@@ -1,8 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { codingTopics } from '../../data/capra/topics/codingTopics';
-import { systemDesignTopics } from '../../data/capra/topics/systemDesignTopics';
-import { behavioralTopics } from '../../data/capra/topics/behavioralTopics';
 
 /* ── Types ───────────────────────────────────────────────────── */
 
@@ -15,65 +12,161 @@ interface SearchResult {
   id: string;
   title: string;
   path: string;
-  category: string;
+  category: string;   // group header: 'Pages' | 'Lumora' | 'Prepare'
   icon: string;
   color?: string;
+  badge?: string;     // small badge label (section the topic belongs to)
+  keywords?: string;  // precomputed lowercased haystack for matching
 }
 
-/* ── Static pages ────────────────────────────────────────────── */
+/* ── Static pages / features ─────────────────────────────────────
+   Every path here is a real route in App.tsx — no dead links.        */
 
 const PAGES: SearchResult[] = [
-  { id: 'page-dashboard', title: 'Dashboard', path: '/capra/prepare', category: 'Pages', icon: 'home' },
+  { id: 'page-prepare', title: 'Prepare', path: '/capra/prepare', category: 'Pages', icon: 'home' },
   { id: 'page-practice', title: 'Practice', path: '/capra/practice', category: 'Pages', icon: 'play' },
-  { id: 'page-jobs', title: 'Jobs', path: '/jobs', category: 'Pages', icon: 'briefcase' },
-  { id: 'page-live', title: 'Live Session', path: '/lumora', category: 'Pages', icon: 'mic' },
-  { id: 'page-pricing', title: 'Pricing', path: '/pricing', category: 'Pages', icon: 'tag' },
+  { id: 'page-quiz', title: 'Quiz', path: '/capra/quiz', category: 'Pages', icon: 'list' },
+  { id: 'page-flashcards', title: 'Flashcards', path: '/capra/flashcards', category: 'Pages', icon: 'list' },
+  { id: 'page-plan', title: 'Prep Plan', path: '/capra/plan', category: 'Pages', icon: 'list' },
+  { id: 'page-resume', title: 'Resume', path: '/capra/resume', category: 'Pages', icon: 'list' },
+  { id: 'page-library', title: 'HR Library', path: '/capra/library', category: 'Pages', icon: 'list' },
   { id: 'page-blind75', title: 'Blind 75', path: '/handbook', category: 'Pages', icon: 'list' },
-  { id: 'page-achievements', title: 'Achievements', path: '/profile?tab=achievements', category: 'Pages', icon: 'trophy' },
-];
+  { id: 'page-playground', title: 'Playground', path: '/playground', category: 'Pages', icon: 'play' },
+  { id: 'page-jobs', title: 'Jobs', path: '/jobs', category: 'Pages', icon: 'briefcase' },
+  { id: 'page-achievements', title: 'Achievements', path: '/capra/achievements', category: 'Pages', icon: 'trophy' },
+  { id: 'page-pricing', title: 'Pricing', path: '/pricing', category: 'Pages', icon: 'tag' },
+  { id: 'page-learn-python', title: 'Learn Python', path: '/capra/learn/python', category: 'Pages', icon: 'list' },
+  { id: 'page-learn-codesignal', title: 'Learn: CodeSignal', path: '/capra/learn/codesignal', category: 'Pages', icon: 'list' },
+  { id: 'page-learn-programiz', title: 'Learn: Programiz', path: '/capra/learn/programiz', category: 'Pages', icon: 'list' },
+  // Lumora live-interview features
+  { id: 'lum-live', title: 'Live Session', path: '/lumora', category: 'Lumora', icon: 'mic' },
+  { id: 'lum-coding', title: 'Lumora Coding', path: '/lumora/coding', category: 'Lumora', icon: 'mic' },
+  { id: 'lum-design', title: 'Lumora Design', path: '/lumora/design', category: 'Lumora', icon: 'mic' },
+  { id: 'lum-behavioral', title: 'Lumora Behavioral', path: '/lumora/behavioral', category: 'Lumora', icon: 'mic' },
+  { id: 'lum-practice', title: 'Lumora Practice', path: '/lumora/practice', category: 'Lumora', icon: 'mic' },
+  { id: 'lum-sessions', title: 'Session History', path: '/lumora/sessions', category: 'Lumora', icon: 'mic' },
+  { id: 'lum-assistants', title: 'Assistants', path: '/lumora/assistants', category: 'Lumora', icon: 'mic' },
+  { id: 'lum-playground', title: 'Lumora Playground', path: '/lumora/playground', category: 'Lumora', icon: 'play' },
+].map((p) => ({ ...p, keywords: p.title.toLowerCase() }));
 
-/* ── Build searchable items from topic data ──────────────────── */
+/* ── Lazy topic index ────────────────────────────────────────────
+   Topic data is large and split into per-category chunks (loader.js).
+   Building the index eagerly would bloat every route's bundle, so we
+   load it on first palette open and cache the result module-wide.     */
 
-function buildItems(): SearchResult[] {
-  const items: SearchResult[] = [];
+// Pages served by loader.js's HEAVY_TOPIC_LOADERS → [dataKey(s)].
+const LAZY_PAGE_KEYS: Record<string, string[]> = {
+  coding: ['codingTopics'],
+  'system-design': ['systemDesignTopics', 'systemDesignExtraTopics', 'systemDesigns'],
+  'low-level': ['lldTopics', 'lldProblems'],
+  behavioral: ['behavioralTopics'],
+  projects: ['projectTopics'],
+  sre: ['sreTopics'],
+  devops: ['devopsTopics'],
+  challenges: ['challengesTopics'],
+  observability: ['observabilityTopics'],
+  platform: ['platformTopics'],
+  ddia: ['ddiaTopics'],
+  mlops: ['mlopsTopics'],
+  'ai-systems-perf': ['aiSystemsPerfTopics'],
+  aiops: ['aiopsTopics'],
+  agentic: ['agenticTopics'],
+  cloud: ['cloudTopics'],
+  linux: ['linuxTopics'],
+  networking: ['networkingTopics'],
+  troubleshooting: ['troubleshootingTopics'],
+  'war-stories': ['warStoriesTopics'],
+  comparisons: ['comparisonTopics'],
+};
 
-  for (const t of codingTopics as Array<{ id: string; title: string; icon: string; color: string }>) {
-    items.push({
-      id: `coding-${t.id}`,
-      title: t.title,
-      path: `/capra/prepare/coding/${t.id}`,
-      category: 'Prepare',
-      icon: t.icon,
-      color: t.color,
-    });
-  }
+const PAGE_LABEL: Record<string, string> = {
+  coding: 'DSA', 'system-design': 'System Design', 'low-level': 'Low-Level Design',
+  behavioral: 'Behavioral', databases: 'Databases', microservices: 'Microservices',
+  ddia: 'DDIA', cloud: 'Cloud', linux: 'Linux', networking: 'Networking', sre: 'SRE',
+  devops: 'DevOps', observability: 'Observability', platform: 'Platform', mlops: 'MLOps',
+  aiops: 'AIOps', 'ai-systems-perf': 'AI Systems Perf', agentic: 'Agentic',
+  challenges: 'Challenges', troubleshooting: 'Troubleshooting', 'war-stories': 'War Stories',
+  comparisons: 'Comparisons', projects: 'Projects', roadmaps: 'Roadmaps', 'eng-blogs': 'Eng Blogs',
+};
 
-  for (const t of systemDesignTopics as Array<{ id: string; title: string; icon: string; color: string }>) {
-    items.push({
-      id: `sd-${t.id}`,
-      title: t.title,
-      path: `/capra/prepare/system-design/${t.id}`,
-      category: 'Prepare',
-      icon: t.icon,
-      color: t.color,
-    });
-  }
+interface RawTopic { id?: string; title?: string; subtitle?: string; description?: string; icon?: string; color?: string; tags?: string[]; concepts?: string[]; }
 
-  for (const t of behavioralTopics as Array<{ id: string; title: string; icon: string; color: string }>) {
-    items.push({
-      id: `beh-${t.id}`,
-      title: t.title,
-      path: `/capra/prepare/behavioral/${t.id}`,
-      category: 'Prepare',
-      icon: t.icon,
-      color: t.color,
-    });
-  }
+let CACHED_TOPIC_ITEMS: SearchResult[] | null = null;
+let INFLIGHT: Promise<SearchResult[]> | null = null;
 
-  return [...items, ...PAGES];
+function toItem(t: RawTopic, page: string): SearchResult | null {
+  if (!t || !t.id || !t.title) return null;
+  const haystack = [t.title, t.subtitle, t.description, t.id, ...(t.tags || []), ...(t.concepts || [])]
+    .filter(Boolean).join(' ').toLowerCase();
+  return {
+    id: `${page}:${t.id}`,
+    title: t.title,
+    path: `/capra/prepare?page=${page}&topic=${t.id}`,
+    category: 'Prepare',
+    icon: t.icon || '',
+    color: t.color,
+    badge: PAGE_LABEL[page] || 'Prepare',
+    keywords: haystack,
+  };
 }
 
-const ALL_ITEMS = buildItems();
+async function loadTopicItems(): Promise<SearchResult[]> {
+  if (CACHED_TOPIC_ITEMS) return CACHED_TOPIC_ITEMS;
+  if (INFLIGHT) return INFLIGHT;
+  INFLIGHT = (async () => {
+    const [loaderMod, dbMod, sqlMod, microMod, roadmapMod, engMod, concMod, patMod, tradeMod, scaleMod, companyMod] =
+      await Promise.all([
+        import('../../data/capra/topics/loader'),
+        import('../../data/capra/topics/databaseTopics'),
+        import('../../data/capra/topics/sqlTopics'),
+        import('../../data/capra/topics/microservicesPatterns'),
+        import('../../data/capra/topics/roadmapTopics'),
+        import('../../data/capra/topics/engBlogsTopics'),
+        import('../../data/capra/topics/concurrencyTopics'),
+        import('../../data/capra/topics/systemDesignPatterns'),
+        import('../../data/capra/topics/systemDesignTradeoffs'),
+        import('../../data/capra/topics/scalableSystemsTopics'),
+        import('../../data/capra/topics/companyPrep'),
+      ]);
+
+    const items: SearchResult[] = [];
+    const seen = new Set<string>();
+    const push = (arr: RawTopic[] | undefined, page: string) => {
+      for (const t of arr || []) {
+        const item = toItem(t, page);
+        if (item && !seen.has(item.id)) { seen.add(item.id); items.push(item); }
+      }
+    };
+
+    // Lazy pages via loader.js
+    const loaded = await Promise.all(
+      Object.keys(LAZY_PAGE_KEYS).map((p) =>
+        loaderMod.loadTopicsForPage(p).then((data: Record<string, unknown>) => [p, data] as const).catch(() => [p, {}] as const)
+      )
+    );
+    for (const [page, data] of loaded) {
+      for (const key of LAZY_PAGE_KEYS[page]) push(data[key] as RawTopic[], page);
+    }
+
+    // Statically-chunked categories not covered by loader.js
+    push(dbMod.databaseTopics as RawTopic[], 'databases');
+    push(sqlMod.sqlTopics as RawTopic[], 'databases');
+    push(microMod.microservicesPatterns as RawTopic[], 'microservices');
+    push(roadmapMod.roadmapTopics as RawTopic[], 'roadmaps');
+    push(engMod.engBlogTopics as RawTopic[], 'eng-blogs');
+    // System-design sub-sections that live in their own static modules
+    push(concMod.concurrencyTopics as RawTopic[], 'system-design');
+    push(patMod.systemDesignPatterns as RawTopic[], 'system-design');
+    push(tradeMod.systemDesignTradeoffs as RawTopic[], 'system-design');
+    push(scaleMod.scalableSystemsTopics as RawTopic[], 'system-design');
+    // Company-specific behavioral prep
+    push(companyMod.companyPrep as RawTopic[], 'behavioral');
+
+    CACHED_TOPIC_ITEMS = items;
+    return items;
+  })();
+  return INFLIGHT;
+}
 
 /* ── Category icons (SVG paths) ──────────────────────────────── */
 
@@ -137,18 +230,41 @@ function Badge({ label }: { label: string }) {
 export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [topicItems, setTopicItems] = useState<SearchResult[]>(CACHED_TOPIC_ITEMS || []);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Filter results
-  const results = useMemo(() => {
-    if (!query.trim()) return ALL_ITEMS.slice(0, 20); // show first 20 when empty
-    const q = query.toLowerCase();
-    return ALL_ITEMS.filter((item) => item.title.toLowerCase().includes(q));
-  }, [query]);
+  // Lazy-load the full topic index the first time the palette opens.
+  useEffect(() => {
+    if (!isOpen || CACHED_TOPIC_ITEMS) return;
+    let cancelled = false;
+    setLoading(true);
+    loadTopicItems()
+      .then((items) => { if (!cancelled) setTopicItems(items); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [isOpen]);
 
-  // Group results by category
+  const allItems = useMemo(() => [...PAGES, ...topicItems], [topicItems]);
+
+  // Filter results — multi-word AND over the precomputed keyword haystack.
+  const results = useMemo(() => {
+    const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      // Empty query: show all pages/features + a few topics as a preview.
+      return [...PAGES, ...topicItems.slice(0, 8)];
+    }
+    return allItems
+      .filter((item) => {
+        const hay = item.keywords || item.title.toLowerCase();
+        return words.every((w) => hay.includes(w));
+      })
+      .slice(0, 50);
+  }, [query, allItems, topicItems]);
+
+  // Group results by category (Pages, Lumora, Prepare)
   const grouped = useMemo(() => {
     const map = new Map<string, SearchResult[]>();
     for (const r of results) {
@@ -200,11 +316,11 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setActiveIndex((i) => (i + 1) % flatResults.length);
+          if (flatResults.length) setActiveIndex((i) => (i + 1) % flatResults.length);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setActiveIndex((i) => (i - 1 + flatResults.length) % flatResults.length);
+          if (flatResults.length) setActiveIndex((i) => (i - 1 + flatResults.length) % flatResults.length);
           break;
         case 'Enter':
           e.preventDefault();
@@ -303,10 +419,10 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
           {flatResults.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                No results found
+                {loading ? 'Loading topics…' : 'No results found'}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-dimmed)' }}>
-                Try a different search term
+                {loading ? 'Indexing all sections' : 'Try a different search term'}
               </p>
             </div>
           ) : (
@@ -341,7 +457,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
                     >
                       <CategoryIcon name={item.icon} color={item.color} />
                       <span className="flex-1 text-sm truncate">{item.title}</span>
-                      <Badge label={item.category} />
+                      <Badge label={item.badge || item.category} />
                     </button>
                   );
                 })}
