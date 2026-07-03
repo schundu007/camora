@@ -5,6 +5,7 @@
 // export site (not via post-hoc mutation) so Vite's tree-shaker can't
 // drop the merge. See bottom of file for the export expression.
 import { SQL_TOP50_PROBLEMS } from './sqlProblemsTop50';
+import { SQL_EXTRA_PROBLEMS } from './sqlProblemsExtra';
 
 export interface SqlTable {
   name: string;
@@ -1282,9 +1283,13 @@ SELECT`,
    The legacy items 1-18 already cover ~17 of the 50; sqlProblemsTop50
    contributes the remaining ~33 that LeetCode lists.
    ───────────────────────────────────────────────────────────────────── */
-const _LEGACY_TITLES = new Set(_LEGACY_PROBLEMS.map(p => p.title.toLowerCase()));
+// Merge all three catalogs, deduped by title (first wins:
+// legacy → Top 50 → extended). SQL_EXTRA_PROBLEMS adds the problems that
+// Prepare's SQL topics referenced but that had no interactive entry.
+const _byTitle = new Map<string, SqlProblem>();
+for (const p of [..._LEGACY_PROBLEMS, ...SQL_TOP50_PROBLEMS, ...SQL_EXTRA_PROBLEMS]) {
+  const key = p.title.toLowerCase();
+  if (!_byTitle.has(key)) _byTitle.set(key, p);
+}
 
-export const SQL_PROBLEMS: SqlProblem[] = [
-  ..._LEGACY_PROBLEMS,
-  ...SQL_TOP50_PROBLEMS.filter(p => !_LEGACY_TITLES.has(p.title.toLowerCase())),
-];
+export const SQL_PROBLEMS: SqlProblem[] = [..._byTitle.values()];
