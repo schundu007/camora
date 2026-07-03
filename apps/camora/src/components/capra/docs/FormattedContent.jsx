@@ -58,6 +58,52 @@ const TERM_DEF_STARTERS_EXCLUDED = new Set([
   'Through', 'Note', 'Unlike', 'Like', 'Where', 'How', 'Why', 'What', 'Which', 'Who',
 ]);
 
+// ── Unfenced-code fencing ─────────────────────────────────────────────────
+// LLD / coding answers often store raw source with NO ``` fences, so it used
+// to shatter into prose paragraphs (and stray one-brace "code" blocks). Detect
+// a code region by a STRONG start signal (class/interface/method declaration —
+// never plain prose), extend it by brace depth, and wrap it in a fence so it
+// renders in a real CodeBlock. Conservative: pure prose is never touched, and
+// content that already has fences is left as-is.
+const CODE_START = /^\s*(?:(?:public|private|protected|static|final|abstract|synchronized)\s+)*(?:class|interface|enum|struct|record)\s+\w/;
+const CODE_METHOD = /^\s*(?:(?:public|private|protected|static|final|synchronized)\s+)+[\w<>\[\],.\s]*\)\s*\{\s*$/;
+const CODE_TYPED_METHOD = /^\s*(?:int|void|long|double|float|boolean|char|byte|short|String|var|Node|List|Map|Object|T)\b[\w<>\[\],.\s]*\w+\s*\([^;]*\)\s*\{\s*$/;
+const CODE_FUNC = /^\s*(?:def|func|function|fn)\s+\w+\s*\(/;
+const isCodeStart = (l) => CODE_START.test(l) || CODE_METHOD.test(l) || CODE_TYPED_METHOD.test(l) || CODE_FUNC.test(l);
+const CODE_CONT = /[;{}]\s*$|^\s{2,}\S|=>|::|^\s*(?:return|if|else|for|while|switch|case|try|catch|new|throw|break|continue|import|package|@\w+)\b|\b\w+\s*\([^)]*\)\s*[;{]/;
+const isCodeish = (l) => isCodeStart(l) || CODE_CONT.test(l);
+
+function fenceUnfencedCode(content) {
+  if (typeof content !== 'string' || content.includes('```')) return content;
+  const lines = content.split('\n');
+  const isBlank = (l) => l.trim() === '';
+  const depthOf = (l) => (l.match(/\{/g) || []).length - (l.match(/\}/g) || []).length;
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    if (!isBlank(lines[i]) && isCodeStart(lines[i])) {
+      const region = [];
+      let depth = 0, j = i;
+      while (j < lines.length) {
+        region.push(lines[j]);
+        depth += depthOf(lines[j]);
+        if (depth <= 0) {
+          let k = j + 1;
+          while (k < lines.length && isBlank(lines[k])) k++;
+          if (k < lines.length && isCodeish(lines[k]) && (k - j) <= 2) {
+            for (let m = j + 1; m < k; m++) region.push(lines[m]);
+            j = k - 1;
+          } else break;
+        }
+        j++;
+      }
+      out.push('```java', ...region, '```');
+      i = j + 1;
+    } else { out.push(lines[i]); i++; }
+  }
+  return out.join('\n');
+}
+
 export default function FormattedContent({ content, inline = false }) {
   // Translate AWS service names to Azure/GCP equivalents for the chosen
   // cloud BEFORE parsing into blocks. The formatter skips fenced code so
@@ -220,7 +266,8 @@ export default function FormattedContent({ content, inline = false }) {
 
   const blocks = [];
   let currentBlock = { type: 'text', lines: [], lang: null };
-  const lines = content.split('\n');
+  // Fence any unfenced code (LLD/coding answers store raw source) before parsing.
+  const lines = fenceUnfencedCode(content).split('\n');
   let inCodeBlock = false;
   let codeBlockLang = null;
 
