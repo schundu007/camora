@@ -22,6 +22,7 @@ export const linuxTopicCategoryMap = {
   'linux-boot-process':         'fundamentals',
   'linux-kernel-basics':        'fundamentals',
   'linux-signals':              'fundamentals',
+  'linux-binutils':             'fundamentals',
   // Shell
   'bash-scripting':             'shell',
   'bash-pipes-redirection':     'shell',
@@ -85,6 +86,198 @@ export const linuxTopicCategoryMap = {
 
 export const linuxTopics = [
   // ─── FUNDAMENTALS ──────────────────────────────────────────────────────────
+  {
+    id: 'linux-binutils',
+    title: 'Binutils & Binary Validation',
+    icon: 'cpu',
+    color: '#3b82f6',
+    questions: 6,
+    description: 'GNU binutils and ELF tooling for CI/CD: inspect symbols, verify architecture and ABI, check shared-library dependencies, and validate C, C++, and Python artifacts before they ship.',
+    introduction: `## Overview
+GNU binutils is the toolchain layer beneath gcc and clang - the utilities that read, transform, and validate compiled artifacts: object files, static archives (.a), shared libraries (.so), and executables. On a C, C++, and Python build farm (CUDA libraries, EDA and firmware pipelines at companies like NVIDIA, AMD, and ASML), these tools are the CI gates that catch a bad binary before it reaches a GPU node or a customer image - wrong architecture, missing symbols, an ABI mismatch, a leaked debug build, or a shared library that will fail to load at runtime.
+
+## The Core Tools
+- readelf - the authoritative ELF reader: header, sections, dynamic table, symbol versions. Never executes the file, so it is safe on untrusted binaries.
+- objdump - disassembly, section dumps, relocations, and the dynamic symbol table (objdump -T).
+- nm - list symbols in an object, archive, or shared library; nm -D reads dynamic symbols, nm -C demangles, nm -u shows undefined.
+- ldd - print shared-library dependencies by asking the dynamic loader to resolve them.
+- ldconfig - refresh the shared-library cache (/etc/ld.so.cache) and search paths.
+- ar and ranlib - create, list, and index static archives.
+- strip - remove symbol and debug information to shrink release binaries.
+- strings - extract printable text (leaked paths, version tags, secrets).
+- c++filt - demangle C++ symbol names, turning _ZN3fooEv into foo().
+- addr2line - map a crash address back to file and line using debug info.
+- objcopy - convert binaries, split debug info, add or remove sections.
+- file - identify type, architecture, and linkage of any artifact in one line.
+- patchelf - edit an existing binary in place: RPATH, interpreter, or SONAME.
+
+## ELF Anatomy
+An ELF file has an ELF header (class, endianness, machine, type), program headers (the segments the loader maps), and section headers such as .text, .data, .bss, .symtab, .dynsym, and .dynamic. Dynamic executables and shared objects carry a .dynamic section that lists NEEDED libraries, the SONAME, RPATH or RUNPATH, and symbol-version tables. Almost every validation you run maps to reading one of these structures.
+
+## CI/CD Validation Gates
+A pipeline usually checks, in order: architecture and ABI (readelf -h, file), required libraries present (readelf -d, ldd), no unresolved symbols (nm -D, ldd -r), the glibc symbol-version floor (objdump -T), hardening flags (RELRO, stack canary, NX, PIE), and that release artifacts are stripped and carry no secret strings.`,
+    whenToUse: [
+      'A shared library or Python C-extension fails to import at runtime with an undefined-symbol error',
+      'Gating CI so a binary built for the wrong architecture or ABI never reaches a GPU or FPGA node',
+      'Verifying a release build was stripped and does not leak debug paths, symbols, or secret strings',
+      'Confirming a binary built on a newer distro will still run on the older glibc of the deploy target',
+      'Auditing a static archive or shared object for the exact symbols a downstream component expects',
+    ],
+    keyConcepts: [
+      { term: 'readelf', definition: 'Reads ELF structure without executing the file. readelf -h shows class and machine (architecture), readelf -d shows the dynamic table (NEEDED, SONAME, RPATH), readelf --dyn-syms lists exported symbols, and readelf -l shows segments and GNU_RELRO. The safe first tool for untrusted binaries.' },
+      { term: 'nm', definition: 'Lists symbols. nm reads the static symbol table, nm -D reads dynamic symbols of a shared object, nm -C demangles C++, and nm -u lists undefined symbols. In the output, U is undefined, T is a defined text symbol, and W is weak.' },
+      { term: 'objdump', definition: 'objdump -d disassembles, objdump -T prints the dynamic symbol table with version tags, objdump -x dumps all headers, and objdump -R shows relocations. objdump -T piped through grep GLIBC reveals the minimum glibc version a binary requires.' },
+      { term: 'ldd vs readelf -d', definition: 'ldd prints resolved shared-library dependencies but can execute code in an untrusted binary, so for inspection prefer readelf -d or objdump -p, which only read the file. Use ldd on trusted builds to confirm every NEEDED library actually resolves.' },
+      { term: 'strip and separate debug', definition: 'strip removes .symtab and debug sections to shrink a release binary. Once stripped, addr2line can no longer symbolize crashes, so save debug first with objcopy --only-keep-debug and link it back with --add-gnu-debuglink.' },
+      { term: 'c++filt and mangling', definition: 'C++ encodes namespaces and argument types into symbol names (mangling). An undefined symbol like _ZN3fooEv looks unrelated until demangled with c++filt (or nm -C) into foo(). Always demangle before matching a missing symbol to its source.' },
+      { term: 'symbol versions', definition: 'glibc tags symbols with versions such as GLIBC_2.34. A binary that references a newer version will not run on a host with older glibc even when the library file exists. Check the required floor with objdump -T | grep GLIBC before deploying across distros.' },
+      { term: 'RPATH and patchelf', definition: 'RPATH and RUNPATH embed library search paths into a binary. When a relocated artifact cannot find its .so files, patchelf --set-rpath or patchelf --set-interpreter fixes the binary in place without rebuilding, and ldconfig -p confirms what the loader cache resolves.' },
+    ],
+    pitfalls: [
+      'Running ldd on an untrusted binary - it can execute the target loader. Use readelf -d or objdump -p to inspect dependencies safely.',
+      'Assuming a stripped binary can still be symbolized - once strip removes the symbol and debug sections, addr2line returns ??. Keep a separate debug file.',
+      'Matching a missing C++ symbol without demangling - a raw mangled name hides which function and signature is actually unresolved; pipe through c++filt.',
+      'Ignoring symbol versions - a build that references GLIBC_2.34 fails on an older host even though libc.so is present. Check with objdump -T.',
+      'Confusing static and dynamic linking - a statically linked binary has no NEEDED entries and ldd prints not a dynamic executable; that is expected, not an error.',
+    ],
+    keyQuestions: [
+      {
+        question: 'A Python C-extension (.so) fails to import with "undefined symbol: _ZN6caffe28TypeMeta...". How do you diagnose and fix it in CI?',
+        answer: `The extension references a symbol that no loaded library provides - almost always an ABI or version mismatch between the extension and the C++ library it was built against.
+
+## Diagnose
+
+\`\`\`bash
+# See the undefined symbol and demangle it
+nm -D --undefined-only my_ext.so | c++filt
+
+# Which libraries does the extension pull in?
+readelf -d my_ext.so | grep NEEDED
+
+# Does the library that should define it actually export it?
+nm -D /path/libcaffe2.so | c++filt | grep TypeMeta
+
+# Confirm what the loader resolves (trusted build only)
+ldd my_ext.so
+\`\`\`
+
+## Fix
+
+If the symbol is missing from the library, the extension and the library were built against different versions or with a different C++ ABI (for example the old vs new libstdc++ std::string ABI). Rebuild both against the same toolchain and _GLIBCXX_USE_CXX11_ABI setting, or pin the matching library version. Add an nm -D check to CI so an unresolved symbol fails the build.`,
+      },
+      {
+        question: 'How do you gate a CI pipeline so an artifact for the wrong architecture or ABI never reaches a GPU node?',
+        answer: `Read the ELF header and the dynamic table, then fail the build on any mismatch. readelf and file only read the file, so they are safe on any artifact.
+
+\`\`\`bash
+# Expect x86-64, dynamically linked
+file build/libkernel.so
+readelf -h build/libkernel.so | grep -E 'Class|Machine|Type'
+
+# Fail the CI step if the architecture is wrong
+arch=$(readelf -h build/libkernel.so | awk -F: '/Machine/{print $2}')
+echo "$arch" | grep -q 'X86-64' || { echo "wrong arch"; exit 1; }
+
+# Confirm required libraries are declared
+readelf -d build/libkernel.so | grep NEEDED
+\`\`\`
+
+For a cross-arch fleet (x86-64 build nodes, aarch64 Grace nodes), assert the expected Machine per target and reject anything else. This one gate catches the classic "built on the wrong runner" failure before it hits hardware.`,
+      },
+      {
+        question: 'At runtime a service dies with "error while loading shared libraries: libfoo.so.3: cannot open shared object file". Walk through the fix.',
+        answer: `The loader cannot resolve a NEEDED library. Find which one, then fix the search path or the dependency.
+
+\`\`\`bash
+# Which libraries are missing?
+ldd ./service | grep 'not found'
+
+# What does the binary actually require, and via what RPATH?
+readelf -d ./service | grep -E 'NEEDED|RPATH|RUNPATH'
+
+# Is the library installed anywhere the loader looks?
+ldconfig -p | grep libfoo
+\`\`\`
+
+## Fix options
+
+- Install the missing package, then run ldconfig to refresh the cache.
+- If the library lives in a non-standard directory, add it via /etc/ld.so.conf.d and ldconfig, or set LD_LIBRARY_PATH for that service unit.
+- For a relocated or vendored binary, embed the path: patchelf --set-rpath '$ORIGIN/../lib' ./service.
+
+Prefer RPATH with $ORIGIN over LD_LIBRARY_PATH so the fix travels with the artifact.`,
+      },
+      {
+        question: 'How do you verify in CI that a release binary is stripped and leaks no debug paths or secrets?',
+        answer: `Check that symbol and debug sections are gone, and scan the printable strings.
+
+\`\`\`bash
+# Should report "stripped"
+file release/app
+
+# No .symtab or .debug_* sections should remain
+readelf -S release/app | grep -E 'symtab|debug'
+
+# Scan for leaked build paths, keys, or internal hostnames
+strings -n 8 release/app | grep -Ei 'BEGIN.*PRIVATE KEY|/home/|internal\.corp|password'
+\`\`\`
+
+In the build, strip and keep debug separately so crashes are still symbolizable:
+
+\`\`\`bash
+objcopy --only-keep-debug app app.debug
+strip --strip-unneeded app
+objcopy --add-gnu-debuglink=app.debug app
+\`\`\`
+
+Fail CI if readelf still shows debug sections or if strings matches a secret pattern.`,
+      },
+      {
+        question: 'A binary built on Ubuntu 22.04 crashes on RHEL 8 with a "GLIBC_2.34 not found" error. How do you catch and prevent this?',
+        answer: `The binary references glibc symbols newer than the target host provides. Inspect the required versions, then rebuild against an older baseline.
+
+\`\`\`bash
+# Highest glibc version the binary needs
+objdump -T ./app | grep -oE 'GLIBC_[0-9.]+' | sort -uV | tail
+
+# Per-symbol view of versioned references
+readelf --dyn-syms ./app | grep GLIBC_2.34
+\`\`\`
+
+## Prevent
+
+Build release artifacts inside a container that matches the OLDEST supported target glibc - for example a manylinux or devtoolset image - so the symbol floor stays low. Add a CI gate that fails if objdump -T reports a GLIBC version above the agreed baseline. This is the standard portability guard for wheels and shared libraries shipped across a mixed fleet.`,
+      },
+      {
+        question: 'How do you validate a static archive (.a) and confirm hardening flags on a shipped binary?',
+        answer: `For a static archive, list its members and check the symbols it defines.
+
+\`\`\`bash
+# List object files inside the archive
+ar t libmath.a
+
+# Confirm expected symbols are defined (T), not undefined (U)
+nm libmath.a | grep -E ' T | U ' | c++filt
+
+# Segment sizes
+size libmath.a
+\`\`\`
+
+For a shipped executable, verify exploit-mitigation flags:
+
+\`\`\`bash
+# Quick summary of RELRO, canary, NX, PIE, RPATH
+checksec --file=./app
+
+# Or read them directly
+readelf -l ./app | grep -E 'GNU_RELRO|GNU_STACK'
+readelf -d ./app | grep BIND_NOW
+\`\`\`
+
+Full RELRO needs both GNU_RELRO and BIND_NOW. Fail CI when a production binary is missing a canary, NX, PIE, or full RELRO.`,
+      },
+    ],
+  },
   {
     id: 'linux-processes',
     title: 'Linux Processes',
