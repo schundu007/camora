@@ -759,7 +759,7 @@ export default function DocsPage({ onBack }) {
       case 'coding': return codingTopics;
       case 'system-design': return [...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics];
       case 'low-level': return [...lldTopics, ...lldProblems];
-      case 'behavioral': return [...behavioralTopics, ...companyPrep];
+      case 'behavioral': return behavioralTopics;
       case 'microservices': return microservicesPatterns;
       case 'databases': return [...databaseTopics, ...sqlTopics];
       case 'projects': return projectTopics;
@@ -822,8 +822,8 @@ export default function DocsPage({ onBack }) {
     if (!words.length) return [...topics].sort((a, b) => {
       if (sortOrder === 'a-z') return (a.title || '').localeCompare(b.title || '');
       if (sortOrder === 'z-a') return (b.title || '').localeCompare(a.title || '');
-      if (sortOrder === 'most') return (b.keyQuestions?.length ?? b.questions ?? 0) - (a.keyQuestions?.length ?? a.questions ?? 0);
-      if (sortOrder === 'least') return (a.keyQuestions?.length ?? a.questions ?? 0) - (b.keyQuestions?.length ?? b.questions ?? 0);
+      if (sortOrder === 'most') return b.questions - a.questions;
+      if (sortOrder === 'least') return a.questions - b.questions;
       return 0;
     });
     const scored = scoreTopicsByQuery(topics, words);
@@ -844,8 +844,8 @@ export default function DocsPage({ onBack }) {
         }
         if (sortOrder === 'a-z') return (a.title || '').localeCompare(b.title || '');
         if (sortOrder === 'z-a') return (b.title || '').localeCompare(a.title || '');
-        if (sortOrder === 'most') return (b.keyQuestions?.length ?? b.questions ?? 0) - (a.keyQuestions?.length ?? a.questions ?? 0);
-        if (sortOrder === 'least') return (a.keyQuestions?.length ?? a.questions ?? 0) - (b.keyQuestions?.length ?? b.questions ?? 0);
+        if (sortOrder === 'most') return b.questions - a.questions;
+        if (sortOrder === 'least') return a.questions - b.questions;
         return 0; // 'default' — preserves data-defined order
       });
   };
@@ -2294,7 +2294,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="space-y-3">
                     {systemDesignPatternCategories.map((category) => {
-                      const categoryTopics = (searchMatchIds ? systemDesignPatterns.filter(t => searchMatchIds.has(t.id)) : systemDesignPatterns).filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
+                      const categoryTopics = systemDesignPatterns.filter(t => systemDesignPatternCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -2342,7 +2342,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="space-y-3">
                     {microservicesCategories.map((category) => {
-                      const categoryTopics = (searchMatchIds ? microservicesPatterns.filter(t => searchMatchIds.has(t.id)) : microservicesPatterns).filter(t => microservicesCategoryMap[t.id] === category.id);
+                      const categoryTopics = microservicesPatterns.filter(t => microservicesCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -2390,7 +2390,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="space-y-3">
                     {tradeoffCategories.map((category) => {
-                      const categoryTopics = (searchMatchIds ? systemDesignTradeoffs.filter(t => searchMatchIds.has(t.id)) : systemDesignTradeoffs).filter(t => tradeoffCategoryMap[t.id] === category.id);
+                      const categoryTopics = systemDesignTradeoffs.filter(t => tradeoffCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -2438,7 +2438,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="space-y-3">
                     {scalableSystemsCategories.map((category) => {
-                      const categoryTopics = (searchMatchIds ? scalableSystemsTopics.filter(t => searchMatchIds.has(t.id)) : scalableSystemsTopics).filter(t => scalableSystemsCategoryMap[t.id] === category.id);
+                      const categoryTopics = scalableSystemsTopics.filter(t => scalableSystemsCategoryMap[t.id] === category.id);
                       if (categoryTopics.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -2486,7 +2486,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
-                        {(searchMatchIds ? concurrencyTopics.filter(t => searchMatchIds.has(t.id)) : concurrencyTopics).map((topic) => (
+                        {concurrencyTopics.map((topic) => (
                           <div
                             key={topic.id}
                             onClick={() => setSelectedTopic(topic.id)}
@@ -2833,7 +2833,7 @@ export default function DocsPage({ onBack }) {
                       className="mb-4"
                     />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {(searchMatchIds ? companyPrep.filter(c => searchMatchIds.has(c.id)) : companyPrep).map((company) => (
+                      {companyPrep.map((company) => (
                         <div
                           key={company.id}
                           onClick={() => setSelectedTopic(company.id)}

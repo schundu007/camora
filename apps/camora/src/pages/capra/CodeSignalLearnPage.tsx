@@ -125,7 +125,7 @@ export default function CodeSignalLearnPage() {
     const q = query.toLowerCase();
     return (CODESIGNAL_LEARN_PATHS as LearnPath[]).filter(p => {
       if (diffFilter !== 'all' && p.difficulty !== diffFilter) return false;
-      if (q && !p.title.toLowerCase().includes(q) && !p.topic.toLowerCase().includes(q)) return false;
+      if (q && !p.title.toLowerCase().includes(q) && !p.topic.includes(q)) return false;
       return true;
     });
   }, [query, diffFilter]);
