@@ -829,7 +829,7 @@ export default function FormattedContent({ content, inline = false }) {
         pushBody(
           <p
             key={`p-${blockIdx}-${lineIdx}`}
-            className="text-[var(--text-primary)] text-[17px] leading-[1.75] my-4 landing-body"
+            className="text-[var(--text-secondary)] text-[15px] leading-[1.75] my-3.5 landing-body"
           >
             {formatInlineText(trimmed)}
           </p>,
