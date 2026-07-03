@@ -15,6 +15,11 @@ const INLINE_TOOLS = new Set([
   'stern','kubectx','kubens','velero','oc',
   'chmod','chown','tar','find','grep','awk','sed',
   'ping','dig','nslookup','nmap','ss','ip','netstat',
+  // binutils / ELF + compiler + debug toolchain
+  'readelf','objdump','nm','ldd','ldconfig','ar','ranlib','strip','strings',
+  'c++filt','addr2line','objcopy','patchelf','ld','size','file',
+  'gcc','g++','clang','clang++','cc','gdb','lldb','valgrind','perf','strace','ltrace','ldd',
+  'docker-compose','helmfile','pulumi','packer','vagrant','kustomize','kubeseal',
 ]);
 
 const renderCmdCode = (text, key) => {
@@ -127,6 +132,26 @@ export default function FormattedContent({ content, inline = false }) {
         starMatch[1].charAt(0).toUpperCase() + starMatch[1].slice(1).toLowerCase();
       parts.push(renderStarEyebrow(keyword, keyCounter++));
       remaining = remaining.substring(starMatch[0].length);
+    }
+
+    // Auto-style a leading CLI command in a "cmd - description" bullet so
+    // command-reference lists render bold+colored even when the data has no
+    // backticks. Allowlist-gated (INLINE_TOOLS) so ordinary "Word - desc"
+    // prose and non-command keys (semver, p50, entrypoint…) are untouched.
+    if (!starMatch) {
+      const lead = remaining.match(/^([a-z][a-z0-9.+_-]*(?:\s+(?:and|vs\.?|or)\s+[a-z][a-z0-9.+_-]*)*)\s+[-–—]\s+/);
+      if (lead) {
+        const seg = lead[1];
+        const cmds = seg.split(/\s+(?:and|vs\.?|or)\s+/);
+        if (cmds.length && cmds.every((c) => INLINE_TOOLS.has(c))) {
+          seg.split(/(\s+(?:and|vs\.?|or)\s+)/).forEach((p) => {
+            if (!p) return;
+            if (/^\s+(?:and|vs\.?|or)\s+$/.test(p)) parts.push(p);
+            else parts.push(renderCmdCode(p, keyCounter++));
+          });
+          remaining = remaining.substring(seg.length); // leaves " - description"
+        }
+      }
     }
 
     while (remaining.length > 0) {
