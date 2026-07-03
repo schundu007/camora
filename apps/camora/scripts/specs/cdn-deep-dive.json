@@ -1,0 +1,36 @@
+{
+  "title": "CDN — Global Content Delivery",
+  "direction": "LR",
+  "clusters": [
+    { "id": "control", "label": "Control Plane" },
+    { "id": "edge", "label": "Edge PoP  ·  300+ locations" },
+    { "id": "origin", "label": "Origin" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "dns", "label": "GeoDNS\n(latency routing)", "type": "dns" },
+    { "id": "invalidation", "label": "Cache Invalidation\n(tag-based purge)", "type": "eventbus", "cluster": "control" },
+    { "id": "analytics", "label": "Real-time\nAnalytics", "type": "analytics", "cluster": "control" },
+    { "id": "ddos", "label": "DDoS\nMitigation", "type": "firewall", "cluster": "edge" },
+    { "id": "tls", "label": "TLS\nTermination", "type": "tls", "cluster": "edge" },
+    { "id": "elb_edge", "label": "Load\nBalancer", "type": "lb", "cluster": "edge" },
+    { "id": "edge_cache", "label": "Edge Cache", "type": "cache", "cluster": "edge" },
+    { "id": "shield", "label": "Origin Shield\n(99% offload)", "type": "cdn" },
+    { "id": "origin_lb", "label": "Load\nBalancer", "type": "lb", "cluster": "origin" },
+    { "id": "web", "label": "Web Server", "type": "compute", "cluster": "origin" },
+    { "id": "store", "label": "Object Storage", "type": "storage", "cluster": "origin" }
+  ],
+  "edges": [
+    { "from": "users", "to": "dns", "label": "nearest PoP", "kind": "main" },
+    { "from": "dns", "to": "ddos", "kind": "main" },
+    { "from": "ddos", "to": "tls" },
+    { "from": "tls", "to": "elb_edge" },
+    { "from": "elb_edge", "to": "edge_cache" },
+    { "from": "edge_cache", "to": "shield", "label": "cache miss", "kind": "main" },
+    { "from": "shield", "to": "origin_lb", "label": "cache miss", "kind": "main" },
+    { "from": "origin_lb", "to": "web" },
+    { "from": "origin_lb", "to": "store" },
+    { "from": "invalidation", "to": "edge_cache", "label": "purge", "kind": "control" },
+    { "from": "edge_cache", "to": "analytics", "label": "metrics", "kind": "control" }
+  ]
+}
