@@ -55,8 +55,8 @@ export default function AmdPrepPage() {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
           width: '100%', textAlign: 'left', cursor: 'pointer',
           padding: '13px 15px', borderRadius: 10,
-          background: 'var(--surface, #fff)',
-          border: '1px solid var(--border, #e5e7eb)',
+          background: 'var(--bg-elevated)',
+          border: '1px solid var(--border)',
           borderLeft: `3px solid ${color}`,
           transition: 'transform .12s ease, box-shadow .12s ease, border-color .12s ease',
         }}
@@ -65,19 +65,19 @@ export default function AmdPrepPage() {
       >
         <span style={{ minWidth: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color, background: `${color}14`, padding: '2px 7px', borderRadius: 5 }}>{it.tag}</span>
-            {isNew && <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#B45309', background: '#B4530914', padding: '2px 7px', borderRadius: 5 }}>New</span>}
+            <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: color, padding: '2px 7px', borderRadius: 5 }}>{it.tag}</span>
+            {isNew && <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#fff', background: '#B45309', padding: '2px 7px', borderRadius: 5 }}>New</span>}
           </span>
           <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</span>
         </span>
-        <span style={{ fontSize: 16, color: 'var(--text-muted, #9ca3af)', flexShrink: 0 }} aria-hidden>→</span>
+        <span style={{ fontSize: 16, color: 'var(--text-muted)', flexShrink: 0 }} aria-hidden>→</span>
       </button>
     );
   };
 
   const Section = ({ label, sub, items, isNew }: { label: string; sub: string; items: Item[]; isNew?: boolean }) => (
     <div style={{ marginBottom: 30 }}>
-      <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(0,71,171,0.75)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{label}</div>
       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 12 }}>{sub}</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
         {items.map((it) => <Card key={it.id} it={it} isNew={isNew} />)}
@@ -102,8 +102,8 @@ export default function AmdPrepPage() {
       <Section label="Core — AMD CI/CD Stack" sub="Built directly from the job description: self-hosted & hardware-in-the-loop CI, release manifests, firmware/kernel builds, and the ROCm GPU stack." items={CORE} isNew />
       <Section label="Supporting Foundations" sub="Existing topics the JD leans on — CI tooling, supply-chain signing, delivery metrics, GPU architecture, and AWS networking." items={RELATED} />
 
-      <div style={{ marginTop: 8, paddingTop: 16, borderTop: '1px solid var(--border, #e5e7eb)' }}>
-        <button type="button" onClick={() => navigate('/capra/prepare')} style={{ fontSize: 12, fontWeight: 700, color: '#0047AB', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>← Back to all Prepare categories</button>
+      <div style={{ marginTop: 8, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+        <button type="button" onClick={() => navigate('/capra/prepare')} style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-text)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>← Back to all Prepare categories</button>
       </div>
     </div>
   );
