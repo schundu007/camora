@@ -5,6 +5,48 @@ type DiagramEntry = { id: string; title: string; file: string };
 type TopicDiagrams = { deepDives: DiagramEntry[]; tradeoffs: DiagramEntry[] };
 
 export const GENERATED_DIAGRAMS: Record<string, TopicDiagrams> = {
+  'ci-self-hosted-runners': {
+    deepDives: [
+      { "id": "ci-self-hosted-runners-architecture", "title": "Self-Hosted Runner Fleet Architecture", "file": "eraser-aws.png" },
+    ],
+    tradeoffs: [],
+  },
+  'ci-runners-aws': {
+    deepDives: [
+      { "id": "ci-runners-aws-architecture", "title": "Ephemeral EC2 Runner Control Plane", "file": "eraser-aws.png" },
+    ],
+    tradeoffs: [],
+  },
+  'release-manifests-lkg': {
+    deepDives: [
+      { "id": "release-manifests-lkg-architecture", "title": "LKG Promotion Pipeline", "file": "eraser-aws.png" },
+    ],
+    tradeoffs: [],
+  },
+  'firmware-signing-secure-boot': {
+    deepDives: [
+      { "id": "firmware-signing-secure-boot-architecture", "title": "Firmware Signing & Secure Boot Chain", "file": "eraser-aws.png" },
+    ],
+    tradeoffs: [],
+  },
+  'hardware-in-the-loop-ci': {
+    deepDives: [
+      { "id": "hardware-in-the-loop-ci-architecture", "title": "Hardware-in-the-Loop Device Lab", "file": "eraser-aws.png" },
+    ],
+    tradeoffs: [],
+  },
+  'kernel-driver-builds': {
+    deepDives: [
+      { "id": "kernel-driver-builds-architecture", "title": "Kernel & Driver Build Matrix", "file": "eraser-aws.png" },
+    ],
+    tradeoffs: [],
+  },
+  'rocm-amd-gpu-stack': {
+    deepDives: [
+      { "id": "rocm-amd-gpu-stack-architecture", "title": "ROCm Stack Layer Architecture", "file": "eraser-aws.png" },
+    ],
+    tradeoffs: [],
+  },
   'acid-vs-base': {
     deepDives: [
     {
