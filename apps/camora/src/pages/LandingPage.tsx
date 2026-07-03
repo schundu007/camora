@@ -269,7 +269,7 @@ export default function LandingPage() {
           style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.35) 35%, rgba(201,162,39,0.22) 58%, transparent 95%)' }}
         />
 
-        <Container className="relative pt-16 pb-16 md:pt-24 md:pb-20">
+        <Container className="relative pt-12 pb-12 md:pt-16 md:pb-16">
           {/* Centered headline block */}
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
 
@@ -280,26 +280,17 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.h1
-              className="mt-5 font-display text-[52px] sm:text-[66px] md:text-[82px] lg:text-[100px] font-bold tracking-[-0.028em] leading-[0.92]"
+              className="mt-4 font-display text-[48px] sm:text-[60px] md:text-[76px] lg:text-[92px] font-bold tracking-[-0.028em] leading-[0.92]"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.32, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
             >
-              <span className="block text-[var(--text-primary)]">All your prep.</span>
-              <span className="block text-[var(--cam-primary)]">One trusted platform.</span>
+              <span className="block text-[var(--text-primary)]">Apply, prep, practice.</span>
+              <span className="block text-[var(--cam-primary)]">Land the offer.</span>
             </motion.h1>
 
-            <motion.p
-              className="mt-6 text-base sm:text-lg leading-relaxed text-[var(--text-secondary)] max-w-lg"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: 0.10, ease: [0.23, 1, 0.32, 1] }}
-            >
-              The complete engineer career platform — apply, study, practice, and win.
-            </motion.p>
-
             <motion.div
-              className="mt-9 flex flex-wrap justify-center items-center gap-3"
+              className="mt-7 flex flex-wrap justify-center items-center gap-3"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.16, ease: [0.23, 1, 0.32, 1] }}
@@ -317,15 +308,15 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-px w-full max-w-2xl bg-[var(--border)] rounded-xl overflow-hidden"
+              className="mt-7 grid grid-cols-4 gap-px w-full max-w-2xl bg-[var(--border)] rounded-xl overflow-hidden"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: 0.22, ease: [0.23, 1, 0.32, 1] }}
             >
               {HERO_STATS.map((stat) => (
-                <div key={stat.label} className="bg-[var(--bg-surface)] flex flex-col items-center justify-center py-4 px-3">
-                  <span className="font-display text-[26px] sm:text-[30px] font-bold tracking-tight text-[var(--cam-primary)] leading-none">{stat.value}</span>
-                  <span className="mt-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[var(--text-muted)]">{stat.label}</span>
+                <div key={stat.label} className="bg-[var(--bg-surface)] flex flex-col items-center justify-center py-3.5 px-1.5 sm:px-3">
+                  <span className="font-display text-[20px] sm:text-[28px] font-bold tracking-tight text-[var(--cam-primary)] leading-none">{stat.value}</span>
+                  <span className="mt-1 text-center font-mono text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-[var(--text-muted)]">{stat.label}</span>
                 </div>
               ))}
             </motion.div>
