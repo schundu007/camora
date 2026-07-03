@@ -31,3 +31,4 @@ scripts/hackerrank-sync/hackerrank-descriptions.json
 # Research pipeline — working files, not committed
 apps/camora/scripts/research/*.json
 .gstack/
+apps/camora/scripts/.diagvenv/
