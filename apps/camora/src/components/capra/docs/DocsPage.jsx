@@ -1138,81 +1138,6 @@ export default function DocsPage({ onBack }) {
                         </div>
                       </div>
 
-                      {/* Start here — Databricks-style pathway row above
-                          the categories grid. Three contextual entry points:
-                          continue learning (from localStorage), today's
-                          challenge (deterministic per-day rotation), and
-                          timed mock practice. */}
-                      {(() => {
-                        let lastTopic = null;
-                        try {
-                          const _ur=user?.id; const raw = localStorage.getItem(`ascend_last_topic${_ur?'_'+_ur:''}`);
-                          if (raw) lastTopic = JSON.parse(raw);
-                        } catch { /* ignore */ }
-                        // Find the title for the saved topic id (best-effort).
-                        const lastTitle = lastTopic
-                          ? overviewCategories
-                              .flatMap(c => c.topics)
-                              .find(t => t.id === lastTopic.topicId)?.title
-                          : null;
-                        // Today's pick: deterministic rotation through coding
-                        // topics keyed by YYYY-MM-DD (UTC).
-                        const dayKey = new Date().toISOString().slice(0, 10);
-                        const seed = [...dayKey].reduce((a, c) => a + c.charCodeAt(0), 0);
-                        const dailyPool = codingTopics;
-                        const daily = dailyPool[seed % dailyPool.length];
-                        return (
-                          <div className="mb-4">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>START HERE</p>
-                            <h2 className="text-base font-bold tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Pick up where you left off</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                              {/* Continue learning */}
-                              {lastTopic && lastTitle ? (
-                                <Link
-                                  to={`/capra/prepare/${lastTopic.category || 'coding'}?topic=${encodeURIComponent(lastTopic.topicId)}`}
-                                  className="card-lift rounded-lg p-3 flex flex-col"
-                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                                >
-                                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>CONTINUE</span>
-                                  <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{lastTitle}</h3>
-                                  <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Resume the topic you were on last.</p>
-                                </Link>
-                              ) : (
-                                <Link
-                                  to="/capra/prepare/coding"
-                                  className="card-lift rounded-lg p-3 flex flex-col"
-                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                                >
-                                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>NEW HERE</span>
-                                  <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Start with DSA</h3>
-                                  <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>The most-studied category.</p>
-                                </Link>
-                              )}
-                              {/* Today's challenge */}
-                              <Link
-                                to={`/capra/prepare/coding?topic=${encodeURIComponent(daily?.id || '')}`}
-                                className="card-lift rounded-lg p-3 flex flex-col"
-                                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                              >
-                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--warning-text)', fontFamily: 'var(--font-mono)' }}>TODAY'S PICK</span>
-                                <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{daily?.title || 'A new topic each day'}</h3>
-                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Daily rotation — fresh topic to revisit each morning.</p>
-                              </Link>
-                              {/* Practice */}
-                              <Link
-                                to="/capra/practice"
-                                className="card-lift rounded-lg p-3 flex flex-col"
-                                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                              >
-                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>PRACTICE</span>
-                                <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Run a timed mock</h3>
-                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>AI-scored practice session with instant feedback.</p>
-                              </Link>
-                            </div>
-                          </div>
-                        );
-                      })()}
-
                       {/* Category Cards Grid — bento layout with the largest
                           category (Coding) spanning two columns on desktop.
                           Section divider uses the global navy-strip + gold-leaf
@@ -1277,6 +1202,81 @@ export default function DocsPage({ onBack }) {
                           })}
                         </div>
                       </div>
+
+                      {/* Start here — Databricks-style pathway row below
+                          the categories grid. Three contextual entry points:
+                          continue learning (from localStorage), today's
+                          challenge (deterministic per-day rotation), and
+                          timed mock practice. */}
+                      {(() => {
+                        let lastTopic = null;
+                        try {
+                          const _ur=user?.id; const raw = localStorage.getItem(`ascend_last_topic${_ur?'_'+_ur:''}`);
+                          if (raw) lastTopic = JSON.parse(raw);
+                        } catch { /* ignore */ }
+                        // Find the title for the saved topic id (best-effort).
+                        const lastTitle = lastTopic
+                          ? overviewCategories
+                              .flatMap(c => c.topics)
+                              .find(t => t.id === lastTopic.topicId)?.title
+                          : null;
+                        // Today's pick: deterministic rotation through coding
+                        // topics keyed by YYYY-MM-DD (UTC).
+                        const dayKey = new Date().toISOString().slice(0, 10);
+                        const seed = [...dayKey].reduce((a, c) => a + c.charCodeAt(0), 0);
+                        const dailyPool = codingTopics;
+                        const daily = dailyPool[seed % dailyPool.length];
+                        return (
+                          <div className="mb-8">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>START HERE</p>
+                            <h2 className="text-base font-bold tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Pick up where you left off</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                              {/* Continue learning */}
+                              {lastTopic && lastTitle ? (
+                                <Link
+                                  to={`/capra/prepare/${lastTopic.category || 'coding'}?topic=${encodeURIComponent(lastTopic.topicId)}`}
+                                  className="card-lift rounded-lg p-3 flex flex-col"
+                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                                >
+                                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>CONTINUE</span>
+                                  <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{lastTitle}</h3>
+                                  <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Resume the topic you were on last.</p>
+                                </Link>
+                              ) : (
+                                <Link
+                                  to="/capra/prepare/coding"
+                                  className="card-lift rounded-lg p-3 flex flex-col"
+                                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                                >
+                                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>NEW HERE</span>
+                                  <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Start with DSA</h3>
+                                  <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>The most-studied category.</p>
+                                </Link>
+                              )}
+                              {/* Today's challenge */}
+                              <Link
+                                to={`/capra/prepare/coding?topic=${encodeURIComponent(daily?.id || '')}`}
+                                className="card-lift rounded-lg p-3 flex flex-col"
+                                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                              >
+                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--warning-text)', fontFamily: 'var(--font-mono)' }}>TODAY'S PICK</span>
+                                <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{daily?.title || 'A new topic each day'}</h3>
+                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Daily rotation — fresh topic to revisit each morning.</p>
+                              </Link>
+                              {/* Practice */}
+                              <Link
+                                to="/capra/practice"
+                                className="card-lift rounded-lg p-3 flex flex-col"
+                                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+                              >
+                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>PRACTICE</span>
+                                <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Run a timed mock</h3>
+                                <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>AI-scored practice session with instant feedback.</p>
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Interview Playbook — presentation mode */}
                       <div className="mb-8">

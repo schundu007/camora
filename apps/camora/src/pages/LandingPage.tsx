@@ -431,11 +431,12 @@ export default function LandingPage() {
         </Container>
       </Section>
 
-      {/* ═══════════ CAPABILITY DECK ═══════════ */}
+      {/* ═══════════ CAPABILITY DECK + JOB URL ANALYSIS — single row ═══════════ */}
       <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            {/* One tool. Every session. */}
+            <div className="flex flex-col gap-6">
               <Reveal>
                 <SectionHeading
                   title={<>One tool.<br /><span className="text-[var(--cam-primary)]">Every session.</span></>}
@@ -445,15 +446,26 @@ export default function LandingPage() {
                   <CTAButton to="/lumora" variant="primary" size="md" trailingArrow>
                     Try live AI
                   </CTAButton>
-                  <CTAButton to="/pricing" variant="ghost" size="md">
-                    View pricing →
+                </div>
+              </Reveal>
+              <Reveal delay={0.12} className="w-full">
+                <CapabilityDeck />
+              </Reveal>
+            </div>
+            {/* Paste a job URL. Get a prep plan. */}
+            <div className="flex flex-col gap-6">
+              <Reveal delay={0.12}>
+                <SectionHeading
+                  title={<>Paste a job URL.<br /><span className="text-[var(--cam-primary)]">Get a prep plan.</span></>}
+                />
+                <div className="mt-7">
+                  <CTAButton to="/jobs" variant="primary" trailingArrow>
+                    Try job analysis
                   </CTAButton>
                 </div>
               </Reveal>
-            </div>
-            <div className="lg:col-span-7 w-full">
-              <Reveal delay={0.12}>
-                <CapabilityDeck />
+              <Reveal delay={0.24} className="w-full">
+                <JobUrlAnalysisDemo />
               </Reveal>
             </div>
           </div>
@@ -539,31 +551,6 @@ export default function LandingPage() {
         </Container>
       </Section>
 
-
-      {/* ═══════════ JOB URL ANALYSIS ═══════════ */}
-      <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
-        <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-7 w-full">
-              <Reveal>
-                <JobUrlAnalysisDemo />
-              </Reveal>
-            </div>
-            <div className="lg:col-span-5">
-              <Reveal delay={0.12}>
-                <SectionHeading
-                  title={<>Paste a job URL.<br /><span className="text-[var(--cam-primary)]">Get a prep plan.</span></>}
-                />
-                <div className="mt-7">
-                  <CTAButton to="/jobs" variant="primary" trailingArrow>
-                    Try job analysis
-                  </CTAButton>
-                </div>
-              </Reveal>
-            </div>
-          </div>
-        </Container>
-      </Section>
 
       {/* ═══════════ TWO AUDIENCES ═══════════ */}
       <Section tone="surface" spacing="md" className="border-b border-[var(--border)]">
@@ -669,12 +656,8 @@ export default function LandingPage() {
               <div>
                 <Eyebrow tone="inverse">Ready when you are</Eyebrow>
                 <h2 className="mt-3 font-display text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1] text-white">
-                  Start free.<br />
-                  <span className="text-[var(--cam-gold-leaf-lt)]">Win the offer.</span>
+                  Start free.
                 </h2>
-                <p className="mt-3 max-w-md text-[14px] leading-relaxed text-white/70">
-                  One free hour, no card required. Pick a plan when you're ready; top-ups never expire.
-                </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <MagneticCTA strength={6}>
