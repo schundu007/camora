@@ -1,0 +1,28 @@
+{
+  "title": "Post Search — Sharded Inverted Index",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Indexing" },
+    { "id": "index", "label": "Index Shards" },
+    { "id": "query", "label": "Query Path" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "posts", "label": "New Posts", "type": "client", "cluster": "ingest" },
+    { "id": "ingestq", "label": "Ingest Queue", "type": "queue", "cluster": "ingest" },
+    { "id": "indexer", "label": "Indexer", "type": "compute", "cluster": "ingest" },
+    { "id": "shard", "label": "Index Shard\n(by user · time)", "type": "search", "cluster": "index" },
+    { "id": "router", "label": "Query Router", "type": "apigw", "cluster": "query" },
+    { "id": "ranker", "label": "Ranking", "type": "compute", "cluster": "query" },
+    { "id": "cache", "label": "Result Cache", "type": "cache", "cluster": "query" }
+  ],
+  "edges": [
+    { "from": "users", "to": "router", "label": "search", "kind": "main" },
+    { "from": "router", "to": "shard", "label": "scatter", "kind": "main" },
+    { "from": "shard", "to": "ranker", "label": "gather", "kind": "main" },
+    { "from": "router", "to": "cache", "label": "hot query", "kind": "control" },
+    { "from": "posts", "to": "ingestq", "label": "ingest", "kind": "main" },
+    { "from": "ingestq", "to": "indexer", "kind": "main" },
+    { "from": "indexer", "to": "shard", "label": "index update", "kind": "main" }
+  ]
+}

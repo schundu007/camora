@@ -1,0 +1,27 @@
+{
+  "title": "Dropbox — Chunked Sync & Block Storage",
+  "direction": "LR",
+  "clusters": [
+    { "id": "client", "label": "Client" },
+    { "id": "sync", "label": "Sync Services" },
+    { "id": "storage", "label": "Storage" }
+  ],
+  "nodes": [
+    { "id": "syncclient", "label": "Sync Client\n(delta upload)", "type": "client", "cluster": "client" },
+    { "id": "api", "label": "Sync API", "type": "apigw", "cluster": "sync" },
+    { "id": "chunker", "label": "Chunker\n(dedup · hash)", "type": "compute", "cluster": "sync" },
+    { "id": "notify", "label": "Change\nNotifier", "type": "eventbus", "cluster": "sync" },
+    { "id": "meta", "label": "Metadata DB\n(file tree · ACLs)", "type": "db", "cluster": "storage" },
+    { "id": "blocks", "label": "Block Store\n(content-addressed)", "type": "storage", "cluster": "storage" },
+    { "id": "versions", "label": "Version\nHistory", "type": "nosql", "cluster": "storage" }
+  ],
+  "edges": [
+    { "from": "syncclient", "to": "api", "label": "upload delta", "kind": "main" },
+    { "from": "api", "to": "chunker", "label": "split", "kind": "main" },
+    { "from": "chunker", "to": "blocks", "label": "store blocks", "kind": "main" },
+    { "from": "api", "to": "meta", "label": "commit", "kind": "control" },
+    { "from": "chunker", "to": "versions", "label": "snapshot", "kind": "control" },
+    { "from": "meta", "to": "notify", "label": "changed", "kind": "control" },
+    { "from": "notify", "to": "syncclient", "label": "push sync", "kind": "control" }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "title": "Data Partitioning — Range, Hash & Geographic Shards",
+  "direction": "LR",
+  "clusters": [
+    { "id": "route", "label": "Routing" },
+    { "id": "shards", "label": "Partitions" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "router", "label": "Partition Router", "type": "lb", "cluster": "route" },
+    { "id": "shardmap", "label": "Shard Map\n(routing table)", "type": "db", "cluster": "route" },
+    { "id": "range", "label": "Range Shard\n(A–M)", "type": "db", "cluster": "shards" },
+    { "id": "hash", "label": "Hash Shard", "type": "db", "cluster": "shards" },
+    { "id": "geo", "label": "Geo Shard\n(EU region)", "type": "db", "cluster": "shards" },
+    { "id": "rebalancer", "label": "Rebalancer", "type": "eventbus" },
+    { "id": "monitor", "label": "Hotspot\nMonitor", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "router", "label": "query", "kind": "main" },
+    { "from": "router", "to": "shardmap", "label": "lookup", "kind": "main" },
+    { "from": "router", "to": "range", "label": "route", "kind": "main" },
+    { "from": "router", "to": "hash", "kind": "main" },
+    { "from": "router", "to": "geo", "kind": "main" },
+    { "from": "rebalancer", "to": "shardmap", "label": "split / move", "kind": "control" },
+    { "from": "range", "to": "monitor", "label": "skew metrics", "kind": "control" }
+  ]
+}

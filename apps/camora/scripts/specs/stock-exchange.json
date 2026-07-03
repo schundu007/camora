@@ -1,0 +1,31 @@
+{
+  "title": "Stock Exchange — Order Matching Engine",
+  "direction": "LR",
+  "clusters": [
+    { "id": "gateway", "label": "Order Gateway" },
+    { "id": "matching", "label": "Matching Core" },
+    { "id": "post", "label": "Post-Trade" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Traders", "type": "users" },
+    { "id": "apigw", "label": "Order Gateway", "type": "apigw", "cluster": "gateway" },
+    { "id": "risk", "label": "Pre-Trade\nRisk Check", "type": "compute", "cluster": "gateway" },
+    { "id": "queue", "label": "Order Queue", "type": "queue", "cluster": "matching" },
+    { "id": "matcher", "label": "Matching Engine\n(price-time)", "type": "compute", "cluster": "matching" },
+    { "id": "book", "label": "Order Book\n(in-memory)", "type": "cache", "cluster": "matching" },
+    { "id": "feed", "label": "Trade &\nMarket Data", "type": "stream", "cluster": "post" },
+    { "id": "settle", "label": "Clearing &\nSettlement", "type": "db", "cluster": "post" },
+    { "id": "report", "label": "Regulatory\nReporting", "type": "analytics", "cluster": "post" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "orders", "kind": "main" },
+    { "from": "apigw", "to": "risk", "kind": "main" },
+    { "from": "risk", "to": "queue", "label": "accepted", "kind": "main" },
+    { "from": "queue", "to": "matcher", "kind": "main" },
+    { "from": "matcher", "to": "book", "label": "match" },
+    { "from": "matcher", "to": "feed", "label": "executions", "kind": "main" },
+    { "from": "feed", "to": "settle", "label": "T+2 settle", "kind": "main" },
+    { "from": "feed", "to": "report", "label": "audit trail", "kind": "control" },
+    { "from": "feed", "to": "users", "label": "market data", "kind": "control" }
+  ]
+}

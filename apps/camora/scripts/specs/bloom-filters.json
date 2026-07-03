@@ -1,0 +1,27 @@
+{
+  "title": "Bloom Filter — Probabilistic Membership",
+  "direction": "LR",
+  "clusters": [
+    { "id": "app", "label": "Application" },
+    { "id": "filter", "label": "Bloom Filter" },
+    { "id": "data", "label": "Storage" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "lb", "label": "Load\nBalancer", "type": "lb" },
+    { "id": "app", "label": "Lookup Svc", "type": "compute", "cluster": "app" },
+    { "id": "writer", "label": "Writer Svc", "type": "compute", "cluster": "app" },
+    { "id": "hasher", "label": "Hash Fns\n(k hashes)", "type": "function", "cluster": "filter" },
+    { "id": "bits", "label": "Bit Array\n(Redis)", "type": "cache", "cluster": "filter" },
+    { "id": "db", "label": "Backing DB", "type": "db", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "lb", "kind": "main" },
+    { "from": "lb", "to": "app", "label": "lookup key", "kind": "main" },
+    { "from": "app", "to": "hasher", "label": "k hashes", "kind": "main" },
+    { "from": "hasher", "to": "bits", "label": "test bits", "kind": "main" },
+    { "from": "bits", "to": "db", "label": "maybe → query", "kind": "main" },
+    { "from": "writer", "to": "bits", "label": "insert → set bits", "kind": "control" },
+    { "from": "writer", "to": "db", "label": "persist", "kind": "control" }
+  ]
+}

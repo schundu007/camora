@@ -1,0 +1,31 @@
+{
+  "title": "Real-Time Transport — Long Polling vs WebSocket vs SSE",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "gw", "label": "Connection Tier" },
+    { "id": "backend", "label": "Backend" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients\n(web / mobile)", "type": "client" },
+    { "id": "lb", "label": "Load Balancer\n(sticky sessions)", "type": "lb", "cluster": "edge" },
+    { "id": "ws", "label": "WebSocket\nGateway (duplex)", "type": "apigw", "cluster": "gw" },
+    { "id": "sse", "label": "SSE / Long-Poll\nGateway", "type": "apigw", "cluster": "gw" },
+    { "id": "conn", "label": "Connection\nRegistry", "type": "cache", "cluster": "gw" },
+    { "id": "pubsub", "label": "Pub/Sub\nFan-out", "type": "eventbus", "cluster": "backend" },
+    { "id": "app", "label": "App Service\n(publishers)", "type": "compute", "cluster": "backend" },
+    { "id": "store", "label": "Event Store", "type": "db", "cluster": "backend" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "lb", "label": "connect", "kind": "main" },
+    { "from": "lb", "to": "ws", "kind": "main" },
+    { "from": "lb", "to": "sse", "kind": "main" },
+    { "from": "ws", "to": "pubsub", "label": "subscribe", "kind": "main" },
+    { "from": "sse", "to": "pubsub", "label": "subscribe", "kind": "main" },
+    { "from": "pubsub", "to": "app", "kind": "main" },
+    { "from": "app", "to": "store", "label": "persist", "kind": "main" },
+    { "from": "ws", "to": "conn", "label": "register", "kind": "control" },
+    { "from": "sse", "to": "conn", "label": "register", "kind": "control" },
+    { "from": "app", "to": "pubsub", "label": "publish", "kind": "control" }
+  ]
+}

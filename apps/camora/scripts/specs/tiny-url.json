@@ -1,0 +1,31 @@
+{
+  "title": "URL Shortener — Key Gen & Redirect",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Services" },
+    { "id": "data", "label": "Data" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "shorten", "label": "Shorten\nService", "type": "compute", "cluster": "app" },
+    { "id": "keygen", "label": "Base62\nKey Gen", "type": "function", "cluster": "app" },
+    { "id": "redirect", "label": "Redirect\nService", "type": "compute", "cluster": "app" },
+    { "id": "cache", "label": "Hot URL\nCache", "type": "cache", "cluster": "data" },
+    { "id": "kv", "label": "KV Store\n(key to URL)", "type": "nosql", "cluster": "data" },
+    { "id": "clicks", "label": "Click Events", "type": "stream", "cluster": "data" },
+    { "id": "analytics", "label": "Analytics", "type": "analytics", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "kind": "main" },
+    { "from": "apigw", "to": "shorten", "label": "create", "kind": "main" },
+    { "from": "shorten", "to": "keygen", "label": "base62 id", "kind": "main" },
+    { "from": "shorten", "to": "kv", "label": "persist", "kind": "main" },
+    { "from": "apigw", "to": "redirect", "label": "resolve" },
+    { "from": "redirect", "to": "cache", "label": "lookup", "kind": "main" },
+    { "from": "cache", "to": "kv", "label": "cache miss", "kind": "main" },
+    { "from": "redirect", "to": "clicks", "label": "log click", "kind": "control" },
+    { "from": "clicks", "to": "analytics", "label": "aggregate", "kind": "control" }
+  ]
+}

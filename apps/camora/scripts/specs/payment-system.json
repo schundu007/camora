@@ -1,0 +1,32 @@
+{
+  "title": "Payment System — Idempotent Ledger & Reconciliation",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "API Tier" },
+    { "id": "core", "label": "Payment Core" },
+    { "id": "async", "label": "Reconciliation & Reporting" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Merchant\n& Apps", "type": "client" },
+    { "id": "gw", "label": "Payments\nAPI Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "idem", "label": "Idempotency\nCache", "type": "cache", "cluster": "edge" },
+    { "id": "svc", "label": "Transfer\nService", "type": "compute", "cluster": "core" },
+    { "id": "fx", "label": "FX Conversion\n(multi-currency)", "type": "function", "cluster": "core" },
+    { "id": "ledger", "label": "Double-Entry\nLedger", "type": "db", "cluster": "core" },
+    { "id": "events", "label": "Payment\nEvent Bus", "type": "eventbus", "cluster": "core" },
+    { "id": "fraud", "label": "Fraud\nScoring", "type": "function", "cluster": "async" },
+    { "id": "recon", "label": "Reconciliation\nPipeline", "type": "stream", "cluster": "async" },
+    { "id": "warehouse", "label": "Regulatory\nReporting", "type": "analytics", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "client", "to": "gw", "label": "charge", "kind": "main" },
+    { "from": "gw", "to": "idem", "label": "dedupe key", "kind": "control" },
+    { "from": "gw", "to": "svc", "label": "transfer", "kind": "main" },
+    { "from": "svc", "to": "fx", "label": "convert", "kind": "main" },
+    { "from": "fx", "to": "ledger", "label": "post entry", "kind": "main" },
+    { "from": "svc", "to": "events", "label": "emit", "kind": "control" },
+    { "from": "events", "to": "fraud", "kind": "control" },
+    { "from": "events", "to": "recon", "kind": "control" },
+    { "from": "recon", "to": "warehouse", "label": "settle", "kind": "control" }
+  ]
+}

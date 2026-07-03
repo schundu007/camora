@@ -1,0 +1,29 @@
+{
+  "title": "Git for DevOps — Branching & CI/CD Flow",
+  "direction": "LR",
+  "clusters": [
+    { "id": "dev", "label": "Developers" },
+    { "id": "repo", "label": "Repository" },
+    { "id": "cicd", "label": "CI/CD" }
+  ],
+  "nodes": [
+    { "id": "devs", "label": "Developers", "type": "client", "cluster": "dev" },
+    { "id": "feature", "label": "Feature\nBranch", "type": "storage", "cluster": "repo" },
+    { "id": "pr", "label": "Pull Request\n(review)", "type": "compute", "cluster": "repo" },
+    { "id": "trunk", "label": "main / trunk", "type": "storage", "cluster": "repo" },
+    { "id": "ci", "label": "CI Pipeline\n(build · test)", "type": "container", "cluster": "cicd" },
+    { "id": "registry", "label": "Artifact\nRegistry", "type": "storage", "cluster": "cicd" },
+    { "id": "cd", "label": "CD Deploy", "type": "function", "cluster": "cicd" },
+    { "id": "prod", "label": "Production", "type": "compute", "cluster": "cicd" }
+  ],
+  "edges": [
+    { "from": "devs", "to": "feature", "label": "commit", "kind": "main" },
+    { "from": "feature", "to": "pr", "label": "open PR", "kind": "main" },
+    { "from": "pr", "to": "trunk", "label": "merge", "kind": "main" },
+    { "from": "trunk", "to": "ci", "label": "trigger", "kind": "main" },
+    { "from": "ci", "to": "registry", "label": "publish", "kind": "main" },
+    { "from": "registry", "to": "cd", "label": "release", "kind": "main" },
+    { "from": "cd", "to": "prod", "label": "deploy", "kind": "main" },
+    { "from": "ci", "to": "pr", "label": "status check", "kind": "control" }
+  ]
+}

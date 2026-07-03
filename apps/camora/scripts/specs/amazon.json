@@ -1,0 +1,40 @@
+{
+  "title": "Amazon — Catalog, Cart & Fulfillment",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Services" },
+    { "id": "data", "label": "Data" },
+    { "id": "async", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Shoppers", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn", "cluster": "edge" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "search", "label": "Product\nSearch", "type": "search", "cluster": "app" },
+    { "id": "catalog", "label": "Catalog Svc", "type": "compute", "cluster": "app" },
+    { "id": "cart", "label": "Cart Svc", "type": "compute", "cluster": "app" },
+    { "id": "order", "label": "Order Svc", "type": "compute", "cluster": "app" },
+    { "id": "reco", "label": "Recommender", "type": "function", "cluster": "app" },
+    { "id": "catalog_db", "label": "Catalog DB", "type": "nosql", "cluster": "data" },
+    { "id": "cart_cache", "label": "Cart Cache", "type": "cache", "cluster": "data" },
+    { "id": "order_db", "label": "Orders DB", "type": "db", "cluster": "data" },
+    { "id": "queue", "label": "Order Events", "type": "queue", "cluster": "async" },
+    { "id": "fulfill", "label": "Fulfillment\nRouting", "type": "compute", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "kind": "main" },
+    { "from": "cdn", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "search", "label": "search", "kind": "main" },
+    { "from": "search", "to": "catalog", "kind": "main" },
+    { "from": "catalog", "to": "catalog_db", "label": "query", "kind": "main" },
+    { "from": "gw", "to": "cart", "label": "add to cart", "kind": "main" },
+    { "from": "cart", "to": "cart_cache" },
+    { "from": "cart", "to": "order", "label": "checkout", "kind": "main" },
+    { "from": "order", "to": "order_db", "label": "persist" },
+    { "from": "order", "to": "queue", "label": "order placed", "kind": "control" },
+    { "from": "queue", "to": "fulfill", "kind": "control" },
+    { "from": "reco", "to": "catalog_db", "label": "reads", "kind": "control" },
+    { "from": "gw", "to": "reco", "label": "recommend", "kind": "control" }
+  ]
+}

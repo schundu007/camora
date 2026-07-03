@@ -1,0 +1,29 @@
+{
+  "title": "Blob Store — Content-Addressed Storage",
+  "direction": "LR",
+  "clusters": [
+    { "id": "api", "label": "API" },
+    { "id": "storage", "label": "Storage" },
+    { "id": "repl", "label": "Replication" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn" },
+    { "id": "gw", "label": "Blob API", "type": "apigw", "cluster": "api" },
+    { "id": "chunker", "label": "Chunker\n(content-addr)", "type": "function", "cluster": "api" },
+    { "id": "meta", "label": "Metadata\nIndex", "type": "db", "cluster": "api" },
+    { "id": "store", "label": "Chunk Store\n(sharded)", "type": "storage", "cluster": "storage" },
+    { "id": "replica", "label": "Region 2\nReplica", "type": "storage", "cluster": "repl" },
+    { "id": "lifecycle", "label": "Lifecycle\nPolicy", "type": "function", "cluster": "repl" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "kind": "main" },
+    { "from": "cdn", "to": "gw", "label": "put / get", "kind": "main" },
+    { "from": "gw", "to": "chunker", "label": "split", "kind": "main" },
+    { "from": "chunker", "to": "store", "label": "write chunks", "kind": "main" },
+    { "from": "gw", "to": "meta", "label": "hash → chunks" },
+    { "from": "meta", "to": "store", "label": "locate" },
+    { "from": "store", "to": "replica", "label": "replicate", "kind": "control" },
+    { "from": "store", "to": "lifecycle", "label": "expire / tier", "kind": "control" }
+  ]
+}

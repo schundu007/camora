@@ -1,0 +1,32 @@
+{
+  "title": "Vector Database — ANN Search & Filtering",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Ingestion" },
+    { "id": "query", "label": "Query Path" },
+    { "id": "storage", "label": "Index & Storage" }
+  ],
+  "nodes": [
+    { "id": "apps", "label": "Client\nApps", "type": "client" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "query" },
+    { "id": "embed", "label": "Embedding\nService", "type": "function", "cluster": "ingest" },
+    { "id": "writer", "label": "Ingest\nWriter", "type": "compute", "cluster": "ingest" },
+    { "id": "query_svc", "label": "Query\nCoordinator", "type": "compute", "cluster": "query" },
+    { "id": "cache", "label": "Result\nCache", "type": "cache", "cluster": "query" },
+    { "id": "ann", "label": "ANN Index\n(HNSW / IVF)", "type": "search", "cluster": "storage" },
+    { "id": "vectors", "label": "Vector\nStore", "type": "storage", "cluster": "storage" },
+    { "id": "meta", "label": "Metadata\n(filter attrs)", "type": "nosql", "cluster": "storage" }
+  ],
+  "edges": [
+    { "from": "apps", "to": "gw", "label": "search / upsert", "kind": "main" },
+    { "from": "gw", "to": "embed", "label": "embed text", "kind": "control" },
+    { "from": "embed", "to": "writer", "kind": "control" },
+    { "from": "writer", "to": "vectors", "label": "store", "kind": "control" },
+    { "from": "writer", "to": "ann", "label": "index", "kind": "control" },
+    { "from": "gw", "to": "query_svc", "kind": "main" },
+    { "from": "query_svc", "to": "cache", "label": "lookup", "kind": "main" },
+    { "from": "cache", "to": "ann", "label": "cache miss", "kind": "main" },
+    { "from": "ann", "to": "meta", "label": "filter", "kind": "main" },
+    { "from": "meta", "to": "vectors", "label": "fetch", "kind": "main" }
+  ]
+}

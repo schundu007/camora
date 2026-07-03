@@ -1,0 +1,36 @@
+{
+  "title": "Twitter — Timeline Fan-out at Scale",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "write", "label": "Write Path" },
+    { "id": "fanout", "label": "Fan-out & Timelines" },
+    { "id": "discover", "label": "Discovery" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "tweet_svc", "label": "Tweet\nService", "type": "compute", "cluster": "write" },
+    { "id": "tweet_db", "label": "Tweet Store", "type": "nosql", "cluster": "write" },
+    { "id": "graph", "label": "Social Graph\nService", "type": "compute", "cluster": "write" },
+    { "id": "fanout_q", "label": "Fan-out\nQueue", "type": "queue", "cluster": "fanout" },
+    { "id": "fanout_svc", "label": "Fan-out\nWorker", "type": "function", "cluster": "fanout" },
+    { "id": "timeline", "label": "Home Timeline\nCache", "type": "cache", "cluster": "fanout" },
+    { "id": "search", "label": "Full-text\nSearch", "type": "search", "cluster": "discover" },
+    { "id": "trends", "label": "Trending\nTopics", "type": "stream", "cluster": "discover" },
+    { "id": "notify", "label": "Push\nNotifications", "type": "eventbus", "cluster": "discover" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "label": "post tweet", "kind": "main" },
+    { "from": "gw", "to": "tweet_svc", "kind": "main" },
+    { "from": "tweet_svc", "to": "tweet_db", "label": "persist", "kind": "main" },
+    { "from": "tweet_svc", "to": "fanout_q", "label": "fan-out\non write", "kind": "main" },
+    { "from": "graph", "to": "fanout_svc", "label": "followers", "kind": "control" },
+    { "from": "fanout_q", "to": "fanout_svc", "kind": "main" },
+    { "from": "fanout_svc", "to": "timeline", "label": "insert", "kind": "main" },
+    { "from": "gw", "to": "timeline", "label": "read timeline", "kind": "main" },
+    { "from": "tweet_svc", "to": "search", "label": "index", "kind": "control" },
+    { "from": "tweet_svc", "to": "trends", "label": "events", "kind": "control" },
+    { "from": "fanout_svc", "to": "notify", "label": "notify", "kind": "control" }
+  ]
+}

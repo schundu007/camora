@@ -1,0 +1,28 @@
+{
+  "title": "Top-K Leaderboard — Heavy Hitters",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Stream Ingest" },
+    { "id": "compute", "label": "Ranking" },
+    { "id": "serve", "label": "Serving" }
+  ],
+  "nodes": [
+    { "id": "producers", "label": "Event\nProducers", "type": "client" },
+    { "id": "stream", "label": "Event Stream", "type": "stream", "cluster": "ingest" },
+    { "id": "cms", "label": "Count-Min\nSketch", "type": "function", "cluster": "ingest" },
+    { "id": "topk", "label": "Heavy Hitters\n(min-heap)", "type": "compute", "cluster": "compute" },
+    { "id": "board", "label": "Leaderboard\n(Redis ZSET)", "type": "cache", "cluster": "compute" },
+    { "id": "snapshot", "label": "Snapshot\nStore", "type": "db", "cluster": "compute" },
+    { "id": "apigw", "label": "Ranking API", "type": "apigw", "cluster": "serve" },
+    { "id": "users", "label": "Consumers", "type": "users" }
+  ],
+  "edges": [
+    { "from": "producers", "to": "stream", "label": "events", "kind": "main" },
+    { "from": "stream", "to": "cms", "label": "count", "kind": "main" },
+    { "from": "cms", "to": "topk", "label": "estimates", "kind": "main" },
+    { "from": "topk", "to": "board", "label": "top-K", "kind": "main" },
+    { "from": "topk", "to": "snapshot", "label": "persist", "kind": "control" },
+    { "from": "users", "to": "apigw", "label": "GET top-K", "kind": "main" },
+    { "from": "apigw", "to": "board", "label": "read", "kind": "main" }
+  ]
+}

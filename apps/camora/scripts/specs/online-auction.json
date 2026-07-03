@@ -1,0 +1,30 @@
+{
+  "title": "Online Auction — Real-Time Bidding & Settlement",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "core", "label": "Auction Core" },
+    { "id": "async", "label": "Async Services" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Bidders", "type": "client" },
+    { "id": "gw", "label": "WebSocket\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "bidsvc", "label": "Bid Service\n(validation)", "type": "compute", "cluster": "core" },
+    { "id": "state", "label": "Auction State\n(hot bids)", "type": "cache", "cluster": "core" },
+    { "id": "db", "label": "Bid / Auction\nDB", "type": "db", "cluster": "core" },
+    { "id": "bus", "label": "Event Bus", "type": "eventbus", "cluster": "async" },
+    { "id": "fraud", "label": "Anti-Fraud\nScoring", "type": "analytics", "cluster": "async" },
+    { "id": "pay", "label": "Payment\nService", "type": "function", "cluster": "async" },
+    { "id": "notify", "label": "Notifications", "type": "function", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "gw", "label": "place bid", "kind": "main" },
+    { "from": "gw", "to": "bidsvc", "kind": "main" },
+    { "from": "bidsvc", "to": "state", "label": "compare-set", "kind": "main" },
+    { "from": "bidsvc", "to": "db", "label": "persist", "kind": "main" },
+    { "from": "bidsvc", "to": "bus", "label": "bid event", "kind": "control" },
+    { "from": "bus", "to": "fraud", "label": "score", "kind": "control" },
+    { "from": "bus", "to": "pay", "label": "on close", "kind": "control" },
+    { "from": "bus", "to": "notify", "label": "outbid", "kind": "control" }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "title": "Key-Value Store — Consistent Hashing & Quorum",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ring", "label": "Hash Ring Nodes" },
+    { "id": "engine", "label": "Storage Engine" },
+    { "id": "control", "label": "Membership" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client\nSDK", "type": "client" },
+    { "id": "coord", "label": "Coordinator\n(partitioner)", "type": "compute", "cluster": "ring" },
+    { "id": "replica", "label": "Replica Node\n(N copies)", "type": "compute", "cluster": "ring" },
+    { "id": "memtable", "label": "Memtable", "type": "cache", "cluster": "engine" },
+    { "id": "commitlog", "label": "Commit Log\n(WAL)", "type": "queue", "cluster": "engine" },
+    { "id": "sstable", "label": "SSTables\n(LSM)", "type": "storage", "cluster": "engine" },
+    { "id": "gossip", "label": "Gossip\nMembership", "type": "eventbus", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "client", "to": "coord", "label": "get / put", "kind": "main" },
+    { "from": "coord", "to": "replica", "label": "quorum W/R", "kind": "main" },
+    { "from": "replica", "to": "commitlog", "label": "append", "kind": "main" },
+    { "from": "replica", "to": "memtable", "label": "write", "kind": "main" },
+    { "from": "memtable", "to": "sstable", "label": "flush", "kind": "main" },
+    { "from": "gossip", "to": "coord", "label": "ring state", "kind": "control" },
+    { "from": "gossip", "to": "replica", "label": "membership", "kind": "control" }
+  ]
+}

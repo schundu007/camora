@@ -1,0 +1,29 @@
+{
+  "title": "Web Crawler — Distributed Frontier & Dedup",
+  "direction": "LR",
+  "clusters": [
+    { "id": "frontier", "label": "URL Frontier" },
+    { "id": "fetch", "label": "Fetch & Parse" },
+    { "id": "store", "label": "Storage" }
+  ],
+  "nodes": [
+    { "id": "internet", "label": "Web\n(target sites)", "type": "internet" },
+    { "id": "frontier_q", "label": "URL Frontier\n(politeness sched)", "type": "queue", "cluster": "frontier" },
+    { "id": "bloom", "label": "Dedup Filter\n(Bloom)", "type": "cache", "cluster": "frontier" },
+    { "id": "fetcher", "label": "Fetcher\nWorkers", "type": "compute", "cluster": "fetch" },
+    { "id": "parser", "label": "HTML Parser /\nLink Extractor", "type": "function", "cluster": "fetch" },
+    { "id": "content", "label": "Content\nStore", "type": "storage", "cluster": "store" },
+    { "id": "index", "label": "Search\nIndex", "type": "search", "cluster": "store" },
+    { "id": "meta", "label": "Crawl\nMetadata", "type": "nosql", "cluster": "store" }
+  ],
+  "edges": [
+    { "from": "frontier_q", "to": "fetcher", "label": "dequeue url", "kind": "main" },
+    { "from": "fetcher", "to": "internet", "label": "fetch", "kind": "main" },
+    { "from": "internet", "to": "parser", "label": "html", "kind": "main" },
+    { "from": "parser", "to": "content", "label": "store page", "kind": "main" },
+    { "from": "parser", "to": "bloom", "label": "seen?", "kind": "control" },
+    { "from": "bloom", "to": "frontier_q", "label": "new urls", "kind": "control" },
+    { "from": "content", "to": "index", "label": "index", "kind": "control" },
+    { "from": "fetcher", "to": "meta", "label": "log", "kind": "control" }
+  ]
+}

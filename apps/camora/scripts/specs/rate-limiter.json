@@ -1,0 +1,25 @@
+{
+  "title": "Distributed Rate Limiter — Token Bucket on Redis",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "API Edge" },
+    { "id": "state", "label": "Distributed State" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Clients", "type": "client" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "limiter", "label": "Rate Limit\nMiddleware", "type": "function", "cluster": "edge" },
+    { "id": "redis", "label": "Redis\nToken Buckets", "type": "cache", "cluster": "state" },
+    { "id": "config", "label": "Limit Rules\n(user/IP/key)", "type": "db", "cluster": "state" },
+    { "id": "app", "label": "Backend\nService", "type": "compute" },
+    { "id": "metrics", "label": "Throttle\nMetrics", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "gw", "label": "request", "kind": "main" },
+    { "from": "gw", "to": "limiter", "kind": "main" },
+    { "from": "limiter", "to": "redis", "label": "consume token", "kind": "main" },
+    { "from": "limiter", "to": "config", "label": "load rules", "kind": "control" },
+    { "from": "limiter", "to": "app", "label": "allow", "kind": "main" },
+    { "from": "limiter", "to": "metrics", "label": "429 rate", "kind": "control" }
+  ]
+}

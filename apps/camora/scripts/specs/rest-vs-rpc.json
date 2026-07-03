@@ -1,0 +1,23 @@
+{
+  "title": "REST vs RPC — API Styles Compared",
+  "direction": "LR",
+  "clusters": [
+    { "id": "rest", "label": "REST / GraphQL  ·  external" },
+    { "id": "rpc", "label": "gRPC  ·  internal service mesh" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Clients", "type": "client" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw" },
+    { "id": "rest", "label": "REST / GraphQL\nEndpoint", "type": "compute", "cluster": "rest" },
+    { "id": "orders", "label": "Orders\nService", "type": "container", "cluster": "rpc" },
+    { "id": "users", "label": "Users\nService", "type": "container", "cluster": "rpc" },
+    { "id": "db", "label": "Service\nDB", "type": "db", "cluster": "rpc" }
+  ],
+  "edges": [
+    { "from": "client", "to": "gw", "label": "HTTP/JSON", "kind": "main" },
+    { "from": "gw", "to": "rest", "label": "REST", "kind": "main" },
+    { "from": "rest", "to": "orders", "label": "gRPC", "kind": "main" },
+    { "from": "orders", "to": "users", "label": "gRPC", "kind": "main" },
+    { "from": "orders", "to": "db", "label": "query", "kind": "main" }
+  ]
+}

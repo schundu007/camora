@@ -1,0 +1,28 @@
+{
+  "title": "Flash Sale — Reservation & Oversell Prevention",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "reserve", "label": "Reservation" },
+    { "id": "fulfill", "label": "Fulfillment" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Buyers", "type": "users" },
+    { "id": "waf", "label": "Rate Limiter", "type": "waf", "cluster": "edge" },
+    { "id": "gate", "label": "Waiting Room\nQueue", "type": "queue", "cluster": "edge" },
+    { "id": "api", "label": "Sale API", "type": "apigw", "cluster": "reserve" },
+    { "id": "redis", "label": "Inventory\n(Redis atomic decr)", "type": "cache", "cluster": "reserve" },
+    { "id": "orderq", "label": "Order Queue", "type": "queue", "cluster": "fulfill" },
+    { "id": "order_svc", "label": "Order\nProcessor", "type": "compute", "cluster": "fulfill" },
+    { "id": "orderdb", "label": "Order DB", "type": "db", "cluster": "fulfill" }
+  ],
+  "edges": [
+    { "from": "users", "to": "waf", "label": "buy", "kind": "main" },
+    { "from": "waf", "to": "gate", "label": "admit", "kind": "main" },
+    { "from": "gate", "to": "api", "label": "release", "kind": "main" },
+    { "from": "api", "to": "redis", "label": "reserve stock", "kind": "main" },
+    { "from": "redis", "to": "orderq", "label": "confirmed", "kind": "main" },
+    { "from": "orderq", "to": "order_svc", "label": "process", "kind": "main" },
+    { "from": "order_svc", "to": "orderdb", "label": "persist", "kind": "control" }
+  ]
+}

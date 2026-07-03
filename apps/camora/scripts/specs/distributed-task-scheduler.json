@@ -1,0 +1,30 @@
+{
+  "title": "Distributed Task Scheduler — Priority Queue & Workers",
+  "direction": "LR",
+  "clusters": [
+    { "id": "schedule", "label": "Scheduling" },
+    { "id": "execute", "label": "Execution" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "API Clients", "type": "client" },
+    { "id": "api", "label": "Scheduler API", "type": "apigw", "cluster": "schedule" },
+    { "id": "cron", "label": "Cron\nTrigger", "type": "function", "cluster": "schedule" },
+    { "id": "queue", "label": "Priority Queue", "type": "queue", "cluster": "schedule" },
+    { "id": "jobdb", "label": "Job Store\n(state)", "type": "db", "cluster": "schedule" },
+    { "id": "workers", "label": "Worker Pool", "type": "compute", "cluster": "execute" },
+    { "id": "retry", "label": "Retry Queue\n(exp. backoff)", "type": "queue", "cluster": "execute" },
+    { "id": "dlq", "label": "Dead Letter\nQueue", "type": "queue", "cluster": "execute" },
+    { "id": "monitor", "label": "Monitoring", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "api", "label": "submit job", "kind": "main" },
+    { "from": "api", "to": "queue", "label": "enqueue", "kind": "main" },
+    { "from": "queue", "to": "workers", "label": "dequeue", "kind": "main" },
+    { "from": "cron", "to": "queue", "label": "schedule", "kind": "main" },
+    { "from": "api", "to": "jobdb", "label": "persist", "kind": "control" },
+    { "from": "workers", "to": "retry", "label": "retry", "kind": "control" },
+    { "from": "retry", "to": "queue", "label": "re-enqueue", "kind": "control" },
+    { "from": "workers", "to": "dlq", "label": "max retries", "kind": "control" },
+    { "from": "workers", "to": "monitor", "label": "metrics", "kind": "control" }
+  ]
+}

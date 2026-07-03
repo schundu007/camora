@@ -1,0 +1,28 @@
+{
+  "title": "Caching — Multi-Tier Hierarchy",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Application" },
+    { "id": "data", "label": "Data" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "browser", "label": "Browser\nCache", "type": "client" },
+    { "id": "cdn", "label": "CDN Cache", "type": "cdn", "cluster": "edge" },
+    { "id": "app", "label": "App Server", "type": "compute", "cluster": "app" },
+    { "id": "local", "label": "Local Cache\n(L1)", "type": "cache", "cluster": "app" },
+    { "id": "dcache", "label": "Distributed\nCache (L2)", "type": "cache", "cluster": "app" },
+    { "id": "db", "label": "Database", "type": "db", "cluster": "data" },
+    { "id": "qcache", "label": "Query Cache\n(buffer pool)", "type": "cache", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "browser", "kind": "main" },
+    { "from": "browser", "to": "cdn", "label": "cache miss", "kind": "main" },
+    { "from": "cdn", "to": "app", "label": "cache miss", "kind": "main" },
+    { "from": "app", "to": "local", "label": "L1 check", "kind": "main" },
+    { "from": "local", "to": "dcache", "label": "L1 miss", "kind": "main" },
+    { "from": "dcache", "to": "db", "label": "L2 miss", "kind": "main" },
+    { "from": "db", "to": "qcache", "kind": "control" }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "title": "TikTok — Video Pipeline & For-You Feed",
+  "direction": "LR",
+  "clusters": [
+    { "id": "upload", "label": "Upload & Transcode" },
+    { "id": "storage", "label": "Storage" },
+    { "id": "ml", "label": "Ranking" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "Video CDN", "type": "cdn" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "upload" },
+    { "id": "upqueue", "label": "Transcode\nQueue", "type": "queue", "cluster": "upload" },
+    { "id": "transcoder", "label": "Transcoder\n(ABR)", "type": "function", "cluster": "upload" },
+    { "id": "storage", "label": "Video Store", "type": "storage", "cluster": "storage" },
+    { "id": "meta", "label": "Video Metadata", "type": "nosql", "cluster": "storage" },
+    { "id": "fyp", "label": "For-You\nRanking", "type": "compute", "cluster": "ml" },
+    { "id": "events", "label": "Watch Events", "type": "stream", "cluster": "ml" },
+    { "id": "mod", "label": "Content\nModeration", "type": "function" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "upload", "kind": "main" },
+    { "from": "apigw", "to": "upqueue", "label": "new video", "kind": "main" },
+    { "from": "upqueue", "to": "transcoder", "kind": "main" },
+    { "from": "transcoder", "to": "storage", "label": "ABR renditions", "kind": "main" },
+    { "from": "storage", "to": "cdn", "label": "origin pull", "kind": "main" },
+    { "from": "users", "to": "cdn", "label": "playback", "kind": "main" },
+    { "from": "transcoder", "to": "mod", "label": "scan", "kind": "control" },
+    { "from": "apigw", "to": "fyp", "label": "For-You feed" },
+    { "from": "fyp", "to": "meta", "label": "rank candidates" },
+    { "from": "users", "to": "events", "label": "engagement", "kind": "control" },
+    { "from": "events", "to": "fyp", "label": "watch signals", "kind": "control" }
+  ]
+}

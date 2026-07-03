@@ -1,0 +1,29 @@
+{
+  "title": "Deployment System — Canary Rollout with Rollback",
+  "direction": "LR",
+  "clusters": [
+    { "id": "build", "label": "Build" },
+    { "id": "traffic", "label": "Traffic" },
+    { "id": "rollout", "label": "Rollout" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "dev", "label": "Commit", "type": "client" },
+    { "id": "build", "label": "Build\nPipeline", "type": "container", "cluster": "build" },
+    { "id": "registry", "label": "Container\nRegistry", "type": "storage", "cluster": "build" },
+    { "id": "router", "label": "Traffic Router\n(canary %)", "type": "lb", "cluster": "traffic" },
+    { "id": "blue", "label": "Blue\n(stable)", "type": "compute", "cluster": "rollout" },
+    { "id": "green", "label": "Green\n(canary)", "type": "compute", "cluster": "rollout" },
+    { "id": "health", "label": "Health Check\n+ Rollback", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "dev", "to": "build", "label": "trigger", "kind": "main" },
+    { "from": "build", "to": "registry", "label": "push image", "kind": "main" },
+    { "from": "registry", "to": "green", "label": "deploy", "kind": "main" },
+    { "from": "users", "to": "router", "kind": "main" },
+    { "from": "router", "to": "blue", "label": "90%", "kind": "main" },
+    { "from": "router", "to": "green", "label": "10%", "kind": "main" },
+    { "from": "health", "to": "green", "label": "probe", "kind": "control" },
+    { "from": "health", "to": "router", "label": "shift / rollback", "kind": "control" }
+  ]
+}

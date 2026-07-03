@@ -1,0 +1,30 @@
+{
+  "title": "DevOps Pipeline — CI/CD, Kubernetes & Observability",
+  "direction": "LR",
+  "clusters": [
+    { "id": "cicd", "label": "CI/CD" },
+    { "id": "platform", "label": "Platform" },
+    { "id": "ops", "label": "Observability" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "dev", "label": "Developer", "type": "client" },
+    { "id": "ci", "label": "CI/CD\nPipeline", "type": "container", "cluster": "cicd" },
+    { "id": "registry", "label": "Image\nRegistry", "type": "storage", "cluster": "cicd" },
+    { "id": "iac", "label": "IaC\n(Terraform)", "type": "function", "cluster": "cicd" },
+    { "id": "lb", "label": "Ingress\n(blue-green)", "type": "lb", "cluster": "platform" },
+    { "id": "k8s", "label": "Kubernetes\nCluster", "type": "container", "cluster": "platform" },
+    { "id": "mon", "label": "Monitoring\n(Prometheus)", "type": "monitor", "cluster": "ops" },
+    { "id": "logs", "label": "Logs +\nMetrics", "type": "analytics", "cluster": "ops" }
+  ],
+  "edges": [
+    { "from": "dev", "to": "ci", "label": "push", "kind": "main" },
+    { "from": "ci", "to": "registry", "label": "build image", "kind": "main" },
+    { "from": "registry", "to": "k8s", "label": "deploy", "kind": "main" },
+    { "from": "users", "to": "lb", "kind": "main" },
+    { "from": "lb", "to": "k8s", "label": "route", "kind": "main" },
+    { "from": "iac", "to": "k8s", "label": "provision", "kind": "control" },
+    { "from": "k8s", "to": "mon", "label": "metrics", "kind": "control" },
+    { "from": "mon", "to": "logs", "label": "aggregate", "kind": "control" }
+  ]
+}

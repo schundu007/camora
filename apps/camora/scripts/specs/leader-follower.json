@@ -1,0 +1,28 @@
+{
+  "title": "Leader-Follower — Replication & Failover",
+  "direction": "LR",
+  "clusters": [
+    { "id": "primary", "label": "Primary" },
+    { "id": "replicas", "label": "Replicas" },
+    { "id": "control", "label": "Failover" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Clients", "type": "client" },
+    { "id": "router", "label": "Query Router\n(R/W split)", "type": "lb" },
+    { "id": "leader", "label": "Leader\n(writes)", "type": "db", "cluster": "primary" },
+    { "id": "wal", "label": "WAL\nLog Shipping", "type": "stream", "cluster": "primary" },
+    { "id": "sync", "label": "Sync Replica\n(hot standby)", "type": "db", "cluster": "replicas" },
+    { "id": "async", "label": "Async Read\nReplica", "type": "db", "cluster": "replicas" },
+    { "id": "failover", "label": "Failover\nController", "type": "monitor", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "client", "to": "router", "label": "query", "kind": "main" },
+    { "from": "router", "to": "leader", "label": "writes", "kind": "main" },
+    { "from": "router", "to": "async", "label": "reads", "kind": "main" },
+    { "from": "leader", "to": "wal", "label": "append", "kind": "main" },
+    { "from": "wal", "to": "sync", "label": "sync repl", "kind": "main" },
+    { "from": "wal", "to": "async", "label": "async repl", "kind": "control" },
+    { "from": "failover", "to": "leader", "label": "health check", "kind": "control" },
+    { "from": "failover", "to": "sync", "label": "promote", "kind": "control" }
+  ]
+}

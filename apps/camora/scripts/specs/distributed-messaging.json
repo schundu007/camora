@@ -1,0 +1,28 @@
+{
+  "title": "Distributed Messaging — Pub/Sub at Scale",
+  "direction": "LR",
+  "clusters": [
+    { "id": "producers", "label": "Producers" },
+    { "id": "broker", "label": "Broker Cluster  ·  partitioned topics" },
+    { "id": "consumers", "label": "Consumer Groups" }
+  ],
+  "nodes": [
+    { "id": "producers", "label": "Producers", "type": "client", "cluster": "producers" },
+    { "id": "ingest_lb", "label": "Ingest\nGateway", "type": "lb", "cluster": "producers" },
+    { "id": "broker", "label": "Broker\n(topics · partitions)", "type": "stream", "cluster": "broker" },
+    { "id": "offsets", "label": "Offset Store\n(commit log)", "type": "db", "cluster": "broker" },
+    { "id": "consumer", "label": "Consumer Group\n(at-least-once)", "type": "compute", "cluster": "consumers" },
+    { "id": "sink", "label": "Downstream\nStore", "type": "db", "cluster": "consumers" },
+    { "id": "dlq", "label": "Dead Letter\nQueue", "type": "queue" },
+    { "id": "monitor", "label": "Lag\nMonitor", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "producers", "to": "ingest_lb", "label": "publish", "kind": "main" },
+    { "from": "ingest_lb", "to": "broker", "label": "append", "kind": "main" },
+    { "from": "broker", "to": "consumer", "label": "poll", "kind": "main" },
+    { "from": "consumer", "to": "sink", "label": "process", "kind": "main" },
+    { "from": "consumer", "to": "offsets", "label": "commit offset", "kind": "control" },
+    { "from": "consumer", "to": "dlq", "label": "on failure", "kind": "control" },
+    { "from": "broker", "to": "monitor", "label": "lag", "kind": "control" }
+  ]
+}

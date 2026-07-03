@@ -1,0 +1,29 @@
+{
+  "title": "CDN — Edge Delivery & Invalidation",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge PoP  ·  Anycast" },
+    { "id": "origin", "label": "Origin" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "dns", "label": "Anycast DNS", "type": "dns" },
+    { "id": "purge", "label": "Cache\nInvalidation", "type": "eventbus" },
+    { "id": "ssl", "label": "SSL\nTermination", "type": "tls", "cluster": "edge" },
+    { "id": "edge_cache", "label": "Edge Cache", "type": "cache", "cluster": "edge" },
+    { "id": "shield", "label": "Origin Shield", "type": "cdn" },
+    { "id": "origin_lb", "label": "Load\nBalancer", "type": "lb", "cluster": "origin" },
+    { "id": "origin", "label": "Origin Server", "type": "compute", "cluster": "origin" },
+    { "id": "store", "label": "Object Store", "type": "storage", "cluster": "origin" }
+  ],
+  "edges": [
+    { "from": "users", "to": "dns", "label": "nearest PoP", "kind": "main" },
+    { "from": "dns", "to": "ssl", "kind": "main" },
+    { "from": "ssl", "to": "edge_cache" },
+    { "from": "edge_cache", "to": "shield", "label": "cache miss", "kind": "main" },
+    { "from": "shield", "to": "origin_lb", "label": "origin pull", "kind": "main" },
+    { "from": "origin_lb", "to": "origin" },
+    { "from": "origin_lb", "to": "store" },
+    { "from": "purge", "to": "edge_cache", "label": "invalidate", "kind": "control" }
+  ]
+}

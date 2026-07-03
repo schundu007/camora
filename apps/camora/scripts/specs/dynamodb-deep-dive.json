@@ -1,0 +1,28 @@
+{
+  "title": "DynamoDB — Partitions, Indexes & Streams",
+  "direction": "LR",
+  "clusters": [
+    { "id": "router", "label": "Request Router" },
+    { "id": "storage", "label": "Storage Partitions" },
+    { "id": "cdc", "label": "Change Data" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "App\n(SDK)", "type": "client" },
+    { "id": "router", "label": "Request Router\n(partition-key hash)", "type": "apigw", "cluster": "router" },
+    { "id": "dax", "label": "DAX\n(read cache)", "type": "cache", "cluster": "router" },
+    { "id": "partition", "label": "Storage Node\n(sort key range)", "type": "nosql", "cluster": "storage" },
+    { "id": "gsi", "label": "GSI\n(alternate index)", "type": "nosql", "cluster": "storage" },
+    { "id": "stream", "label": "DynamoDB\nStreams", "type": "stream", "cluster": "cdc" },
+    { "id": "consumer", "label": "Stream\nConsumer", "type": "function", "cluster": "cdc" },
+    { "id": "monitor", "label": "Adaptive\nCapacity", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "router", "label": "get / put", "kind": "main" },
+    { "from": "router", "to": "partition", "label": "route by hash", "kind": "main" },
+    { "from": "partition", "to": "stream", "label": "change log", "kind": "main" },
+    { "from": "stream", "to": "consumer", "label": "trigger", "kind": "main" },
+    { "from": "router", "to": "dax", "label": "cached read", "kind": "control" },
+    { "from": "partition", "to": "gsi", "label": "async replicate", "kind": "control" },
+    { "from": "monitor", "to": "partition", "label": "rebalance heat", "kind": "control" }
+  ]
+}

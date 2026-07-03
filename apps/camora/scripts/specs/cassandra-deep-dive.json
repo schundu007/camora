@@ -1,0 +1,29 @@
+{
+  "title": "Cassandra — Ring, LSM & Gossip",
+  "direction": "LR",
+  "clusters": [
+    { "id": "coord", "label": "Coordinator" },
+    { "id": "engine", "label": "Storage Engine" },
+    { "id": "ring", "label": "Cluster Ring" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients", "type": "users" },
+    { "id": "coord", "label": "Coordinator\n(token-aware)", "type": "compute", "cluster": "coord" },
+    { "id": "commitlog", "label": "Commit Log", "type": "storage", "cluster": "engine" },
+    { "id": "memtable", "label": "Memtable\n(in-mem)", "type": "cache", "cluster": "engine" },
+    { "id": "sstable", "label": "SSTables\n(immutable)", "type": "storage", "cluster": "engine" },
+    { "id": "compaction", "label": "Compaction", "type": "function", "cluster": "engine" },
+    { "id": "replica", "label": "Replica Node\n(RF=3)", "type": "nosql", "cluster": "ring" },
+    { "id": "gossip", "label": "Gossip\nProtocol", "type": "eventbus", "cluster": "ring" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "coord", "label": "write (QUORUM)", "kind": "main" },
+    { "from": "coord", "to": "commitlog", "label": "append", "kind": "main" },
+    { "from": "commitlog", "to": "memtable", "label": "apply", "kind": "main" },
+    { "from": "coord", "to": "replica", "label": "consistent hash", "kind": "main" },
+    { "from": "memtable", "to": "sstable", "label": "flush", "kind": "control" },
+    { "from": "sstable", "to": "compaction", "label": "merge", "kind": "control" },
+    { "from": "replica", "to": "gossip", "label": "membership", "kind": "control" },
+    { "from": "gossip", "to": "coord", "label": "ring state", "kind": "control" }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "title": "Gmail — Ingest, Spam Filter & Search",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Ingest" },
+    { "id": "process", "label": "Processing" },
+    { "id": "store", "label": "Storage" },
+    { "id": "deliver", "label": "Delivery" }
+  ],
+  "nodes": [
+    { "id": "internet", "label": "Inbound\nSMTP", "type": "internet" },
+    { "id": "smtp", "label": "SMTP\nGateway", "type": "compute", "cluster": "ingest" },
+    { "id": "spam", "label": "Spam Filter\n(ML pipeline)", "type": "function", "cluster": "process" },
+    { "id": "mailstore", "label": "Mail Store\n(threads · labels)", "type": "db", "cluster": "store" },
+    { "id": "blob", "label": "Attachment\nStore", "type": "storage", "cluster": "store" },
+    { "id": "index", "label": "Search Index\n(inverted)", "type": "search", "cluster": "store" },
+    { "id": "push", "label": "FCM Push", "type": "eventbus", "cluster": "deliver" },
+    { "id": "users", "label": "Recipients", "type": "users" }
+  ],
+  "edges": [
+    { "from": "internet", "to": "smtp", "label": "inbound mail", "kind": "main" },
+    { "from": "smtp", "to": "spam", "label": "scan", "kind": "main" },
+    { "from": "spam", "to": "mailstore", "label": "store thread", "kind": "main" },
+    { "from": "mailstore", "to": "push", "label": "notify", "kind": "main" },
+    { "from": "push", "to": "users", "label": "deliver", "kind": "main" },
+    { "from": "smtp", "to": "blob", "label": "attachments", "kind": "control" },
+    { "from": "mailstore", "to": "index", "label": "index", "kind": "control" },
+    { "from": "users", "to": "index", "label": "search", "kind": "control" }
+  ]
+}

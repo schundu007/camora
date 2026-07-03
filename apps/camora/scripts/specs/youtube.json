@@ -1,0 +1,35 @@
+{
+  "title": "YouTube — Upload, Transcode & Delivery",
+  "direction": "LR",
+  "clusters": [
+    { "id": "upload", "label": "Upload & Transcode" },
+    { "id": "deliver", "label": "Delivery" },
+    { "id": "discover", "label": "Discovery" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Viewers &\nCreators", "type": "users" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw" },
+    { "id": "upload_svc", "label": "Upload\nService", "type": "compute", "cluster": "upload" },
+    { "id": "raw", "label": "Raw Video\nStore", "type": "storage", "cluster": "upload" },
+    { "id": "transcode_q", "label": "Transcode\nQueue", "type": "queue", "cluster": "upload" },
+    { "id": "transcode", "label": "Transcoder\n(adaptive ABR)", "type": "container", "cluster": "upload" },
+    { "id": "vod", "label": "Encoded\nSegments", "type": "storage", "cluster": "deliver" },
+    { "id": "cdn", "label": "CDN\nEdge", "type": "cdn", "cluster": "deliver" },
+    { "id": "recs", "label": "Recommendation\nEngine", "type": "function", "cluster": "discover" },
+    { "id": "search", "label": "Search\nIndex", "type": "search", "cluster": "discover" },
+    { "id": "meta_db", "label": "Video\nMetadata", "type": "nosql", "cluster": "discover" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "label": "upload", "kind": "main" },
+    { "from": "gw", "to": "upload_svc", "kind": "main" },
+    { "from": "upload_svc", "to": "raw", "label": "store", "kind": "main" },
+    { "from": "upload_svc", "to": "transcode_q", "kind": "main" },
+    { "from": "transcode_q", "to": "transcode", "kind": "main" },
+    { "from": "transcode", "to": "vod", "label": "renditions", "kind": "main" },
+    { "from": "vod", "to": "cdn", "label": "origin", "kind": "main" },
+    { "from": "users", "to": "cdn", "label": "watch", "kind": "main" },
+    { "from": "upload_svc", "to": "meta_db", "label": "metadata", "kind": "control" },
+    { "from": "meta_db", "to": "search", "label": "index", "kind": "control" },
+    { "from": "meta_db", "to": "recs", "label": "signals", "kind": "control" }
+  ]
+}

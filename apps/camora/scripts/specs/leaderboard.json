@@ -1,0 +1,29 @@
+{
+  "title": "Leaderboard — Real-Time Ranking",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Score Ingestion" },
+    { "id": "serving", "label": "Ranking" },
+    { "id": "control", "label": "Durability" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Players", "type": "users" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "ingestor", "label": "Score\nIngestor", "type": "compute", "cluster": "ingest" },
+    { "id": "stream", "label": "Event\nStream", "type": "stream", "cluster": "ingest" },
+    { "id": "sortedset", "label": "Sorted Set\n(Redis ZSET)", "type": "cache", "cluster": "serving" },
+    { "id": "rank", "label": "Rank &\nPage Service", "type": "compute", "cluster": "serving" },
+    { "id": "snapshot", "label": "Snapshot\nStore", "type": "storage", "cluster": "control" },
+    { "id": "db", "label": "Score\nHistory DB", "type": "db", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "submit score", "kind": "main" },
+    { "from": "apigw", "to": "ingestor", "kind": "main" },
+    { "from": "ingestor", "to": "stream", "label": "publish", "kind": "main" },
+    { "from": "stream", "to": "sortedset", "label": "ZADD", "kind": "main" },
+    { "from": "apigw", "to": "rank", "label": "top-N", "kind": "main" },
+    { "from": "rank", "to": "sortedset", "label": "ZRANGE", "kind": "main" },
+    { "from": "sortedset", "to": "snapshot", "label": "periodic", "kind": "control" },
+    { "from": "stream", "to": "db", "label": "archive", "kind": "control" }
+  ]
+}

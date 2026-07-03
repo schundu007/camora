@@ -1,0 +1,33 @@
+{
+  "title": "Scalable System — Reference Architecture",
+  "direction": "LR",
+  "clusters": [
+    { "id": "gateway", "label": "Gateway" },
+    { "id": "services", "label": "Services" },
+    { "id": "data", "label": "Data" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN\n(static)", "type": "cdn" },
+    { "id": "lb", "label": "Load Balancer", "type": "lb", "cluster": "gateway" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "gateway" },
+    { "id": "svcA", "label": "Microservice", "type": "compute", "cluster": "services" },
+    { "id": "svcB", "label": "Worker\nService", "type": "compute", "cluster": "services" },
+    { "id": "cache", "label": "Cache\n(Redis)", "type": "cache", "cluster": "data" },
+    { "id": "db", "label": "Primary DB", "type": "db", "cluster": "data" },
+    { "id": "queue", "label": "Message Queue", "type": "queue", "cluster": "data" },
+    { "id": "storage", "label": "Object Store", "type": "storage", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "static assets" },
+    { "from": "users", "to": "lb", "label": "requests", "kind": "main" },
+    { "from": "lb", "to": "apigw", "kind": "main" },
+    { "from": "apigw", "to": "svcA", "label": "route", "kind": "main" },
+    { "from": "svcA", "to": "cache", "label": "read", "kind": "main" },
+    { "from": "cache", "to": "db", "label": "cache miss", "kind": "main" },
+    { "from": "svcA", "to": "queue", "label": "async jobs", "kind": "control" },
+    { "from": "queue", "to": "svcB" },
+    { "from": "svcB", "to": "storage", "label": "files" },
+    { "from": "svcB", "to": "db", "label": "write" }
+  ]
+}

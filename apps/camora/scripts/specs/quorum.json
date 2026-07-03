@@ -1,0 +1,20 @@
+{
+  "title": "Quorum Consistency — R + W > N",
+  "direction": "LR",
+  "clusters": [
+    { "id": "replicas", "label": "N = 3 Replicas  ·  W=2  R=2" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "coord", "label": "Coordinator\nNode", "type": "compute" },
+    { "id": "r1", "label": "Replica A", "type": "db", "cluster": "replicas" },
+    { "id": "r2", "label": "Replica B", "type": "db", "cluster": "replicas" },
+    { "id": "r3", "label": "Replica C", "type": "db", "cluster": "replicas" }
+  ],
+  "edges": [
+    { "from": "client", "to": "coord", "label": "write / read", "kind": "main" },
+    { "from": "coord", "to": "r1", "label": "W ack", "kind": "main" },
+    { "from": "coord", "to": "r2", "label": "W ack", "kind": "main" },
+    { "from": "coord", "to": "r3", "label": "async", "kind": "control" }
+  ]
+}

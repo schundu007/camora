@@ -1,0 +1,25 @@
+{
+  "title": "Database Types — Relational, Document, Wide-Column, Graph",
+  "direction": "LR",
+  "clusters": [
+    { "id": "access", "label": "Access Layer" },
+    { "id": "stores", "label": "Data Stores" }
+  ],
+  "nodes": [
+    { "id": "app", "label": "Application", "type": "compute" },
+    { "id": "api", "label": "Data Access\nLayer", "type": "apigw", "cluster": "access" },
+    { "id": "cache", "label": "Cache Layer", "type": "cache", "cluster": "access" },
+    { "id": "sql", "label": "PostgreSQL\n(relational)", "type": "db", "cluster": "stores" },
+    { "id": "doc", "label": "MongoDB\n(document)", "type": "nosql", "cluster": "stores" },
+    { "id": "wide", "label": "Cassandra\n(wide-column)", "type": "nosql", "cluster": "stores" },
+    { "id": "graph", "label": "Neo4j\n(graph)", "type": "nosql", "cluster": "stores" }
+  ],
+  "edges": [
+    { "from": "app", "to": "api", "kind": "main" },
+    { "from": "api", "to": "cache", "label": "check", "kind": "main" },
+    { "from": "cache", "to": "sql", "label": "ACID txns", "kind": "main" },
+    { "from": "api", "to": "doc", "label": "documents", "kind": "control" },
+    { "from": "api", "to": "wide", "label": "time-series", "kind": "control" },
+    { "from": "api", "to": "graph", "label": "relationships", "kind": "control" }
+  ]
+}

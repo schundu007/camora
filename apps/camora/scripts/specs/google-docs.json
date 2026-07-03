@@ -1,0 +1,31 @@
+{
+  "title": "Google Docs — Real-Time Collaborative Editing",
+  "direction": "LR",
+  "clusters": [
+    { "id": "collab", "label": "Collaboration Tier" },
+    { "id": "storage", "label": "Storage" },
+    { "id": "control", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Editors", "type": "users" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "ws", "label": "WebSocket\nGateway", "type": "compute", "cluster": "collab" },
+    { "id": "otcrdt", "label": "OT / CRDT\nEngine", "type": "compute", "cluster": "collab" },
+    { "id": "presence", "label": "Presence\n(cursors)", "type": "cache", "cluster": "collab" },
+    { "id": "docstore", "label": "Document\nStore", "type": "nosql", "cluster": "storage" },
+    { "id": "revisions", "label": "Revision\nHistory", "type": "storage", "cluster": "storage" },
+    { "id": "acl", "label": "Permissions\nDB", "type": "db", "cluster": "storage" },
+    { "id": "bus", "label": "Op Broadcast\nBus", "type": "eventbus", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "edit ops", "kind": "main" },
+    { "from": "apigw", "to": "ws", "kind": "main" },
+    { "from": "ws", "to": "otcrdt", "label": "transform", "kind": "main" },
+    { "from": "otcrdt", "to": "docstore", "label": "persist", "kind": "main" },
+    { "from": "otcrdt", "to": "revisions", "label": "snapshot", "kind": "main" },
+    { "from": "otcrdt", "to": "bus", "label": "broadcast", "kind": "control" },
+    { "from": "bus", "to": "ws", "label": "fan-out", "kind": "control" },
+    { "from": "ws", "to": "presence", "label": "cursors", "kind": "control" },
+    { "from": "apigw", "to": "acl", "label": "authz", "kind": "control" }
+  ]
+}

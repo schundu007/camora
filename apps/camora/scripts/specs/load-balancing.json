@@ -1,0 +1,27 @@
+{
+  "title": "Load Balancing — L4/L7 & Algorithms",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Balancing Tier" },
+    { "id": "backend", "label": "Backend Pool" },
+    { "id": "control", "label": "Health" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "dns", "label": "GeoDNS", "type": "dns" },
+    { "id": "l4", "label": "L4 Balancer\n(conn / IP hash)", "type": "lb", "cluster": "edge" },
+    { "id": "l7", "label": "L7 Balancer\n(path / header)", "type": "lb", "cluster": "edge" },
+    { "id": "server", "label": "Backend Server\n(weighted pool)", "type": "compute", "cluster": "backend" },
+    { "id": "cache", "label": "Session\nAffinity", "type": "cache", "cluster": "backend" },
+    { "id": "health", "label": "Health\nChecks", "type": "monitor", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "dns", "label": "resolve", "kind": "main" },
+    { "from": "dns", "to": "l4", "label": "nearest VIP", "kind": "main" },
+    { "from": "l4", "to": "l7", "label": "round-robin", "kind": "main" },
+    { "from": "l7", "to": "server", "label": "least-conn", "kind": "main" },
+    { "from": "l7", "to": "cache", "label": "sticky", "kind": "control" },
+    { "from": "health", "to": "l4", "label": "probe", "kind": "control" },
+    { "from": "health", "to": "server", "label": "liveness", "kind": "control" }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Twitch — Live Ingest & HLS Delivery",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Ingest & Transcode" },
+    { "id": "delivery", "label": "Delivery" },
+    { "id": "realtime", "label": "Realtime" }
+  ],
+  "nodes": [
+    { "id": "streamers", "label": "Streamers", "type": "users" },
+    { "id": "ingest", "label": "RTMP Ingest", "type": "compute", "cluster": "ingest" },
+    { "id": "tqueue", "label": "Transcode\nQueue", "type": "queue", "cluster": "ingest" },
+    { "id": "transcoder", "label": "ABR\nTranscoder", "type": "function", "cluster": "ingest" },
+    { "id": "segments", "label": "HLS Segments", "type": "storage", "cluster": "delivery" },
+    { "id": "cdn", "label": "Video CDN", "type": "cdn", "cluster": "delivery" },
+    { "id": "viewers", "label": "Viewers", "type": "users" },
+    { "id": "chat", "label": "Chat Fan-out", "type": "eventbus", "cluster": "realtime" },
+    { "id": "clips", "label": "Clip Service", "type": "function", "cluster": "realtime" }
+  ],
+  "edges": [
+    { "from": "streamers", "to": "ingest", "label": "RTMP", "kind": "main" },
+    { "from": "ingest", "to": "tqueue", "kind": "main" },
+    { "from": "tqueue", "to": "transcoder", "kind": "main" },
+    { "from": "transcoder", "to": "segments", "label": "HLS", "kind": "main" },
+    { "from": "segments", "to": "cdn", "label": "origin", "kind": "main" },
+    { "from": "cdn", "to": "viewers", "label": "watch", "kind": "main" },
+    { "from": "viewers", "to": "chat", "label": "messages", "kind": "control" },
+    { "from": "chat", "to": "viewers", "label": "fan-out", "kind": "control" },
+    { "from": "segments", "to": "clips", "label": "create clip", "kind": "control" }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "title": "Payment Gateway — Tokenize, Route & Settle",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Secure Edge" },
+    { "id": "core", "label": "Processing Core" },
+    { "id": "settle", "label": "Settlement" }
+  ],
+  "nodes": [
+    { "id": "merchant", "label": "Merchant\nCheckout", "type": "client" },
+    { "id": "api", "label": "Payment API\n(PCI-DSS)", "type": "apigw", "cluster": "edge" },
+    { "id": "vault", "label": "Tokenization\nVault", "type": "secrets", "cluster": "edge" },
+    { "id": "fraud", "label": "Fraud\nScoring", "type": "analytics", "cluster": "core" },
+    { "id": "router", "label": "Acquirer\nRouting", "type": "compute", "cluster": "core" },
+    { "id": "acquirers", "label": "Acquirers /\nCard Networks", "type": "internet", "cluster": "core" },
+    { "id": "ledger", "label": "Transaction\nLedger", "type": "db", "cluster": "settle" },
+    { "id": "batch", "label": "Settlement\n+ Chargeback", "type": "function", "cluster": "settle" }
+  ],
+  "edges": [
+    { "from": "merchant", "to": "api", "label": "charge", "kind": "main" },
+    { "from": "api", "to": "vault", "label": "tokenize", "kind": "main" },
+    { "from": "vault", "to": "fraud", "label": "score", "kind": "main" },
+    { "from": "fraud", "to": "router", "label": "approve", "kind": "main" },
+    { "from": "router", "to": "acquirers", "label": "authorize", "kind": "main" },
+    { "from": "router", "to": "ledger", "label": "record", "kind": "control" },
+    { "from": "ledger", "to": "batch", "label": "settle / dispute", "kind": "control" }
+  ]
+}

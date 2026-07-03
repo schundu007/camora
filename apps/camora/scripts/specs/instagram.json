@@ -1,0 +1,35 @@
+{
+  "title": "Instagram — Media Pipeline & Feed",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Upload & Transcode" },
+    { "id": "serving", "label": "Feed Serving" },
+    { "id": "control", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "upload", "label": "Upload\nService", "type": "compute", "cluster": "ingest" },
+    { "id": "transcode", "label": "Transcoder\n(variants)", "type": "function", "cluster": "ingest" },
+    { "id": "media", "label": "Media\nStore", "type": "storage", "cluster": "ingest" },
+    { "id": "feed", "label": "Feed &\nExplore Service", "type": "compute", "cluster": "serving" },
+    { "id": "graph", "label": "Social\nGraph", "type": "nosql", "cluster": "serving" },
+    { "id": "feedcache", "label": "Feed\nCache", "type": "cache", "cluster": "serving" },
+    { "id": "queue", "label": "Transcode\nQueue", "type": "queue", "cluster": "control" },
+    { "id": "push", "label": "Push\nNotifications", "type": "eventbus", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "upload", "kind": "main" },
+    { "from": "apigw", "to": "upload", "kind": "main" },
+    { "from": "upload", "to": "queue", "label": "enqueue", "kind": "main" },
+    { "from": "queue", "to": "transcode", "kind": "main" },
+    { "from": "transcode", "to": "media", "label": "store", "kind": "main" },
+    { "from": "media", "to": "cdn", "label": "origin", "kind": "main" },
+    { "from": "cdn", "to": "users", "label": "deliver", "kind": "main" },
+    { "from": "apigw", "to": "feed", "label": "feed req", "kind": "control" },
+    { "from": "feed", "to": "graph", "label": "fan-out", "kind": "control" },
+    { "from": "feed", "to": "feedcache", "label": "timeline", "kind": "control" },
+    { "from": "transcode", "to": "push", "label": "notify", "kind": "control" }
+  ]
+}

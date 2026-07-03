@@ -1,0 +1,31 @@
+{
+  "title": "Google Drive — File Sync & Storage",
+  "direction": "LR",
+  "clusters": [
+    { "id": "app", "label": "Application Tier" },
+    { "id": "storage", "label": "Storage" },
+    { "id": "control", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients\n+ Sync Agent", "type": "client" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "upload", "label": "Upload\nService", "type": "compute", "cluster": "app" },
+    { "id": "meta", "label": "Metadata\nService", "type": "compute", "cluster": "app" },
+    { "id": "blocks", "label": "Block Store\n(chunks)", "type": "storage", "cluster": "storage" },
+    { "id": "metadb", "label": "Metadata DB\n(folder tree)", "type": "db", "cluster": "storage" },
+    { "id": "search", "label": "Full-Text\nSearch", "type": "search", "cluster": "storage" },
+    { "id": "cache", "label": "ACL Cache", "type": "cache", "cluster": "storage" },
+    { "id": "sync", "label": "Sync / ACL\nPropagation", "type": "eventbus", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "upload", "kind": "main" },
+    { "from": "apigw", "to": "upload", "kind": "main" },
+    { "from": "upload", "to": "blocks", "label": "chunks", "kind": "main" },
+    { "from": "upload", "to": "meta", "label": "commit", "kind": "main" },
+    { "from": "meta", "to": "metadb", "label": "write", "kind": "main" },
+    { "from": "meta", "to": "cache", "label": "authz", "kind": "control" },
+    { "from": "metadb", "to": "search", "label": "index", "kind": "control" },
+    { "from": "meta", "to": "sync", "label": "change feed", "kind": "control" },
+    { "from": "sync", "to": "users", "label": "push delta", "kind": "control" }
+  ]
+}

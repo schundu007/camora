@@ -1,0 +1,27 @@
+{
+  "title": "Online Chess — Real-Time Game Sync & Matchmaking",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "game", "label": "Game Core" },
+    { "id": "services", "label": "Services" }
+  ],
+  "nodes": [
+    { "id": "players", "label": "Players", "type": "client" },
+    { "id": "gw", "label": "WebSocket\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "gamesvc", "label": "Game Service\n(move validation)", "type": "compute", "cluster": "game" },
+    { "id": "state", "label": "Game State\n+ Clocks", "type": "cache", "cluster": "game" },
+    { "id": "match", "label": "Matchmaking\n(ELO)", "type": "function", "cluster": "services" },
+    { "id": "profile", "label": "Player / Rating\nDB", "type": "db", "cluster": "services" },
+    { "id": "replay", "label": "Replay\nStorage (PGN)", "type": "storage", "cluster": "services" }
+  ],
+  "edges": [
+    { "from": "players", "to": "gw", "label": "move", "kind": "main" },
+    { "from": "gw", "to": "gamesvc", "kind": "main" },
+    { "from": "gamesvc", "to": "state", "label": "apply move", "kind": "main" },
+    { "from": "gamesvc", "to": "gw", "label": "broadcast", "kind": "main" },
+    { "from": "players", "to": "match", "label": "queue", "kind": "control" },
+    { "from": "match", "to": "profile", "label": "read ELO", "kind": "control" },
+    { "from": "gamesvc", "to": "replay", "label": "archive", "kind": "control" }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "title": "Concurrency Patterns — Shared Memory vs Message Passing",
+  "direction": "LR",
+  "clusters": [
+    { "id": "shared", "label": "Shared Memory" },
+    { "id": "message", "label": "Message Passing" },
+    { "id": "async", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Requests", "type": "client" },
+    { "id": "scheduler", "label": "Scheduler\n(dispatch)", "type": "lb" },
+    { "id": "threads", "label": "Thread Pool", "type": "compute", "cluster": "shared" },
+    { "id": "locks", "label": "Locks +\nSemaphores", "type": "cache", "cluster": "shared" },
+    { "id": "state", "label": "Shared State", "type": "db", "cluster": "shared" },
+    { "id": "actors", "label": "Actor System", "type": "container", "cluster": "message" },
+    { "id": "channel", "label": "CSP Channels", "type": "queue", "cluster": "message" },
+    { "id": "eventloop", "label": "Event Loop\n(async / await)", "type": "function", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "client", "to": "scheduler", "kind": "main" },
+    { "from": "scheduler", "to": "threads", "label": "parallel", "kind": "main" },
+    { "from": "threads", "to": "locks", "label": "acquire", "kind": "main" },
+    { "from": "locks", "to": "state", "label": "guarded write", "kind": "main" },
+    { "from": "scheduler", "to": "actors", "label": "send msg", "kind": "control" },
+    { "from": "actors", "to": "channel", "label": "pipe", "kind": "control" },
+    { "from": "scheduler", "to": "eventloop", "label": "await", "kind": "control" }
+  ]
+}

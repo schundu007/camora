@@ -1,0 +1,33 @@
+{
+  "title": "Calendar System — Events & Scheduling",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Application" },
+    { "id": "data", "label": "Data" },
+    { "id": "async", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "event", "label": "Event Service", "type": "compute", "cluster": "app" },
+    { "id": "recur", "label": "Recurrence\nExpander", "type": "function", "cluster": "app" },
+    { "id": "conflict", "label": "Conflict\nDetector", "type": "function", "cluster": "app" },
+    { "id": "db", "label": "Events DB", "type": "db", "cluster": "data" },
+    { "id": "cache", "label": "Free/Busy\nCache", "type": "cache", "cluster": "data" },
+    { "id": "queue", "label": "Notify Queue", "type": "queue", "cluster": "async" },
+    { "id": "push", "label": "Push\nNotifications", "type": "function", "cluster": "async" },
+    { "id": "sync", "label": "CalDAV Sync", "type": "compute", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "event", "label": "create event", "kind": "main" },
+    { "from": "event", "to": "recur", "label": "expand series", "kind": "main" },
+    { "from": "recur", "to": "db", "label": "store", "kind": "main" },
+    { "from": "event", "to": "conflict", "label": "check overlap", "kind": "control" },
+    { "from": "conflict", "to": "cache", "label": "read free/busy", "kind": "control" },
+    { "from": "event", "to": "queue", "label": "invite / RSVP", "kind": "control" },
+    { "from": "queue", "to": "push", "kind": "control" },
+    { "from": "event", "to": "sync", "label": "CalDAV", "kind": "control" }
+  ]
+}

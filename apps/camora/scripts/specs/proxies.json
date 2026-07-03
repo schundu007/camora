@@ -1,0 +1,27 @@
+{
+  "title": "Proxies — Forward, Reverse & Transparent",
+  "direction": "LR",
+  "clusters": [
+    { "id": "fwd", "label": "Forward Proxy  ·  client-side" },
+    { "id": "rev", "label": "Reverse Proxy  ·  server-side" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Internal\nClients", "type": "users" },
+    { "id": "fproxy", "label": "Forward Proxy\n(egress filter)", "type": "firewall", "cluster": "fwd" },
+    { "id": "fcache", "label": "Forward\nCache", "type": "cache", "cluster": "fwd" },
+    { "id": "internet", "label": "Internet", "type": "internet" },
+    { "id": "waf", "label": "WAF\n(security)", "type": "waf", "cluster": "rev" },
+    { "id": "rproxy", "label": "Reverse Proxy\n(TLS + LB)", "type": "lb", "cluster": "rev" },
+    { "id": "rcache", "label": "Reverse\nCache", "type": "cache", "cluster": "rev" },
+    { "id": "origin", "label": "Origin\nServers", "type": "compute", "cluster": "rev" }
+  ],
+  "edges": [
+    { "from": "users", "to": "fproxy", "label": "request", "kind": "main" },
+    { "from": "fproxy", "to": "fcache", "label": "cache hit", "kind": "control" },
+    { "from": "fproxy", "to": "internet", "label": "anonymized", "kind": "main" },
+    { "from": "internet", "to": "waf", "label": "inbound", "kind": "main" },
+    { "from": "waf", "to": "rproxy", "kind": "main" },
+    { "from": "rproxy", "to": "rcache", "label": "cache hit", "kind": "control" },
+    { "from": "rproxy", "to": "origin", "label": "forward", "kind": "main" }
+  ]
+}

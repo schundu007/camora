@@ -1,0 +1,26 @@
+{
+  "title": "Object Storage — Buckets, Multipart & Tiering",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "API Tier" },
+    { "id": "meta", "label": "Metadata Plane" },
+    { "id": "data", "label": "Data Plane" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients\n(SDK / REST)", "type": "client" },
+    { "id": "api", "label": "Storage API\n(auth policies)", "type": "apigw", "cluster": "edge" },
+    { "id": "meta", "label": "Bucket / Object\nMetadata", "type": "nosql", "cluster": "meta" },
+    { "id": "index", "label": "Version\nIndex", "type": "db", "cluster": "meta" },
+    { "id": "blocks", "label": "Content-Addressed\nBlock Store", "type": "storage", "cluster": "data" },
+    { "id": "lifecycle", "label": "Lifecycle\nTiering", "type": "function", "cluster": "data" },
+    { "id": "cold", "label": "Cold / Archive\nTier", "type": "storage", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "api", "label": "PUT / GET", "kind": "main" },
+    { "from": "api", "to": "meta", "label": "lookup", "kind": "main" },
+    { "from": "api", "to": "blocks", "label": "multipart", "kind": "main" },
+    { "from": "meta", "to": "index", "label": "version", "kind": "control" },
+    { "from": "blocks", "to": "lifecycle", "label": "age out", "kind": "control" },
+    { "from": "lifecycle", "to": "cold", "label": "tier down", "kind": "control" }
+  ]
+}

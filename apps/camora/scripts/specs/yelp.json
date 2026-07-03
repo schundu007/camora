@@ -1,0 +1,34 @@
+{
+  "title": "Yelp — Local Search & Reviews",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Services" },
+    { "id": "search", "label": "Search & Data" },
+    { "id": "async", "label": "Review Pipeline" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "cdn", "label": "Photo\nCDN", "type": "cdn", "cluster": "edge" },
+    { "id": "biz_svc", "label": "Business\nService", "type": "compute", "cluster": "app" },
+    { "id": "review_svc", "label": "Review\nService", "type": "compute", "cluster": "app" },
+    { "id": "biz_db", "label": "Business\nStore", "type": "db", "cluster": "search" },
+    { "id": "geo_search", "label": "Geo + Text\nSearch", "type": "search", "cluster": "search" },
+    { "id": "photos", "label": "Photo\nBlob Store", "type": "storage", "cluster": "search" },
+    { "id": "review_q", "label": "Review\nQueue", "type": "queue", "cluster": "async" },
+    { "id": "spam", "label": "Spam / Rank\nScorer", "type": "function", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "label": "search", "kind": "main" },
+    { "from": "gw", "to": "biz_svc", "kind": "main" },
+    { "from": "biz_svc", "to": "geo_search", "label": "query", "kind": "main" },
+    { "from": "geo_search", "to": "biz_db", "label": "fetch", "kind": "main" },
+    { "from": "gw", "to": "review_svc", "label": "post review", "kind": "main" },
+    { "from": "review_svc", "to": "review_q", "kind": "main" },
+    { "from": "review_q", "to": "spam", "label": "gate", "kind": "control" },
+    { "from": "spam", "to": "geo_search", "label": "index\napproved", "kind": "control" },
+    { "from": "users", "to": "cdn", "label": "photos", "kind": "main" },
+    { "from": "cdn", "to": "photos", "label": "origin", "kind": "control" }
+  ]
+}

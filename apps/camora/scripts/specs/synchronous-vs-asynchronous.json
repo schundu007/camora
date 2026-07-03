@@ -1,0 +1,26 @@
+{
+  "title": "Sync vs Async — Blocking vs Event-Driven",
+  "direction": "LR",
+  "clusters": [
+    { "id": "sync", "label": "Synchronous (blocking)" },
+    { "id": "async", "label": "Asynchronous (event-driven)" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "svc", "label": "Sync Service\n(blocks)", "type": "compute", "cluster": "sync" },
+    { "id": "db", "label": "Database", "type": "db", "cluster": "sync" },
+    { "id": "queue", "label": "Message Queue", "type": "queue", "cluster": "async" },
+    { "id": "worker", "label": "Async Worker", "type": "function", "cluster": "async" },
+    { "id": "store", "label": "Result Store", "type": "storage", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "client", "to": "apigw", "label": "request", "kind": "main" },
+    { "from": "apigw", "to": "svc", "label": "blocking call", "kind": "main" },
+    { "from": "svc", "to": "db", "label": "read / write (wait)", "kind": "main" },
+    { "from": "apigw", "to": "queue", "label": "enqueue", "kind": "control" },
+    { "from": "queue", "to": "worker", "label": "consume" },
+    { "from": "worker", "to": "store", "label": "write result" },
+    { "from": "worker", "to": "client", "label": "callback / webhook", "kind": "control" }
+  ]
+}

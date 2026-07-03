@@ -1,0 +1,31 @@
+{
+  "title": "CI/CD Pipeline — Commit to Production",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ci", "label": "Continuous Integration" },
+    { "id": "artifacts", "label": "Artifacts" },
+    { "id": "cd", "label": "Continuous Delivery" }
+  ],
+  "nodes": [
+    { "id": "dev", "label": "Developer", "type": "client" },
+    { "id": "repo", "label": "Source Repo\n(git)", "type": "storage" },
+    { "id": "build", "label": "Build Workers", "type": "container", "cluster": "ci" },
+    { "id": "test", "label": "Test Runners", "type": "compute", "cluster": "ci" },
+    { "id": "registry", "label": "Artifact\nRegistry", "type": "storage", "cluster": "artifacts" },
+    { "id": "gate", "label": "Staging\nGate", "type": "function", "cluster": "cd" },
+    { "id": "staging", "label": "Staging", "type": "compute", "cluster": "cd" },
+    { "id": "prod", "label": "Production", "type": "compute", "cluster": "cd" },
+    { "id": "mon", "label": "Health +\nRollback", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "dev", "to": "repo", "label": "push", "kind": "main" },
+    { "from": "repo", "to": "build", "label": "trigger", "kind": "main" },
+    { "from": "build", "to": "test", "kind": "main" },
+    { "from": "test", "to": "registry", "label": "publish", "kind": "main" },
+    { "from": "registry", "to": "gate", "kind": "main" },
+    { "from": "gate", "to": "staging", "label": "deploy", "kind": "main" },
+    { "from": "staging", "to": "prod", "label": "promote", "kind": "main" },
+    { "from": "prod", "to": "mon", "label": "metrics", "kind": "control" },
+    { "from": "mon", "to": "prod", "label": "rollback", "kind": "control" }
+  ]
+}

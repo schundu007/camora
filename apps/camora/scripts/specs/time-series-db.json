@@ -1,0 +1,31 @@
+{
+  "title": "Time-Series DB — Ingest, Tiering & Query",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Write Path" },
+    { "id": "storage", "label": "Tiered Storage" },
+    { "id": "query", "label": "Query Path" }
+  ],
+  "nodes": [
+    { "id": "agents", "label": "Agents\n(scrapers)", "type": "client" },
+    { "id": "writeapi", "label": "Write API", "type": "apigw", "cluster": "ingest" },
+    { "id": "buffer", "label": "Ingest Buffer\n(WAL)", "type": "stream", "cluster": "ingest" },
+    { "id": "writer", "label": "Columnar\nWriter", "type": "compute", "cluster": "ingest" },
+    { "id": "hot", "label": "Hot Tier\n(SSD)", "type": "storage", "cluster": "storage" },
+    { "id": "roll", "label": "Downsample &\nTiering", "type": "function", "cluster": "storage" },
+    { "id": "cold", "label": "Cold Tier\n(object)", "type": "storage", "cluster": "storage" },
+    { "id": "queryeng", "label": "Query Engine\n(PromQL)", "type": "compute", "cluster": "query" },
+    { "id": "reader", "label": "Dashboards", "type": "client" }
+  ],
+  "edges": [
+    { "from": "agents", "to": "writeapi", "label": "samples", "kind": "main" },
+    { "from": "writeapi", "to": "buffer", "kind": "main" },
+    { "from": "buffer", "to": "writer", "kind": "main" },
+    { "from": "writer", "to": "hot", "label": "write blocks", "kind": "main" },
+    { "from": "hot", "to": "roll", "label": "compact", "kind": "control" },
+    { "from": "roll", "to": "cold", "label": "age out", "kind": "control" },
+    { "from": "reader", "to": "queryeng", "label": "PromQL", "kind": "main" },
+    { "from": "queryeng", "to": "hot", "label": "recent", "kind": "main" },
+    { "from": "queryeng", "to": "cold", "label": "historical" }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "title": "Shopify — Multi-Tenant Commerce Platform",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Storefront Edge" },
+    { "id": "core", "label": "Commerce Core" },
+    { "id": "async", "label": "Async & Ecosystem" }
+  ],
+  "nodes": [
+    { "id": "shoppers", "label": "Shoppers", "type": "users" },
+    { "id": "cdn", "label": "Storefront\nCDN", "type": "cdn", "cluster": "edge" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "catalog", "label": "Catalog\nService", "type": "compute", "cluster": "core" },
+    { "id": "checkout", "label": "Cart &\nCheckout", "type": "compute", "cluster": "core" },
+    { "id": "tenantdb", "label": "Merchant\nData (sharded)", "type": "db", "cluster": "core" },
+    { "id": "payments", "label": "Payment\nProcessing", "type": "function", "cluster": "core" },
+    { "id": "events", "label": "Order\nEvent Bus", "type": "eventbus", "cluster": "async" },
+    { "id": "inventory", "label": "Inventory\nSync", "type": "function", "cluster": "async" },
+    { "id": "apps", "label": "App\nMarketplace", "type": "container", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "shoppers", "to": "cdn", "label": "browse", "kind": "main" },
+    { "from": "cdn", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "catalog", "label": "products", "kind": "main" },
+    { "from": "catalog", "to": "checkout", "label": "add to cart", "kind": "main" },
+    { "from": "checkout", "to": "payments", "label": "charge", "kind": "main" },
+    { "from": "checkout", "to": "tenantdb", "label": "order", "kind": "main" },
+    { "from": "checkout", "to": "events", "label": "emit", "kind": "control" },
+    { "from": "events", "to": "inventory", "kind": "control" },
+    { "from": "events", "to": "apps", "label": "webhooks", "kind": "control" }
+  ]
+}

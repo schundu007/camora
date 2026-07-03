@@ -1,0 +1,26 @@
+{
+  "title": "Distributed Lock — Leases, Fencing Tokens & Raft",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Clients" },
+    { "id": "lock", "label": "Lock Service  ·  Raft" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "api", "label": "Lock Service\nAPI", "type": "apigw", "cluster": "edge" },
+    { "id": "leader", "label": "Leader\n(Raft)", "type": "compute", "cluster": "lock" },
+    { "id": "follower", "label": "Followers", "type": "compute", "cluster": "lock" },
+    { "id": "log", "label": "Replicated Log\n+ Fencing Token", "type": "db", "cluster": "lock" },
+    { "id": "resource", "label": "Protected\nResource", "type": "storage" },
+    { "id": "monitor", "label": "Lease Renewal\n& Expiry", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "api", "label": "acquire(key)", "kind": "main" },
+    { "from": "api", "to": "leader", "label": "grant lease", "kind": "main" },
+    { "from": "leader", "to": "log", "label": "append token", "kind": "main" },
+    { "from": "client", "to": "resource", "label": "write(token)", "kind": "main" },
+    { "from": "leader", "to": "follower", "label": "replicate (consensus)", "kind": "control" },
+    { "from": "resource", "to": "log", "label": "validate token", "kind": "control" },
+    { "from": "monitor", "to": "leader", "label": "renew / expire", "kind": "control" }
+  ]
+}

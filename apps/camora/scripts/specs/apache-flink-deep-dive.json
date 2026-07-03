@@ -1,0 +1,30 @@
+{
+  "title": "Apache Flink — Stateful Stream Processing",
+  "direction": "LR",
+  "clusters": [
+    { "id": "control", "label": "Control Plane" },
+    { "id": "tasks", "label": "Task Managers" },
+    { "id": "state", "label": "State Backend" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Job Client", "type": "client" },
+    { "id": "source", "label": "Source\n(Kafka)", "type": "stream" },
+    { "id": "jm", "label": "JobManager\n(scheduler)", "type": "compute", "cluster": "control" },
+    { "id": "ckpt", "label": "Checkpoint\nCoordinator", "type": "function", "cluster": "control" },
+    { "id": "tm", "label": "TaskManager\n(operators)", "type": "compute", "cluster": "tasks" },
+    { "id": "rocksdb", "label": "RocksDB\nState", "type": "db", "cluster": "state" },
+    { "id": "ckpt_store", "label": "Checkpoint\nStore (S3)", "type": "storage", "cluster": "state" },
+    { "id": "sink", "label": "Sink", "type": "stream" }
+  ],
+  "edges": [
+    { "from": "client", "to": "jm", "label": "submit job", "kind": "main" },
+    { "from": "jm", "to": "tm", "label": "deploy tasks", "kind": "main" },
+    { "from": "source", "to": "tm", "label": "events", "kind": "main" },
+    { "from": "tm", "to": "rocksdb", "label": "read/write state", "kind": "main" },
+    { "from": "tm", "to": "sink", "label": "results", "kind": "main" },
+    { "from": "jm", "to": "ckpt", "kind": "control" },
+    { "from": "ckpt", "to": "tm", "label": "barrier", "kind": "control" },
+    { "from": "tm", "to": "ckpt_store", "label": "snapshot", "kind": "control" },
+    { "from": "rocksdb", "to": "ckpt_store", "label": "incremental", "kind": "control" }
+  ]
+}

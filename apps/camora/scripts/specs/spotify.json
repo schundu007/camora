@@ -1,0 +1,35 @@
+{
+  "title": "Spotify — Audio Streaming & Recommendations",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "services", "label": "App Services" },
+    { "id": "data", "label": "Data & ML" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "Audio CDN", "type": "cdn" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "playback", "label": "Playback\nService", "type": "compute", "cluster": "services" },
+    { "id": "playlist", "label": "Playlist\nService", "type": "compute", "cluster": "services" },
+    { "id": "reco", "label": "Recommendations\n(collab filtering)", "type": "compute", "cluster": "services" },
+    { "id": "cache", "label": "Session /\nState Cache", "type": "cache", "cluster": "data" },
+    { "id": "db", "label": "Metadata DB", "type": "db", "cluster": "data" },
+    { "id": "storage", "label": "Encoded Audio\n(object store)", "type": "storage", "cluster": "data" },
+    { "id": "events", "label": "Play Events", "type": "stream", "cluster": "data" },
+    { "id": "analytics", "label": "ML Features", "type": "analytics", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "request", "kind": "main" },
+    { "from": "apigw", "to": "playback", "kind": "main" },
+    { "from": "playback", "to": "cache", "label": "sync state" },
+    { "from": "playback", "to": "db", "label": "metadata", "kind": "main" },
+    { "from": "apigw", "to": "playlist" },
+    { "from": "apigw", "to": "reco" },
+    { "from": "users", "to": "cdn", "label": "stream audio", "kind": "main" },
+    { "from": "cdn", "to": "storage", "label": "cache miss", "kind": "main" },
+    { "from": "playback", "to": "events", "label": "plays", "kind": "control" },
+    { "from": "events", "to": "analytics", "label": "aggregate", "kind": "control" },
+    { "from": "analytics", "to": "reco", "label": "features", "kind": "control" }
+  ]
+}

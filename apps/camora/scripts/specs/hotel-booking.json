@@ -1,0 +1,31 @@
+{
+  "title": "Hotel Booking — Search to Confirmation",
+  "direction": "LR",
+  "clusters": [
+    { "id": "services", "label": "Booking Services" },
+    { "id": "data", "label": "Data Stores" },
+    { "id": "control", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Guests", "type": "users" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "search", "label": "Search &\nAvailability", "type": "compute", "cluster": "services" },
+    { "id": "reserve", "label": "Reservation\nService", "type": "compute", "cluster": "services" },
+    { "id": "payment", "label": "Payment\nService", "type": "compute", "cluster": "services" },
+    { "id": "idx", "label": "Search Index\n+ Cal Cache", "type": "search", "cluster": "data" },
+    { "id": "inventory", "label": "Inventory /\nRates DB", "type": "db", "cluster": "data" },
+    { "id": "bookings", "label": "Reservations\nDB", "type": "db", "cluster": "data" },
+    { "id": "notify", "label": "Confirmation\nNotifications", "type": "queue", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "search", "kind": "main" },
+    { "from": "apigw", "to": "search", "kind": "main" },
+    { "from": "search", "to": "idx", "label": "availability", "kind": "main" },
+    { "from": "apigw", "to": "reserve", "label": "book", "kind": "main" },
+    { "from": "reserve", "to": "inventory", "label": "hold room", "kind": "main" },
+    { "from": "reserve", "to": "payment", "label": "charge", "kind": "main" },
+    { "from": "reserve", "to": "bookings", "label": "confirm", "kind": "main" },
+    { "from": "idx", "to": "inventory", "label": "sync", "kind": "control" },
+    { "from": "reserve", "to": "notify", "label": "email / SMS", "kind": "control" }
+  ]
+}

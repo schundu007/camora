@@ -1,0 +1,30 @@
+{
+  "title": "Digital Wallet — Idempotent Ledger & Settlement",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "API" },
+    { "id": "processing", "label": "Processing" },
+    { "id": "ledger", "label": "Ledger" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "api", "label": "Wallet API\n(idempotency key)", "type": "apigw", "cluster": "edge" },
+    { "id": "txn", "label": "Txn Processor", "type": "compute", "cluster": "processing" },
+    { "id": "fraud", "label": "Fraud\nScoring", "type": "function", "cluster": "processing" },
+    { "id": "queue", "label": "Settlement\nQueue", "type": "queue", "cluster": "processing" },
+    { "id": "ledger", "label": "Account Ledger\n(double-entry)", "type": "db", "cluster": "ledger" },
+    { "id": "recon", "label": "Reconciliation", "type": "function", "cluster": "ledger" },
+    { "id": "rails", "label": "Payment Rails\n(ACH / card)", "type": "internet" },
+    { "id": "audit", "label": "Compliance\nAudit Log", "type": "storage" }
+  ],
+  "edges": [
+    { "from": "users", "to": "api", "label": "pay", "kind": "main" },
+    { "from": "api", "to": "txn", "kind": "main" },
+    { "from": "txn", "to": "fraud", "label": "score", "kind": "main" },
+    { "from": "fraud", "to": "ledger", "label": "debit / credit", "kind": "main" },
+    { "from": "txn", "to": "queue", "label": "settle", "kind": "control" },
+    { "from": "queue", "to": "rails", "label": "payout", "kind": "control" },
+    { "from": "recon", "to": "ledger", "label": "balance check", "kind": "control" },
+    { "from": "ledger", "to": "audit", "label": "compliance", "kind": "control" }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "title": "Distributed Cache — Sharding, Replication & Hot Keys",
+  "direction": "LR",
+  "clusters": [
+    { "id": "route", "label": "Routing" },
+    { "id": "cluster", "label": "Cache Cluster" },
+    { "id": "backing", "label": "Backing Store" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "router", "label": "Cache Router\n(consistent hash)", "type": "lb", "cluster": "route" },
+    { "id": "primary", "label": "Shard Primary", "type": "cache", "cluster": "cluster" },
+    { "id": "replica", "label": "Read Replica", "type": "cache", "cluster": "cluster" },
+    { "id": "hotkey", "label": "Hot-Key\nReplica", "type": "cache", "cluster": "cluster" },
+    { "id": "db", "label": "Backing DB", "type": "db", "cluster": "backing" },
+    { "id": "monitor", "label": "TTL Eviction\nMonitor", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "router", "label": "get(key)", "kind": "main" },
+    { "from": "router", "to": "primary", "label": "hash", "kind": "main" },
+    { "from": "primary", "to": "db", "label": "write-through / miss", "kind": "main" },
+    { "from": "primary", "to": "replica", "label": "replicate", "kind": "control" },
+    { "from": "router", "to": "hotkey", "label": "hot key fan-out", "kind": "control" },
+    { "from": "monitor", "to": "primary", "label": "evict (TTL)", "kind": "control" }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Multi-Cloud Architecture — Active Region + DR",
+  "direction": "LR",
+  "clusters": [
+    { "id": "aws", "label": "AWS  ·  Primary" },
+    { "id": "azure", "label": "Azure  ·  DR" },
+    { "id": "gcp", "label": "GCP  ·  Backup" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "dns", "label": "Global Traffic\nManager", "type": "dns" },
+    { "id": "aws_lb", "label": "ALB", "type": "lb", "cluster": "aws" },
+    { "id": "aws_app", "label": "EKS", "type": "compute", "cluster": "aws" },
+    { "id": "aws_db", "label": "RDS\n(primary)", "type": "db", "cluster": "aws" },
+    { "id": "link", "label": "Cloud\nInterconnect", "type": "internet" },
+    { "id": "az_app", "label": "AKS", "type": "compute", "cluster": "azure" },
+    { "id": "az_db", "label": "Azure SQL\n(replica)", "type": "db", "cluster": "azure" },
+    { "id": "gcp_store", "label": "GCS\n(DR backup)", "type": "storage", "cluster": "gcp" }
+  ],
+  "edges": [
+    { "from": "users", "to": "dns", "kind": "main" },
+    { "from": "dns", "to": "aws_lb", "label": "route", "kind": "main" },
+    { "from": "aws_lb", "to": "aws_app", "kind": "main" },
+    { "from": "aws_app", "to": "aws_db", "label": "read / write", "kind": "main" },
+    { "from": "aws_db", "to": "link", "kind": "control" },
+    { "from": "link", "to": "az_db", "label": "geo-replica", "kind": "control" },
+    { "from": "link", "to": "gcp_store", "label": "DR backup", "kind": "control" },
+    { "from": "az_db", "to": "az_app", "label": "failover", "kind": "control" },
+    { "from": "dns", "to": "az_app", "label": "failover", "kind": "control" }
+  ]
+}

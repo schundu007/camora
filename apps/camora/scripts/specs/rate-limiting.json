@@ -1,0 +1,25 @@
+{
+  "title": "Rate Limiting — Algorithms & Distributed Enforcement",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Enforcement Point" },
+    { "id": "algo", "label": "Counter Algorithms" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Clients", "type": "client" },
+    { "id": "lb", "label": "Load\nBalancer", "type": "lb", "cluster": "edge" },
+    { "id": "limiter", "label": "Limiter\nService", "type": "function", "cluster": "edge" },
+    { "id": "store", "label": "Shared Counter\nStore (Redis)", "type": "cache", "cluster": "algo" },
+    { "id": "window", "label": "Sliding Window\n& Leaky Bucket", "type": "function", "cluster": "algo" },
+    { "id": "app", "label": "Upstream\nServices", "type": "compute" },
+    { "id": "log", "label": "Reject\nLogs", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "lb", "label": "request", "kind": "main" },
+    { "from": "lb", "to": "limiter", "kind": "main" },
+    { "from": "limiter", "to": "store", "label": "incr count", "kind": "main" },
+    { "from": "store", "to": "window", "label": "evaluate", "kind": "control" },
+    { "from": "limiter", "to": "app", "label": "under limit", "kind": "main" },
+    { "from": "limiter", "to": "log", "label": "throttled", "kind": "control" }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "title": "Distributed File System — NameNode + Replicated Chunks",
+  "direction": "LR",
+  "clusters": [
+    { "id": "coord", "label": "Coordination" },
+    { "id": "data", "label": "Data Nodes  ·  replication = 3" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "namenode", "label": "NameNode\n(metadata)", "type": "db", "cluster": "coord" },
+    { "id": "standby", "label": "Standby\nNameNode", "type": "db", "cluster": "coord" },
+    { "id": "dn1", "label": "DataNode A", "type": "storage", "cluster": "data" },
+    { "id": "dn2", "label": "DataNode B", "type": "storage", "cluster": "data" },
+    { "id": "dn3", "label": "DataNode C", "type": "storage", "cluster": "data" },
+    { "id": "monitor", "label": "Heartbeats +\nRe-replication", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "namenode", "label": "locate blocks", "kind": "main" },
+    { "from": "client", "to": "dn1", "label": "stream chunk", "kind": "main" },
+    { "from": "dn1", "to": "dn2", "label": "replicate", "kind": "main" },
+    { "from": "dn2", "to": "dn3", "label": "replicate", "kind": "main" },
+    { "from": "namenode", "to": "standby", "label": "edit log", "kind": "control" },
+    { "from": "dn1", "to": "monitor", "label": "heartbeat", "kind": "control" },
+    { "from": "monitor", "to": "namenode", "label": "block report", "kind": "control" }
+  ]
+}

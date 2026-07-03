@@ -1,0 +1,33 @@
+{
+  "title": "Google Maps — Tiles, Routing & ETA",
+  "direction": "LR",
+  "clusters": [
+    { "id": "serving", "label": "Serving Tier" },
+    { "id": "data", "label": "Map & Traffic Data" },
+    { "id": "control", "label": "Ingestion" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "tiles", "label": "Tile\nServer", "type": "compute", "cluster": "serving" },
+    { "id": "tilecache", "label": "Tile\nCache", "type": "cache", "cluster": "serving" },
+    { "id": "routing", "label": "Routing Engine\n(A* / Dijkstra)", "type": "compute", "cluster": "serving" },
+    { "id": "places", "label": "Place\nSearch", "type": "search", "cluster": "serving" },
+    { "id": "geodb", "label": "Geospatial\nMap DB", "type": "db", "cluster": "data" },
+    { "id": "traffic", "label": "Traffic\nStream", "type": "stream", "cluster": "data" },
+    { "id": "eta", "label": "ETA\nModel", "type": "function", "cluster": "data" },
+    { "id": "probes", "label": "GPS Probe\nIngest", "type": "queue", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "map / route", "kind": "main" },
+    { "from": "apigw", "to": "tiles", "kind": "main" },
+    { "from": "tiles", "to": "tilecache", "label": "cache miss", "kind": "main" },
+    { "from": "tilecache", "to": "geodb", "label": "render", "kind": "main" },
+    { "from": "apigw", "to": "routing", "label": "route", "kind": "main" },
+    { "from": "routing", "to": "geodb", "label": "graph", "kind": "main" },
+    { "from": "routing", "to": "eta", "label": "predict", "kind": "main" },
+    { "from": "apigw", "to": "places", "label": "search", "kind": "control" },
+    { "from": "probes", "to": "traffic", "label": "GPS", "kind": "control" },
+    { "from": "traffic", "to": "eta", "label": "live speed", "kind": "control" }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "title": "Network Essentials — DNS, TLS, LB & Firewall",
+  "direction": "LR",
+  "clusters": [
+    { "id": "resolve", "label": "Resolution" },
+    { "id": "edge", "label": "Security Edge (L3–L7)" },
+    { "id": "app", "label": "Application Tier" }
+  ],
+  "nodes": [
+    { "id": "user", "label": "User\n(HTTP client)", "type": "users" },
+    { "id": "dns", "label": "DNS\nResolver", "type": "dns", "cluster": "resolve" },
+    { "id": "fw", "label": "Firewall\n(L3/L4 rules)", "type": "firewall", "cluster": "edge" },
+    { "id": "tls", "label": "TLS\nTermination", "type": "tls", "cluster": "edge" },
+    { "id": "lb", "label": "Load Balancer\n(L7 routing)", "type": "lb", "cluster": "edge" },
+    { "id": "web", "label": "Web Server", "type": "compute", "cluster": "app" },
+    { "id": "db", "label": "Database", "type": "db", "cluster": "app" }
+  ],
+  "edges": [
+    { "from": "user", "to": "dns", "label": "resolve name", "kind": "main" },
+    { "from": "user", "to": "fw", "label": "TCP/IP", "kind": "main" },
+    { "from": "fw", "to": "tls", "label": "HTTPS", "kind": "main" },
+    { "from": "tls", "to": "lb", "kind": "main" },
+    { "from": "lb", "to": "web", "label": "forward", "kind": "main" },
+    { "from": "web", "to": "db", "label": "query", "kind": "main" }
+  ]
+}
