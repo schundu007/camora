@@ -750,67 +750,41 @@ export default function DocsPage({ onBack }) {
     return new Set(ids);
   };
 
-  // Map a page id to its full (unfiltered) merged topic array. Shared by the
-  // per-page view (getFilteredTopics) and the global cross-page search so both
-  // read from exactly the same source set. System-design / low-level merge
-  // several arrays; search must operate over that same merged set.
-  const getTopicsForPage = (page) => {
-    switch (page) {
-      case 'coding': return codingTopics;
-      case 'system-design': return [...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics];
-      case 'low-level': return [...lldTopics, ...lldProblems];
-      case 'behavioral': return behavioralTopics;
-      case 'microservices': return microservicesPatterns;
-      case 'databases': return [...databaseTopics, ...sqlTopics];
-      case 'projects': return projectTopics;
-      case 'roadmaps': return roadmapTopics;
-      case 'eng-blogs': return engBlogTopics;
-      case 'sre': return sreTopics;
-      case 'devops': return devopsTopics;
-      case 'observability': return observabilityTopics;
-      case 'platform': return platformTopics;
-      case 'mlops': return mlopsTopics;
-      case 'aiops': return aiopsTopics;
-      case 'ai-systems-perf': return aiSystemsPerfTopics;
-      case 'agentic': return agenticTopics;
-      case 'challenges': return challengesTopics;
-      case 'cloud': return cloudTopics;
-      case 'linux': return linuxTopics;
-      case 'networking': return networkingTopics;
-      case 'troubleshooting': return troubleshootingTopics;
-      case 'war-stories': return warStoriesTopics;
-      case 'comparisons': return comparisonTopics;
-      case 'ddia': return ddiaTopics;
-      default: return [];
-    }
-  };
-
-  // Human-readable page names — also the canonical set of pages global search scans.
-  const PAGE_TITLES = {
-    coding: 'DSA & Algorithms', 'system-design': 'System Design', 'low-level': 'Low Level Design',
-    behavioral: 'Behavioral', microservices: 'Microservices', databases: 'Databases & SQL',
-    projects: 'Projects', roadmaps: 'Roadmaps', 'eng-blogs': 'Eng Blogs', sre: 'SRE',
-    devops: 'DevOps', observability: 'Observability', platform: 'Platform Engineering',
-    mlops: 'MLOps & LLMOps', aiops: 'AIOps', 'ai-systems-perf': 'AI Systems Performance',
-    agentic: 'Agentic Orchestration', challenges: 'Coding Challenges', cloud: 'Cloud / AWS',
-    linux: 'Linux', networking: 'Networking', troubleshooting: 'Troubleshooting',
-    'war-stories': 'War Stories', comparisons: 'This vs That', ddia: 'DDIA',
-  };
-
-  // Score a topic list against the query words. Returns topics matching at least
-  // one word, tagged with how many words matched.
-  const scoreTopicsByQuery = (list, words) => list.map(topic => {
-    const haystack = [
-      topic.title, topic.subtitle, topic.description, topic.id,
-      ...(Array.isArray(topic.concepts) ? topic.concepts : []),
-      ...(Array.isArray(topic.tags) ? topic.tags : []),
-    ].filter(Boolean).join(' ').toLowerCase();
-    return { topic, matched: words.filter(w => haystack.includes(w)).length };
-  }).filter(({ matched }) => matched > 0);
-
   const getFilteredTopics = () => {
-    let topics = getTopicsForPage(activePage);
-    if (!topics.length && !PAGE_TITLES[activePage]) return [];
+    // eslint-disable-next-line no-useless-assignment
+    let topics = [];
+    if (activePage === 'coding') topics = codingTopics;
+    // System-design and Low-level pages render multiple topic arrays merged
+    // together (see line ~400 and the category renderers around line 1633 /
+    // 2131 which iterate `filteredTopics` filtered by their category map).
+    // Search must operate over the same merged set, otherwise typing
+    // matches nothing for topics that live in microservicesPatterns,
+    // systemDesignTradeoffs, concurrencyTopics, etc.
+    else if (activePage === 'system-design') topics = [...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...concurrencyTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics];
+    else if (activePage === 'low-level') topics = [...lldTopics, ...lldProblems];
+    else if (activePage === 'behavioral') topics = behavioralTopics;
+    else if (activePage === 'microservices') topics = microservicesPatterns;
+    else if (activePage === 'databases') topics = [...databaseTopics, ...sqlTopics];
+    else if (activePage === 'projects') topics = projectTopics;
+    else if (activePage === 'roadmaps') topics = roadmapTopics;
+    else if (activePage === 'eng-blogs') topics = engBlogTopics;
+    else if (activePage === 'sre') topics = sreTopics;
+    else if (activePage === 'devops') topics = devopsTopics;
+    else if (activePage === 'observability') topics = observabilityTopics;
+    else if (activePage === 'platform') topics = platformTopics;
+    else if (activePage === 'mlops') topics = mlopsTopics;
+    else if (activePage === 'aiops') topics = aiopsTopics;
+    else if (activePage === 'ai-systems-perf') topics = aiSystemsPerfTopics;
+    else if (activePage === 'agentic') topics = agenticTopics;
+    else if (activePage === 'challenges') topics = challengesTopics;
+    else if (activePage === 'cloud') topics = cloudTopics;
+    else if (activePage === 'linux') topics = linuxTopics;
+    else if (activePage === 'networking') topics = networkingTopics;
+    else if (activePage === 'troubleshooting') topics = troubleshootingTopics;
+    else if (activePage === 'war-stories') topics = warStoriesTopics;
+    else if (activePage === 'comparisons') topics = comparisonTopics;
+    else if (activePage === 'ddia') topics = ddiaTopics;
+    else return [];
 
     // Apply role-based filtering when navigating from a job prep page
     const roleFilteredIds = getRoleFilteredIds(activePage);
@@ -826,7 +800,18 @@ export default function DocsPage({ onBack }) {
       if (sortOrder === 'least') return a.questions - b.questions;
       return 0;
     });
-    const scored = scoreTopicsByQuery(topics, words);
+    const scored = topics.map(topic => {
+      const haystack = [
+        topic.title,
+        topic.subtitle,
+        topic.description,
+        topic.id,
+        ...(Array.isArray(topic.concepts) ? topic.concepts : []),
+        ...(Array.isArray(topic.tags) ? topic.tags : []),
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matched = words.filter(w => haystack.includes(w)).length;
+      return { topic, matched };
+    }).filter(({ matched }) => matched > 0);
 
     // Primary: all words match. Fallback: best partial match (≥ half words).
     const allMatch = scored.filter(({ matched }) => matched === words.length);
@@ -856,69 +841,6 @@ export default function DocsPage({ onBack }) {
   // and cascading into the OnThisPage scroll-spy loop (error #300).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const filteredTopics = useMemo(getFilteredTopics, [activePage, heavyData, searchQuery, sortOrder, jobContext]);
-
-  // Set of ids that matched the active search. Some sections (System Design's
-  // "Common System Designs", Low-Level's problem lists) render from their own
-  // raw arrays instead of `filteredTopics`, so without intersecting against
-  // this set they ignored the search box entirely and always showed the full
-  // list (e.g. searching "calendar" left every design visible). Null when no
-  // search is active so those sections fall back to their normal (role) filter.
-  const searchMatchIds = useMemo(
-    () => (searchQuery.trim() ? new Set(filteredTopics.map(t => t.id)) : null),
-    [searchQuery, filteredTopics]
-  );
-
-  // Global cross-page search. filteredTopics is scoped to the active page, which
-  // is why searching "calendar" on, say, the Coding tab found nothing. This scans
-  // every OTHER page's topics with the same scorer so matches elsewhere surface in
-  // a "More results in other sections" panel. Current page is skipped (shown natively).
-  const globalSearchResults = useMemo(() => {
-    const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!words.length) return [];
-    const results = [];
-    const seen = new Set();
-    for (const page of Object.keys(PAGE_TITLES)) {
-      if (page === activePage) continue;
-      const scored = scoreTopicsByQuery(getTopicsForPage(page), words);
-      if (!scored.length) continue;
-      const full = scored.filter(s => s.matched === words.length);
-      const chosen = full.length ? full : scored.filter(s => s.matched >= Math.ceil(words.length / 2));
-      for (const { topic, matched } of chosen) {
-        if (!topic?.id || seen.has(topic.id)) continue;
-        seen.add(topic.id);
-        results.push({ topic, page, pageTitle: PAGE_TITLES[page], matched });
-      }
-    }
-    return results.sort((a, b) => b.matched - a.matched).slice(0, 60);
-  }, [searchQuery, heavyData, activePage]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Each page's heavy topic data is loaded on demand, so global search can only
-  // see pages already visited. The first time the user searches, eagerly load
-  // every page's chunk (once) so cross-page matches are actually findable.
-  const allPagesRequestedRef = useRef(false);
-  useEffect(() => {
-    if (!searchQuery.trim() || allPagesRequestedRef.current) return;
-    allPagesRequestedRef.current = true;
-    let cancelled = false;
-    Promise.all(Object.keys(PAGE_TITLES).map(loadTopicsForPage)).then((loaded) => {
-      if (cancelled) return;
-      const merged = {};
-      loaded.forEach((d) => { if (d && Object.keys(d).length) Object.assign(merged, d); });
-      if (Object.keys(merged).length) setHeavyData((prev) => ({ ...prev, ...merged }));
-    }).catch(() => {});
-    return () => { cancelled = true; };
-  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Open a global-search result: switch to its page, select it, clear the query.
-  const openGlobalResult = useCallback((page, topicId) => {
-    setSearchQuery('');
-    setActivePageState(page);
-    setActiveSection(page);
-    setJobContext(null);
-    setSelectedTopic(topicId);
-    const el = document.getElementById('app-scroll-container');
-    if (el) el.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [setSelectedTopic, setActiveSection]);
 
   // Get page title and color
   const getPageConfig = () => {
@@ -1898,39 +1820,6 @@ export default function DocsPage({ onBack }) {
                   </div>
                   )}
 
-                  {/* Global cross-page search — surfaces matches from OTHER
-                      sections so a query isn't trapped on the current tab. */}
-                  {activePage !== 'overview' && searchQuery.trim() && globalSearchResults.length > 0 && (
-                    <div className="mb-6 rounded-lg overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                      <div className="px-4 py-2 flex items-center gap-2.5" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-                        <Icon name="search" size={12} style={{ color: 'var(--cam-gold-leaf-lt)' }} />
-                        <h3 className="text-[12px] font-bold uppercase tracking-[0.12em] landing-display" style={{ color: 'var(--cam-strip-heading)' }}>More results in other sections</h3>
-                        <Chip>{globalSearchResults.length}</Chip>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 p-3">
-                        {globalSearchResults.map(({ topic, page, pageTitle }) => (
-                          <button
-                            key={`${page}:${topic.id}`}
-                            onClick={() => openGlobalResult(page, topic.id)}
-                            className="group text-left rounded p-3 flex items-center justify-between gap-2 cursor-pointer transition-colors min-w-0"
-                            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: 'var(--accent-subtle)' }}>
-                                <Icon name={topic.icon || 'book'} size={12} style={{ color: 'var(--accent)' }} />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors truncate">{topic.title}</div>
-                                <div className="text-[10px] landing-mono uppercase tracking-wider text-[var(--text-muted)] truncate">{pageTitle}</div>
-                              </div>
-                            </div>
-                            <Icon name="chevronRight" size={12} className="text-[var(--text-muted)] group-hover:text-[var(--accent)] flex-shrink-0" />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
               {/* Loading skeleton — shown while heavyData chunk fetches */}
               {topicsLoading && filteredTopics.length === 0 && activePage !== 'overview' && activePage !== 'resume' && (
                 <div className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
@@ -2154,12 +2043,9 @@ export default function DocsPage({ onBack }) {
                       const roleSDProblemIds = !showAllContent && jobContext?.role && ROLE_TOPIC_MAP[jobContext.role]?.systemDesignProblems?.length > 0
                         ? new Set(ROLE_TOPIC_MAP[jobContext.role].systemDesignProblems)
                         : null;
-                      let filteredDesigns = roleSDProblemIds
+                      const filteredDesigns = roleSDProblemIds
                         ? systemDesigns.filter(d => roleSDProblemIds.has(d.id))
                         : systemDesigns;
-                      // Respect the search box: when a query is active, only keep
-                      // designs that matched it (filteredTopics already scores these).
-                      if (searchMatchIds) filteredDesigns = filteredDesigns.filter(d => searchMatchIds.has(d.id));
                       const categoryDesigns = filteredDesigns.filter(d => systemDesignProblemCategoryMap[d.id] === category.id);
                       if (categoryDesigns.length === 0) return null;
                       return (
@@ -2239,7 +2125,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="space-y-3">
                     {lldProblemCategories.map((category) => {
-                      const categoryProblems = (searchMatchIds ? lldProblems.filter(p => searchMatchIds.has(p.id)) : lldProblems).filter(p => lldProblemCategoryMap[p.id] === category.id);
+                      const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
                       if (categoryProblems.length === 0) return null;
                       // diffStyle is computed inline per-problem below
                       return (
@@ -2609,7 +2495,7 @@ export default function DocsPage({ onBack }) {
                     />
                     <div className="space-y-3">
                     {lldProblemCategories.map((category) => {
-                      const categoryProblems = (searchMatchIds ? lldProblems.filter(p => searchMatchIds.has(p.id)) : lldProblems).filter(p => lldProblemCategoryMap[p.id] === category.id);
+                      const categoryProblems = lldProblems.filter(p => lldProblemCategoryMap[p.id] === category.id);
                       if (categoryProblems.length === 0) return null;
                       return (
                         <div key={category.id} className="rounded overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
