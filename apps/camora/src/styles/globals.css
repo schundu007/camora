@@ -1000,25 +1000,29 @@
    cards, panels and inner surfaces are untouched. The width lives on the
    COLUMN, never on individual <p> tags (which previously caused half-width,
    left-aligned prose). Figures, code, tables and diagrams break out wider than
-   the text so they still read big. System serifs only — no webfont load. */
+   the text so they still read big. Set in an editorial serif pairing —
+   Newsreader for body, Fraunces for headings (loaded in index.html). Each
+   family also carries its own accent hue so no two topics feel identical. */
 .prep-content.flex-1 {
   max-width: 66rem;
   margin-inline: auto;
+  --topic-accent: var(--accent); /* per-family override below; default = base blue */
 }
 .prep-content.flex-1 p,
 .prep-content.flex-1 li,
 .prep-content.flex-1 dd,
 .prep-content.flex-1 blockquote {
-  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
+  font-family: 'Newsreader', 'Iowan Old Style', Georgia, Cambria, serif;
   line-height: 1.8;
 }
-/* Book headings: serif, in the reading column, for a chapter-like hierarchy. */
+/* Book headings: Fraunces — a high-contrast old-style face with real
+   character — gives the reading column its own editorial voice. */
 .prep-content.flex-1 h1,
 .prep-content.flex-1 h2,
 .prep-content.flex-1 h3,
 .prep-content.flex-1 h4,
 .prep-content.flex-1 .landing-display {
-  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
+  font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   letter-spacing: -0.01em;
 }
 /* Pull-quote / key insight — a book-style aside with a gold rule. */
@@ -1030,6 +1034,50 @@
   line-height: 1.5;
   font-style: italic;
   color: var(--text-primary);
+}
+
+/* ── Per-family reading identity ──────────────────────────────────────────
+   Each top-level prep family (activePage, set as data-family on the reading
+   column) carries its own accent hue, so no two topics feel identical. In
+   DARK mode the hue flows through the in-column accent tokens — chapter-rule
+   eyebrows, the pull-quote bar, requirement icons, inline links — giving the
+   whole reading surface a per-topic character. The outer nav / header chrome
+   sits outside .prep-content.flex-1 and stays navy-gold, untouched.
+   LIGHT mode is intentionally blue-only (see accent tokens), so the remap is
+   gated to dark; the hue defs below are inert there. */
+.prep-content.flex-1[data-family="coding"]           { --topic-accent: #6c8cff; }
+.prep-content.flex-1[data-family="system-design"]    { --topic-accent: #4fb0c6; }
+.prep-content.flex-1[data-family="databases"]        { --topic-accent: #c79245; }
+.prep-content.flex-1[data-family="behavioral"]       { --topic-accent: #d9789b; }
+.prep-content.flex-1[data-family="devops"]           { --topic-accent: #57b894; }
+.prep-content.flex-1[data-family="linux"]            { --topic-accent: #e0894e; }
+.prep-content.flex-1[data-family="networking"]       { --topic-accent: #5aa6e8; }
+.prep-content.flex-1[data-family="low-level"]        { --topic-accent: #9b8cf0; }
+.prep-content.flex-1[data-family="microservices"]    { --topic-accent: #3fbfa8; }
+.prep-content.flex-1[data-family="sre"]              { --topic-accent: #e06b60; }
+.prep-content.flex-1[data-family="observability"]    { --topic-accent: #b48cf0; }
+.prep-content.flex-1[data-family="mlops"]            { --topic-accent: #8f7ff0; }
+.prep-content.flex-1[data-family="ai-systems-perf"]  { --topic-accent: #7c9cff; }
+.prep-content.flex-1[data-family="agentic"]          { --topic-accent: #a07cf0; }
+.prep-content.flex-1[data-family="aiops"]            { --topic-accent: #7cc0f0; }
+.prep-content.flex-1[data-family="cloud"]            { --topic-accent: #5aa6e8; }
+.prep-content.flex-1[data-family="platform"]         { --topic-accent: #57b894; }
+.prep-content.flex-1[data-family="ddia"]             { --topic-accent: #c0607a; }
+.prep-content.flex-1[data-family="troubleshooting"]  { --topic-accent: #e0894e; }
+.prep-content.flex-1[data-family="war-stories"]      { --topic-accent: #c79245; }
+.prep-content.flex-1[data-family="challenges"]       { --topic-accent: #e06b60; }
+.prep-content.flex-1[data-family="comparisons"]      { --topic-accent: #4fb0c6; }
+.prep-content.flex-1[data-family="eng-blogs"]        { --topic-accent: #8f9bb3; }
+.prep-content.flex-1[data-family="roadmaps"]         { --topic-accent: #57b894; }
+.prep-content.flex-1[data-family="projects"]         { --topic-accent: #6c8cff; }
+
+/* Dark-mode only: flow the family hue through the accent tokens used inside
+   the reading column. Light mode (blue-only) skips this and keeps base blue. */
+:root:not([data-theme="light"]) .prep-content.flex-1[data-family] {
+  --accent: var(--topic-accent);
+  --accent-text: var(--topic-accent);
+  --accent-hover: color-mix(in oklab, var(--topic-accent) 85%, white);
+  --accent-subtle: color-mix(in oklab, var(--topic-accent) 12%, transparent);
 }
 
 /* ── ContentHeading ──────────────────────────────────────────────────────
@@ -1063,7 +1111,7 @@
   color: var(--accent);
 }
 .prep-content.flex-1 .content-heading-title {
-  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
+  font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.01em;
