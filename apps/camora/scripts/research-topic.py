@@ -366,10 +366,25 @@ def _update_manifest(topic_id: str, deep_dives: list[dict], tradeoffs: list[dict
         try:
             body = match.group(1)
             body = re.sub(r"//[^\n]*", "", body)
+            # The manifest is JS, not JSON: top-level keys are single-quoted and
+            # the deepDives/tradeoffs keys are unquoted. Quote them so json.loads
+            # can parse the existing entries. Without this, parsing fails, existing
+            # falls back to {}, and the write below silently drops EVERY existing
+            # topic (including hand-added / eraser-only entries).
+            body = re.sub(r"(?m)^(\s*)'([\w./-]+)'\s*:", r'\1"\2":', body)
+            body = re.sub(r"(?m)^(\s*)(deepDives|tradeoffs)\s*:", r'\1"\2":', body)
             body = re.sub(r",\s*([}\]])", r"\1", body)
             existing = json.loads(body)
         except Exception:
             existing = {}
+
+    # Guard: never let a parse failure wipe a populated manifest. If the file
+    # clearly held entries but we parsed none, abort rather than overwrite.
+    if not existing and "deepDives" in content:
+        raise RuntimeError(
+            "refusing to write manifest: existing entries failed to parse "
+            "(would wipe every topic). Fix the parser before regenerating."
+        )
 
     existing[topic_id] = {
         "deepDives": [
