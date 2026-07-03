@@ -955,6 +955,25 @@ export default function TopicDetail({
         </div>
       </div>
 
+      {/* ── Author byline — renders on every topic ── */}
+      <div className="flex items-center gap-3 mb-4">
+        <img
+          src="/author-chundu.jpg"
+          alt="Sudhakar Chundu"
+          width={40}
+          height={40}
+          loading="lazy"
+          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+          style={{ border: '1px solid var(--border)' }}
+        />
+        <div className="min-w-0 leading-tight">
+          <div className="text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sudhakar Chundu</div>
+          <div className="text-[10px] uppercase tracking-[0.12em] landing-mono truncate" style={{ color: 'var(--text-muted)' }}>
+            18+ yrs · GPU Compute · SRE · Platform · FinOps
+          </div>
+        </div>
+      </div>
+
       {/* ── Interactive Toolbar ── */}
       <div className="flex flex-wrap items-center justify-between gap-2 py-3 mb-5 border-b border-[var(--border)]">
         {/* Left — primary actions */}
