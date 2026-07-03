@@ -1,0 +1,30 @@
+{
+  "title": "Slack — Real-Time Messaging Platform",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Realtime Edge" },
+    { "id": "core", "label": "Messaging Core" },
+    { "id": "async", "label": "Async Fanout" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients", "type": "client" },
+    { "id": "ws", "label": "WebSocket\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "presence", "label": "Presence\nService", "type": "cache", "cluster": "edge" },
+    { "id": "msg", "label": "Message\nService", "type": "compute", "cluster": "core" },
+    { "id": "store", "label": "Message\nHistory DB", "type": "db", "cluster": "core" },
+    { "id": "bus", "label": "Channel\nEvent Bus", "type": "eventbus", "cluster": "core" },
+    { "id": "notify", "label": "Notification\nRouter", "type": "function", "cluster": "async" },
+    { "id": "search", "label": "History\nSearch", "type": "search", "cluster": "async" },
+    { "id": "files", "label": "File\nStorage", "type": "storage", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "ws", "label": "connect", "kind": "main" },
+    { "from": "ws", "to": "msg", "label": "send msg", "kind": "main" },
+    { "from": "ws", "to": "presence", "label": "online", "kind": "control" },
+    { "from": "msg", "to": "store", "label": "persist", "kind": "main" },
+    { "from": "msg", "to": "bus", "label": "fanout", "kind": "main" },
+    { "from": "bus", "to": "notify", "kind": "control" },
+    { "from": "store", "to": "search", "label": "index", "kind": "control" },
+    { "from": "msg", "to": "files", "label": "attach", "kind": "control" }
+  ]
+}

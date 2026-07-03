@@ -1,0 +1,28 @@
+{
+  "title": "Docs Platform — Markdown, Search & CDN",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Application" },
+    { "id": "data", "label": "Storage" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Readers", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn", "cluster": "edge" },
+    { "id": "api", "label": "Docs API", "type": "apigw", "cluster": "app" },
+    { "id": "renderer", "label": "Markdown\nRenderer", "type": "compute", "cluster": "app" },
+    { "id": "search", "label": "Full-text\nSearch", "type": "search", "cluster": "app" },
+    { "id": "content", "label": "Content Store\n(rendered HTML)", "type": "storage", "cluster": "data" },
+    { "id": "versions", "label": "Version History\n(git-backed)", "type": "db", "cluster": "data" },
+    { "id": "monitor", "label": "Monitoring", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "request", "kind": "main" },
+    { "from": "cdn", "to": "api", "label": "cache miss", "kind": "main" },
+    { "from": "api", "to": "renderer", "label": "render", "kind": "main" },
+    { "from": "renderer", "to": "content", "label": "store", "kind": "main" },
+    { "from": "api", "to": "search", "label": "query", "kind": "control" },
+    { "from": "renderer", "to": "versions", "label": "commit", "kind": "control" },
+    { "from": "api", "to": "monitor", "label": "metrics", "kind": "control" }
+  ]
+}

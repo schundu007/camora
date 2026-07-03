@@ -1,0 +1,33 @@
+{
+  "title": "URL Shortener — Base62 Redirect at Scale",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Application" },
+    { "id": "data", "label": "Storage" },
+    { "id": "async", "label": "Analytics" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "waf", "label": "WAF\n(abuse guard)", "type": "waf", "cluster": "edge" },
+    { "id": "svc", "label": "Shorten /\nRedirect Svc", "type": "compute", "cluster": "app" },
+    { "id": "keygen", "label": "Base62 Key\nGenerator", "type": "function", "cluster": "app" },
+    { "id": "cache", "label": "Redirect\nCache", "type": "cache", "cluster": "data" },
+    { "id": "kv", "label": "Key-Value\nStore", "type": "nosql", "cluster": "data" },
+    { "id": "clicks", "label": "Click\nStream", "type": "stream", "cluster": "async" },
+    { "id": "analytics", "label": "Click\nAnalytics", "type": "analytics", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "GET /abc", "kind": "main" },
+    { "from": "cdn", "to": "waf", "label": "miss", "kind": "main" },
+    { "from": "waf", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "svc", "kind": "main" },
+    { "from": "keygen", "to": "svc", "label": "new key", "kind": "control" },
+    { "from": "svc", "to": "cache", "label": "lookup", "kind": "main" },
+    { "from": "cache", "to": "kv", "label": "cache miss", "kind": "main" },
+    { "from": "svc", "to": "clicks", "label": "log click", "kind": "control" },
+    { "from": "clicks", "to": "analytics", "kind": "control" }
+  ]
+}

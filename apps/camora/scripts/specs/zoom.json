@@ -1,0 +1,34 @@
+{
+  "title": "Zoom — SFU Video Conferencing",
+  "direction": "LR",
+  "clusters": [
+    { "id": "signal", "label": "Signaling" },
+    { "id": "media", "label": "Media Plane (SFU)" },
+    { "id": "record", "label": "Recording" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Participants\n(WebRTC)", "type": "client" },
+    { "id": "lb", "label": "Edge\nLoad Balancer", "type": "lb" },
+    { "id": "signal_svc", "label": "Signaling\nService", "type": "compute", "cluster": "signal" },
+    { "id": "room_db", "label": "Room / Session\nState", "type": "nosql", "cluster": "signal" },
+    { "id": "sfu", "label": "Media Server\n(SFU forward)", "type": "container", "cluster": "media" },
+    { "id": "screen", "label": "Screen Share\nTrack", "type": "stream", "cluster": "media" },
+    { "id": "breakout", "label": "Breakout\nRoom Mgr", "type": "function", "cluster": "media" },
+    { "id": "rec_svc", "label": "Recording\nService", "type": "compute", "cluster": "record" },
+    { "id": "rec_store", "label": "Cloud\nRecording Store", "type": "storage", "cluster": "record" },
+    { "id": "cdn", "label": "Playback\nCDN", "type": "cdn", "cluster": "record" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "lb", "label": "join", "kind": "main" },
+    { "from": "lb", "to": "signal_svc", "label": "signaling", "kind": "main" },
+    { "from": "signal_svc", "to": "room_db", "label": "session", "kind": "control" },
+    { "from": "signal_svc", "to": "sfu", "label": "assign", "kind": "main" },
+    { "from": "clients", "to": "sfu", "label": "media\ntracks", "kind": "main" },
+    { "from": "sfu", "to": "clients", "label": "forward", "kind": "main" },
+    { "from": "screen", "to": "sfu", "label": "share", "kind": "control" },
+    { "from": "breakout", "to": "sfu", "label": "sub-rooms", "kind": "control" },
+    { "from": "sfu", "to": "rec_svc", "label": "mix", "kind": "control" },
+    { "from": "rec_svc", "to": "rec_store", "label": "store", "kind": "control" },
+    { "from": "rec_store", "to": "cdn", "label": "playback", "kind": "control" }
+  ]
+}

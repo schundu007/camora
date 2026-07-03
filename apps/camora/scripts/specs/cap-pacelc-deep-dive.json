@@ -1,0 +1,27 @@
+{
+  "title": "CAP / PACELC — Consistency vs Latency",
+  "direction": "LR",
+  "clusters": [
+    { "id": "leader", "label": "Leader Side  ·  Consistency" },
+    { "id": "follower", "label": "Follower Side  ·  Availability" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients", "type": "users" },
+    { "id": "lb", "label": "Router", "type": "lb" },
+    { "id": "arbiter", "label": "Failure\nDetector", "type": "monitor" },
+    { "id": "leader", "label": "Leader\n(sync quorum)", "type": "db", "cluster": "leader" },
+    { "id": "lcache", "label": "Strong Read", "type": "cache", "cluster": "leader" },
+    { "id": "follower", "label": "Follower\n(async)", "type": "db", "cluster": "follower" },
+    { "id": "fcache", "label": "Fast Read\n(stale ok)", "type": "cache", "cluster": "follower" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "lb", "kind": "main" },
+    { "from": "lb", "to": "leader", "label": "write (E→L)", "kind": "main" },
+    { "from": "leader", "to": "lcache", "label": "consistent read" },
+    { "from": "lb", "to": "follower", "label": "read (A)", "kind": "main" },
+    { "from": "follower", "to": "fcache", "label": "low latency" },
+    { "from": "leader", "to": "follower", "label": "replicate (P: may lag)", "kind": "control" },
+    { "from": "arbiter", "to": "leader", "label": "quorum", "kind": "control" },
+    { "from": "arbiter", "to": "follower", "label": "partition detect", "kind": "control" }
+  ]
+}

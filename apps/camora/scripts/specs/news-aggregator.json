@@ -1,0 +1,29 @@
+{
+  "title": "News Aggregator — Ingest, NLP Ranking & Trending",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Ingestion" },
+    { "id": "process", "label": "Processing" },
+    { "id": "serve", "label": "Serving" }
+  ],
+  "nodes": [
+    { "id": "sources", "label": "RSS / Webhook\nSources", "type": "internet" },
+    { "id": "collector", "label": "Ingest\nCollector", "type": "function", "cluster": "ingest" },
+    { "id": "bus", "label": "Article\nStream", "type": "stream", "cluster": "ingest" },
+    { "id": "nlp", "label": "Dedup + NLP\nClassifier", "type": "analytics", "cluster": "process" },
+    { "id": "store", "label": "Article Store", "type": "nosql", "cluster": "process" },
+    { "id": "rank", "label": "Personalized\nRanking", "type": "compute", "cluster": "serve" },
+    { "id": "cache", "label": "Feed Cache", "type": "cache", "cluster": "serve" },
+    { "id": "clients", "label": "Readers", "type": "client" }
+  ],
+  "edges": [
+    { "from": "sources", "to": "collector", "label": "poll", "kind": "main" },
+    { "from": "collector", "to": "bus", "kind": "main" },
+    { "from": "bus", "to": "nlp", "label": "process", "kind": "main" },
+    { "from": "nlp", "to": "store", "label": "index", "kind": "main" },
+    { "from": "clients", "to": "rank", "label": "get feed", "kind": "main" },
+    { "from": "rank", "to": "cache", "label": "hit", "kind": "main" },
+    { "from": "rank", "to": "store", "label": "fetch", "kind": "main" },
+    { "from": "nlp", "to": "cache", "label": "trending", "kind": "control" }
+  ]
+}

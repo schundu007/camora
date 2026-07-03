@@ -1,0 +1,29 @@
+{
+  "title": "Checksum Verification — Integrity Across Storage & Transit",
+  "direction": "LR",
+  "clusters": [
+    { "id": "write", "label": "Write Path" },
+    { "id": "store", "label": "Storage" },
+    { "id": "read", "label": "Read Path" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "writer", "label": "Writer", "type": "compute", "cluster": "write" },
+    { "id": "hash_w", "label": "Compute Hash\n(SHA-256)", "type": "function", "cluster": "write" },
+    { "id": "blob", "label": "Object Store\n(data + checksum)", "type": "storage", "cluster": "store" },
+    { "id": "catalog", "label": "Checksum\nCatalog", "type": "db", "cluster": "store" },
+    { "id": "reader", "label": "Reader", "type": "compute", "cluster": "read" },
+    { "id": "hash_r", "label": "Recompute\n& Compare", "type": "function", "cluster": "read" },
+    { "id": "scrubber", "label": "Background\nScrubber", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "writer", "label": "upload", "kind": "main" },
+    { "from": "writer", "to": "hash_w", "kind": "main" },
+    { "from": "hash_w", "to": "blob", "label": "data + hash", "kind": "main" },
+    { "from": "blob", "to": "reader", "label": "fetch", "kind": "main" },
+    { "from": "reader", "to": "hash_r", "label": "verify", "kind": "main" },
+    { "from": "hash_w", "to": "catalog", "label": "store digest", "kind": "control" },
+    { "from": "hash_r", "to": "catalog", "label": "compare", "kind": "control" },
+    { "from": "scrubber", "to": "blob", "label": "detect bit rot", "kind": "control" }
+  ]
+}

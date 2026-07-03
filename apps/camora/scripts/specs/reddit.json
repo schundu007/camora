@@ -1,0 +1,31 @@
+{
+  "title": "Reddit — Posts, Ranking & Search",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge & API" },
+    { "id": "core", "label": "Content Services" },
+    { "id": "async", "label": "Async Pipelines" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn" },
+    { "id": "api", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "posts", "label": "Post & Comment\nService", "type": "compute", "cluster": "core" },
+    { "id": "store", "label": "Post\nStore", "type": "db", "cluster": "core" },
+    { "id": "feed", "label": "Feed Ranking\n(hot/new/top)", "type": "cache", "cluster": "core" },
+    { "id": "votes", "label": "Vote Counter\nStream", "type": "stream", "cluster": "async" },
+    { "id": "mod", "label": "Content\nModeration", "type": "function", "cluster": "async" },
+    { "id": "search", "label": "Full-Text\nSearch", "type": "search", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "browse", "kind": "main" },
+    { "from": "cdn", "to": "api", "kind": "main" },
+    { "from": "api", "to": "posts", "label": "read/write", "kind": "main" },
+    { "from": "posts", "to": "store", "label": "persist", "kind": "main" },
+    { "from": "api", "to": "feed", "label": "rank feed", "kind": "main" },
+    { "from": "posts", "to": "votes", "label": "upvote", "kind": "control" },
+    { "from": "votes", "to": "feed", "label": "score", "kind": "control" },
+    { "from": "posts", "to": "mod", "kind": "control" },
+    { "from": "store", "to": "search", "label": "index", "kind": "control" }
+  ]
+}

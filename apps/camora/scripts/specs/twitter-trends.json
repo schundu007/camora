@@ -1,0 +1,28 @@
+{
+  "title": "Twitter Trends — Sliding-Window Heavy Hitters",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Stream Ingest" },
+    { "id": "compute", "label": "Detection & Ranking" },
+    { "id": "serve", "label": "Serving" }
+  ],
+  "nodes": [
+    { "id": "firehose", "label": "Tweet\nFirehose", "type": "client" },
+    { "id": "stream", "label": "Event Stream", "type": "stream", "cluster": "ingest" },
+    { "id": "cms", "label": "Count-Min\n(sliding window)", "type": "function", "cluster": "ingest" },
+    { "id": "detector", "label": "Heavy Hitter\nDetection", "type": "compute", "cluster": "compute" },
+    { "id": "geo", "label": "Geo Trends\n(per region)", "type": "cache", "cluster": "compute" },
+    { "id": "history", "label": "Trend History", "type": "db", "cluster": "compute" },
+    { "id": "apigw", "label": "Trends API", "type": "apigw", "cluster": "serve" },
+    { "id": "users", "label": "Users", "type": "users" }
+  ],
+  "edges": [
+    { "from": "firehose", "to": "stream", "label": "hashtags", "kind": "main" },
+    { "from": "stream", "to": "cms", "label": "window count", "kind": "main" },
+    { "from": "cms", "to": "detector", "label": "candidates", "kind": "main" },
+    { "from": "detector", "to": "geo", "label": "rank by region", "kind": "main" },
+    { "from": "detector", "to": "history", "label": "persist", "kind": "control" },
+    { "from": "users", "to": "apigw", "label": "GET trends", "kind": "main" },
+    { "from": "apigw", "to": "geo", "label": "read", "kind": "main" }
+  ]
+}

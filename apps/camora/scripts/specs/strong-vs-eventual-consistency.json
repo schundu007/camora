@@ -1,0 +1,26 @@
+{
+  "title": "Consistency — Strong vs Eventual",
+  "direction": "LR",
+  "clusters": [
+    { "id": "strong", "label": "Strong (linearizable)" },
+    { "id": "eventual", "label": "Eventual (causal)" }
+  ],
+  "nodes": [
+    { "id": "writer", "label": "Writer", "type": "client" },
+    { "id": "coord", "label": "Coordinator", "type": "lb" },
+    { "id": "primary", "label": "Primary\n(quorum write)", "type": "db", "cluster": "strong" },
+    { "id": "replica", "label": "Sync Replica", "type": "db", "cluster": "strong" },
+    { "id": "leader", "label": "Leader Region", "type": "nosql", "cluster": "eventual" },
+    { "id": "follower", "label": "Async Follower", "type": "nosql", "cluster": "eventual" },
+    { "id": "reader", "label": "Reader", "type": "client" }
+  ],
+  "edges": [
+    { "from": "writer", "to": "coord", "label": "write", "kind": "main" },
+    { "from": "coord", "to": "primary", "label": "quorum ack", "kind": "main" },
+    { "from": "primary", "to": "replica", "label": "sync replicate", "kind": "main" },
+    { "from": "replica", "to": "reader", "label": "read-your-writes", "kind": "main" },
+    { "from": "coord", "to": "leader", "label": "write" },
+    { "from": "leader", "to": "follower", "label": "async\n(lag)", "kind": "control" },
+    { "from": "follower", "to": "reader", "label": "stale read", "kind": "control" }
+  ]
+}

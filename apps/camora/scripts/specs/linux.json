@@ -1,0 +1,28 @@
+{
+  "title": "Linux — Kernel & User Space",
+  "direction": "LR",
+  "clusters": [
+    { "id": "user", "label": "User Space" },
+    { "id": "kernel", "label": "Kernel Space" },
+    { "id": "hw", "label": "Hardware" }
+  ],
+  "nodes": [
+    { "id": "apps", "label": "Applications", "type": "client", "cluster": "user" },
+    { "id": "libs", "label": "libc /\nRuntime", "type": "compute", "cluster": "user" },
+    { "id": "syscall", "label": "System Call\nInterface", "type": "apigw" },
+    { "id": "sched", "label": "Process\nScheduler", "type": "compute", "cluster": "kernel" },
+    { "id": "mem", "label": "Memory\nManager", "type": "cache", "cluster": "kernel" },
+    { "id": "vfs", "label": "VFS /\nFilesystem", "type": "storage", "cluster": "kernel" },
+    { "id": "drivers", "label": "Device\nDrivers", "type": "container", "cluster": "kernel" },
+    { "id": "disk", "label": "Disk / NIC\nHardware", "type": "storage", "cluster": "hw" }
+  ],
+  "edges": [
+    { "from": "apps", "to": "libs", "label": "call", "kind": "main" },
+    { "from": "libs", "to": "syscall", "label": "trap", "kind": "main" },
+    { "from": "syscall", "to": "sched", "label": "dispatch", "kind": "main" },
+    { "from": "syscall", "to": "vfs", "label": "read / write", "kind": "main" },
+    { "from": "vfs", "to": "drivers", "label": "block I/O", "kind": "main" },
+    { "from": "drivers", "to": "disk", "label": "hardware", "kind": "main" },
+    { "from": "sched", "to": "mem", "label": "page / alloc", "kind": "control" }
+  ]
+}

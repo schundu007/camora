@@ -1,0 +1,32 @@
+{
+  "title": "Strava — GPS Ingestion & Segments",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "ingest", "label": "Ingest Pipeline" },
+    { "id": "data", "label": "Data" },
+    { "id": "social", "label": "Social" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Athletes", "type": "users" },
+    { "id": "mobile", "label": "Mobile App", "type": "mobile" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "queue", "label": "Activity\nIngest Queue", "type": "queue", "cluster": "ingest" },
+    { "id": "matcher", "label": "Segment\nMatching", "type": "function", "cluster": "ingest" },
+    { "id": "actdb", "label": "Activity Store", "type": "db", "cluster": "data" },
+    { "id": "board", "label": "Leaderboards\n(Redis ZSET)", "type": "cache", "cluster": "data" },
+    { "id": "feed", "label": "Activity Feed", "type": "compute", "cluster": "social" },
+    { "id": "graph", "label": "Social Graph", "type": "nosql", "cluster": "social" }
+  ],
+  "edges": [
+    { "from": "users", "to": "mobile", "kind": "main" },
+    { "from": "mobile", "to": "apigw", "label": "upload GPS", "kind": "main" },
+    { "from": "apigw", "to": "queue", "label": "activity", "kind": "main" },
+    { "from": "queue", "to": "matcher", "kind": "main" },
+    { "from": "matcher", "to": "actdb", "label": "store", "kind": "main" },
+    { "from": "matcher", "to": "board", "label": "rank", "kind": "control" },
+    { "from": "apigw", "to": "feed", "label": "timeline" },
+    { "from": "feed", "to": "graph", "label": "follows" },
+    { "from": "feed", "to": "actdb", "label": "activities" }
+  ]
+}

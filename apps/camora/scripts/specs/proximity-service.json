@@ -1,0 +1,28 @@
+{
+  "title": "Proximity Service — Geospatial Radius Search",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Location Ingest" },
+    { "id": "index", "label": "Geospatial Index" },
+    { "id": "query", "label": "Search Path" }
+  ],
+  "nodes": [
+    { "id": "devices", "label": "Mobile\nDevices", "type": "mobile" },
+    { "id": "gw", "label": "Location\nAPI Gateway", "type": "apigw" },
+    { "id": "stream", "label": "Location Update\nStream", "type": "stream", "cluster": "ingest" },
+    { "id": "indexer", "label": "Geohash\nIndexer", "type": "function", "cluster": "ingest" },
+    { "id": "geodb", "label": "Geospatial\nStore", "type": "nosql", "cluster": "index" },
+    { "id": "search", "label": "Radius Search\nService", "type": "compute", "cluster": "query" },
+    { "id": "cache", "label": "Result\nCache", "type": "cache", "cluster": "query" },
+    { "id": "users", "label": "Users", "type": "users" }
+  ],
+  "edges": [
+    { "from": "devices", "to": "gw", "label": "update loc", "kind": "main" },
+    { "from": "gw", "to": "stream", "label": "ingest", "kind": "main" },
+    { "from": "stream", "to": "indexer", "kind": "main" },
+    { "from": "indexer", "to": "geodb", "label": "index cell", "kind": "main" },
+    { "from": "users", "to": "search", "label": "nearby?", "kind": "main" },
+    { "from": "search", "to": "cache", "label": "cache hit", "kind": "control" },
+    { "from": "search", "to": "geodb", "label": "cell scan", "kind": "main" }
+  ]
+}

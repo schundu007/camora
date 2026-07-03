@@ -1,0 +1,33 @@
+{
+  "title": "LinkedIn — Graph, Feed & Search",
+  "direction": "LR",
+  "clusters": [
+    { "id": "services", "label": "Services" },
+    { "id": "data", "label": "Data Stores" },
+    { "id": "control", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Members", "type": "users" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "profile", "label": "Profile &\nConnection Svc", "type": "compute", "cluster": "services" },
+    { "id": "feed", "label": "Feed\nAggregator", "type": "compute", "cluster": "services" },
+    { "id": "jobs", "label": "Job Search\nIndex", "type": "search", "cluster": "services" },
+    { "id": "msg", "label": "Messaging\nService", "type": "compute", "cluster": "services" },
+    { "id": "graphdb", "label": "Connection\nGraph DB", "type": "nosql", "cluster": "data" },
+    { "id": "feedcache", "label": "Feed\nCache", "type": "cache", "cluster": "data" },
+    { "id": "profiledb", "label": "Profile DB\n(+ endorsements)", "type": "db", "cluster": "data" },
+    { "id": "msgqueue", "label": "Message\nQueue", "type": "queue", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "request", "kind": "main" },
+    { "from": "apigw", "to": "profile", "kind": "main" },
+    { "from": "profile", "to": "graphdb", "label": "2nd-degree", "kind": "main" },
+    { "from": "profile", "to": "profiledb", "label": "read / write", "kind": "main" },
+    { "from": "apigw", "to": "feed", "label": "feed", "kind": "main" },
+    { "from": "feed", "to": "feedcache", "label": "timeline", "kind": "main" },
+    { "from": "feed", "to": "graphdb", "label": "network", "kind": "control" },
+    { "from": "apigw", "to": "jobs", "label": "job search", "kind": "control" },
+    { "from": "apigw", "to": "msg", "label": "chat", "kind": "control" },
+    { "from": "msg", "to": "msgqueue", "label": "deliver", "kind": "control" }
+  ]
+}

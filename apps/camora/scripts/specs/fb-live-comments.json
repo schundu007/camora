@@ -1,0 +1,31 @@
+{
+  "title": "Live Comments — WebSocket Fanout",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "pipeline", "label": "Comment Pipeline" },
+    { "id": "fanout", "label": "Fanout" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Viewers", "type": "users" },
+    { "id": "ws", "label": "WebSocket\nGateway", "type": "lb", "cluster": "edge" },
+    { "id": "ratelimit", "label": "Rate Limiter", "type": "waf", "cluster": "edge" },
+    { "id": "moderation", "label": "Moderation\n(ML filter)", "type": "function", "cluster": "pipeline" },
+    { "id": "ranking", "label": "Ranking", "type": "compute", "cluster": "pipeline" },
+    { "id": "commentq", "label": "Comment\nStream", "type": "stream", "cluster": "pipeline" },
+    { "id": "pubsub", "label": "Fanout\nPub/Sub", "type": "eventbus", "cluster": "fanout" },
+    { "id": "cache", "label": "Hot Comments\nCache", "type": "cache", "cluster": "fanout" },
+    { "id": "store", "label": "Comment Store", "type": "nosql", "cluster": "fanout" }
+  ],
+  "edges": [
+    { "from": "users", "to": "ws", "label": "post comment", "kind": "main" },
+    { "from": "ws", "to": "ratelimit", "label": "throttle", "kind": "main" },
+    { "from": "ratelimit", "to": "moderation", "label": "screen", "kind": "main" },
+    { "from": "moderation", "to": "commentq", "label": "accept", "kind": "main" },
+    { "from": "commentq", "to": "pubsub", "label": "publish", "kind": "main" },
+    { "from": "pubsub", "to": "ws", "label": "fanout", "kind": "control" },
+    { "from": "commentq", "to": "ranking", "label": "score", "kind": "control" },
+    { "from": "ranking", "to": "cache", "label": "top comments", "kind": "control" },
+    { "from": "commentq", "to": "store", "label": "persist", "kind": "control" }
+  ]
+}

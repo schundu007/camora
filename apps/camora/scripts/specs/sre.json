@@ -1,0 +1,28 @@
+{
+  "title": "SRE — SLOs, Error Budgets & Incidents",
+  "direction": "LR",
+  "clusters": [
+    { "id": "obs", "label": "Observability" },
+    { "id": "control", "label": "SRE Control Loop" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "app", "label": "Production\nServices", "type": "compute" },
+    { "id": "metrics", "label": "Metrics\n(SLIs)", "type": "monitor", "cluster": "obs" },
+    { "id": "logs", "label": "Logs", "type": "analytics", "cluster": "obs" },
+    { "id": "traces", "label": "Traces", "type": "stream", "cluster": "obs" },
+    { "id": "slo", "label": "SLO Engine\n(error budget)", "type": "compute", "cluster": "control" },
+    { "id": "alert", "label": "Alerting", "type": "eventbus", "cluster": "control" },
+    { "id": "incident", "label": "Incident\nAutomation", "type": "function", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "app", "label": "traffic", "kind": "main" },
+    { "from": "app", "to": "metrics", "label": "SLIs", "kind": "main" },
+    { "from": "app", "to": "logs" },
+    { "from": "app", "to": "traces" },
+    { "from": "metrics", "to": "slo", "label": "SLI data", "kind": "main" },
+    { "from": "slo", "to": "alert", "label": "budget burn", "kind": "main" },
+    { "from": "alert", "to": "incident", "label": "page on-call", "kind": "main" },
+    { "from": "incident", "to": "app", "label": "remediate", "kind": "control" }
+  ]
+}

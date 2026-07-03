@@ -1,0 +1,34 @@
+{
+  "title": "Uber — Real-time Matching & Dispatch",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "location", "label": "Location Ingest" },
+    { "id": "dispatch", "label": "Matching & Trip" },
+    { "id": "billing", "label": "Billing" }
+  ],
+  "nodes": [
+    { "id": "riders", "label": "Riders &\nDrivers", "type": "mobile" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "loc_stream", "label": "Location\nStream", "type": "stream", "cluster": "location" },
+    { "id": "geo", "label": "Geo Index\n(quadtree)", "type": "nosql", "cluster": "location" },
+    { "id": "match", "label": "Matching\nService", "type": "compute", "cluster": "dispatch" },
+    { "id": "surge", "label": "Surge Pricing\nEngine", "type": "function", "cluster": "dispatch" },
+    { "id": "trip", "label": "Trip State\nMachine", "type": "compute", "cluster": "dispatch" },
+    { "id": "trip_db", "label": "Trip Store", "type": "db", "cluster": "dispatch" },
+    { "id": "pay_q", "label": "Payment\nQueue", "type": "queue", "cluster": "billing" },
+    { "id": "pay", "label": "Payment\nService", "type": "function", "cluster": "billing" }
+  ],
+  "edges": [
+    { "from": "riders", "to": "gw", "label": "request ride", "kind": "main" },
+    { "from": "riders", "to": "loc_stream", "label": "GPS pings", "kind": "control" },
+    { "from": "loc_stream", "to": "geo", "label": "update", "kind": "control" },
+    { "from": "gw", "to": "match", "kind": "main" },
+    { "from": "match", "to": "geo", "label": "nearby\ndrivers", "kind": "main" },
+    { "from": "surge", "to": "match", "label": "multiplier", "kind": "control" },
+    { "from": "match", "to": "trip", "label": "assign", "kind": "main" },
+    { "from": "trip", "to": "trip_db", "label": "persist", "kind": "main" },
+    { "from": "trip", "to": "pay_q", "label": "on complete", "kind": "main" },
+    { "from": "pay_q", "to": "pay", "kind": "main" }
+  ]
+}

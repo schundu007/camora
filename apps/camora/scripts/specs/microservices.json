@@ -1,0 +1,28 @@
+{
+  "title": "Microservices — Gateway, Mesh & Tracing",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "mesh", "label": "Service Mesh" },
+    { "id": "obs", "label": "Observability" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients", "type": "client" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "disco", "label": "Service\nDiscovery", "type": "compute", "cluster": "mesh" },
+    { "id": "svc", "label": "Service +\nSidecar Proxy", "type": "container", "cluster": "mesh" },
+    { "id": "broker", "label": "Event Bus\n(async calls)", "type": "eventbus", "cluster": "mesh" },
+    { "id": "db", "label": "Service DB", "type": "db", "cluster": "mesh" },
+    { "id": "trace", "label": "Distributed\nTracing", "type": "analytics", "cluster": "obs" },
+    { "id": "metrics", "label": "Metrics\n/ Alerts", "type": "monitor", "cluster": "obs" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "apigw", "label": "request", "kind": "main" },
+    { "from": "apigw", "to": "svc", "label": "route", "kind": "main" },
+    { "from": "svc", "to": "db", "label": "read/write", "kind": "main" },
+    { "from": "svc", "to": "broker", "label": "publish", "kind": "main" },
+    { "from": "svc", "to": "disco", "label": "resolve", "kind": "control" },
+    { "from": "svc", "to": "trace", "label": "spans", "kind": "control" },
+    { "from": "svc", "to": "metrics", "label": "metrics", "kind": "control" }
+  ]
+}

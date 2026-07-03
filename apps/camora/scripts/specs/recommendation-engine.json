@@ -1,0 +1,29 @@
+{
+  "title": "Recommendation Engine — Serving & Training",
+  "direction": "LR",
+  "clusters": [
+    { "id": "serve", "label": "Online Serving" },
+    { "id": "features", "label": "Feature Layer" },
+    { "id": "train", "label": "Offline Training" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "api", "label": "Recs\nAPI", "type": "apigw", "cluster": "serve" },
+    { "id": "ranker", "label": "Ranking\nService", "type": "compute", "cluster": "serve" },
+    { "id": "ab", "label": "A/B Test\nRouter", "type": "function", "cluster": "serve" },
+    { "id": "fstore", "label": "Feature\nStore", "type": "cache", "cluster": "features" },
+    { "id": "events", "label": "Interaction\nStream", "type": "stream", "cluster": "features" },
+    { "id": "lake", "label": "Data\nLake", "type": "storage", "cluster": "train" },
+    { "id": "trainer", "label": "Model Training\n(CF + content)", "type": "analytics", "cluster": "train" }
+  ],
+  "edges": [
+    { "from": "users", "to": "api", "label": "get recs", "kind": "main" },
+    { "from": "api", "to": "ab", "kind": "main" },
+    { "from": "ab", "to": "ranker", "label": "variant", "kind": "main" },
+    { "from": "ranker", "to": "fstore", "label": "features", "kind": "main" },
+    { "from": "users", "to": "events", "label": "clicks", "kind": "control" },
+    { "from": "events", "to": "lake", "kind": "control" },
+    { "from": "lake", "to": "trainer", "label": "train", "kind": "control" },
+    { "from": "trainer", "to": "fstore", "label": "publish", "kind": "control" }
+  ]
+}

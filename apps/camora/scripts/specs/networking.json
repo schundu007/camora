@@ -1,0 +1,26 @@
+{
+  "title": "Networking — Routing, Switching, VLANs & NAT",
+  "direction": "LR",
+  "clusters": [
+    { "id": "lan", "label": "LAN (Layer 2)" },
+    { "id": "gateway", "label": "Edge Gateway (Layer 3)" },
+    { "id": "wan", "label": "WAN" }
+  ],
+  "nodes": [
+    { "id": "hosts", "label": "Hosts\n(TCP/IP stack)", "type": "client" },
+    { "id": "switch", "label": "Switch\n(VLAN tagging)", "type": "lb", "cluster": "lan" },
+    { "id": "router", "label": "Router\n(routing table)", "type": "internet", "cluster": "gateway" },
+    { "id": "nat", "label": "NAT\nTranslation", "type": "apigw", "cluster": "gateway" },
+    { "id": "fw", "label": "Firewall\n(ACL rules)", "type": "firewall", "cluster": "gateway" },
+    { "id": "isp", "label": "ISP\nUpstream", "type": "internet", "cluster": "wan" },
+    { "id": "dest", "label": "Remote\nServer", "type": "compute", "cluster": "wan" }
+  ],
+  "edges": [
+    { "from": "hosts", "to": "switch", "label": "frames", "kind": "main" },
+    { "from": "switch", "to": "router", "label": "L3 route", "kind": "main" },
+    { "from": "router", "to": "nat", "kind": "main" },
+    { "from": "nat", "to": "fw", "label": "translate", "kind": "main" },
+    { "from": "fw", "to": "isp", "label": "egress", "kind": "main" },
+    { "from": "isp", "to": "dest", "label": "packets", "kind": "main" }
+  ]
+}

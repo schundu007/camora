@@ -1,0 +1,34 @@
+{
+  "title": "WhatsApp — E2E Messaging & Delivery",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Connection Layer" },
+    { "id": "core", "label": "Messaging Core" },
+    { "id": "media", "label": "Media" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients\n(Signal E2E)", "type": "mobile" },
+    { "id": "gw", "label": "Connection\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "msg_svc", "label": "Message\nService", "type": "compute", "cluster": "core" },
+    { "id": "outbox", "label": "Offline\nQueue", "type": "queue", "cluster": "core" },
+    { "id": "fanout", "label": "Group\nFan-out", "type": "function", "cluster": "core" },
+    { "id": "msg_db", "label": "Message Store\n(cipher blobs)", "type": "nosql", "cluster": "core" },
+    { "id": "receipts", "label": "Delivery\nReceipts", "type": "eventbus", "cluster": "core" },
+    { "id": "media_svc", "label": "Media\nUpload Svc", "type": "compute", "cluster": "media" },
+    { "id": "blob", "label": "Media\nBlob Store", "type": "storage", "cluster": "media" },
+    { "id": "cdn", "label": "Media\nCDN", "type": "cdn", "cluster": "media" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "gw", "label": "send msg", "kind": "main" },
+    { "from": "gw", "to": "msg_svc", "kind": "main" },
+    { "from": "msg_svc", "to": "msg_db", "label": "persist", "kind": "main" },
+    { "from": "msg_svc", "to": "outbox", "label": "if offline", "kind": "main" },
+    { "from": "outbox", "to": "clients", "label": "deliver", "kind": "main" },
+    { "from": "msg_svc", "to": "fanout", "label": "group msg", "kind": "control" },
+    { "from": "fanout", "to": "outbox", "label": "per member", "kind": "control" },
+    { "from": "clients", "to": "receipts", "label": "ack", "kind": "control" },
+    { "from": "clients", "to": "media_svc", "label": "upload", "kind": "main" },
+    { "from": "media_svc", "to": "blob", "kind": "main" },
+    { "from": "blob", "to": "cdn", "label": "serve", "kind": "control" }
+  ]
+}

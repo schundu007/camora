@@ -1,0 +1,31 @@
+{
+  "title": "Facebook News Feed — Fanout & Ranking",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Post Ingestion" },
+    { "id": "fanout", "label": "Fanout" },
+    { "id": "serve", "label": "Feed Serving" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN\n(media assets)", "type": "cdn" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw" },
+    { "id": "post_svc", "label": "Post\nService", "type": "compute", "cluster": "ingest" },
+    { "id": "postdb", "label": "Post Store", "type": "db", "cluster": "ingest" },
+    { "id": "fanout", "label": "Fanout Worker\n(on write)", "type": "queue", "cluster": "fanout" },
+    { "id": "feedcache", "label": "Feed Cache\n(per-user)", "type": "cache", "cluster": "fanout" },
+    { "id": "ranker", "label": "Ranking\nModel", "type": "compute", "cluster": "serve" },
+    { "id": "privacy", "label": "Privacy\nFilter", "type": "compute", "cluster": "serve" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "label": "load feed", "kind": "main" },
+    { "from": "gw", "to": "ranker", "label": "rank", "kind": "main" },
+    { "from": "ranker", "to": "feedcache", "label": "read feed", "kind": "main" },
+    { "from": "feedcache", "to": "privacy", "label": "filter", "kind": "main" },
+    { "from": "gw", "to": "post_svc", "label": "new post", "kind": "control" },
+    { "from": "post_svc", "to": "postdb", "label": "persist", "kind": "control" },
+    { "from": "postdb", "to": "fanout", "label": "fanout-on-write", "kind": "control" },
+    { "from": "fanout", "to": "feedcache", "label": "push to followers", "kind": "control" },
+    { "from": "users", "to": "cdn", "label": "assets", "kind": "control" }
+  ]
+}

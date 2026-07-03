@@ -1,0 +1,31 @@
+{
+  "title": "Typeahead — Prefix Search & Top-K Completions",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Serving Path" },
+    { "id": "index", "label": "Trie Index" },
+    { "id": "build", "label": "Index Builder" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN\n(edge cache)", "type": "cdn" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "svc", "label": "Suggest\nService", "type": "compute", "cluster": "edge" },
+    { "id": "cache", "label": "Prefix Cache\n(top-K per prefix)", "type": "cache", "cluster": "edge" },
+    { "id": "trie", "label": "Trie Shards\n(prefix → top-K)", "type": "nosql", "cluster": "index" },
+    { "id": "logs", "label": "Query Log\nStream", "type": "stream", "cluster": "build" },
+    { "id": "agg", "label": "Frequency\nAggregator", "type": "analytics", "cluster": "build" },
+    { "id": "builder", "label": "Trie Builder\n(rank by freq)", "type": "function", "cluster": "build" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "keystroke", "kind": "main" },
+    { "from": "cdn", "to": "gw", "label": "miss", "kind": "main" },
+    { "from": "gw", "to": "svc", "kind": "main" },
+    { "from": "svc", "to": "cache", "label": "lookup", "kind": "main" },
+    { "from": "cache", "to": "trie", "label": "cache miss", "kind": "main" },
+    { "from": "users", "to": "logs", "label": "query logs", "kind": "control" },
+    { "from": "logs", "to": "agg", "kind": "control" },
+    { "from": "agg", "to": "builder", "kind": "control" },
+    { "from": "builder", "to": "trie", "label": "publish", "kind": "control" }
+  ]
+}

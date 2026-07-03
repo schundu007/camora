@@ -1,0 +1,30 @@
+{
+  "title": "System Security — AuthN, AuthZ, Encryption",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Perimeter" },
+    { "id": "identity", "label": "Identity & Access" },
+    { "id": "data", "label": "Protected Resources" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "waf", "label": "WAF", "type": "waf", "cluster": "edge" },
+    { "id": "tls", "label": "TLS\nTermination", "type": "tls", "cluster": "edge" },
+    { "id": "gw", "label": "API\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "oauth", "label": "OAuth / JWT\nAuth", "type": "function", "cluster": "identity" },
+    { "id": "rbac", "label": "RBAC\nAuthorization", "type": "function", "cluster": "identity" },
+    { "id": "secrets", "label": "Secrets\nManager", "type": "secrets", "cluster": "identity" },
+    { "id": "app", "label": "App\nServices", "type": "compute", "cluster": "data" },
+    { "id": "db", "label": "Encrypted\nDatabase", "type": "db", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "waf", "label": "https", "kind": "main" },
+    { "from": "waf", "to": "tls", "kind": "main" },
+    { "from": "tls", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "oauth", "label": "verify token", "kind": "main" },
+    { "from": "oauth", "to": "rbac", "label": "check role", "kind": "main" },
+    { "from": "rbac", "to": "app", "label": "allow", "kind": "main" },
+    { "from": "app", "to": "db", "label": "at-rest enc", "kind": "main" },
+    { "from": "app", "to": "secrets", "label": "fetch keys", "kind": "control" }
+  ]
+}

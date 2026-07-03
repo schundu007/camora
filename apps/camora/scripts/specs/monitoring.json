@@ -1,0 +1,26 @@
+{
+  "title": "Monitoring — Prometheus Metrics & Alerting",
+  "direction": "LR",
+  "clusters": [
+    { "id": "targets", "label": "Targets" },
+    { "id": "core", "label": "Monitoring Core" },
+    { "id": "consume", "label": "Consumers" }
+  ],
+  "nodes": [
+    { "id": "apps", "label": "Services\n(/metrics)", "type": "compute", "cluster": "targets" },
+    { "id": "prom", "label": "Prometheus\n(scrape + rules)", "type": "apigw", "cluster": "core" },
+    { "id": "tsdb", "label": "Time-Series DB", "type": "db", "cluster": "core" },
+    { "id": "agg", "label": "Aggregation\n/ Recording", "type": "function", "cluster": "core" },
+    { "id": "alert", "label": "Alert\nManager", "type": "eventbus", "cluster": "core" },
+    { "id": "dash", "label": "Grafana\nDashboards", "type": "monitor", "cluster": "consume" },
+    { "id": "notify", "label": "On-call\nNotifications", "type": "function", "cluster": "consume" }
+  ],
+  "edges": [
+    { "from": "apps", "to": "prom", "label": "pull scrape", "kind": "main" },
+    { "from": "prom", "to": "tsdb", "label": "store", "kind": "main" },
+    { "from": "tsdb", "to": "dash", "label": "query", "kind": "main" },
+    { "from": "tsdb", "to": "agg", "label": "rollup", "kind": "control" },
+    { "from": "prom", "to": "alert", "label": "fire rule", "kind": "control" },
+    { "from": "alert", "to": "notify", "label": "page", "kind": "control" }
+  ]
+}

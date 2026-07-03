@@ -1,0 +1,31 @@
+{
+  "title": "LLM Serving Platform — Prompt to Streamed Tokens",
+  "direction": "LR",
+  "clusters": [
+    { "id": "gateway", "label": "Gateway" },
+    { "id": "inference", "label": "Inference Cluster" },
+    { "id": "data", "label": "State & Billing" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "apigw", "label": "API Gateway\n(auth, rate limit)", "type": "apigw" },
+    { "id": "router", "label": "Prompt Router\n(model select)", "type": "lb", "cluster": "gateway" },
+    { "id": "cache", "label": "Answer\nCache", "type": "cache", "cluster": "gateway" },
+    { "id": "infer", "label": "Model Servers\n(GPU pods)", "type": "container", "cluster": "inference" },
+    { "id": "stream", "label": "Token\nStreaming", "type": "stream", "cluster": "inference" },
+    { "id": "ctx", "label": "Conversation\nContext", "type": "nosql", "cluster": "data" },
+    { "id": "billing", "label": "Token Billing\nLedger", "type": "db", "cluster": "data" },
+    { "id": "meter", "label": "Usage\nMetering", "type": "analytics", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "prompt", "kind": "main" },
+    { "from": "apigw", "to": "router", "kind": "main" },
+    { "from": "router", "to": "cache", "label": "check", "kind": "main" },
+    { "from": "cache", "to": "infer", "label": "cache miss", "kind": "main" },
+    { "from": "infer", "to": "stream", "label": "tokens", "kind": "main" },
+    { "from": "router", "to": "ctx", "label": "load history", "kind": "control" },
+    { "from": "infer", "to": "ctx", "label": "append turn", "kind": "control" },
+    { "from": "stream", "to": "meter", "label": "count tokens", "kind": "control" },
+    { "from": "meter", "to": "billing", "label": "charge", "kind": "control" }
+  ]
+}

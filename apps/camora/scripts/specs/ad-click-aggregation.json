@@ -1,0 +1,36 @@
+{
+  "title": "Ad Click Aggregation — Real-time + Batch",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Ingest" },
+    { "id": "stream", "label": "Stream Processing" },
+    { "id": "batch", "label": "Batch Reconciliation" },
+    { "id": "serving", "label": "Serving" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Ad\nClients", "type": "users" },
+    { "id": "gw", "label": "Ingestion API", "type": "apigw", "cluster": "ingest" },
+    { "id": "estream", "label": "Event Stream\n(Kafka)", "type": "stream", "cluster": "ingest" },
+    { "id": "dedup", "label": "Dedup\n(idempotency)", "type": "function", "cluster": "stream" },
+    { "id": "agg", "label": "Real-time\nAggregator", "type": "compute", "cluster": "stream" },
+    { "id": "counts", "label": "Counts DB", "type": "nosql", "cluster": "serving" },
+    { "id": "report", "label": "Reporting API", "type": "apigw", "cluster": "serving" },
+    { "id": "lake", "label": "Raw Log\nStore", "type": "storage", "cluster": "batch" },
+    { "id": "batchjob", "label": "Batch\nReconcile", "type": "compute", "cluster": "batch" },
+    { "id": "dwh", "label": "Warehouse", "type": "analytics", "cluster": "batch" },
+    { "id": "dash", "label": "Dashboards", "type": "client" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "label": "clicks", "kind": "main" },
+    { "from": "gw", "to": "estream", "kind": "main" },
+    { "from": "estream", "to": "dedup", "kind": "main" },
+    { "from": "dedup", "to": "agg", "kind": "main" },
+    { "from": "agg", "to": "counts", "label": "increment", "kind": "main" },
+    { "from": "counts", "to": "report", "label": "query", "kind": "main" },
+    { "from": "report", "to": "dash", "kind": "main" },
+    { "from": "estream", "to": "lake", "label": "archive", "kind": "control" },
+    { "from": "lake", "to": "batchjob", "kind": "control" },
+    { "from": "batchjob", "to": "dwh", "kind": "control" },
+    { "from": "batchjob", "to": "counts", "label": "correct", "kind": "control" }
+  ]
+}

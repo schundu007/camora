@@ -1,0 +1,27 @@
+{
+  "title": "API Design — REST/GraphQL at Scale",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Application" },
+    { "id": "data", "label": "Data" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "cdn", "label": "CDN Cache", "type": "cdn", "cluster": "edge" },
+    { "id": "gw", "label": "API Gateway\n(versioning,\nrate limit)", "type": "apigw", "cluster": "edge" },
+    { "id": "auth", "label": "Auth Service\n(JWT/OAuth)", "type": "function", "cluster": "app" },
+    { "id": "api", "label": "API Service\n(REST/GraphQL)", "type": "compute", "cluster": "app" },
+    { "id": "cache", "label": "Redis Cache", "type": "cache", "cluster": "app" },
+    { "id": "db", "label": "Database\n(pagination)", "type": "db", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "kind": "main" },
+    { "from": "cdn", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "auth", "label": "verify token", "kind": "main" },
+    { "from": "auth", "to": "api", "kind": "main" },
+    { "from": "api", "to": "cache", "label": "read", "kind": "main" },
+    { "from": "cache", "to": "db", "label": "cache miss", "kind": "main" },
+    { "from": "api", "to": "db", "label": "paged query" }
+  ]
+}

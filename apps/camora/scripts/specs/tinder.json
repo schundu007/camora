@@ -1,0 +1,32 @@
+{
+  "title": "Tinder — Discovery, Swipes & Matching",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "discovery", "label": "Discovery" },
+    { "id": "match", "label": "Swipe & Match" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "mobile", "label": "Mobile App", "type": "mobile" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "discovery", "label": "Discovery\n(geohash)", "type": "compute", "cluster": "discovery" },
+    { "id": "geoidx", "label": "Profile Geo\nIndex", "type": "nosql", "cluster": "discovery" },
+    { "id": "swipes", "label": "Swipe Events", "type": "stream", "cluster": "match" },
+    { "id": "matcher", "label": "Match\nDetector", "type": "function", "cluster": "match" },
+    { "id": "push", "label": "Push Notif", "type": "eventbus", "cluster": "match" },
+    { "id": "chat", "label": "Chat Service", "type": "compute" },
+    { "id": "msgs", "label": "Messages", "type": "nosql" }
+  ],
+  "edges": [
+    { "from": "users", "to": "mobile", "kind": "main" },
+    { "from": "mobile", "to": "apigw", "label": "swipe / browse", "kind": "main" },
+    { "from": "apigw", "to": "discovery", "label": "recommend", "kind": "main" },
+    { "from": "discovery", "to": "geoidx", "label": "geohash query", "kind": "main" },
+    { "from": "apigw", "to": "swipes", "label": "swipe event" },
+    { "from": "swipes", "to": "matcher", "label": "detect match", "kind": "main" },
+    { "from": "matcher", "to": "push", "label": "it's a match!", "kind": "control" },
+    { "from": "matcher", "to": "chat", "label": "unlock chat" },
+    { "from": "chat", "to": "msgs", "label": "history" }
+  ]
+}

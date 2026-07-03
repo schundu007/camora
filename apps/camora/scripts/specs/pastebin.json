@@ -1,0 +1,28 @@
+{
+  "title": "Pastebin — Short URLs, TTL & View Counting",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Application" },
+    { "id": "data", "label": "Storage" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN\n(read cache)", "type": "cdn", "cluster": "edge" },
+    { "id": "api", "label": "Paste API\n(base62 IDs)", "type": "apigw", "cluster": "app" },
+    { "id": "svc", "label": "Paste Service\n(syntax highlight)", "type": "compute", "cluster": "app" },
+    { "id": "meta", "label": "Metadata DB\n(TTL, ACL)", "type": "db", "cluster": "data" },
+    { "id": "blob", "label": "Content\nObject Store", "type": "storage", "cluster": "data" },
+    { "id": "cache", "label": "Hot Paste\nCache", "type": "cache", "cluster": "data" },
+    { "id": "counter", "label": "View Counter", "type": "nosql", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "read", "kind": "main" },
+    { "from": "cdn", "to": "api", "label": "miss", "kind": "main" },
+    { "from": "api", "to": "svc", "kind": "main" },
+    { "from": "svc", "to": "meta", "label": "lookup", "kind": "main" },
+    { "from": "svc", "to": "blob", "label": "fetch body", "kind": "main" },
+    { "from": "svc", "to": "cache", "label": "warm", "kind": "control" },
+    { "from": "svc", "to": "counter", "label": "increment", "kind": "control" }
+  ]
+}

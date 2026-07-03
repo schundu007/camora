@@ -1,0 +1,31 @@
+{
+  "title": "Online Judge — Sandboxed Code Execution",
+  "direction": "LR",
+  "clusters": [
+    { "id": "api", "label": "Submission Tier" },
+    { "id": "judge", "label": "Judge Farm" },
+    { "id": "data", "label": "Data Stores" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "submit", "label": "Submission\nService", "type": "compute", "cluster": "api" },
+    { "id": "queue", "label": "Submission\nQueue", "type": "queue", "cluster": "api" },
+    { "id": "sandbox", "label": "Sandbox\nExecutor", "type": "container", "cluster": "judge" },
+    { "id": "runner", "label": "Test\nRunner", "type": "container", "cluster": "judge" },
+    { "id": "tests", "label": "Problem /\nTestcase Store", "type": "storage", "cluster": "data" },
+    { "id": "cache", "label": "Verdict\nCache", "type": "cache", "cluster": "data" },
+    { "id": "resultdb", "label": "Results\nDB", "type": "db", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "submit code", "kind": "main" },
+    { "from": "apigw", "to": "submit", "kind": "main" },
+    { "from": "submit", "to": "queue", "label": "enqueue", "kind": "main" },
+    { "from": "queue", "to": "sandbox", "label": "dispatch", "kind": "main" },
+    { "from": "sandbox", "to": "runner", "label": "run tests", "kind": "main" },
+    { "from": "runner", "to": "tests", "label": "fetch cases", "kind": "main" },
+    { "from": "runner", "to": "resultdb", "label": "verdict", "kind": "main" },
+    { "from": "submit", "to": "cache", "label": "cache hit", "kind": "control" },
+    { "from": "runner", "to": "cache", "label": "store verdict", "kind": "control" }
+  ]
+}

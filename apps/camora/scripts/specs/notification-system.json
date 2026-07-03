@@ -1,0 +1,28 @@
+{
+  "title": "Notification System — Multi-Channel Fan-out",
+  "direction": "LR",
+  "clusters": [
+    { "id": "intake", "label": "Intake" },
+    { "id": "route", "label": "Routing" },
+    { "id": "channels", "label": "Channel Workers" }
+  ],
+  "nodes": [
+    { "id": "producers", "label": "Source\nServices", "type": "compute" },
+    { "id": "api", "label": "Notification\nAPI", "type": "apigw", "cluster": "intake" },
+    { "id": "prefs", "label": "Preference\nStore", "type": "db", "cluster": "intake" },
+    { "id": "fanout", "label": "Priority\nFan-out Queue", "type": "queue", "cluster": "route" },
+    { "id": "rate", "label": "Rate\nLimiter", "type": "cache", "cluster": "route" },
+    { "id": "workers", "label": "Push / Email /\nSMS Workers", "type": "function", "cluster": "channels" },
+    { "id": "providers", "label": "Delivery\nProviders", "type": "internet", "cluster": "channels" },
+    { "id": "tracking", "label": "Delivery\nTracking", "type": "analytics" }
+  ],
+  "edges": [
+    { "from": "producers", "to": "api", "label": "notify", "kind": "main" },
+    { "from": "api", "to": "fanout", "label": "enqueue", "kind": "main" },
+    { "from": "fanout", "to": "workers", "label": "dispatch", "kind": "main" },
+    { "from": "workers", "to": "providers", "label": "send", "kind": "main" },
+    { "from": "api", "to": "prefs", "label": "check opt-in", "kind": "control" },
+    { "from": "workers", "to": "rate", "label": "throttle", "kind": "control" },
+    { "from": "providers", "to": "tracking", "label": "receipts", "kind": "control" }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "title": "Database Indexes — B-Tree, Hash & Composite",
+  "direction": "LR",
+  "clusters": [
+    { "id": "engine", "label": "Query Engine" },
+    { "id": "indexes", "label": "Index Structures" },
+    { "id": "storage", "label": "Storage" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Query", "type": "client" },
+    { "id": "planner", "label": "Query Planner", "type": "compute", "cluster": "engine" },
+    { "id": "buffer", "label": "Buffer Pool", "type": "cache", "cluster": "engine" },
+    { "id": "btree", "label": "B-Tree Index\n(range scans)", "type": "db", "cluster": "indexes" },
+    { "id": "hashidx", "label": "Hash Index\n(point lookup)", "type": "nosql", "cluster": "indexes" },
+    { "id": "composite", "label": "Composite\nIndex", "type": "db", "cluster": "indexes" },
+    { "id": "heap", "label": "Table Heap\n(row data)", "type": "storage", "cluster": "storage" }
+  ],
+  "edges": [
+    { "from": "client", "to": "planner", "label": "SQL", "kind": "main" },
+    { "from": "planner", "to": "buffer", "label": "check", "kind": "main" },
+    { "from": "buffer", "to": "btree", "label": "index scan", "kind": "main" },
+    { "from": "btree", "to": "heap", "label": "fetch rows", "kind": "main" },
+    { "from": "planner", "to": "hashidx", "label": "equality", "kind": "control" },
+    { "from": "planner", "to": "composite", "label": "multi-column", "kind": "control" }
+  ]
+}

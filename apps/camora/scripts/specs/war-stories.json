@@ -1,0 +1,33 @@
+{
+  "title": "War Stories — Failure Modes & Recovery",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Front Door" },
+    { "id": "app", "label": "Service Tier" },
+    { "id": "data", "label": "Data Tier" },
+    { "id": "recover", "label": "Recovery Controls" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Traffic\nSurge", "type": "users" },
+    { "id": "lb", "label": "Load Balancer\n(shed load)", "type": "lb", "cluster": "edge" },
+    { "id": "breaker", "label": "Circuit\nBreaker", "type": "firewall", "cluster": "app" },
+    { "id": "svc", "label": "Service\n(cascading fail)", "type": "compute", "cluster": "app" },
+    { "id": "cache", "label": "Cache\n(thundering herd)", "type": "cache", "cluster": "data" },
+    { "id": "primary", "label": "DB Primary\n(split-brain)", "type": "db", "cluster": "data" },
+    { "id": "replica", "label": "DB Replica\n(failover)", "type": "db", "cluster": "data" },
+    { "id": "retry_q", "label": "Retry Queue\n(backoff)", "type": "queue", "cluster": "recover" },
+    { "id": "monitor", "label": "Health &\nAlerting", "type": "monitor", "cluster": "recover" }
+  ],
+  "edges": [
+    { "from": "users", "to": "lb", "label": "spike", "kind": "main" },
+    { "from": "lb", "to": "breaker", "kind": "main" },
+    { "from": "breaker", "to": "svc", "kind": "main" },
+    { "from": "svc", "to": "cache", "label": "read", "kind": "main" },
+    { "from": "cache", "to": "primary", "label": "miss\n(herd)", "kind": "main" },
+    { "from": "primary", "to": "replica", "label": "replicate", "kind": "control" },
+    { "from": "svc", "to": "retry_q", "label": "overflow", "kind": "control" },
+    { "from": "retry_q", "to": "svc", "label": "retry", "kind": "control" },
+    { "from": "monitor", "to": "breaker", "label": "trip", "kind": "control" },
+    { "from": "monitor", "to": "replica", "label": "promote", "kind": "control" }
+  ]
+}

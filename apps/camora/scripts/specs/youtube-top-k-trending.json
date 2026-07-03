@@ -1,0 +1,29 @@
+{
+  "title": "Top-K Trending — Count-Min Sketch Heavy Hitters",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Event Ingest" },
+    { "id": "process", "label": "Stream Processing" },
+    { "id": "serve", "label": "Serving" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Video\nPlayers", "type": "client" },
+    { "id": "gw", "label": "Event\nCollector", "type": "apigw", "cluster": "ingest" },
+    { "id": "stream", "label": "View Event\nStream", "type": "stream", "cluster": "ingest" },
+    { "id": "cms", "label": "Count-Min\nSketch", "type": "function", "cluster": "process" },
+    { "id": "heap", "label": "Heavy Hitters\n(top-K heap)", "type": "compute", "cluster": "process" },
+    { "id": "topk_db", "label": "Trending\nStore", "type": "nosql", "cluster": "serve" },
+    { "id": "cache", "label": "Top-K\nCache", "type": "cache", "cluster": "serve" },
+    { "id": "api", "label": "Trending\nAPI", "type": "compute", "cluster": "serve" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "gw", "label": "view event", "kind": "main" },
+    { "from": "gw", "to": "stream", "kind": "main" },
+    { "from": "stream", "to": "cms", "label": "count", "kind": "main" },
+    { "from": "cms", "to": "heap", "label": "estimates", "kind": "main" },
+    { "from": "heap", "to": "topk_db", "label": "persist", "kind": "main" },
+    { "from": "topk_db", "to": "cache", "label": "warm", "kind": "control" },
+    { "from": "api", "to": "cache", "label": "read", "kind": "main" },
+    { "from": "clients", "to": "api", "label": "get trending", "kind": "main" }
+  ]
+}

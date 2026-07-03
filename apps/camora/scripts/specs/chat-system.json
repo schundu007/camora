@@ -1,0 +1,30 @@
+{
+  "title": "Chat System — Real-time Messaging",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "realtime", "label": "Realtime" },
+    { "id": "data", "label": "Data" },
+    { "id": "async", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "lb", "label": "Load Balancer\n(sticky)", "type": "lb", "cluster": "edge" },
+    { "id": "ws", "label": "WebSocket\nGateway", "type": "compute", "cluster": "realtime" },
+    { "id": "presence", "label": "Presence\nStore", "type": "cache", "cluster": "realtime" },
+    { "id": "queue", "label": "Fan-out\nQueue", "type": "queue", "cluster": "realtime" },
+    { "id": "msgsvc", "label": "Message Svc", "type": "compute", "cluster": "data" },
+    { "id": "db", "label": "Message DB\n(Cassandra)", "type": "nosql", "cluster": "data" },
+    { "id": "push", "label": "Push\nNotifications", "type": "function", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "users", "to": "lb", "kind": "main" },
+    { "from": "lb", "to": "ws", "label": "connect", "kind": "main" },
+    { "from": "ws", "to": "msgsvc", "label": "send msg", "kind": "main" },
+    { "from": "msgsvc", "to": "db", "label": "persist", "kind": "main" },
+    { "from": "msgsvc", "to": "queue", "label": "fan-out", "kind": "main" },
+    { "from": "queue", "to": "ws", "label": "deliver", "kind": "control" },
+    { "from": "ws", "to": "presence", "label": "heartbeat", "kind": "control" },
+    { "from": "queue", "to": "push", "label": "offline users", "kind": "control" }
+  ]
+}

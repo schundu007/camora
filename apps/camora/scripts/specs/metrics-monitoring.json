@@ -1,0 +1,28 @@
+{
+  "title": "Metrics Monitoring — Ingest, TSDB & Alerting",
+  "direction": "LR",
+  "clusters": [
+    { "id": "sources", "label": "Sources" },
+    { "id": "pipeline", "label": "Ingest Pipeline" },
+    { "id": "storage", "label": "Storage & Analysis" }
+  ],
+  "nodes": [
+    { "id": "agents", "label": "Host Agents\n(exporters)", "type": "compute", "cluster": "sources" },
+    { "id": "ingest", "label": "Ingest Gateway\n(push / pull)", "type": "apigw", "cluster": "pipeline" },
+    { "id": "stream", "label": "Metrics\nStream", "type": "stream", "cluster": "pipeline" },
+    { "id": "tsdb", "label": "Time-Series DB", "type": "db", "cluster": "storage" },
+    { "id": "roll", "label": "Downsample\n/ Rollup", "type": "function", "cluster": "storage" },
+    { "id": "anomaly", "label": "Anomaly\nDetection", "type": "analytics", "cluster": "storage" },
+    { "id": "alert", "label": "Alert\nManager", "type": "eventbus", "cluster": "storage" },
+    { "id": "dash", "label": "Dashboards", "type": "monitor", "cluster": "storage" }
+  ],
+  "edges": [
+    { "from": "agents", "to": "ingest", "label": "scrape", "kind": "main" },
+    { "from": "ingest", "to": "stream", "kind": "main" },
+    { "from": "stream", "to": "tsdb", "label": "write", "kind": "main" },
+    { "from": "tsdb", "to": "dash", "label": "query", "kind": "main" },
+    { "from": "tsdb", "to": "roll", "label": "compact", "kind": "control" },
+    { "from": "tsdb", "to": "anomaly", "label": "evaluate", "kind": "control" },
+    { "from": "anomaly", "to": "alert", "label": "trigger", "kind": "control" }
+  ]
+}

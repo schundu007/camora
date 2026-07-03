@@ -1,0 +1,26 @@
+{
+  "title": "Low-Level Design — Patterns & SOLID",
+  "direction": "LR",
+  "clusters": [
+    { "id": "creational", "label": "Creational" },
+    { "id": "behavioral", "label": "Behavioral" },
+    { "id": "data", "label": "State" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client\n(depends on\nabstraction)", "type": "client" },
+    { "id": "factory", "label": "Factory\n(creates objects)", "type": "function", "cluster": "creational" },
+    { "id": "product", "label": "Product\nInterface", "type": "compute", "cluster": "creational" },
+    { "id": "context", "label": "Context\n(Strategy)", "type": "compute", "cluster": "behavioral" },
+    { "id": "subject", "label": "Subject\n(Observable)", "type": "eventbus", "cluster": "behavioral" },
+    { "id": "observers", "label": "Observers\n(subscribers)", "type": "compute", "cluster": "behavioral" },
+    { "id": "repo", "label": "Repository\n(persistence)", "type": "db", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "client", "to": "factory", "label": "request", "kind": "main" },
+    { "from": "factory", "to": "product", "label": "instantiate", "kind": "main" },
+    { "from": "product", "to": "context", "label": "inject strategy", "kind": "main" },
+    { "from": "context", "to": "subject", "label": "state change", "kind": "main" },
+    { "from": "context", "to": "repo", "label": "persist", "kind": "main" },
+    { "from": "subject", "to": "observers", "label": "notify", "kind": "control" }
+  ]
+}

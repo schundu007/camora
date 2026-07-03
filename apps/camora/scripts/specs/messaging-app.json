@@ -1,0 +1,29 @@
+{
+  "title": "Messaging App — E2E Chat with Fan-out & Push",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "chat", "label": "Chat Services" },
+    { "id": "data", "label": "Data & Delivery" }
+  ],
+  "nodes": [
+    { "id": "clients", "label": "Clients\n(E2E encrypted)", "type": "mobile" },
+    { "id": "gw", "label": "WebSocket\nGateway", "type": "apigw", "cluster": "edge" },
+    { "id": "chatsvc", "label": "Chat Service\n(Signal protocol)", "type": "compute", "cluster": "chat" },
+    { "id": "fanout", "label": "Group Fan-out\nBus", "type": "eventbus", "cluster": "chat" },
+    { "id": "offline", "label": "Offline\nQueue", "type": "queue", "cluster": "chat" },
+    { "id": "msgdb", "label": "Message Store\n(receipts)", "type": "nosql", "cluster": "data" },
+    { "id": "media", "label": "Media\nStorage", "type": "storage", "cluster": "data" },
+    { "id": "push", "label": "Push\nNotifications", "type": "function", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "clients", "to": "gw", "label": "send", "kind": "main" },
+    { "from": "gw", "to": "chatsvc", "kind": "main" },
+    { "from": "chatsvc", "to": "fanout", "label": "route", "kind": "main" },
+    { "from": "fanout", "to": "gw", "label": "deliver", "kind": "main" },
+    { "from": "chatsvc", "to": "msgdb", "label": "persist", "kind": "main" },
+    { "from": "chatsvc", "to": "media", "label": "upload", "kind": "control" },
+    { "from": "fanout", "to": "offline", "label": "if offline", "kind": "control" },
+    { "from": "offline", "to": "push", "label": "wake device", "kind": "control" }
+  ]
+}

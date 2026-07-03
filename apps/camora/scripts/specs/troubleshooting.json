@@ -1,0 +1,30 @@
+{
+  "title": "Distributed Troubleshooting — Observability",
+  "direction": "LR",
+  "clusters": [
+    { "id": "telemetry", "label": "Telemetry" },
+    { "id": "analysis", "label": "Analysis" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "services", "label": "Distributed\nServices", "type": "compute" },
+    { "id": "traces", "label": "Traces\n(spans)", "type": "stream", "cluster": "telemetry" },
+    { "id": "logs", "label": "Logs", "type": "analytics", "cluster": "telemetry" },
+    { "id": "metrics", "label": "Metrics", "type": "monitor", "cluster": "telemetry" },
+    { "id": "search", "label": "Trace / Log\nSearch", "type": "search", "cluster": "analysis" },
+    { "id": "apm", "label": "APM &\nProfiling", "type": "compute", "cluster": "analysis" },
+    { "id": "alert", "label": "Alerting", "type": "eventbus", "cluster": "analysis" },
+    { "id": "engineer", "label": "On-call\nEngineer", "type": "client" }
+  ],
+  "edges": [
+    { "from": "users", "to": "services", "label": "requests", "kind": "main" },
+    { "from": "services", "to": "traces", "label": "emit spans", "kind": "main" },
+    { "from": "services", "to": "logs", "label": "logs" },
+    { "from": "services", "to": "metrics", "label": "metrics" },
+    { "from": "traces", "to": "search", "label": "index", "kind": "main" },
+    { "from": "search", "to": "apm", "label": "correlate", "kind": "main" },
+    { "from": "apm", "to": "engineer", "label": "root cause", "kind": "main" },
+    { "from": "metrics", "to": "alert", "label": "threshold" },
+    { "from": "alert", "to": "engineer", "label": "page", "kind": "control" }
+  ]
+}

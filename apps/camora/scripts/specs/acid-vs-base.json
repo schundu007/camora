@@ -1,0 +1,29 @@
+{
+  "title": "ACID vs BASE — Consistency Tradeoffs",
+  "direction": "LR",
+  "clusters": [
+    { "id": "acid", "label": "ACID  ·  Strong Consistency" },
+    { "id": "base", "label": "BASE  ·  Eventual Consistency" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw" },
+    { "id": "app", "label": "App Service", "type": "compute" },
+    { "id": "acid_primary", "label": "SQL Primary\n(2PC commit)", "type": "db", "cluster": "acid" },
+    { "id": "acid_replica", "label": "Sync\nReplica", "type": "db", "cluster": "acid" },
+    { "id": "base_node", "label": "NoSQL Node\n(avail write)", "type": "nosql", "cluster": "base" },
+    { "id": "base_bus", "label": "Replication\nBus", "type": "eventbus", "cluster": "base" },
+    { "id": "base_replica", "label": "Async\nReplica", "type": "nosql", "cluster": "base" },
+    { "id": "base_cache", "label": "Read Cache", "type": "cache", "cluster": "base" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "app", "kind": "main" },
+    { "from": "app", "to": "acid_primary", "label": "strong write", "kind": "main" },
+    { "from": "acid_primary", "to": "acid_replica", "label": "sync" },
+    { "from": "app", "to": "base_node", "label": "avail write", "kind": "main" },
+    { "from": "base_node", "to": "base_cache" },
+    { "from": "base_node", "to": "base_bus", "label": "propagate", "kind": "control" },
+    { "from": "base_bus", "to": "base_replica", "label": "eventual", "kind": "control" }
+  ]
+}

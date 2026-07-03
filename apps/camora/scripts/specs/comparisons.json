@@ -1,0 +1,28 @@
+{
+  "title": "System Tradeoffs — Sync vs Async, SQL vs NoSQL",
+  "direction": "LR",
+  "clusters": [
+    { "id": "comm", "label": "Communication" },
+    { "id": "store", "label": "Storage Choice" },
+    { "id": "delivery", "label": "Delivery" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "api", "label": "API Gateway", "type": "apigw" },
+    { "id": "sync", "label": "Sync Service\n(request / reply)", "type": "compute", "cluster": "comm" },
+    { "id": "async", "label": "Async Queue\n(decoupled)", "type": "queue", "cluster": "comm" },
+    { "id": "sql", "label": "SQL\n(ACID, joins)", "type": "db", "cluster": "store" },
+    { "id": "nosql", "label": "NoSQL\n(scale, flexible)", "type": "nosql", "cluster": "store" },
+    { "id": "push", "label": "Push\n(event-driven)", "type": "eventbus", "cluster": "delivery" },
+    { "id": "pull", "label": "Pull\n(client polls)", "type": "cache", "cluster": "delivery" }
+  ],
+  "edges": [
+    { "from": "client", "to": "api", "kind": "main" },
+    { "from": "api", "to": "sync", "label": "sync call", "kind": "main" },
+    { "from": "sync", "to": "sql", "label": "strong", "kind": "main" },
+    { "from": "sync", "to": "push", "label": "notify", "kind": "main" },
+    { "from": "api", "to": "async", "label": "enqueue", "kind": "control" },
+    { "from": "async", "to": "nosql", "label": "eventual", "kind": "control" },
+    { "from": "nosql", "to": "pull", "label": "poll", "kind": "control" }
+  ]
+}

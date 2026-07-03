@@ -1,0 +1,30 @@
+{
+  "title": "Distributed Search — Sharded Inverted Index",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Ingestion" },
+    { "id": "index", "label": "Index Shards  ·  N-way" },
+    { "id": "query", "label": "Query Path" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "docs", "label": "Documents", "type": "client", "cluster": "ingest" },
+    { "id": "ingestq", "label": "Ingest Queue", "type": "queue", "cluster": "ingest" },
+    { "id": "indexer", "label": "Indexer\n(tokenize · build)", "type": "compute", "cluster": "ingest" },
+    { "id": "docstore", "label": "Document\nStore", "type": "storage", "cluster": "ingest" },
+    { "id": "shard", "label": "Index Shard\n(inverted index)", "type": "search", "cluster": "index" },
+    { "id": "router", "label": "Query Router\n(scatter-gather)", "type": "apigw", "cluster": "query" },
+    { "id": "ranker", "label": "Ranking\nService", "type": "compute", "cluster": "query" },
+    { "id": "cache", "label": "Query Cache", "type": "cache", "cluster": "query" }
+  ],
+  "edges": [
+    { "from": "users", "to": "router", "label": "search", "kind": "main" },
+    { "from": "router", "to": "shard", "label": "scatter", "kind": "main" },
+    { "from": "shard", "to": "ranker", "label": "gather", "kind": "main" },
+    { "from": "router", "to": "cache", "label": "hot results", "kind": "control" },
+    { "from": "docs", "to": "ingestq", "label": "ingest", "kind": "main" },
+    { "from": "ingestq", "to": "indexer", "kind": "main" },
+    { "from": "indexer", "to": "shard", "label": "near-RT update", "kind": "main" },
+    { "from": "indexer", "to": "docstore", "label": "store doc", "kind": "control" }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "title": "Message Queues — Broker, Persistence & DLQ",
+  "direction": "LR",
+  "clusters": [
+    { "id": "producers", "label": "Producers" },
+    { "id": "broker", "label": "Broker Cluster" },
+    { "id": "consumers", "label": "Consumers" }
+  ],
+  "nodes": [
+    { "id": "app", "label": "Producer\nService", "type": "compute", "cluster": "producers" },
+    { "id": "gw", "label": "Broker\nGateway", "type": "apigw", "cluster": "broker" },
+    { "id": "queue", "label": "Queue\n(point-to-point)", "type": "queue", "cluster": "broker" },
+    { "id": "topic", "label": "Topic\n(pub/sub)", "type": "eventbus", "cluster": "broker" },
+    { "id": "log", "label": "Commit Log\n(persistence)", "type": "storage", "cluster": "broker" },
+    { "id": "dlq", "label": "Dead Letter\nQueue", "type": "queue", "cluster": "broker" },
+    { "id": "worker", "label": "Consumer\nGroup", "type": "compute", "cluster": "consumers" },
+    { "id": "db", "label": "Result Store", "type": "db", "cluster": "consumers" }
+  ],
+  "edges": [
+    { "from": "app", "to": "gw", "label": "publish", "kind": "main" },
+    { "from": "gw", "to": "queue", "kind": "main" },
+    { "from": "gw", "to": "topic", "kind": "main" },
+    { "from": "queue", "to": "worker", "label": "consume", "kind": "main" },
+    { "from": "topic", "to": "worker", "label": "consume", "kind": "main" },
+    { "from": "worker", "to": "db", "label": "ack + write", "kind": "main" },
+    { "from": "queue", "to": "log", "label": "durable", "kind": "control" },
+    { "from": "topic", "to": "log", "label": "durable", "kind": "control" },
+    { "from": "worker", "to": "dlq", "label": "max retries", "kind": "control" }
+  ]
+}

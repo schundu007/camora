@@ -1,0 +1,27 @@
+{
+  "title": "Consistent Hashing — Ring, Virtual Nodes, Rebalance",
+  "direction": "LR",
+  "clusters": [
+    { "id": "route", "label": "Routing" },
+    { "id": "ring", "label": "Hash Ring" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client", "type": "client" },
+    { "id": "router", "label": "Hash Router\n(key → ring)", "type": "lb", "cluster": "route" },
+    { "id": "hashring", "label": "Hash Ring\n+ Virtual Nodes", "type": "function", "cluster": "ring" },
+    { "id": "nodeA", "label": "Node A", "type": "cache", "cluster": "ring" },
+    { "id": "nodeB", "label": "Node B", "type": "cache", "cluster": "ring" },
+    { "id": "nodeC", "label": "Node C", "type": "cache", "cluster": "ring" },
+    { "id": "membership", "label": "Membership\n(add / remove)", "type": "eventbus" },
+    { "id": "monitor", "label": "Load\nDistribution", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "router", "label": "key", "kind": "main" },
+    { "from": "router", "to": "hashring", "label": "hash(key)", "kind": "main" },
+    { "from": "hashring", "to": "nodeA", "label": "owner", "kind": "main" },
+    { "from": "hashring", "to": "nodeB", "kind": "main" },
+    { "from": "hashring", "to": "nodeC", "kind": "main" },
+    { "from": "membership", "to": "hashring", "label": "rebalance", "kind": "control" },
+    { "from": "hashring", "to": "monitor", "label": "load metrics", "kind": "control" }
+  ]
+}

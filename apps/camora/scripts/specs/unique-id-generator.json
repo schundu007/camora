@@ -1,0 +1,27 @@
+{
+  "title": "Unique ID Generator — Snowflake at 1M+ IDs/sec",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Clients" },
+    { "id": "gen", "label": "ID Generation Nodes" },
+    { "id": "coord", "label": "Coordination" }
+  ],
+  "nodes": [
+    { "id": "services", "label": "App\nServices", "type": "client" },
+    { "id": "lb", "label": "Load\nBalancer", "type": "lb", "cluster": "edge" },
+    { "id": "worker1", "label": "ID Worker\n(ts | dc | worker | seq)", "type": "compute", "cluster": "gen" },
+    { "id": "clock", "label": "NTP Clock\n(skew guard)", "type": "monitor", "cluster": "gen" },
+    { "id": "seq", "label": "Sequence\nCounter", "type": "cache", "cluster": "gen" },
+    { "id": "coordsvc", "label": "Worker-ID\nRegistry", "type": "compute", "cluster": "coord" },
+    { "id": "zk", "label": "Coordination\nStore", "type": "db", "cluster": "coord" }
+  ],
+  "edges": [
+    { "from": "services", "to": "lb", "label": "next id", "kind": "main" },
+    { "from": "lb", "to": "worker1", "kind": "main" },
+    { "from": "worker1", "to": "seq", "label": "increment", "kind": "main" },
+    { "from": "worker1", "to": "services", "label": "64-bit id", "kind": "main" },
+    { "from": "clock", "to": "worker1", "label": "monotonic\ntime", "kind": "control" },
+    { "from": "coordsvc", "to": "worker1", "label": "lease\nworker id", "kind": "control" },
+    { "from": "coordsvc", "to": "zk", "label": "register", "kind": "control" }
+  ]
+}

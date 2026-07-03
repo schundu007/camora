@@ -1,0 +1,36 @@
+{
+  "title": "Airbnb — Listings, Booking & Payments",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "Application" },
+    { "id": "data", "label": "Data" },
+    { "id": "async", "label": "Async" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Guests\n& Hosts", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn", "cluster": "edge" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "search", "label": "Geo Search", "type": "search", "cluster": "app" },
+    { "id": "listing", "label": "Listing Svc", "type": "compute", "cluster": "app" },
+    { "id": "booking", "label": "Booking Svc", "type": "compute", "cluster": "app" },
+    { "id": "payment", "label": "Payment Svc", "type": "compute", "cluster": "app" },
+    { "id": "db", "label": "Listings &\nBookings DB", "type": "db", "cluster": "data" },
+    { "id": "cache", "label": "Cache", "type": "cache", "cluster": "data" },
+    { "id": "queue", "label": "Event Queue", "type": "queue", "cluster": "async" },
+    { "id": "fraud", "label": "Trust &\nSafety", "type": "function", "cluster": "async" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "kind": "main" },
+    { "from": "cdn", "to": "gw", "kind": "main" },
+    { "from": "gw", "to": "search", "label": "search", "kind": "main" },
+    { "from": "search", "to": "listing", "kind": "main" },
+    { "from": "listing", "to": "db", "label": "query", "kind": "main" },
+    { "from": "gw", "to": "booking", "label": "reserve", "kind": "main" },
+    { "from": "booking", "to": "payment", "label": "charge", "kind": "main" },
+    { "from": "booking", "to": "db" },
+    { "from": "listing", "to": "cache" },
+    { "from": "booking", "to": "queue", "label": "notify", "kind": "control" },
+    { "from": "payment", "to": "fraud", "label": "risk check", "kind": "control" }
+  ]
+}

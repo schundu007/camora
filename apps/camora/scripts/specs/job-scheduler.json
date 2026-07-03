@@ -1,0 +1,31 @@
+{
+  "title": "Job Scheduler — Cron, DAG & Workers",
+  "direction": "LR",
+  "clusters": [
+    { "id": "control-plane", "label": "Control Plane" },
+    { "id": "workers", "label": "Execution" },
+    { "id": "data", "label": "State & Results" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients /\nCron Defs", "type": "client" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw" },
+    { "id": "trigger", "label": "Cron Trigger\nEngine", "type": "compute", "cluster": "control-plane" },
+    { "id": "dag", "label": "DAG\nOrchestrator", "type": "compute", "cluster": "control-plane" },
+    { "id": "queue", "label": "Task Queue\n(leasing)", "type": "queue", "cluster": "control-plane" },
+    { "id": "worker", "label": "Worker Pool\n(retry policy)", "type": "container", "cluster": "workers" },
+    { "id": "jobdb", "label": "Job / DAG\nState DB", "type": "db", "cluster": "data" },
+    { "id": "results", "label": "Result\nStore", "type": "storage", "cluster": "data" },
+    { "id": "monitor", "label": "Monitoring", "type": "monitor", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "apigw", "label": "define job", "kind": "main" },
+    { "from": "apigw", "to": "trigger", "kind": "main" },
+    { "from": "trigger", "to": "dag", "label": "fire", "kind": "main" },
+    { "from": "dag", "to": "queue", "label": "enqueue task", "kind": "main" },
+    { "from": "queue", "to": "worker", "label": "lease", "kind": "main" },
+    { "from": "worker", "to": "results", "label": "persist", "kind": "main" },
+    { "from": "worker", "to": "dag", "label": "ack / next", "kind": "control" },
+    { "from": "dag", "to": "jobdb", "label": "state", "kind": "control" },
+    { "from": "worker", "to": "monitor", "label": "metrics", "kind": "control" }
+  ]
+}

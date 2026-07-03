@@ -1,0 +1,25 @@
+{
+  "title": "DNS — Recursive Resolution Hierarchy",
+  "direction": "LR",
+  "clusters": [
+    { "id": "resolver", "label": "Recursive Resolver" },
+    { "id": "authority", "label": "Authority Hierarchy" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Client\n(stub resolver)", "type": "client" },
+    { "id": "recursive", "label": "Recursive\nResolver", "type": "dns", "cluster": "resolver" },
+    { "id": "cache", "label": "Resolver Cache\n(TTL)", "type": "cache", "cluster": "resolver" },
+    { "id": "root", "label": "Root\nServers", "type": "dns", "cluster": "authority" },
+    { "id": "tld", "label": "TLD Servers\n(.com)", "type": "dns", "cluster": "authority" },
+    { "id": "auth", "label": "Authoritative\nServer", "type": "dns", "cluster": "authority" },
+    { "id": "dnssec", "label": "DNSSEC\n(signed zones)", "type": "secrets", "cluster": "authority" }
+  ],
+  "edges": [
+    { "from": "client", "to": "recursive", "label": "query", "kind": "main" },
+    { "from": "recursive", "to": "root", "label": "referral", "kind": "main" },
+    { "from": "root", "to": "tld", "label": "NS .com", "kind": "main" },
+    { "from": "tld", "to": "auth", "label": "NS domain", "kind": "main" },
+    { "from": "recursive", "to": "cache", "label": "cache hit", "kind": "control" },
+    { "from": "auth", "to": "dnssec", "label": "sign / validate", "kind": "control" }
+  ]
+}

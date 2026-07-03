@@ -1,0 +1,24 @@
+{
+  "title": "Redundancy & Replication — Sync, Async, Failover",
+  "direction": "LR",
+  "clusters": [
+    { "id": "primary", "label": "Primary Region" },
+    { "id": "standby", "label": "Standby Region" }
+  ],
+  "nodes": [
+    { "id": "client", "label": "Clients", "type": "client" },
+    { "id": "lb", "label": "Failover\nLoad Balancer", "type": "lb" },
+    { "id": "master", "label": "Primary\n(Leader)", "type": "db", "cluster": "primary" },
+    { "id": "sync", "label": "Sync\nReplica", "type": "db", "cluster": "primary" },
+    { "id": "async", "label": "Async\nReplica", "type": "db", "cluster": "standby" },
+    { "id": "monitor", "label": "Health\nMonitor", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "client", "to": "lb", "label": "write", "kind": "main" },
+    { "from": "lb", "to": "master", "kind": "main" },
+    { "from": "master", "to": "sync", "label": "sync repl", "kind": "main" },
+    { "from": "master", "to": "async", "label": "async repl", "kind": "control" },
+    { "from": "monitor", "to": "master", "label": "heartbeat", "kind": "control" },
+    { "from": "monitor", "to": "lb", "label": "promote", "kind": "control" }
+  ]
+}

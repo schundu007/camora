@@ -1,0 +1,31 @@
+{
+  "title": "DoorDash — Delivery & Geospatial Dispatch",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Client Edge" },
+    { "id": "order", "label": "Order Services" },
+    { "id": "dispatch", "label": "Dispatch" },
+    { "id": "data", "label": "Data" }
+  ],
+  "nodes": [
+    { "id": "apps", "label": "Consumer &\nDriver Apps", "type": "mobile" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "catalog", "label": "Restaurant\nCatalog", "type": "compute", "cluster": "order" },
+    { "id": "order_svc", "label": "Order\nService", "type": "compute", "cluster": "order" },
+    { "id": "orderdb", "label": "Order DB", "type": "db", "cluster": "data" },
+    { "id": "dispatch", "label": "Dispatch\n(geo-matching)", "type": "compute", "cluster": "dispatch" },
+    { "id": "geo", "label": "Geo Index\n(driver locations)", "type": "nosql", "cluster": "dispatch" },
+    { "id": "tracking", "label": "Live Tracking\nStream", "type": "stream", "cluster": "dispatch" },
+    { "id": "payout", "label": "Payout\nQueue", "type": "queue", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "apps", "to": "gw", "label": "order", "kind": "main" },
+    { "from": "gw", "to": "order_svc", "label": "place order", "kind": "main" },
+    { "from": "order_svc", "to": "dispatch", "label": "assign", "kind": "main" },
+    { "from": "dispatch", "to": "geo", "label": "match driver", "kind": "main" },
+    { "from": "gw", "to": "catalog", "label": "browse", "kind": "control" },
+    { "from": "order_svc", "to": "orderdb", "label": "persist", "kind": "control" },
+    { "from": "dispatch", "to": "tracking", "label": "location updates", "kind": "control" },
+    { "from": "order_svc", "to": "payout", "label": "on delivery", "kind": "control" }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "title": "ZooKeeper — ZAB Coordination & Watches",
+  "direction": "LR",
+  "clusters": [
+    { "id": "clients", "label": "Clients" },
+    { "id": "ensemble", "label": "ZK Ensemble (ZAB)" },
+    { "id": "state", "label": "Durable State" }
+  ],
+  "nodes": [
+    { "id": "apps", "label": "Client\nApps", "type": "client" },
+    { "id": "session", "label": "Session\nLayer", "type": "apigw", "cluster": "clients" },
+    { "id": "leader", "label": "Leader\n(proposes txns)", "type": "compute", "cluster": "ensemble" },
+    { "id": "follower", "label": "Followers\n(vote + serve reads)", "type": "compute", "cluster": "ensemble" },
+    { "id": "watches", "label": "Watch\nNotifier", "type": "eventbus", "cluster": "ensemble" },
+    { "id": "znodes", "label": "Znode Tree\n(in-memory)", "type": "cache", "cluster": "state" },
+    { "id": "wal", "label": "Txn Log\n(WAL)", "type": "db", "cluster": "state" },
+    { "id": "snap", "label": "Snapshots", "type": "storage", "cluster": "state" }
+  ],
+  "edges": [
+    { "from": "apps", "to": "session", "label": "read / write", "kind": "main" },
+    { "from": "session", "to": "follower", "label": "connect", "kind": "main" },
+    { "from": "follower", "to": "leader", "label": "forward\nwrite", "kind": "main" },
+    { "from": "leader", "to": "follower", "label": "proposal\n+ commit", "kind": "main" },
+    { "from": "leader", "to": "wal", "label": "append", "kind": "main" },
+    { "from": "follower", "to": "znodes", "label": "apply", "kind": "main" },
+    { "from": "znodes", "to": "snap", "label": "checkpoint", "kind": "control" },
+    { "from": "znodes", "to": "watches", "label": "on change", "kind": "control" },
+    { "from": "watches", "to": "apps", "label": "notify", "kind": "control" }
+  ]
+}

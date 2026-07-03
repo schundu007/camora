@@ -1,0 +1,27 @@
+{
+  "title": "Latency vs Throughput — Queueing & Batching",
+  "direction": "LR",
+  "clusters": [
+    { "id": "intake", "label": "Intake" },
+    { "id": "processing", "label": "Parallel Processing" },
+    { "id": "control", "label": "SLO Control" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Requests\n(arrival rate λ)", "type": "users" },
+    { "id": "lb", "label": "Load\nBalancer", "type": "lb", "cluster": "intake" },
+    { "id": "queue", "label": "Request Queue\n(Little's Law)", "type": "queue", "cluster": "intake" },
+    { "id": "batcher", "label": "Batcher\n(throughput ↑)", "type": "compute", "cluster": "processing" },
+    { "id": "workers", "label": "Worker Pool\n(parallelism)", "type": "container", "cluster": "processing" },
+    { "id": "store", "label": "Result\nStore", "type": "db", "cluster": "processing" },
+    { "id": "slo", "label": "SLO Monitor\n(p99 latency)", "type": "monitor", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "users", "to": "lb", "label": "λ req/s", "kind": "main" },
+    { "from": "lb", "to": "queue", "label": "enqueue", "kind": "main" },
+    { "from": "queue", "to": "batcher", "label": "dequeue", "kind": "main" },
+    { "from": "batcher", "to": "workers", "label": "batch", "kind": "main" },
+    { "from": "workers", "to": "store", "label": "write", "kind": "main" },
+    { "from": "queue", "to": "slo", "label": "wait time", "kind": "control" },
+    { "from": "workers", "to": "slo", "label": "service time", "kind": "control" }
+  ]
+}

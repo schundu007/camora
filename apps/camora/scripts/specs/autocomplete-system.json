@@ -1,0 +1,31 @@
+{
+  "title": "Autocomplete — Typeahead Suggestions",
+  "direction": "LR",
+  "clusters": [
+    { "id": "serving", "label": "Serving" },
+    { "id": "build", "label": "Index Build" },
+    { "id": "data", "label": "Data" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw" },
+    { "id": "suggest", "label": "Suggestion\nService", "type": "compute", "cluster": "serving" },
+    { "id": "cache", "label": "Prefix Cache\n(top-K)", "type": "cache", "cluster": "serving" },
+    { "id": "trie", "label": "Trie Index\n(sharded)", "type": "nosql", "cluster": "serving" },
+    { "id": "collector", "label": "Query\nStream", "type": "stream", "cluster": "build" },
+    { "id": "aggregator", "label": "Frequency\nAggregator", "type": "compute", "cluster": "build" },
+    { "id": "builder", "label": "Trie Builder", "type": "function", "cluster": "build" },
+    { "id": "logs", "label": "Query Logs", "type": "storage", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "gw", "label": "prefix", "kind": "main" },
+    { "from": "gw", "to": "suggest", "kind": "main" },
+    { "from": "suggest", "to": "cache", "label": "lookup", "kind": "main" },
+    { "from": "cache", "to": "trie", "label": "cache miss", "kind": "main" },
+    { "from": "gw", "to": "collector", "label": "log query", "kind": "control" },
+    { "from": "collector", "to": "aggregator", "kind": "control" },
+    { "from": "collector", "to": "logs", "label": "archive", "kind": "control" },
+    { "from": "aggregator", "to": "builder", "kind": "control" },
+    { "from": "builder", "to": "trie", "label": "rebuild", "kind": "control" }
+  ]
+}

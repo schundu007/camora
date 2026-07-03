@@ -1,0 +1,32 @@
+{
+  "title": "E-commerce — Catalog, Checkout & Fulfillment",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "commerce", "label": "Commerce Services" },
+    { "id": "async", "label": "Fulfillment" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Shoppers", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn", "cluster": "edge" },
+    { "id": "gw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "catalog", "label": "Catalog\nService", "type": "compute", "cluster": "commerce" },
+    { "id": "cart", "label": "Cart &\nCheckout", "type": "compute", "cluster": "commerce" },
+    { "id": "payment", "label": "Payment\nGateway", "type": "compute", "cluster": "commerce" },
+    { "id": "inventory", "label": "Inventory DB", "type": "db", "cluster": "commerce" },
+    { "id": "orderq", "label": "Order Queue", "type": "queue", "cluster": "async" },
+    { "id": "fulfillment", "label": "Fulfillment\nWorker", "type": "compute", "cluster": "async" },
+    { "id": "reco", "label": "Recommendations", "type": "analytics" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "browse", "kind": "main" },
+    { "from": "cdn", "to": "gw", "label": "cache miss", "kind": "main" },
+    { "from": "gw", "to": "cart", "label": "checkout", "kind": "main" },
+    { "from": "cart", "to": "payment", "label": "charge", "kind": "main" },
+    { "from": "payment", "to": "orderq", "label": "order placed", "kind": "main" },
+    { "from": "orderq", "to": "fulfillment", "label": "fulfill", "kind": "main" },
+    { "from": "gw", "to": "catalog", "label": "products", "kind": "control" },
+    { "from": "cart", "to": "inventory", "label": "reserve stock", "kind": "control" },
+    { "from": "gw", "to": "reco", "label": "personalize", "kind": "control" }
+  ]
+}

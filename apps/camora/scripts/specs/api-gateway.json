@@ -1,0 +1,28 @@
+{
+  "title": "API Gateway — Routing & Cross-cutting",
+  "direction": "LR",
+  "clusters": [
+    { "id": "gw", "label": "Gateway" },
+    { "id": "backend", "label": "Backend Services" },
+    { "id": "obs", "label": "Observability" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Clients", "type": "users" },
+    { "id": "lb", "label": "Load\nBalancer", "type": "lb", "cluster": "gw" },
+    { "id": "gateway", "label": "API Gateway\n(routing,\ncircuit breaker)", "type": "apigw", "cluster": "gw" },
+    { "id": "auth", "label": "JWT Auth", "type": "function", "cluster": "gw" },
+    { "id": "rl", "label": "Rate Limiter\n(Redis)", "type": "cache", "cluster": "gw" },
+    { "id": "svcA", "label": "Service A", "type": "compute", "cluster": "backend" },
+    { "id": "svcB", "label": "Service B", "type": "compute", "cluster": "backend" },
+    { "id": "metrics", "label": "Metrics\n& Traces", "type": "monitor", "cluster": "obs" }
+  ],
+  "edges": [
+    { "from": "users", "to": "lb", "kind": "main" },
+    { "from": "lb", "to": "gateway", "kind": "main" },
+    { "from": "gateway", "to": "auth", "label": "verify", "kind": "control" },
+    { "from": "gateway", "to": "rl", "label": "check quota", "kind": "control" },
+    { "from": "gateway", "to": "svcA", "label": "route", "kind": "main" },
+    { "from": "gateway", "to": "svcB", "label": "route", "kind": "main" },
+    { "from": "gateway", "to": "metrics", "label": "telemetry", "kind": "control" }
+  ]
+}

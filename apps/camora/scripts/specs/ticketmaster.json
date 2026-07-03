@@ -1,0 +1,30 @@
+{
+  "title": "Ticketmaster — Inventory Hold & Checkout",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "inventory", "label": "Inventory" },
+    { "id": "checkout", "label": "Checkout" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Buyers", "type": "users" },
+    { "id": "waitroom", "label": "Virtual\nWaiting Room", "type": "queue", "cluster": "edge" },
+    { "id": "apigw", "label": "API Gateway", "type": "apigw", "cluster": "edge" },
+    { "id": "inventory", "label": "Inventory\nHold Service", "type": "compute", "cluster": "inventory" },
+    { "id": "locks", "label": "Seat Locks\n(Redis TTL)", "type": "cache", "cluster": "inventory" },
+    { "id": "catalog", "label": "Event & Seat\nCatalog", "type": "db", "cluster": "inventory" },
+    { "id": "checkout", "label": "Checkout", "type": "compute", "cluster": "checkout" },
+    { "id": "payment", "label": "Payment\n(Stripe)", "type": "function", "cluster": "checkout" },
+    { "id": "orders", "label": "Order Store", "type": "db", "cluster": "checkout" }
+  ],
+  "edges": [
+    { "from": "users", "to": "waitroom", "label": "throttle", "kind": "main" },
+    { "from": "waitroom", "to": "apigw", "kind": "main" },
+    { "from": "apigw", "to": "inventory", "label": "select seats", "kind": "main" },
+    { "from": "inventory", "to": "locks", "label": "hold (TTL)", "kind": "main" },
+    { "from": "inventory", "to": "catalog", "label": "seat map" },
+    { "from": "locks", "to": "checkout", "label": "confirm hold", "kind": "main" },
+    { "from": "checkout", "to": "payment", "label": "charge", "kind": "main" },
+    { "from": "payment", "to": "orders", "label": "confirmed", "kind": "main" }
+  ]
+}

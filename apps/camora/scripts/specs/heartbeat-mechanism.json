@@ -1,0 +1,27 @@
+{
+  "title": "Heartbeat Mechanism — Gossip & Failure Detection",
+  "direction": "LR",
+  "clusters": [
+    { "id": "node", "label": "Cluster Node" },
+    { "id": "peers", "label": "Peer Nodes" },
+    { "id": "control", "label": "Coordination" }
+  ],
+  "nodes": [
+    { "id": "gossip", "label": "Gossip\nAgent", "type": "compute", "cluster": "node" },
+    { "id": "membership", "label": "Membership\nTable", "type": "cache", "cluster": "node" },
+    { "id": "phi", "label": "Phi Accrual\nDetector", "type": "monitor", "cluster": "node" },
+    { "id": "peer", "label": "Peer Node\n(gossip agent)", "type": "compute", "cluster": "peers" },
+    { "id": "peermem", "label": "Peer\nMembership", "type": "cache", "cluster": "peers" },
+    { "id": "election", "label": "Leader\nElection", "type": "compute", "cluster": "control" },
+    { "id": "registry", "label": "Config /\nMembership Store", "type": "db", "cluster": "control" }
+  ],
+  "edges": [
+    { "from": "gossip", "to": "peer", "label": "heartbeat", "kind": "main" },
+    { "from": "peer", "to": "gossip", "label": "ack", "kind": "main" },
+    { "from": "gossip", "to": "membership", "label": "update", "kind": "main" },
+    { "from": "peer", "to": "peermem", "kind": "main" },
+    { "from": "membership", "to": "phi", "label": "arrival times", "kind": "control" },
+    { "from": "phi", "to": "election", "label": "suspect down", "kind": "control" },
+    { "from": "election", "to": "registry", "label": "new leader", "kind": "control" }
+  ]
+}

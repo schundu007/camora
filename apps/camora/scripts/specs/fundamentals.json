@@ -1,0 +1,30 @@
+{
+  "title": "System Design Fundamentals — Scalable Web Tier",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge  ·  availability" },
+    { "id": "app", "label": "Application  ·  scalability" },
+    { "id": "data", "label": "Data  ·  reliability" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "dns", "label": "GeoDNS", "type": "dns" },
+    { "id": "cdn", "label": "CDN\n(performance)", "type": "cdn", "cluster": "edge" },
+    { "id": "lb", "label": "Load Balancer\n(availability)", "type": "lb", "cluster": "edge" },
+    { "id": "app", "label": "App Servers\n(horizontal scale)", "type": "compute", "cluster": "app" },
+    { "id": "cache", "label": "Cache\n(low latency)", "type": "cache", "cluster": "app" },
+    { "id": "db", "label": "Primary DB", "type": "db", "cluster": "data" },
+    { "id": "replica", "label": "Read Replica\n(redundancy)", "type": "db", "cluster": "data" },
+    { "id": "monitor", "label": "Monitoring\n(maintainability)", "type": "monitor" }
+  ],
+  "edges": [
+    { "from": "users", "to": "dns", "label": "resolve", "kind": "main" },
+    { "from": "dns", "to": "cdn", "kind": "main" },
+    { "from": "cdn", "to": "lb", "label": "cache miss", "kind": "main" },
+    { "from": "lb", "to": "app", "label": "distribute", "kind": "main" },
+    { "from": "app", "to": "cache", "label": "read", "kind": "main" },
+    { "from": "app", "to": "db", "label": "query", "kind": "main" },
+    { "from": "db", "to": "replica", "label": "replicate", "kind": "control" },
+    { "from": "app", "to": "monitor", "label": "metrics", "kind": "control" }
+  ]
+}

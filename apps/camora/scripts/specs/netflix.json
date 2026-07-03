@@ -1,0 +1,29 @@
+{
+  "title": "Netflix — Streaming, CDN & Recommendations",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Content Pipeline" },
+    { "id": "control", "label": "Control Plane" },
+    { "id": "delivery", "label": "Delivery" }
+  ],
+  "nodes": [
+    { "id": "studio", "label": "Source\nMasters", "type": "storage", "cluster": "ingest" },
+    { "id": "transcode", "label": "Transcode\nFarm", "type": "compute", "cluster": "ingest" },
+    { "id": "catalog", "label": "Asset\nCatalog", "type": "db", "cluster": "ingest" },
+    { "id": "apigw", "label": "Playback\nAPI Gateway", "type": "apigw", "cluster": "control" },
+    { "id": "reco", "label": "Recommendation\nEngine", "type": "analytics", "cluster": "control" },
+    { "id": "abtest", "label": "A/B Testing\nPlatform", "type": "function", "cluster": "control" },
+    { "id": "oc", "label": "Open Connect\nCDN (edge)", "type": "cdn", "cluster": "delivery" },
+    { "id": "clients", "label": "Client Devices\n(adaptive bitrate)", "type": "client" }
+  ],
+  "edges": [
+    { "from": "studio", "to": "transcode", "label": "encode", "kind": "main" },
+    { "from": "transcode", "to": "oc", "label": "push assets", "kind": "main" },
+    { "from": "clients", "to": "apigw", "label": "play", "kind": "main" },
+    { "from": "apigw", "to": "oc", "label": "manifest", "kind": "main" },
+    { "from": "oc", "to": "clients", "label": "stream", "kind": "main" },
+    { "from": "transcode", "to": "catalog", "label": "register", "kind": "control" },
+    { "from": "apigw", "to": "reco", "label": "personalize", "kind": "control" },
+    { "from": "apigw", "to": "abtest", "label": "assign", "kind": "control" }
+  ]
+}

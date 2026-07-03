@@ -1,0 +1,28 @@
+{
+  "title": "Scalable Web Architecture — CDN to Data Tier",
+  "direction": "LR",
+  "clusters": [
+    { "id": "edge", "label": "Edge" },
+    { "id": "app", "label": "App Tier" },
+    { "id": "data", "label": "Data Tier" }
+  ],
+  "nodes": [
+    { "id": "users", "label": "Users", "type": "users" },
+    { "id": "cdn", "label": "CDN", "type": "cdn", "cluster": "edge" },
+    { "id": "lb", "label": "Load\nBalancer", "type": "lb", "cluster": "edge" },
+    { "id": "app", "label": "App\nServers", "type": "compute", "cluster": "app" },
+    { "id": "cache", "label": "Cache\nLayer", "type": "cache", "cluster": "app" },
+    { "id": "queue", "label": "Message\nQueue", "type": "queue", "cluster": "app" },
+    { "id": "worker", "label": "Async\nWorkers", "type": "container", "cluster": "app" },
+    { "id": "db", "label": "Primary\nDatabase", "type": "db", "cluster": "data" }
+  ],
+  "edges": [
+    { "from": "users", "to": "cdn", "label": "request", "kind": "main" },
+    { "from": "cdn", "to": "lb", "label": "dynamic", "kind": "main" },
+    { "from": "lb", "to": "app", "kind": "main" },
+    { "from": "app", "to": "cache", "label": "cache hit", "kind": "control" },
+    { "from": "app", "to": "db", "label": "query", "kind": "main" },
+    { "from": "app", "to": "queue", "label": "enqueue", "kind": "control" },
+    { "from": "queue", "to": "worker", "kind": "control" }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "title": "Web Search Engine — Crawl, Index, Serve",
+  "direction": "LR",
+  "clusters": [
+    { "id": "crawl", "label": "Crawling" },
+    { "id": "index", "label": "Indexing" },
+    { "id": "serve", "label": "Query Serving" }
+  ],
+  "nodes": [
+    { "id": "web", "label": "World\nWide Web", "type": "internet" },
+    { "id": "frontier", "label": "URL\nFrontier", "type": "queue", "cluster": "crawl" },
+    { "id": "crawler", "label": "Distributed\nCrawler", "type": "container", "cluster": "crawl" },
+    { "id": "docs", "label": "Crawled\nDoc Store", "type": "storage", "cluster": "crawl" },
+    { "id": "builder", "label": "Inverted Index\n+ PageRank", "type": "analytics", "cluster": "index" },
+    { "id": "shards", "label": "Index\nShards", "type": "search", "cluster": "index" },
+    { "id": "query", "label": "Query Parser\n+ Spell Fix", "type": "compute", "cluster": "serve" },
+    { "id": "cache", "label": "Result\nCache", "type": "cache", "cluster": "serve" },
+    { "id": "users", "label": "Users", "type": "users" }
+  ],
+  "edges": [
+    { "from": "frontier", "to": "crawler", "label": "next URL", "kind": "main" },
+    { "from": "crawler", "to": "web", "label": "fetch", "kind": "control" },
+    { "from": "crawler", "to": "docs", "label": "store", "kind": "main" },
+    { "from": "crawler", "to": "frontier", "label": "new links", "kind": "control" },
+    { "from": "docs", "to": "builder", "label": "build", "kind": "main" },
+    { "from": "builder", "to": "shards", "label": "publish", "kind": "main" },
+    { "from": "users", "to": "query", "label": "search", "kind": "main" },
+    { "from": "query", "to": "cache", "label": "cache hit", "kind": "control" },
+    { "from": "query", "to": "shards", "label": "lookup", "kind": "main" }
+  ]
+}

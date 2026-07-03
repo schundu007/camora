@@ -1,0 +1,30 @@
+{
+  "title": "Price Tracking Service — Scrape, Detect, Notify",
+  "direction": "LR",
+  "clusters": [
+    { "id": "ingest", "label": "Scraper Fleet" },
+    { "id": "process", "label": "Change Detection" },
+    { "id": "notify", "label": "Notification" }
+  ],
+  "nodes": [
+    { "id": "sites", "label": "Retail\nSites", "type": "internet" },
+    { "id": "sched", "label": "Scrape\nScheduler", "type": "queue", "cluster": "ingest" },
+    { "id": "scrapers", "label": "Scraper\nWorkers", "type": "container", "cluster": "ingest" },
+    { "id": "raw", "label": "Raw Price\nStore", "type": "storage", "cluster": "ingest" },
+    { "id": "detect", "label": "Change\nDetection", "type": "function", "cluster": "process" },
+    { "id": "history", "label": "Historical\nPrice DB", "type": "db", "cluster": "process" },
+    { "id": "nq", "label": "Notification\nQueue", "type": "queue", "cluster": "notify" },
+    { "id": "sender", "label": "Alert\nSender", "type": "function", "cluster": "notify" },
+    { "id": "users", "label": "Subscribers", "type": "users" }
+  ],
+  "edges": [
+    { "from": "sched", "to": "scrapers", "label": "dispatch", "kind": "main" },
+    { "from": "scrapers", "to": "sites", "label": "fetch", "kind": "control" },
+    { "from": "scrapers", "to": "raw", "label": "store", "kind": "main" },
+    { "from": "raw", "to": "detect", "label": "compare", "kind": "main" },
+    { "from": "detect", "to": "history", "label": "upsert", "kind": "main" },
+    { "from": "detect", "to": "nq", "label": "price drop", "kind": "main" },
+    { "from": "nq", "to": "sender", "kind": "main" },
+    { "from": "sender", "to": "users", "label": "alert", "kind": "main" }
+  ]
+}
