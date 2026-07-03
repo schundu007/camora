@@ -1,0 +1,109 @@
+{
+  "title": "Self-Hosted CI Runners \u2014 Ephemeral JIT Fleet",
+  "direction": "LR",
+  "clusters": [
+    {
+      "id": "gh",
+      "label": "GitHub"
+    },
+    {
+      "id": "fleet",
+      "label": "Ephemeral Runner Fleet (ARC)"
+    },
+    {
+      "id": "deps",
+      "label": "Build Dependencies"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "dev",
+      "label": "Developer\nopens PR",
+      "type": "users"
+    },
+    {
+      "id": "ghw",
+      "label": "GitHub Actions\nwebhook: job queued",
+      "type": "apigw",
+      "cluster": "gh"
+    },
+    {
+      "id": "ctrl",
+      "label": "actions-runner-controller\nlistener + autoscaler",
+      "type": "function",
+      "cluster": "fleet"
+    },
+    {
+      "id": "runner",
+      "label": "JIT Runner Pod\none job, then destroyed",
+      "type": "container",
+      "cluster": "fleet"
+    },
+    {
+      "id": "nfs",
+      "label": "NFS Toolchains\nshared build cache",
+      "type": "storage",
+      "cluster": "deps"
+    },
+    {
+      "id": "hsm",
+      "label": "HSM / Signing\nfirmware keys",
+      "type": "secrets",
+      "cluster": "deps"
+    },
+    {
+      "id": "reg",
+      "label": "Artifact Registry",
+      "type": "storage",
+      "cluster": "deps"
+    },
+    {
+      "id": "mon",
+      "label": "Job Results\nback to PR",
+      "type": "monitor"
+    }
+  ],
+  "edges": [
+    {
+      "from": "dev",
+      "to": "ghw",
+      "label": "push / PR",
+      "kind": "main"
+    },
+    {
+      "from": "ghw",
+      "to": "ctrl",
+      "label": "scale on queue depth",
+      "kind": "main"
+    },
+    {
+      "from": "ctrl",
+      "to": "runner",
+      "label": "launch ephemeral",
+      "kind": "main"
+    },
+    {
+      "from": "runner",
+      "to": "nfs",
+      "label": "mount"
+    },
+    {
+      "from": "runner",
+      "to": "hsm",
+      "label": "sign (isolated)",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "runner",
+      "to": "reg",
+      "label": "push image",
+      "kind": "main"
+    },
+    {
+      "from": "runner",
+      "to": "mon",
+      "label": "report status"
+    }
+  ]
+}
