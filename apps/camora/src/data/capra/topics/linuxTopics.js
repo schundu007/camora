@@ -143,12 +143,12 @@ export const linuxTopics = [
       "Target hosts enforce Secure Boot, so every module must be signed with an enrolled key or the kernel refuses to load it (or taints and blocks under lockdown).",
     ],
     keyConcepts: [
-      { term: "Kbuild and `obj-m`", definition: "The kernel's recursive make-based build system. An external module ships a `Kbuild` or `Makefile` that lists `obj-m += foo.o` (build `foo.ko` as a loadable module) and, for multi-file modules, `foo-y := a.o b.o`. You invoke it via the prepared kernel tree with `make -C <kdir> M=$PWD modules`, so the kernel's flags, `.config`, and compiler settings govern the build rather than your own." },
-      { term: "`kernel-devel` / `linux-headers` vs full source", definition: "You do not need full kernel source to build a module. The `kernel-devel` (Fedora/RHEL) or `linux-headers-$(uname -r)` (Debian/Ubuntu) package provides the prepared build tree: headers, `Kconfig`/`.config`, `Module.symvers`, and `scripts/` (including `modpost`). It is exposed at `/lib/modules/$(uname -r)/build`, a symlink into that package. Full source is only needed to build the kernel itself." },
-      { term: "`vermagic`", definition: "A version-magic string baked into every `.ko` by `modpost`, combining kernel release, SMP, preemption model, module-versioning state, and other ABI markers (for example `6.8.0-35-generic SMP mod_unload modversions`). At load time the kernel compares the module's `vermagic` against its own; any mismatch yields `invalid module format`. It is the coarse gate that stops an ABI-incompatible module from loading." },
-      { term: "Module versioning (`modversions` / `Module.symvers`)", definition: "With `CONFIG_MODVERSIONS=y`, each exported symbol gets a CRC derived from its type signature, recorded in `Module.symvers`. A module stores the CRCs it was built against; if the running kernel's CRC for a symbol differs, load fails with `disagrees about version of symbol`. This catches ABI drift finer than `vermagic` (for example a changed struct that keeps the same kernel release)." },
+      { term: "Kbuild and obj-m", definition: "The kernel's recursive make-based build system. An external module ships a `Kbuild` or `Makefile` that lists `obj-m += foo.o` (build `foo.ko` as a loadable module) and, for multi-file modules, `foo-y := a.o b.o`. You invoke it via the prepared kernel tree with `make -C <kdir> M=$PWD modules`, so the kernel's flags, `.config`, and compiler settings govern the build rather than your own." },
+      { term: "kernel-devel / linux-headers vs full source", definition: "You do not need full kernel source to build a module. The `kernel-devel` (Fedora/RHEL) or `linux-headers-$(uname -r)` (Debian/Ubuntu) package provides the prepared build tree: headers, `Kconfig`/`.config`, `Module.symvers`, and `scripts/` (including `modpost`). It is exposed at `/lib/modules/$(uname -r)/build`, a symlink into that package. Full source is only needed to build the kernel itself." },
+      { term: "vermagic", definition: "A version-magic string baked into every `.ko` by `modpost`, combining kernel release, SMP, preemption model, module-versioning state, and other ABI markers (for example `6.8.0-35-generic SMP mod_unload modversions`). At load time the kernel compares the module's `vermagic` against its own; any mismatch yields `invalid module format`. It is the coarse gate that stops an ABI-incompatible module from loading." },
+      { term: "Module versioning (modversions / Module.symvers)", definition: "With `CONFIG_MODVERSIONS=y`, each exported symbol gets a CRC derived from its type signature, recorded in `Module.symvers`. A module stores the CRCs it was built against; if the running kernel's CRC for a symbol differs, load fails with `disagrees about version of symbol`. This catches ABI drift finer than `vermagic` (for example a changed struct that keeps the same kernel release)." },
       { term: "DKMS (Dynamic Kernel Module Support)", definition: "A framework that stores driver source under `/usr/src/<name>-<version>/` with a `dkms.conf`, then rebuilds and installs the module automatically whenever a new kernel is installed. Driven by `dkms add`, `dkms build`, `dkms install`; kernel package post-install hooks trigger rebuilds so the driver survives upgrades. This is how AMD ships `amdgpu-dkms`." },
-      { term: "`ARCH` and `CROSS_COMPILE`", definition: "Two make variables controlling cross-compilation. `ARCH` selects the target architecture subtree (for example `arm64`), and `CROSS_COMPILE` is the toolchain prefix (for example `aarch64-linux-gnu-`) prepended to `gcc`, `ld`, `objcopy`. You must build against a kernel tree prepared for that same `ARCH`; mixing a host x86_64 tree with `ARCH=arm64` will not work." },
+      { term: "ARCH and CROSS_COMPILE", definition: "Two make variables controlling cross-compilation. `ARCH` selects the target architecture subtree (for example `arm64`), and `CROSS_COMPILE` is the toolchain prefix (for example `aarch64-linux-gnu-`) prepended to `gcc`, `ld`, `objcopy`. You must build against a kernel tree prepared for that same `ARCH`; mixing a host x86_64 tree with `ARCH=arm64` will not work." },
       { term: "Module signing and Secure Boot", definition: "Under Secure Boot with kernel lockdown, unsigned modules are rejected (or the kernel is tainted and load blocked). Modules are signed with `scripts/sign-file` using a private key whose matching certificate is enrolled in the platform (a MOK via `mokutil`, or a build-time key in `CONFIG_MODULE_SIG_KEY`). The signature is appended to the `.ko`; `modinfo` then shows `sig_id`/`signer`." },
     ],
     pitfalls: [
@@ -179,19 +179,19 @@ export const linuxTopics = [
 GNU binutils is the toolchain layer beneath gcc and clang - the utilities that read, transform, and validate compiled artifacts: object files, static archives (.a), shared libraries (.so), and executables. On a C, C++, and Python build farm (CUDA libraries, EDA and firmware pipelines at companies like NVIDIA, AMD, and ASML), these tools are the CI gates that catch a bad binary before it reaches a GPU node or a customer image - wrong architecture, missing symbols, an ABI mismatch, a leaked debug build, or a shared library that will fail to load at runtime.
 
 ## The Core Tools
-- readelf - the authoritative ELF reader: header, sections, dynamic table, symbol versions. Never executes the file, so it is safe on untrusted binaries.
-- objdump - disassembly, section dumps, relocations, and the dynamic symbol table (objdump -T).
-- nm - list symbols in an object, archive, or shared library; nm -D reads dynamic symbols, nm -C demangles, nm -u shows undefined.
-- ldd - print shared-library dependencies by asking the dynamic loader to resolve them.
-- ldconfig - refresh the shared-library cache (/etc/ld.so.cache) and search paths.
-- ar and ranlib - create, list, and index static archives.
-- strip - remove symbol and debug information to shrink release binaries.
-- strings - extract printable text (leaked paths, version tags, secrets).
-- c++filt - demangle C++ symbol names, turning _ZN3fooEv into foo().
-- addr2line - map a crash address back to file and line using debug info.
-- objcopy - convert binaries, split debug info, add or remove sections.
-- file - identify type, architecture, and linkage of any artifact in one line.
-- patchelf - edit an existing binary in place: RPATH, interpreter, or SONAME.
+- \`readelf\` - the authoritative ELF reader: header, sections, dynamic table, symbol versions. Never executes the file, so it is safe on untrusted binaries.
+- \`objdump\` - disassembly, section dumps, relocations, and the dynamic symbol table (\`objdump -T\`).
+- \`nm\` - list symbols in an object, archive, or shared library; \`nm -D\` reads dynamic symbols, \`nm -C\` demangles, \`nm -u\` shows undefined.
+- \`ldd\` - print shared-library dependencies by asking the dynamic loader to resolve them.
+- \`ldconfig\` - refresh the shared-library cache (/etc/ld.so.cache) and search paths.
+- \`ar\` and \`ranlib\` - create, list, and index static archives.
+- \`strip\` - remove symbol and debug information to shrink release binaries.
+- \`strings\` - extract printable text (leaked paths, version tags, secrets).
+- \`c++filt\` - demangle C++ symbol names, turning _ZN3fooEv into foo().
+- \`addr2line\` - map a crash address back to file and line using debug info.
+- \`objcopy\` - convert binaries, split debug info, add or remove sections.
+- \`file\` - identify type, architecture, and linkage of any artifact in one line.
+- \`patchelf\` - edit an existing binary in place: RPATH, interpreter, or SONAME.
 
 ## ELF Anatomy
 An ELF file has an ELF header (class, endianness, machine, type), program headers (the segments the loader maps), and section headers such as .text, .data, .bss, .symtab, .dynsym, and .dynamic. Dynamic executables and shared objects carry a .dynamic section that lists NEEDED libraries, the SONAME, RPATH or RUNPATH, and symbol-version tables. Almost every validation you run maps to reading one of these structures.
