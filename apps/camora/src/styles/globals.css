@@ -1011,7 +1011,12 @@
 .prep-content.flex-1 p,
 .prep-content.flex-1 li,
 .prep-content.flex-1 dd,
-.prep-content.flex-1 blockquote {
+.prep-content.flex-1 blockquote,
+/* Bespoke cards (requirements, concepts, scope…) set their body text with the
+   .landing-body utility, which hard-codes the sans UI face — so it never
+   inherited the reading serif and read as a foreign font mid-page. Fold it
+   into the book body so every prose surface in the column is one voice. */
+.prep-content.flex-1 .landing-body {
   font-family: 'Newsreader', 'Iowan Old Style', Georgia, Cambria, serif;
   line-height: 1.8;
 }
@@ -1110,12 +1115,58 @@
   padding: 0;
   color: var(--accent);
 }
+/* ── Book heading scale ───────────────────────────────────────────────────
+   A deliberate three-tier hierarchy in the reading column so section
+   headings, subsections and micro-labels read as distinct levels — each
+   with its own colour, face and size:
+
+     Tier 1  SECTION      Fraunces display · 2rem  · family accent  (colour)
+     Tier 2  SUBSECTION   Fraunces         · 1.4rem · neutral + accent marker
+     Tier 3  MICRO-LABEL  IBM Plex Mono    · 0.75rem· family accent, UPPERCASE
+
+   The alternating colour (accent → neutral → accent) and the serif→mono
+   switch at the smallest level make the hierarchy legible at a glance. All
+   scoped to .prep-content.flex-1; docs pages keep the navy-strip system. */
+
+/* Tier 1 — section heading (ContentHeading label + markdown h2) */
 .prep-content.flex-1 .content-heading-title {
   font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
-  font-size: 1.5rem;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'opsz' 144;
+  color: var(--accent-text);
+}
+.prep-content.flex-1 > h2,
+.prep-content.flex-1 > section > h2,
+.prep-content.flex-1 h2.prep-section-heading {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'opsz' 144;
+  color: var(--accent-text);
+}
+
+/* Tier 2 — subsection (h3): neutral serif, accent lives in the hex marker */
+.prep-content.flex-1 > h3,
+.prep-content.flex-1 > section > h3,
+.prep-content.flex-1 h3.prep-section-heading {
+  font-size: 1.4rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+  font-variation-settings: 'opsz' 40;
   color: var(--text-primary);
+}
+
+/* Tier 3 — micro-label (h4): mono uppercase kicker in the family accent */
+.prep-content.flex-1 > h4,
+.prep-content.flex-1 > section > h4,
+.prep-content.flex-1 h4.prep-section-heading {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 /* Buttons */
