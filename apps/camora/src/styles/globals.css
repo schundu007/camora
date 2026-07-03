@@ -1002,7 +1002,7 @@
    left-aligned prose). Figures, code, tables and diagrams break out wider than
    the text so they still read big. System serifs only — no webfont load. */
 .prep-content.flex-1 {
-  max-width: 48rem;
+  max-width: 60rem;
   margin-inline: auto;
 }
 .prep-content.flex-1 p,
@@ -1011,6 +1011,25 @@
 .prep-content.flex-1 blockquote {
   font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
   line-height: 1.8;
+}
+/* Book headings: serif, in the reading column, for a chapter-like hierarchy. */
+.prep-content.flex-1 h1,
+.prep-content.flex-1 h2,
+.prep-content.flex-1 h3,
+.prep-content.flex-1 h4,
+.prep-content.flex-1 .landing-display {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
+  letter-spacing: -0.01em;
+}
+/* Pull-quote / key insight — a book-style aside with a gold rule. */
+.prep-content.flex-1 blockquote {
+  border-left: 2px solid var(--accent);
+  padding: 0.15rem 0 0.15rem 1.4rem;
+  margin: 2rem 0 2rem 0;
+  font-size: 1.4rem;
+  line-height: 1.5;
+  font-style: italic;
+  color: var(--text-primary);
 }
 
 /* Buttons */
