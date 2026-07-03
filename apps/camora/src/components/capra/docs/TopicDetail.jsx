@@ -1079,7 +1079,7 @@ export default function TopicDetail({
                     <div key={i} className="px-3 py-2.5">
                       <div className="flex items-start gap-2">
                         <span className="w-5 h-5 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-[var(--text-secondary)]">{i + 1}</span>
-                        <span className="text-sm font-semibold text-[var(--text-primary)]">{qa.question}</span>
+                        <span className="text-[16px] font-semibold text-[var(--text-primary)]">{qa.question}</span>
                       </div>
                       {i === 0 && qa.answer && (
                         <div className="mt-2 ml-7 text-sm text-[var(--text-secondary)] leading-relaxed">
@@ -1261,7 +1261,7 @@ export default function TopicDetail({
                       <span className="w-6 h-6 rounded bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-[var(--text-secondary)] landing-mono">
                         {i + 1}
                       </span>
-                      <span className="flex-1 text-sm font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
+                      <span className="flex-1 text-[16px] font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
                       <Icon name={expandedTheoryQuestions[`eb-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] mt-1 shrink-0" />
                     </button>
                     {expandedTheoryQuestions[`eb-${i}`] && (
@@ -1363,7 +1363,7 @@ export default function TopicDetail({
                       <span className="w-6 h-6 rounded bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-[var(--text-secondary)] landing-mono">
                         Q
                       </span>
-                      <span className="flex-1 text-sm font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
+                      <span className="flex-1 text-[16px] font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
                       <Icon name={expandedTheoryQuestions[`rm-${i}`] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] mt-1 shrink-0" />
                     </button>
                     {expandedTheoryQuestions[`rm-${i}`] && (
@@ -1459,7 +1459,7 @@ export default function TopicDetail({
                       <span className="w-6 h-6 rounded bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold text-[var(--text-secondary)] landing-mono">
                         {i + 1}
                       </span>
-                      <span className="flex-1 text-sm font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
+                      <span className="flex-1 text-[16px] font-semibold text-[var(--text-primary)] landing-display">{qa.question}</span>
                       <Icon name={expandedTheoryQuestions[i] ? 'chevronUp' : 'chevronDown'} size={14} className="text-[var(--text-muted)] mt-1 shrink-0" />
                     </button>
                     {expandedTheoryQuestions[i] && (
@@ -2611,7 +2611,7 @@ export default function TopicDetail({
                       <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
                         <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(201,162,39,0.04)] border-b border-[rgba(201,162,39,0.2)]">
                           <span className="text-xs font-bold text-[var(--warning-text)] landing-mono flex-shrink-0">Q{i + 1}</span>
-                          <span className="text-sm font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
+                          <span className="text-[16px] font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
                         </div>
                         <div className="px-3 py-2 pl-7 text-[var(--text-secondary)] text-xs landing-body leading-relaxed">
                           <FormattedContent content={item.answer} color="blue" />
