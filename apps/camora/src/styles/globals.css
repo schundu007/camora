@@ -1032,6 +1032,44 @@
   color: var(--text-primary);
 }
 
+/* ── ContentHeading ──────────────────────────────────────────────────────
+   Default = the navy-strip + gold-leaf chrome, preserved on docs and every
+   other surface (moved off inline styles so the reading view can override). */
+.content-heading {
+  background: var(--cam-hero-strip);
+  border-bottom: 1px solid var(--cam-gold-leaf);
+}
+.content-heading-eyebrow {
+  background: var(--cam-strip-icon-bg);
+  border: 1px solid var(--cam-strip-icon-border);
+  color: var(--cam-gold-leaf, #c9a55d);
+}
+.content-heading-title { color: var(--cam-strip-heading); }
+
+/* Inside the book reading column: a quiet serif chapter heading with a
+   hairline rule instead of the navy strip. */
+.prep-content.flex-1 .content-heading {
+  background: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0 0 0.55rem 0;
+  margin: 3.25rem 0 1.6rem 0;
+  align-items: baseline;
+}
+.prep-content.flex-1 .content-heading-eyebrow {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+}
+.prep-content.flex-1 .content-heading-title {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
 /* Buttons */
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;

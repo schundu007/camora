@@ -26,13 +26,9 @@ export default function ContentHeading({
   eyebrow,
   className = '',
 }) {
-  return (
+    return (
     <div
-      className={`mb-6 px-4 py-2.5 rounded-md flex items-center gap-2.5 ${className}`}
-      style={{
-        background: 'var(--cam-hero-strip)',
-        borderBottom: '1px solid var(--cam-gold-leaf)',
-      }}
+      className={`content-heading mb-6 px-4 py-2.5 rounded-md flex items-center gap-2.5 ${className}`}
     >
       {accent && (
         <span
@@ -42,17 +38,12 @@ export default function ContentHeading({
       )}
       {eyebrow && (
         <span
-          className="text-[10px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded flex-shrink-0"
-          style={{
-            background: 'var(--cam-strip-icon-bg)',
-            border: '1px solid var(--cam-strip-icon-border)',
-            color: 'var(--cam-gold-leaf, #c9a55d)',
-          }}
+          className="content-heading-eyebrow text-[10px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded flex-shrink-0"
         >
           {eyebrow}
         </span>
       )}
-      <h3 className="text-[15px] font-bold landing-display tracking-tight min-w-0 leading-snug" style={{ color: 'var(--cam-strip-heading)' }}>
+      <h3 className="content-heading-title text-[15px] font-bold landing-display tracking-tight min-w-0 leading-snug">
         {title}
       </h3>
       {pills && pills.length > 0 && (
