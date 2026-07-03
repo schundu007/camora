@@ -114,7 +114,7 @@ export default function ProgramizLearnPage() {
     const q = query.toLowerCase();
     return (PROGRAMIZ_PATHS as LearnPath[]).filter(p => {
       if (levelFilter !== 'all' && p.level !== levelFilter) return false;
-      if (q && !p.title.toLowerCase().includes(q) && !p.category.toLowerCase().includes(q)) return false;
+      if (q && !p.title.toLowerCase().includes(q) && !p.category.includes(q)) return false;
       return true;
     });
   }, [query, levelFilter]);
