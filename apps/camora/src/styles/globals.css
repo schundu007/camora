@@ -993,6 +993,26 @@
   max-width: 68ch;
 }
 
+/* ── Book reading mode ────────────────────────────────────────────────────
+   The main topic body reads like a book: one centered column at a comfortable
+   measure, set in a serif for continuous long-form reading. Scoped to the
+   primary reading surface (.prep-content.flex-1, the topic body column) so
+   cards, panels and inner surfaces are untouched. The width lives on the
+   COLUMN, never on individual <p> tags (which previously caused half-width,
+   left-aligned prose). Figures, code, tables and diagrams break out wider than
+   the text so they still read big. System serifs only — no webfont load. */
+.prep-content.flex-1 {
+  max-width: 48rem;
+  margin-inline: auto;
+}
+.prep-content.flex-1 p,
+.prep-content.flex-1 li,
+.prep-content.flex-1 dd,
+.prep-content.flex-1 blockquote {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, Cambria, serif;
+  line-height: 1.8;
+}
+
 /* Buttons */
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
