@@ -3142,28 +3142,21 @@ export default function TopicDetail({
                   const questionKey = `sre-${index}`;
                   const isExpanded = expandedTheoryQuestions[questionKey] === undefined ? index < 2 : expandedTheoryQuestions[questionKey];
                   return (
-                    <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
+                    <div key={index} className="border-b border-[var(--border)] pb-4 last:border-b-0">
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
-                        className="w-full px-4 py-3 flex items-center gap-3 bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-elevated)] transition-colors text-left"
+                        className="w-full py-2 flex items-baseline gap-3 hover:opacity-80 transition-opacity text-left"
                       >
-                        <span
-                          className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
-                          style={{
-                            color: 'var(--cam-gold-leaf, #c9a55d)',
-                            background: 'rgba(201, 165, 93, 0.08)',
-                            border: '1px solid rgba(201, 165, 93, 0.3)',
-                          }}
-                        >
+                        <span className="text-[11px] font-bold landing-mono tabular-nums flex-shrink-0" style={{ color: 'var(--cam-gold-leaf, #c9a55d)' }}>
                           Q{String(index + 1).padStart(2, '0')}
                         </span>
-                        <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display flex-1">{item.question || item.q}</h4>
-                        <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <h4 className="text-[var(--text-primary)] font-semibold text-[17px] leading-snug landing-display flex-1">{item.question || item.q}</h4>
+                        <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 mt-1 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       {isExpanded && (
-                        <div className="px-5 py-4 border-t border-[var(--border)]">
+                        <div className="pl-8 pr-1 pt-1">
                           <div className="prep-content w-full">
                             <FormattedContent content={item.answer || item.a} color="blue" />
                           </div>
@@ -3210,24 +3203,21 @@ export default function TopicDetail({
                   const qKey = `qf-${index}`;
                   const isExpanded = expandedTheoryQuestions[qKey] === undefined ? index < 3 : expandedTheoryQuestions[qKey];
                   return (
-                    <div key={index} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
+                    <div key={index} className="border-b border-[var(--border)] pb-4 last:border-b-0">
                       <button
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [qKey]: !isExpanded }))}
-                        className="w-full px-4 py-3 flex items-center gap-3 bg-[var(--bg-elevated)]/40 hover:bg-[var(--bg-elevated)] transition-colors text-left"
+                        className="w-full py-2 flex items-baseline gap-3 hover:opacity-80 transition-opacity text-left"
                       >
-                        <span
-                          className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
-                          style={{ color: 'var(--cam-gold-leaf, #c9a55d)', background: 'rgba(201,165,93,0.08)', border: '1px solid rgba(201,165,93,0.3)' }}
-                        >
+                        <span className="text-[11px] font-bold landing-mono tabular-nums flex-shrink-0" style={{ color: 'var(--cam-gold-leaf, #c9a55d)' }}>
                           Q{String(index + 1).padStart(2, '0')}
                         </span>
-                        <h4 className="text-[var(--text-primary)] font-semibold text-[14px] leading-snug landing-display flex-1">{item.q}</h4>
-                        <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <h4 className="text-[var(--text-primary)] font-semibold text-[17px] leading-snug landing-display flex-1">{item.q}</h4>
+                        <svg className={`w-4 h-4 text-[var(--text-muted)] transition-transform flex-shrink-0 mt-1 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
                       {isExpanded && (
-                        <div className="px-5 py-4 border-t border-[var(--border)]">
+                        <div className="pl-8 pr-1 pt-1">
                           <div className="prep-content w-full">
                             <FormattedContent content={item.a} color="blue" />
                           </div>
