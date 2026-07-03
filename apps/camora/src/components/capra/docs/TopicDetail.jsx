@@ -1752,8 +1752,12 @@ export default function TopicDetail({
 
                   const problemText = problemData?.description || `Solve: ${problemName}`;
                   const isSqlTopic = activePage === 'sql' || (typeof selectedTopic === 'string' && selectedTopic.startsWith('sql-'));
+                  // SQL problems open in the real SQL editor (SQLPlayground at
+                  // /playground?tab=sql), which reads ?sqlProblem=<title> and
+                  // preloads it. The old /capra/practice?view=sql-editor target
+                  // was a view that no longer exists → blank page.
                   const href = isSqlTopic
-                    ? `/capra/practice?view=sql-editor&sqlProblem=${encodeURIComponent(problemName)}`
+                    ? `/playground?tab=sql&sqlProblem=${encodeURIComponent(problemName)}`
                     : `/capra/coding?problem=${encodeURIComponent(problemText)}&autosolve=true`;
 
                   return (
