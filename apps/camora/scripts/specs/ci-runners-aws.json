@@ -1,0 +1,112 @@
+{
+  "title": "Ephemeral CI Runners on AWS \u2014 OIDC + EC2",
+  "direction": "LR",
+  "clusters": [
+    {
+      "id": "aws",
+      "label": "AWS Account (private subnets)"
+    },
+    {
+      "id": "scale",
+      "label": "Scale-Up Control Plane"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "gh",
+      "label": "GitHub Actions\nOIDC token",
+      "type": "users"
+    },
+    {
+      "id": "oidc",
+      "label": "STS AssumeRole\nWithWebIdentity",
+      "type": "secrets",
+      "cluster": "aws"
+    },
+    {
+      "id": "apigw",
+      "label": "API Gateway\nworkflow_job webhook",
+      "type": "apigw",
+      "cluster": "scale"
+    },
+    {
+      "id": "lam",
+      "label": "Scale-Up Lambda",
+      "type": "function",
+      "cluster": "scale"
+    },
+    {
+      "id": "sqs",
+      "label": "SQS Queue",
+      "type": "queue",
+      "cluster": "scale"
+    },
+    {
+      "id": "ec2",
+      "label": "Ephemeral EC2 Runner\nbaked AMI, one job",
+      "type": "compute",
+      "cluster": "aws"
+    },
+    {
+      "id": "vpce",
+      "label": "VPC Endpoints\nECR / S3 / STS",
+      "type": "firewall",
+      "cluster": "aws"
+    },
+    {
+      "id": "ecr",
+      "label": "ECR Registry",
+      "type": "storage",
+      "cluster": "aws"
+    }
+  ],
+  "edges": [
+    {
+      "from": "gh",
+      "to": "oidc",
+      "label": "federate (no static keys)",
+      "kind": "main"
+    },
+    {
+      "from": "gh",
+      "to": "apigw",
+      "label": "webhook",
+      "kind": "main"
+    },
+    {
+      "from": "apigw",
+      "to": "lam",
+      "label": ""
+    },
+    {
+      "from": "lam",
+      "to": "sqs",
+      "label": "enqueue"
+    },
+    {
+      "from": "sqs",
+      "to": "ec2",
+      "label": "launch JIT",
+      "kind": "main"
+    },
+    {
+      "from": "ec2",
+      "to": "vpce",
+      "label": "private egress",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "vpce",
+      "to": "ecr",
+      "label": "pull image"
+    },
+    {
+      "from": "oidc",
+      "to": "ec2",
+      "label": "temp creds",
+      "kind": "control",
+      "style": "dashed"
+    }
+  ]
+}

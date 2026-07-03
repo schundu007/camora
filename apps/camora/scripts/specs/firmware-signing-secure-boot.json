@@ -1,0 +1,95 @@
+{
+  "title": "Firmware Signing & Secure Boot in CI",
+  "direction": "LR",
+  "clusters": [
+    {
+      "id": "signer",
+      "label": "Isolated Signer"
+    },
+    {
+      "id": "boot",
+      "label": "Secure Boot Chain"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "build",
+      "label": "Build Runner\nunsigned artifact",
+      "type": "compute"
+    },
+    {
+      "id": "req",
+      "label": "Signing Request\ndigest only",
+      "type": "function",
+      "cluster": "signer"
+    },
+    {
+      "id": "hsm",
+      "label": "HSM / KMS\nprivate key never leaves",
+      "type": "secrets",
+      "cluster": "signer"
+    },
+    {
+      "id": "sig",
+      "label": "Signed Artifact",
+      "type": "storage"
+    },
+    {
+      "id": "verify",
+      "label": "Verify Gate\nCI blocks on fail",
+      "type": "monitor"
+    },
+    {
+      "id": "root",
+      "label": "Root of Trust\nOTP / db,KEK,PK",
+      "type": "secrets",
+      "cluster": "boot"
+    },
+    {
+      "id": "boot",
+      "label": "Secure Boot\nverify each stage",
+      "type": "tls",
+      "cluster": "boot"
+    }
+  ],
+  "edges": [
+    {
+      "from": "build",
+      "to": "req",
+      "label": "send digest",
+      "kind": "main"
+    },
+    {
+      "from": "req",
+      "to": "hsm",
+      "label": "sign",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "hsm",
+      "to": "sig",
+      "label": "detached signature",
+      "kind": "main"
+    },
+    {
+      "from": "sig",
+      "to": "verify",
+      "label": "gate before promote",
+      "kind": "main"
+    },
+    {
+      "from": "root",
+      "to": "boot",
+      "label": "chain of trust",
+      "kind": "main"
+    },
+    {
+      "from": "sig",
+      "to": "boot",
+      "label": "verified at load",
+      "kind": "control",
+      "style": "dashed"
+    }
+  ]
+}

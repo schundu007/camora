@@ -1,0 +1,94 @@
+{
+  "title": "Release Manifests & Last-Known-Good Promotion",
+  "direction": "LR",
+  "clusters": [
+    {
+      "id": "chan",
+      "label": "Channels"
+    },
+    {
+      "id": "val",
+      "label": "Validation"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "dev",
+      "label": "Component Repos\nfirmware \u00b7 driver \u00b7 ROCm",
+      "type": "storage"
+    },
+    {
+      "id": "mani",
+      "label": "Candidate Manifest\npinned SHAs / digests",
+      "type": "db",
+      "cluster": "chan"
+    },
+    {
+      "id": "night",
+      "label": "Nightly Integration\nfull-stack build",
+      "type": "compute",
+      "cluster": "val"
+    },
+    {
+      "id": "gate",
+      "label": "Promote-on-Green\ngates",
+      "type": "monitor",
+      "cluster": "val"
+    },
+    {
+      "id": "lkg",
+      "label": "LKG Pointer\ntrusted baseline",
+      "type": "db",
+      "cluster": "chan"
+    },
+    {
+      "id": "rel",
+      "label": "Release Channel",
+      "type": "storage",
+      "cluster": "chan"
+    },
+    {
+      "id": "eng",
+      "label": "Engineers\nbuild against LKG",
+      "type": "users"
+    }
+  ],
+  "edges": [
+    {
+      "from": "dev",
+      "to": "mani",
+      "label": "pin exact versions",
+      "kind": "main"
+    },
+    {
+      "from": "mani",
+      "to": "night",
+      "label": "validate",
+      "kind": "main"
+    },
+    {
+      "from": "night",
+      "to": "gate",
+      "label": ""
+    },
+    {
+      "from": "gate",
+      "to": "lkg",
+      "label": "promote if green",
+      "kind": "main"
+    },
+    {
+      "from": "lkg",
+      "to": "rel",
+      "label": "cut release",
+      "kind": "main"
+    },
+    {
+      "from": "lkg",
+      "to": "eng",
+      "label": "resolve baseline",
+      "kind": "control",
+      "style": "dashed"
+    }
+  ]
+}

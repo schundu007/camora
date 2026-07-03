@@ -1,0 +1,110 @@
+{
+  "title": "Kernel & Driver Build Environments (out-of-tree)",
+  "direction": "LR",
+  "clusters": [
+    {
+      "id": "matrix",
+      "label": "Kernel Matrix"
+    },
+    {
+      "id": "infra",
+      "label": "Build Infra"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "src",
+      "label": "Driver Source\namdgpu / module",
+      "type": "storage"
+    },
+    {
+      "id": "hdr",
+      "label": "Kernel Headers\nper version",
+      "type": "storage",
+      "cluster": "infra"
+    },
+    {
+      "id": "tool",
+      "label": "NFS Toolchain\npinned gcc",
+      "type": "storage",
+      "cluster": "infra"
+    },
+    {
+      "id": "b1",
+      "label": "Build k6.5\nKbuild + vermagic",
+      "type": "compute",
+      "cluster": "matrix"
+    },
+    {
+      "id": "b2",
+      "label": "Build k6.8",
+      "type": "compute",
+      "cluster": "matrix"
+    },
+    {
+      "id": "dkms",
+      "label": "DKMS Package\nrebuild on upgrade",
+      "type": "function"
+    },
+    {
+      "id": "sign",
+      "label": "Module Signing\nSecure Boot",
+      "type": "secrets"
+    },
+    {
+      "id": "ko",
+      "label": "Signed .ko\nartifacts",
+      "type": "storage"
+    }
+  ],
+  "edges": [
+    {
+      "from": "src",
+      "to": "b1",
+      "label": "make -C headers",
+      "kind": "main"
+    },
+    {
+      "from": "src",
+      "to": "b2",
+      "label": "make -C headers",
+      "kind": "main"
+    },
+    {
+      "from": "hdr",
+      "to": "b1",
+      "label": "",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "tool",
+      "to": "b1",
+      "label": "",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "b1",
+      "to": "dkms",
+      "label": ""
+    },
+    {
+      "from": "b2",
+      "to": "dkms",
+      "label": ""
+    },
+    {
+      "from": "dkms",
+      "to": "sign",
+      "label": "sign per rebuild",
+      "kind": "main"
+    },
+    {
+      "from": "sign",
+      "to": "ko",
+      "label": "enrolled key",
+      "kind": "main"
+    }
+  ]
+}

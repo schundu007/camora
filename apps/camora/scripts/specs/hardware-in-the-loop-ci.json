@@ -1,0 +1,103 @@
+{
+  "title": "Hardware-in-the-Loop CI \u2014 GPU Device Lab",
+  "direction": "LR",
+  "clusters": [
+    {
+      "id": "lab",
+      "label": "Device Lab"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "dev",
+      "label": "PR touches\nfirmware / driver",
+      "type": "users"
+    },
+    {
+      "id": "gh",
+      "label": "GitHub Actions",
+      "type": "internet"
+    },
+    {
+      "id": "runner",
+      "label": "Bench Runner\nself-hosted, labeled",
+      "type": "compute",
+      "cluster": "lab"
+    },
+    {
+      "id": "lease",
+      "label": "Exclusive Lease\none job per board",
+      "type": "function",
+      "cluster": "lab"
+    },
+    {
+      "id": "gpu",
+      "label": "GPU Under Test\nreal MI300X",
+      "type": "compute",
+      "cluster": "lab"
+    },
+    {
+      "id": "bmc",
+      "label": "BMC / PDU\nout-of-band power",
+      "type": "firewall",
+      "cluster": "lab"
+    },
+    {
+      "id": "serial",
+      "label": "Serial Console\ncapture",
+      "type": "monitor",
+      "cluster": "lab"
+    },
+    {
+      "id": "res",
+      "label": "Results + Logs\nto PR",
+      "type": "storage"
+    }
+  ],
+  "edges": [
+    {
+      "from": "dev",
+      "to": "gh",
+      "label": "open PR",
+      "kind": "main"
+    },
+    {
+      "from": "gh",
+      "to": "runner",
+      "label": "dispatch to hardware",
+      "kind": "main"
+    },
+    {
+      "from": "runner",
+      "to": "lease",
+      "label": "acquire board",
+      "kind": "main"
+    },
+    {
+      "from": "lease",
+      "to": "gpu",
+      "label": "flash + test",
+      "kind": "main"
+    },
+    {
+      "from": "bmc",
+      "to": "gpu",
+      "label": "power-cycle / recover",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "gpu",
+      "to": "serial",
+      "label": "stream console",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "runner",
+      "to": "res",
+      "label": "publish",
+      "kind": "main"
+    }
+  ]
+}

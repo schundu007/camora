@@ -1,0 +1,112 @@
+{
+  "title": "ROCm & the AMD GPU Stack \u2014 Layer Coherence",
+  "direction": "LR",
+  "clusters": [
+    {
+      "id": "user",
+      "label": "ROCm Userspace"
+    },
+    {
+      "id": "kern",
+      "label": "Kernel"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "fw",
+      "label": "Framework\nPyTorch / TF (ROCm)",
+      "type": "compute"
+    },
+    {
+      "id": "hip",
+      "label": "HIP Runtime\nlibamdhip64",
+      "type": "compute",
+      "cluster": "user"
+    },
+    {
+      "id": "libs",
+      "label": "rocBLAS \u00b7 MIOpen \u00b7 RCCL",
+      "type": "compute",
+      "cluster": "user"
+    },
+    {
+      "id": "rocr",
+      "label": "ROCr / HSA Runtime",
+      "type": "container",
+      "cluster": "user"
+    },
+    {
+      "id": "kfd",
+      "label": "amdkfd\n/dev/kfd compute",
+      "type": "container",
+      "cluster": "kern"
+    },
+    {
+      "id": "drm",
+      "label": "amdgpu\n/dev/dri DRM driver",
+      "type": "container",
+      "cluster": "kern"
+    },
+    {
+      "id": "firm",
+      "label": "GPU Firmware\nmicrocode",
+      "type": "secrets"
+    },
+    {
+      "id": "gpu",
+      "label": "Instinct MI300X\nCDNA silicon",
+      "type": "compute"
+    }
+  ],
+  "edges": [
+    {
+      "from": "fw",
+      "to": "hip",
+      "label": "",
+      "kind": "main"
+    },
+    {
+      "from": "hip",
+      "to": "libs",
+      "label": ""
+    },
+    {
+      "from": "hip",
+      "to": "rocr",
+      "label": "",
+      "kind": "main"
+    },
+    {
+      "from": "rocr",
+      "to": "kfd",
+      "label": "",
+      "kind": "main"
+    },
+    {
+      "from": "kfd",
+      "to": "drm",
+      "label": "",
+      "kind": "main"
+    },
+    {
+      "from": "drm",
+      "to": "firm",
+      "label": "loads at probe",
+      "kind": "control",
+      "style": "dashed"
+    },
+    {
+      "from": "drm",
+      "to": "gpu",
+      "label": "enumerate",
+      "kind": "main"
+    },
+    {
+      "from": "firm",
+      "to": "gpu",
+      "label": "",
+      "kind": "control",
+      "style": "dashed"
+    }
+  ]
+}
