@@ -46,6 +46,11 @@ const renderCmdCode = (text, key) => {
   );
 };
 
+// Unambiguous DevOps tool names safe to auto-highlight in plain prose.
+// Deliberately excludes generic words (grep, find, node, python, ssh) that
+// also appear as English nouns/verbs and would cause false positives.
+const PROSE_TOOL_RE = /(?<![`\w])(kubectl|terraform|tofu|helm|argocd|fluxcd|istioctl|kustomize|skaffold|kubeadm|eksctl|k9s|minikube|k3s|crictl|podman|buildah|trivy|snyk|grype|etcdctl|kubectx|kubens|velero|consul|nomad|nerdctl|skopeo|ansible-playbook|ansible-vault|docker|ansible|jq|yq)(?![\w`])/;
+
 // Common English sentence starters excluded from the "Term. Definition" detector.
 // Technical terms (Pod, Deployment, ConfigMap, etc.) are intentionally absent.
 const TERM_DEF_STARTERS_EXCLUDED = new Set([
@@ -204,6 +209,7 @@ export default function FormattedContent({ content, inline = false }) {
       const boldMatch = remaining.match(/\*\*([^*]+)\*\*/);
       const codeMatch = remaining.match(/`([^`]+)`/);
       const quoteMatch = remaining.match(/"([^"]{10,})"/);
+      const toolMatch = remaining.match(PROSE_TOOL_RE);
 
       let nextMatch = null;
       let matchType = null;
@@ -222,6 +228,12 @@ export default function FormattedContent({ content, inline = false }) {
       if (quoteMatch && quoteMatch.index < matchIndex) {
         nextMatch = quoteMatch;
         matchType = 'quote';
+        matchIndex = quoteMatch.index;
+      }
+      if (toolMatch && toolMatch.index < matchIndex) {
+        nextMatch = toolMatch;
+        matchType = 'tool';
+        matchIndex = toolMatch.index;
       }
 
       if (nextMatch) {
@@ -245,6 +257,8 @@ export default function FormattedContent({ content, inline = false }) {
               {nextMatch[1]}
             </em>,
           );
+        } else if (matchType === 'tool') {
+          parts.push(renderCmdCode(nextMatch[0], keyCounter++));
         }
         remaining = remaining.substring(nextMatch.index + nextMatch[0].length);
       } else {
