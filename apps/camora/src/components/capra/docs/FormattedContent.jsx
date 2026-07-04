@@ -51,6 +51,14 @@ const renderCmdCode = (text, key) => {
 // also appear as English nouns/verbs and would cause false positives.
 const PROSE_TOOL_RE = /(?<![`\w])(kubectl|terraform|tofu|helm|argocd|fluxcd|istioctl|kustomize|skaffold|kubeadm|eksctl|k9s|minikube|k3s|crictl|podman|buildah|trivy|snyk|grype|etcdctl|kubectx|kubens|velero|consul|nomad|nerdctl|skopeo|ansible-playbook|ansible-vault|docker|ansible|jq|yq)(?![\w`])/;
 
+// Ordinal starters → badge number (or symbol for "Finally" / "Next").
+const ORDINAL_NUM = {
+  first: 1, second: 2, third: 3, fourth: 4, fifth: 5,
+  sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10,
+  finally: '→', next: '→', lastly: '→',
+};
+const ORDINAL_RE = /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth|Finally|Lastly|Next),\s+(.+)/i;
+
 // Common English sentence starters excluded from the "Term. Definition" detector.
 // Technical terms (Pod, Deployment, ConfigMap, etc.) are intentionally absent.
 const TERM_DEF_STARTERS_EXCLUDED = new Set([
@@ -812,6 +820,33 @@ export default function FormattedContent({ content, inline = false }) {
         if (cliRow) {
           flushList(); flushStructuredGroup(); flushShellGroup();
           currentCliGroup.push(cliRow);
+          return;
+        }
+
+        // Ordinal numbered point: "First, label. Body..." renders as a
+        // numbered badge + bold label + body, breaking up "wall of paragraphs".
+        const ordinalM = trimmed.match(ORDINAL_RE);
+        if (ordinalM) {
+          const num = ORDINAL_NUM[ordinalM[1].toLowerCase()];
+          const rest = ordinalM[2];
+          const dotIdx = rest.indexOf('. ');
+          let label = null, body = rest;
+          if (dotIdx > 0 && dotIdx < 70) {
+            label = rest.substring(0, dotIdx);
+            body = rest.substring(dotIdx + 2);
+          }
+          flushAll();
+          pushBody(
+            <div key={`ord-${blockIdx}-${lineIdx}`} className="flex gap-3 my-3.5 items-start">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] text-[11px] font-bold text-[var(--accent-text)] flex items-center justify-center mt-[3px] landing-mono select-none">
+                {num}
+              </span>
+              <span className="flex-1 text-[15px] leading-[1.75] landing-body text-[var(--text-secondary)]">
+                {label && <strong className="text-[var(--text-primary)] font-semibold">{label}. </strong>}
+                {formatInlineText(body)}
+              </span>
+            </div>,
+          );
           return;
         }
 
