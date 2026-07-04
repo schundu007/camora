@@ -512,14 +512,17 @@ function isActive(itemPath: string, currentPath: string): boolean {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { pathname } = useLocation();
   const [pinned, setPinned] = useState(false);
-  const [hovered, setHovered] = useState(false);
+  // Temporary reveal — toggled by right-clicking the collapsed rail (never by
+  // hover). Collapses again when the cursor leaves the sidebar unless pinned.
+  const [revealed, setRevealed] = useState(false);
 
   // Collapse when navigating to a different page
   useEffect(() => {
     setPinned(false);
+    setRevealed(false);
   }, [pathname]);
 
-  const expanded = pinned || hovered;
+  const expanded = pinned || revealed;
   const sidebarWidth = expanded ? '240px' : '56px';
 
   const renderSidebarContent = (isCollapsed: boolean, onItemClick?: () => void) => (
@@ -584,8 +587,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           the same reason — flips light/dark with the rest of the chrome. */}
       <aside
         className="hidden md:flex flex-col shrink-0"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        onContextMenu={(e) => { e.preventDefault(); setRevealed((r) => !r); }}
+        onMouseLeave={() => setRevealed(false)}
         style={{
           width: sidebarWidth,
           height: '100%',

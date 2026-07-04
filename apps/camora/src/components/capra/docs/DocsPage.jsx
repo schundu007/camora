@@ -1155,12 +1155,12 @@ export default function DocsPage({ onBack }) {
                           <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-section-label-text)' }}>Topic Categories</span>
                           <Chip className="ml-auto">Browse</Chip>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2">
                           {overviewCategories.map((cat, idx) => {
                             const _len = overviewCategories.length;
                             const _isLast = idx === _len - 1;
-                            const _orphanClass = _isLast && _len % 4 === 1
-                              ? 'sm:col-span-full sm:justify-self-center sm:w-1/2 lg:w-1/4'
+                            const _orphanClass = _isLast && _len % 5 === 1
+                              ? 'sm:col-span-full sm:justify-self-center sm:w-1/2 lg:w-1/5'
                               : _isLast && _len % 2 === 1
                               ? 'sm:col-span-full sm:justify-self-center sm:w-1/2'
                               : '';
