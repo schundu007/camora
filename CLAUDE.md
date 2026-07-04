@@ -127,6 +127,7 @@ cd apps/camora && npx eslint .
 - `DATABASE_URL` — PostgreSQL connection string
 - `JWT_SECRET` — JWT signing key (canonical). `JWT_SECRET_KEY` was the prior name and is still read as a fallback for backward compat — set `JWT_SECRET` going forward.
 - `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` — AI model access
+- `GROQ_API_KEY` — optional. When set, lumora-backend uses Groq `whisper-large-v3-turbo` for transcription (~100ms vs ~300ms). Falls back to OpenAI Whisper when absent or on error.
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — Payments
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — OAuth
 - `AI_SERVICES_URL` (default: `http://localhost:8001`) — Python microservice

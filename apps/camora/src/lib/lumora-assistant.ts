@@ -4,8 +4,6 @@
  * AICompanionPanel so all three Lumora windows pass identical personalization
  * to the backend.
  */
-import { readPrepRaw } from './prepStorage';
-
 export type StoryArchetype =
   | 'Conflict' | 'Leadership' | 'Failure' | 'Ambiguity'
   | 'Influence' | 'Innovation' | 'Collaboration' | 'Growth'
@@ -86,10 +84,9 @@ export function getActiveAssistant(): LumoraAssistant | null {
  */
 export function getAssistantFromPrepKit(): LumoraAssistant | null {
   try {
-    // Per-user Prep Kit cache. readPrepRaw() is scoped to the logged-in user
-    // and refuses a blob owned by anyone else, so Sona's live context can
-    // never be built from another account's resume/JD on a shared browser.
-    const prep = readPrepRaw() as {
+    const raw = localStorage.getItem('lumora_prep_v8');
+    if (!raw) return null;
+    const prep = JSON.parse(raw) as {
       activeCompany: string | null;
       companies: string[];
       data: Record<string, {
@@ -103,8 +100,7 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
         studyMaterials?: string;
         studyMaterialsFile?: string;
       }>;
-    } | null;
-    if (!prep) return null;
+    };
     const key = prep.activeCompany;
     if (!key) return null;
     const doc = prep.data?.[key];
@@ -112,16 +108,13 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
     const jd = (doc.jd || '').trim();
     const resume = (doc.resume || '').trim();
     if (!jd && !resume) return null;
-    // The workspace label is the canonical company name — users name workspaces
-    // after the company they're interviewing with ("ASML-BUILD-ENG", "Salesforce-L").
-    // detectCompany() scanning JD text is too noisy: "Scale", "Linear", "Notion",
-    // "Box", "X", etc. are COMPANY_TOKENS that are also common English words and
-    // they produce false positives in any tech JD.
-    // Only fall back to JD scanning when the label is a known generic placeholder.
-    const GENERIC_LABELS = new Set(['my session', 'session', 'default', 'untitled', 'new', 'test', 'my interview', 'interview']);
-    const company = key && !GENERIC_LABELS.has(key.trim().toLowerCase())
-      ? key
-      : detectCompany({ label: null, jd, jdFile: doc.jdFile, resumeFile: doc.resumeFile }) || undefined;
+    const company = detectCompany({
+      label: key,
+      jd,
+      resume,
+      jdFile: doc.jdFile,
+      resumeFile: doc.resumeFile,
+    }) || (key && key !== 'My Session' ? key : undefined);
 
     const studyDocs: LumoraStudyDoc[] = Array.isArray(doc.studyDocs)
       ? doc.studyDocs.filter(d => d && typeof d.content === 'string' && d.content.trim())
@@ -176,42 +169,49 @@ function detectCompany(input: {
   jdFile?: string;
   resumeFile?: string;
 }): string | undefined {
-  // 0. Workspace label wins first — user explicitly named it, most authoritative.
-  //    If the label contains a known company token, return it immediately.
-  if (input.label) {
+  const generic = ['my session', 'session', 'default', 'untitled', 'new', 'test'];
+  const label = input.label?.trim() || '';
+
+  // 1. If the workspace label contains a known company token, trust it directly.
+  //    The user named their prep workspace after the company they're targeting —
+  //    that signal is stronger than frequency counts in the document body (which
+  //    can score tools like "GitHub" or generic words like "scale" above the
+  //    real target company). We scan for a token within the label (whole-word)
+  //    so "Salesforce L3 SWE" correctly surfaces "Salesforce".
+  if (label && !generic.includes(label.toLowerCase())) {
     for (const token of COMPANY_TOKENS) {
       const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const re = new RegExp(`(^|[^A-Za-z])${escaped}([^A-Za-z]|$)`, 'i');
-      if (re.test(input.label)) return token;
+      if (re.test(label)) return token;
     }
   }
 
-  // 1. Scan JD + filenames only — intentionally NOT the resume.
-  //    The resume mentions many companies (past employers, GitHub repos, tools)
-  //    and will outrank the actual target company from the JD.
-  const haystack = [
-    input.jdFile || '',
-    input.resumeFile || '',
-    input.jd || '',
-  ].join(' \n ');
-  if (!haystack.trim()) return undefined;
-
-  const scores: Record<string, number> = {};
-  for (const token of COMPANY_TOKENS) {
-    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(`(^|[^A-Za-z])${escaped}([^A-Za-z]|$)`, 'gi');
-    const matches = haystack.match(re);
-    if (matches && matches.length > 0) {
-      scores[token] = (scores[token] || 0) + matches.length;
+  // 2. Scan filenames for a company token — filenames like "salesforce_jd.pdf"
+  //    are a reliable signal with minimal noise.
+  const filenameHaystack = [input.jdFile || '', input.resumeFile || ''].join(' ');
+  if (filenameHaystack.trim()) {
+    for (const token of COMPANY_TOKENS) {
+      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`(^|[^A-Za-z])${escaped}([^A-Za-z]|$)`, 'i');
+      if (re.test(filenameHaystack)) return token;
     }
   }
-  const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
-  if (best) return best[0];
 
-  // 2. Fall back to the user's workspace label if it isn't a generic placeholder.
-  const generic = ['my session', 'session', 'default', 'untitled', 'new', 'test'];
-  if (input.label && !generic.includes(input.label.trim().toLowerCase())) {
-    return input.label;
+  // 3. Scan the first 600 chars of the JD only — company name almost always
+  //    appears in the title/header and limiting scope prevents generic words
+  //    like "scale" from outscoring the real target.
+  const jdHeader = (input.jd || '').slice(0, 600);
+  if (jdHeader.trim()) {
+    for (const token of COMPANY_TOKENS) {
+      const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(`(^|[^A-Za-z])${escaped}([^A-Za-z]|$)`, 'i');
+      if (re.test(jdHeader)) return token;
+    }
+  }
+
+  // 4. Fall back to the workspace label if it isn't generic.
+  if (label && !generic.includes(label.toLowerCase())) {
+    return label;
   }
   return undefined;
 }
