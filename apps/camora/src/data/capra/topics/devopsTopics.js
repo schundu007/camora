@@ -4142,15 +4142,695 @@ What\'s missing or omitted for brevity: secret rotation policy, a merge-queue co
 
 The cumulative effect is: PRs run in 4-8 minutes; main pushes deploy to staging in 12-15 minutes; production requires a human approval; supply-chain attack surface is minimized; deploy credentials never leave AWS STS\'s 1-hour window. This is what "production-grade" looks like in 2026.`,
       },
+      {
+        question: 'Explain the key GitHub Actions trigger events and how path filters prevent wasted CI runs.',
+        answer: `## Core trigger events
+
+The \`on:\` key controls which events launch a workflow. Most-used triggers:
+
+\`\`\`yaml
+on:
+  push:
+    branches: [main, 'release/**']   # runs on push to these branches
+    paths-ignore: ['docs/**', '**.md']
+  pull_request:
+    branches: [main]                  # runs when PR targets main
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 6 * * 1-5'            # weekdays at 06:00 UTC
+  workflow_dispatch:                  # manual trigger with optional inputs
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+  workflow_call:                      # called from another workflow (reusable)
+    inputs:
+      deploy: { type: boolean, required: false, default: false }
+\`\`\`
+
+## push vs pull_request
+
+\`push\` fires when commits land on a branch directly. \`pull_request\` fires when a PR is opened or updated — the runner checks out the merge commit (PR head merged with base), not the branch head. This is why \`pull_request\` tests what will actually merge.
+
+Key difference in \`github.ref\`: push to main gives \`refs/heads/main\`; a PR gives \`refs/pull/123/merge\`. OIDC trust policies that restrict by ref must account for this — the staging deploy role typically allows \`refs/heads/main\` only, which a PR can never satisfy.
+
+## Path filtering to skip unnecessary runs
+
+Without filters, a frontend-only commit triggers backend tests and vice versa. Path filters fix this:
+
+\`\`\`yaml
+on:
+  push:
+    paths:
+      - 'apps/api/**'
+      - 'packages/shared/**'
+      - '.github/workflows/api.yml'
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+\`\`\`
+
+\`paths\` and \`paths-ignore\` are mutually exclusive — use one or the other. \`paths\` is an allowlist (runs if ANY matching file changed); \`paths-ignore\` is a denylist (skips if ALL changed files match the ignore patterns).
+
+Limitation: branch protection required-status-checks fail for skipped workflows, because the check never runs to post a result. The standard workaround is the \`dorny/paths-filter\` action: it always runs but outputs a flag, and downstream jobs conditionally execute with \`if: steps.filter.outputs.api == 'true'\`.
+
+## schedule trigger (cron in GitHub Actions)
+
+\`\`\`yaml
+on:
+  schedule:
+    - cron: '0 2 * * *'   # daily at 02:00 UTC — standard format, UTC only
+\`\`\`
+
+Schedule only runs on the default branch. Minimum interval: 5 minutes (GitHub enforces this). Heavy schedule usage on free-tier accounts drains minutes — budget scheduled jobs carefully. Always set a \`concurrency\` group with \`cancel-in-progress: false\` for scheduled runs (overlapping nightly runs waste minutes and can corrupt state).
+
+## workflow_dispatch — manual triggers with inputs
+
+\`workflow_dispatch\` lets you trigger workflows from the GitHub UI, API, or \`gh workflow run\`. Inputs have types: \`string\`, \`boolean\`, \`choice\`, \`environment\`. The UI renders a form from the inputs definition. API call:
+
+\`\`\`bash
+gh workflow run deploy.yml \\
+  --ref main \\
+  --field environment=production \\
+  --field dry-run=false
+\`\`\``,
+      },
+      {
+        question: 'How does caching work in GitHub Actions, and how do you share data between jobs?',
+        answer: `## Dependency caching with actions/cache
+
+Cache is keyed by a string you control. On a cache hit, the action restores the saved directory; on a miss, a post-job step saves it.
+
+\`\`\`yaml
+- uses: actions/cache@3624ceb22c1c5a301c8b4ead8b74710d5b4af68b  # v4.1.1
+  with:
+    path: ~/.npm
+    key: npm-\${{ runner.os }}-\${{ hashFiles('**/package-lock.json') }}
+    restore-keys: |
+      npm-\${{ runner.os }}-
+\`\`\`
+
+\`key\` is the exact-match cache lookup. \`restore-keys\` are prefix fallbacks tried in order when the exact key misses — you get a stale but usable cache rather than starting cold. The post-job save only runs if the exact key missed (no point re-saving an identical cache).
+
+## Setup actions with built-in caching
+
+For Node, Python, Go, Java, and others, the setup actions accept a \`cache:\` input that wraps the above automatically:
+
+\`\`\`yaml
+- uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a  # v4
+  with:
+    node-version: '20'
+    cache: 'pnpm'          # or 'npm', 'yarn'
+- uses: actions/setup-python@<sha>
+  with:
+    python-version: '3.12'
+    cache: 'pip'
+\`\`\`
+
+This is simpler than writing \`actions/cache\` manually for standard dependency managers.
+
+## Docker layer caching
+
+\`\`\`yaml
+- uses: docker/build-push-action@<sha>
+  with:
+    cache-from: type=gha        # restore layers from GitHub Actions cache
+    cache-to: type=gha,mode=max # save all layers (not just final stage)
+\`\`\`
+
+\`mode=max\` saves every intermediate layer, not just the final image — dramatically speeds up Dockerfile builds with many RUN steps.
+
+## Cache scope rules
+
+Caches created on a branch are available only to that branch and its parent (main). A PR can read caches from its base branch. Main's cache is available to all branches. Caches never flow from PR to PR. Caches expire after 7 days of no access; maximum size per cache: 10 GB per repo.
+
+## Sharing data between jobs — artifacts
+
+Jobs are isolated (separate runners). To pass build output from a build job to a deploy job:
+
+\`\`\`yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm run build
+      - uses: actions/upload-artifact@<sha>
+        with:
+          name: dist-\${{ github.sha }}
+          path: dist/
+          retention-days: 1          # no need to keep longer for in-pipeline use
+
+  deploy:
+    needs: build                     # job dependency — waits for build to succeed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@<sha>
+        with:
+          name: dist-\${{ github.sha }}
+          path: dist/
+      - run: deploy.sh dist/
+\`\`\`
+
+\`needs:\` declares a job dependency — the deploy job won't start until build finishes. If build fails, deploy is skipped. Use \`if: always()\` to run a cleanup job even after failures.
+
+## Job outputs (for small values, not file blobs)
+
+\`\`\`yaml
+jobs:
+  version:
+    outputs:
+      tag: \${{ steps.ver.outputs.tag }}
+    steps:
+      - id: ver
+        run: echo "tag=\$(git describe --tags)" >> \$GITHUB_OUTPUT
+
+  build:
+    needs: version
+    steps:
+      - run: docker build -t myapp:\${{ needs.version.outputs.tag }} .
+\`\`\`
+
+Use \`$GITHUB_OUTPUT\` (not \`set-output\`, which was deprecated in 2022) to pass string values between jobs without artifact overhead.`,
+      },
     ],
     references: [
       'https://docs.github.com/en/actions',
+      'https://docs.github.com/en/actions/get-started/understand-github-actions',
+      'https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax',
+      'https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows',
       'https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions',
       'https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect',
       'https://docs.github.com/en/actions/using-workflows/reusing-workflows',
       'https://github.com/actions/actions-runner-controller',
       'https://www.stepsecurity.io/blog/pinning-github-actions-by-commit-sha',
       'https://www.jetbrains.com/lp/devecosystem-2024/',
+    ],
+  },
+
+  {
+    id: 'linux-cron-scheduling',
+    title: 'Linux Cron & Task Scheduling',
+    icon: 'clock',
+    color: '#f59e0b',
+    questions: 5,
+    description: 'Cron syntax, user vs system crontabs, /etc/cron.d vs /etc/crontab, environment pitfalls, systemd timers as the modern alternative, and debugging strategies. Essential for any infrastructure or backend role.',
+    visualizations: [
+      {
+        title: 'Crontab field layout and special strings',
+        description: `A cron expression is five space-separated fields followed by the command to run. Left to right: minute (0-59), hour (0-23), day-of-month (1-31), month (1-12), day-of-week (0-7, where both 0 and 7 mean Sunday).
+
+\`\`\`
+┌──── minute       (0–59)
+│  ┌─── hour          (0–23)
+│  │  ┌── day-of-month  (1–31)
+│  │  │  ┌─ month        (1–12)
+│  │  │  │  ┌ day-of-week  (0–7, 0 and 7 = Sunday)
+│  │  │  │  │
+*  *  *  *  *  command
+\`\`\`
+
+Special characters:
+* — any value (wildcard). "Every minute" is * * * * *. "Every hour at minute 0" is 0 * * * *.
+/ — step values. */15 in the minute field means "every 15 minutes." 0 */4 * * * means "every 4 hours at minute 0."
+, — list. 0 9,12,15 * * 1-5 means "9am, noon, and 3pm on weekdays."
+- — range. 1-5 in day-of-week means Monday through Friday.
+
+Special @-strings that replace the five-field syntax:
+@reboot       — run once at daemon startup
+@yearly       — 0 0 1 1 * (midnight Jan 1)
+@monthly      — 0 0 1 * * (midnight first of month)
+@weekly       — 0 0 * * 0 (midnight Sunday)
+@daily        — 0 0 * * * (midnight every day)
+@hourly       — 0 * * * * (minute 0 of every hour)
+
+Crontab file locations:
+/var/spool/cron/crontabs/<user>  — per-user crontabs managed by crontab -e
+/etc/crontab                      — system crontab (has an extra "user" column)
+/etc/cron.d/                      — drop-in system crontabs (same format as /etc/crontab)
+/etc/cron.{hourly,daily,weekly,monthly}/  — scripts dropped here run by run-parts
+
+Cron daemon logs to /var/log/syslog (Debian/Ubuntu) or /var/log/cron (RHEL/CentOS).
+Filter with: grep CRON /var/log/syslog | tail -20`,
+        image: null,
+      },
+      {
+        title: 'systemd timer unit anatomy vs cron equivalent',
+        description: `A systemd timer replaces a cron job with two unit files: a .timer file and a matching .service file. The timer fires the service on schedule.
+
+Equivalent of "0 2 * * *  /usr/local/bin/backup.sh" as systemd units:
+
+\`\`\`ini
+# /etc/systemd/system/backup.timer
+[Unit]
+Description=Daily backup at 02:00
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true        # run immediately if the system was off at fire-time
+
+[Install]
+WantedBy=timers.target
+\`\`\`
+
+\`\`\`ini
+# /etc/systemd/system/backup.service
+[Unit]
+Description=Backup job
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup.sh
+User=backupuser
+\`\`\`
+
+Enable and start: systemctl enable --now backup.timer
+
+Check status:
+systemctl list-timers --all          — see next trigger + last trigger for every timer
+journalctl -u backup.service         — full output log, no mail, no /dev/null needed
+systemctl status backup.service      — last run exit code and output
+
+Key advantages over cron:
+1. Persistent=true handles missed fires (machine was off) — cron drops them silently.
+2. Full journal integration — every stdout/stderr line lands in journald.
+3. OnBootSec=5min — relative timers for startup tasks (cron @reboot has no delay control).
+4. Resource limits (MemoryMax=, CPUQuota=) on the service unit constrain the job.
+5. After=network-online.target ensures network is up before the service starts.`,
+        image: null,
+      },
+    ],
+    introduction: `## Overview
+Cron is the Unix daemon for scheduled command execution. The modern cron daemon on most Linux distributions is vixie-cron or cronie; the syntax has been stable for decades.
+
+Understanding cron matters in three DevOps contexts: running periodic maintenance tasks on servers (backups, log rotation, report generation); understanding how scheduled CI pipelines work under the hood (GitHub Actions schedule: trigger, Jenkins' "Build periodically", Kubernetes CronJobs — all use the same five-field syntax); and debugging "why didn't my job run" incidents, which almost always trace to environment differences or time zone confusion.
+
+Three gotchas that account for 80% of cron incidents:
+
+First, environment. Cron runs with a nearly empty environment: PATH is typically /usr/bin:/bin, HOME is set to the user's home, but SHELL defaults to /bin/sh. Scripts that rely on a rich PATH, NVM, conda environments, or bash-specific syntax silently fail. Fix: use absolute paths for every executable, or set PATH= at the top of the crontab.
+
+Second, output. By default, cron mails stdout+stderr to the crontab owner via the local MTA. If no MTA is configured, output is discarded. Most servers have no MTA. Add \`>> /var/log/myjob.log 2>&1\` to every cron command to capture output.
+
+Third, the user. User crontabs (crontab -e, no user column) vs system crontabs (/etc/crontab and /etc/cron.d/*, with an extra user column). Mixing them up causes permission errors that look like the job simply isn't running.
+
+For new systems: prefer systemd timers. They have full journal logging, handle missed fires with Persistent=true, support resource limits, and integrate with the dependency graph. Cron is still ubiquitous and worth understanding deeply, but for new infrastructure work systemd timers are the better default.`,
+    whenToUse: [
+      'Any role involving Linux server administration, infrastructure engineering, or SRE',
+      'Designing or debugging scheduled jobs: backups, report generation, log rotation, health checks',
+      'Kubernetes: CronJob resources use the identical five-field cron syntax',
+      'GitHub Actions: the schedule: trigger uses vixie-cron syntax (UTC timezone always)',
+      'Jenkins: job scheduler ("Build periodically") and SCM polling use the same five-field format',
+    ],
+    keyConcepts: [
+      {
+        term: 'crontab command',
+        definition: `Manage the per-user crontab (stored in /var/spool/cron/crontabs/):
+
+\`\`\`bash
+crontab -e          # open in $EDITOR (creates if absent)
+crontab -l          # list current crontab
+crontab -r          # remove — irreversible, no prompt on most systems
+crontab -u alice -l # list another user's crontab (root only)
+crontab -u alice -e # edit another user's crontab (root only)
+\`\`\`
+
+User crontab format (no USER column):
+
+\`\`\`
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=ops@example.com
+
+# daily backup at 2:30 AM
+30 2 * * * /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1
+
+# every 15 minutes during business hours, weekdays
+*/15 9-17 * * 1-5 /usr/local/bin/health-check.sh
+\`\`\``,
+      },
+      {
+        term: '/etc/cron.d and system crontabs',
+        definition: `System crontabs run commands as a specified user (the extra column):
+
+\`\`\`
+# /etc/cron.d/myapp — system crontab format
+# minute hour dom month dow USER command
+0 3 * * *   appuser  /opt/myapp/bin/cleanup >> /var/log/cleanup.log 2>&1
+@reboot     root     /opt/myapp/bin/warm-cache.sh
+\`\`\`
+
+Drop-in files in /etc/cron.d/ must have no extensions and no world-write permission — cron ignores files with wrong permissions silently. Unlike user crontabs, these are managed by package managers or Ansible/Puppet and survive user removal.
+
+The /etc/cron.{hourly,daily,weekly,monthly}/ directories are simpler: drop an executable script there and run-parts executes it at the appropriate interval. No schedule expression needed — just the executable bit and correct directory.`,
+      },
+      {
+        term: 'Common cron expression patterns',
+        definition: `
+\`\`\`bash
+# Every minute
+* * * * *  command
+
+# Every 5 minutes
+*/5 * * * *  command
+
+# Every day at midnight UTC
+0 0 * * *  command
+
+# Every weekday (Mon-Fri) at 9:15 AM
+15 9 * * 1-5  command
+
+# First day of every month at 6 AM
+0 6 1 * *  command
+
+# Every 4 hours
+0 */4 * * *  command
+
+# Twice a day (8 AM and 8 PM)
+0 8,20 * * *  command
+
+# Every Sunday at 1 AM
+0 1 * * 0  command
+
+# Run at startup
+@reboot  /usr/local/bin/start-agent.sh
+\`\`\`
+
+Use crontab.guru to verify expressions interactively. Always think in UTC — cron reads the system timezone unless CRON_TZ is set.`,
+      },
+      {
+        term: 'systemd timer units',
+        definition: `Two files per scheduled task. The timer activates the matching service.
+
+\`\`\`ini
+# /etc/systemd/system/cleanup.timer
+[Unit]
+Description=Daily cleanup at 03:00
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=5min     # jitter to avoid thundering-herd across a fleet
+Persistent=true             # catch up missed fires on next boot
+
+[Install]
+WantedBy=timers.target
+\`\`\`
+
+\`\`\`ini
+# /etc/systemd/system/cleanup.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/cleanup.sh
+User=appuser
+Nice=10
+MemoryMax=512M
+\`\`\`
+
+\`\`\`bash
+systemctl enable --now cleanup.timer    # enable + start immediately
+systemctl list-timers                   # all active timers + next fire time
+journalctl -u cleanup.service -f        # tail log output
+\`\`\`
+
+OnCalendar mirrors cron but is more readable: weekly, monthly, Sat *-*-* 04:00:00. OnBootSec=2min fires 2 minutes after boot — better than @reboot with no delay control.`,
+      },
+      {
+        term: 'Debugging cron failures',
+        definition: `Standard debugging workflow:
+
+\`\`\`bash
+# 1. Check if cron daemon is running
+systemctl status cron      # Debian/Ubuntu
+systemctl status crond     # RHEL/CentOS
+
+# 2. Check recent cron activity in system log
+grep CRON /var/log/syslog | tail -30
+journalctl -u cron -f
+
+# 3. Test the command with cron's environment
+sudo -u cronuser env -i HOME=/home/cronuser SHELL=/bin/sh PATH=/usr/bin:/bin bash -c 'your-command'
+
+# 4. Verify script is executable
+ls -la /path/to/script.sh
+file /path/to/script.sh     # check shebang is set
+
+# 5. Add explicit output capture to the cron entry
+*/5 * * * *  /path/to/script.sh >> /tmp/cron-debug.log 2>&1
+\`\`\`
+
+Common root causes of "cron job doesn't run":
+— Wrong file permissions on /etc/cron.d/ (world-writable = ignored silently)
+— Missing executable bit on the script
+— PATH doesn't include the binary
+— Script uses bash-isms but SHELL=/bin/sh (fix: add #!/bin/bash shebang, set SHELL=/bin/bash in crontab)
+— NVM/rbenv/conda active in interactive shell but not in cron (fix: use absolute paths)
+— Windows line endings (\\r\\n) in the crontab file — silently breaks parsing (fix: dos2unix)`,
+      },
+    ],
+    approach: [
+      'Use absolute paths for every binary in cron commands — PATH is minimal in cron\'s environment',
+      'Always redirect output: `>> /var/log/job.log 2>&1` — silent failures in cron are the norm without this',
+      'Test scripts with the cron environment: `sudo -u cronuser env -i HOME=... bash -c "command"`',
+      'Use /etc/cron.d/ drop-ins for system jobs rather than editing /etc/crontab directly',
+      'For new infrastructure: prefer systemd timers — better logging, Persistent=true, resource limits',
+      'Set RandomizedDelaySec on systemd timers to jitter identical schedules across a fleet',
+      'Keep cron jobs idempotent — safe to run twice if two instances overlap',
+      'Use flock to serialize concurrent runs: `flock /var/lock/job.lock -c "command"`',
+    ],
+    pitfalls: [
+      'Using relative paths — the working directory in cron is undefined',
+      'Relying on interactive shell initialization (~/.bashrc, NVM, conda activate) — cron doesn\'t source these',
+      'Forgetting 2>&1 — stderr goes to mail or nowhere; errors become invisible',
+      'Time zone confusion — GitHub Actions schedule: is always UTC; Kubernetes CronJobs use cluster timezone unless .spec.timeZone is set',
+      'crontab -r instead of crontab -e — the flags are adjacent; -r silently deletes the entire crontab',
+      'World-writable /etc/cron.d/ files — cron silently ignores them; job stops running after a chmod accident',
+      'No concurrency guard — if the previous run hasn\'t finished when the next fires, two instances run concurrently',
+    ],
+    keyQuestions: [
+      {
+        question: 'Write a cron expression for: run a backup every weekday at 2:30 AM, and a report every Sunday at 8 AM. What file would you put this in and why?',
+        answer: `Two separate cron entries — different schedules, likely different purposes.
+
+\`\`\`
+# Weekday backup at 2:30 AM (Monday=1 through Friday=5)
+30 2 * * 1-5  /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1
+
+# Sunday report at 8 AM (0 = Sunday)
+0 8 * * 0   /usr/local/bin/weekly-report.sh >> /var/log/weekly-report.log 2>&1
+\`\`\`
+
+**Where to put it:**
+
+If both run as the same non-root user (e.g., appuser): put them in that user's crontab via \`crontab -e\`. No USER column, file lives in /var/spool/cron/crontabs/appuser.
+
+If these are system-level jobs that should survive user removal, use /etc/cron.d/:
+
+\`\`\`
+# /etc/cron.d/myapp-scheduled-tasks
+# minute  hour  dom  month  dow  USER     command
+30        2     *    *      1-5  appuser  /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1
+0         8     *    *      0    appuser  /usr/local/bin/weekly-report.sh >> /var/log/weekly-report.log 2>&1
+\`\`\`
+
+The /etc/cron.d/ format requires the USER column and the file must not be world-writable (cron ignores world-writable files silently — a very easy trap when Ansible deploys with wrong permissions).
+
+**The output redirection matters.** Without \`>> /var/log/backup.log 2>&1\`, stdout+stderr goes to the user's mail spool via the local MTA. On most servers there is no MTA, so output goes nowhere and failures are silent. The \`2>&1\` is critical — stderr is where error messages appear.
+
+If setting this up today on a systemd server, I'd use two systemd timer+service pairs instead. Persistent=true means if the machine was rebooted during the 2:30 AM window, the backup fires on next boot — cron silently drops that run. For a backup job, a missed fire on reboot is exactly the failure mode that matters most.`,
+      },
+      {
+        question: 'A script runs perfectly when executed manually but fails silently in cron. Walk through your diagnosis.',
+        answer: `This is the single most common cron incident and almost always traces to environment differences, path problems, or output swallowing.
+
+**Step 1: Confirm the job is actually firing.** Check the cron daemon log:
+
+\`\`\`bash
+grep CRON /var/log/syslog | grep myscript | tail -20    # Debian/Ubuntu
+journalctl -u cron | grep myscript | tail -20           # systemd distros
+\`\`\`
+
+If you see CMD (ran) in the log, the daemon fired it — the failure is in the script. If you don't see it at all, the crontab entry itself has a problem (syntax error, file permission issue on /etc/cron.d/ entry).
+
+**Step 2: Reproduce the cron environment manually.** Cron provides almost nothing:
+
+\`\`\`bash
+sudo -u cronuser env -i \\
+  HOME=/home/cronuser \\
+  SHELL=/bin/sh \\
+  PATH=/usr/bin:/bin \\
+  LOGNAME=cronuser \\
+  bash -c '/path/to/your/script.sh'
+\`\`\`
+
+Running this will reproduce the failure. Common discoveries:
+
+PATH difference — the interactive session has /usr/local/bin in PATH (where node, python, pip live). Cron's PATH is /usr/bin:/bin only. Fix: add \`PATH=/usr/local/bin:/usr/bin:/bin\` at the top of the crontab, or use absolute paths everywhere.
+
+Shell difference — the script uses bash arrays or \`[[…]]\`, but cron's SHELL is /bin/sh. Fix: add \`#!/bin/bash\` shebang AND set \`SHELL=/bin/bash\` in the crontab.
+
+Missing environment variables — the script expects DATABASE_URL set in ~/.profile. Cron doesn't source ~/.profile or ~/.bashrc. Fix: set variables explicitly in the crontab, or source the env file explicitly in the script.
+
+NVM/rbenv/conda — tools that modify PATH via shell hooks that only run in interactive sessions. Fix: use absolute paths to the versioned binary.
+
+**Step 3: Add output capture and wait:**
+
+\`\`\`bash
+* * * * *  /path/to/script.sh >> /tmp/cron-debug.log 2>&1
+\`\`\`
+
+Then \`tail -f /tmp/cron-debug.log\` and wait. The actual error message will appear.
+
+**Step 4: Check permissions:**
+
+\`\`\`bash
+ls -la /path/to/script.sh    # executable? owned by right user?
+ls -la /etc/cron.d/myfile    # world-writable? cron ignores such files
+\`\`\`
+
+Root cause in practice: about half of all "works manually, fails in cron" issues are PATH problems. A third are shell/bashism issues. The rest are environment variables, permissions, or output being swallowed.`,
+      },
+      {
+        question: 'You need to ensure a cleanup job on a fleet of 50 servers doesn\'t hammer a shared database all at once. How do you implement the schedule?',
+        answer: `The problem is called a thundering herd at scheduled time: 50 servers all fire at 00:00:00 and send 50 simultaneous queries to the same database.
+
+**Approach 1 — random jitter in cron.** Add a sleep with a random delay at the top of the job:
+
+\`\`\`bash
+#!/bin/bash
+# Scatter load across 5 minutes (300 seconds)
+sleep $((RANDOM % 300))
+exec /usr/local/bin/cleanup.sh
+\`\`\`
+
+\`\`\`
+# crontab: run the wrapper at midnight
+0 0 * * *  /usr/local/bin/cleanup-with-jitter.sh >> /var/log/cleanup.log 2>&1
+\`\`\`
+
+Simple and effective. RANDOM % 300 distributes starts uniformly across 5 minutes.
+
+**Approach 2 — hash-based deterministic offset.** Derive the delay from the hostname so each host has a stable, predictable offset:
+
+\`\`\`bash
+#!/bin/bash
+OFFSET=$(( $(hostname | cksum | cut -d' ' -f1) % 300 ))
+sleep "$OFFSET"
+exec /usr/local/bin/cleanup.sh
+\`\`\`
+
+server web-01 always starts at midnight+47s, web-02 at midnight+183s, etc. Easier to reason about and reproduce when debugging.
+
+**Approach 3 — systemd timer with RandomizedDelaySec.** Built in:
+
+\`\`\`ini
+[Timer]
+OnCalendar=*-*-* 00:00:00
+RandomizedDelaySec=5min    # systemd adds uniform random delay 0–5min per host
+Persistent=true
+\`\`\`
+
+No wrapper script needed. The journald log shows the actual start time.
+
+**Additional consideration:** Jitter reduces the peak but doesn't eliminate it. Add a short \`lock_timeout\` in the cleanup job so it backs off if the DB is busy, and make the cleanup idempotent so it's safe to re-run if it times out. The jitter and per-job backoff are complementary defenses.
+
+For very large fleets (500+ hosts), move to a centralized scheduler that distributes work from a queue rather than scheduling per-host. For 50 hosts, jitter is sufficient.`,
+      },
+      {
+        question: 'Compare cron and systemd timers — when would you choose one over the other?',
+        answer: `**Cron strengths:**
+— Universal: available on every Unix system, no systemd required (Alpine, embedded Linux, containers, BSDs).
+— Simple: a one-liner in /etc/cron.d/ gets a job running in 30 seconds.
+— Familiar: every sysadmin knows crontab syntax.
+
+**Cron weaknesses:**
+— Logging: output goes to mail or /dev/null unless you redirect explicitly. No structured log of "job ran at T and exited 0."
+— Missed fires: if the machine is off when a cron job is scheduled, that run is lost. No recovery.
+— Environment: cron's minimal environment causes most debugging incidents.
+— No resource limits: a runaway cron job can consume all memory without constraint.
+— No dependency graph: cron can't say "run after the network is up."
+
+**systemd timer strengths:**
+— Full journal logging: every line goes to journald, queryable by unit name.
+— Persistent=true: if the timer fires while off, the service runs immediately on next boot. Ideal for backup jobs.
+— Resource limits: MemoryMax=, CPUQuota=, Nice=, PrivateTmp= directly in the service unit.
+— Dependencies: After=network-online.target ensures jobs that need the network wait for it.
+— OnBootSec=: "run 5 minutes after boot" is clean. cron @reboot has no delay control.
+— RandomizedDelaySec=: built-in jitter for fleet deployments.
+
+**systemd timer weaknesses:**
+— Requires systemd: not available in containers running as PID 1, Alpine, or older init systems.
+— More files: two unit files per job vs one crontab line.
+
+**When to choose cron:**
+— Containers (almost always — no systemd)
+— Non-systemd systems (Alpine, FreeBSD, embedded)
+— Quick one-off tasks where the timer/service overhead isn't worth it
+
+**When to choose systemd timers:**
+— Production Linux servers (RHEL, Ubuntu, Debian) where systemd is the init system
+— Jobs where you need audit-quality logs of exactly when it ran and what it produced
+— Jobs that must catch up after a missed fire (Persistent=true)
+— Jobs with startup dependencies (After=postgresql.service)
+— Jobs that need resource isolation to avoid starving the host
+
+Pragmatic default for 2025+: use systemd timers for new system-level jobs on systemd-based Linux. Keep cron for containers, simple one-liners, and anywhere systemd is absent.`,
+      },
+      {
+        question: 'How do Kubernetes CronJobs differ from Linux cron, and what are the key pitfalls?',
+        answer: `Kubernetes CronJobs use the identical five-field cron syntax but run in the cluster scheduler rather than on a host cron daemon. The key differences:
+
+**Creation:**
+
+\`\`\`yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-cleanup
+spec:
+  schedule: "0 2 * * *"          # standard cron syntax, UTC by default
+  timeZone: "America/New_York"   # k8s 1.27+: explicit timezone support
+  concurrencyPolicy: Forbid       # Forbid | Allow | Replace
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 300    # seconds past scheduled time to still start
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: cleanup
+            image: myapp:latest
+            command: ["/usr/local/bin/cleanup.sh"]
+\`\`\`
+
+**Key differences from Linux cron:**
+
+concurrencyPolicy — cron has no built-in guard against overlapping runs (you need flock). Kubernetes CronJob has three policies: Allow (default, can overlap), Forbid (skip if previous still running), Replace (kill previous and start new).
+
+startingDeadlineSeconds — if the cluster scheduler is down and comes back, cron would have dropped the missed fire. Kubernetes will still try to start the job if it's within startingDeadlineSeconds of the scheduled time. If more than 100 runs were missed, the CronJob is blocked — a silent failure mode.
+
+Resource limits — the Pod spec enforces CPU/memory limits. No equivalent in Linux cron.
+
+History retention — successfulJobsHistoryLimit and failedJobsHistoryLimit control how many old Job objects (and their logs) to keep. Default is 3 successful and 1 failed. Set these deliberately or you lose visibility into past runs.
+
+**Common Kubernetes CronJob pitfalls:**
+
+Missed fire cliff — if the cluster control plane is down for > startingDeadlineSeconds, the run is dropped. If 100+ runs are missed, the CronJob stops firing entirely until manually unblocked with kubectl patch.
+
+No timezone before 1.27 — all schedules were UTC-only. Teams compensated by doing the UTC math manually, which is error-prone. Always set .spec.timeZone explicitly on clusters ≥ 1.27.
+
+concurrencyPolicy: Allow + slow jobs — if your cleanup takes 90 minutes and fires every hour, you accumulate overlapping pods that all contend for the same database. Default to Forbid for cleanup-style jobs.
+
+Image pull on cold cluster — if the node hasn't cached the image and the registry is slow, the pod may not start within startingDeadlineSeconds. Use imagePullPolicy: IfNotPresent with a pinned image tag in production CronJobs.`,
+      },
+    ],
+    references: [
+      'https://cronitor.io/guides/cron-jobs',
+      'https://crontab.guru/examples.html',
+      'https://systemd.guru/',
+      'https://www.man7.org/linux/man-pages/man5/crontab.5.html',
+      'https://www.freedesktop.org/software/systemd/man/systemd.timer.html',
+      'https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/',
     ],
   },
 
