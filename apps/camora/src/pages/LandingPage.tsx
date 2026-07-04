@@ -154,7 +154,9 @@ const HERO_STATS = [
   { value: '<1s', label: 'AI latency' },
 ];
 
-const FEATURE_SPANS = [2, 1, 1, 2, 2, 1];
+// Six features in a 3-column grid → exactly two even rows. All span 1 so
+// nothing overflows into a third row.
+const FEATURE_SPANS = [1, 1, 1, 1, 1, 1];
 
 /* ── Hooks ────────────────────────────────────────────── */
 function Reveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
