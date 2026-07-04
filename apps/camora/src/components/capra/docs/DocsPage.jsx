@@ -1159,11 +1159,20 @@ export default function DocsPage({ onBack }) {
                           {overviewCategories.map((cat, idx) => {
                             const _len = overviewCategories.length;
                             const _isLast = idx === _len - 1;
-                            const _orphanClass = _isLast && _len % 5 === 1
-                              ? 'sm:col-span-full sm:justify-self-center sm:w-1/2 lg:w-1/5'
-                              : _isLast && _len % 2 === 1
-                              ? 'sm:col-span-full sm:justify-self-center sm:w-1/2'
-                              : '';
+                            // Center a LONE trailing card so it doesn't sit
+                            // awkwardly left-aligned. Scope each breakpoint on
+                            // its own column count: a fix for the 2-col mobile
+                            // grid must never leak into the 5-col desktop grid.
+                            // When _len is a clean multiple (e.g. 25 % 5 === 0)
+                            // the desktop row stays full — no orphan.
+                            const _smOrphan = _isLast && _len % 2 === 1; // 2-col rows
+                            const _lgOrphan = _isLast && _len % 5 === 1; // 5-col rows
+                            const _orphanClass = [
+                              _smOrphan ? 'col-span-2 justify-self-center w-1/2' : '',
+                              _lgOrphan
+                                ? 'lg:col-span-full lg:justify-self-center lg:w-1/5'
+                                : (_smOrphan ? 'lg:col-span-1 lg:w-auto lg:justify-self-stretch' : ''),
+                            ].filter(Boolean).join(' ');
                             return (
                             <Link
                               key={cat.id}
