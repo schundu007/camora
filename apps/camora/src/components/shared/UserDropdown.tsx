@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { isOwner } from '../../lib/owner';
+
+// Owner/admin-only destinations. These pages are gated by ShellRoute (any
+// authed user renders them) but have no other nav entry — on the web they were
+// reached by typing the URL. The desktop Electron shell has no address bar, so
+// without these links an admin can't reach them at all. Shown only to owners.
+const ADMIN_ITEMS = [
+  { label: 'Admin', href: '/admin', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
+  { label: 'Analytics', href: '/analytics', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+];
 
 const MENU_ITEMS = [
   { label: 'Dashboard', href: '/capra/prepare', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -169,6 +179,29 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 </span>
                 Upload Resume
               </Link>
+            )}
+
+            {/* Owner-only: Admin + Analytics. No address bar in the desktop
+                shell, so these are the only in-app path to those surfaces. */}
+            {isOwner(user) && (
+              <div style={{ borderTop: '1px solid var(--border)' }}>
+                {ADMIN_ITEMS.map(item => (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors"
+                    style={{ color: 'var(--cam-gold-leaf-dk, var(--text-primary))' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="var(--cam-gold-leaf, var(--text-muted))" viewBox="0 0 24 24" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                    </svg>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             )}
 
             {/* Switch account + Sign out */}
