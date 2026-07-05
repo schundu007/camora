@@ -229,9 +229,10 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
   const [solved, setSolved] = useState<Set<number>>(() => {
     try {
       const stored = sqlSolvedStore.read();
-      return Array.isArray(stored) ? new Set(stored) : new Set();
+      // Store persists as string[]; solved problem IDs are numbers — coerce.
+      return Array.isArray(stored) ? new Set(stored.map(Number)) : new Set<number>();
     } catch {
-      return new Set();
+      return new Set<number>();
     }
   });
   const [submitResult, setSubmitResult] = useState<'correct' | 'wrong' | null>(null);
@@ -262,7 +263,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
   // ── Persist solved state ────────────────────────────────────────────────
   useEffect(() => {
     try {
-      sqlSolvedStore.write([...solved]);
+      sqlSolvedStore.write([...solved].map(String));
     } catch { /* ignore */ }
   }, [solved]);
 
