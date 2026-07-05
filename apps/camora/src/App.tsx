@@ -48,6 +48,7 @@ const DownloadPage = lazy(() => import('./pages/DownloadPage'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
+const JobProfilePage = lazy(() => import('./pages/JobProfilePage'));
 const TeamSettingsPage = lazy(() => import('./pages/account/TeamSettingsPage'));
 const JoinTeamPage = lazy(() => import('./pages/account/JoinTeamPage'));
 const TeamsDocsPage = lazy(() => import('./pages/docs/TeamsDocsPage'));
@@ -547,6 +548,8 @@ export const App = () => {
           {/* ── Jobs: Apply ──────────────────────────────── */}
           <Route path="/jobs" element={<ShellRoute><JobsPage /></ShellRoute>} />
           <Route path="/jobs/:id/prepare" element={<ShellRoute><JobPrepPage /></ShellRoute>} />
+          <Route path="/jobs/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+          <Route path="/jobs/profile" element={<ProtectedRoute><JobProfilePage /></ProtectedRoute>} />
 
           {/* ── Lumora: Live Session (PAID — own layout, no shell) ── */}
           <Route path="/lumora" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
@@ -619,8 +622,9 @@ export const App = () => {
           {/* ── Profile ──────────────────────────────── */}
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           {/* Job profile now lives as a tab inside /profile — redirect the old route. */}
-          <Route path="/jobsearch/profile" element={<Navigate to="/profile?tab=job-profile" replace />} />
-          <Route path="/jobsearch/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+          {/* Job-search pages now live under the Apply (/jobs) section. */}
+          <Route path="/jobsearch/profile" element={<Navigate to="/jobs/profile" replace />} />
+          <Route path="/jobsearch/applications" element={<Navigate to="/jobs/applications" replace />} />
 
           {/* ── Analytics ─────────────────────────────── */}
           <Route path="/admin" element={<ShellRoute><AnalyticsPage section="admin" /></ShellRoute>} />
