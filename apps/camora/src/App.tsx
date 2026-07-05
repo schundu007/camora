@@ -47,6 +47,8 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage'));
 const LegalPage = lazy(() => import('./pages/LegalPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const JobSeekerProfilePage = lazy(() => import('./pages/JobSeekerProfilePage'));
+const ApplicationsPage = lazy(() => import('./pages/ApplicationsPage'));
 const TeamSettingsPage = lazy(() => import('./pages/account/TeamSettingsPage'));
 const JoinTeamPage = lazy(() => import('./pages/account/JoinTeamPage'));
 const TeamsDocsPage = lazy(() => import('./pages/docs/TeamsDocsPage'));
@@ -617,6 +619,8 @@ export const App = () => {
 
           {/* ── Profile ──────────────────────────────── */}
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/jobsearch/profile" element={<ProtectedRoute><JobSeekerProfilePage /></ProtectedRoute>} />
+          <Route path="/jobsearch/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
 
           {/* ── Analytics ─────────────────────────────── */}
           <Route path="/admin" element={<ShellRoute><AnalyticsPage section="admin" /></ShellRoute>} />

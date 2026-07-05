@@ -5,6 +5,7 @@ import { Icon } from '../components/shared/Icons';
 import { HeroBand, HeroAccent } from '../components/capra/ui';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
+import TrackJobButton from '../components/jobsearch/TrackJobButton';
 
 /* ──────────────────────────── Company Logo Mapping ──────────────────────────── */
 
@@ -1473,6 +1474,7 @@ export default function JobsPage() {
                         <Icon name="arrowRight" size={14} />
                       </Link>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                        {user && <TrackJobButton job={job} />}
                         <a
                           href={job.job_url}
                           target="_blank"
