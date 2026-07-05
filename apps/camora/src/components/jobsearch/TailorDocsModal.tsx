@@ -105,7 +105,7 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6 shadow-xl" style={T.card} onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold" style={T.heading}>Tailor CV &amp; cover letter</h2>
+            <h2 className="text-lg" style={T.pageTitle}>Tailor CV &amp; cover letter</h2>
             <p className="text-sm" style={T.muted}>
               {application.title || 'Untitled role'}{application.company ? ` · ${application.company}` : ''}
             </p>
@@ -125,7 +125,7 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
               </div>
             )}
 
-            <label className="mb-1 block text-sm font-medium" style={T.body}>Job description</label>
+            <label className="mb-2 block text-sm font-bold uppercase tracking-wide" style={T.sectionTitle}>Job description</label>
             <textarea className={`${CX.input} min-h-[180px]`} style={T.input} value={jd} onChange={(e) => setJd(e.target.value)} placeholder="Paste the job description here…" />
 
             <div className="mt-4 flex items-center gap-3">
@@ -138,7 +138,7 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
             </div>
 
             <div className="mt-6 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-              <p className="mb-1 text-sm font-medium" style={T.body}>Apply</p>
+              <p className="mb-1 text-sm font-bold uppercase tracking-wide" style={T.sectionTitle}>Apply</p>
               <p className="mb-3 text-xs" style={T.muted}>
                 Open the employer&apos;s application page, attach the documents above, submit there, then mark this application as applied.
               </p>

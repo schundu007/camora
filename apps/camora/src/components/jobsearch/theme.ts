@@ -19,6 +19,15 @@ export const T = {
     color: 'var(--text-primary)',
   } as CSSProperties,
   heading: { color: 'var(--text-primary)' } as CSSProperties,
+  // Page title — strong weight, primary color.
+  pageTitle: { color: 'var(--text-primary)', fontWeight: 800, letterSpacing: '-0.01em' } as CSSProperties,
+  // Section heading — bold + accent color, with an accent underline (applied
+  // via className border-b + this borderColor) so sections are eye-catching.
+  sectionTitle: {
+    color: 'var(--accent-text)',
+    fontWeight: 700,
+    borderColor: 'var(--accent-subtle)',
+  } as CSSProperties,
   body: { color: 'var(--text-primary)' } as CSSProperties,
   muted: { color: 'var(--text-secondary)' } as CSSProperties,
   accentText: { color: 'var(--accent-text)' } as CSSProperties,

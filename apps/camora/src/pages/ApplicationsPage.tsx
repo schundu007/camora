@@ -143,7 +143,7 @@ export default function ApplicationsPage() {
       <JobsSubNav />
       <main className="mx-auto max-w-7xl px-4 py-10">
         <header className="mb-6">
-          <h1 className="text-2xl font-semibold" style={T.heading}>Application tracker</h1>
+          <h1 className="text-2xl" style={T.pageTitle}>Application tracker</h1>
           <p className="mt-1 text-sm" style={T.muted}>
             {apps.length} application{apps.length === 1 ? '' : 's'} tracked.
           </p>
@@ -169,7 +169,7 @@ export default function ApplicationsPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             {APPLICATION_STATUSES.map((status) => (
               <div key={status} className="rounded-xl p-3" style={T.columnBg}>
-                <h2 className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide" style={T.muted}>
+                <h2 className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--accent-text)' }}>
                   {STATUS_LABELS[status]}
                   <span className="rounded-full px-2 py-0.5" style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)' }}>
                     {byStatus[status].length}

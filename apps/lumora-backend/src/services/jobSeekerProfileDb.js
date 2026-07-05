@@ -38,6 +38,17 @@ const JSONB_COLUMNS = new Set([
   'preferences',
 ]);
 
+// JSONB columns whose empty default is an array (the rest default to '{}').
+// All JSONB columns are NOT NULL DEFAULT, so a missing field must write the
+// empty default, never NULL (which violates the not-null constraint).
+const JSONB_ARRAY_COLUMNS = new Set([
+  'skills',
+  'experience',
+  'education',
+  'certifications',
+  'languages',
+]);
+
 /**
  * Fetch a user's profile, or null if they haven't created one yet.
  * @param {number} userId
@@ -61,7 +72,8 @@ export async function upsertProfile(userId, input = {}) {
   const values = PROFILE_COLUMNS.map((col) => {
     const v = input[col];
     if (JSONB_COLUMNS.has(col)) {
-      return v === undefined || v === null ? null : JSON.stringify(v);
+      if (v === undefined || v === null) return JSONB_ARRAY_COLUMNS.has(col) ? '[]' : '{}';
+      return JSON.stringify(v);
     }
     return v === undefined ? null : v;
   });

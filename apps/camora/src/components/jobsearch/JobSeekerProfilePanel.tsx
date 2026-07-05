@@ -110,6 +110,14 @@ function Field(props: { label: string; value: string; onChange: (v: string) => v
   );
 }
 
+function SectionHeading({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="mb-3 border-b pb-1 text-sm font-bold uppercase tracking-wide" style={T.sectionTitle}>
+      {children}
+    </h3>
+  );
+}
+
 function RepeatableSection<E>(props: {
   title: string; entries: E[]; blank: E;
   onChange: (next: E[]) => void;
@@ -118,8 +126,8 @@ function RepeatableSection<E>(props: {
   const { title, entries, blank, onChange, render } = props;
   return (
     <section>
-      <div className="mb-2 flex items-center justify-between">
-        <label className="text-sm font-medium" style={T.body}>{title}</label>
+      <div className="mb-3 flex items-center justify-between border-b pb-1" style={{ borderColor: 'var(--accent-subtle)' }}>
+        <h3 className="text-sm font-bold uppercase tracking-wide" style={T.sectionTitle}>{title}</h3>
         <button onClick={() => onChange([...entries, { ...blank }])} className="rounded px-2.5 py-1 text-xs font-medium" style={T.subtleBtn}>
           + Add
         </button>
@@ -194,7 +202,7 @@ export default function JobSeekerProfilePanel() {
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold" style={T.heading}>Job Profile</h2>
+          <h2 className="text-xl" style={T.pageTitle}>Job Profile</h2>
           <p className="mt-1 text-sm" style={T.muted}>Used to tailor your CV, cover letters, and application autofill.</p>
         </div>
         <button onClick={onAutofill} disabled={autofilling || loading}
@@ -211,7 +219,9 @@ export default function JobSeekerProfilePanel() {
         <p style={T.muted}>Loading…</p>
       ) : (
         <div className="space-y-8">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <section>
+            <SectionHeading>Basics</SectionHeading>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Full name" value={form.full_name} onChange={(v) => set('full_name', v)} />
             <Field label="Headline" value={form.headline} onChange={(v) => set('headline', v)} placeholder="e.g. Senior Backend Engineer" />
             <Field label="Location" value={form.location} onChange={(v) => set('location', v)} />
@@ -221,14 +231,17 @@ export default function JobSeekerProfilePanel() {
             <Field label="LinkedIn" value={form.linkedin} onChange={(v) => set('linkedin', v)} placeholder="https://linkedin.com/in/…" />
             <Field label="GitHub" value={form.github} onChange={(v) => set('github', v)} placeholder="https://github.com/…" />
             <Field label="Website" value={form.website} onChange={(v) => set('website', v)} />
+            </div>
           </section>
 
           <section>
-            <label className={CX.label} style={T.body}>Professional summary</label>
+            <SectionHeading>Professional summary</SectionHeading>
             <textarea className={`${CX.input} min-h-[100px]`} style={T.input} value={form.summary} onChange={(e) => set('summary', e.target.value)} />
           </section>
 
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <section>
+            <SectionHeading>Skills &amp; languages</SectionHeading>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className={CX.label} style={T.body}>Skills</label>
               <Input value={form.skills} onChange={(v) => set('skills', v)} placeholder="Python, PostgreSQL, Docker" />
@@ -238,6 +251,7 @@ export default function JobSeekerProfilePanel() {
               <label className={CX.label} style={T.body}>Languages</label>
               <Input value={form.languages} onChange={(v) => set('languages', v)} placeholder="English, Danish" />
               <p className="mt-1 text-xs" style={T.muted}>Comma-separated.</p>
+            </div>
             </div>
           </section>
 
