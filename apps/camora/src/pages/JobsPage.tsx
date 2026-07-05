@@ -6,6 +6,7 @@ import { HeroBand, HeroAccent } from '../components/capra/ui';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import TrackJobButton from '../components/jobsearch/TrackJobButton';
+import JobsSubNav from '../components/jobsearch/JobsSubNav';
 
 /* ──────────────────────────── Company Logo Mapping ──────────────────────────── */
 
@@ -625,6 +626,7 @@ export default function JobsPage() {
   return (
     <div style={{ background: 'var(--bg-app)', minHeight: '100vh' }}>
       <SiteNav />
+      <JobsSubNav />
 
       {/* ═══════════════════════ Page Content ═══════════════════════ */}
       <div>
