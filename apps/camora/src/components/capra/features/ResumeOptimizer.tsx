@@ -232,6 +232,13 @@ export default function ResumeOptimizer({
       setError('Please paste your resume first.');
       return;
     }
+    // Guard against a resume that failed to extract (e.g. an image-only PDF
+    // that yields a single garbled line). Generating from near-empty text is
+    // what makes the model hallucinate employers, so stop and tell the user.
+    if (resume.replace(/\s+/g, ' ').trim().length < 120) {
+      setError('We could only read a little text from this file — it may be image-based or scanned. Switch to "Paste Resume" and paste your full resume text so we can tailor it accurately without guessing.');
+      return;
+    }
     if (!jobDescription.trim() && !jobUrl.trim()) {
       setError('Please provide a job description or URL.');
       return;
@@ -306,22 +313,39 @@ export default function ResumeOptimizer({
           const content = await page.getTextContent();
           const viewport = page.getViewport({ scale: 1 });
           const pageHeight = viewport.height;
-          let lastY: number | null = null;
-          let line = '';
           const lines: string[] = [];
+          let line = '';
+          let lastY: number | null = null;
+          let lastEndX: number | null = null;
+          const flush = () => { if (line.trim()) lines.push(line.trim()); line = ''; lastEndX = null; };
           for (const item of content.items as any[]) {
+            const str = item.str ?? '';
+            const tx = item.transform?.[4] ?? 0;
             const y = pageHeight - (item.transform?.[5] ?? 0);
-            if (lastY !== null && Math.abs(y - lastY) > 2) {
-              if (line.trim()) lines.push(line.trim());
-              line = '';
+            // Break on a real vertical shift. Scale the threshold to the glyph
+            // height so tight line spacing still registers instead of
+            // collapsing the whole page onto one line. Floor at 3px.
+            const threshold = Math.max((item.height || 0) * 0.5, 3);
+            if (lastY !== null && Math.abs(y - lastY) > threshold) flush();
+            // Same-line: insert a space when there's a horizontal gap and
+            // neither side already carries whitespace (pdf.js often omits
+            // inter-token spaces, which is what welds words together).
+            if (line && lastEndX !== null) {
+              const gap = tx - lastEndX;
+              if (gap > 1 && !/\s$/.test(line) && !/^\s/.test(str)) line += ' ';
             }
-            line += (item.str ?? '');
+            line += str;
+            lastEndX = tx + (item.width ?? 0);
             lastY = y;
+            // pdf.js marks the last fragment of a visual line with hasEOL —
+            // the most reliable break signal when coordinates are noisy.
+            if (item.hasEOL) { flush(); lastY = null; }
           }
-          if (line.trim()) lines.push(line.trim());
+          flush();
           pages.push(lines.join('\n'));
         }
-        setResume(pages.join('\n\n'));
+        const text = pages.join('\n\n').replace(/[ \t]{2,}/g, ' ').replace(/\n{3,}/g, '\n\n');
+        setResume(text);
       } else {
         const text = await file.text();
         setResume(text);
@@ -399,8 +423,8 @@ export default function ResumeOptimizer({
         setJobUrl('');
         setFetchingJd(false);
 
-        if (!resumeText) {
-          setAutoStatus('Job description loaded — paste or upload your resume to continue.');
+        if (!resumeText || resumeText.replace(/\s+/g, ' ').trim().length < 120) {
+          setAutoStatus('Job description loaded — paste or upload your full resume to continue.');
           return;
         }
 
