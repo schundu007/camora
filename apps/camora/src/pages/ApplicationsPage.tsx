@@ -12,13 +12,13 @@ import {
   type ApplicationStatus,
 } from '../lib/jobsearch-api';
 import TailorDocsModal from '../components/jobsearch/TailorDocsModal';
+import JobsSubNav from '../components/jobsearch/JobsSubNav';
+import { T, CX, banner } from '../components/jobsearch/theme';
 
 /**
- * Application tracker (assisted-apply feature).
- *
- * A status board over the user's tracked applications. Move a card between
- * statuses with its dropdown; add applications manually; delete. Cards created
- * from the job feed (Save/Track) will land here in the 'saved' column.
+ * Application tracker — a status board over the user's tracked applications.
+ * Themed with camora CSS tokens (not Tailwind dark:) so it reads in both
+ * light and dark. Move a card via its dropdown; add manually; delete; tailor.
  */
 
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -30,9 +30,6 @@ const STATUS_LABELS: Record<ApplicationStatus, string> = {
   offer: 'Offer',
   rejected: 'Rejected',
 };
-
-const inputCls =
-  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 
 export default function ApplicationsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -98,7 +95,7 @@ export default function ApplicationsPage() {
     try {
       await updateApplication(app.id, { status });
     } catch (e) {
-      setApps(prev); // rollback
+      setApps(prev);
       setError(e instanceof Error ? e.message : 'Failed to move application');
     }
   };
@@ -109,7 +106,7 @@ export default function ApplicationsPage() {
     try {
       await deleteApplication(app.id);
     } catch (e) {
-      setApps(prev); // rollback
+      setApps(prev);
       setError(e instanceof Error ? e.message : 'Failed to delete application');
     }
   };
@@ -123,7 +120,7 @@ export default function ApplicationsPage() {
     try {
       await updateApplication(app.id, { status: 'applied', applied_at });
     } catch (e) {
-      setApps(prev); // rollback
+      setApps(prev);
       throw e; // surfaced by the modal; keeps it open
     }
   };
@@ -132,10 +129,8 @@ export default function ApplicationsPage() {
     return (
       <>
         <SiteNav />
-        <main className="mx-auto max-w-3xl px-4 py-16 text-center">
-          <p className="text-gray-600 dark:text-gray-400">
-            Please sign in to track your applications.
-          </p>
+        <main className="mx-auto max-w-3xl px-4 py-16 text-center" style={T.body}>
+          <p style={T.muted}>Please sign in to track your applications.</p>
         </main>
         <SiteFooter />
       </>
@@ -143,67 +138,57 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <>
+    <div style={T.pageBg}>
       <SiteNav />
+      <JobsSubNav />
       <main className="mx-auto max-w-7xl px-4 py-10">
         <header className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Application tracker
-          </h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <h1 className="text-2xl font-semibold" style={T.heading}>Application tracker</h1>
+          <p className="mt-1 text-sm" style={T.muted}>
             {apps.length} application{apps.length === 1 ? '' : 's'} tracked.
           </p>
         </header>
 
         {error && (
-          <div className="mb-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
-            {error}
-          </div>
+          <div className="mb-6 rounded-lg px-4 py-3 text-sm" style={banner('error')}>{error}</div>
         )}
 
         {/* Add form */}
         <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-          <input className={inputCls} placeholder="Role / title" value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
-          <input className={inputCls} placeholder="Company" value={draft.company} onChange={(e) => setDraft((d) => ({ ...d, company: e.target.value }))} />
-          <input className={inputCls} placeholder="Job URL (optional)" value={draft.job_url} onChange={(e) => setDraft((d) => ({ ...d, job_url: e.target.value }))} />
-          <button
-            onClick={onAdd}
-            disabled={adding}
-            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-          >
+          <input className={CX.input} style={T.input} placeholder="Role / title" value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
+          <input className={CX.input} style={T.input} placeholder="Company" value={draft.company} onChange={(e) => setDraft((d) => ({ ...d, company: e.target.value }))} />
+          <input className={CX.input} style={T.input} placeholder="Job URL (optional)" value={draft.job_url} onChange={(e) => setDraft((d) => ({ ...d, job_url: e.target.value }))} />
+          <button onClick={onAdd} disabled={adding} className="rounded-lg px-5 py-2 text-sm font-medium disabled:opacity-60" style={T.primaryBtn}>
             {adding ? 'Adding…' : 'Add'}
           </button>
         </div>
 
         {loading ? (
-          <p className="text-gray-500">Loading…</p>
+          <p style={T.muted}>Loading…</p>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
             {APPLICATION_STATUSES.map((status) => (
-              <div key={status} className="rounded-xl bg-gray-50 dark:bg-gray-900/50 p-3">
-                <h2 className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <div key={status} className="rounded-xl p-3" style={T.columnBg}>
+                <h2 className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-wide" style={T.muted}>
                   {STATUS_LABELS[status]}
-                  <span className="rounded-full bg-gray-200 dark:bg-gray-800 px-2 py-0.5 text-gray-600 dark:text-gray-300">
+                  <span className="rounded-full px-2 py-0.5" style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)' }}>
                     {byStatus[status].length}
                   </span>
                 </h2>
                 <div className="space-y-3">
                   {byStatus[status].map((app) => (
-                    <div key={app.id} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-sm">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {app.title || 'Untitled role'}
-                      </p>
-                      {app.company && (
-                        <p className="text-xs text-gray-500">{app.company}</p>
-                      )}
+                    <div key={app.id} className="rounded-lg p-3" style={T.card}>
+                      <p className="text-sm font-medium" style={T.heading}>{app.title || 'Untitled role'}</p>
+                      {app.company && <p className="text-xs" style={T.muted}>{app.company}</p>}
                       {app.job_url && (
-                        <a href={app.job_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs text-blue-600 hover:underline">
+                        <a href={app.job_url} target="_blank" rel="noreferrer" className="mt-1 inline-block text-xs hover:underline" style={T.accentText}>
                           View posting →
                         </a>
                       )}
                       <div className="mt-3 flex items-center gap-2">
                         <select
-                          className="flex-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-800 dark:text-gray-200"
+                          className="flex-1 rounded px-2 py-1 text-xs"
+                          style={T.input}
                           value={app.status}
                           onChange={(e) => onMove(app, e.target.value as ApplicationStatus)}
                         >
@@ -211,26 +196,16 @@ export default function ApplicationsPage() {
                             <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                           ))}
                         </select>
-                        <button
-                          onClick={() => onDelete(app)}
-                          className="rounded px-2 py-1 text-xs text-gray-400 hover:text-red-600"
-                          aria-label="Delete application"
-                          title="Delete"
-                        >
+                        <button onClick={() => onDelete(app)} className="rounded px-2 py-1 text-xs hover:opacity-80" style={T.muted} aria-label="Delete application" title="Delete">
                           ✕
                         </button>
                       </div>
-                      <button
-                        onClick={() => setTailoring(app)}
-                        className="mt-2 w-full rounded border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900"
-                      >
+                      <button onClick={() => setTailoring(app)} className="mt-2 w-full rounded px-2 py-1 text-xs font-medium" style={T.subtleBtn}>
                         Tailor CV
                       </button>
                     </div>
                   ))}
-                  {byStatus[status].length === 0 && (
-                    <p className="text-xs text-gray-400">—</p>
-                  )}
+                  {byStatus[status].length === 0 && <p className="text-xs" style={T.muted}>—</p>}
                 </div>
               </div>
             ))}
@@ -248,6 +223,6 @@ export default function ApplicationsPage() {
         />
       )}
       <SiteFooter />
-    </>
+    </div>
   );
 }

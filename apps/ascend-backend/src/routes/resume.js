@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { authenticate } from '../middleware/authenticate.js';
+import { query } from '../lib/shared-db.js';
 import { fetchJobViaAPI } from './jobAnalyze.js';
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
@@ -462,6 +463,61 @@ Return ONLY valid JSON (no markdown fences) matching this exact schema:
   } catch (err) {
     console.error('[Resume] Generate error:', err);
     res.status(500).json({ error: 'Resume generation failed' });
+  }
+});
+
+// Parse the user's base resume (users.resume_text, or a passed override) into
+// structured job-seeker profile fields. Powers the "Autofill from resume"
+// button on the Job Profile. Returns parsed fields WITHOUT saving — the user
+// reviews and saves.
+router.post('/parse-profile', authenticate, async (req, res) => {
+  try {
+    let resumeText = String(req.body?.resumeText || '').trim();
+    if (!resumeText) {
+      const { rows } = await query('SELECT resume_text FROM users WHERE id = $1', [req.user.id]);
+      resumeText = String(rows[0]?.resume_text || '').trim();
+    }
+    // The upload flow stores "[PDF uploaded: …]" style placeholders for
+    // unreadable binaries — treat those as "no resume".
+    if (!resumeText || resumeText.startsWith('[')) {
+      return res.status(404).json({
+        error: 'No readable base resume found. Upload one on your profile first.',
+        code: 'NO_RESUME',
+      });
+    }
+
+    const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const _resp = await _model.generateContent(`Extract structured profile data from this resume. Return ONLY valid JSON (no markdown fences) matching this exact schema. Use an empty string/array when a field is absent — never invent data.
+{
+  "full_name": "",
+  "headline": "<short professional headline / current title>",
+  "location": "",
+  "email": "",
+  "phone": "",
+  "links": { "linkedin": "", "github": "", "website": "" },
+  "summary": "<2-3 sentence professional summary>",
+  "skills": ["<skill>"],
+  "languages": ["<spoken language>"],
+  "work_authorization": "",
+  "experience": [{ "company": "", "title": "", "start": "", "end": "", "bullets": ["<achievement>"] }],
+  "education": [{ "institution": "", "degree": "", "year": "" }],
+  "certifications": [{ "name": "", "date": "" }]
+}
+
+RESUME:
+${resumeText}`);
+
+    const raw = _resp.response.text().trim();
+    let profile;
+    try {
+      profile = JSON.parse(raw.replace(/^```json?\n?/, '').replace(/```$/, '').trim());
+    } catch {
+      return res.status(500).json({ error: 'Could not parse the resume into profile fields' });
+    }
+    res.json({ profile });
+  } catch (err) {
+    console.error('[Resume] parse-profile error:', err);
+    res.status(500).json({ error: 'Resume parsing failed' });
   }
 });
 
