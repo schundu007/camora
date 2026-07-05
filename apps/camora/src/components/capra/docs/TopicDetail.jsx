@@ -1047,24 +1047,6 @@ export default function TopicDetail({
             <Icon name="mic" size={15} />
             <span className="hidden sm:inline">Voice</span>
           </button>
-          {/* Author byline — moved onto the toolbar, pinned far right. */}
-          <div className="hidden sm:flex items-center gap-2.5 pl-3 ml-1 border-l border-[var(--border)]">
-            <img
-              src="/author-chundu.jpg"
-              alt="Sudhakar Chundu"
-              width={28}
-              height={28}
-              loading="lazy"
-              className="w-7 h-7 rounded-full object-cover flex-shrink-0"
-              style={{ border: '1px solid var(--border)' }}
-            />
-            <div className="min-w-0 leading-tight">
-              <div className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sudhakar Chundu</div>
-              <div className="text-[9px] uppercase tracking-[0.12em] landing-mono truncate" style={{ color: 'var(--text-muted)' }}>
-                18+ yrs · GPU Compute · SRE · Platform · FinOps
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -3647,6 +3629,25 @@ export default function TopicDetail({
         <aside className="hidden xl:flex flex-col flex-shrink-0" style={{ width: '220px', borderLeft: '1px solid var(--border)' }}>
           <div className="sticky pl-5 pr-3 pt-4" style={{ top: '80px' }}>
             <OnThisPage items={onThisPageItems} />
+            {/* Author byline — lives in the On-this-page rail, below the last
+                section item, separated by a hairline. Off the content toolbar. */}
+            <div className="mt-4 pt-4 border-t border-[var(--border)]">
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <img
+                  src="/author-chundu.jpg"
+                  alt="Sudhakar Chundu"
+                  width={32}
+                  height={32}
+                  loading="lazy"
+                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  style={{ border: '1px solid var(--border)' }}
+                />
+                <div className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sudhakar Chundu</div>
+              </div>
+              <div className="text-[9px] uppercase tracking-[0.1em] landing-mono leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                18+ yrs · GPU Compute · SRE · Platform · FinOps
+              </div>
+            </div>
           </div>
         </aside>
       )}
