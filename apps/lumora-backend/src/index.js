@@ -147,6 +147,64 @@ async function runMigrations() {
         answer_json JSONB NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
       )`,
+
+      // ── Job-search / assisted-apply feature ────────────────────────
+      // Per-user structured candidate profile (one row per user; user_id
+      // is the PK). Drives tailored CV/cover-letter generation and
+      // application autofill. Extends the thin users.resume_text /
+      // users.job_roles with a full structured profile.
+      `CREATE TABLE IF NOT EXISTS job_seeker_profiles (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        full_name TEXT,
+        headline TEXT,
+        location TEXT,
+        email TEXT,
+        phone TEXT,
+        links JSONB NOT NULL DEFAULT '{}'::jsonb,
+        summary TEXT,
+        skills JSONB NOT NULL DEFAULT '[]'::jsonb,
+        experience JSONB NOT NULL DEFAULT '[]'::jsonb,
+        education JSONB NOT NULL DEFAULT '[]'::jsonb,
+        certifications JSONB NOT NULL DEFAULT '[]'::jsonb,
+        languages JSONB NOT NULL DEFAULT '[]'::jsonb,
+        work_authorization TEXT,
+        preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
+        default_cv_template TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
+
+      // Application tracker — one row per application a user is tracking.
+      // status='saved' is the initial saved-but-not-applied state, so this
+      // table also serves as the saved-jobs list. Columns mirror the
+      // reference job_search_tracker.csv. source_job_id references the
+      // external jobportal DB by value only (no cross-DB FK); title/company/
+      // url are snapshotted at save time.
+      `CREATE TABLE IF NOT EXISTS job_applications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        source_job_id TEXT,
+        title TEXT,
+        company TEXT,
+        location TEXT,
+        job_url TEXT,
+        source TEXT,
+        sector TEXT,
+        role_type TEXT,
+        status TEXT NOT NULL DEFAULT 'saved'
+          CHECK (status IN ('saved','drafting','ready','applied','interviewing','offer','rejected')),
+        fit_rating INTEGER CHECK (fit_rating BETWEEN 1 AND 5),
+        channel TEXT,
+        contact_person TEXT,
+        notes TEXT,
+        tailored_cv_url TEXT,
+        cover_letter_url TEXT,
+        applied_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`,
+      'CREATE INDEX IF NOT EXISTS idx_job_applications_user ON job_applications(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_job_applications_user_status ON job_applications(user_id, status)',
       // ai_hour_topups + its ALTER/INDEX migrations are owned by
       // ascend-backend (see comment above re: billing-owned tables).
       // Indexes
@@ -406,6 +464,8 @@ import reactionsRouter from './routes/reactions.js';
 import analyticsRouter from './routes/analytics.js';
 import usageRouter from './routes/usage.js';
 import jobsRouter from './routes/jobs.js';
+import jobseekerProfileRouter from './routes/jobseekerProfile.js';
+import jobApplicationsRouter from './routes/jobApplications.js';
 import storiesRouter from './routes/stories.js';
 import prepRouter from './routes/prep.js';
 import companyContextRouter from './routes/companyContext.js';
@@ -466,6 +526,8 @@ app.use('/api/v1/reactions', apiLimiter, authenticate, reactionsRouter);
 app.use('/api/v1/analytics', apiLimiter, analyticsRouter); // analytics may include public ingestion routes
 app.use('/api/v1/usage', apiLimiter, authenticate, usageRouter);
 app.use('/api/v1/jobs', apiLimiter, jobsRouter); // jobs feed is public-readable
+app.use('/api/v1/jobsearch/profile', apiLimiter, authenticate, jobseekerProfileRouter);
+app.use('/api/v1/jobsearch/applications', apiLimiter, authenticate, jobApplicationsRouter);
 app.use('/api/v1/stories', apiLimiter, storiesRouter); // stories feed is public-readable
 app.use('/api/v1/github', apiLimiter, authenticate, requirePaidSubscription, githubRouter);
 
