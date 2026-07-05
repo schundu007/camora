@@ -101,10 +101,12 @@ function Input(props: { value: string; onChange: (v: string) => void; placeholde
   );
 }
 
-function Field(props: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+function Field(props: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; required?: boolean }) {
   return (
     <div>
-      <label className={CX.label} style={T.body}>{props.label}</label>
+      <label className={CX.label} style={T.body}>
+        {props.label}{props.required && <span style={{ color: '#e5798a' }}> *</span>}
+      </label>
       <Input value={props.value} onChange={props.onChange} placeholder={props.placeholder} type={props.type} />
     </div>
   );
@@ -187,6 +189,19 @@ export default function JobSeekerProfilePanel() {
   };
 
   const onSave = async () => {
+    // Don't let an empty profile be saved — it can't tailor anything.
+    if (!form.full_name.trim()) {
+      setError('Add at least your full name before saving.');
+      return;
+    }
+    const hasDetail =
+      form.headline.trim() || form.summary.trim() || form.skills.trim() ||
+      form.experience.length || form.education.length ||
+      form.email.trim() || form.location.trim();
+    if (!hasDetail) {
+      setError('Fill in a bit more than just your name (e.g. headline, summary, skills, or experience).');
+      return;
+    }
     setSaving(true); setError(null); setInfo(null);
     try {
       const saved = await saveJobSeekerProfile(formToProfile(form));
@@ -222,7 +237,7 @@ export default function JobSeekerProfilePanel() {
           <section>
             <SectionHeading>Basics</SectionHeading>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Full name" value={form.full_name} onChange={(v) => set('full_name', v)} />
+            <Field label="Full name" required value={form.full_name} onChange={(v) => set('full_name', v)} />
             <Field label="Headline" value={form.headline} onChange={(v) => set('headline', v)} placeholder="e.g. Senior Backend Engineer" />
             <Field label="Location" value={form.location} onChange={(v) => set('location', v)} />
             <Field label="Work authorization" value={form.work_authorization} onChange={(v) => set('work_authorization', v)} placeholder="e.g. EU citizen, needs H1B" />
