@@ -1,0 +1,356 @@
+{
+  "audit_date": "2026-07-01",
+  "prior_audit_date": "2026-06-01",
+  "summary": {
+    "CRITICAL": 4,
+    "HIGH": 8,
+    "MEDIUM": 22,
+    "LOW": 8,
+    "total": 42
+  },
+  "net_change_vs_prior": {
+    "CRITICAL": "+2",
+    "HIGH": "+1",
+    "MEDIUM": "-11",
+    "LOW": "-8",
+    "note": "2 prior Stripe CRITICALs (ascend_stripe_events never created; handleInvoicePaid skip) no longer present — presumed fixed. 2 new Stripe CRITICAL + 1 auth escalation."
+  },
+  "findings": [
+    {
+      "id": "AUTH-001",
+      "severity": "CRITICAL",
+      "area": "AUTH",
+      "file": "packages/shared-auth/src/index.js",
+      "line": 46,
+      "description": "verifyToken() does not enforce payload.type === 'access' — add type check so refresh/other tokens are rejected by all middleware"
+    },
+    {
+      "id": "AUTH-002",
+      "severity": "CRITICAL",
+      "area": "AUTH",
+      "file": "packages/shared-auth/src/index.js",
+      "line": 27,
+      "description": "createToken() accepts any payload without type claim validation — add type allowlist in createToken()"
+    },
+    {
+      "id": "AUTH-003",
+      "severity": "HIGH",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/middleware/authenticate.js",
+      "line": 120,
+      "description": "requireAdmin() checks role === 'admin' but role field is never set (always 'user') — change to check is_admin boolean"
+    },
+    {
+      "id": "AUTH-004",
+      "severity": "HIGH",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/lib/_shared/auth.js",
+      "line": 71,
+      "description": "Cookie domain hardcoded to '.cariara.com' with no env override — add COOKIE_DOMAIN env support for staging"
+    },
+    {
+      "id": "AUTH-005",
+      "severity": "HIGH",
+      "area": "AUTH",
+      "file": "packages/shared-auth/src/index.js",
+      "line": 40,
+      "description": "Bearer token parsed with slice(7) not split(' ')[1] — standardize parsing across all middlewares"
+    },
+    {
+      "id": "AUTH-006",
+      "severity": "MEDIUM",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/index.js",
+      "line": 537,
+      "description": "OWNER_EMAILS auto-applies is_admin at every startup — manage admin grant via DB, not env auto-grant"
+    },
+    {
+      "id": "AUTH-007",
+      "severity": "MEDIUM",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/middleware/authenticate.js",
+      "line": 6,
+      "description": "Both OWNER_EMAILS and ADMIN_EMAILS supported with no deprecation path — standardize on one variable"
+    },
+    {
+      "id": "AUTH-008",
+      "severity": "MEDIUM",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/routes/auth.js",
+      "line": 337,
+      "description": "Refresh endpoint uses ignoreExpiration without max-age check — add 90-day max-age limit on token age"
+    },
+    {
+      "id": "AUTH-009",
+      "severity": "MEDIUM",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/routes/auth.js",
+      "line": 509,
+      "description": "ADMIN_SECRET endpoint has no rate limiting — add IP-based lockout or exponential backoff"
+    },
+    {
+      "id": "AUTH-010",
+      "severity": "MEDIUM",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/index.js",
+      "line": 812,
+      "description": "CORS allows origins containing 'ascend' or 'camora' keyword substring — switch to explicit allowlist"
+    },
+    {
+      "id": "AUTH-011",
+      "severity": "MEDIUM",
+      "area": "AUTH",
+      "file": "apps/lumora-backend/src/middleware/authenticate.js",
+      "line": 85,
+      "description": "ADMIN_EMAILS check is case-sensitive — normalize with .toLowerCase() and use Set.has()"
+    },
+    {
+      "id": "AUTH-012",
+      "severity": "LOW",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/routes/auth.js",
+      "line": 18,
+      "description": "OAuth state freshness uses Date.now() — replace with server-TTL cache to avoid clock skew rejections"
+    },
+    {
+      "id": "AUTH-013",
+      "severity": "LOW",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/middleware/jwtAuth.js",
+      "line": 67,
+      "description": "shared-auth verifyToken has no algorithm whitelist — add algorithm: ['HS256'] to jwt.verify options"
+    },
+    {
+      "id": "AUTH-014",
+      "severity": "LOW",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/routes/auth.js",
+      "line": 212,
+      "description": "Referral code truncates base64url output — keep all 8 chars from randomBytes(6) for full entropy"
+    },
+    {
+      "id": "AUTH-015",
+      "severity": "LOW",
+      "area": "AUTH",
+      "file": "apps/ascend-backend/src/routes/auth.js",
+      "line": 427,
+      "description": "Token issuance at /me does not check is_active flag — add account suspension check"
+    },
+    {
+      "id": "STRIPE-001",
+      "severity": "CRITICAL",
+      "area": "STRIPE",
+      "file": "apps/ascend-backend/src/services/teamService.js",
+      "line": 23,
+      "description": "Team price formula (n*20-1)*100 contradicts billing.js tiered formula — reconcile to single authoritative calculation"
+    },
+    {
+      "id": "STRIPE-002",
+      "severity": "CRITICAL",
+      "area": "STRIPE",
+      "file": "apps/ascend-backend/src/routes/billing.js",
+      "line": 18,
+      "description": "Tiered team price formula ($49+$10/seat) contradicts teamService.js — customers charged inconsistently by code path"
+    },
+    {
+      "id": "STRIPE-003",
+      "severity": "HIGH",
+      "area": "STRIPE",
+      "file": "apps/ascend-backend/src/services/freeUsageService.js",
+      "line": 118,
+      "description": "Hardcoded plan type check missing 'lifetime' — import PAID_PLAN_TYPES from @camora/shared-db/plans"
+    },
+    {
+      "id": "STRIPE-004",
+      "severity": "HIGH",
+      "area": "STRIPE",
+      "file": "apps/ascend-backend/src/services/playground/sessionManager.js",
+      "line": 16,
+      "description": "PAID_PLAN_TYPES redeclared locally instead of imported from lib/plans.js — import from shared source"
+    },
+    {
+      "id": "STRIPE-005",
+      "severity": "MEDIUM",
+      "area": "STRIPE",
+      "file": "apps/ascend-backend/src/routes/billing.js",
+      "line": 110,
+      "description": "Comment describes flat_discount_cents but code uses tiered formula — remove or fix misleading comment"
+    },
+    {
+      "id": "STRIPE-006",
+      "severity": "LOW",
+      "area": "STRIPE",
+      "file": "apps/ascend-backend/src/routes/billing.js",
+      "line": 1102,
+      "description": "Team renewal skips ai_hour_topups, relying implicitly on rollOverTeamPoolForUser — add explicit comment"
+    },
+    {
+      "id": "ROBUST-001",
+      "severity": "MEDIUM",
+      "area": "ROBUSTNESS",
+      "file": "apps/ascend-backend/src/routes/teams.js",
+      "line": 459,
+      "description": "Admin endpoints protected by adminGate but lack a dedicated stricter rate limiter — apply admin-specific rate limit"
+    },
+    {
+      "id": "ROBUST-002",
+      "severity": "LOW",
+      "area": "ROBUSTNESS",
+      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
+      "line": 63,
+      "description": "Math.random() for multipart boundary generation (non-security, acceptable)"
+    },
+    {
+      "id": "ROBUST-003",
+      "severity": "LOW",
+      "area": "ROBUSTNESS",
+      "file": "apps/ascend-backend/src/routes/mcq.js",
+      "line": 184,
+      "description": "Math.random() for quiz question shuffle (non-security, acceptable)"
+    },
+    {
+      "id": "ROBUST-004",
+      "severity": "LOW",
+      "area": "ROBUSTNESS",
+      "file": "apps/ascend-backend/src/services/autoTopupService.js",
+      "line": 115,
+      "description": "Empty catch on advisory lock release (intentional per inline comment)"
+    },
+    {
+      "id": "DESIGN-001",
+      "severity": "HIGH",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/FlyerPage.tsx",
+      "line": 21,
+      "description": "Missing SiteNav on public page — add SiteNav for brand consistency (feedback_nav_redirect_rules)"
+    },
+    {
+      "id": "DESIGN-002",
+      "severity": "HIGH",
+      "area": "DESIGN",
+      "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx",
+      "line": 59,
+      "description": "cyan-500 in gradient text — replace with emerald per Lumora palette rules (feedback_lumora_sharp_palette)"
+    },
+    {
+      "id": "DESIGN-003",
+      "severity": "HIGH",
+      "area": "DESIGN",
+      "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx",
+      "line": 198,
+      "description": "cyan-500 in gradient text (second occurrence) — replace with emerald per Lumora palette rules"
+    },
+    {
+      "id": "DESIGN-004",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx",
+      "line": 179,
+      "description": "text-cyan-200 in step labels — replace with emerald palette color"
+    },
+    {
+      "id": "DESIGN-005",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/PracticePage.jsx",
+      "line": 1201,
+      "description": "rgba(255,255,255,0.75) on variable backgrounds — verify WCAG contrast (feedback_no_white_on_white)"
+    },
+    {
+      "id": "DESIGN-006",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx",
+      "line": 30,
+      "description": "Hardcoded hex #10b981 for easy difficulty — replace with CSS design token"
+    },
+    {
+      "id": "DESIGN-007",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx",
+      "line": 31,
+      "description": "Hardcoded hex #f59e0b for medium difficulty — replace with CSS design token"
+    },
+    {
+      "id": "DESIGN-008",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx",
+      "line": 32,
+      "description": "Hardcoded hex #ef4444 for hard difficulty — replace with CSS design token"
+    },
+    {
+      "id": "DESIGN-009",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/ResumeGeneratorPage.tsx",
+      "line": 133,
+      "description": "Hardcoded hex #ef4444 — consolidate with design token var(--danger)"
+    },
+    {
+      "id": "DESIGN-010",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/ResumeGeneratorPage.tsx",
+      "line": 153,
+      "description": "Mixed CSS vars with hex fallbacks (#22c55e, #f59e0b, #ef4444) — standardize to single token system"
+    },
+    {
+      "id": "DESIGN-011",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
+      "line": 25,
+      "description": "Hardcoded hex #ef4444 for 'again' state — use design token"
+    },
+    {
+      "id": "DESIGN-012",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
+      "line": 26,
+      "description": "Hardcoded hex #f59e0b for 'hard' state — use design token"
+    },
+    {
+      "id": "DESIGN-013",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
+      "line": 27,
+      "description": "Hardcoded hex #22c55e for 'good' state — use design token"
+    },
+    {
+      "id": "DESIGN-014",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
+      "line": 28,
+      "description": "Hardcoded hex #3683DC (--accent value) — use CSS var(--accent) directly"
+    },
+    {
+      "id": "DESIGN-015",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/PracticePage.jsx",
+      "line": 452,
+      "description": "Company brand colors hardcoded as hex values — move to shared constants"
+    },
+    {
+      "id": "DESIGN-016",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/pages/capra/CompanyPrepPage.tsx",
+      "line": 40,
+      "description": "Hardcoded company brand colors — centralize in constants or design tokens"
+    },
+    {
+      "id": "DESIGN-017",
+      "severity": "MEDIUM",
+      "area": "DESIGN",
+      "file": "apps/camora/src/components/shared/SiteNav.tsx",
+      "line": 156,
+      "description": "Hardcoded hex #3683DC and #2265BF in className — use CSS var(--accent)"
+    }
+  ]
+}
