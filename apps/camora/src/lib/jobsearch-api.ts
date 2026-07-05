@@ -205,6 +205,32 @@ export async function fetchJobDetail(sourceJobId: string): Promise<JobDetail | n
   }
 }
 
+/**
+ * Upload a base resume (PDF/DOCX/TXT) — reuses ascend's existing
+ * /api/onboarding/upload-resume, which extracts text and stores it as the
+ * active resume + users.resume_text (what Autofill reads). Multipart, so it
+ * bypasses the JSON `request` helper.
+ */
+export async function uploadBaseResume(file: File): Promise<{ text?: string; resume_id?: number }> {
+  const form = new FormData();
+  form.append('resume', file);
+  const res = await fetch(`${CAPRA_API}/api/onboarding/upload-resume`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { ...getAuthHeaders() }, // no Content-Type — browser sets the multipart boundary
+    body: form,
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      detail = body.error || detail;
+    } catch { /* keep statusText */ }
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
 /** Fetch + extract a job description from a posting URL (ascend fetch-jd). */
 export async function fetchJdFromUrl(url: string): Promise<string> {
   const data = await request<{ text: string }>(

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import Chip from '../components/shared/ui/Chip';
@@ -9,7 +9,6 @@ import SiteFooter from '../components/shared/SiteFooter';
 import ReferralDashboard from '../components/capra/features/ReferralDashboard';
 import GamificationWidget from '../components/capra/features/GamificationWidget';
 import BadgeGrid from '../components/capra/features/BadgeGrid';
-import JobSeekerProfilePanel from '../components/jobsearch/JobSeekerProfilePanel';
 import Leaderboard from '../components/capra/features/Leaderboard';
 
 // Billing reads/writes go to ascend-backend (single source of truth);
@@ -20,7 +19,6 @@ const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.
 const TABS = [
   { key: 'general', label: 'General' },
   { key: 'preferences', label: 'Preferences' },
-  { key: 'job-profile', label: 'Job Profile' },
   { key: 'achievements', label: 'Achievements' },
   { key: 'referrals', label: 'Referrals' },
   { key: 'contributions', label: 'Contributions' },
@@ -861,7 +859,8 @@ export default function ProfilePage() {
 
         {activeTab === 'preferences' && <PreferencesTab />}
 
-        {activeTab === 'job-profile' && <JobSeekerProfilePanel />}
+        {/* Job Profile moved to the Apply section — redirect old ?tab=job-profile links. */}
+        {activeTab === 'job-profile' && <Navigate to="/jobs/profile" replace />}
 
         {activeTab === 'achievements' && (
           <div className="space-y-6">
