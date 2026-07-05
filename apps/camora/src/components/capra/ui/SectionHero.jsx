@@ -20,7 +20,7 @@ export default function SectionHero({
   eyebrow,
   title,
   subtitle,
-  actions,
+  actions = null,
   className = '',
 }) {
   return (
