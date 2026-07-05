@@ -466,6 +466,7 @@ import usageRouter from './routes/usage.js';
 import jobsRouter from './routes/jobs.js';
 import jobseekerProfileRouter from './routes/jobseekerProfile.js';
 import jobApplicationsRouter from './routes/jobApplications.js';
+import jobseekerTailorRouter from './routes/jobseekerTailor.js';
 import storiesRouter from './routes/stories.js';
 import prepRouter from './routes/prep.js';
 import companyContextRouter from './routes/companyContext.js';
@@ -528,6 +529,7 @@ app.use('/api/v1/usage', apiLimiter, authenticate, usageRouter);
 app.use('/api/v1/jobs', apiLimiter, jobsRouter); // jobs feed is public-readable
 app.use('/api/v1/jobsearch/profile', apiLimiter, authenticate, jobseekerProfileRouter);
 app.use('/api/v1/jobsearch/applications', apiLimiter, authenticate, jobApplicationsRouter);
+app.use('/api/v1/jobsearch/tailor', aiLimiter, authenticate, jobseekerTailorRouter);
 app.use('/api/v1/stories', apiLimiter, storiesRouter); // stories feed is public-readable
 app.use('/api/v1/github', apiLimiter, authenticate, requirePaidSubscription, githubRouter);
 
