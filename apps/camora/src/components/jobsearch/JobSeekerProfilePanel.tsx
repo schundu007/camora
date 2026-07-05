@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import {
   fetchJobSeekerProfile,
   saveJobSeekerProfile,
   parseProfileFromResume,
+  uploadBaseResume,
   type JobSeekerProfile,
 } from '../../lib/jobsearch-api';
 import { T, CX, banner } from './theme';
@@ -154,6 +155,8 @@ export default function JobSeekerProfilePanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -183,9 +186,22 @@ export default function JobSeekerProfilePanel() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Autofill failed';
       setError(/no readable base resume|no_resume/i.test(msg)
-        ? 'No base resume found. Upload one under the Preferences tab, then try Autofill again.'
+        ? 'No base resume found. Upload one with “Upload base resume” above, then try Autofill again.'
         : msg);
     } finally { setAutofilling(false); }
+  };
+
+  const onUpload = async (file: File) => {
+    setUploading(true); setError(null); setInfo(null);
+    try {
+      await uploadBaseResume(file);
+      setInfo('Base resume uploaded — now click “Autofill from my base resume” to fill your profile.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Resume upload failed');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
   };
 
   const onSave = async () => {
@@ -220,11 +236,20 @@ export default function JobSeekerProfilePanel() {
           <h2 className="text-xl" style={T.pageTitle}>Job Profile</h2>
           <p className="mt-1 text-sm" style={T.muted}>Used to tailor your CV, cover letters, and application autofill.</p>
         </div>
-        <button onClick={onAutofill} disabled={autofilling || loading}
-          className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60" style={T.subtleBtn}
-          title="Fill these fields from the base resume you uploaded under Preferences">
-          {autofilling ? 'Reading your resume…' : '✨ Autofill from my base resume'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
+            className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60" style={T.ghostBtn}
+            title="Upload your base resume (PDF, DOCX, or TXT)">
+            {uploading ? 'Uploading…' : '⬆ Upload base resume'}
+          </button>
+          <button onClick={onAutofill} disabled={autofilling || loading}
+            className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60" style={T.subtleBtn}
+            title="Fill these fields from your uploaded base resume">
+            {autofilling ? 'Reading your resume…' : '✨ Autofill from my base resume'}
+          </button>
+        </div>
       </div>
 
       {error && <div className="mb-6 rounded-lg px-4 py-3 text-sm" style={banner('error')}>{error}</div>}

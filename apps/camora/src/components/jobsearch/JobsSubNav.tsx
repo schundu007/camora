@@ -13,25 +13,25 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const TABS = [
   { label: 'Browse jobs', href: '/jobs' },
-  { label: 'My applications', href: '/jobsearch/applications' },
-  { label: 'Job profile', href: '/profile?tab=job-profile' },
+  { label: 'My applications', href: '/jobs/applications' },
+  { label: 'Job profile', href: '/jobs/profile' },
 ];
 
 export default function JobsSubNav() {
   const { isAuthenticated } = useAuth();
-  const { pathname, search } = useLocation();
+  const { pathname } = useLocation();
 
   if (!isAuthenticated) return null;
 
-  // Path-only links match by prefix (/jobs also covers /jobs/:id/*). Links
-  // with a ?tab= (the Job Profile tab inside /profile) match path + tab.
   const isActive = (href: string) => {
-    const [path, qs] = href.split('?');
-    if (qs) {
-      const want = new URLSearchParams(qs).get('tab');
-      return pathname === path && new URLSearchParams(search).get('tab') === want;
+    if (href === '/jobs') {
+      // Feed + job detail (/jobs/:id/*), but NOT the sibling sub-pages.
+      return pathname === '/jobs'
+        || (pathname.startsWith('/jobs/')
+            && !pathname.startsWith('/jobs/applications')
+            && !pathname.startsWith('/jobs/profile'));
     }
-    return pathname === path || pathname.startsWith(path + '/');
+    return pathname === href || pathname.startsWith(href + '/');
   };
 
   return (
