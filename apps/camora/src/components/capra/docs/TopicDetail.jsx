@@ -285,9 +285,25 @@ function DataModelSection({ schema, examples, diagramSrc }) {
     setTimeout(() => setCopied(false), 2000);
   }, [schema]);
 
+  // Is this schema an ASCII-art architecture diagram / JSON block rather than a
+  // SQL-style table definition? Box borders (+----+), connector arrows, caret
+  // fan-outs, and standalone JSON braces all mean the table/pipe parsers below
+  // would shred the alignment into garbled prose (the microservices topics did
+  // exactly this). When true we skip those parsers and render verbatim as a
+  // faithful monospace block instead.
+  const isDiagramArt = useMemo(() => {
+    if (!schema) return false;
+    return /^[ \t]*\+[-=+]{2,}/m.test(schema)      // ASCII box border: +-----+
+      || /[┌┐└┘│├┤┬┴┼─╭╮╰╯]/.test(schema)          // unicode box drawing
+      || /(--+>|<--+)/.test(schema)                 // arrows: -->  <--
+      || /\^\s+\^/.test(schema)                     // caret fan-out: ^   ^
+      || /^\s*\{\s*$/m.test(schema)                 // standalone { : JSON block
+      || /^\s*"?\w+"?\s*:\s*".*",?\s*$/m.test(schema); // JSON key: "value",
+  }, [schema]);
+
   // Try to parse schema into structured tables
   const tables = useMemo(() => {
-    if (!schema) return [];
+    if (!schema || isDiagramArt) return [];
     const parsed = [];
     // Match table blocks like "Table users {" or "CREATE TABLE users (" or just "users:" or "Users" followed by fields
     const lines = schema.split('\n');
@@ -348,7 +364,7 @@ function DataModelSection({ schema, examples, diagramSrc }) {
 
   // Parse ASCII pipe-table schemas into renderable blocks
   const asciiBlocks = useMemo(() => {
-    if (!schema) return null;
+    if (!schema || isDiagramArt) return null;
     const lines = schema.split('\n');
     if (lines.filter(l => l.trim().startsWith('|')).length < 2) return null;
     const blocks = [];
