@@ -190,6 +190,8 @@ export interface JobDetail {
   location?: string | null;
   job_url?: string | null;
   job_description?: string | null;
+  ai_summary?: string | null;
+  ai_tech_stack?: string[] | null;
 }
 
 /** Fetch a single job from the jobs feed (to prefill the JD when tailoring). */
