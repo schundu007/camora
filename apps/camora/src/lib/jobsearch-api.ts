@@ -205,6 +205,16 @@ export async function fetchJobDetail(sourceJobId: string): Promise<JobDetail | n
   }
 }
 
+/** Fetch + extract a job description from a posting URL (ascend fetch-jd). */
+export async function fetchJdFromUrl(url: string): Promise<string> {
+  const data = await request<{ text: string }>(
+    '/api/v1/resume/fetch-jd',
+    { method: 'POST', body: JSON.stringify({ url }) },
+    CAPRA_API,
+  );
+  return data.text || '';
+}
+
 /** Flatten a structured profile into the plain-text resume `/generate` expects. */
 export function profileToResumeText(p: JobSeekerProfile): string {
   const out: string[] = [];
