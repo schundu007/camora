@@ -37,7 +37,7 @@ router.post('/optimize', authenticate, async (req, res) => {
       'X-Accel-Buffering': 'no',
     });
 
-    const prompt = `You are an expert resume optimizer for tech companies. Optimize this resume for the following job.
+    const prompt = `You are an expert resume editor for tech companies. Rewrite the candidate's resume so it is ATS-optimized for the target job — WITHOUT inventing anything.
 
 TARGET COMPANY: ${company || 'Not specified'}
 TARGET ROLE: ${role || 'Software Engineer'}
@@ -45,19 +45,18 @@ TARGET ROLE: ${role || 'Software Engineer'}
 JOB DESCRIPTION:
 ${jobDescription}
 
-CURRENT RESUME:
+CANDIDATE'S BASE RESUME (the ONLY source of truth for facts):
 ${resume}
 
-INSTRUCTIONS:
-1. Rewrite the resume to be ATS-optimized for this specific job
-2. Match keywords from the job description
-3. Quantify achievements with metrics where possible
-4. Use strong action verbs
-5. Keep it concise (1-2 pages worth of content)
-6. Highlight relevant skills and experience
-7. Format with clear sections: Summary, Experience, Skills, Education, Projects
+STRICT GROUND RULES — follow exactly:
+- Use ONLY the employers, job titles, employment dates, education, certifications, projects, and metrics that appear in the BASE RESUME. Do NOT invent, add, rename, or substitute any company, role, date, school, degree, or number. If the base resume lists no employers, do not manufacture any (never add companies like TCS, Genpact, Infosys, etc. that are not in the base resume).
+- Do NOT fabricate metrics or achievements. Keep only numbers already present in the base resume.
+- Use the candidate's REAL name and contact details exactly as written in the base resume. NEVER output bracketed placeholders such as [Your Name], [City, State], [Phone Number], [Email Address], or [LinkedIn Profile URL]. If a specific contact detail is not present in the base resume, OMIT it entirely — do not write a placeholder.
+- You MAY reword bullets, reorder for relevance, tighten language, use strong action verbs, and surface skills/keywords from the job description that the candidate genuinely has per the base resume.
 
-Output ONLY the optimized resume text, ready to copy. No commentary.`;
+FORMAT: clear sections in this order — Name + contact line, Summary, Experience, Skills, Education, Projects. Include a section only if the base resume has real content for it. Keep it to 1-2 pages worth of content.
+
+Output ONLY the finished resume text, ready to copy. No commentary, no markdown code fences.`;
 
     const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
     const _stream = await _model.generateContentStream(prompt);
@@ -101,27 +100,33 @@ router.post('/cover-letter', authenticate, async (req, res) => {
       'X-Accel-Buffering': 'no',
     });
 
-    const prompt = `You are an expert cover letter writer for tech companies. Write a compelling cover letter.
+    const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const prompt = `You are an expert cover letter writer for tech companies. Write a compelling, ready-to-send cover letter — WITHOUT inventing anything.
 
+TODAY'S DATE: ${today}
 TARGET COMPANY: ${company || 'Not specified'}
 TARGET ROLE: ${role || 'Software Engineer'}
 
 JOB DESCRIPTION:
 ${jobDescription}
 
-CANDIDATE'S RESUME:
+CANDIDATE'S BASE RESUME (the ONLY source of truth for facts):
 ${resume}
 
-INSTRUCTIONS:
-1. Write a professional, compelling cover letter (3-4 paragraphs)
-2. Address specific requirements from the job description
-3. Highlight the candidate's most relevant experience and achievements
-4. Show genuine enthusiasm for the company and role
-5. Include specific technical skills that match the job
-6. Keep it concise but impactful
-7. Use a professional tone — confident but not arrogant
+STRICT GROUND RULES — follow exactly:
+- Build the letterhead from the candidate's REAL name and contact details exactly as written in the base resume. NEVER output bracketed placeholders such as [Your Name], [Your Address], [Your Phone], [Your Email], [Your LinkedIn], [Date], or [Platform where you saw the ad]. If a contact detail is absent from the base resume, OMIT that line — never leave a placeholder.
+- Use TODAY'S DATE above for the date line (do not write "[Date]").
+- Reference only real experience, employers, titles, and skills found in the base resume. Do NOT invent employers, roles, dates, or metrics.
+- Do NOT mention where the job was advertised unless the job description states it; otherwise phrase the opening without any placeholder.
+- Address the letter to "Hiring Manager" at ${company || 'the company'}.
 
-Output ONLY the cover letter text, ready to copy. No commentary.`;
+INSTRUCTIONS:
+1. Letterhead: candidate's real name + real contact details (omit any that are missing), then TODAY'S DATE, then the greeting.
+2. 3-4 strong paragraphs addressing specific requirements from the job description, backed only by real resume content.
+3. Genuine enthusiasm for ${company || 'the company'} and the role; confident, not arrogant.
+4. Close with a professional sign-off using the candidate's real name.
+
+Output ONLY the cover letter text, ready to copy. No commentary, no markdown code fences.`;
 
     const _model = getGenAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
     const _stream = await _model.generateContentStream(prompt);
