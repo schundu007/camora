@@ -84,6 +84,23 @@ export async function saveJobSeekerProfile(
   return data.profile;
 }
 
+/**
+ * Parse the user's base resume (users.resume_text, uploaded on the account
+ * profile) into structured profile fields via the ascend backend. Pass
+ * `resumeText` to parse ad-hoc text instead. Does not save — the caller
+ * prefills the form and the user reviews before saving.
+ */
+export async function parseProfileFromResume(
+  resumeText?: string,
+): Promise<JobSeekerProfile> {
+  const data = await request<{ profile: JobSeekerProfile }>(
+    '/api/v1/resume/parse-profile',
+    { method: 'POST', body: JSON.stringify(resumeText ? { resumeText } : {}) },
+    CAPRA_API,
+  );
+  return data.profile;
+}
+
 // --- Application tracker -----------------------------------------------------
 
 /** Application statuses in pipeline order (kanban columns). */

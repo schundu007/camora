@@ -9,27 +9,18 @@ import {
   type JobSeekerProfile,
   type TailoredDocsResult,
 } from '../../lib/jobsearch-api';
+import { T, CX, banner } from './theme';
 
 /**
- * Tailored-documents modal (Phase 3).
- *
- * Reuses the ascend backend's /resume/generate: takes the user's structured
- * profile + this application's job description, produces a tailored resume +
- * cover letter (DOCX) plus a gap-analysis match score, and offers downloads.
- *
- * Persisting the generated files to R2 and attaching them to the application
- * record is a later phase — for now the user downloads them directly.
+ * Tailored-documents modal (assisted apply). Reuses ascend's /resume/generate
+ * to produce a tailored resume + cover letter from the profile + JD, then
+ * hands off to the employer's apply page. Themed with camora CSS tokens.
  */
-
-const inputCls =
-  'w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500';
 
 interface Props {
   application: JobApplication;
   onClose: () => void;
-  /** Called after a successful generation, e.g. to advance status. */
   onGenerated?: () => void;
-  /** Mark this application as applied (sets status='applied' + applied_at). */
   onMarkApplied?: () => void | Promise<void>;
 }
 
@@ -62,9 +53,7 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
       try {
         const [p, job] = await Promise.all([
           fetchJobSeekerProfile(),
-          application.source_job_id
-            ? fetchJobDetail(application.source_job_id)
-            : Promise.resolve(null),
+          application.source_job_id ? fetchJobDetail(application.source_job_id) : Promise.resolve(null),
         ]);
         if (cancelled) return;
         setProfile(p);
@@ -75,14 +64,12 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [application.source_job_id]);
 
   const onGenerate = async () => {
     if (!profile) {
-      setError('Create your job-seeker profile first (Profile page).');
+      setError('Create your job profile first (Profile → Job Profile).');
       return;
     }
     if (!jd.trim()) {
@@ -114,94 +101,57 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
   const score = result?.gapAnalysis?.matchScore;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white dark:bg-gray-950 p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl p-6 shadow-xl" style={T.card} onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              Tailor CV &amp; cover letter
-            </h2>
-            <p className="text-sm text-gray-500">
-              {application.title || 'Untitled role'}
-              {application.company ? ` · ${application.company}` : ''}
+            <h2 className="text-lg font-semibold" style={T.heading}>Tailor CV &amp; cover letter</h2>
+            <p className="text-sm" style={T.muted}>
+              {application.title || 'Untitled role'}{application.company ? ` · ${application.company}` : ''}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700" aria-label="Close">
-            ✕
-          </button>
+          <button onClick={onClose} style={T.muted} aria-label="Close">✕</button>
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={banner('error')}>{error}</div>}
 
         {loading ? (
-          <p className="text-gray-500">Loading…</p>
+          <p style={T.muted}>Loading…</p>
         ) : (
           <>
             {!profile && (
-              <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-                You don&apos;t have a job-seeker profile yet. Fill it in on the Profile page for a well-tailored result.
+              <div className="mb-4 rounded-lg px-4 py-3 text-sm" style={{ background: 'var(--accent-secondary-subtle)', border: '1px solid var(--border)', color: 'var(--accent-secondary-text)' }}>
+                You don&apos;t have a job profile yet. Fill it in under Profile → Job Profile for a well-tailored result.
               </div>
             )}
 
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Job description
-            </label>
-            <textarea
-              className={`${inputCls} min-h-[180px]`}
-              value={jd}
-              onChange={(e) => setJd(e.target.value)}
-              placeholder="Paste the job description here…"
-            />
+            <label className="mb-1 block text-sm font-medium" style={T.body}>Job description</label>
+            <textarea className={`${CX.input} min-h-[180px]`} style={T.input} value={jd} onChange={(e) => setJd(e.target.value)} placeholder="Paste the job description here…" />
 
             <div className="mt-4 flex items-center gap-3">
-              <button
-                onClick={onGenerate}
-                disabled={generating}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-              >
+              <button onClick={onGenerate} disabled={generating} className="rounded-lg px-5 py-2.5 text-sm font-medium disabled:opacity-60" style={T.primaryBtn}>
                 {generating ? 'Generating…' : 'Generate tailored documents'}
               </button>
               {typeof score === 'number' && (
-                <span className="text-sm text-gray-600 dark:text-gray-300">
-                  Match score: <strong>{score}%</strong>
-                </span>
+                <span className="text-sm" style={T.body}>Match score: <strong>{score}%</strong></span>
               )}
             </div>
 
-            <div className="mt-6 border-t border-gray-200 dark:border-gray-800 pt-4">
-              <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">Apply</p>
-              <p className="mb-3 text-xs text-gray-500">
+            <div className="mt-6 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
+              <p className="mb-1 text-sm font-medium" style={T.body}>Apply</p>
+              <p className="mb-3 text-xs" style={T.muted}>
                 Open the employer&apos;s application page, attach the documents above, submit there, then mark this application as applied.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 {application.job_url ? (
-                  <a
-                    href={application.job_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900"
-                  >
+                  <a href={application.job_url} target="_blank" rel="noreferrer" className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
                     Open application page ↗
                   </a>
                 ) : (
-                  <span className="text-xs text-gray-400">No application URL on this job.</span>
+                  <span className="text-xs" style={T.muted}>No application URL on this job.</span>
                 )}
                 {onMarkApplied && application.status !== 'applied' && (
-                  <button
-                    onClick={handleMarkApplied}
-                    disabled={applying}
-                    className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-60"
-                  >
+                  <button onClick={handleMarkApplied} disabled={applying} className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60" style={{ background: '#28a745' }}>
                     {applying ? 'Saving…' : 'Mark as applied'}
                   </button>
                 )}
@@ -209,18 +159,12 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
             </div>
 
             {result && (
-              <div className="mt-6 space-y-4 border-t border-gray-200 dark:border-gray-800 pt-4">
+              <div className="mt-6 space-y-4 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
                 <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={() => downloadBase64Docx(result.resume.base64, result.resume.filename)}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900"
-                  >
+                  <button onClick={() => downloadBase64Docx(result.resume.base64, result.resume.filename)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
                     ↓ Download resume (.docx)
                   </button>
-                  <button
-                    onClick={() => downloadBase64Docx(result.coverLetter.base64, result.coverLetter.filename)}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-2 text-sm font-medium text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-900"
-                  >
+                  <button onClick={() => downloadBase64Docx(result.coverLetter.base64, result.coverLetter.filename)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
                     ↓ Download cover letter (.docx)
                   </button>
                 </div>
@@ -229,16 +173,16 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
                     {result.gapAnalysis.gaps?.length ? (
                       <div>
-                        <p className="mb-1 font-medium text-gray-700 dark:text-gray-300">Gaps vs this role</p>
-                        <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400">
+                        <p className="mb-1 font-medium" style={T.body}>Gaps vs this role</p>
+                        <ul className="list-disc pl-5" style={T.muted}>
                           {result.gapAnalysis.gaps.map((g, i) => <li key={i}>{g}</li>)}
                         </ul>
                       </div>
                     ) : null}
                     {result.gapAnalysis.quickWins?.length ? (
                       <div>
-                        <p className="mb-1 font-medium text-gray-700 dark:text-gray-300">Quick wins</p>
-                        <ul className="list-disc pl-5 text-gray-600 dark:text-gray-400">
+                        <p className="mb-1 font-medium" style={T.body}>Quick wins</p>
+                        <ul className="list-disc pl-5" style={T.muted}>
                           {result.gapAnalysis.quickWins.map((q, i) => <li key={i}>{q}</li>)}
                         </ul>
                       </div>
