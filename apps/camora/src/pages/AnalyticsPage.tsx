@@ -648,13 +648,23 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
             ) : usersError ? (
               <p className="text-[var(--danger)]">{usersError}</p>
             ) : (
-              <div className="border border-[var(--border)] rounded-xl overflow-x-auto" style={{ background: 'var(--bg-surface)' }}>
-                <table className="w-full text-left" style={{ fontSize: '13px' }}>
+              <div className="border border-[var(--border)] rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
+                <table className="w-full table-fixed text-left" style={{ fontSize: '13px' }}>
+                  <colgroup>
+                    <col style={{ width: '17%' }} />{/* User */}
+                    <col style={{ width: '15%' }} />{/* Email */}
+                    <col style={{ width: '11%' }} />{/* Plan */}
+                    <col style={{ width: '11%' }} />{/* Location */}
+                    <col style={{ width: '11%' }} />{/* Target */}
+                    <col style={{ width: '11%' }} />{/* Last Login */}
+                    <col style={{ width: '8%' }} />{/* Joined */}
+                    <col style={{ width: '16%' }} />{/* Actions */}
+                  </colgroup>
                   <thead>
                     <tr className="border-b border-[var(--border)]"
                       style={{ background: 'color-mix(in oklab, var(--cam-primary) 7%, var(--bg-surface))' }}>
                       {['User', 'Email', 'Plan', 'Location', 'Target', 'Last Login', 'Joined', 'Actions'].map(h => (
-                        <th key={h} className="px-4 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] whitespace-nowrap"
+                        <th key={h} className="px-3 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] whitespace-nowrap"
                           style={{ color: 'var(--cam-primary)', opacity: 0.85 }}>{h}</th>
                       ))}
                     </tr>
@@ -669,7 +679,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                           onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 9%, var(--bg-elevated))')}
                           onMouseLeave={e => (e.currentTarget.style.background = rowBase)}>
 
-                          <td className="px-4 py-2.5">
+                          <td className="px-3 py-2.5">
                             <div className="flex items-center gap-2.5">
                               {u.image ? (
                                 <img src={u.image} alt={u.name || u.email}
@@ -689,11 +699,11 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                             </div>
                           </td>
 
-                          <td className="px-4 py-2.5 text-xs text-[var(--text-muted)]">
-                            <span className="truncate block max-w-[200px]">{u.email}</span>
+                          <td className="px-3 py-2.5 text-xs text-[var(--text-muted)]">
+                            <span className="truncate block">{u.email}</span>
                           </td>
 
-                          <td className="px-4 py-2.5 whitespace-nowrap">
+                          <td className="px-3 py-2.5">
                             {(() => {
                               const cat = getUserPlanCategory(u);
                               const badgeStyle = cat === 'paid'
@@ -716,13 +726,13 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                             })()}
                           </td>
 
-                          <td className="px-4 py-2.5 text-xs max-w-[130px]">
+                          <td className="px-3 py-2.5 text-xs">
                             <span className="truncate block text-[var(--text-muted)]">
                               {u.location || <span style={{ opacity: 0.3 }}>—</span>}
                             </span>
                           </td>
 
-                          <td className="px-4 py-2.5 text-xs max-w-[130px]">
+                          <td className="px-3 py-2.5 text-xs">
                             <span className="truncate block text-[var(--text-muted)]">
                               {u.target_company || u.target_role
                                 ? `${u.target_role || ''} ${u.target_company ? `@ ${u.target_company}` : ''}`.trim()
@@ -730,17 +740,17 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                             </span>
                           </td>
 
-                          <td className="px-4 py-2.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
+                          <td className="px-3 py-2.5 text-xs text-[var(--text-muted)] whitespace-nowrap truncate">
                             {u.last_login_at
                               ? new Date(u.last_login_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
                               : <span style={{ opacity: 0.3 }}>—</span>}
                           </td>
 
-                          <td className="px-4 py-2.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
+                          <td className="px-3 py-2.5 text-xs text-[var(--text-muted)] whitespace-nowrap truncate">
                             {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </td>
 
-                          <td className="px-4 py-2.5">
+                          <td className="px-2.5 py-2.5">
                             <div className="flex items-center gap-1.5">
                               {/* Trial days — connected button group */}
                               <div className="flex overflow-hidden rounded border"
