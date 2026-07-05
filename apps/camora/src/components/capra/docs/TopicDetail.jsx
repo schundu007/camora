@@ -972,25 +972,6 @@ export default function TopicDetail({
         </div>
       </div>
 
-      {/* ── Author byline — renders on every topic ── */}
-      <div className="flex items-center gap-3 mb-4">
-        <img
-          src="/author-chundu.jpg"
-          alt="Sudhakar Chundu"
-          width={40}
-          height={40}
-          loading="lazy"
-          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-          style={{ border: '1px solid var(--border)' }}
-        />
-        <div className="min-w-0 leading-tight">
-          <div className="text-[14px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sudhakar Chundu</div>
-          <div className="text-[10px] uppercase tracking-[0.12em] landing-mono truncate" style={{ color: 'var(--text-muted)' }}>
-            18+ yrs · GPU Compute · SRE · Platform · FinOps
-          </div>
-        </div>
-      </div>
-
       {/* ── Interactive Toolbar ── */}
       <div className="flex flex-wrap items-center justify-between gap-2 py-3 mb-5 border-b border-[var(--border)]">
         {/* Left — primary actions */}
@@ -1066,6 +1047,24 @@ export default function TopicDetail({
             <Icon name="mic" size={15} />
             <span className="hidden sm:inline">Voice</span>
           </button>
+          {/* Author byline — moved onto the toolbar, pinned far right. */}
+          <div className="hidden sm:flex items-center gap-2.5 pl-3 ml-1 border-l border-[var(--border)]">
+            <img
+              src="/author-chundu.jpg"
+              alt="Sudhakar Chundu"
+              width={28}
+              height={28}
+              loading="lazy"
+              className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+              style={{ border: '1px solid var(--border)' }}
+            />
+            <div className="min-w-0 leading-tight">
+              <div className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sudhakar Chundu</div>
+              <div className="text-[9px] uppercase tracking-[0.12em] landing-mono truncate" style={{ color: 'var(--text-muted)' }}>
+                18+ yrs · GPU Compute · SRE · Platform · FinOps
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
