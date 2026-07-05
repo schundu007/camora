@@ -7,6 +7,7 @@ import {
   tailorResumeWithClaude,
   type JobApplication,
   type JobSeekerProfile,
+  type JobDetail,
   type TailorData,
 } from '../../lib/jobsearch-api';
 import { buildTailoredDocs, downloadDoc, type BuiltDoc } from '../../lib/resumeDocx';
@@ -17,6 +18,28 @@ import { T, CX, banner } from './theme';
  * to produce a tailored resume + cover letter from the profile + JD, then
  * hands off to the employer's apply page. Themed with camora CSS tokens.
  */
+
+/**
+ * Best-effort JD straight from the feed DB — the full description if present,
+ * otherwise the AI summary + tech stack the feed already stored. Avoids
+ * scraping the live posting (which fails on JS-rendered ATS pages) and avoids
+ * asking the user to paste.
+ */
+function jdFromJobDetail(job: JobDetail): string {
+  if (job.job_description && job.job_description.trim().length > 80) {
+    return job.job_description.trim();
+  }
+  if (job.ai_summary && job.ai_summary.trim()) {
+    const parts: string[] = [];
+    if (job.title) parts.push(`Role: ${job.title}`);
+    if (job.company_name) parts.push(`Company: ${job.company_name}`);
+    if (job.location) parts.push(`Location: ${job.location}`);
+    parts.push('', job.ai_summary.trim());
+    if (job.ai_tech_stack?.length) parts.push('', `Tech stack: ${job.ai_tech_stack.join(', ')}`);
+    return parts.join('\n');
+  }
+  return (job.job_description || '').trim();
+}
 
 interface Props {
   application: JobApplication;
@@ -76,7 +99,7 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
         ]);
         if (cancelled) return;
         setProfile(p);
-        if (job?.job_description) jdText = job.job_description;
+        if (job) jdText = jdFromJobDetail(job); // full description, else AI summary + tech stack
         if (!jobUrl && job?.job_url) jobUrl = job.job_url;
         if (jdText) setJd(jdText);
       } catch (e) {
