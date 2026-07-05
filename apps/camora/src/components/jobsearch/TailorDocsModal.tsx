@@ -167,6 +167,11 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
             </div>
             <textarea className={`${CX.input} min-h-[180px]`} style={T.input} value={jd} onChange={(e) => setJd(e.target.value)}
               placeholder={jdFetching ? 'Fetching the job description from the posting…' : 'Paste the job description here (or use “Fetch from posting”)…'} />
+            {jd && (/not found in the provided text/i.test(jd) || jd.replace(/\s/g, '').length < 300) && (
+              <p className="mt-1.5 text-xs" style={{ color: 'var(--accent-secondary-text)' }}>
+                ⚠ This looks incomplete — some postings (e.g. AMD / Workday) block automatic reading. Paste the full job description here for the best tailoring.
+              </p>
+            )}
 
             <div className="mt-4 flex items-center gap-3">
               <button onClick={onGenerate} disabled={generating} className="rounded-lg px-5 py-2.5 text-sm font-medium disabled:opacity-60" style={T.primaryBtn}>
