@@ -4,12 +4,12 @@ import {
   fetchJobDetail,
   fetchJdFromUrl,
   profileToResumeText,
-  generateTailoredDocuments,
-  downloadBase64Docx,
+  tailorResumeWithClaude,
   type JobApplication,
   type JobSeekerProfile,
-  type TailoredDocsResult,
+  type TailorData,
 } from '../../lib/jobsearch-api';
+import { buildTailoredDocs, downloadDoc, type BuiltDoc } from '../../lib/resumeDocx';
 import { T, CX, banner } from './theme';
 
 /**
@@ -31,7 +31,8 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<TailoredDocsResult | null>(null);
+  const [result, setResult] = useState<TailorData | null>(null);
+  const [docs, setDocs] = useState<{ resume: BuiltDoc; coverLetter: BuiltDoc } | null>(null);
   const [applying, setApplying] = useState(false);
   const [jdFetching, setJdFetching] = useState(false);
 
@@ -112,17 +113,14 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
     setGenerating(true);
     setError(null);
     try {
-      const res = await generateTailoredDocuments({
+      const data = await tailorResumeWithClaude({
         resume: profileToResumeText(profile),
         jobDescription: jd.trim(),
         company: application.company || undefined,
         role: application.title || undefined,
-        candidateName: profile.full_name || undefined,
-        candidateEmail: profile.email || undefined,
-        candidatePhone: profile.phone || undefined,
-        candidateLinkedIn: profile.links?.linkedin || undefined,
       });
-      setResult(res);
+      setResult(data);
+      setDocs(await buildTailoredDocs(data, application.company || undefined, application.title || undefined));
       onGenerated?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Generation failed');
@@ -202,14 +200,16 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
 
             {result && (
               <div className="mt-6 space-y-4 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-                <div className="flex flex-wrap gap-3">
-                  <button onClick={() => downloadBase64Docx(result.resume.base64, result.resume.filename)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
-                    ↓ Download resume (.docx)
-                  </button>
-                  <button onClick={() => downloadBase64Docx(result.coverLetter.base64, result.coverLetter.filename)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
-                    ↓ Download cover letter (.docx)
-                  </button>
-                </div>
+                {docs && (
+                  <div className="flex flex-wrap gap-3">
+                    <button onClick={() => downloadDoc(docs.resume)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
+                      ↓ Download resume (.docx)
+                    </button>
+                    <button onClick={() => downloadDoc(docs.coverLetter)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
+                      ↓ Download cover letter (.docx)
+                    </button>
+                  </div>
+                )}
 
                 {(result.gapAnalysis?.gaps?.length || result.gapAnalysis?.quickWins?.length) ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">

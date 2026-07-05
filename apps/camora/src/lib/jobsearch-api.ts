@@ -215,6 +215,38 @@ export async function fetchJdFromUrl(url: string): Promise<string> {
   return data.text || '';
 }
 
+/** Structured tailored content returned by the Claude tailoring endpoint. */
+export interface TailorData {
+  candidate?: { name?: string; email?: string; phone?: string; linkedin?: string; location?: string };
+  gapAnalysis?: { matchScore?: number; strengths?: string[]; gaps?: string[]; quickWins?: string[] };
+  optimizedResume?: {
+    summary?: string;
+    experience?: { title?: string; company?: string; dates?: string; bullets?: string[] }[];
+    skills?: string[];
+    education?: { degree?: string; school?: string; year?: string }[];
+    certifications?: string[];
+    projects?: { name?: string; description?: string; tech?: string }[];
+  };
+  coverLetter?: { opening?: string; body1?: string; body2?: string; closing?: string };
+}
+
+/**
+ * Tailor the resume to a JD using REAL Claude (lumora /jobsearch/tailor).
+ * Returns structured content; the caller builds the DOCX (see resumeDocx.ts).
+ */
+export async function tailorResumeWithClaude(input: {
+  resume: string;
+  jobDescription: string;
+  company?: string;
+  role?: string;
+}): Promise<TailorData> {
+  // Uses the default (lumora) base — that's the backend with real Claude.
+  return request<TailorData>('/api/v1/jobsearch/tailor', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 /** Flatten a structured profile into the plain-text resume `/generate` expects. */
 export function profileToResumeText(p: JobSeekerProfile): string {
   const out: string[] = [];
