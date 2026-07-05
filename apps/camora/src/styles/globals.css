@@ -1017,17 +1017,20 @@
    inherited the reading serif and read as a foreign font mid-page. Fold it
    into the book body so every prose surface in the column is one voice. */
 .prep-content.flex-1 .landing-body {
-  font-family: 'Newsreader', 'Iowan Old Style', Georgia, Cambria, serif;
-  line-height: 1.8;
+  /* Reading body — clean UI sans (Inter) to match the job-description
+     reading style. Was an editorial serif (Newsreader); switched for
+     readability per request. Generous line-height keeps long-form legible. */
+  font-family: var(--font-sans);
+  line-height: 1.75;
 }
-/* Book headings: Fraunces — a high-contrast old-style face with real
-   character — gives the reading column its own editorial voice. */
+/* Reading headings — Plus Jakarta Sans display face (same as "Transform your
+   future"), bold and tight, matching the job-description headings. */
 .prep-content.flex-1 h1,
 .prep-content.flex-1 h2,
 .prep-content.flex-1 h3,
 .prep-content.flex-1 h4,
 .prep-content.flex-1 .landing-display {
-  font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  font-family: var(--font-display);
   letter-spacing: -0.01em;
 }
 /* Pull-quote / key insight — a book-style aside with a gold rule. */
@@ -1130,11 +1133,10 @@
 
 /* Tier 1 — section heading (ContentHeading label + markdown h2) */
 .prep-content.flex-1 .content-heading-title {
-  font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+  font-family: var(--font-display);
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  font-variation-settings: 'opsz' 144;
   color: var(--accent-text);
 }
 .prep-content.flex-1 > h2,
