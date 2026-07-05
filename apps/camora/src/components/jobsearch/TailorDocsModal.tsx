@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   fetchJobSeekerProfile,
   fetchJobDetail,
+  fetchJdFromUrl,
   profileToResumeText,
-  generateTailoredDocuments,
-  downloadBase64Docx,
+  tailorResumeWithClaude,
   type JobApplication,
   type JobSeekerProfile,
-  type TailoredDocsResult,
+  type TailorData,
 } from '../../lib/jobsearch-api';
+import { buildTailoredDocs, downloadDoc, type BuiltDoc } from '../../lib/resumeDocx';
 import { T, CX, banner } from './theme';
 
 /**
@@ -30,8 +31,24 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<TailoredDocsResult | null>(null);
+  const [result, setResult] = useState<TailorData | null>(null);
+  const [docs, setDocs] = useState<{ resume: BuiltDoc; coverLetter: BuiltDoc } | null>(null);
   const [applying, setApplying] = useState(false);
+  const [jdFetching, setJdFetching] = useState(false);
+
+  const doFetchJd = useCallback(async (url: string) => {
+    setJdFetching(true);
+    setError(null);
+    try {
+      const text = await fetchJdFromUrl(url);
+      if (text) setJd(text);
+      else setError('Could not extract a description from the posting — paste it manually.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not fetch the description — paste it manually.');
+    } finally {
+      setJdFetching(false);
+    }
+  }, []);
 
   const handleMarkApplied = async () => {
     setApplying(true);
@@ -50,6 +67,8 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
     let cancelled = false;
     (async () => {
       setLoading(true);
+      let jdText = '';
+      let jobUrl = application.job_url || '';
       try {
         const [p, job] = await Promise.all([
           fetchJobSeekerProfile(),
@@ -57,15 +76,30 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
         ]);
         if (cancelled) return;
         setProfile(p);
-        if (job?.job_description) setJd(job.job_description);
+        if (job?.job_description) jdText = job.job_description;
+        if (!jobUrl && job?.job_url) jobUrl = job.job_url;
+        if (jdText) setJd(jdText);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
         if (!cancelled) setLoading(false);
       }
+      // No description stored in the feed? Pull it from the posting URL
+      // automatically so the user doesn't have to paste it.
+      if (!cancelled && !jdText && jobUrl) {
+        setJdFetching(true);
+        try {
+          const text = await fetchJdFromUrl(jobUrl);
+          if (!cancelled && text) setJd(text);
+        } catch {
+          // leave empty — the user can paste or click "Fetch from posting"
+        } finally {
+          if (!cancelled) setJdFetching(false);
+        }
+      }
     })();
     return () => { cancelled = true; };
-  }, [application.source_job_id]);
+  }, [application.source_job_id, application.job_url]);
 
   const onGenerate = async () => {
     if (!profile) {
@@ -79,17 +113,14 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
     setGenerating(true);
     setError(null);
     try {
-      const res = await generateTailoredDocuments({
+      const data = await tailorResumeWithClaude({
         resume: profileToResumeText(profile),
         jobDescription: jd.trim(),
         company: application.company || undefined,
         role: application.title || undefined,
-        candidateName: profile.full_name || undefined,
-        candidateEmail: profile.email || undefined,
-        candidatePhone: profile.phone || undefined,
-        candidateLinkedIn: profile.links?.linkedin || undefined,
       });
-      setResult(res);
+      setResult(data);
+      setDocs(await buildTailoredDocs(data, application.company || undefined, application.title || undefined));
       onGenerated?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Generation failed');
@@ -125,8 +156,17 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
               </div>
             )}
 
-            <label className="mb-2 block text-sm font-bold uppercase tracking-wide" style={T.sectionTitle}>Job description</label>
-            <textarea className={`${CX.input} min-h-[180px]`} style={T.input} value={jd} onChange={(e) => setJd(e.target.value)} placeholder="Paste the job description here…" />
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-bold uppercase tracking-wide" style={T.sectionTitle}>Job description</label>
+              {application.job_url && (
+                <button onClick={() => doFetchJd(application.job_url!)} disabled={jdFetching}
+                  className="rounded px-2.5 py-1 text-xs font-medium disabled:opacity-60" style={T.subtleBtn}>
+                  {jdFetching ? 'Fetching…' : '↻ Fetch from posting'}
+                </button>
+              )}
+            </div>
+            <textarea className={`${CX.input} min-h-[180px]`} style={T.input} value={jd} onChange={(e) => setJd(e.target.value)}
+              placeholder={jdFetching ? 'Fetching the job description from the posting…' : 'Paste the job description here (or use “Fetch from posting”)…'} />
 
             <div className="mt-4 flex items-center gap-3">
               <button onClick={onGenerate} disabled={generating} className="rounded-lg px-5 py-2.5 text-sm font-medium disabled:opacity-60" style={T.primaryBtn}>
@@ -160,14 +200,16 @@ export default function TailorDocsModal({ application, onClose, onGenerated, onM
 
             {result && (
               <div className="mt-6 space-y-4 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-                <div className="flex flex-wrap gap-3">
-                  <button onClick={() => downloadBase64Docx(result.resume.base64, result.resume.filename)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
-                    ↓ Download resume (.docx)
-                  </button>
-                  <button onClick={() => downloadBase64Docx(result.coverLetter.base64, result.coverLetter.filename)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
-                    ↓ Download cover letter (.docx)
-                  </button>
-                </div>
+                {docs && (
+                  <div className="flex flex-wrap gap-3">
+                    <button onClick={() => downloadDoc(docs.resume)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
+                      ↓ Download resume (.docx)
+                    </button>
+                    <button onClick={() => downloadDoc(docs.coverLetter)} className="rounded-lg px-4 py-2 text-sm font-medium" style={T.ghostBtn}>
+                      ↓ Download cover letter (.docx)
+                    </button>
+                  </div>
+                )}
 
                 {(result.gapAnalysis?.gaps?.length || result.gapAnalysis?.quickWins?.length) ? (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
