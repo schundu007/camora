@@ -79,8 +79,8 @@ const TERM_DEF_STARTERS_EXCLUDED = new Set([
 // renders in a real CodeBlock. Conservative: pure prose is never touched, and
 // content that already has fences is left as-is.
 const CODE_START = /^\s*(?:(?:public|private|protected|static|final|abstract|synchronized)\s+)*(?:class|interface|enum|struct|record)\s+\w/;
-const CODE_METHOD = /^\s*(?:(?:public|private|protected|static|final|synchronized)\s+)+[\w<>\[\],.\s]*\)\s*\{\s*$/;
-const CODE_TYPED_METHOD = /^\s*(?:int|void|long|double|float|boolean|char|byte|short|String|var|Node|List|Map|Object|T)\b[\w<>\[\],.\s]*\w+\s*\([^;]*\)\s*\{\s*$/;
+const CODE_METHOD = /^\s*(?:(?:public|private|protected|static|final|synchronized)\s+)+[\w<>[\],.\s]*\)\s*\{\s*$/;
+const CODE_TYPED_METHOD = /^\s*(?:int|void|long|double|float|boolean|char|byte|short|String|var|Node|List|Map|Object|T)\b[\w<>[\],.\s]*\w+\s*\([^;]*\)\s*\{\s*$/;
 const CODE_FUNC = /^\s*(?:def|func|function|fn)\s+\w+\s*\(/;
 const isCodeStart = (l) => CODE_START.test(l) || CODE_METHOD.test(l) || CODE_TYPED_METHOD.test(l) || CODE_FUNC.test(l);
 const CODE_CONT = /[;{}]\s*$|^\s{2,}\S|=>|::|^\s*(?:return|if|else|for|while|switch|case|try|catch|new|throw|break|continue|import|package|@\w+)\b|\b\w+\s*\([^)]*\)\s*[;{]/;
@@ -241,7 +241,6 @@ export default function FormattedContent({ content, inline = false }) {
       if (toolMatch && toolMatch.index < matchIndex) {
         nextMatch = toolMatch;
         matchType = 'tool';
-        matchIndex = toolMatch.index;
       }
 
       if (nextMatch) {
