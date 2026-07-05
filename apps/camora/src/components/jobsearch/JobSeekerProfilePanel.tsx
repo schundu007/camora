@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
   fetchJobSeekerProfile,
   saveJobSeekerProfile,
@@ -9,35 +9,39 @@ import { T, CX, banner } from './theme';
 
 /**
  * Job-seeker profile editor, rendered as the "Job Profile" tab inside the
- * account ProfilePage — one profile surface, not three. This structured
- * profile drives tailored CV/cover-letter generation and application autofill.
- * Includes one-click "Autofill from my base resume" (parses the resume
- * uploaded on the Preferences tab). Auth is handled by ProfilePage.
+ * account ProfilePage. Structured, no-JSON editors for experience / education
+ * / certifications (add & remove rows). Drives tailored CV/cover-letter
+ * generation + application autofill; includes "Autofill from my base resume".
  */
 
-const listToText = (v?: string[]): string => (Array.isArray(v) ? v.join(', ') : '');
-const textToList = (v: string): string[] =>
-  v.split(',').map((s) => s.trim()).filter(Boolean);
+// --- structured entry shapes (bullets held as newline text while editing) ---
+interface ExpEntry { company: string; title: string; start: string; end: string; bullets: string }
+interface EduEntry { institution: string; degree: string; year: string }
+interface CertEntry { name: string; date: string }
 
-const jsonToText = (v: unknown): string => {
-  if (v === undefined || v === null) return '';
-  const arr = Array.isArray(v) ? v : [];
-  return arr.length ? JSON.stringify(arr, null, 2) : '';
-};
+const listToText = (v?: string[]): string => (Array.isArray(v) ? v.join(', ') : '');
+const textToList = (v: string): string[] => v.split(',').map((s) => s.trim()).filter(Boolean);
+const linesToList = (v: string): string[] => v.split('\n').map((s) => s.trim()).filter(Boolean);
+
+const s = (v: unknown): string => (v == null ? '' : String(v));
 
 interface FormState {
   full_name: string; headline: string; location: string; email: string; phone: string;
   linkedin: string; github: string; website: string; summary: string; skills: string;
-  languages: string; work_authorization: string; experienceJson: string;
-  educationJson: string; certificationsJson: string;
+  languages: string; work_authorization: string;
+  experience: ExpEntry[]; education: EduEntry[]; certifications: CertEntry[];
 }
 
 const EMPTY_FORM: FormState = {
   full_name: '', headline: '', location: '', email: '', phone: '',
   linkedin: '', github: '', website: '', summary: '', skills: '',
-  languages: '', work_authorization: '', experienceJson: '',
-  educationJson: '', certificationsJson: '',
+  languages: '', work_authorization: '', experience: [], education: [], certifications: [],
 };
+
+function toEntries<E>(v: unknown, map: (o: Record<string, unknown>) => E): E[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((item) => map((item && typeof item === 'object' ? item : {}) as Record<string, unknown>));
+}
 
 function profileToForm(p: JobSeekerProfile | null): FormState {
   if (!p) return EMPTY_FORM;
@@ -49,20 +53,21 @@ function profileToForm(p: JobSeekerProfile | null): FormState {
     summary: p.summary || '',
     skills: listToText(p.skills), languages: listToText(p.languages),
     work_authorization: p.work_authorization || '',
-    experienceJson: jsonToText(p.experience),
-    educationJson: jsonToText(p.education),
-    certificationsJson: jsonToText(p.certifications),
+    experience: toEntries<ExpEntry>(p.experience, (o) => ({
+      company: s(o.company), title: s(o.title), start: s(o.start), end: s(o.end),
+      bullets: Array.isArray(o.bullets) ? o.bullets.map(s).join('\n') : s(o.bullets),
+    })),
+    education: toEntries<EduEntry>(p.education, (o) => ({
+      institution: s(o.institution || o.school), degree: s(o.degree), year: s(o.year),
+    })),
+    certifications: toEntries<CertEntry>(p.certifications, (o) => ({
+      name: s(o.name), date: s(o.date),
+    })),
   };
 }
 
-function parseJsonArray(text: string, label: string): unknown[] {
-  const trimmed = text.trim();
-  if (!trimmed) return [];
-  let parsed: unknown;
-  try { parsed = JSON.parse(trimmed); } catch { throw new Error(`${label} is not valid JSON.`); }
-  if (!Array.isArray(parsed)) throw new Error(`${label} must be a JSON array (e.g. [ { ... } ]).`);
-  return parsed;
-}
+const nonEmpty = (obj: Record<string, unknown>) =>
+  Object.values(obj).some((v) => (Array.isArray(v) ? v.length : String(v || '').trim()));
 
 function formToProfile(f: FormState): JobSeekerProfile {
   const links: Record<string, string> = {};
@@ -75,18 +80,62 @@ function formToProfile(f: FormState): JobSeekerProfile {
     links, summary: f.summary.trim() || null,
     skills: textToList(f.skills), languages: textToList(f.languages),
     work_authorization: f.work_authorization.trim() || null,
-    experience: parseJsonArray(f.experienceJson, 'Experience'),
-    education: parseJsonArray(f.educationJson, 'Education'),
-    certifications: parseJsonArray(f.certificationsJson, 'Certifications'),
+    experience: f.experience
+      .map((e) => ({ company: e.company.trim(), title: e.title.trim(), start: e.start.trim(), end: e.end.trim(), bullets: linesToList(e.bullets) }))
+      .filter(nonEmpty),
+    education: f.education
+      .map((e) => ({ institution: e.institution.trim(), degree: e.degree.trim(), year: e.year.trim() }))
+      .filter(nonEmpty),
+    certifications: f.certifications
+      .map((c) => ({ name: c.name.trim(), date: c.date.trim() }))
+      .filter(nonEmpty),
   };
+}
+
+// --- small presentational pieces -------------------------------------------
+
+function Input(props: { value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+  return (
+    <input className={CX.input} style={T.input} type={props.type || 'text'} value={props.value}
+      placeholder={props.placeholder} onChange={(e) => props.onChange(e.target.value)} />
+  );
 }
 
 function Field(props: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
   return (
     <div>
       <label className={CX.label} style={T.body}>{props.label}</label>
-      <input className={CX.input} style={T.input} type={props.type || 'text'} value={props.value} placeholder={props.placeholder} onChange={(e) => props.onChange(e.target.value)} />
+      <Input value={props.value} onChange={props.onChange} placeholder={props.placeholder} type={props.type} />
     </div>
+  );
+}
+
+function RepeatableSection<E>(props: {
+  title: string; entries: E[]; blank: E;
+  onChange: (next: E[]) => void;
+  render: (entry: E, update: (patch: Partial<E>) => void) => ReactNode;
+}) {
+  const { title, entries, blank, onChange, render } = props;
+  return (
+    <section>
+      <div className="mb-2 flex items-center justify-between">
+        <label className="text-sm font-medium" style={T.body}>{title}</label>
+        <button onClick={() => onChange([...entries, { ...blank }])} className="rounded px-2.5 py-1 text-xs font-medium" style={T.subtleBtn}>
+          + Add
+        </button>
+      </div>
+      {entries.length === 0 && <p className="text-xs" style={T.muted}>None yet — click Add.</p>}
+      <div className="space-y-3">
+        {entries.map((entry, i) => (
+          <div key={i} className="rounded-lg p-3" style={T.card}>
+            {render(entry, (patch) => onChange(entries.map((e, j) => (j === i ? { ...e, ...patch } : e))))}
+            <button onClick={() => onChange(entries.filter((_, j) => j !== i))} className="mt-2 text-xs hover:underline" style={T.muted}>
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -132,10 +181,10 @@ export default function JobSeekerProfilePanel() {
   const onSave = async () => {
     setSaving(true); setError(null); setInfo(null);
     try {
-      const payload = formToProfile(form); // may throw on bad JSON
-      const saved = await saveJobSeekerProfile(payload);
+      const saved = await saveJobSeekerProfile(formToProfile(form));
       setForm(profileToForm(saved));
       setSavedAt(saved.updated_at || new Date().toISOString());
+      setInfo('Saved.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save profile');
     } finally { setSaving(false); }
@@ -149,8 +198,7 @@ export default function JobSeekerProfilePanel() {
           <p className="mt-1 text-sm" style={T.muted}>Used to tailor your CV, cover letters, and application autofill.</p>
         </div>
         <button onClick={onAutofill} disabled={autofilling || loading}
-          className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60"
-          style={T.subtleBtn}
+          className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60" style={T.subtleBtn}
           title="Fill these fields from the base resume you uploaded under Preferences">
           {autofilling ? 'Reading your resume…' : '✨ Autofill from my base resume'}
         </button>
@@ -183,28 +231,55 @@ export default function JobSeekerProfilePanel() {
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className={CX.label} style={T.body}>Skills</label>
-              <input className={CX.input} style={T.input} value={form.skills} onChange={(e) => set('skills', e.target.value)} placeholder="Python, PostgreSQL, Docker" />
+              <Input value={form.skills} onChange={(v) => set('skills', v)} placeholder="Python, PostgreSQL, Docker" />
               <p className="mt-1 text-xs" style={T.muted}>Comma-separated.</p>
             </div>
             <div>
               <label className={CX.label} style={T.body}>Languages</label>
-              <input className={CX.input} style={T.input} value={form.languages} onChange={(e) => set('languages', e.target.value)} placeholder="English, Danish" />
+              <Input value={form.languages} onChange={(v) => set('languages', v)} placeholder="English, Danish" />
               <p className="mt-1 text-xs" style={T.muted}>Comma-separated.</p>
             </div>
           </section>
 
-          <section className="space-y-4">
-            {([
-              ['Experience', 'experienceJson', '[ { "company": "", "title": "", "start": "", "end": "", "bullets": [] } ]'],
-              ['Education', 'educationJson', '[ { "institution": "", "degree": "", "year": "" } ]'],
-              ['Certifications', 'certificationsJson', '[ { "name": "", "date": "" } ]'],
-            ] as const).map(([label, key, ph]) => (
-              <div key={key}>
-                <label className={CX.label} style={T.body}>{label} <span className="font-normal" style={T.muted}>(JSON array)</span></label>
-                <textarea className={`${CX.input} min-h-[120px] font-mono text-xs`} style={T.input} value={form[key]} onChange={(e) => set(key, e.target.value)} placeholder={ph} spellCheck={false} />
+          <RepeatableSection<ExpEntry>
+            title="Experience" entries={form.experience} onChange={(v) => set('experience', v)}
+            blank={{ company: '', title: '', start: '', end: '', bullets: '' }}
+            render={(e, update) => (
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <Input value={e.title} onChange={(v) => update({ title: v })} placeholder="Title" />
+                  <Input value={e.company} onChange={(v) => update({ company: v })} placeholder="Company" />
+                  <Input value={e.start} onChange={(v) => update({ start: v })} placeholder="Start (e.g. Feb 2026)" />
+                  <Input value={e.end} onChange={(v) => update({ end: v })} placeholder="End (e.g. Present)" />
+                </div>
+                <textarea className={`${CX.input} min-h-[70px]`} style={T.input} value={e.bullets}
+                  onChange={(ev) => update({ bullets: ev.target.value })} placeholder="Key achievements — one per line" />
               </div>
-            ))}
-          </section>
+            )}
+          />
+
+          <RepeatableSection<EduEntry>
+            title="Education" entries={form.education} onChange={(v) => set('education', v)}
+            blank={{ institution: '', degree: '', year: '' }}
+            render={(e, update) => (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Input value={e.institution} onChange={(v) => update({ institution: v })} placeholder="Institution" />
+                <Input value={e.degree} onChange={(v) => update({ degree: v })} placeholder="Degree" />
+                <Input value={e.year} onChange={(v) => update({ year: v })} placeholder="Year" />
+              </div>
+            )}
+          />
+
+          <RepeatableSection<CertEntry>
+            title="Certifications" entries={form.certifications} onChange={(v) => set('certifications', v)}
+            blank={{ name: '', date: '' }}
+            render={(e, update) => (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Input value={e.name} onChange={(v) => update({ name: v })} placeholder="Certification" />
+                <Input value={e.date} onChange={(v) => update({ date: v })} placeholder="Date (optional)" />
+              </div>
+            )}
+          />
 
           <div className="flex items-center gap-4 pt-2">
             <button onClick={onSave} disabled={saving} className="rounded-lg px-5 py-2.5 text-sm font-medium disabled:opacity-60" style={T.primaryBtn}>
