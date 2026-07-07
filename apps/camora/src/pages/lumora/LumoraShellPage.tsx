@@ -405,6 +405,7 @@ export const LumoraShellPage = () => {
         codingPlatform={codingPlatform}
         onCodingPlatformChange={setCodingPlatform}
         onBack={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
+        onOpenContext={() => setContextDrawerOpen(true)}
       />
 
       {/* Sessions sidebar — only when on session tab */}
@@ -482,9 +483,9 @@ export const LumoraShellPage = () => {
               from the hamburger sheet below. */}
           <div className="flex items-center gap-2 shrink-0">
 
-            {/* Interview context pill — the AMD-style company chip, kept in
-                the header (right side) on all sizes. Opens the context drawer. */}
-            <div className="block">
+            {/* Interview context pill — mobile only. On desktop the context
+                chip lives in the icon rail below Tools; mobile has no rail. */}
+            <div className="md:hidden">
               <InterviewContextPill onOpen={() => setContextDrawerOpen(true)} />
             </div>
 

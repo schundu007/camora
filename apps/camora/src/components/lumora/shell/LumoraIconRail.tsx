@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { getActiveCompanyKey, ASSISTANT_UPDATED_EVENT } from '../../../lib/companyContext';
 import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
@@ -22,6 +23,9 @@ interface LumoraIconRailProps {
   /** Back navigation — the Back button now lives at the top of the rail,
       above Home (moved out of the shell header). */
   onBack?: () => void;
+  /** Opens the interview-context drawer — the AMD-style company chip lives in
+      the rail, below the Tools group. */
+  onOpenContext?: () => void;
 }
 
 /* ── Sidebar items ── */
@@ -47,8 +51,19 @@ const TOOL_ITEMS = [
   { id: 'cofix', label: 'CoFix', path: '/lumora/fix', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z" /></svg> },
 ];
 
-export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack }: LumoraIconRailProps) => {
+export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack, onOpenContext }: LumoraIconRailProps) => {
   const [accountOpen, setAccountOpen] = useState(false);
+  // Active interview/company key drives the context chip label (below Tools).
+  const [companyKey, setCompanyKey] = useState<string | null>(() => getActiveCompanyKey());
+  useEffect(() => {
+    const update = () => setCompanyKey(getActiveCompanyKey());
+    window.addEventListener(ASSISTANT_UPDATED_EVENT, update);
+    window.addEventListener('storage', update);
+    return () => {
+      window.removeEventListener(ASSISTANT_UPDATED_EVENT, update);
+      window.removeEventListener('storage', update);
+    };
+  }, []);
 
   const isActive = (id: string) => {
     if (id === 'dashboard') return activeTab === 'session';
@@ -230,6 +245,27 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
             )}
           </div>
         </>
+      )}
+
+      {/* Interview-context chip — the AMD-style company chip, placed BELOW the
+          Tools group. Briefcase icon collapsed; company name + gold highlight
+          when a context is active. */}
+      {onOpenContext && (
+        <div className="px-1.5 mt-1">
+          <button
+            type="button"
+            onClick={onOpenContext}
+            title={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
+            aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
+            className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
+            style={companyKey
+              ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', border: '1px solid rgba(201,162,39,0.40)' }
+              : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
+            {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
+          </button>
+        </div>
       )}
 
       {/* Divider */}
