@@ -381,6 +381,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [outputPanelHeight, setOutputPanelHeight] = useState(180);
   const [isResizingH, setIsResizingH] = useState(false);
   const [isResizingV, setIsResizingV] = useState(false);
+  const vResizeRef = useRef<{ startY: number; startH: number } | null>(null);
   const [isOutputCollapsed, setIsOutputCollapsed] = useState(true); // Start collapsed — expands when test cases arrive
   const [multiPageCapturing, setMultiPageCapturing] = useState(false);
   const [multiPageCount, setMultiPageCount] = useState(0);
@@ -642,11 +643,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   useEffect(() => {
     if (!isResizingV) return;
+    // Delta from drag start — robust to the CustomInputPanel row that sits
+    // between the handle and the panel, and to embedded mode where the panel
+    // bottom is not the viewport bottom. Dragging up grows the panel.
     const move = (e: MouseEvent) => {
-      const bottom = window.innerHeight - e.clientY;
-      setOutputPanelHeight(Math.min(Math.max(100, bottom), 500));
+      if (!vResizeRef.current) return;
+      const delta = vResizeRef.current.startY - e.clientY;
+      setOutputPanelHeight(Math.min(Math.max(100, vResizeRef.current.startH + delta), 500));
     };
-    const up = () => setIsResizingV(false);
+    const up = () => { setIsResizingV(false); vResizeRef.current = null; };
     document.addEventListener('mousemove', move);
     document.addEventListener('mouseup', up);
     document.body.style.cursor = 'row-resize';
@@ -3054,7 +3059,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
-        <div className="flex-1 flex flex-col min-w-0" style={{ background: t.surfaceBg, color: t.text }}>
+        <div className="flex-1 flex flex-col min-w-0 min-h-0" style={{ background: t.surfaceBg, color: t.text }}>
           {/* Editor Header */}
           <div className="flex items-center justify-between px-2 py-1" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-1.5">
@@ -3137,7 +3142,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
-            <div onMouseDown={() => setIsResizingV(true)}
+            <div onMouseDown={(e) => { vResizeRef.current = { startY: e.clientY, startH: outputPanelHeight }; setIsResizingV(true); }}
               className="h-1.5 hover:bg-[rgba(38,97,156,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
               style={{ background: t.sectionBg }}>
               <div className="w-8 h-0.5 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.textDim }} />
@@ -3346,7 +3351,7 @@ function EditorContainer({ children, embedded: _embedded }: { children: (height:
   }, []);
 
   return (
-    <div ref={ref} className="flex-1 overflow-hidden" style={{ minHeight: 200 }}>
+    <div ref={ref} className="flex-1 min-h-0 overflow-hidden" style={{ minHeight: 120 }}>
       {children(height)}
     </div>
   );
