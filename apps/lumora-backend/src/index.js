@@ -383,6 +383,7 @@ async function runMigrations() {
       `ALTER TABLE lumora_user_doc_chunks ADD COLUMN IF NOT EXISTS source_key TEXT`,
       `ALTER TABLE coding_usage ADD COLUMN IF NOT EXISTS input_tokens INTEGER DEFAULT 0`,
       `ALTER TABLE coding_usage ADD COLUMN IF NOT EXISTS output_tokens INTEGER DEFAULT 0`,
+      `ALTER TABLE coding_usage ADD COLUMN IF NOT EXISTS latency_ms INTEGER DEFAULT 0`,
       `CREATE INDEX IF NOT EXISTS lumora_user_doc_chunks_source_key ON lumora_user_doc_chunks(source_key)`,
 
       // ── Embedding dimension migration: 1536 → 1024 (Cohere) ───────────
