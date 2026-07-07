@@ -19,4 +19,11 @@ describe('proctor sanitizeEvents', () => {
     const out = sanitizeEvents([{ id: 'x', type: 'COPY', severity: 'low', ts: 'nope' }]);
     expect(out).toEqual([]);
   });
+
+  it('truncates fractional ts and keeps the event', () => {
+    const out = sanitizeEvents([{ id: 'x', type: 'PASTE', severity: 'medium', ts: 1000.7 }]);
+    expect(out).toHaveLength(1);
+    expect(out[0].ts).toBe(1000);
+    expect(Number.isInteger(out[0].ts)).toBe(true);
+  });
 });
