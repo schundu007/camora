@@ -400,6 +400,11 @@ export const LumoraShellPage = () => {
         activeTab={activeTab}
         sessionsOpen={sessionsOpen}
         onToggleSessions={() => setSessionsOpen(prev => !prev)}
+        meetingPlatform={meetingPlatform}
+        onMeetingPlatformChange={setMeetingPlatform}
+        codingPlatform={codingPlatform}
+        onCodingPlatformChange={setCodingPlatform}
+        onOpenContext={() => setContextDrawerOpen(true)}
       />
 
       {/* Sessions sidebar — only when on session tab */}
@@ -461,49 +466,9 @@ export const LumoraShellPage = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
 
-          {/* Tools pill — compact meeting + coding platform selectors kept
-              visible in the top bar so users can always pick which meeting
-              app and coding platform this interview uses. Tiny (10px) to save
-              space but explicit. Prepare/Pricing links stay removed. lg+ only
-              so the 5-tab cluster still fits at the md breakpoint. */}
-          <div className="hidden lg:flex items-center gap-1 p-0.5 rounded shrink-0"
-            style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
-            {/* Meeting platform */}
-            <div className="flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-bold"
-              style={{ color: 'var(--lumora-chrome-text)' }} title="Meeting platform for this interview">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-              <select value={meetingPlatform} onChange={e => setMeetingPlatform(e.target.value)}
-                className="bg-transparent border-none outline-none cursor-pointer text-[10px] font-bold"
-                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
-                aria-label="Meeting platform">
-                <option value="zoom">Zoom</option>
-                <option value="teams">Teams</option>
-                <option value="meet">Meet</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div className="w-px h-3.5" style={{ background: 'var(--lumora-chrome-border)' }} />
-            {/* Coding platform */}
-            <div className="flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-bold"
-              style={codingPlatform !== 'none' && codingPlatform !== 'auto'
-                ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: '0.25rem' }
-                : { color: 'var(--lumora-chrome-text)' }}
-              title="Coding platform — Auto-detect reads your interview tab">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              <select value={codingPlatform} onChange={e => setCodingPlatform(e.target.value)}
-                className="bg-transparent border-none outline-none cursor-pointer text-[10px] font-bold"
-                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
-                aria-label="Coding platform">
-                <option value="auto">Auto</option>
-                <option value="none">Off</option>
-                <option value="hackerrank">HackerRank</option>
-                <option value="leetcode">LeetCode</option>
-                <option value="coderpad">CoderPad</option>
-                <option value="codesignal">CodeSignal</option>
-                <option value="glider">Glider</option>
-              </select>
-            </div>
-          </div>
+          {/* Meeting + coding tool selectors and the interview-context chip
+              were moved into the left icon rail (Tools group below Practice,
+              and the context chip above Home) to keep the top bar minimal. */}
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
               top bar instead of letting them sit flush against the
@@ -563,10 +528,10 @@ export const LumoraShellPage = () => {
               from the hamburger sheet below. */}
           <div className="flex items-center gap-2 shrink-0">
 
-            {/* Interview context pill — shows active interview name, opens
-                the context drawer to create/switch contexts. Hidden on
-                mobile (hamburger sheet covers secondary controls there). */}
-            <div className="hidden md:block">
+            {/* Interview context pill — mobile only. On desktop the context
+                chip lives at the top of the icon rail (above Home); mobile has
+                no rail, so keep the pill here for context access. */}
+            <div className="md:hidden">
               <InterviewContextPill onOpen={() => setContextDrawerOpen(true)} />
             </div>
 
@@ -608,19 +573,20 @@ export const LumoraShellPage = () => {
           </div>
         )}
 
-        {/* Global screenshot strip — shown on AI tabs only */}
-        {(activeTab === 'coding' || activeTab === 'design' || activeTab === 'behavioral') && (
+        {/* Global screenshot strip — design & behavioral render it as a
+            standalone row here. Coding merges it into CodingLayout's toolbar
+            (passed below as captureControls) so coding shows one row, not two. */}
+        {(activeTab === 'design' || activeTab === 'behavioral') && (
           <ScreenshotStrip
-            surface={activeTab as 'coding' | 'design' | 'behavioral'}
+            surface={activeTab as 'design' | 'behavioral'}
             screenshots={screenshots}
             onSnapped={handleSnapped}
             onRemove={handleRemoveScreenshot}
-            inputMode={activeTab === 'coding' ? codingInputMode : activeTab === 'design' ? designInputMode : undefined}
+            inputMode={activeTab === 'design' ? designInputMode : undefined}
             onInputModeChange={handleInputModeChange}
-            showInputModeSelector={activeTab === 'coding' || activeTab === 'design'}
+            showInputModeSelector={activeTab === 'design'}
             onTranscription={handleTranscription}
             isTabActive={true}
-            codingPlatform={activeTab === 'coding' ? codingPlatform : undefined}
           />
         )}
 
@@ -668,6 +634,20 @@ export const LumoraShellPage = () => {
                         externalInputMode={codingInputMode}
                         onExternalInputModeChange={(m) => setCodingInputMode(m as 'paste' | 'url' | 'image')}
                         onSendToCofix={(code, lang) => { cofixInjectRef.current?.(code, lang); navigate('/lumora/fix', { state: { injectCode: code, injectLang: lang } }); }}
+                        captureControls={
+                          <ScreenshotStrip
+                            inline
+                            surface="coding"
+                            screenshots={screenshots}
+                            onSnapped={handleSnapped}
+                            onRemove={handleRemoveScreenshot}
+                            inputMode={codingInputMode}
+                            onInputModeChange={handleInputModeChange}
+                            showInputModeSelector
+                            onTranscription={handleTranscription}
+                            isTabActive={activeTab === 'coding'}
+                          />
+                        }
                       />
                     </div>
                     {/* Sona Q&A sidebar — independent state, follow-up

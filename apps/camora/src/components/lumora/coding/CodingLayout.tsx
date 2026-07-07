@@ -209,6 +209,10 @@ interface CodingLayoutProps {
   embedded?: boolean;
   /** Called when user clicks "→ CoFix" chip; receives current editor code + language */
   onSendToCofix?: (code: string, lang: string) => void;
+  /** Capture controls (Snap + input-mode icons) rendered inline in the
+      Description/Solution toolbar row, so coding shows one toolbar instead of
+      a separate strip above. Supplied by LumoraShell as an <ScreenshotStrip inline/>. */
+  captureControls?: React.ReactNode;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
   /** DataURL from F9 auto-capture of HackerRank window. Processed via OCR. */
@@ -273,7 +277,7 @@ function useTheme(_dark: boolean) {
   };
 }
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix, captureControls }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -2152,38 +2156,54 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 1px 2px rgba(0,0,0,0.25)',
               }}
             >
+              {/* Description — icon-only (document) */}
               <button
                 onClick={() => setProblemTab('description')}
-                className="px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
+                title="Description"
+                aria-label="Description"
+                className="flex items-center justify-center w-7 h-6 transition-[background-color,color,transform] active:scale-[0.98]"
                 style={
                   problemTab === 'description'
                     ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
                     : { color: 'var(--cam-strip-text)', borderRadius: 999 }
                 }
-              >Description</button>
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+              </button>
+              {/* Solution — icon-only (lightbulb) */}
               <button
                 onClick={() => setProblemTab('solution')}
-                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98] flex items-center gap-1.5"
+                title="Solution"
+                aria-label="Solution"
+                className="flex items-center justify-center gap-1 w-7 h-6 transition-[background-color,color,transform] active:scale-[0.98]"
                 style={
                   problemTab === 'solution'
                     ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
                     : { color: 'var(--cam-strip-text)', borderRadius: 999 }
                 }
               >
-                Solution
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0012 2z"/></svg>
                 {isStreaming && <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: problemTab === 'solution' ? '#020617' : 'var(--cam-gold-leaf-lt)' }} />}
               </button>
             </div>
-            {/* New Problem — wipes every solution-side state so the user
-                can dictate / paste / fetch a fresh problem in the same
-                session without refreshing the page. Always clickable —
-                the shared isStreaming flag is set by Sona's stream too,
-                and disabling on it would lock the user out whenever
-                Sona was answering. handleNewProblem aborts any active
-                stream as part of the reset. */}
+
+            {/* Merged capture controls (Snap + input-mode icons) — supplied by
+                LumoraShell as an inline <ScreenshotStrip/>. Renders in THIS
+                row so coding shows a single toolbar instead of a separate
+                strip above. Divider separates the tab pills from capture. */}
+            {captureControls && (
+              <>
+                <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-strip-icon-border)' }} />
+                {captureControls}
+              </>
+            )}
+
+            {/* Reset — icon-only. Wipes every solution-side state so the user
+                can dictate / paste / fetch a fresh problem in the same session
+                without refreshing. handleNewProblem aborts any active stream. */}
             <button
               onClick={handleNewProblem}
-              className="ml-auto shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors"
+              className="ml-auto shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-colors"
               style={{
                 color: 'var(--cam-strip-text)',
                 background: 'var(--cam-strip-icon-bg)',
@@ -2192,12 +2212,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-border)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
               title="Reset — clear everything for a fresh problem"
+              aria-label="Reset"
             >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="1 4 1 10 7 10" />
                 <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
               </svg>
-              <span className="text-[10px] font-bold uppercase tracking-wider">Reset</span>
             </button>
           </div>
 
