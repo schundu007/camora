@@ -404,7 +404,7 @@ export const LumoraShellPage = () => {
         onMeetingPlatformChange={setMeetingPlatform}
         codingPlatform={codingPlatform}
         onCodingPlatformChange={setCodingPlatform}
-        onOpenContext={() => setContextDrawerOpen(true)}
+        onBack={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
       />
 
       {/* Sessions sidebar — only when on session tab */}
@@ -450,7 +450,7 @@ export const LumoraShellPage = () => {
           <button
             type="button"
             onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-            className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
+            className="md:hidden flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
             style={{
               background: 'var(--lumora-chrome-bg)',
               border: '1px solid var(--lumora-chrome-border)',
@@ -470,56 +470,10 @@ export const LumoraShellPage = () => {
               were moved into the left icon rail (Tools group below Practice,
               and the context chip above Home) to keep the top bar minimal. */}
 
-          {/* LEFT spacer — pushes the tab pills toward the centre of the
-              top bar instead of letting them sit flush against the
-              logo. Paired with the matching spacer after the tab cluster
-              so the cluster stays visually centred regardless of how much
-              chrome lives on the right. */}
-          <div className="hidden md:block flex-1" />
-
-          {/* CENTRE — Lumora-specific tab pills. LeetCode treatment:
-              navy hero-strip background, gold-leaf underline, active
-              tab flips to gold-leaf with dark navy text — same active
-              affordance as the SHORT/DETAILED toggle for consistency
-              across the app. */}
-          <div
-            className="hidden md:flex items-center gap-0.5 p-0.5 rounded-md shrink-0"
-            style={{
-              background: 'var(--lumora-chrome-bg)',
-              border: '1px solid var(--lumora-chrome-border)',
-              boxShadow: 'var(--lumora-chrome-shadow)',
-            }}
-          >
-            {[
-              { id: 'session', label: 'Home', path: '/lumora', title: 'Session assistant home' },
-              { id: 'coding', label: 'Coding', path: '/lumora/coding', title: 'Coding session assistant' },
-              { id: 'design', label: 'Design', path: '/lumora/design', title: 'System design assistant' },
-              { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', title: 'Behavioral session assistant' },
-              { id: 'cofix', label: 'CoFix', path: '/lumora/fix', title: 'Fix & debug code' },
-            ].map(tab => {
-              const isActive = activeTab === tab.id;
-              return (
-                <Link
-                  key={tab.id}
-                  to={tab.path}
-                  title={tab.title}
-                  viewTransition
-                  data-active={isActive ? 'true' : 'false'}
-                  className="lumora-tab-pill px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
-                  style={isActive
-                    ? { background: 'var(--lumora-tab-active-bg)', color: 'var(--lumora-tab-active-text)', boxShadow: 'var(--lumora-tab-active-shadow)' }
-                    : { color: 'var(--lumora-chrome-text)' }}
-                >
-                  {tab.label}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* RIGHT spacer — symmetric with the left flex-1 above so the
-              tab cluster stays centred. The right-hand chrome still
-              renders at the very edge thanks to its own shrink-0. */}
-          <div className="hidden md:block flex-1" />
+          {/* Tab pills removed — navigation is now via the home-page tool
+              cards (Coding / Design / Behavioral / CoFix). This spacer pushes
+              the remaining right-hand chrome to the edge. */}
+          <div className="flex-1" />
 
 
           {/* RIGHT — utility chrome. Theme toggle lives in the IconRail's
@@ -528,10 +482,9 @@ export const LumoraShellPage = () => {
               from the hamburger sheet below. */}
           <div className="flex items-center gap-2 shrink-0">
 
-            {/* Interview context pill — mobile only. On desktop the context
-                chip lives at the top of the icon rail (above Home); mobile has
-                no rail, so keep the pill here for context access. */}
-            <div className="md:hidden">
+            {/* Interview context pill — the AMD-style company chip, kept in
+                the header (right side) on all sizes. Opens the context drawer. */}
+            <div className="block">
               <InterviewContextPill onOpen={() => setContextDrawerOpen(true)} />
             </div>
 
@@ -599,6 +552,7 @@ export const LumoraShellPage = () => {
                 onAskQuestion={(q) => navigate(q ? `/lumora/behavioral?q=${encodeURIComponent(q)}` : '/lumora/behavioral')}
                 onSwitchToCoding={(p) => navigate(p ? `/lumora/coding?problem=${encodeURIComponent(p)}` : '/lumora/coding')}
                 onSwitchToDesign={(p) => navigate(p ? `/lumora/design?problem=${encodeURIComponent(p)}` : '/lumora/design')}
+                onSwitchToCofix={() => navigate('/lumora/fix')}
                 onRetry={() => { if (question) handleSubmit(question, isDesignQuestion, true); }}
               />
             </ErrorBoundary>
