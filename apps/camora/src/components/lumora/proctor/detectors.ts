@@ -6,7 +6,7 @@ interface DetectorOpts {
   cameraTrack?: MediaStreamTrack;
 }
 
-const now = () => (typeof performance !== 'undefined' ? performance.now() : 0);
+const now = () => (typeof performance !== 'undefined' ? Math.floor(performance.now()) : 0);
 
 export const createDetectors = (emit: Emit, opts: DetectorOpts = {}) => {
   const fire = (type: ProctorEventType, severity: Severity, meta?: Record<string, unknown>) =>

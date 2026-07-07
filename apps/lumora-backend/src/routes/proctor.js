@@ -17,12 +17,14 @@ const VALID_STATUSES = new Set(['active', 'ended', 'aborted']);
 
 export const sanitizeEvents = (events) => {
   if (!Array.isArray(events)) return [];
-  return events.filter((e) =>
-    e && typeof e === 'object' &&
-    VALID_TYPES.has(e.type) &&
-    VALID_SEVERITIES.has(e.severity) &&
-    typeof e.ts === 'number' && Number.isFinite(e.ts)
-  );
+  return events
+    .filter((e) =>
+      e && typeof e === 'object' &&
+      VALID_TYPES.has(e.type) &&
+      VALID_SEVERITIES.has(e.severity) &&
+      typeof e.ts === 'number' && Number.isFinite(e.ts)
+    )
+    .map((e) => ({ ...e, ts: Math.trunc(e.ts) }));
 };
 
 const router = Router();
