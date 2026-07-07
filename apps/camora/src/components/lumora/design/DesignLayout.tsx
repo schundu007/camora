@@ -1589,7 +1589,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       const half = Math.ceil(items.length / 2);
                       const cols = [items.slice(0, half), items.slice(half)].filter(c => c.length > 0);
                       return (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className={`grid gap-4 items-start ${cols.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                           {cols.map((col, ci) => (
                             <table key={ci} className="w-full text-left font-mono" style={{ borderCollapse: 'collapse' }}>
                               <thead>
@@ -1691,7 +1691,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="ml-auto"><SectionCopyBtn getText={() => (sd.dataModel || []).map(e => `${e.entity}: ${e.fields.join(', ')}`).join('\n')} title="Copy data model" /></div>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
                       {sd.dataModel.map((entity, i) => (
                         <div key={i} className="rounded-lg px-3 py-2.5" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
                           <div className="text-xs font-bold mb-1.5" style={{ color: t.dotColor }}>{entity.entity}</div>
@@ -1716,7 +1716,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="ml-auto"><SectionCopyBtn getText={() => (sd.technologies || []).map(e => `${e.name}: ${e.reason}`).join('\n')} title="Copy technologies" /></div>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
                       {sd.technologies.map((tech, i) => (
                         <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
                           <span className="text-xs font-bold shrink-0" style={{ color: t.dotColor }}>{tech.name}</span>
@@ -1739,7 +1739,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="ml-auto"><SectionCopyBtn getText={() => (sd.cloudServices || []).map(s => `${s.name}: ${s.role}`).join('\n')} title="Copy services used" /></div>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
                       {sd.cloudServices.map((svc, i) => (
                         <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
                           <span className="text-xs font-bold shrink-0" style={{ color: t.dotColor }}>{svc.name}</span>
@@ -1760,7 +1760,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 const edgeCasesClean = cleanRequirementList(sd.edgeCases);
                 if (!tradeoffsClean.length && !edgeCasesClean.length) return null;
                 return (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 items-start">
                   {tradeoffsClean.length > 0 && (
                     <section className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${t.cardBorder}`, background: t.cardBg, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                       <div className="flex items-center gap-2.5 px-4 py-2.5" style={{ background: t.headerBg }}>
@@ -1827,7 +1827,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <SectionCopyBtn getText={() => followupsClean.map((f, i) => `Q${i + 1}: ${f.question}\nA: ${f.answer}`).join('\n\n')} title="Copy follow-up Q&A" />
                   </div>
                   <div className="px-4 py-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 items-start">
                       {followupsClean.map((f, i) => (
                         <button
                           key={i}
@@ -1845,7 +1845,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                               <polyline points="9 18 15 12 9 6" />
                             </svg>
                           </div>
-                          <p className="text-xs leading-relaxed pl-5" style={{ color: t.textMuted }}>{f.answer}</p>
+                          <p className="text-xs leading-relaxed pl-5 line-clamp-3" style={{ color: t.textMuted }}>{f.answer}</p>
                         </button>
                       ))}
                     </div>
