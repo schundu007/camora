@@ -631,6 +631,14 @@ VALUE to that example's "expected". Follow this contract exactly:
           return f"{a + b} {a - b} {a * b}"
   The runner calls solve(3, 5) and compares its return to "8 -2 15". Note: NO
   input(), NO print(), NO module-level solve() call.
+- EXCEPTION — stdin/print (HackerRank / CoderPad-style) problems: if the problem
+  DESCRIBES reading from stdin and printing output (e.g. "takes a single integer
+  as input ... prints True or False"), then write the COMPLETE program WITH the
+  driver — read the input, call your function, and print the result (e.g.
+  \`year = int(input())\` then \`print(is_leap(year))\`). Do NOT strip the
+  input()/print() driver — the candidate must paste this into the platform and
+  have it run. In that case the examples use RAW stdin as "input" and RAW stdout
+  as "expected" (e.g. {"input": "2000", "expected": "True"}), NOT parsed args.
 - For config/infra languages (Terraform, Kubernetes, Docker, SQL, etc.),
   write the complete config/query directly.`}
 
@@ -767,6 +775,24 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
     {"input": "nums = [3,2,4], target = 6", "expected": "[1, 2]"}
   ]
 }
+
+##############################################################################
+# EXAMPLES FORMAT — CRITICAL (this is what the Run button tests against)
+##############################################################################
+"input" is the RAW program input and "expected" is the RAW program output.
+"input" MUST NEVER be a code statement or a function call.
+- If your solution READS STDIN (it has input()/sys.stdin — e.g. a HackerRank
+  template with a driver like \`year = int(input())\`), then "input" is exactly
+  what is typed on stdin and "expected" is exactly what is printed. Example for
+  a leap-year program: {"input": "2000", "expected": "True"}. NEVER write
+  {"input": "print(is_leap(2000))"} or {"input": "is_leap(2000)"} — those are
+  code, not input, and will fail with NameError.
+- If your solution is a PURE FUNCTION the runner calls (no stdin), then "input"
+  is the parsed arguments (e.g. "nums = [2,7,11,15], target = 9") and "expected"
+  is the stringified return value.
+- Every example's "input"/"expected" must match the SAME I/O model your code
+  uses. Mentally run your code on each example and confirm it produces
+  "expected" before returning.
 
 Rules:
 - ${singleSolution ? 'You MUST provide exactly 1 solution' : 'You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)'}
