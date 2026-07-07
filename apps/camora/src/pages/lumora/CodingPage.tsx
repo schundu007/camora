@@ -60,9 +60,9 @@ const CodingPageContent = () => {
   );
 }
 
-export const CodingPage = () => {
+export const CodingProctoredPage = () => {
   useEffect(() => {
-    document.title = 'Coding Interview | Camora';
+    document.title = 'Proctored Coding | Camora';
     return () => { document.title = 'Camora'; };
   }, []);
 
@@ -77,4 +77,4 @@ export const CodingPage = () => {
   );
 }
 
-export default CodingPage;
+export default CodingProctoredPage;
