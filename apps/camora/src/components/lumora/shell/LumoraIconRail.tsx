@@ -119,9 +119,13 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         // UserDropdown band made the two columns end at different y values.
         paddingBottom: 0,
       }}
-      onMouseEnter={() => setExpanded(true)}
-      onMouseLeave={() => setExpanded(false)}
-      onTouchStart={() => setExpanded(prev => !prev)}
+      onClick={(e) => {
+        // Expand/collapse on click (no hover). Clicking a nav item
+        // (link/button/select/input) keeps its own behavior and does not
+        // toggle; clicking the rail background toggles the width.
+        if ((e.target as HTMLElement).closest('a,button,select,input')) return;
+        setExpanded(prev => !prev);
+      }}
     >
       {/* Wordmark — sole navy strip on the rail, same chrome grammar as
           every other Camora header (cam-hero-strip + 2px gold-leaf bottom
