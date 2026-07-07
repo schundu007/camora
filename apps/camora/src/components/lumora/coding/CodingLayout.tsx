@@ -1588,7 +1588,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ url: urlToFetch }),
+        body: JSON.stringify({ url: urlToFetch, language }),
       });
 
       if (!resp.ok) {
@@ -1610,6 +1610,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
       const data = await resp.json();
       const text = String(data.problem || '').trim();
+      // Backend now returns the platform's editor stub (HackerRank `<lang>_template`,
+      // LeetCode codeSnippets). Keep it so the solve preserves the harness verbatim
+      // instead of writing from scratch — matches the screenshot/OCR path.
+      const fetchedStarter = typeof data.starter_code === 'string' && data.starter_code.trim()
+        ? data.starter_code
+        : null;
       if (!text) {
         // Empty response — same fallback
         const camo = (window as any).camo;
@@ -1618,7 +1624,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         return;
       }
       setProblemText(text);
-      setStarterCode(null);
+      setStarterCode(fetchedStarter);
       setInputMode('paste');
       // Auto URL-mode fetch (mode switch / initialUrl) dedupes so re-entering
       // URL mode on the same problem can't re-solve. An explicit Fetch click
@@ -1641,7 +1647,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setActiveSolutionIdx(0);
       setIsOutputCollapsed(true);
       setProblemTab('solution');
-      onSubmit(text, resolveLanguage(text));
+      onSubmit(text, resolveLanguage(text), fetchedStarter ? { starterCode: fetchedStarter } : undefined);
     } catch {
       // Network error — fall back to OCR on desktop, show nothing on web.
       const camo = (window as any).camo;
