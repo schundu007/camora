@@ -1669,7 +1669,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="px-4 py-3">
                     <div className="flex flex-col gap-1.5">
                       {sd.apiDesign.map((ep, i) => (
-                        <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                        <div key={i} className="flex items-start gap-2 px-1 py-1.5 border-b last:border-b-0" style={{ borderColor: t.cardBorder }}>
                           {ep.method && (
                             <span className="text-[10px] font-black font-mono shrink-0 mt-0.5 px-1.5 py-0.5 rounded" style={{ background: 'var(--accent)', color: '#fff' }}>{ep.method}</span>
                           )}
@@ -1718,7 +1718,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
                       {sd.technologies.map((tech, i) => (
-                        <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                        <div key={i} className="flex items-start gap-2 px-1 py-1.5 border-b last:border-b-0" style={{ borderColor: t.cardBorder }}>
                           <span className="text-xs font-bold shrink-0" style={{ color: t.dotColor }}>{tech.name}</span>
                           <span className="text-xs leading-snug" style={{ color: t.textMuted }}>{tech.reason}</span>
                         </div>
@@ -1741,7 +1741,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <div className="px-4 py-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-start">
                       {sd.cloudServices.map((svc, i) => (
-                        <div key={i} className="flex items-start gap-2 rounded-lg px-3 py-2" style={{ background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                        <div key={i} className="flex items-start gap-2 px-1 py-1.5 border-b last:border-b-0" style={{ borderColor: t.cardBorder }}>
                           <span className="text-xs font-bold shrink-0" style={{ color: t.dotColor }}>{svc.name}</span>
                           {svc.role && <span className="text-xs leading-snug" style={{ color: t.textMuted }}>{svc.role}</span>}
                         </div>
