@@ -12,6 +12,10 @@ interface LumoraIconRailProps {
   activeTab: LumoraTab;
   sessionsOpen: boolean;
   onToggleSessions: () => void;
+  /** Meeting-platform selector, relocated here from the top bar to keep the
+      shell header compact. Collapsed rail shows just the video icon. */
+  meetingPlatform?: string;
+  onMeetingPlatformChange?: (v: string) => void;
 }
 
 /* ── Sidebar items ── */
@@ -28,7 +32,7 @@ const MORE_ITEMS = [
   { id: 'credits', label: 'Credits', path: '/lumora/credits' },
 ];
 
-export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions }: LumoraIconRailProps) => {
+export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange }: LumoraIconRailProps) => {
   const [accountOpen, setAccountOpen] = useState(false);
 
   const isActive = (id: string) => {
@@ -96,7 +100,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           band of chrome instead of staggered boxes. */}
       <Link
         to="/"
-        className={`h-[60px] flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4 shrink-0`}
+        className={`h-11 flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4 shrink-0`}
         style={{
           background: 'var(--cam-hero-strip)',
           borderBottom: '1px solid var(--cam-gold-leaf)',
@@ -164,6 +168,37 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       {/* Spacer */}
       <div className="flex-1" />
 
+      {/* Meeting-platform picker — relocated from the top bar to keep the
+          shell header compact. Icon-only when the rail is collapsed; reveals
+          the select on hover-expand, matching every other rail item's
+          icon→label behavior. */}
+      {onMeetingPlatformChange && (
+        <div className={`px-2 mb-1 ${expanded ? '' : 'flex justify-center'}`}>
+          <div
+            className={`flex items-center ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg`}
+            style={{ color: 'var(--text-secondary)' }}
+            title={expanded ? undefined : `Meeting: ${meetingPlatform}`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+            {expanded && (
+              <select
+                value={meetingPlatform}
+                onChange={e => onMeetingPlatformChange(e.target.value)}
+                className="bg-transparent border-none outline-none cursor-pointer text-[13px] font-medium"
+                style={{ color: 'inherit' }}
+                title="Meeting platform"
+                aria-label="Meeting platform"
+              >
+                <option value="zoom">Zoom</option>
+                <option value="teams">Teams</option>
+                <option value="meet">Google Meet</option>
+                <option value="other">Other</option>
+              </select>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Bottom items */}
       <div className="flex flex-col gap-0.5 px-2">
         {[
@@ -195,7 +230,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           trigger glass-pill reads on the navy strip regardless of the
           page theme. */}
       <div
-        className={`h-[60px] flex items-center shrink-0 ${expanded ? 'px-2' : 'justify-center px-1'}`}
+        className={`h-11 flex items-center shrink-0 ${expanded ? 'px-2' : 'justify-center px-1'}`}
         style={{
           background: 'var(--cam-hero-strip)',
           borderTop: '1px solid var(--cam-gold-leaf)',
