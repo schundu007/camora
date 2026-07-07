@@ -30,7 +30,7 @@ describe('proctor detectors', () => {
     d.stop();
     const call = emit.mock.calls.find(([e]) => e.type === 'WINDOW_BLUR');
     expect(call).toBeTruthy();
-    expect(Number.isInteger(call[0].ts)).toBe(true);
+    expect(Number.isInteger(call![0].ts)).toBe(true);
   });
 
   it('stop() removes listeners', () => {
