@@ -400,6 +400,8 @@ export const LumoraShellPage = () => {
         activeTab={activeTab}
         sessionsOpen={sessionsOpen}
         onToggleSessions={() => setSessionsOpen(prev => !prev)}
+        meetingPlatform={meetingPlatform}
+        onMeetingPlatformChange={setMeetingPlatform}
       />
 
       {/* Sessions sidebar — only when on session tab */}
@@ -461,35 +463,11 @@ export const LumoraShellPage = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
 
-          {/* Meeting-platform picker — the only tool chip kept in the top bar.
-              Prepare/Pricing links and the duplicate coding-platform chip were
-              removed to reclaim space (the active coding platform is already
-              shown as the green dot + logo in the ScreenshotStrip below).
-              lg+ only so the 5-tab cluster still fits at the md breakpoint. */}
-          <div className="hidden lg:flex items-center shrink-0">
-            <div className="flex items-center gap-1 p-0.5 rounded"
-              style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
-              <div className="lumora-chrome-link flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-[background-color]"
-                style={{ color: 'var(--lumora-chrome-text)' }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                <select
-                  value={meetingPlatform}
-                  onChange={e => setMeetingPlatform(e.target.value)}
-                  className="bg-transparent border-none outline-none cursor-pointer text-[10px] font-bold"
-                  style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
-                  title="Meeting platform"
-                  aria-label="Meeting platform"
-                >
-                  <option value="zoom">Zoom</option>
-                  <option value="teams">Teams</option>
-                  <option value="meet">Meet</option>
-                  <option value="other">Other</option>
-                </select>
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
-              </div>
-            </div>
-          </div>{/* end meeting-platform picker */}
+          {/* Tool-picker chips (Prepare/Pricing links, meeting + coding
+              platform) were removed from the top bar to reclaim space. The
+              meeting-platform picker now lives in the left icon rail; the
+              active coding platform shows as the green dot + logo in the
+              ScreenshotStrip below. */}
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
               top bar instead of letting them sit flush against the
