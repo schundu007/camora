@@ -19,6 +19,10 @@ const SNAP_CHIPS = [
   { label: 'Write Tests', prompt: 'Write comprehensive unit tests covering happy paths, edge cases, and error conditions for this code.' },
 ] as const;
 
+// Hard cap on multi-page SNAP captures — a backstop so the page count can never
+// run away even if a capture source keeps delivering new (non-duplicate) frames.
+const MAX_SNAP_PAGES = 12;
+
 // Returns true when the pasted text is itself a code template with placeholder
 // bodies (return [], pass, NotImplementedError, TODO). Used to auto-promote
 // problemText → starterCode so the backend completes-in-place rather than
@@ -360,6 +364,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [isOutputCollapsed, setIsOutputCollapsed] = useState(true); // Start collapsed — expands when test cases arrive
   const [multiPageCapturing, setMultiPageCapturing] = useState(false);
   const [multiPageCount, setMultiPageCount] = useState(0);
+  const multiPageCountRef = useRef(0);
 
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1052,11 +1057,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       try {
         // Subsequent page in a multi-page session: append and reset timer.
         if (multiPageCapturingRef.current) {
+          // Hard backstop: once we've collected the max pages, stop appending and let
+          // the pending idle timer generate — never keep growing.
+          if (multiPageCountRef.current >= MAX_SNAP_PAGES) return;
           const blob = await (await fetch(pendingHackerrankCapture)).blob();
           const file = new File([blob], 'hackerrank-capture.png', { type: blob.type || 'image/png' });
-          await extractAndAppend(file);
-          setMultiPageCount(c => c + 1);
-          scheduleAutoGenerate();
+          const added = await extractAndAppend(file);
+          // Only count the page + extend the capture window when new content arrived.
+          // A duplicate (same screen re-snapped) is ignored, so the existing 8s idle
+          // timer fires and generates instead of the count climbing forever.
+          if (added) {
+            setMultiPageCount(c => c + 1);
+            scheduleAutoGenerate();
+          }
           return;
         }
 
@@ -1324,6 +1337,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
   useEffect(() => { languageRef.current = language; }, [language]);
   useEffect(() => { problemTextRef.current = problemText; }, [problemText]);
+  useEffect(() => { multiPageCountRef.current = multiPageCount; }, [multiPageCount]);
 
   useEffect(() => {
     if (!onVoiceProblemRef) return;
@@ -1669,8 +1683,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // OCR a supplemental screenshot and APPEND its text to the existing problem.
   // Used for multi-page problems: take a 2nd/3rd screenshot and add to current
   // problem text without replacing it or triggering a new solution generation.
-  const extractAndAppend = useCallback(async (file: File) => {
-    if (!token) { setError('Not authenticated'); return; }
+  // Returns true only when the capture added NEW problem text. Duplicate captures
+  // (e.g. the desktop auto-poll re-snapping the same static screen) are skipped so
+  // they neither inflate the page count nor keep resetting the auto-generate timer.
+  const extractAndAppend = useCallback(async (file: File): Promise<boolean> => {
+    if (!token) { setError('Not authenticated'); return false; }
     setIsProcessing(true);
     setError(null);
     try {
@@ -1685,14 +1702,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to extract');
       const data = await resp.json();
       const text = String(data.problem || '').trim();
-      if (text) {
-        const combined = (problemTextRef.current ? problemTextRef.current + '\n\n' + text : text).trim();
-        setProblemText(combined);
-        setSnapChipCode(combined);
-        setInputMode('paste');
-      }
+      if (!text) return false;
+      // Skip duplicates: if this OCR text is already present in what we've captured,
+      // it's the same screen re-snapped — don't append it again.
+      const norm = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+      const prev = problemTextRef.current;
+      if (prev && norm(prev).includes(norm(text))) return false;
+      const combined = (prev ? prev + '\n\n' + text : text).trim();
+      setProblemText(combined);
+      setSnapChipCode(combined);
+      setInputMode('paste');
+      return true;
     } catch (err: any) {
       setError(err.message);
+      return false;
     } finally {
       setIsProcessing(false);
     }

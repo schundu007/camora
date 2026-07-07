@@ -617,7 +617,15 @@ async function doHackerrankScrape() {
   // DOM extraction failed — fall back to a single screenshot of the browser window.
   console.log('[hr-auto] DOM extraction failed, falling back to single screenshot');
   const dataUrl = await captureExactBrowserWindow(windowTitle);
-  if (dataUrl) return { ok: true, dataUrl, url };
+  if (dataUrl) {
+    // Mark this URL processed so the 3s auto-detect poll does NOT re-capture the same
+    // window every tick. Without this, a screenshot-fallback problem gets snapped
+    // forever — each poll appends another "page" in the renderer and resets the
+    // 8s auto-generate timer, so the page count runs away (20 → 30 → …) and it
+    // never generates. The DOM-text path already sets _lastHrUrl for the same reason.
+    _lastHrUrl = url;
+    return { ok: true, dataUrl, url };
+  }
   return { ok: false, error: 'Could not extract the problem text. Make sure the HackerRank tab is visible and try again.' };
 }
 
