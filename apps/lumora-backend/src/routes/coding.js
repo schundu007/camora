@@ -1649,6 +1649,104 @@ RULES:
 });
 
 // ---------------------------------------------------------------------------
+// CoFix output sanitizer — models (esp. Gemini) sometimes ignore the "no
+// comments" rule and dump their chain-of-thought (traceback analysis, harness
+// musings) as whole-line comments inside fixed_code. That reads as nonsense in
+// a candidate's editor. We strip whole-line comments defensively, string-aware
+// so we never touch code or string literals, and remap changes[]/walkthrough[]
+// line references so annotations stay aligned with the trimmed code.
+// ---------------------------------------------------------------------------
+function commentTokenFor(lang) {
+  const l = (lang || '').toLowerCase();
+  if (/sql/.test(l)) return '--';
+  if (/(python|^py$|ruby|^rb$|bash|shell|^sh$|zsh|yaml|^yml$|perl|^r$)/.test(l)) return '#';
+  return '//'; // js/ts/java/c/c++/c#/go/rust/kotlin/swift/scala/php/dart…
+}
+
+// Returns { code, lineMap } where lineMap maps original 1-indexed line numbers
+// that survive → their new 1-indexed position. Removed lines are absent.
+function stripInjectedComments(code, lang) {
+  if (!code || typeof code !== 'string') return { code, lineMap: null };
+  const token = commentTokenFor(lang);
+  const lines = code.split('\n');
+  const kept = []; // { old0, text }
+  let inTriple = null;    // python triple-quote: `'''` or `"""`
+  let inTemplate = false; // js template literal (backtick)
+  let removedAny = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trimStart();
+    const insideString = Boolean(inTriple) || inTemplate;
+    const isWholeComment = !insideString
+      && trimmed.startsWith(token)
+      && !(token === '#' && trimmed.startsWith('#!')); // keep shebang
+
+    if (isWholeComment) { removedAny = true; continue; }
+    kept.push({ old0: i, text: line });
+
+    // Advance string state using only the lines we keep.
+    if (token === '#') {
+      const re = /'''|"""/g; let m;
+      while ((m = re.exec(line)) !== null) {
+        if (!inTriple) inTriple = m[0];
+        else if (inTriple === m[0]) inTriple = null;
+      }
+    } else if (token === '//') {
+      for (let c = 0; c < line.length; c++) {
+        if (line[c] === '`' && line[c - 1] !== '\\') inTemplate = !inTemplate;
+      }
+    }
+  }
+
+  if (!removedAny) return { code, lineMap: null };
+  const lineMap = new Map();
+  kept.forEach((k, idx) => lineMap.set(k.old0 + 1, idx + 1));
+  return { code: kept.map(k => k.text).join('\n'), lineMap };
+}
+
+// Map an old 1-indexed line number to its new position; if that exact line was
+// removed, snap to the nearest surviving neighbour so annotations don't vanish.
+function remapLine(n, lineMap) {
+  const num = parseInt(n, 10);
+  if (!Number.isFinite(num) || !lineMap) return num;
+  if (lineMap.has(num)) return lineMap.get(num);
+  const max = Math.max(...lineMap.keys(), num);
+  for (let d = 1; d <= max; d++) {
+    if (lineMap.has(num + d)) return lineMap.get(num + d);
+    if (lineMap.has(num - d)) return lineMap.get(num - d);
+  }
+  return num;
+}
+
+// Remap a walkthrough "lines" string like "7" or "35-38".
+function remapLineRef(ref, lineMap) {
+  if (ref == null || !lineMap) return ref;
+  const parts = String(ref).split('-').map(s => s.trim()).filter(Boolean);
+  const mapped = parts.map(p => remapLine(p, lineMap));
+  if (mapped.some(v => !Number.isFinite(v))) return ref;
+  return mapped.length > 1 ? `${mapped[0]}-${mapped[mapped.length - 1]}` : String(mapped[0]);
+}
+
+function sanitizeCofixResult(parsed, lang) {
+  if (!parsed || typeof parsed.fixed_code !== 'string') return parsed;
+  const { code, lineMap } = stripInjectedComments(parsed.fixed_code, lang);
+  if (!lineMap) return parsed; // nothing removed — leave untouched
+  parsed.fixed_code = code;
+  if (Array.isArray(parsed.changes)) {
+    parsed.changes = parsed.changes.map(ch => (
+      ch && Number.isFinite(ch.line) ? { ...ch, line: remapLine(ch.line, lineMap) } : ch
+    ));
+  }
+  if (Array.isArray(parsed.walkthrough)) {
+    parsed.walkthrough = parsed.walkthrough.map(w => (
+      w && w.lines != null ? { ...w, lines: remapLineRef(w.lines, lineMap) } : w
+    ));
+  }
+  return parsed;
+}
+
+// ---------------------------------------------------------------------------
 // POST /cofix/stream — CoFix: fix broken code, stream structured change annotations
 // ---------------------------------------------------------------------------
 
@@ -1750,7 +1848,7 @@ RULES:
 - hackerrank_compatible: true only if the function has a clean return-based signature with no stdin/input() boilerplate
 - If code has no issues, return changes: [] and fixed_code equal to the input
 - Return the COMPLETE fixed code, not a partial snippet
-- Do NOT add comments inside the code (changes[] documents everything)
+- fixed_code MUST be submission-ready: the corrected program ONLY. Add ZERO comments. NEVER write your reasoning, analysis, or notes — about tracebacks, NameErrors, the test harness, "why this works", or "we include the __main__ block because…" — as comments in the code. That commentary is nonsense in a candidate's editor. ALL explanation goes ONLY in changes[] and walkthrough[]. If the input code had no comments, fixed_code has no comments.
 - walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`;
 
   // Shared JSON parse + emit helper used by both Claude and OpenAI paths
@@ -1768,6 +1866,7 @@ RULES:
         throw new Error('no closing brace');
       }
     }
+    sanitizeCofixResult(parsed, lang);
     sendEvent('answer', parsed);
     sendEvent('done', {});
     try { await recordCodingUsage(req.user.id, lang, 0, 0, 0); } catch {}
@@ -2373,4 +2472,6 @@ Rules:
 });
 
 export default router;
+// Exported for unit testing the CoFix output sanitizer.
+export { stripInjectedComments, remapLine, remapLineRef, sanitizeCofixResult };
 
