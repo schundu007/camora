@@ -58,12 +58,13 @@ interface SessionPanelProps {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
+  onSwitchToCofix?: () => void;
   focusedEntry?: number | null;
   onClearFocus?: () => void;
   onRetry?: () => void;
 }
 
-export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onRetry }: SessionPanelProps) => {
+export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitchToCofix, onRetry }: SessionPanelProps) => {
   const {
     question,
     isStreaming,
@@ -127,7 +128,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
         }
       `}</style>
       {showEmptyState ? (
-        <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} />
+        <EmptyState onAskQuestion={onAskQuestion} onSwitchToCoding={onSwitchToCoding} onSwitchToDesign={onSwitchToDesign} onSwitchToCofix={onSwitchToCofix} />
       ) : (
         <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-auto w-full mx-auto px-3 sm:px-4 py-3" style={{ maxWidth: 'min(720px, 100%)' }}>
           {/* Current streaming question — glowing pill with a pulse ring */}
@@ -246,10 +247,11 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
 }
 
 /* ─── Lumora Dashboard ─────────────────────────────── */
-const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
+const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitchToCofix }: {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
   onSwitchToDesign?: (problem?: string) => void;
+  onSwitchToCofix?: () => void;
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -278,6 +280,12 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
       accent: '#5B9BD5',
       onClick: () => onSwitchToDesign?.(),
+    },
+    {
+      name: 'CoFix', desc: 'Fix & debug your code with inline annotations.',
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z" /></svg>,
+      accent: '#C9A227',
+      onClick: () => onSwitchToCofix?.(),
     },
     {
       name: 'Behavioral', desc: 'STAR answers drawn from your resume and past experience.',
@@ -359,7 +367,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign }: {
             <span style={{ display:'inline-block', width:2, height:14, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
             <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', textTransform:'uppercase', color:'var(--text-muted)' }}>Start a session</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {COPILOTS.map(cp => (
               <button
                 key={cp.name}

@@ -36,10 +36,10 @@ function cleanErrorMsg(raw: string | undefined | null): string {
 }
 
 const SNAP_CHIPS = [
-  { label: 'Find Issues', prompt: 'Analyze this system design and identify all bottlenecks, single points of failure, scalability gaps, and design flaws. For each issue explain what is wrong and provide a concrete fix.' },
-  { label: 'Explain', prompt: 'Explain this system design step by step. Describe what each component does, how they interact, and why they are designed this way.' },
-  { label: 'Improve', prompt: 'Suggest prioritized, concrete improvements to make this design more scalable, reliable, and cost-effective. Be specific about what to change and why.' },
-  { label: 'Estimate Scale', prompt: 'Estimate the scale this design can handle. Calculate storage requirements, throughput limits, latency bounds, and compute needs with specific numbers.' },
+  { label: 'Find Issues', emoji: '🔍', prompt: 'Analyze this system design and identify all bottlenecks, single points of failure, scalability gaps, and design flaws. For each issue explain what is wrong and provide a concrete fix.' },
+  { label: 'Explain', emoji: '💡', prompt: 'Explain this system design step by step. Describe what each component does, how they interact, and why they are designed this way.' },
+  { label: 'Improve', emoji: '✨', prompt: 'Suggest prioritized, concrete improvements to make this design more scalable, reliable, and cost-effective. Be specific about what to change and why.' },
+  { label: 'Estimate Scale', emoji: '📊', prompt: 'Estimate the scale this design can handle. Calculate storage requirements, throughput limits, latency bounds, and compute needs with specific numbers.' },
 ] as const;
 
 /* Some responses (especially cached ones from earlier prompt
@@ -1038,11 +1038,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   </span>
                   {SNAP_CHIPS.map(chip => (
                     <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
-                      className="shrink-0 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                      title={chip.label} aria-label={chip.label}
+                      className="shrink-0 flex items-center justify-center w-7 h-6 text-[13px] leading-none rounded transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
                       style={snapChipCode
-                        ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
-                        : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}>
-                      {chip.label}
+                        ? { background: 'var(--cam-chip-active-bg)' }
+                        : { background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}>
+                      <span aria-hidden>{chip.emoji}</span>
                     </button>
                   ))}
                   {snapChipCode && (

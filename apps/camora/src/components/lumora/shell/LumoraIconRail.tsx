@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getActiveCompanyKey, ASSISTANT_UPDATED_EVENT } from '../../../lib/companyContext';
 import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
@@ -20,9 +19,9 @@ interface LumoraIconRailProps {
   onMeetingPlatformChange?: (v: string) => void;
   codingPlatform?: string;
   onCodingPlatformChange?: (v: string) => void;
-  /** Opens the interview-context drawer — the AMD-style company chip now
-      lives at the top of the rail, above Home. */
-  onOpenContext?: () => void;
+  /** Back navigation — the Back button now lives at the top of the rail,
+      above Home (moved out of the shell header). */
+  onBack?: () => void;
 }
 
 /* ── Sidebar items ── */
@@ -39,20 +38,8 @@ const MORE_ITEMS = [
   { id: 'credits', label: 'Credits', path: '/lumora/credits' },
 ];
 
-export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onOpenContext }: LumoraIconRailProps) => {
+export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack }: LumoraIconRailProps) => {
   const [accountOpen, setAccountOpen] = useState(false);
-  // Active interview/company key drives the context chip label at the top of
-  // the rail (mirrors the old top-bar InterviewContextPill).
-  const [companyKey, setCompanyKey] = useState<string | null>(() => getActiveCompanyKey());
-  useEffect(() => {
-    const update = () => setCompanyKey(getActiveCompanyKey());
-    window.addEventListener(ASSISTANT_UPDATED_EVENT, update);
-    window.addEventListener('storage', update);
-    return () => {
-      window.removeEventListener(ASSISTANT_UPDATED_EVENT, update);
-      window.removeEventListener('storage', update);
-    };
-  }, []);
 
   const isActive = (id: string) => {
     if (id === 'dashboard') return activeTab === 'session';
@@ -130,23 +117,20 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         {expanded && <span className="text-sm font-bold whitespace-nowrap" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-heading)' }}>Camora</span>}
       </Link>
 
-      {/* Interview-context chip — the AMD-style company chip, moved here from
-          the top bar and placed ABOVE Home. Briefcase icon collapsed; company
-          name + gold highlight when a context is active. */}
-      {onOpenContext && (
+      {/* Back — moved here from the shell header, placed ABOVE Home. Chevron
+          icon collapsed; "Back" label when expanded. */}
+      {onBack && (
         <div className="px-1.5 mb-2">
           <button
             type="button"
-            onClick={onOpenContext}
-            title={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
-            aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
-            className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
-            style={companyKey
-              ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', border: '1px solid rgba(201,162,39,0.40)' }
-              : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            onClick={onBack}
+            title="Back"
+            aria-label="Back"
+            className={`flex items-center w-full ${expanded ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] active:scale-[0.98] hover:bg-[var(--bg-elevated)]`}
+            style={{ color: 'var(--text-secondary)' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
-            {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            {expanded && <span className="whitespace-nowrap">Back</span>}
           </button>
         </div>
       )}
