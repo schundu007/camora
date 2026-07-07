@@ -422,6 +422,26 @@ async function runMigrations() {
         value TEXT NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS lumora_proctor_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        surface VARCHAR(20) NOT NULL,
+        risk_score INTEGER DEFAULT 0,
+        status VARCHAR(20) DEFAULT 'active',
+        started_at TIMESTAMPTZ DEFAULT NOW(),
+        ended_at TIMESTAMPTZ
+      )`,
+      `CREATE TABLE IF NOT EXISTS lumora_proctor_events (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        session_id UUID REFERENCES lumora_proctor_sessions(id) ON DELETE CASCADE,
+        type VARCHAR(32) NOT NULL,
+        severity VARCHAR(10) NOT NULL,
+        ts BIGINT NOT NULL,
+        meta JSONB,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_proctor_events_session
+        ON lumora_proctor_events(session_id, ts)`,
     ];
 
     // Postgres error codes for "already exists" — the legitimate swallow
