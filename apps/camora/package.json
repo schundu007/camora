@@ -54,10 +54,12 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "eslint-plugin-unused-imports": "^4.4.1",
     "globals": "^17.6.0",
+    "jsdom": "^24.0.0",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.59.1",
-    "vite": "^8.0.10"
+    "vite": "^8.0.10",
+    "vitest": "^4.1.5"
   }
 }

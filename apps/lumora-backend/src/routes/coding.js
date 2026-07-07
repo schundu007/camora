@@ -1997,7 +1997,65 @@ Respond with ONLY the translated code inside a single \`\`\`${target} code block
  * Other sites still use the regex HTML-strip + Haiku-clean fallback,
  * which works for static / server-rendered pages.
  */
-async function fetchLeetcodeProblem(url) {
+/**
+ * Map a requested language label (frontend 'python', 'cpp', 'javascript'…) to the
+ * prefixes coding platforms use in their per-language starter fields — HackerRank
+ * `<prefix>_template`, LeetCode `langSlug`. Ordered most- to least-preferred.
+ */
+function langCandidates(lang) {
+  const l = String(lang || '').toLowerCase().trim();
+  const MAP = {
+    // Prefer Python 3 stubs — `python_template` is HackerRank's Python 2 (EOL).
+    python: ['python3', 'pypy3', 'python', 'pypy'],
+    python3: ['python3', 'pypy3', 'python', 'pypy'],
+    py: ['python3', 'pypy3', 'python', 'pypy'],
+    java: ['java'], javascript: ['javascript', 'node', 'js'], js: ['javascript', 'node', 'js'],
+    typescript: ['typescript'], node: ['node', 'javascript'],
+    'c++': ['cpp'], cpp: ['cpp'], c: ['c'], csharp: ['csharp'], 'c#': ['csharp'],
+    go: ['golang', 'go'], golang: ['golang', 'go'], ruby: ['ruby'], php: ['php'],
+    swift: ['swift'], kotlin: ['kotlin'], scala: ['scala'], rust: ['rust'], bash: ['bash'],
+  };
+  return MAP[l] || (l ? [l] : []);
+}
+
+/**
+ * HackerRank's REST challenge model carries the editor stub per language as
+ * `<prefix>_template` (python3_template, java_template, cpp_template…), plus a
+ * `languages` list and optional `default_language`. Return the stub matching the
+ * requested language, else the platform default, else any non-empty template.
+ */
+function pickHackerRankTemplate(model, lang) {
+  const keys = Object.keys(model).filter(
+    (k) => /_template$/.test(k) && typeof model[k] === 'string' && model[k].trim(),
+  );
+  if (!keys.length) return null;
+  for (const root of langCandidates(lang)) {
+    const exact = keys.find((k) => k === `${root}_template`);
+    if (exact) return model[exact];
+    const versioned = keys.find((k) => new RegExp(`^${root}\\d+_template$`).test(k));
+    if (versioned) return model[versioned];
+  }
+  if (model.default_language && model[`${model.default_language}_template`]) {
+    return model[`${model.default_language}_template`];
+  }
+  return model[keys[0]];
+}
+
+/**
+ * LeetCode GraphQL `codeSnippets`: [{ lang, langSlug, code }] with langSlug values
+ * like python3, java, cpp, c, javascript. Return the snippet matching the requested
+ * language, else the first available.
+ */
+function pickLeetcodeSnippet(snippets, lang) {
+  if (!Array.isArray(snippets) || !snippets.length) return null;
+  for (const root of langCandidates(lang)) {
+    const s = snippets.find((x) => new RegExp(`^${root}\\d*$`).test(String(x.langSlug || '').toLowerCase()));
+    if (s && s.code) return s.code;
+  }
+  return snippets[0] && snippets[0].code ? snippets[0].code : null;
+}
+
+async function fetchLeetcodeProblem(url, lang) {
   // Accept any leetcode.com or leetcode.cn host; tolerate trailing
   // /description, /submissions, /discussion, query params, etc.
   const m = url.match(/leetcode\.(?:com|cn)\/problems\/([^/?#]+)/i);
@@ -2007,7 +2065,7 @@ async function fetchLeetcodeProblem(url) {
   const gqlBody = {
     operationName: 'questionContent',
     variables: { titleSlug },
-    query: 'query questionContent($titleSlug: String!) { question(titleSlug: $titleSlug) { title difficulty content exampleTestcases } }',
+    query: 'query questionContent($titleSlug: String!) { question(titleSlug: $titleSlug) { title difficulty content exampleTestcases codeSnippets { lang langSlug code } } }',
   };
   const gqlResp = await fetch('https://leetcode.com/graphql', {
     method: 'POST',
@@ -2042,7 +2100,7 @@ async function fetchLeetcodeProblem(url) {
     .trim();
 
   const header = `${q.title}${q.difficulty ? ` (${q.difficulty})` : ''}\n\n`;
-  return header + text;
+  return { problem: header + text, starterCode: pickLeetcodeSnippet(q.codeSnippets, lang) };
 }
 
 /**
@@ -2087,7 +2145,7 @@ function latexToText(s) {
  * payload returns clean, LaTeX-bearing JSON. Returns null when the URL isn't a
  * challenge or the payload lacks a statement (caller then falls through).
  */
-async function fetchHackerRankProblem(url) {
+async function fetchHackerRankProblem(url, lang) {
   const m = url.match(/hackerrank\.com\/(?:contests\/([^/]+)\/)?challenges\/([^/?#]+)/i);
   if (!m) return null;
   const contest = m[1] || 'master';
@@ -2129,7 +2187,11 @@ async function fetchHackerRankProblem(url) {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  return text && text.length >= 40 ? text : null;
+  if (!text || text.length < 40) return null;
+  // The same REST model carries the editor stub per language as `<prefix>_template`
+  // (python3_template, java_template…). Extract it so the URL path preserves the
+  // platform harness exactly like the screenshot/OCR path does.
+  return { problem: text, starterCode: pickHackerRankTemplate(d, lang) };
 }
 
 function isPrivateIp(ip) {
@@ -2156,7 +2218,7 @@ async function assertPublicHost(rawUrl) {
 
 router.post('/fetch-problem', authenticate, async (req, res) => {
   try {
-    const { url } = req.body;
+    const { url, language } = req.body;
     if (!url) return res.status(400).json({ error: 'URL is required' });
 
     try { await assertPublicHost(url); } catch { return res.status(400).json({ error: 'URL is not allowed.' }); }
@@ -2167,13 +2229,13 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     let lcProblem = null;
     let lcError = null;
     try {
-      lcProblem = await fetchLeetcodeProblem(url);
+      lcProblem = await fetchLeetcodeProblem(url, language);
     } catch (e) {
       lcError = e.message;
       console.warn('fetchLeetcodeProblem failed:', e.message);
     }
     if (lcProblem) {
-      return res.json({ problem: lcProblem, source: url });
+      return res.json({ problem: lcProblem.problem, starter_code: lcProblem.starterCode || null, source: url });
     }
     // For a LeetCode URL the raw-HTML fallback below never works (SPA shell),
     // so don't mask the real failure with a generic "empty page" error —
@@ -2193,12 +2255,12 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     if (/hackerrank\.com/i.test(url)) {
       let hrProblem = null;
       try {
-        hrProblem = await fetchHackerRankProblem(url);
+        hrProblem = await fetchHackerRankProblem(url, language);
       } catch (e) {
         console.warn('fetchHackerRankProblem failed, falling back to raw fetch:', e.message);
       }
       if (hrProblem) {
-        return res.json({ problem: hrProblem, source: url });
+        return res.json({ problem: hrProblem.problem, starter_code: hrProblem.starterCode || null, source: url });
       }
     }
 
@@ -2232,7 +2294,8 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     } catch (claudeErr) {
       console.warn('[fetch-problem] Claude unavailable, returning raw text:', claudeErr.message?.slice(0, 120));
     }
-    res.json({ problem, source: url });
+    // Generic HTML scrape: the code editor is JS-rendered, so no starter here.
+    res.json({ problem, starter_code: null, source: url });
   } catch (err) {
     console.error('fetch-problem error:', err.message);
     const msg = isApiExhaustedError(err)
@@ -2480,4 +2543,6 @@ Rules:
 export default router;
 // Exported for unit testing the CoFix output sanitizer.
 export { stripInjectedComments, remapLine, remapLineRef, sanitizeCofixResult };
+// Exported for unit testing the URL-fetch starter-code extraction.
+export { langCandidates, pickHackerRankTemplate, pickLeetcodeSnippet };
 
