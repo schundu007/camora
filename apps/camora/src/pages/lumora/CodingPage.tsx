@@ -1,15 +1,38 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CodingLayout } from '../../components/lumora/coding/CodingLayout';
 import { ErrorBoundary } from '../../components/shared/ui/ErrorBoundary';
 import { PaywallGate } from '../../components/shared/ui/PaywallGate';
 import { useStreamingSession } from '../../hooks/useStreamingSession';
-import { ProctorProvider, ProctorOverlays, ProctorTimeline, useProctor } from '@/components/lumora/proctor';
+import { ProctorProvider, ProctorOverlays, ProctorTimeline, ProctorConsent, useProctor } from '@/components/lumora/proctor';
 
-const ProctorLifecycle = () => {
+const ProctorGate = ({ children }: { children: ReactNode }) => {
   const { start, stop } = useProctor();
-  useEffect(() => { void start(); return () => { void stop(); }; }, [start, stop]);
-  return null;
+  const [started, setStarted] = useState(false);
+  const [starting, setStarting] = useState(false);
+
+  useEffect(() => {
+    return () => { if (started) void stop(); };
+  }, [started, stop]);
+
+  const begin = async () => {
+    setStarting(true);
+    try { await document.documentElement.requestFullscreen(); } catch { /* user may deny fullscreen */ }
+    try { await start(); setStarted(true); } finally { setStarting(false); }
+  };
+
+  if (!started) return <ProctorConsent onStart={begin} starting={starting} />;
+
+  return (
+    <>
+      <ProctorOverlays />
+      {children}
+      <div className="fixed bottom-4 right-4 z-40 w-72" style={{ maxWidth: 'calc(100vw - 2rem)' }}>
+        <ProctorTimeline />
+      </div>
+    </>
+  );
 };
 
 const CodingPageContent = () => {
@@ -23,19 +46,16 @@ const CodingPageContent = () => {
 
   return (
     <ProctorProvider surface="coding">
-      <ProctorLifecycle />
-      <ProctorOverlays />
-      <CodingLayout
-        onSubmit={handleCodingSubmit}
-        isLoading={isStreaming}
-        onBack={() => navigate('/lumora')}
-        initialProblem={initialProblem}
-        initialUrl={initialUrl}
-        initialStarterCode={initialStarterCode}
-      />
-      <div className="fixed bottom-4 right-4 z-40 w-72" style={{ maxWidth: 'calc(100vw - 2rem)' }}>
-        <ProctorTimeline />
-      </div>
+      <ProctorGate>
+        <CodingLayout
+          onSubmit={handleCodingSubmit}
+          isLoading={isStreaming}
+          onBack={() => navigate('/lumora')}
+          initialProblem={initialProblem}
+          initialUrl={initialUrl}
+          initialStarterCode={initialStarterCode}
+        />
+      </ProctorGate>
     </ProctorProvider>
   );
 }
