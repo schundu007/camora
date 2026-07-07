@@ -951,11 +951,12 @@ export const LumoraShellPage = () => {
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.35)' }} />
           <div onClick={e => e.stopPropagation()}
             className="lumora-mobile-sheet absolute right-2 w-[260px] max-w-[90vw] rounded-bl-xl rounded-br-xl"
-            style={{ top: 48, background: 'var(--bg-surface)', boxShadow: '0 12px 28px rgba(0,0,0,0.20)', border: '1px solid var(--border)' }}>
+            style={{ top: 'calc(44px + env(safe-area-inset-top))', background: 'var(--bg-surface)', boxShadow: '0 12px 28px rgba(0,0,0,0.20)', border: '1px solid var(--border)' }}>
             <div className="py-2 max-h-[70vh] overflow-y-auto">
               {[
                 { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral' },
                 { id: 'cofix',      label: 'CoFix',      path: '/lumora/fix' },
+                { id: 'practice',   label: 'Practice',   path: '/lumora/practice' },
                 { id: 'calendar',   label: 'Calendar',   path: '/lumora/calendar' },
                 { id: 'sessions',   label: 'Sessions',   path: '/lumora/sessions' },
                 { id: 'assistants', label: 'Assistants', path: '/lumora/assistants' },

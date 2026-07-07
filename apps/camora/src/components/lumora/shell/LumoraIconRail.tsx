@@ -115,7 +115,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
 
   return (
     <nav
-      className="hidden md:flex flex-col shrink-0 transition-all duration-200 relative"
+      className="hidden md:flex flex-col shrink-0 overflow-y-auto overflow-x-hidden transition-all duration-200 relative"
       style={{
         width: expanded ? 200 : 60,
         // Charcoal chrome — navy is reserved for ACCENT strips only

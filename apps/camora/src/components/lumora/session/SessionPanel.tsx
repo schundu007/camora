@@ -82,8 +82,6 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
   // history, so users see "Q.7" land before it gets persisted as #7.
   const activeQNumber = history.length + 1;
   const activeCategory = categorize(question || '', isCodingQuestion, isDesignQuestion);
-  const { theme } = useTheme();
-  const behavioralAccent = theme === 'light' ? '#3683DC' : '#C9A227';
 
   // Home tab = dashboard by default. Past sessions live on /lumora/sessions,
   // not here. Only switch off the dashboard while a question is actively
