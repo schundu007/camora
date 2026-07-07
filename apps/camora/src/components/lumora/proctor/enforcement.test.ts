@@ -32,4 +32,31 @@ describe('proctor enforcement', () => {
     const low = evaluate(ev('COPY', 'low'), INITIAL_STATE).scoreDelta;
     expect(high).toBeGreaterThan(low);
   });
+
+  it('devtools adds both flag and warn', () => {
+    const r = evaluate(ev('DEVTOOLS', 'high'), INITIAL_STATE);
+    expect(r.actions).toContain('flag');
+    expect(r.actions).toContain('warn');
+  });
+
+  it('automation adds both flag and warn', () => {
+    const r = evaluate(ev('AUTOMATION', 'high'), INITIAL_STATE);
+    expect(r.actions).toContain('flag');
+    expect(r.actions).toContain('warn');
+  });
+
+  it('tab-hidden and window-blur share blur counter', () => {
+    let state = INITIAL_STATE;
+    const first = evaluate(ev('TAB_HIDDEN'), state); state = first.state;
+    const second = evaluate(ev('WINDOW_BLUR'), state); state = second.state;
+    const third = evaluate(ev('TAB_HIDDEN'), state);
+    expect(first.actions).not.toContain('flag');
+    expect(second.actions).not.toContain('flag');
+    expect(third.actions).toContain('flag');
+  });
+
+  it('every evaluate result includes log action', () => {
+    const r = evaluate(ev('COPY', 'low'), INITIAL_STATE);
+    expect(r.actions).toContain('log');
+  });
 });
