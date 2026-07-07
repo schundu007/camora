@@ -109,7 +109,7 @@ describe('ProctorProvider', () => {
       await act(async () => { await hook.start(); });
       expect(getUserMedia).toHaveBeenCalledWith({ video: true });
       expect(hook.paused).toBe(false);
-      await act(async () => { fakeTrack.dispatchEvent(new Event('ended')); });
+      await act(async () => { fakeTrack.dispatchEvent(new Event('mute')); });
       expect(hook.paused).toBe(true);
       await act(async () => { fakeTrack.dispatchEvent(new Event('unmute')); });
       expect(hook.paused).toBe(false);

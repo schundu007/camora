@@ -52,6 +52,7 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
   const pendingRef = useRef<ProctorEvent[]>([]);
   const riskRef = useRef(0);
   const ownedStreamRef = useRef<MediaStream | null>(null);
+  const mountedRef = useRef(true);
 
   const flush = useCallback(async () => {
     if (!sessionIdRef.current || pendingRef.current.length === 0) return;
@@ -99,12 +100,21 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
       // session requires the candidate's camera on; if a caller didn't supply
       // a track, request one. Denial/absence fails open (logged), never throws.
       let track: MediaStreamTrack | null = cameraTrack ?? null;
-      if (!track && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          ownedStreamRef.current = stream;
-          track = stream.getVideoTracks()[0] ?? null;
-        } catch {
+      if (!track) {
+        const gum = typeof navigator !== 'undefined' ? navigator.mediaDevices?.getUserMedia : undefined;
+        if (gum) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            if (!mountedRef.current) {
+              stream.getTracks().forEach((t) => t.stop());
+              return;
+            }
+            ownedStreamRef.current = stream;
+            track = stream.getVideoTracks()[0] ?? null;
+          } catch {
+            record({ type: 'UNSUPPORTED', severity: 'info', ts: nowTs(), meta: { signal: 'camera' } });
+          }
+        } else {
           record({ type: 'UNSUPPORTED', severity: 'info', ts: nowTs(), meta: { signal: 'camera' } });
         }
       }
@@ -135,6 +145,11 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
   }, [flush]);
 
   const resolveBlock = useCallback(() => setBlocked(false), []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // camera recovery → auto-resume (keys on the active track, acquired or provided)
   useEffect(() => {
