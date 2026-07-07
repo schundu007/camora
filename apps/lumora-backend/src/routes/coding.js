@@ -86,6 +86,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
 import { executeCode } from '../services/codeRunner.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
+import { retrieveExemplars, formatExemplars } from '../services/codingKnowledge.js';
 
 const router = Router();
 
@@ -1077,9 +1078,18 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     }
   }
 
+  // RAG: retrieve the closest solved-pattern exemplars and inject them into the
+  // per-request user message (NOT the cached system prompt) so the model infers
+  // the pattern and copies a verified, return-based structure instead of
+  // re-deriving it. Best-effort — retrieval never blocks solving.
+  let exemplarBlock = '';
+  try {
+    exemplarBlock = formatExemplars(await retrieveExemplars(problem, { k: 2 }));
+  } catch { /* retrieval is best-effort */ }
+
   messages.push({
     role: 'user',
-    content: `Solve this coding problem in ${lang}:\n\n${problem}`,
+    content: `Solve this coding problem in ${lang}:\n\n${problem}${exemplarBlock}`,
   });
 
   // ── Call Claude with layered reliability ────────────────────────────────

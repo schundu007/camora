@@ -768,6 +768,20 @@ function normalizeValue(s) {
   s = s.trim();
   if (!s) return s;
   try { return JSON.parse(s); } catch { /* continue */ }
+  // Python-repr → JSON best-effort: Python prints collections with single
+  // quotes and True/False/None (e.g. [['eat', 'tea']]), but expected outputs
+  // are usually JSON-style. Only attempt on collection-shaped strings, and
+  // only as a fallback after strict JSON.parse already failed.
+  if (/^[[{]/.test(s)) {
+    try {
+      const j = s
+        .replace(/'/g, '"')
+        .replace(/\bTrue\b/g, 'true')
+        .replace(/\bFalse\b/g, 'false')
+        .replace(/\bNone\b/g, 'null');
+      return JSON.parse(j);
+    } catch { /* continue */ }
+  }
   if (s === 'True' || s === 'true') return true;
   if (s === 'False' || s === 'false') return false;
   if (s === 'None' || s === 'null') return null;
