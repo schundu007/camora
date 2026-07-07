@@ -421,11 +421,11 @@ export const LumoraShellPage = () => {
             Gradient + shadow give the header a high-fidelity modern
             feel in both themes via design tokens. */}
         <div
-          className="flex items-center h-[60px] px-4 shrink-0 lumora-shell-topbar gap-3"
+          className="flex items-center h-11 px-3 shrink-0 lumora-shell-topbar gap-2"
           style={{
-            borderBottom: '3px solid var(--cam-gold-leaf)',
+            borderBottom: '2px solid var(--cam-gold-leaf)',
             background: 'var(--cam-hero-strip)',
-            boxShadow: '0 6px 22px rgba(0,0,0,0.45)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
           }}
         >
           {/* Mobile-only Camora logo — the desktop LumoraIconRail (which
@@ -445,7 +445,7 @@ export const LumoraShellPage = () => {
           <button
             type="button"
             onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
+            className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
             style={{
               background: 'var(--lumora-chrome-bg)',
               border: '1px solid var(--lumora-chrome-border)',
@@ -455,76 +455,41 @@ export const LumoraShellPage = () => {
             title="Back"
             aria-label="Back"
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M15 18l-6-6 6-6" />
             </svg>
             <span className="hidden sm:inline">Back</span>
           </button>
 
-          {/* Cross-section quick links + tool pickers — lg+ only so 5-tab
-              cluster fits cleanly at the md (768px) tablet breakpoint. */}
-          <div className="hidden lg:flex items-center gap-2 shrink-0">
-            {/* Nav links pill */}
-            <div className="flex items-center gap-1 p-0.5 rounded-md"
+          {/* Meeting-platform picker — the only tool chip kept in the top bar.
+              Prepare/Pricing links and the duplicate coding-platform chip were
+              removed to reclaim space (the active coding platform is already
+              shown as the green dot + logo in the ScreenshotStrip below).
+              lg+ only so the 5-tab cluster still fits at the md breakpoint. */}
+          <div className="hidden lg:flex items-center shrink-0">
+            <div className="flex items-center gap-1 p-0.5 rounded"
               style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
-              <Link to="/capra/prepare"
-                className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
+              <div className="lumora-chrome-link flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold cursor-pointer transition-[background-color]"
                 style={{ color: 'var(--lumora-chrome-text)' }}
-              >Prepare</Link>
-              <Link to="/pricing"
-                className="lumora-chrome-link px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-[background-color,color]"
-                style={{ color: 'var(--lumora-chrome-text)' }}
-              >Pricing</Link>
-            </div>
-            {/* Tool chips pill */}
-            <div className="flex items-center gap-1 p-0.5 rounded-md"
-              style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
-            {/* Meeting platform */}
-            <div className="lumora-chrome-link flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-bold cursor-pointer transition-[background-color]"
-              style={{ color: 'var(--lumora-chrome-text)' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-              <select
-                value={meetingPlatform}
-                onChange={e => setMeetingPlatform(e.target.value)}
-                className="bg-transparent border-none outline-none cursor-pointer text-[12px] font-bold"
-                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
-                title="Meeting platform"
-                aria-label="Meeting platform"
               >
-                <option value="zoom">Zoom</option>
-                <option value="teams">Teams</option>
-                <option value="meet">Google Meet</option>
-                <option value="other">Other</option>
-              </select>
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                <select
+                  value={meetingPlatform}
+                  onChange={e => setMeetingPlatform(e.target.value)}
+                  className="bg-transparent border-none outline-none cursor-pointer text-[10px] font-bold"
+                  style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
+                  title="Meeting platform"
+                  aria-label="Meeting platform"
+                >
+                  <option value="zoom">Zoom</option>
+                  <option value="teams">Teams</option>
+                  <option value="meet">Meet</option>
+                  <option value="other">Other</option>
+                </select>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
             </div>
-            {/* Coding platform */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[12px] font-bold cursor-pointer transition-[background-color]"
-              style={codingPlatform !== 'none'
-                ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: '0.25rem', boxShadow: '0 0 0 2px rgba(201,162,39,0.30)' }
-                : { color: 'var(--lumora-chrome-text)' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              <select
-                value={codingPlatform}
-                onChange={e => setCodingPlatform(e.target.value)}
-                className="bg-transparent border-none outline-none cursor-pointer text-[12px] font-bold"
-                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
-                title="Coding platform — Camora auto-detects this tab"
-                aria-label="Coding platform"
-              >
-                <option value="auto">Auto-detect</option>
-                <option value="none">Disabled</option>
-                <option value="hackerrank">HackerRank</option>
-                <option value="leetcode">LeetCode</option>
-                <option value="coderpad">CoderPad</option>
-                <option value="codesignal">CodeSignal</option>
-                <option value="glider">Glider</option>
-              </select>
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            </div>{/* end tool chips pill */}
-          </div>{/* end quick links + tool pickers */}
+          </div>{/* end meeting-platform picker */}
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
               top bar instead of letting them sit flush against the
@@ -539,7 +504,7 @@ export const LumoraShellPage = () => {
               affordance as the SHORT/DETAILED toggle for consistency
               across the app. */}
           <div
-            className="hidden md:flex items-center gap-1 p-1.5 rounded-lg shrink-0"
+            className="hidden md:flex items-center gap-0.5 p-0.5 rounded-md shrink-0"
             style={{
               background: 'var(--lumora-chrome-bg)',
               border: '1px solid var(--lumora-chrome-border)',
@@ -561,7 +526,7 @@ export const LumoraShellPage = () => {
                   title={tab.title}
                   viewTransition
                   data-active={isActive ? 'true' : 'false'}
-                  className="lumora-tab-pill px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
+                  className="lumora-tab-pill px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,color,transform]"
                   style={isActive
                     ? { background: 'var(--lumora-tab-active-bg)', color: 'var(--lumora-tab-active-text)', boxShadow: 'var(--lumora-tab-active-shadow)' }
                     : { color: 'var(--lumora-chrome-text)' }}
