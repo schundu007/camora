@@ -28,11 +28,17 @@ interface LumoraIconRailProps {
   onOpenContext?: () => void;
 }
 
-/* ── Sidebar items ── */
+/* ── Sidebar items, ordered by priority ──
+   Home (hub) → Interview (live surfaces) → Setup (context + tools) →
+   Prep (study) → Library (history/assistants) → account/utilities. */
 const MAIN_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', path: '/lumora', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
-  { id: 'assistants', label: 'Assistants', path: '/lumora/assistants', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
+  { id: 'dashboard', label: 'Home', path: '/lumora', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
+];
+
+/* Library group — review history + manage assistants (lower priority). */
+const LIBRARY_ITEMS = [
   { id: 'sessions', label: 'Sessions', path: '/lumora/sessions', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
+  { id: 'assistants', label: 'Assistants', path: '/lumora/assistants', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
 ];
 
 /* Prep group — Prep Kit + Practice + Prepare, grouped together in their own
@@ -169,30 +175,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         </div>
       )}
 
-      {/* Interview tool switchers — quick-switch between live surfaces
-          (Coding / Design / Behavioral / CoFix), icon-only when collapsed. */}
-      <div className="flex flex-col gap-0.5 px-1.5 mb-1">
-        {TOOL_ITEMS.map(item => {
-          const active = activeTab === item.id;
-          return (
-            <Link
-              key={item.id}
-              to={item.path}
-              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
-              style={itemStyle(active)}
-              title={expanded ? undefined : item.label}
-            >
-              {item.icon}
-              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Divider between tools and the rest of the nav */}
-      <div className="mx-4 mb-2 h-px" style={{ background: 'var(--border)' }} />
-
-      {/* Main nav */}
+      {/* Home — primary hub (top priority). */}
       <div className="flex flex-col gap-0.5 px-1.5">
         {MAIN_ITEMS.map(item => {
           const active = isActive(item.id);
@@ -211,18 +194,17 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         })}
       </div>
 
-      {/* Prep group — Prep Kit + Practice + Prepare, their own section,
-          separate from the meeting/coding Tools group below. */}
+      {/* Interview — the live surfaces (highest daily-use priority). */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Prep</p>}
-        {PREP_ITEMS.map(item => {
-          const active = isActive(item.id);
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Interview</p>}
+        {TOOL_ITEMS.map(item => {
+          const active = activeTab === item.id;
           return (
             <Link
               key={item.id}
               to={item.path}
-              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
               title={expanded ? undefined : item.label}
             >
@@ -233,15 +215,28 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         })}
       </div>
 
-      {/* Tools group — meeting + coding platform selectors, their own set
-          separate from the Prep group above. Icons only when collapsed;
-          expand reveals the selects so the interview's meeting app + coding
-          platform are always pickable from the rail. */}
-      {(onMeetingPlatformChange || onCodingPlatformChange) && (
+      {/* Setup — interview context + meeting/coding platform. Configured per
+          interview, so it sits right under the live surfaces. */}
+      {(onOpenContext || onMeetingPlatformChange || onCodingPlatformChange) && (
         <>
           <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
           <div className="px-1.5">
-            {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Tools</p>}
+            {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Setup</p>}
+            {onOpenContext && (
+              <button
+                type="button"
+                onClick={onOpenContext}
+                title={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
+                aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
+                className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 mb-0.5 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
+                style={companyKey
+                  ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', border: '1px solid rgba(201,162,39,0.40)' }
+                  : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
+                {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
+              </button>
+            )}
             {onMeetingPlatformChange && (
               <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} title={expanded ? undefined : `Meeting: ${meetingPlatform}`}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
@@ -279,26 +274,47 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         </>
       )}
 
-      {/* Interview-context chip — the AMD-style company chip, placed BELOW the
-          Tools group. Briefcase icon collapsed; company name + gold highlight
-          when a context is active. */}
-      {onOpenContext && (
-        <div className="px-1.5 mt-1">
-          <button
-            type="button"
-            onClick={onOpenContext}
-            title={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
-            aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
-            className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
-            style={companyKey
-              ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', border: '1px solid rgba(201,162,39,0.40)' }
-              : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
-            {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
-          </button>
-        </div>
-      )}
+      {/* Prep — study before interviews (Prep Kit + Practice + Prepare). */}
+      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
+      <div className="px-1.5">
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Prep</p>}
+        {PREP_ITEMS.map(item => {
+          const active = isActive(item.id);
+          return (
+            <Link
+              key={item.id}
+              to={item.path}
+              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+              style={itemStyle(active)}
+              title={expanded ? undefined : item.label}
+            >
+              {item.icon}
+              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Library — history + assistants (lower priority). */}
+      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
+      <div className="px-1.5">
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Library</p>}
+        {LIBRARY_ITEMS.map(item => {
+          const active = isActive(item.id);
+          return (
+            <Link
+              key={item.id}
+              to={item.path}
+              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+              style={itemStyle(active)}
+              title={expanded ? undefined : item.label}
+            >
+              {item.icon}
+              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
+            </Link>
+          );
+        })}
+      </div>
 
       {/* Divider */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
