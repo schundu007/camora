@@ -33,8 +33,14 @@ const MAIN_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', path: '/lumora', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
   { id: 'assistants', label: 'Assistants', path: '/lumora/assistants', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
   { id: 'sessions', label: 'Sessions', path: '/lumora/sessions', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
-  { id: 'documents', label: 'Documents', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
+];
+
+/* Prep group — Prep Kit + Practice + Prepare, grouped together in their own
+   section, kept separate from the meeting/coding Tools group. */
+const PREP_ITEMS = [
+  { id: 'documents', label: 'Prep Kit', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
   { id: 'practice', label: 'Practice', path: '/lumora/practice', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="0.5" fill="currentColor" /></svg> },
+  { id: 'prepare', label: 'Prepare', path: '/capra/prepare', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /><path d="M9 7h7M9 11h5" /></svg> },
 ];
 
 const MORE_ITEMS = [
@@ -205,10 +211,32 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         })}
       </div>
 
+      {/* Prep group — Prep Kit + Practice + Prepare, their own section,
+          separate from the meeting/coding Tools group below. */}
+      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
+      <div className="px-1.5">
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Prep</p>}
+        {PREP_ITEMS.map(item => {
+          const active = isActive(item.id);
+          return (
+            <Link
+              key={item.id}
+              to={item.path}
+              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+              style={itemStyle(active)}
+              title={expanded ? undefined : item.label}
+            >
+              {item.icon}
+              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Tools group — meeting + coding platform selectors, their own set
-          directly below Practice. Icons only when collapsed; hover-expand
-          reveals the selects so the interview's meeting app + coding platform
-          are always pickable from the rail. */}
+          separate from the Prep group above. Icons only when collapsed;
+          expand reveals the selects so the interview's meeting app + coding
+          platform are always pickable from the rail. */}
       {(onMeetingPlatformChange || onCodingPlatformChange) && (
         <>
           <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
