@@ -91,4 +91,30 @@ describe('ProctorProvider', () => {
     expect(hook.events.some((e) => e.type === 'WINDOW_BLUR')).toBe(false);
     expect(hook.riskScore).toBe(0);
   });
+
+  it('acquires webcam on start; camera-off pauses, unmute resumes', async () => {
+    const fakeTrack = new EventTarget() as unknown as MediaStreamTrack;
+    (fakeTrack as unknown as { readyState: string }).readyState = 'live';
+    (fakeTrack as unknown as { muted: boolean }).muted = false;
+    (fakeTrack as unknown as { stop: () => void }).stop = vi.fn();
+    const getUserMedia = vi.fn().mockResolvedValue({
+      getVideoTracks: () => [fakeTrack],
+      getTracks: () => [fakeTrack],
+    } as unknown as MediaStream);
+    const original = (navigator as unknown as { mediaDevices?: unknown }).mediaDevices;
+    Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } });
+
+    try {
+      await mount();
+      await act(async () => { await hook.start(); });
+      expect(getUserMedia).toHaveBeenCalledWith({ video: true });
+      expect(hook.paused).toBe(false);
+      await act(async () => { fakeTrack.dispatchEvent(new Event('ended')); });
+      expect(hook.paused).toBe(true);
+      await act(async () => { fakeTrack.dispatchEvent(new Event('unmute')); });
+      expect(hook.paused).toBe(false);
+    } finally {
+      Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: original });
+    }
+  });
 });

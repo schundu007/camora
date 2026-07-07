@@ -36,11 +36,14 @@ const uid = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.round(Math.random() * 1e9)}`);
 
+const nowTs = () => (typeof performance !== 'undefined' ? Math.floor(performance.now()) : 0);
+
 export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProviderProps) => {
   const [events, setEvents] = useState<ProctorEvent[]>([]);
   const [riskScore, setRiskScore] = useState(0);
   const [paused, setPaused] = useState(false);
   const [blocked, setBlocked] = useState(false);
+  const [activeTrack, setActiveTrack] = useState<MediaStreamTrack | null>(null);
 
   const sessionIdRef = useRef<string | null>(null);
   const startingRef = useRef(false);
@@ -48,6 +51,7 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
   const detectorsRef = useRef<ReturnType<typeof createDetectors> | null>(null);
   const pendingRef = useRef<ProctorEvent[]>([]);
   const riskRef = useRef(0);
+  const ownedStreamRef = useRef<MediaStream | null>(null);
 
   const flush = useCallback(async () => {
     if (!sessionIdRef.current || pendingRef.current.length === 0) return;
@@ -91,7 +95,22 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
       setPaused(false);
       setBlocked(false);
 
-      const detectors = createDetectors(record, { cameraTrack });
+      // Acquire the webcam so camera presence can be enforced. A proctored
+      // session requires the candidate's camera on; if a caller didn't supply
+      // a track, request one. Denial/absence fails open (logged), never throws.
+      let track: MediaStreamTrack | null = cameraTrack ?? null;
+      if (!track && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          ownedStreamRef.current = stream;
+          track = stream.getVideoTracks()[0] ?? null;
+        } catch {
+          record({ type: 'UNSUPPORTED', severity: 'info', ts: nowTs(), meta: { signal: 'camera' } });
+        }
+      }
+      setActiveTrack(track);
+
+      const detectors = createDetectors(record, { cameraTrack: track ?? undefined });
       detectorsRef.current = detectors;
       detectors.start();
     } finally {
@@ -102,6 +121,12 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
   const stop = useCallback(async () => {
     detectorsRef.current?.stop();
     detectorsRef.current = null;
+    // release a webcam we acquired ourselves (never stop a caller-provided track)
+    if (ownedStreamRef.current) {
+      ownedStreamRef.current.getTracks().forEach((t) => t.stop());
+      ownedStreamRef.current = null;
+    }
+    setActiveTrack(null);
     await flush();
     if (sessionIdRef.current) {
       await proctorApi.endSession(sessionIdRef.current, riskRef.current, 'ended');
@@ -111,19 +136,20 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
 
   const resolveBlock = useCallback(() => setBlocked(false), []);
 
-  // camera recovery → auto-resume
+  // camera recovery → auto-resume (keys on the active track, acquired or provided)
   useEffect(() => {
-    if (!cameraTrack) return;
+    const track = activeTrack;
+    if (!track) return;
     const onLive = () => {
       if (!enforceStateRef.current.cameraDown) return;
-      if (cameraTrack.readyState === 'live' && !cameraTrack.muted) {
+      if (track.readyState === 'live' && !track.muted) {
         enforceStateRef.current = { ...enforceStateRef.current, cameraDown: false };
         setPaused(false);
       }
     };
-    cameraTrack.addEventListener('unmute', onLive);
-    return () => cameraTrack.removeEventListener('unmute', onLive);
-  }, [cameraTrack]);
+    track.addEventListener('unmute', onLive);
+    return () => track.removeEventListener('unmute', onLive);
+  }, [activeTrack]);
 
   // periodic flush
   useEffect(() => {
