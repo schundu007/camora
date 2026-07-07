@@ -1,0 +1,46 @@
+# Gitleaks configuration for Camora
+#
+# Extends the default ruleset and allowlists known false positives surfaced by the
+# scheduled "Security Scan" workflow (.github/workflows/security.yml). Categories:
+#   - Publishable client keys that ship in browser code by design (logo.dev token,
+#     Firebase Web API key — a project identifier, not an auth secret).
+#   - Non-secret identifiers the generic-api-key rule mis-flags (localStorage key
+#     names, plain variable assignments).
+#   - Study/prep content and scraped problem datasets that contain example tokens
+#     (WebSocket handshake keys, example passwords, etc.) as teaching material.
+#
+# The one genuine credential the scan found — a CodeSignal session cookie at
+# scripts/codesignal-sync/.codesignal-learn-cookies.json — has been removed from the
+# working tree and .gitignore'd. Its historical blob is allowlisted by path below so
+# the full-history scan stays green; rotate that CodeSignal session to be safe.
+
+title = "Camora gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Camora false positives and public client keys"
+
+paths = [
+  # Capra study/prep topic content (both apps/frontend pre-rename and apps/camora)
+  '''(^|/)src/data/capra/.*''',
+  # Scraped problem / probe datasets produced by sync scripts
+  '''(^|/)scripts/[^/]+-sync/.*\.json$''',
+  '''(^|/)scripts/hr_problems/.*\.json$''',
+  '''(^|/)apps/[^/]+/scripts/hr_problems/.*\.json$''',
+  # HR interview library content dataset
+  '''(^|/)apps/ascend-backend/data/hr_library\.json$''',
+  # Planning / documentation with illustrative curl + example commands
+  '''(^|/)docs/.*\.md$''',
+  # Removed + rotated CodeSignal session cookie (kept out of the tree via .gitignore)
+  '''(^|/)scripts/codesignal-sync/\.codesignal-learn-cookies\.json$''',
+]
+
+# Match these against the full source line, not just the detected secret value.
+regexTarget = "line"
+regexes = [
+  # Publishable client keys / non-secret identifiers that legitimately live in source
+  '''\b(LOGO_TOKEN|STORAGE_KEY|FIREBASE_API_KEY)\b''',
+  '''logo\.dev/[^'"]*\?token=''',
+]

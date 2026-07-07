@@ -32,3 +32,8 @@ scripts/hackerrank-sync/hackerrank-descriptions.json
 apps/camora/scripts/research/*.json
 .gstack/
 apps/camora/scripts/.diagvenv/
+
+# CodeSignal sync — local session cookie, never commit
+scripts/codesignal-sync/.codesignal-learn-cookies.json
+# Any browser session cookie jar from sync scripts
+scripts/**/.*-cookies.json
