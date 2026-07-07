@@ -222,8 +222,9 @@ export const LumoraShellPage = () => {
     document.title = titles[activeTab] || 'Camora';
   }, [activeTab]);
 
-  // Cmd+Shift+H global shortcut (Electron): silently capture the HackerRank
-  // browser window → navigate to Coding tab → auto-solve. Zero cursor movement.
+  // Capture-key global shortcut (Electron: num0, or F9 fallback): silently
+  // capture the HackerRank browser window → navigate to Coding tab → auto-solve.
+  // Zero cursor movement; single keystroke so it's easy to hit mid-interview.
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.onHackerrankCapture) return;
