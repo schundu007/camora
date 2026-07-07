@@ -229,11 +229,16 @@ app.whenReady().then(async () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
   });
 
-  // F9 — silently capture the HackerRank browser window and push it to the
-  // renderer for auto-solving. F9 is unclaimed by Chrome/Safari/macOS so it
-  // never triggers a browser action while the user is in their interview window.
-  // Cmd+Shift+H was the prior choice but it navigates Chrome to the home page.
-  const hrRegistered = globalShortcut.register('F9', async () => {
+  // Capture the HackerRank browser window and push it to the renderer for
+  // auto-solving. Bound to a SINGLE keystroke so it's easy to hit mid-interview
+  // without a modifier chord:
+  //   • num0 (numeric keypad 0) — primary. A true single stroke that never
+  //     needs Fn and never types into the code editor.
+  //   • F9 — kept as a fallback alias. (On Mac laptops F9 may require Fn unless
+  //     "Use F1, F2 as standard function keys" is enabled — that's why num0 is
+  //     the recommended default.)
+  // Cmd+Shift+H was an earlier choice but it navigates Chrome to the home page.
+  const captureHackerrank = async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
     // Block the 3s auto-detect poll from running concurrently so both paths
     // don't send separate hackerrank-capture-result events to the renderer.
@@ -254,8 +259,16 @@ app.whenReady().then(async () => {
     } finally {
       _scrapeInProgress = false;
     }
-  });
-  if (!hrRegistered) console.warn('[shortcut] F9 registration failed — may be claimed by OS or another app');
+  };
+  // Register each accelerator independently so one failing (claimed by the OS)
+  // doesn't prevent the other from working.
+  const captureKeys = ['num0', 'F9'];
+  const registeredKeys = captureKeys.filter((key) => globalShortcut.register(key, captureHackerrank));
+  if (!registeredKeys.length) {
+    console.warn(`[shortcut] no capture key registered — all of [${captureKeys.join(', ')}] were claimed by the OS or another app`);
+  } else {
+    console.log(`[shortcut] HackerRank capture bound to: ${registeredKeys.join(', ')}`);
+  }
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
