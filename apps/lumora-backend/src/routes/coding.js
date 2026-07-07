@@ -592,13 +592,19 @@ ${starterCode ? `\n#############################################################
 # RULE #3: CODE STRUCTURE
 ##############################################################################
 ${starterCode
-  ? `STARTER CODE IS PRESENT.
+  ? `STARTER CODE IS PRESENT — you are COMPLETING the platform's exact template, NOT writing a new program.
 
 STEP 1 — Read the problem description AND examples. Determine EXACTLY what to compute (count what? sum what? output what format?).
-STEP 2 — Fill in the function body that produces that output for the given inputs.
+STEP 2 — Fill in ONLY the missing implementation inside the given function/method body.
 STEP 3 — Mentally trace on example[0]: confirm your output matches expected.
 
-BASH RULES:
+PRESERVATION RULES (ALL LANGUAGES — this is what makes the solution actually run on the platform):
+1. Keep EVERYTHING outside the function body VERBATIM: imports / package / using lines, shebang, the class and function SIGNATURE exactly as given, and the ENTIRE input/output harness — Python input()/sys.stdin/print(), Java Scanner/BufferedReader/System.out, C++ cin/cout/scanf/printf, JS readline, Go bufio, bash readarray + wrapper call + exit 0.
+2. DO NOT rename functions, change the parameter list, or replace the platform's stdin-reading / printing with your own parsing — the candidate pastes this WHOLE file back into the platform and it must run unmodified.
+3. ONLY fill in the body marked by "Write your code here" / "Complete the function" / TODO / an empty or pass/return-placeholder body. Add nothing outside it except an import your implementation strictly needs.
+4. Return the COMPLETE file: the untouched harness PLUS your filled-in body — never a bare function with the harness stripped off.
+
+BASH-SPECIFIC (only when the starter is a bash script):
 1. PRESERVE verbatim: shebang, readarray/input lines, CR-strip line, function signature, wrapper call, exit 0
 2. ONLY fill in the function body — nothing outside it
 3. CRITICAL DISTINCTION — read carefully:

@@ -29,9 +29,14 @@ const MAX_SNAP_PAGES = 12;
 // problemText → starterCode so the backend completes-in-place rather than
 // generating a standalone function that loses the surrounding boilerplate.
 function isCodeTemplate(text: string): boolean {
-  const hasStructure = /\bdef\s+\w+\s*\(|\bclass\s+\w+[:(]|void\s+\w+\s*\(|public\s+\w+\s+\w+\s*\(|function\s+\w+\s*\(/.test(text);
+  const hasStructure = /\bdef\s+\w+\s*\(|\bclass\s+\w+[:(]|void\s+\w+\s*\(|public\s+\w+\s+\w+\s*\(|function\s+\w+\s*\(|^\s*\w+\s*\(\)\s*\{/m.test(text);
   if (!hasStructure) return false;
-  return /\breturn\s+\[\]\s*$|\breturn\s+\{\}\s*$|\bpass\s*$|raise\s+NotImplementedError|\/\/\s*TODO|\bTODO\b|\/\*\s*TODO/m.test(text);
+  if (/\breturn\s+\[\]\s*$|\breturn\s+\{\}\s*$|\bpass\s*$|raise\s+NotImplementedError|\/\/\s*TODO|\bTODO\b|\/\*\s*TODO/m.test(text)) return true;
+  // HackerRank / CoderPad style stub markers — the platform's real placeholder
+  // comments and "Complete the <fn> function below" banners. Recognizing these
+  // promotes the paste to starterCode so the backend completes-in-place and
+  // preserves the stdin harness instead of writing a bare from-scratch function.
+  return /(?:#|\/\/)\s*write your code here|(?:#|\/\/)\s*your code goes here|complete the\b[^\n]*\b(?:function|method)\b[^\n]*below/i.test(text);
 }
 
 function detectLanguage(text: string): string {
