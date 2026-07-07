@@ -29,6 +29,17 @@ const MAX_SNAP_PAGES = 12;
 // problemText → starterCode so the backend completes-in-place rather than
 // generating a standalone function that loses the surrounding boilerplate.
 function isCodeTemplate(text: string): boolean {
+  // HackerRank / CoderPad "bare-script" templates: an `if __name__ == '__main__':`
+  // harness (or a top-level block with several stdin reads) that has NO function to
+  // fill and NO stub marker — the candidate simply appends the solution after the
+  // provided input-reading lines (e.g. HackerRank "Finding the Percentage", whose
+  // starter ends at `query_name = input()`). This is pure platform boilerplate that
+  // must be preserved verbatim, so promote it to starterCode even though there is no
+  // def/class. Checked BEFORE hasStructure, which these templates deliberately lack.
+  const mainGuard = /^\s*if\s+__name__\s*==\s*['"]__main__['"]\s*:/m.test(text);
+  const stdinReads = (text.match(/\binput\s*\(|\bsys\.stdin\b|\.nextInt\s*\(|\bcin\s*>>|\breadline\s*\(/g) || []).length;
+  if (mainGuard || stdinReads >= 2) return true;
+
   const hasStructure = /\bdef\s+\w+\s*\(|\bclass\s+\w+[:(]|void\s+\w+\s*\(|public\s+\w+\s+\w+\s*\(|function\s+\w+\s*\(|^\s*\w+\s*\(\)\s*\{/m.test(text);
   if (!hasStructure) return false;
   if (/\breturn\s+\[\]\s*$|\breturn\s+\{\}\s*$|\bpass\s*$|raise\s+NotImplementedError|\/\/\s*TODO|\bTODO\b|\/\*\s*TODO/m.test(text)) return true;
