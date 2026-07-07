@@ -181,11 +181,21 @@ async function withTmpDir(fn) {
   }
 }
 
-async function runPython(code) {
+async function runPython(code, stdin) {
   return withTmpDir(async (dir) => {
     await writeFile(join(dir, 'code.py'), code, 'utf8');
-    await writeFile(join(dir, 'main.py'), PYTHON_WRAPPER, 'utf8');
     const start = Date.now();
+
+    // Custom-input run: execute the user's code directly with piped stdin.
+    // Skips the variable-capture wrapper (custom input just wants stdout/stderr).
+    if (typeof stdin === 'string' && stdin.length > 0) {
+      const { stdout, stderr, exitCode } = await spawnWithStdin(
+        'python3', [join(dir, 'code.py')], stdin, 10000,
+      );
+      return { stdout, stderr, exitCode, duration: Date.now() - start, variables: {} };
+    }
+
+    await writeFile(join(dir, 'main.py'), PYTHON_WRAPPER, 'utf8');
 
     const exec = () => execFileAsync('python3', ['main.py'], { cwd: dir, timeout: 10000, ...EXEC_OPTS });
 
@@ -215,11 +225,15 @@ async function runPython(code) {
   });
 }
 
-async function runBash(code) {
+async function runBash(code, stdin) {
   return withTmpDir(async (dir) => {
     const file = join(dir, 'script.sh');
     await writeFile(file, code, { encoding: 'utf8', mode: 0o755 });
     const start = Date.now();
+    if (typeof stdin === 'string' && stdin.length > 0) {
+      const { stdout, stderr, exitCode } = await spawnWithStdin('bash', [file], stdin, 10000);
+      return { stdout, stderr, exitCode, duration: Date.now() - start, variables: {} };
+    }
     try {
       const { stdout, stderr } = await execFileAsync(
         'bash', [file],
@@ -405,19 +419,21 @@ Rules:
 // POST /run
 router.post('/run', async (req, res, next) => {
   try {
-    const { language, code } = req.body;
+    const { language, code, stdin } = req.body;
     if (!code || typeof code !== 'string') {
       return res.status(400).json({ error: 'code is required' });
     }
     if (code.length > CODE_LIMIT) {
       return res.status(413).json({ error: 'Code exceeds 50 KB limit' });
     }
+    // Optional custom stdin — cap to protect the runner.
+    const runStdin = typeof stdin === 'string' ? stdin.slice(0, 64 * 1024) : undefined;
 
     const lang = String(language || '').toLowerCase();
     let result;
     switch (lang) {
-      case 'python3': result = await runPython(code); break;
-      case 'bash':    result = await runBash(code);   break;
+      case 'python3': result = await runPython(code, runStdin); break;
+      case 'bash':    result = await runBash(code, runStdin);   break;
       case 'docker':  result = await runDockerLint(code); break;
       case 'terraform': result = await runTerraform(code); break;
       default:

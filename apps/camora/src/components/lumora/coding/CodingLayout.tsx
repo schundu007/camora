@@ -9,6 +9,7 @@ import { dialogAlert } from '@/components/shared/Dialog';
 import Chip from '@/components/shared/ui/Chip';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
+import { CustomInputPanel } from '@/components/shared/CustomInputPanel';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -277,6 +278,14 @@ function useTheme(_dark: boolean) {
   };
 }
 
+// Normalized signature of a problem statement, used to dedupe AUTO solution
+// generation. Whitespace-collapsed + lowercased so the SAME problem delivered
+// twice (a source re-arming its pending prop, an idle timer re-firing, an
+// identical re-capture) produces an identical key and never regenerates.
+// Text, URL and image captures all funnel through this, so one source can't
+// retrigger a solve for content another source already generated.
+const genSignature = (t: string) => (t || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
 export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix, captureControls }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
@@ -301,6 +310,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [output, setOutput] = useState('');
   const [outputLog, setOutputLog] = useState<Array<{ts: Date; text: string}>>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [customInputEnabled, setCustomInputEnabled] = useState(false);
+  const [customInput, setCustomInput] = useState('');
   const [jsonSolution, setJsonSolution] = useState<any>(null);
   const [, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -378,6 +389,23 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Accumulated screenshot dataUrls — filled synchronously on each snap,
   // processed all-at-once when the idle timer fires or Coding is clicked.
   const pendingSnapUrlsRef = useRef<string[]>([]);
+
+  // Signature of the problem the solver last AUTO-generated for. Every
+  // automatic path (URL scrape, DOM text, image OCR, voice, idle timer)
+  // calls claimAutoGen() before wiping state + submitting; a duplicate is
+  // skipped so the solution never regenerates on its own. Explicit user
+  // actions (Generate / Regenerate buttons) bypass the guard and refresh
+  // this signature so a trailing auto-fire can't immediately re-solve.
+  const lastAutoGenSigRef = useRef<string>('');
+  // Returns true (and records the signature) when `text` is a genuinely new
+  // problem; false when it matches the last auto-generated one — caller skips.
+  // Only touches stable refs, so it is safe to call from long-lived effects.
+  const claimAutoGen = (text: string): boolean => {
+    const sig = genSignature(text);
+    if (!sig || sig === lastAutoGenSigRef.current) return false;
+    lastAutoGenSigRef.current = sig;
+    return true;
+  };
 
   // Store
   const { streamText, parsedBlocks, isStreaming, clearStreamChunks, setParsedBlocks, error: streamError, setError: setStreamError, setLastFromCache } = useSessionStore();
@@ -659,7 +687,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ code, language: resolveLanguage(), test_cases: testCasesToSend }),
+        body: JSON.stringify({
+          code,
+          language: resolveLanguage(),
+          // Custom-input mode runs once against the user's stdin, bypassing test cases.
+          test_cases: customInputEnabled ? [] : testCasesToSend,
+          ...(customInputEnabled ? { stdin: customInput } : {}),
+        }),
       });
 
       if (!response.ok) {
@@ -711,7 +745,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     } finally {
       setIsRunning(false);
     }
-  }, [token, code, language, testCases]);
+  }, [token, code, language, testCases, customInputEnabled, customInput]);
 
   const handleAutoFix = useCallback(async (silent = false) => {
     if (!token) {
@@ -1022,7 +1056,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     autoUrlFetchDone.current = true;
     setInputMode('url');
     setProblemUrl(initialUrl);
-    handleFetchFromUrl(initialUrl);
+    handleFetchFromUrl(initialUrl, { auto: true });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl, token]);
 
@@ -1036,6 +1070,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       multiPageCapturingRef.current = false;
       setMultiPageCapturing(false);
       setMultiPageCount(0);
+      if (!claimAutoGen(text)) return; // same problem — don't regenerate
       const lang = resolveLanguage(text);
       setStreamError(null);
       setTestResults([]);
@@ -1103,6 +1138,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 setSnapChipCode(text);
                 setStarterCode(null);
                 setInputMode('paste');
+                if (!claimAutoGen(text)) return; // same problem — show it, don't regenerate
                 setStreamError(null);
                 setTestResults([]);
                 setTestCases([]);
@@ -1159,6 +1195,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setProblemText(trimmed);
     setSnapChipCode(trimmed);
     setInputMode('paste');
+    if (!claimAutoGen(trimmed)) return; // same problem — show it, don't regenerate
     setStreamError(null);
     setTestResults([]);
     setTestCases([]);
@@ -1357,6 +1394,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       // the Behavioral tab or via the typed input on Home.
       setProblemText(text);
       setProblemTab('solution');
+      if (!claimAutoGen(text)) return; // same dictation re-delivered — don't re-solve
       setTestCases([]);
       setTestResults([]);
       setOutput('');
@@ -1442,7 +1480,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setStarterCode(extractedStarterCode);
       if (detectedLang) setLanguage(detectedLang);
       setInputMode('paste');
-      if (combinedText) {
+      // Show the extracted problem, but only solve if it's new (same capture
+      // re-processed → skip). claimAutoGen keys on the combined OCR text.
+      if (combinedText && claimAutoGen(combinedText)) {
         setStreamError(null); setTestResults([]); setTestCases([]); setOutput('');
         setShowFixPrompt(false); clearStreamChunks(); setParsedBlocks([]); setJsonSolution(null);
         setCode(getDefaultCode(effectiveLang));
@@ -1507,7 +1547,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // useCallback deps array would access the const before initialization.
   const acceptImageRef = useRef<((file: File) => void) | null>(null);
 
-  const handleFetchFromUrl = async (overrideUrl?: string) => {
+  const handleFetchFromUrl = async (overrideUrl?: string, opts?: { auto?: boolean }) => {
     const urlToFetch = overrideUrl ?? problemUrl;
     if (!urlToFetch.trim()) { setError('Please enter a URL'); return; }
     if (!token) { setError('Not authenticated'); return; }
@@ -1555,6 +1595,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setProblemText(text);
       setStarterCode(null);
       setInputMode('paste');
+      // Auto URL-mode fetch (mode switch / initialUrl) dedupes so re-entering
+      // URL mode on the same problem can't re-solve. An explicit Fetch click
+      // always solves, but records the signature so a trailing auto path won't.
+      if (opts?.auto) {
+        if (!claimAutoGen(text)) { setIsProcessing(false); return; }
+      } else {
+        lastAutoGenSigRef.current = genSignature(text);
+      }
       setStreamError(null);
       setTestResults([]);
       setTestCases([]);
@@ -1604,7 +1652,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         if (expected && !url.includes(expected)) return;
       }
       setProblemUrl(url);
-      handleFetchFromUrl(url);
+      handleFetchFromUrl(url, { auto: true });
     }).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputMode]);
@@ -3086,6 +3134,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               <div className="w-8 h-0.5 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.textDim }} />
             </div>
           )}
+
+          {/* Custom input (stdin) — "Test against custom input" */}
+          <div className="border-t px-3 py-2 shrink-0" style={{ borderColor: t.cardBorder, background: t.sectionBg }}>
+            <CustomInputPanel
+              enabled={customInputEnabled}
+              value={customInput}
+              onToggle={setCustomInputEnabled}
+              onChange={setCustomInput}
+              disabled={isRunning}
+            />
+          </div>
 
           {/* ═══ BOTTOM PANEL: Test Cases / Output ═══ */}
           <div className="border-t flex flex-col shrink-0" style={{ borderColor: t.cardBorder, background: t.surfaceBg, height: isOutputCollapsed ? 36 : outputPanelHeight }}>
