@@ -816,6 +816,116 @@ Rules:
 }
 
 // ---------------------------------------------------------------------------
+// MCQ (multiple-choice question) support
+// ---------------------------------------------------------------------------
+
+/**
+ * Heuristically decide whether a pasted/OCR'd/URL-fetched problem is a
+ * multiple-choice question rather than a code-writing problem.
+ *
+ * MCQs show up constantly in HackerRank/Codility/CoderPad "assessment"
+ * rounds interleaved with coding tasks. They have a question stem plus a
+ * set of enumerated options (A/B/C/D, 1/2/3/4, or "(a) ...") and expect a
+ * choice, not a written function.
+ *
+ * Strategy: count DISTINCT option markers. Three or more markers (A/B/C…)
+ * is almost always an MCQ. Two markers only counts when a recognisable
+ * MCQ cue phrase is also present, so a coding problem that merely says
+ * "option a) sort the array" doesn't misfire. Starter code is a strong
+ * "this is a code problem" signal, so we never treat it as MCQ.
+ */
+function detectMcq(problem, { hasStarterCode = false } = {}) {
+  if (!problem || typeof problem !== 'string' || hasStarterCode) return false;
+
+  // Line-anchored markers: "A) ", "A. ", "(A) ", "[A] ", "1) ", "a: ", "- A) "
+  const optRe = /^\s*[-*]?\s*[([]?\s*([A-Ha-h1-9])\s*[).\].:\-]\s+\S/;
+  const seen = new Set();
+  for (const ln of problem.split(/\r?\n/)) {
+    const m = ln.match(optRe);
+    if (m) seen.add(m[1].toUpperCase());
+  }
+  // Inline markers on one line: "... (A) foo (B) bar (C) baz"
+  const inline = new Set(
+    (problem.match(/\(([A-Ha-h])\)/g) || []).map((s) => s.slice(1, 2).toUpperCase()),
+  );
+  const distinct = Math.max(seen.size, inline.size);
+
+  const cue = /\b(which of the following|select all that apply|choose (the|all|one)|the correct answer|mark for review|multiple[ -]?choice|single[ -]?choice|true or false|pick the|what (is|will|does) the (output|result|value))\b/i.test(problem);
+
+  if (distinct >= 3) return true;          // A/B/C present → almost certainly MCQ
+  if (distinct >= 2 && cue) return true;   // 2 options + an explicit cue phrase
+  return false;
+}
+
+/**
+ * System prompt for answering a multiple-choice question. Returns a
+ * distinct JSON schema ({ type:'mcq', mcq:{...} }) so the frontend can
+ * render an answer card instead of code cards. Supports both
+ * single-answer and "select all that apply" multi-answer questions.
+ */
+function buildMcqSystemPrompt(systemContext) {
+  const contextBlock = systemContext
+    ? `\n# CANDIDATE CONTEXT\n${systemContext}\nUse this only to phrase the spoken narration naturally; it never changes which option is correct.\n\n`
+    : '';
+  return `You are an expert technical interview assistant answering a MULTIPLE-CHOICE QUESTION (MCQ) from a coding assessment (HackerRank / Codility / CoderPad style). These cover CS fundamentals, language semantics, complexity, output-prediction, SQL, systems, etc.
+${contextBlock}
+##############################################################################
+# YOUR JOB
+##############################################################################
+1. Read the question stem and EVERY option EXACTLY as written. Do not invent, drop, reorder, or reword options.
+2. Reason carefully to the correct answer. For "what is the output/value" questions, mentally execute the code step by step before choosing.
+3. Decide if it is SINGLE-answer or MULTIPLE-answer ("select all that apply", "choose all", checkboxes). Set "multiSelect" accordingly and put ALL correct keys in "answer".
+4. Give a short, correct justification and mark each option correct:true/false with a one-line reason.
+
+##############################################################################
+# ABSOLUTE RULES
+##############################################################################
+- Preserve each option's original letter/number key (A, B, C… or 1, 2, 3…) exactly as shown in the question. If the question uses no visible keys, assign A, B, C… top to bottom.
+- "answer" MUST be an array of the correct option keys (one element for single-answer, several for multi-answer).
+- Base the answer on real correctness, NOT on position or phrasing. If genuinely ambiguous, pick the single best answer and set confidence "medium" or "low".
+- All explanation/reason/narration fields are PLAIN TEXT — no markdown, no code fences.
+
+Respond with ONLY valid JSON in EXACTLY this shape (no text before/after):
+{
+  "type": "mcq",
+  "mcq": {
+    "question": "The question stem in plain text (omit the option list).",
+    "multiSelect": false,
+    "options": [
+      { "key": "A", "text": "verbatim option text", "correct": true, "reason": "one-line why this is right/wrong" }
+    ],
+    "answer": ["A"],
+    "answerText": "A) verbatim text of the correct option (join with ' , ' if multiple)",
+    "explanation": "2-4 sentence plain-text explanation of the correct reasoning, including why the tempting distractors are wrong.",
+    "narration": "First-person script the candidate can say ALOUD, 3-5 sentences, natural spoken tone, no markdown. State the answer, the core reason, and one distractor to avoid.",
+    "confidence": "high"
+  }
+}
+
+Rules:
+- "options" MUST list every option from the question, in order, each with correct:true/false.
+- Exactly the keys in "answer" may have correct:true; all others correct:false.
+- confidence is one of: "high", "medium", "low".`;
+}
+
+/**
+ * Answer-validity gate shared by all reliability passes. Code problems need
+ * code/solutions; MCQs need a well-formed mcq block with options.
+ */
+function isValidAnswer(parsed, isMcq) {
+  if (!parsed) return false;
+  if (isMcq) {
+    return parsed.type === 'mcq'
+      && parsed.mcq
+      && Array.isArray(parsed.mcq.options)
+      && parsed.mcq.options.length >= 2
+      && Array.isArray(parsed.mcq.answer)
+      && parsed.mcq.answer.length >= 1;
+  }
+  return !!(parsed.code || parsed.solutions);
+}
+
+// ---------------------------------------------------------------------------
 // JSON extraction helpers
 // ---------------------------------------------------------------------------
 
@@ -966,7 +1076,7 @@ async function recordCodingUsage(userId, language, inputTokens, outputTokens, la
 // ---------------------------------------------------------------------------
 
 router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async (req, res) => {
-  const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache, starter_code: starterCode } = req.body;
+  const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache, starter_code: starterCode, question_type: questionType } = req.body;
 
   // ── Validate ────────────────────────────────────────────────────────────
   if (!problem || typeof problem !== 'string') {
@@ -977,7 +1087,12 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   }
 
   const lang = language.toLowerCase();
-  console.log(`[solve] lang=${lang} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
+  // MCQ auto-detection. An explicit question_type from the client wins;
+  // otherwise we sniff the problem text for enumerated options. Starter
+  // code always means "write code", never MCQ.
+  const isMcq = questionType === 'mcq'
+    || (questionType !== 'code' && detectMcq(problem, { hasStarterCode: !!starterCode }));
+  console.log(`[solve] lang=${lang} mcq=${isMcq} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({
       error: `Unsupported language: ${language}. Supported: ${SUPPORTED_LANGUAGES.join(', ')}`,
@@ -1063,7 +1178,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   const cacheKey = buildAnswerCacheKey({
     question: problem,
     plan: planType,
-    route: 'solve',
+    route: isMcq ? 'solve_mcq' : 'solve',
     language: lang,
     model: getModelForUser(req),
     starterCode: starterCode || null,
@@ -1096,7 +1211,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     logCacheEvent('MISS', cacheKey, { route: 'solve', plan: planType, lang });
   }
 
-  sendEvent('status', { state: 'write', msg: `Generating ${lang} solution...` });
+  sendEvent('status', { state: 'write', msg: isMcq ? 'Answering multiple-choice question…' : `Generating ${lang} solution...` });
 
   // ── Build messages array (with optional conversation history) ───────────
   const messages = [];
@@ -1114,13 +1229,18 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // the pattern and copies a verified, return-based structure instead of
   // re-deriving it. Best-effort — retrieval never blocks solving.
   let exemplarBlock = '';
-  try {
-    exemplarBlock = formatExemplars(await retrieveExemplars(problem, { k: 2 }));
-  } catch { /* retrieval is best-effort */ }
+  if (!isMcq) {
+    // Code-pattern exemplars only help code generation; they are noise for MCQs.
+    try {
+      exemplarBlock = formatExemplars(await retrieveExemplars(problem, { k: 2 }));
+    } catch { /* retrieval is best-effort */ }
+  }
 
   messages.push({
     role: 'user',
-    content: `Solve this coding problem in ${lang}:\n\n${problem}${exemplarBlock}`,
+    content: isMcq
+      ? `Answer this multiple-choice question. Return ONLY the MCQ JSON object.\n\n${problem}`
+      : `Solve this coding problem in ${lang}:\n\n${problem}${exemplarBlock}`,
   });
 
   // ── Call Claude with layered reliability ────────────────────────────────
@@ -1162,14 +1282,17 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   let anthropicExhausted = false; // true when Anthropic spending/quota limit hit
   let passTag = 'primary_stream';
 
-  const systemPrompt = buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true);
+  const systemPrompt = isMcq
+    ? buildMcqSystemPrompt(typeof systemContext === 'string' ? systemContext : undefined)
+    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true);
   // Anthropic prompt cache — wraps the large coding system prompt as a
   // single ephemeral cache block. Subsequent /solve calls within the
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting
   // time-to-first-token by 200–500 ms in the steady state. Identical
   // pattern to services/claude.js:457. Per-request blocks are unchanged.
-  const STRICT_JSON_REMINDER =
-    'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 1 complete solution object.';
+  const STRICT_JSON_REMINDER = isMcq
+    ? 'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the MCQ schema above. No preamble, no markdown fences, no prose. Start with { and end with }. It MUST have "type":"mcq", an "mcq.options" array covering every option, and an "mcq.answer" array of the correct option keys.'
+    : 'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 1 complete solution object.';
 
   const ANTI_CHEAT_REJECTION =
     'REJECTED — your solution cheated by returning hardcoded example data.\n\n' +
@@ -1229,13 +1352,13 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // ── Parse Pass 1 output ─────────────────────────────────────────────────
   if (rawAnswer && rawAnswer.trim()) {
     parsedJson = extractJsonFromText(rawAnswer);
-    if (!parsedJson || (!parsedJson.code && !parsedJson.solutions)) {
+    if (!isValidAnswer(parsedJson, isMcq)) {
       console.error(
-        `[coding/solve] parse_failed pass=primary_stream rawLen=${rawAnswer.length} ` +
+        `[coding/solve] parse_failed pass=primary_stream mcq=${isMcq} rawLen=${rawAnswer.length} ` +
         `head=${JSON.stringify(truncateForLog(rawAnswer.slice(0, 1024), 1024))} tail=${JSON.stringify(truncateForLog(rawAnswer.slice(-1024), 1024))} ua=${JSON.stringify(userAgent)}`,
       );
       parsedJson = null;
-    } else if (detectsHardcoding(getCodeFromParsed(parsedJson))) {
+    } else if (!isMcq && detectsHardcoding(getCodeFromParsed(parsedJson))) {
       console.error(`[coding/solve] hardcoding_detected pass=primary_stream — rejecting and retrying`);
       hardcodingDetected = true;
       parsedJson = null;
@@ -1267,11 +1390,11 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       const fixParsed = extractJsonFromText(fixRaw);
       console.log(
         `[coding/solve] pass=${passTag} provider=${provider} model=${result.model} ` +
-        `ok=${!!(fixParsed && (fixParsed.code || fixParsed.solutions))} ` +
+        `ok=${isValidAnswer(fixParsed, isMcq)} ` +
         `rawLen=${fixRaw.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
       );
-      if (fixParsed && (fixParsed.code || fixParsed.solutions)) {
-        if (detectsHardcoding(getCodeFromParsed(fixParsed))) {
+      if (isValidAnswer(fixParsed, isMcq)) {
+        if (!isMcq && detectsHardcoding(getCodeFromParsed(fixParsed))) {
           console.error(`[coding/solve] hardcoding_detected pass=${passTag} provider=${provider}`);
           hardcodingDetected = true;
         } else {
@@ -1326,18 +1449,24 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   }
 
   // ── Success path — normalize and emit answer ────────────────────────────
-  // Ensure code fields are strings
-  if (parsedJson.code && typeof parsedJson.code !== 'string') {
-    parsedJson.code = String(parsedJson.code);
-  }
-  for (const sol of parsedJson.solutions || []) {
-    if (sol.code && typeof sol.code !== 'string') {
-      sol.code = String(sol.code);
+  if (!isMcq) {
+    // Ensure code fields are strings
+    if (parsedJson.code && typeof parsedJson.code !== 'string') {
+      parsedJson.code = String(parsedJson.code);
     }
-  }
-  // Set top-level code from first solution for backwards compat
-  if (!parsedJson.code && parsedJson.solutions?.length) {
-    parsedJson.code = parsedJson.solutions[0].code || '';
+    for (const sol of parsedJson.solutions || []) {
+      if (sol.code && typeof sol.code !== 'string') {
+        sol.code = String(sol.code);
+      }
+    }
+    // Set top-level code from first solution for backwards compat
+    if (!parsedJson.code && parsedJson.solutions?.length) {
+      parsedJson.code = parsedJson.solutions[0].code || '';
+    }
+  } else {
+    // Tag the language so the frontend never tries to run/translate an MCQ.
+    parsedJson.type = 'mcq';
+    parsedJson.language = 'mcq';
   }
   const parsed = { json: parsedJson, format: 'ascend_json' };
 
