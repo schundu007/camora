@@ -322,7 +322,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
 
   const clearMessages = useCallback(async () => {
     if (messages.length === 0) return;
-    const ok = await dialogConfirm({ title: 'Clear chat history?', message: 'This will clear the Sona chat in this panel only.', confirmLabel: 'Clear', tone: 'danger' });
+    const ok = await dialogConfirm({ title: 'Reset this interview?', message: 'This clears the current behavioral Q&A with Sona so you can start fresh. Saved sessions are not affected.', confirmLabel: 'Reset', tone: 'danger' });
     if (ok) setMessages([]);
   }, [messages.length]);
 
