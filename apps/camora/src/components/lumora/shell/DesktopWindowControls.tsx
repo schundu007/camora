@@ -21,8 +21,11 @@ export function DesktopWindowControls() {
     initOverlayModeBridge();
   }, []);
 
-  if (!isElectron() || typeof document === 'undefined') return null;
   const camo = (window as any).camo;
+  // Only render when the desktop window was actually created frameless (opt-in
+  // overlay build). A normal framed window keeps its native traffic lights, so
+  // these custom controls would be a duplicate/overlap.
+  if (!isElectron() || !camo?.overlayEnabled || typeof document === 'undefined') return null;
   const overlay = mode === 'overlay';
 
   // Portal to <body> so the cluster sits outside #root — it stays visible even

@@ -32,6 +32,15 @@ const {
 const APP_URL = process.env.CAMORA_URL || 'https://camora.cariara.com';
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 
+// Transparent-overlay mode is OPT-IN. It requires the renderer to paint a solid
+// background in docked mode AND to render the custom min/close/overlay controls
+// (a frameless window has no native traffic lights). That renderer code only
+// exists once the camora.cariara.com frontend is deployed — until then a
+// transparent+frameless window loaded against the live site is unusable (no
+// window controls, see-through chrome). Default OFF → normal framed, opaque
+// window. Enable with CAMORA_OVERLAY=1 once the frontend is live.
+const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1';
+
 // Electron 40+ regression: setDisplayMediaRequestHandler with
 // audio:'loopback' returns a silent stream when Chromium routes through
 // CoreAudio Tap (the default on macOS 14.2+). Force the legacy
@@ -68,6 +77,7 @@ let _overlayMode = false;
 let _dockedBounds = null;
 
 function applyOverlayMode(mode) {
+  if (!OVERLAY_ENABLED) return; // window isn't transparent — nothing to toggle
   if (!mainWindow || mainWindow.isDestroyed()) return;
   const overlay = mode === 'overlay';
   if (overlay === _overlayMode) return;
@@ -105,16 +115,14 @@ function createWindow() {
     width: state.width, height: state.height, x: state.x, y: state.y,
     minWidth: 900, minHeight: 600,
     title: 'Camora',
-    // Transparent + frameless so the renderer can switch between a solid
-    // "docked" look and a click-through "overlay" that floats above the meeting.
-    // Transparency is fixed at window creation, so we ALWAYS create it transparent
-    // and let the renderer paint a solid background in docked mode. The custom
-    // title bar (drag + window controls) lives in the renderer since there is no
-    // native frame. setContentProtection stays on in BOTH modes.
-    transparent: true,
-    frame: false,
-    hasShadow: false,
-    backgroundColor: '#00000000',
+    // Transparency is fixed at window creation, so overlay mode (opt-in) requires
+    // creating the window transparent + frameless and letting the renderer paint a
+    // solid background + custom title bar in docked mode. When overlay is disabled
+    // (the default) we use a normal framed, opaque window with native traffic
+    // lights. setContentProtection stays on in both configurations.
+    ...(OVERLAY_ENABLED
+      ? { transparent: true, frame: false, hasShadow: false, backgroundColor: '#00000000' }
+      : { backgroundColor: '#0a0a0a' }),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -269,15 +277,18 @@ app.whenReady().then(async () => {
   globalShortcut.register('CommandOrControl+Shift+R', () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
   });
-  // Toggle transparent overlay ↔ docked. Applies the window flags AND tells the
-  // renderer to repaint (transparent background / panel-only chrome). Chosen to
-  // avoid the capture keys (num0 / F9) and the reload chords above.
-  globalShortcut.register('CommandOrControl+Shift+O', () => {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-    const next = _overlayMode ? 'docked' : 'overlay';
-    applyOverlayMode(next);
-    mainWindow.webContents.send('overlay:mode-changed', next);
-  });
+  // Toggle transparent overlay ↔ docked. Only meaningful when the window was
+  // created transparent (CAMORA_OVERLAY=1); a no-op chord otherwise so it can't
+  // half-apply overlay flags to a framed window. Chosen to avoid the capture
+  // keys (num0 / F9) and the reload chords above.
+  if (OVERLAY_ENABLED) {
+    globalShortcut.register('CommandOrControl+Shift+O', () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return;
+      const next = _overlayMode ? 'docked' : 'overlay';
+      applyOverlayMode(next);
+      mainWindow.webContents.send('overlay:mode-changed', next);
+    });
+  }
 
   // Capture the HackerRank browser window and push it to the renderer for
   // auto-solving. Bound to a SINGLE keystroke so it's easy to hit mid-interview

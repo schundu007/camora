@@ -8,6 +8,12 @@ contextBridge.exposeInMainWorld('camo', {
   platform: process.platform,
   version: '2.1.0',
 
+  // Transparent-overlay mode is opt-in (main creates the window transparent +
+  // frameless only when CAMORA_OVERLAY=1). The renderer gates its custom title-
+  // bar controls + overlay toggle on this so they never render over a normal
+  // framed window's native traffic lights.
+  overlayEnabled: process.env.CAMORA_OVERLAY === '1',
+
   // Permissions — both read-only status check and prompt-trigger.
   // The audio setup wizard uses these to make permission flow explicit
   // instead of failing inside getUserMedia/getDisplayMedia.
