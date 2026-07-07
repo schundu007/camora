@@ -165,13 +165,13 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
   return (
     <div
-      className={`flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar ${inline ? '' : 'px-2 py-1'}`}
+      className={`flex items-center shrink-0 overflow-x-auto no-scrollbar ${inline ? 'gap-1' : 'gap-2 px-3 py-1.5'}`}
       style={inline
         ? {}
         : {
             background: 'var(--cam-hero-strip)',
             borderBottom: '1px solid var(--cam-gold-leaf)',
-            minHeight: 28,
+            minHeight: 40,
           }}
     >
       {/* Platform identifier — coding tab autopilot mode */}
@@ -322,21 +322,18 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       {/* SHORT / DETAILED — behavioral tab only */}
       {surface === 'behavioral' && (
         <div
-          className="flex items-center gap-0.5 shrink-0"
+          className="flex items-center gap-0.5 shrink-0 h-8 px-1 rounded-lg"
           style={{
-            padding: '2px 3px',
             background: 'var(--cam-strip-icon-bg)',
-            border: '1px solid var(--cam-gold-leaf)',
-            borderRadius: 8,
+            border: '1px solid var(--cam-strip-icon-border)',
           }}
         >
           {(['short', 'detailed'] as const).map(mode => (
             <button
               key={mode}
               onClick={() => setAnswerMode(mode)}
-              className="px-2.5 py-0.5 transition-[background-color,color]"
+              className="h-6 px-2.5 rounded-md transition-[background-color,color]"
               style={{
-                borderRadius: 6,
                 fontSize: '10px',
                 fontWeight: 700,
                 letterSpacing: '0.08em',
@@ -354,19 +351,17 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       {/* Sona panel actions — behavioral only, lifted from AICompanionPanel header */}
       {surface === 'behavioral' && (sonaExport || sonaClear || sonaClose) && (
         <div
-          className="flex items-center gap-0.5 shrink-0"
+          className="flex items-center gap-0.5 shrink-0 h-8 px-1 rounded-lg"
           style={{
-            padding: '2px 3px',
             background: 'var(--cam-strip-icon-bg)',
-            border: '1px solid var(--cam-gold-leaf)',
-            borderRadius: 8,
+            border: '1px solid var(--cam-strip-icon-border)',
           }}
         >
           <button
             onClick={sonaExport ?? undefined}
             disabled={!sonaHasMessages}
             title="Export session (.md)"
-            className="p-1.5 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ color: 'var(--cam-strip-text)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
@@ -375,7 +370,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             onClick={sonaClear ?? undefined}
             disabled={!sonaHasMessages}
             title="Clear chat history"
-            className="p-1.5 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ color: 'var(--cam-strip-text)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
@@ -383,7 +378,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           <button
             onClick={sonaClose ?? undefined}
             title="Close Sona"
-            className="p-1.5 rounded-md transition-colors hover:bg-white/10"
+            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-white/10"
             style={{ color: 'var(--cam-strip-text)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
@@ -395,7 +390,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           Coding and Design already have Sona; mic controls don't belong there. */}
       {onTranscription && surface === 'behavioral' && (
         <div
-          className="flex items-center gap-1.5 px-2 py-1 rounded-lg shrink-0"
+          className="flex items-center gap-1.5 px-1.5 h-8 rounded-lg shrink-0"
           style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
         >
           <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={surface === 'behavioral'} />

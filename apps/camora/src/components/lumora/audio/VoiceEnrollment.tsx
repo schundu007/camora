@@ -182,9 +182,9 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
         <button
           onClick={handleEnroll}
           disabled={isEnrolling || disabled}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
+          className="flex items-center justify-center gap-2 h-8 px-3 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
           style={isLight ? {
-            fontSize: '13px',
+            fontSize: '12px',
             color: '#ffffff',
             background: isRecording ? 'var(--danger)' : 'var(--cam-primary-dk)',
             border: '1px solid var(--border)',
@@ -231,8 +231,9 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
         disabled={disabled}
         className="flex items-center justify-center gap-2 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
         style={isLight ? {
-          fontSize: '13px',
-          padding: '10px 16px',
+          fontSize: '12px',
+          height: 32,
+          padding: '0 14px',
           color: voiceFilterEnabled ? '#ffffff' : 'var(--text-primary)',
           background: voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--bg-elevated)',
           border: `1px solid ${voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
@@ -254,7 +255,8 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
         className="font-bold rounded-lg transition-[background-color,border-color,color,opacity,transform] active:scale-[0.98]"
         style={isLight ? {
           fontSize: '12px',
-          padding: '8px 16px',
+          height: 32,
+          padding: '0 14px',
           color: 'var(--danger)',
           background: 'transparent',
           border: '1.5px solid var(--danger)',
