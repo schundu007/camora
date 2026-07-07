@@ -376,8 +376,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [timerRunning, setTimerRunning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Panel resize
-  const [leftPanelWidth, setLeftPanelWidth] = useState(25);
+  // Panel resize. Default 40% (was 25%) so the dense solution content —
+  // approach, tradeoffs, the 3-column dry-run trace table, walkthrough —
+  // isn't cramped; users can still drag it to 25–70%.
+  const [leftPanelWidth, setLeftPanelWidth] = useState(40);
   const [outputPanelHeight, setOutputPanelHeight] = useState(180);
   const [isResizingH, setIsResizingH] = useState(false);
   const [isResizingV, setIsResizingV] = useState(false);
