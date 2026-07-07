@@ -418,7 +418,7 @@ def _parse_params(s, func):
 
 def _find_target_func(user_code):
     if 'class Solution' in user_code:
-        m = re.search(r'class Solution.*?def (?!__)(\w+)\\s*\\(\\s*self', user_code, re.DOTALL)
+        m = re.search(r'class Solution.*?def (?!__)(\\w+)\\s*\\(\\s*self', user_code, re.DOTALL)
         if m:
             return 'solution_method', m.group(1)
     all_funcs = re.findall(r'^def (\\w+)\\s*\\(', user_code, re.MULTILINE)
@@ -496,7 +496,8 @@ if _kind == 'solution_method':
     _result = _method(*_params)
     if _has_ll and hasattr(_result, 'val'):
         _result = listToArray(_result)
-    print(_result)
+    if _result is not None:
+        print(_result)
 elif _kind == 'standalone':
     _func = globals()[_fn_name]
     try:
@@ -513,7 +514,8 @@ elif _kind == 'standalone':
     _result = _func(*_params)
     if _has_ll and hasattr(_result, 'val'):
         _result = listToArray(_result)
-    print(_result)
+    if _result is not None:
+        print(_result)
 else:
     _try_simulation()
 `;
