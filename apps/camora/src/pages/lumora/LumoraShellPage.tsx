@@ -98,22 +98,11 @@ export const LumoraShellPage = () => {
     try { localStorage.setItem('lumora_settings_tip_dismissed', val ? '1' : '0'); } catch {}
   };
 
-  // Sona sidebar (Coding / Design tabs only). Persisted per-surface
-  // so the user's preference survives reloads. Default closed so we
-  // don't shrink the solver area unless the user wants Sona.
-  const [sonaSidebarOpen, setSonaSidebarOpen] = useState<boolean>(() => {
-    try { return localStorage.getItem('lumora_sona_sidebar_open') === 'on'; } catch { return false; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem('lumora_sona_sidebar_open', sonaSidebarOpen ? 'on' : 'off'); } catch {}
-  }, [sonaSidebarOpen]);
-
-  // Incremented each time a coding generation stream ends so the Sona
-  // sidebar auto-opens and its mic auto-starts to capture interviewer follow-ups.
-  // NOTE: declared here as state but the effect that reads activeTab is placed
-  // AFTER the activeTab const below to avoid TDZ (const has a dead zone).
-  const [sonaListenTrigger, setSonaListenTrigger] = useState(0);
-  const prevIsStreamingRef = useRef(false);
+  // Sona sidebar (Coding / Design tabs only). Always starts CLOSED and is
+  // NOT persisted — it opens only when the user clicks the Sona toggle icon.
+  // A refresh therefore never reopens it or shrinks the solver area, and Sona
+  // never auto-listens/answers until the user explicitly opens it.
+  const [sonaSidebarOpen, setSonaSidebarOpen] = useState<boolean>(false);
 
   // Track which tabs have been activated (for lazy mounting)
   const [mountedTabs, setMountedTabs] = useState<Set<LumoraTab>>(new Set(['session']));
@@ -151,16 +140,6 @@ export const LumoraShellPage = () => {
   }, [activeTab]);
 
   const showSettingsHint = !settingsDismissed && typeof vadThreshold === 'number' && vadThreshold <= 0.015 && (activeTab === 'coding' || activeTab === 'design');
-
-  // activeTab is now in scope — safe to reference in deps array.
-  useEffect(() => {
-    const prev = prevIsStreamingRef.current;
-    prevIsStreamingRef.current = isStreaming;
-    if (prev && !isStreaming && activeTab === 'coding' && useSessionStore.getState().liveSolveContext) {
-      setSonaSidebarOpen(true);
-      setSonaListenTrigger(n => n + 1);
-    }
-  }, [isStreaming, activeTab]);
 
   // Lazy-mount tabs on first activation
   useEffect(() => {
@@ -616,7 +595,6 @@ export const LumoraShellPage = () => {
                       surface="coding"
                       open={sonaSidebarOpen}
                       onClose={() => setSonaSidebarOpen(false)}
-                      listenTrigger={sonaListenTrigger}
                     />
                   </div>
                 </Suspense>
