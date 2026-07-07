@@ -611,13 +611,27 @@ BASH RULES:
    Match the pattern to what the problem asks for.
 4. Conditions: ALWAYS use if [[ ... ]]; then ... fi — NEVER [[ ]] && (( )) (set -e aborts on exit 1)
 5. Arithmetic: var=\$(( expr )) only — never standalone (( var += n ))`
-  : `CRITICAL CODE STRUCTURE RULES for ${language}:
-- Write a function, class method, or the idiomatic entry point for ${language}
-- Do NOT include a main block or hard-coded example inputs in the code
-- The test runner or user will call your function with arguments
-- The "examples" field in JSON handles test cases — NOT the code itself
+  : `CRITICAL CODE STRUCTURE / EXECUTION CONTRACT for ${language}:
+The test runner PARSES each example's "input" into arguments, CALLS your
+top-level function with those arguments, and compares the function's RETURN
+VALUE to that example's "expected". Follow this contract exactly:
+- Write ONE function (or a class Solution method) whose PARAMETERS are the
+  parsed inputs and that RETURNS the answer as a value.
+- Do NOT read stdin (no input(), no sys.stdin), do NOT print(), do NOT add a
+  module-level call to your function, and do NOT include an if __name__ block.
+  The runner calls the function for you and reads its return value — printing or
+  reading stdin will NOT be compared and will fail the tests.
+- RETURN the answer in the EXACT string / value / format the examples'
+  "expected" shows (this is what RULE #2's "match exactly" refers to — it means
+  the returned value, not printed text).
+- Worked example — problem "read a and b, output a+b, a-b, a*b", example input
+  "3 5", expected "8 -2 15":
+      def solve(a, b):
+          return f"{a + b} {a - b} {a * b}"
+  The runner calls solve(3, 5) and compares its return to "8 -2 15". Note: NO
+  input(), NO print(), NO module-level solve() call.
 - For config/infra languages (Terraform, Kubernetes, Docker, SQL, etc.),
-  write the complete config/query directly`}
+  write the complete config/query directly.`}
 
 ##############################################################################
 # RULE #3.5: PYTHON — USE STDLIB FOR HTTP, NOT THIRD-PARTY PACKAGES
@@ -1410,7 +1424,16 @@ ${language === 'bash' || language === 'shell' ? `BASH EXECUTION CONTEXT:
 - Your function receives $1, $2, ... as quoted strings — parse them yourself
 - echo the final answer to stdout — that is what gets compared to Expected
 - If input is a Python-style list string in $1, parse it with sed/awk or use mapfile
-` : ''}
+` : `EXECUTION CONTEXT for ${language}:
+- The runner PARSES each test Input into arguments, CALLS your top-level function
+  (or class Solution method) with them, and compares the function's RETURN VALUE
+  to Expected. Printed output is NOT what gets compared in this mode.
+- Therefore your fix MUST take the inputs as parameters and RETURN the answer.
+- If the current code reads stdin (input()/sys.stdin), prints its answer, or
+  returns None (a HackerRank-style scaffold), CONVERT it into a clean function
+  that takes the parsed inputs as parameters and RETURNS the answer — that
+  conversion is often the actual fix.
+`}
 Return ONLY a JSON object (no markdown fences):
 {
   "code": "the complete fixed code as a string with \\n for newlines",
@@ -1418,11 +1441,13 @@ Return ONLY a JSON object (no markdown fences):
 }
 
 RULES:
-- Produce code whose stdout matches Expected EXACTLY for every test
+- Produce code whose RETURN VALUE equals Expected EXACTLY for every test
 - Fix ALL failing tests, not just the first one
 - Do NOT add comments in the code
 - Return the COMPLETE runnable code, not a partial snippet
-- Keep the same function signature
+- You MAY change the function signature or restructure (e.g. stdin/print → a
+  param-taking, return-based function) when that is what makes the tests pass
+- Never add a module-level call to your function or an if __name__ block
 - No extra blank lines in the output`);
 
     const content = fixResult.response.text() || '';
@@ -1531,12 +1556,20 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
 }
 
 RULES:
+- EXECUTION CONTRACT: this code is run by a test harness that parses each test
+  Input into arguments, CALLS the top-level function, and compares its RETURN
+  VALUE to the expected output. If the code reads stdin (input()/sys.stdin),
+  prints its answer instead of returning it, or returns None, it is NOT
+  harness-compatible — in that case you SHOULD restructure it into a clean
+  function that takes the parsed inputs as PARAMETERS and RETURNS the answer,
+  then set hackerrank_compatible:true. The "never restructure" rules below apply
+  ONLY to code that is already harness-compatible and merely has a small bug.
 - Fix ONLY what is factually broken (syntax error, wrong operator, off-by-one, missing return, undefined variable, etc.)
 - NEVER substitute a different algorithm, built-in, or idiom for what the user wrote — even if yours is "better". all() stays all(), any() stays any(), a loop stays a loop.
-- NEVER rewrite or restructure code that already works correctly. Edit the minimum number of characters needed.
+- NEVER rewrite or restructure code that already works correctly AND is harness-compatible. Edit the minimum number of characters needed.
 - Preserve variable names, indentation style, string quotes, f-string prefixes, and every other stylistic choice exactly.
 - Respect existing code style and naming conventions
-- The \`if __name__ == '__main__':\` block is READ-ONLY platform boilerplate (HackerRank/CoderPad/etc). NEVER modify anything inside it — not os.environ[...] refs, not file handles, not input() calls. Copy it character-for-character into fixed_code.
+- The \`if __name__ == '__main__':\` block is READ-ONLY platform boilerplate (HackerRank/CoderPad/etc). NEVER modify anything inside it — not os.environ[...] refs, not file handles, not input() calls. Copy it character-for-character into fixed_code. (Exception: when converting an incompatible stdin/print scaffold to a return-based function per the EXECUTION CONTRACT rule above, you may remove the stdin/__main__ boilerplate.)
 - NEVER replace os.environ[...] with a hardcoded string. Environment variables are correct by design on the platform.
 - line numbers refer to the FIXED code, not the original
 - type "fix" = correcting an existing line; type "added" = newly inserted line
@@ -1853,13 +1886,25 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     // Failures here fall through to the generic fetch below (e.g. premium problems
     // that aren't accessible via GraphQL may still have a readable HTML page).
     let lcProblem = null;
+    let lcError = null;
     try {
       lcProblem = await fetchLeetcodeProblem(url);
     } catch (e) {
-      console.warn('fetchLeetcodeProblem failed, falling back to raw fetch:', e.message);
+      lcError = e.message;
+      console.warn('fetchLeetcodeProblem failed:', e.message);
     }
     if (lcProblem) {
       return res.json({ problem: lcProblem, source: url });
+    }
+    // For a LeetCode URL the raw-HTML fallback below never works (SPA shell),
+    // so don't mask the real failure with a generic "empty page" error —
+    // surface the actual GraphQL error. A 403/429 here means this server's IP
+    // is being rate-limited/blocked by LeetCode (common on datacenter IPs).
+    if (/leetcode\.(?:com|cn)\/problems\//i.test(url)) {
+      const hint = /\b(403|429)\b/.test(lcError || '')
+        ? 'LeetCode is rate-limiting this server. Use the screenshot or copy-paste option instead.'
+        : `Could not fetch the LeetCode problem${lcError ? ` (${lcError})` : ''}. Try screenshot or copy-paste.`;
+      return res.status(502).json({ error: hint });
     }
 
     // HackerRank is a Cloudflare-guarded SPA — the raw HTML fetch below 403s
