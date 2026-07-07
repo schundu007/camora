@@ -953,7 +953,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       </div>
 
       {/* ── Split pane ── */}
-      <div className="flex-1 min-h-0">
+      {/* On narrow screens the 3-pane min-width (220+220+160) would push the
+          whole page sideways; contain it to a local horizontal scroll instead.
+          Desktop (md+) is unchanged: min-w-0 + overflow visible. */}
+      <div className="flex-1 min-h-0 overflow-x-auto md:overflow-x-visible">
+      <div className="h-full min-w-[680px] md:min-w-0">
       <Allotment defaultSizes={[34, 33, 33]}>
 
         {/* LEFT — broken code input */}
@@ -1245,6 +1249,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         </Allotment.Pane>
 
       </Allotment>
+      </div>
       </div>
 
       {/* ── Analysis panel — 2 columns ── */}
