@@ -43,6 +43,7 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
   const [blocked, setBlocked] = useState(false);
 
   const sessionIdRef = useRef<string | null>(null);
+  const startingRef = useRef(false);
   const enforceStateRef = useRef<EnforcementState>(INITIAL_STATE);
   const detectorsRef = useRef<ReturnType<typeof createDetectors> | null>(null);
   const pendingRef = useRef<ProctorEvent[]>([]);
@@ -75,12 +76,27 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
   }, [flush]);
 
   const start = useCallback(async () => {
-    if (sessionIdRef.current) return;
-    const { id } = await proctorApi.createSession(surface);
-    sessionIdRef.current = id;
-    const detectors = createDetectors(record, { cameraTrack });
-    detectorsRef.current = detectors;
-    detectors.start();
+    if (sessionIdRef.current || startingRef.current) return;
+    startingRef.current = true;
+    try {
+      const { id } = await proctorApi.createSession(surface);
+      sessionIdRef.current = id;
+
+      // fresh session → reset any state left over from a prior run
+      enforceStateRef.current = INITIAL_STATE;
+      riskRef.current = 0;
+      pendingRef.current = [];
+      setEvents([]);
+      setRiskScore(0);
+      setPaused(false);
+      setBlocked(false);
+
+      const detectors = createDetectors(record, { cameraTrack });
+      detectorsRef.current = detectors;
+      detectors.start();
+    } finally {
+      startingRef.current = false;
+    }
   }, [surface, cameraTrack, record]);
 
   const stop = useCallback(async () => {
@@ -99,6 +115,7 @@ export const ProctorProvider = ({ surface, cameraTrack, children }: ProctorProvi
   useEffect(() => {
     if (!cameraTrack) return;
     const onLive = () => {
+      if (!enforceStateRef.current.cameraDown) return;
       if (cameraTrack.readyState === 'live' && !cameraTrack.muted) {
         enforceStateRef.current = { ...enforceStateRef.current, cameraDown: false };
         setPaused(false);
