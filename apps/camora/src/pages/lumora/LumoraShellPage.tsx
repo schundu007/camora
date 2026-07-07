@@ -400,8 +400,6 @@ export const LumoraShellPage = () => {
         activeTab={activeTab}
         sessionsOpen={sessionsOpen}
         onToggleSessions={() => setSessionsOpen(prev => !prev)}
-        meetingPlatform={meetingPlatform}
-        onMeetingPlatformChange={setMeetingPlatform}
       />
 
       {/* Sessions sidebar — only when on session tab */}
@@ -463,11 +461,49 @@ export const LumoraShellPage = () => {
             <span className="hidden sm:inline">Back</span>
           </button>
 
-          {/* Tool-picker chips (Prepare/Pricing links, meeting + coding
-              platform) were removed from the top bar to reclaim space. The
-              meeting-platform picker now lives in the left icon rail; the
-              active coding platform shows as the green dot + logo in the
-              ScreenshotStrip below. */}
+          {/* Tools pill — compact meeting + coding platform selectors kept
+              visible in the top bar so users can always pick which meeting
+              app and coding platform this interview uses. Tiny (10px) to save
+              space but explicit. Prepare/Pricing links stay removed. lg+ only
+              so the 5-tab cluster still fits at the md breakpoint. */}
+          <div className="hidden lg:flex items-center gap-1 p-0.5 rounded shrink-0"
+            style={{ background: 'var(--lumora-chrome-bg)', border: '1px solid var(--lumora-chrome-border)', boxShadow: 'var(--lumora-chrome-shadow)' }}>
+            {/* Meeting platform */}
+            <div className="flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-bold"
+              style={{ color: 'var(--lumora-chrome-text)' }} title="Meeting platform for this interview">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+              <select value={meetingPlatform} onChange={e => setMeetingPlatform(e.target.value)}
+                className="bg-transparent border-none outline-none cursor-pointer text-[10px] font-bold"
+                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
+                aria-label="Meeting platform">
+                <option value="zoom">Zoom</option>
+                <option value="teams">Teams</option>
+                <option value="meet">Meet</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="w-px h-3.5" style={{ background: 'var(--lumora-chrome-border)' }} />
+            {/* Coding platform */}
+            <div className="flex items-center gap-1 px-1.5 py-1 rounded text-[10px] font-bold"
+              style={codingPlatform !== 'none' && codingPlatform !== 'auto'
+                ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: '0.25rem' }
+                : { color: 'var(--lumora-chrome-text)' }}
+              title="Coding platform — Auto-detect reads your interview tab">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <select value={codingPlatform} onChange={e => setCodingPlatform(e.target.value)}
+                className="bg-transparent border-none outline-none cursor-pointer text-[10px] font-bold"
+                style={{ color: 'inherit', appearance: 'none', WebkitAppearance: 'none' }}
+                aria-label="Coding platform">
+                <option value="auto">Auto</option>
+                <option value="none">Off</option>
+                <option value="hackerrank">HackerRank</option>
+                <option value="leetcode">LeetCode</option>
+                <option value="coderpad">CoderPad</option>
+                <option value="codesignal">CodeSignal</option>
+                <option value="glider">Glider</option>
+              </select>
+            </div>
+          </div>
 
           {/* LEFT spacer — pushes the tab pills toward the centre of the
               top bar instead of letting them sit flush against the
