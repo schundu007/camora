@@ -19,6 +19,7 @@ const PricingPage = lazy(() => import('./pages/PricingPage'));
 
 // ── Lumora pages (live session) ───────────────────────
 const LumoraShellPage = lazy(() => import('./pages/lumora/LumoraShellPage'));
+const CodingProctoredPage = lazy(() => import('./pages/lumora/CodingPage').then(m => ({ default: m.CodingProctoredPage })));
 
 // ── Capra pages (preparation) ───────────────────────────
 const CapraDashboard = lazy(() => import('./pages/capra/DashboardPage'));
@@ -554,6 +555,7 @@ export const App = () => {
           {/* ── Lumora: Live Session (PAID — own layout, no shell) ── */}
           <Route path="/lumora" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/coding" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/coding/proctored" element={<PaidRoute><CodingProctoredPage /></PaidRoute>} />
           <Route path="/lumora/design" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/behavioral" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/practice" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
