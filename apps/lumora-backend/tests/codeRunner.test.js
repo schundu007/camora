@@ -69,4 +69,19 @@ describe('codeRunner Python harness — input/output correctness', () => {
     ]);
     expect(bool.results[0].output).toBe('False');
   });
+
+  // "Test against custom input": opts.stdin runs the code once feeding raw stdin,
+  // bypassing the test-case harness, and returns direct output.
+  py('runs against custom stdin via opts.stdin (bypasses test cases)', async () => {
+    const single = await executeCode('n = int(input())\nprint(n * n)', 'python', [], { stdin: '7\n' });
+    expect(single.direct_output).toBe('49');
+    const multi = await executeCode(
+      'import sys\nprint(sum(int(x) for x in sys.stdin.read().split()))',
+      'python', [], { stdin: '1 2 3\n4 5\n' },
+    );
+    expect(multi.direct_output).toBe('15');
+    // No opts → unchanged direct execution (regression guard).
+    const plain = await executeCode('print(1 + 1)', 'python', []);
+    expect(plain.direct_output).toBe('2');
+  });
 });

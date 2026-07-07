@@ -4,6 +4,7 @@ import type * as Monaco from 'monaco-editor';
 import { LanguageTabs } from './LanguageTabs';
 import { PlaygroundEditor } from './PlaygroundEditor';
 import { OutputPane, type RunEntry } from './OutputPane';
+import { CustomInputPanel } from '../../shared/CustomInputPanel';
 import { playgroundAPI, type PlaygroundLanguage, type ExplainResult } from '../../../lib/capra-api';
 
 const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
@@ -125,6 +126,9 @@ export const PlaygroundLayout = () => {
   const [explainMode, setExplainMode] = useState(false);
   const [rightTab, setRightTab]     = useState<'output' | 'explain'>('output');
   const [runs, setRuns]             = useState<RunEntry[]>([]);
+  const [customInputEnabled, setCustomInputEnabled] = useState(false);
+  const [customInput, setCustomInput] = useState('');
+  const supportsStdin = activeTab === 'python3' || activeTab === 'bash';
   const [explain, setExplain]       = useState<ExplainState>({ rich: null, loading: false, line: 0, error: null });
 
   const codeRef       = useRef<Record<PlaygroundLanguage, string>>({ ...DEFAULT_CODE });
@@ -177,14 +181,15 @@ export const PlaygroundLayout = () => {
     setRunning(true);
     setRightTab('output');
     try {
-      const r = await playgroundAPI.run({ language: activeTab, code });
+      const useStdin = customInputEnabled && (activeTab === 'python3' || activeTab === 'bash');
+      const r = await playgroundAPI.run({ language: activeTab, code, stdin: useStdin ? customInput : undefined });
       setRuns(prev => [...prev, { ts: new Date(), result: r, error: null }]);
     } catch (err: unknown) {
       setRuns(prev => [...prev, { ts: new Date(), result: null, error: err instanceof Error ? err.message : 'Execution failed' }]);
     } finally {
       setRunning(false);
     }
-  }, [activeTab]);
+  }, [activeTab, customInputEnabled, customInput]);
 
   const handleFormat = useCallback(async () => {
     if (activeTab === 'docker') return;
@@ -335,15 +340,28 @@ export const PlaygroundLayout = () => {
       {/* Split pane */}
       <div className="flex flex-1 overflow-hidden">
         {/* Editor */}
-        <div className="w-1/2 border-r border-[#1e293b] overflow-hidden">
-          <PlaygroundEditor
-            key={activeTab}
-            language={activeTab}
-            defaultValue={codeRef.current[activeTab]}
-            onChange={handleCodeChange}
-            onMount={handleEditorMount}
-            onCursorChange={handleCursorChange}
-          />
+        <div className="w-1/2 border-r border-[#1e293b] overflow-hidden flex flex-col">
+          <div className="flex-1 overflow-hidden">
+            <PlaygroundEditor
+              key={activeTab}
+              language={activeTab}
+              defaultValue={codeRef.current[activeTab]}
+              onChange={handleCodeChange}
+              onMount={handleEditorMount}
+              onCursorChange={handleCursorChange}
+            />
+          </div>
+          {supportsStdin && (
+            <div className="shrink-0 border-t border-[#1e293b] px-3 py-2 bg-[#0a0d12]">
+              <CustomInputPanel
+                enabled={customInputEnabled}
+                value={customInput}
+                onToggle={setCustomInputEnabled}
+                onChange={setCustomInput}
+                disabled={running}
+              />
+            </div>
+          )}
         </div>
 
         {/* Right pane: Output | Explain */}

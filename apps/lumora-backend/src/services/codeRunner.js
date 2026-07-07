@@ -153,7 +153,7 @@ function emptyOutputHint(code, runtime) {
   return '(no output)';
 }
 
-async function directExecute(code, runtime) {
+async function directExecute(code, runtime, stdin = null) {
   const id = randomUUID();
   const tmpBase = join(tmpdir(), `lumora-${id}`);
 
@@ -166,7 +166,7 @@ async function directExecute(code, runtime) {
     try {
       const bin = await which(cmd);
       if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
-      let runOpts = {};
+      let runOpts = stdin != null ? { stdin } : {};
       let result = await runCommand(cmd, [srcPath], runOpts);
       // Auto-install missing packages and retry (up to 5 different imports)
       for (let attempt = 0; attempt < 5 && result.exitCode !== 0; attempt++) {
@@ -181,7 +181,7 @@ async function directExecute(code, runtime) {
           await mkdir(tmpDir, { recursive: true });
           const ok = await npmInstall(mod, tmpDir);
           if (!ok) break;
-          runOpts = { env: { ...process.env, NODE_PATH: join(tmpDir, 'node_modules') } };
+          runOpts = { ...runOpts, env: { ...process.env, NODE_PATH: join(tmpDir, 'node_modules') } };
         } else {
           break;
         }
@@ -189,7 +189,7 @@ async function directExecute(code, runtime) {
       }
       if (result.exitCode !== 0) {
         const err = result.stderr || '';
-        if (err.includes('EOFError') || err.includes('NoSuchElementException') || err.includes('End of input')) {
+        if (stdin == null && (err.includes('EOFError') || err.includes('NoSuchElementException') || err.includes('End of input'))) {
           return { direct_output: '(no stdin input) — this code reads from stdin. Add test cases in the Test Cases tab to run with input.' };
         }
         return { direct_output: err ? `Error:\n${err}` : 'Execution failed' };
@@ -211,7 +211,7 @@ async function directExecute(code, runtime) {
       const bin = await which(cmd);
       if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
       const args = subcmd ? [subcmd, srcPath] : [srcPath];
-      const { stdout, stderr, exitCode } = await runCommand(cmd, args, { timeout: COMPILE_TIMEOUT_MS });
+      const { stdout, stderr, exitCode } = await runCommand(cmd, args, { timeout: COMPILE_TIMEOUT_MS, stdin });
       if (exitCode !== 0) return { direct_output: stderr ? `Error:\n${stderr}` : 'Execution failed' };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
       return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
@@ -231,7 +231,7 @@ async function directExecute(code, runtime) {
       if (!bin) throw new Error(`Compiler '${compiler}' not found on server`);
       const compile = await runCommand(compiler, makeArgs(srcPath, binPath), { timeout: COMPILE_TIMEOUT_MS });
       if (compile.exitCode !== 0) return { direct_output: `Compilation Error:\n${compile.stderr}` };
-      const { stdout, stderr, exitCode } = await runCommand(binPath, []);
+      const { stdout, stderr, exitCode } = await runCommand(binPath, [], { stdin });
       if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
       return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
@@ -254,7 +254,7 @@ async function directExecute(code, runtime) {
       if (!javac) throw new Error("Runtime 'javac' not found on server");
       const compile = await runCommand('javac', [srcPath], { timeout: COMPILE_TIMEOUT_MS });
       if (compile.exitCode !== 0) return { direct_output: `Compilation Error:\n${compile.stderr}` };
-      const { stdout, stderr, exitCode } = await runCommand('java', ['-cp', srcDir, className]);
+      const { stdout, stderr, exitCode } = await runCommand('java', ['-cp', srcDir, className], { stdin });
       if (exitCode !== 0) return { direct_output: stderr ? `Runtime Error:\n${stderr}` : 'Execution failed' };
       const out = stderr ? `${stdout}\n[stderr]: ${stderr}` : stdout;
       return { direct_output: out.trim() || emptyOutputHint(code, runtime) };
@@ -286,9 +286,16 @@ function buildPythonRunner(code, testInput) {
   // printed output, print its `None` return, and double-execute it (the
   // module-level self-call plus the harness call) — the exact cause of the
   // "correct Out but IndexError/FAILED" symptom.
+  // Only pass through when the code actually EXECUTES at module level — either a
+  // top-level input()/print() or a top-level call (e.g. `solve()`). If the
+  // stdin/print logic lives only inside an uncalled `def`, running verbatim would
+  // define but never invoke it → "(no output)". In that case fall through to the
+  // harness, which detects the entry function and calls it (feeding stdin).
   const readsStdin = /\b(?:sys\.stdin|input\s*\()/.test(code);
   const printsOut = /\bprint\s*\(/.test(code);
-  if (readsStdin && printsOut && !/class\s+Solution\b/.test(code)) {
+  const moduleLevelIO = /^\S[^\n]*\b(?:input|print)\s*\(/m.test(code);
+  const moduleLevelCall = /^(?!def\b|class\b|if\b|elif\b|else\b|for\b|while\b|with\b|try\b|except\b|finally\b|return\b|import\b|from\b|@)[A-Za-z_]\w*\s*\(/m.test(code);
+  if (readsStdin && printsOut && (moduleLevelIO || moduleLevelCall) && !/class\s+Solution\b/.test(code)) {
     return code;
   }
 
@@ -907,7 +914,7 @@ const NOT_EXECUTABLE = new Set([
 // Public API
 // ---------------------------------------------------------------------------
 
-export async function executeCode(code, language, testCases = []) {
+export async function executeCode(code, language, testCases = [], opts = {}) {
   const lang = language.toLowerCase();
 
   // Check for non-executable languages
@@ -924,6 +931,12 @@ export async function executeCode(code, language, testCases = []) {
       `Code execution for '${language}' is not available. ` +
       `Solution generation works for all languages, but execution requires a server runtime.`,
     );
+  }
+
+  // Custom-input run ("Test against custom input"): execute once feeding the raw
+  // stdin, bypassing the test-case harness entirely, and return direct output.
+  if (typeof opts.stdin === 'string') {
+    return directExecute(code, runtime, opts.stdin);
   }
 
   // No test cases → direct execution

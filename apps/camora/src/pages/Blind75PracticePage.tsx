@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteNav from '../components/shared/SiteNav';
 import SiteFooter from '../components/shared/SiteFooter';
 import { Icon } from '../components/shared/Icons';
+import { CustomInputPanel } from '../components/shared/CustomInputPanel';
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -5663,6 +5664,8 @@ export default function Blind75PracticePage() {
   const [language, setLanguage] = useState<Language>('python');
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
+  const [customInputEnabled, setCustomInputEnabled] = useState(false);
+  const [customInput, setCustomInput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [aiSolution, setAiSolution] = useState('');
   const [isSolving, setIsSolving] = useState(false);
@@ -5687,7 +5690,7 @@ export default function Blind75PracticePage() {
     try {
       const res = await fetch(`${CAPRA_API_URL}/api/run`, {
         credentials: 'include',
-        method: 'POST', headers, body: JSON.stringify({ code, language, input: '', problem: problem?.title || `Problem #${id}` }) });
+        method: 'POST', headers, body: JSON.stringify({ code, language, input: customInputEnabled ? customInput : '', problem: problem?.title || `Problem #${id}` }) });
       if (!res.ok) throw new Error(`Server error (${res.status})`);
       const data = await res.json();
       setOutput(data.output || data.stdout || data.stderr || 'No output');
@@ -5826,6 +5829,16 @@ export default function Blind75PracticePage() {
             {/* Editor */}
             <textarea value={code} onChange={e => setCode(e.target.value)} spellCheck={false}
               style={{ flex: 1, resize: 'none', border: '1px solid var(--border)', outline: 'none', padding: 16, fontFamily: "var(--font-mono)", fontSize: 14, lineHeight: 1.6, background: '#1e1e1e', color: '#d4d4d4', tabSize: 2, minHeight: 300 }} />
+            {/* Custom input (stdin) */}
+            <div style={{ borderTop: '1px solid #333', background: '#1a1a1a', padding: '10px 12px' }}>
+              <CustomInputPanel
+                enabled={customInputEnabled}
+                value={customInput}
+                onToggle={setCustomInputEnabled}
+                onChange={setCustomInput}
+                disabled={isRunning}
+              />
+            </div>
             {/* Output */}
             <div style={{ borderTop: '1px solid #333', background: '#1a1a1a', padding: 12, minHeight: 80, maxHeight: 200, overflow: 'auto' }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>OUTPUT</div>

@@ -1539,7 +1539,7 @@ router.post('/execute', authenticate, async (req, res) => {
   // input, sandbox failure all map to a 200/400 with a readable message
   // rather than a generic "Internal server error".
   try {
-    const { code, language, test_cases: testCases } = req.body || {};
+    const { code, language, test_cases: testCases, stdin } = req.body || {};
 
     if (!code || !language) {
       return res.status(400).json({ error: 'Missing code or language' });
@@ -1548,10 +1548,14 @@ router.post('/execute', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'code and language must be strings' });
     }
 
+    // Optional custom stdin ("Test against custom input") — cap to protect the runner.
+    // When present, the runner executes once feeding this stdin, bypassing test cases.
+    const runOpts = typeof stdin === 'string' ? { stdin: stdin.slice(0, 64 * 1024) } : {};
+
     // Hard 25s wall — Railway's edge proxy times out at ~30s; we must
     // beat it so the client gets a JSON error rather than a 502 HTML.
     const result = await Promise.race([
-      executeCode(code, language, Array.isArray(testCases) ? testCases : []),
+      executeCode(code, language, Array.isArray(testCases) ? testCases : [], runOpts),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Execution timed out after 25s')), 25_000),
       ),
