@@ -207,11 +207,13 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger,
     }
   }, [token, onText, onDone, autoMode, releaseStream, clearTimers, stopRecorder]);
 
+  /* eslint-disable react-hooks/preserve-manual-memoization -- compiler can't preserve this manual memo; DOM onClick identity is irrelevant so it's benign */
   const handleClick = useCallback(() => {
     if (disabled || autoMode) return;
     if (state === 'idle') startRecording();
     else if (state === 'recording') stopRecorder();
   }, [disabled, autoMode, state, startRecording, stopRecorder]);
+  /* eslint-enable react-hooks/preserve-manual-memoization */
 
   const isRecording = state === 'recording';
   const isBusy = state === 'transcribing';

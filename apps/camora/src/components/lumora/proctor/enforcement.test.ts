@@ -16,7 +16,7 @@ describe('proctor enforcement', () => {
     let state = INITIAL_STATE;
     const first = evaluate(ev('WINDOW_BLUR'), state); state = first.state;
     const second = evaluate(ev('WINDOW_BLUR'), state); state = second.state;
-    const third = evaluate(ev('WINDOW_BLUR'), state); state = third.state;
+    const third = evaluate(ev('WINDOW_BLUR'), state);
     expect(first.actions).toContain('warn');
     expect(first.actions).not.toContain('flag');
     expect(third.actions).toContain('flag');
