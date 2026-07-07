@@ -17,7 +17,6 @@ interface SonaMicButtonProps {
   /** Called after transcription completes (whether or not text was returned). */
   onDone?: () => void;
   disabled?: boolean;
-  startTrigger?: number;
   /** Increment to toggle mic on/off (driven by Cmd+M keyboard shortcut). */
   toggleTrigger?: number;
   /** When true: auto-starts, uses VAD silence detection to stop, no manual stop UI. */
@@ -55,7 +54,7 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-export const SonaMicButton = ({ onText, onDone, disabled = false, startTrigger, toggleTrigger, autoMode = false }: SonaMicButtonProps) => {
+export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger, autoMode = false }: SonaMicButtonProps) => {
   const { token } = useAuth();
   const reducedMotion = usePrefersReducedMotion();
 
@@ -99,12 +98,6 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, startTrigger, 
     recorderRef.current = null;
     releaseStream();
   }, [clearTimers, releaseStream]);
-
-  useEffect(() => {
-    if (!startTrigger) return;
-    if (state === 'idle' && !disabled) startRecording();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startTrigger]);
 
   useEffect(() => {
     if (!toggleTrigger) return;

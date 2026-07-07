@@ -43,9 +43,6 @@ interface CodingSonaSidebarProps {
   surface: 'coding' | 'design';
   open: boolean;
   onClose: () => void;
-  /** Increment to auto-start the Sona mic (e.g. after coding generation
-   *  completes so the interviewer's follow-up is captured immediately). */
-  listenTrigger?: number;
 }
 
 // Per-user, per-surface store (sonaSidebarStoreFor) — chat history is scoped
@@ -62,7 +59,7 @@ const saveHistory = (surface: string, msgs: ChatMessage[]) => {
   sonaSidebarStoreFor(surface).write(msgs.slice(-50));
 }
 
-export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: CodingSonaSidebarProps) => {
+export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarProps) => {
   const { token } = useAuth();
   const liveSolveContext = useSessionStore(s => s.liveSolveContext);
 
@@ -71,7 +68,6 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [micStartTrigger, setMicStartTrigger] = useState(0);
   const [micToggleTrigger, setMicToggleTrigger] = useState(0);
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const dragRef = useRef<{ startX: number; startW: number } | null>(null);
@@ -116,14 +112,6 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 80);
   }, [open]);
-
-  // When listenTrigger fires from the parent (coding generation complete),
-  // bump the mic start so the user can immediately ask a follow-up.
-  useEffect(() => {
-    if (!listenTrigger || !open) return;
-    const t = setTimeout(() => setMicStartTrigger(n => n + 1), 500);
-    return () => clearTimeout(t);
-  }, [listenTrigger, open]);
 
   // Cleanup any in-flight stream on unmount
   useEffect(() => () => abortRef.current?.abort(), []);
@@ -476,7 +464,6 @@ export const CodingSonaSidebar = ({ surface, open, onClose, listenTrigger }: Cod
             <div className="flex items-end gap-3 min-h-[2rem]">
               <SonaMicButton
                 disabled={streaming}
-                startTrigger={micStartTrigger}
                 toggleTrigger={micToggleTrigger}
                 onText={(t) => {
                   const full = input ? `${input.trimEnd()} ${t}` : t;
