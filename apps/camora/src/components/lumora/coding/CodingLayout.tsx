@@ -1896,10 +1896,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // ── Analysis content renderers (const, not module-level, to avoid TDZ in bundler) ──
 
   const SEV_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-    CRITICAL: { bg: 'rgba(239,68,68,0.12)', border: '#ef4444', text: '#ef4444' },
-    HIGH:     { bg: 'rgba(249,115,22,0.12)', border: '#f97316', text: '#f97316' },
-    MEDIUM:   { bg: 'rgba(234,179,8,0.12)',  border: '#eab308', text: '#ca8a04' },
-    LOW:      { bg: 'rgba(34,197,94,0.12)',  border: '#22c55e', text: '#16a34a' },
+    // Urgency ramp within the sanctioned palette (danger -> gold -> navy ->
+    // neutral), not a rainbow. Tints via the Surface-Wash rule.
+    CRITICAL: { bg: 'color-mix(in oklab, var(--danger) 12%, transparent)',        border: 'var(--danger)',        text: 'var(--danger)' },
+    HIGH:     { bg: 'color-mix(in oklab, var(--cam-gold-leaf) 14%, transparent)', border: 'var(--cam-gold-leaf)',  text: 'var(--cam-gold-leaf-lt)' },
+    MEDIUM:   { bg: 'color-mix(in oklab, var(--cam-primary) 12%, transparent)',   border: 'var(--cam-primary)',    text: 'var(--cam-primary)' },
+    LOW:      { bg: 'color-mix(in oklab, var(--text-muted) 10%, transparent)',    border: 'var(--border-hover)',  text: 'var(--text-muted)' },
   };
 
   const renderInline = (text: string): React.ReactNode => {
