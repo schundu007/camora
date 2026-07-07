@@ -846,6 +846,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   useEffect(() => {
     const pb = parsedBlocks as any;
     const jsonData = pb && !Array.isArray(pb) ? (pb.json || pb) : null;
+    // MCQ answer — store it and stop. No code/testcases to extract, so the
+    // Monaco editor and auto-run stay untouched.
+    if (jsonData && jsonData.type === 'mcq' && jsonData.mcq) {
+      setJsonSolution(jsonData);
+      return;
+    }
     if (jsonData && (jsonData.code || jsonData.solutions)) {
       setJsonSolution(jsonData);
       // New multi-solution format
@@ -1810,6 +1816,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   const streamingSolution = streamText;
   const sd = jsonSolution;
+  // MCQ answers reuse the `sd` channel but carry type:'mcq' + an `mcq` block
+  // instead of solutions/code. They render an answer card, not code cards.
+  const isMcqAnswer = !!(sd && sd.type === 'mcq' && sd.mcq);
+  const mcq = isMcqAnswer ? sd.mcq : null;
 
   // Passed/failed counts
   const passedCount = testResults.filter(r => r.passed).length;
@@ -2395,7 +2405,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             {problemTab === 'solution' && (
               <div className="p-2 md:p-3">
                 {/* ── Analysis tabs (Code | Explain | Issues | Deep Dive) ── */}
-                {sd && !isStreaming && (
+                {sd && !isStreaming && !isMcqAnswer && (
                   <div className="flex items-center gap-0.5 mb-3 p-1 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                     {(['code', 'explain', 'issues', 'deepdive'] as const).map(tab => {
                       const labels: Record<string, string> = { code: 'Code', explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' };
@@ -2577,8 +2587,88 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   );
                 })()}
 
+                {/* ── MCQ ANSWER CARD ── */}
+                {isMcqAnswer && mcq && (
+                  <div className="space-y-3 solution-cards-appear">
+                    {/* Answer banner */}
+                    <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid var(--cam-primary)` }}>
+                      <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap" style={{ background: 'var(--cam-hero-strip)', borderBottom: `1px solid var(--cam-primary)` }}>
+                        <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+                          {mcq.multiSelect ? 'Correct answers' : 'Correct answer'}
+                        </span>
+                        <span className="text-sm font-bold rounded-md px-2 py-0.5" style={{ color: '#FFFFFF', background: 'var(--cam-primary)' }}>
+                          {Array.isArray(mcq.answer) ? mcq.answer.join(', ') : String(mcq.answer ?? '')}
+                        </span>
+                        {mcq.confidence && (
+                          <span className="ml-auto text-[9px] font-mono uppercase tracking-wider rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>
+                            {mcq.confidence} confidence
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3 space-y-2">
+                        {mcq.question && <p className="text-xs md:text-[13px] font-semibold leading-relaxed" style={{ color: t.text }}>{mcq.question}</p>}
+                        {/* Options list */}
+                        {Array.isArray(mcq.options) && (
+                          <div className="space-y-1.5 pt-1">
+                            {mcq.options.map((opt: any, i: number) => (
+                              <div key={opt.key ?? i} className="flex items-start gap-2 rounded-lg px-2.5 py-1.5"
+                                style={opt.correct
+                                  ? { background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)' }
+                                  : { background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
+                                <span className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold mt-0.5"
+                                  style={opt.correct
+                                    ? { background: 'var(--cam-primary)', color: '#fff' }
+                                    : { background: t.badgeBg, color: t.badgeText }}>
+                                  {opt.correct ? '✓' : (opt.key ?? String.fromCharCode(65 + i))}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <span className="text-[11px] md:text-xs leading-relaxed" style={{ color: opt.correct ? t.text : t.textMuted }}>
+                                    <span className="font-bold">{opt.key ?? String.fromCharCode(65 + i)})</span> {opt.text}
+                                  </span>
+                                  {opt.reason && <span className="block text-[10px] leading-snug mt-0.5" style={{ color: t.textDim }}>{opt.reason}</span>}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Explanation */}
+                    {mcq.explanation && (
+                      <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
+                        <div className="flex items-center gap-1.5 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                          <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: t.headerText }}>Why</span>
+                        </div>
+                        <p className="px-3 py-2.5 text-[11px] md:text-xs leading-relaxed" style={{ color: t.textMuted }}>{mcq.explanation}</p>
+                      </div>
+                    )}
+
+                    {/* Say this out loud */}
+                    {mcq.narration && (
+                      <div className="rounded-lg" style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.35)' }}>
+                        <div className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                          <div className="flex items-center gap-1.5">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                              <line x1="12" y1="19" x2="12" y2="22" />
+                            </svg>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)' }}>Say this out loud</span>
+                          </div>
+                          <button onClick={() => navigator.clipboard.writeText(mcq.narration)}
+                            className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5" style={{ color: 'var(--cam-primary-dk)' }}>
+                            Copy
+                          </button>
+                        </div>
+                        <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>{mcq.narration}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* JSON Solution — Modern Cards */}
-                {analysisTab === 'code' && sd && (
+                {analysisTab === 'code' && sd && !isMcqAnswer && (
                   <div className="space-y-3 solution-cards-appear">
 
                     {/* ── SOLUTION TABS (when multiple solutions) ── */}
