@@ -1888,7 +1888,10 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 /* Coding/Design panel responsive widths */
 @media (min-width: 768px) {
   .coding-left-panel { width: var(--left-w, 42%) !important; }
-  .design-left-panel { width: var(--left-w, 42%) !important; min-width: 360px; max-width: 60vw; }
+  /* Floor is viewport-relative: a flat 360px pinned the left panel once
+     42% dropped below it (window < ~857px), so the split stopped reflowing
+     on resize. min(360px, 40vw) keeps it shrinking with the window. */
+  .design-left-panel { width: var(--left-w, 42%) !important; min-width: min(360px, 40vw); max-width: 60vw; }
 }
 
 /* Lumora icon-rail offset — 0 on mobile (rail hidden), 80px on md+ (rail visible).
