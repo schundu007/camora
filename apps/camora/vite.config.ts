@@ -9,6 +9,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+  },
   build: {
     // Modern evergreen browsers only — interview platform users are on
     // up-to-date browsers. Saves ~kb per chunk vs the default es2015
