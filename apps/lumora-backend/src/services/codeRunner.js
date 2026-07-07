@@ -278,6 +278,20 @@ function buildPythonRunner(code, testInput) {
   const codeB64 = Buffer.from(code).toString('base64');
   const inputB64 = Buffer.from(testInput).toString('base64');
 
+  // Stdin/print passthrough — mirror buildJavascriptRunner's `console.log`
+  // short-circuit. If the solution reads stdin AND prints, it targets the
+  // HackerRank stdin/print model, not the LeetCode call-and-return model.
+  // Run it VERBATIM so runInSandbox pipes the test input to stdin and we
+  // compare its stdout. Wrapping+calling such code instead would discard its
+  // printed output, print its `None` return, and double-execute it (the
+  // module-level self-call plus the harness call) — the exact cause of the
+  // "correct Out but IndexError/FAILED" symptom.
+  const readsStdin = /\b(?:sys\.stdin|input\s*\()/.test(code);
+  const printsOut = /\bprint\s*\(/.test(code);
+  if (readsStdin && printsOut && !/class\s+Solution\b/.test(code)) {
+    return code;
+  }
+
   const needsLinkedList = ['listnode', 'linked', '.next', '.val', 'head.next', 'current.next']
     .some(p => code.toLowerCase().includes(p));
 
@@ -316,7 +330,14 @@ def listToArray(head):
     return r
 ` : '';
 
-  const cleanCode = code.replace(/\n*if\s+__name__\s*==\s*['"]__main__['"]\s*:[\s\S]*/m, '');
+  let cleanCode = code.replace(/\n*if\s+__name__\s*==\s*['"]__main__['"]\s*:[\s\S]*/m, '');
+  // Also drop a trailing module-level bare call of a defined function (a footer
+  // like `solve()` / `main()`), so wrapping in the call-model doesn't execute
+  // the solution twice — once via the footer, once via `_func(*_params)`.
+  cleanCode = cleanCode.replace(
+    /\n[ \t]*([a-zA-Z_]\w*)\s*\([^\n]*\)\s*$/,
+    (m, name) => (new RegExp(`\\bdef\\s+${name}\\s*\\(`).test(cleanCode) ? '' : m),
+  );
 
   return `${llHelpers}
 ${cleanCode}
@@ -766,7 +787,12 @@ function compareOutput(expected, actual) {
       if (JSON.stringify(eSorted) === JSON.stringify(aSorted)) return true;
     }
   }
-  return expected.trim() === actual.trim();
+  // Whitespace-insensitive fallback: collapse all runs of whitespace (incl.
+  // newlines) to single spaces so a per-line print output ("8\n-2\n15") matches
+  // a space-joined expected ("8 -2 15") and vice versa — interview-coding
+  // outputs rarely depend on exact interior whitespace.
+  const normWs = (x) => x.trim().replace(/\s+/g, ' ');
+  return normWs(expected) === normWs(actual);
 }
 
 // ---------------------------------------------------------------------------
@@ -944,11 +970,20 @@ export async function executeCode(code, language, testCases = []) {
         error = stderr.slice(0, 500);
       }
 
-      const passed = !error && !!output && compareOutput(tc.expected, output);
+      // Decide correctness on STDOUT FIRST. A stdout that matches expected is a
+      // PASS even if the process later exits non-zero (e.g. a harness crash
+      // AFTER the solution already printed the right answer). Previously
+      // `passed = !error && ...` let any non-zero exit veto an already-correct
+      // stdout — the "Out == Exp yet FAILED, with a traceback" symptom.
+      const matched = !!output && compareOutput(tc.expected, output);
+      const passed = matched;
 
       results.push({
         input: tc.input,
         expected: tc.expected,
+        // Keep the correct stdout as the shown Out; only fall back to the error
+        // text when there was no usable output. Never show a matching Out next
+        // to a failure.
         output: output || error || '(no output)',
         passed,
         error: passed ? null : error,
@@ -963,3 +998,5 @@ export async function executeCode(code, language, testCases = []) {
     all_passed: results.every(r => r.passed),
   };
 }
+
+
