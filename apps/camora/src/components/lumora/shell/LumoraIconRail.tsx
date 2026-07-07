@@ -38,6 +38,15 @@ const MORE_ITEMS = [
   { id: 'credits', label: 'Credits', path: '/lumora/credits' },
 ];
 
+/* Interview tool switchers — compact icon-only quick-switch between the live
+   surfaces (replaces the old header tab pills). Home is the Dashboard item. */
+const TOOL_ITEMS = [
+  { id: 'coding', label: 'Coding', path: '/lumora/coding', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
+  { id: 'design', label: 'Design', path: '/lumora/design', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
+  { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg> },
+  { id: 'cofix', label: 'CoFix', path: '/lumora/fix', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z" /></svg> },
+];
+
 export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack }: LumoraIconRailProps) => {
   const [accountOpen, setAccountOpen] = useState(false);
 
@@ -134,6 +143,29 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           </button>
         </div>
       )}
+
+      {/* Interview tool switchers — quick-switch between live surfaces
+          (Coding / Design / Behavioral / CoFix), icon-only when collapsed. */}
+      <div className="flex flex-col gap-0.5 px-1.5 mb-1">
+        {TOOL_ITEMS.map(item => {
+          const active = activeTab === item.id;
+          return (
+            <Link
+              key={item.id}
+              to={item.path}
+              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+              style={itemStyle(active)}
+              title={expanded ? undefined : item.label}
+            >
+              {item.icon}
+              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Divider between tools and the rest of the nav */}
+      <div className="mx-4 mb-2 h-px" style={{ background: 'var(--border)' }} />
 
       {/* Main nav */}
       <div className="flex flex-col gap-0.5 px-1.5">
