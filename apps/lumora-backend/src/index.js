@@ -496,6 +496,7 @@ import usercodeRouter from './routes/usercode.js';
 import githubRouter from './routes/github.js';
 import internalRouter from './routes/internal.js';
 import adminRouter from './routes/admin.js';
+import proctorRouter from './routes/proctor.js';
 import { loadAdminConfig } from './services/adminConfig.js';
 
 // Per-IP rate limiting — previously only ascend had limits. Transcribe/speaker/
@@ -553,6 +554,7 @@ app.use('/api/v1/jobsearch/applications', apiLimiter, authenticate, jobApplicati
 app.use('/api/v1/jobsearch/tailor', aiLimiter, authenticate, jobseekerTailorRouter);
 app.use('/api/v1/stories', apiLimiter, storiesRouter); // stories feed is public-readable
 app.use('/api/v1/github', apiLimiter, authenticate, requirePaidSubscription, githubRouter);
+app.use('/api/v1/proctor', apiLimiter, authenticate, proctorRouter);
 
 app.use('/internal', internalRouter);
 app.use('/api/v1/admin', apiLimiter, authenticate, adminRouter);
