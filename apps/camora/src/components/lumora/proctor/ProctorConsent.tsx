@@ -15,6 +15,7 @@ export const ProctorConsent = ({ onStart, starting = false }: ProctorConsentProp
           When you begin, this session enters fullscreen and monitors:
         </p>
         <ul className="text-caption text-left inline-block mb-6 space-y-1" style={{ color: 'var(--text-secondary)' }}>
+          <li>📷 Webcam presence (your camera must stay on)</li>
           <li>👁️ Tab / window focus changes</li>
           <li>🖥️ Exiting fullscreen or a second monitor</li>
           <li>📋 Copy &amp; paste</li>
