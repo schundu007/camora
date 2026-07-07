@@ -22,7 +22,7 @@ export const InterviewContextPill = ({ onOpen }: Props) => {
     <button
       type="button"
       onClick={onOpen}
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
+      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
       style={activeKey
         ? {
             background: 'var(--cam-chip-active-bg)',
@@ -43,7 +43,7 @@ export const InterviewContextPill = ({ onOpen }: Props) => {
         <rect x="2" y="7" width="20" height="14" rx="2" />
         <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
       </svg>
-      <span className="max-w-[110px] truncate">
+      <span className="max-w-[90px] truncate">
         {activeKey ?? '+ Context'}
       </span>
       <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden>

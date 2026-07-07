@@ -2137,14 +2137,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               top bar grammar. Navy band + gold underline + bezelled pill
               container holding the Description / Solution toggles. */}
           <div
-            className="flex items-center gap-2 px-3 py-2 overflow-x-auto no-scrollbar"
+            className="flex items-center gap-2 px-2 py-1 overflow-x-auto no-scrollbar"
             style={{
               background: 'var(--cam-hero-strip)',
               borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
             <div
-              className="flex items-center gap-1 px-1 py-1 shrink-0"
+              className="flex items-center gap-1 px-0.5 py-0.5 shrink-0"
               style={{
                 background: 'var(--cam-strip-icon-bg)',
                 border: '1px solid var(--cam-strip-icon-border)',
@@ -2154,7 +2154,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             >
               <button
                 onClick={() => setProblemTab('description')}
-                className="px-3.5 py-1 text-xs font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
+                className="px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider transition-[background-color,color,transform] active:scale-[0.98]"
                 style={
                   problemTab === 'description'
                     ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }
@@ -2979,11 +2979,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
         <div className="flex-1 flex flex-col min-w-0" style={{ background: t.surfaceBg, color: t.text }}>
           {/* Editor Header */}
-          <div className="flex items-center justify-between px-3 py-1.5" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-2 py-1" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+            <div className="flex items-center gap-1.5">
               <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
                 disabled={isTranslating}
-                className="rounded-md px-2 py-1 text-xs font-mono focus:outline-none cursor-pointer disabled:opacity-60"
+                className="rounded px-1.5 py-0.5 text-[11px] font-mono focus:outline-none cursor-pointer disabled:opacity-60"
                 style={{ background: language === 'auto' ? 'var(--cam-primary)' : t.inputBg, border: `1px solid ${language === 'auto' ? 'var(--cam-primary)' : t.inputBorder}`, color: language === 'auto' ? '#fff' : t.inputText }}>
                 <option value="auto">Auto-detect</option>
                 {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
@@ -2995,7 +2995,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 </span>
               )}
               <button onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-1.5 px-3 py-1 text-white text-xs font-bold rounded-md disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--cam-primary)' }}
+                className="flex items-center gap-1 px-2.5 py-0.5 text-white text-[11px] font-bold rounded disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--cam-primary)' }}
                 title="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
