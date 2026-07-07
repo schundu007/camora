@@ -197,7 +197,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       {/* Interview — the live surfaces (highest daily-use priority). */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Interview</p>}
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
         {TOOL_ITEMS.map(item => {
           const active = activeTab === item.id;
           return (
@@ -221,7 +221,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         <>
           <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
           <div className="px-1.5">
-            {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Setup</p>}
+            {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Setup</p>}
             {onOpenContext && (
               <button
                 type="button"
@@ -277,7 +277,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       {/* Prep — study before interviews (Prep Kit + Practice + Prepare). */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Prep</p>}
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Prep</p>}
         {PREP_ITEMS.map(item => {
           const active = isActive(item.id);
           return (
@@ -298,7 +298,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       {/* Library — history + assistants (lower priority). */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Library</p>}
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Library</p>}
         {LIBRARY_ITEMS.map(item => {
           const active = isActive(item.id);
           return (
@@ -321,7 +321,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
 
       {/* More section */}
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>More</p>}
+        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>More</p>}
         {/* Account dropdown */}
         <button
           onClick={() => setAccountOpen(!accountOpen)}

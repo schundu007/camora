@@ -1047,8 +1047,8 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               borderBottom: '1px solid var(--cam-gold-leaf)',
             }}
           >
-            {/* ── Quick-action chips + collapse — single row ── */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5">
+            {/* ── Quick-action chips + collapse — wraps on narrow panels ── */}
+            <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5">
               {!isLoading && (
                 <>
                   <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"

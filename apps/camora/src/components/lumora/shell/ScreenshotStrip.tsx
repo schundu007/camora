@@ -44,7 +44,7 @@ const modeIcon = (m: string) => {
 };
 
 /** Shared pill chrome — matches the LumoraShellPage tab nav exactly. */
-const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.1em] transition-[background-color,color,opacity] active:scale-[0.97]';
+const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.1em] font-mono transition-[background-color,color,opacity] active:scale-[0.97]';
 
 export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform, inline }: ScreenshotStripProps) => {
   const { token } = useAuth();
