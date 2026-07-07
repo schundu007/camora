@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { getActiveCompanyKey, ASSISTANT_UPDATED_EVENT } from '../../../lib/companyContext';
 import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
@@ -12,10 +13,16 @@ interface LumoraIconRailProps {
   activeTab: LumoraTab;
   sessionsOpen: boolean;
   onToggleSessions: () => void;
-  /** Meeting-platform selector, relocated here from the top bar to keep the
-      shell header compact. Collapsed rail shows just the video icon. */
+  /** Meeting + coding platform selectors, relocated here from the top bar as
+      their own "Tools" group below Practice. Collapsed rail shows just the
+      icons; hover-expand reveals the selects. */
   meetingPlatform?: string;
   onMeetingPlatformChange?: (v: string) => void;
+  codingPlatform?: string;
+  onCodingPlatformChange?: (v: string) => void;
+  /** Opens the interview-context drawer — the AMD-style company chip now
+      lives at the top of the rail, above Home. */
+  onOpenContext?: () => void;
 }
 
 /* ── Sidebar items ── */
@@ -32,8 +39,20 @@ const MORE_ITEMS = [
   { id: 'credits', label: 'Credits', path: '/lumora/credits' },
 ];
 
-export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange }: LumoraIconRailProps) => {
+export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onOpenContext }: LumoraIconRailProps) => {
   const [accountOpen, setAccountOpen] = useState(false);
+  // Active interview/company key drives the context chip label at the top of
+  // the rail (mirrors the old top-bar InterviewContextPill).
+  const [companyKey, setCompanyKey] = useState<string | null>(() => getActiveCompanyKey());
+  useEffect(() => {
+    const update = () => setCompanyKey(getActiveCompanyKey());
+    window.addEventListener(ASSISTANT_UPDATED_EVENT, update);
+    window.addEventListener('storage', update);
+    return () => {
+      window.removeEventListener(ASSISTANT_UPDATED_EVENT, update);
+      window.removeEventListener('storage', update);
+    };
+  }, []);
 
   const isActive = (id: string) => {
     if (id === 'dashboard') return activeTab === 'session';
@@ -111,6 +130,27 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         {expanded && <span className="text-sm font-bold whitespace-nowrap" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-heading)' }}>Camora</span>}
       </Link>
 
+      {/* Interview-context chip — the AMD-style company chip, moved here from
+          the top bar and placed ABOVE Home. Briefcase icon collapsed; company
+          name + gold highlight when a context is active. */}
+      {onOpenContext && (
+        <div className="px-1.5 mb-2">
+          <button
+            type="button"
+            onClick={onOpenContext}
+            title={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
+            aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
+            className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
+            style={companyKey
+              ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', border: '1px solid rgba(201,162,39,0.40)' }
+              : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
+            {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
+          </button>
+        </div>
+      )}
+
       {/* Main nav */}
       <div className="flex flex-col gap-0.5 px-1.5">
         {MAIN_ITEMS.map(item => {
@@ -129,6 +169,52 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           );
         })}
       </div>
+
+      {/* Tools group — meeting + coding platform selectors, their own set
+          directly below Practice. Icons only when collapsed; hover-expand
+          reveals the selects so the interview's meeting app + coding platform
+          are always pickable from the rail. */}
+      {(onMeetingPlatformChange || onCodingPlatformChange) && (
+        <>
+          <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
+          <div className="px-1.5">
+            {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Tools</p>}
+            {onMeetingPlatformChange && (
+              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} title={expanded ? undefined : `Meeting: ${meetingPlatform}`}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+                {expanded && (
+                  <select value={meetingPlatform} onChange={e => onMeetingPlatformChange(e.target.value)}
+                    className="bg-transparent border-none outline-none cursor-pointer text-[13px] font-medium flex-1" style={{ color: 'inherit' }}
+                    aria-label="Meeting platform">
+                    <option value="zoom">Zoom</option>
+                    <option value="teams">Teams</option>
+                    <option value="meet">Google Meet</option>
+                    <option value="other">Other</option>
+                  </select>
+                )}
+              </div>
+            )}
+            {onCodingPlatformChange && (
+              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} title={expanded ? undefined : `Coding: ${codingPlatform}`}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                {expanded && (
+                  <select value={codingPlatform} onChange={e => onCodingPlatformChange(e.target.value)}
+                    className="bg-transparent border-none outline-none cursor-pointer text-[13px] font-medium flex-1" style={{ color: 'inherit' }}
+                    aria-label="Coding platform">
+                    <option value="auto">Auto-detect</option>
+                    <option value="none">Disabled</option>
+                    <option value="hackerrank">HackerRank</option>
+                    <option value="leetcode">LeetCode</option>
+                    <option value="coderpad">CoderPad</option>
+                    <option value="codesignal">CodeSignal</option>
+                    <option value="glider">Glider</option>
+                  </select>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Divider */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />

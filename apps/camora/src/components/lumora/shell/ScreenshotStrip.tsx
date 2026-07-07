@@ -29,12 +29,24 @@ interface ScreenshotStripProps {
   isTabActive?: boolean;
   /** Coding tab only — shows platform chip (hackerrank/leetcode/coderpad) at left of strip */
   codingPlatform?: string;
+  /** When true, drops the full-width bar chrome (bg/border/min-height) so the
+      controls can be embedded inside another toolbar row (e.g. CodingLayout's
+      Description/Solution row) instead of rendering as a standalone strip. */
+  inline?: boolean;
 }
+
+/** Icon per input mode — replaces the TEXT/URL/IMAGE text labels. */
+const modeIcon = (m: string) => {
+  if (m === 'url') return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>;
+  if (m === 'image') return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>;
+  // paste / text
+  return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V5h16v2M9 20h6M12 5v15"/></svg>;
+};
 
 /** Shared pill chrome — matches the LumoraShellPage tab nav exactly. */
 const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.1em] transition-[background-color,color,opacity] active:scale-[0.97]';
 
-export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform }: ScreenshotStripProps) => {
+export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform, inline }: ScreenshotStripProps) => {
   const { token } = useAuth();
   const isStealthActive = useSessionStore(s => s.isStealthActive);
   const setIsStealthActive = useSessionStore(s => s.setIsStealthActive);
@@ -153,12 +165,14 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
   return (
     <div
-      className="flex items-center gap-1 px-2 py-1 shrink-0 overflow-x-auto no-scrollbar"
-      style={{
-        background: 'var(--cam-hero-strip)',
-        borderBottom: '1px solid var(--cam-gold-leaf)',
-        minHeight: 28,
-      }}
+      className={`flex items-center gap-1 shrink-0 overflow-x-auto no-scrollbar ${inline ? '' : 'px-2 py-1'}`}
+      style={inline
+        ? {}
+        : {
+            background: 'var(--cam-hero-strip)',
+            borderBottom: '1px solid var(--cam-gold-leaf)',
+            minHeight: 28,
+          }}
     >
       {/* Platform identifier — coding tab autopilot mode */}
       {codingPlatform && codingPlatform !== 'none' && (
@@ -228,9 +242,8 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
             : snapArmed
             ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" fill="currentColor" /></svg>
-            : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
+            : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
           }
-          {snapState === 'error' ? 'Failed' : snapState === 'capturing' ? 'Capturing…' : snapArmed ? 'Armed' : 'Snap'}
         </button>
       )}
 
@@ -289,13 +302,15 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             <button
               key={mode}
               onClick={() => onInputModeChange(mode)}
-              className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-[background-color,color] active:scale-[0.98]"
+              title={modeLabel(mode)}
+              aria-label={modeLabel(mode)}
+              className="flex items-center justify-center w-6 h-5 transition-[background-color,color] active:scale-[0.98]"
               style={inputMode === mode
                 ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', borderRadius: 999 }
                 : { color: 'var(--cam-strip-text-muted)', borderRadius: 999 }
               }
             >
-              {modeLabel(mode)}
+              {modeIcon(mode)}
             </button>
           ))}
         </div>
