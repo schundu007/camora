@@ -453,6 +453,20 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // couldn't grab it to drag it back. With panel anchored bottom-right
   // (bottom: 24 - y), the lowest valid y is `80 + height - viewport`
   // which puts the panel's top edge exactly at 56 px (topbar bottom).
+  // Keep the floating panel on-screen. Clamps the bottom-right-anchored
+  // position so neither axis can push the panel past a viewport edge (the
+  // header must stay grabbable). Applied during drag, on mount, and on
+  // resize so a previously-saved off-screen position self-heals.
+  const clampPosition = useCallback((pos: { x: number; y: number }, w: number, h: number) => {
+    const maxX = 16, maxY = 16;
+    const minX = 32 - window.innerWidth + w;
+    const minY = 80 + h - window.innerHeight;
+    return {
+      x: minX > maxX ? 0 : Math.max(minX, Math.min(maxX, pos.x)),
+      y: minY > maxY ? minY : Math.max(minY, Math.min(maxY, pos.y)),
+    };
+  }, []);
+
   useEffect(() => {
     if (!isDragging) return;
     // RAF-throttle the position state writes — without this, dragging
@@ -469,10 +483,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     };
     const handleMove = (e: MouseEvent) => {
       if (!dragRef.current) return;
-      pendingX = dragRef.current.origX + (e.clientX - dragRef.current.startX);
+      const rawX = dragRef.current.origX + (e.clientX - dragRef.current.startX);
       const rawY = dragRef.current.origY + (e.clientY - dragRef.current.startY);
-      const minY = 80 + panelHeight - window.innerHeight;
-      pendingY = Math.max(minY, rawY);
+      const c = clampPosition({ x: rawX, y: rawY }, panelWidth, panelHeight);
+      pendingX = c.x; pendingY = c.y;
       hasPending = true;
       if (!rafId) rafId = requestAnimationFrame(flush);
     };
@@ -486,7 +500,19 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-  }, [isDragging, panelHeight]);
+  }, [isDragging, panelHeight, panelWidth, clampPosition]);
+
+  // Self-heal a persisted off-screen position (older builds had no X clamp)
+  // and re-clamp when the viewport shrinks below the saved position.
+  useEffect(() => {
+    const reclamp = () => setPosition(p => {
+      const c = clampPosition(p, panelWidth, panelHeight);
+      return (c.x === p.x && c.y === p.y) ? p : c;
+    });
+    reclamp();
+    window.addEventListener('resize', reclamp);
+    return () => window.removeEventListener('resize', reclamp);
+  }, [clampPosition, panelWidth, panelHeight]);
 
   const startDrag = (e: React.MouseEvent) => {
     if (maximized) return;
@@ -864,7 +890,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             const dx = ev.clientX - startX;
             const dy = ev.clientY - startY;
             if (!moved && Math.hypot(dx, dy) > 4) moved = true;
-            if (moved) setPosition({ x: origX + dx, y: origY + dy });
+            if (moved) setPosition(clampPosition({ x: origX + dx, y: origY + dy }, panelWidth, panelHeight));
           };
           const handleUp = () => {
             window.removeEventListener('mousemove', handleMove);
@@ -1330,9 +1356,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3">
           {messages.length === 0 && !streaming ? (
             <div className="flex flex-col items-center justify-center h-full py-6">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1" className="mb-4 opacity-40">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
+              <div className="mb-4 opacity-40"><SonaAvatar size={32} /></div>
               <p className="text-[9px] mb-3 text-center" style={{ color: C.muted }}>
                 {answerMode === 'short' ? 'Short mode — concise bullet points' : 'Detailed mode — comprehensive explanations'}
               </p>
@@ -1456,9 +1480,9 @@ export const AICompanionToggle = ({ onClick, hasActivity }: { onClick: () => voi
         bottom: 'calc(80px + env(safe-area-inset-bottom))',
         background: 'var(--cam-primary)',
       }}
-      title="Assistant"
+      title="Sona"
     >
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+      <SonaAvatar size={22} active />
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2" style={{ borderColor: C.base }} />}
     </button>
   );

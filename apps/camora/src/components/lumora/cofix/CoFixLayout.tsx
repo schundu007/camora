@@ -143,10 +143,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const [refinePrompt, setRefinePrompt] = useState('');
   const refineTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const [outputHeight, setOutputHeight] = useState<number | null>(null);
-  const outputPanelRef = useRef<HTMLDivElement | null>(null);
-  const outputDragRef = useRef<{ startY: number; startH: number } | null>(null);
-
   type LogLine = { elapsed: string; icon: React.ReactNode; status?: 'error' | 'success'; msg: string };
   const [logLines, setLogLines] = useState<LogLine[]>([]);
   const [showLogPopup, setShowLogPopup] = useState(false);
@@ -161,7 +157,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const pendingAnalyzeRef = useRef(false);
   const handleFixRef = useRef<() => void>(() => {});
 
-  const [outputCollapsed, setOutputCollapsed] = useState(false);
   const [panelHeight, setPanelHeight] = useState(300);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const panelDragRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -494,8 +489,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const handleRun = useCallback(async () => {
     if (!fixedCode || isRunning) return;
     setIsRunning(true);
-    setOutputHeight(null);
-    setOutputCollapsed(false);
     try {
       const response = await fetch(`${API_URL}/api/v1/coding/execute`, {
         method: 'POST',
@@ -743,25 +736,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     }
   }, [isLoading, fixedCode, effectiveLang, runAnalyze]);
 
-  const handleOutputDragStart = useCallback((e: React.MouseEvent) => {
-    if (!outputPanelRef.current) return;
-    e.preventDefault();
-    const startY = e.clientY;
-    const startH = outputPanelRef.current.offsetHeight;
-    outputDragRef.current = { startY, startH };
-    const onMove = (ev: MouseEvent) => {
-      if (!outputDragRef.current) return;
-      const delta = outputDragRef.current.startY - ev.clientY;
-      setOutputHeight(Math.max(48, outputDragRef.current.startH + delta));
-    };
-    const onUp = () => {
-      outputDragRef.current = null;
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-  }, []);
 
   const handlePanelDragStart = useCallback((e: React.MouseEvent) => {
     if (!panelRef.current) return;

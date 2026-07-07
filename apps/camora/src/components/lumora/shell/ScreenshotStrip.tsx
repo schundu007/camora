@@ -165,7 +165,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
   return (
     <div
-      className={`flex items-center shrink-0 overflow-x-auto no-scrollbar ${inline ? 'gap-1' : 'gap-2 px-3 py-1.5'}`}
+      className={`flex items-center shrink-0 ${inline ? 'gap-1 overflow-x-auto no-scrollbar' : 'gap-2 px-3 py-1.5 flex-wrap sm:flex-nowrap sm:overflow-x-auto'}`}
       style={inline
         ? {}
         : {
