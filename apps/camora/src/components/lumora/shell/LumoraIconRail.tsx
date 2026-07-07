@@ -168,37 +168,6 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Meeting-platform picker — relocated from the top bar to keep the
-          shell header compact. Icon-only when the rail is collapsed; reveals
-          the select on hover-expand, matching every other rail item's
-          icon→label behavior. */}
-      {onMeetingPlatformChange && (
-        <div className={`px-2 mb-1 ${expanded ? '' : 'flex justify-center'}`}>
-          <div
-            className={`flex items-center ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg`}
-            style={{ color: 'var(--text-secondary)' }}
-            title={expanded ? undefined : `Meeting: ${meetingPlatform}`}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-            {expanded && (
-              <select
-                value={meetingPlatform}
-                onChange={e => onMeetingPlatformChange(e.target.value)}
-                className="bg-transparent border-none outline-none cursor-pointer text-[13px] font-medium"
-                style={{ color: 'inherit' }}
-                title="Meeting platform"
-                aria-label="Meeting platform"
-              >
-                <option value="zoom">Zoom</option>
-                <option value="teams">Teams</option>
-                <option value="meet">Google Meet</option>
-                <option value="other">Other</option>
-              </select>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Bottom items */}
       <div className="flex flex-col gap-0.5 px-2">
         {[
