@@ -101,27 +101,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Pick up code injected from the Coding tab via navigate state
-  useEffect(() => {
-    const state = location.state as { injectCode?: string; injectLang?: string } | null;
-    if (state?.injectCode) {
-      setInputCode(state.injectCode);
-      if (state.injectLang) setLanguage(state.injectLang);
-      // Clear so it doesn't re-apply on future re-renders
-      window.history.replaceState(null, '');
-    }
-  }, [location.state]);
+  // NOTE: the two "inject a problem from the Coding tab" effects live further
+  // down (after resetSolution is declared) so a fresh problem also clears the
+  // previous fix. See resetSolution + the inject effects below.
   const monaco = useMonaco();
   useEffect(() => { if (monaco) monaco.editor.setTheme(monacoTheme); }, [monaco, monacoTheme]);
-
-  useEffect(() => {
-    if (!onInjectCodeRef) return;
-    onInjectCodeRef.current = (code: string, lang?: string) => {
-      setInputCode(code);
-      if (lang) setLanguage(lang);
-    };
-    return () => { onInjectCodeRef.current = null; };
-  }, [onInjectCodeRef]);
 
   const [inputCode, setInputCode] = useState('');
   const [language, setLanguage] = useState('python');
@@ -186,6 +170,59 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
   const decorationCollectionRef = useRef<any>(null);
+
+  // Clear every solution-derived output so a freshly injected problem never
+  // shows the previous fix. Mirrors the reset block in handleFix but does NOT
+  // start a run — the user still presses Fix (or paste auto-fires). Stable
+  // identity (empty deps, only stable setters/refs inside) so the inject
+  // effects below don't re-fire on every render.
+  const resetSolution = useCallback(() => {
+    // Abort any in-flight fix so its stream can't land on the new problem,
+    // and drop the loading / log-popup state it owned.
+    abortRef.current?.abort();
+    if (logHideTimerRef.current) clearTimeout(logHideTimerRef.current);
+    setIsLoading(false);
+    setShowLogPopup(false);
+    setLogLines([]);
+    setFixedCode('');
+    setChanges([]);
+    setWalkthrough([]);
+    setComplexity(null);
+    setHackerrankCompatible(null);
+    setError(null);
+    setRunOutputLog([]);
+    setAnalysis(null);
+    setAnalysisError(false);
+    setAnalysisLoading(false);
+    setCustomTests([mkTest()]);
+    autoFixAttemptsRef.current = 0;
+    decorationCollectionRef.current = null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Pick up a problem injected from the Coding tab via navigate state, and
+  // clear the previous solution first so the old fix never lingers.
+  useEffect(() => {
+    const state = location.state as { injectCode?: string; injectLang?: string } | null;
+    if (state?.injectCode) {
+      resetSolution();
+      setInputCode(state.injectCode);
+      if (state.injectLang) setLanguage(state.injectLang);
+      // Clear so it doesn't re-apply on future re-renders
+      window.history.replaceState(null, '');
+    }
+  }, [location.state, resetSolution]);
+
+  // Direct injection via the shared ref (Coding "Send to CoFix").
+  useEffect(() => {
+    if (!onInjectCodeRef) return;
+    onInjectCodeRef.current = (code: string, lang?: string) => {
+      resetSolution();
+      setInputCode(code);
+      if (lang) setLanguage(lang);
+    };
+    return () => { onInjectCodeRef.current = null; };
+  }, [onInjectCodeRef, resetSolution]);
 
   // effectiveLang must be declared before any useEffect that lists it as a dependency,
   // otherwise it is in TDZ when React evaluates the dependency array.
