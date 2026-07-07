@@ -1750,6 +1750,80 @@ body.electron-desktop [contenteditable='true'] {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   TRANSPARENT OVERLAY MODE  (Electron only — driven by <html data-overlay="on">)
+   The window is created transparent + frameless. Docked mode keeps the normal
+   solid app background; overlay mode paints a transparent canvas so the meeting
+   shows through, and the window floats click-through above it (main process).
+   Everything here is gated on data-overlay, which is never set in the web build.
+   ══════════════════════════════════════════════════════════════ */
+html[data-overlay='on'],
+html[data-overlay='on'] body,
+html[data-overlay='on'] #root {
+  background: transparent !important;
+}
+/* The top drag strip must not paint a bar over the meeting in overlay mode. */
+html[data-overlay='on'] body.electron-desktop::before {
+  -webkit-app-region: no-drag;
+}
+/* NOTE (device-tuning pass): to collapse overlay mode to ONLY the floating answer
+   panel, hide the shell here once the exact container is confirmed on a real run,
+   e.g.  html[data-overlay='on'] #root .lumora-shell-chrome { display: none; }
+   Left disabled until it can be verified live so it can't break the docked UI. */
+
+/* Frameless-window controls (min / close / overlay toggle). Required now that the
+   window has no native title bar. Pinned top-right inside the 28px drag strip. */
+.desktop-winctl {
+  position: fixed;
+  top: 3px;
+  right: 8px;
+  z-index: 100001; /* above the drag strip (100000) */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+.desktop-winctl__toggle {
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--cam-primary, #0047ab);
+  border: 1px solid var(--cam-gold-leaf, #c9a227);
+  cursor: pointer;
+}
+.desktop-winctl__toggle:hover { filter: brightness(1.08); }
+.desktop-winctl__btn {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-secondary, #9aa4b2);
+  background: var(--surface-2, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
+  cursor: pointer;
+}
+.desktop-winctl__btn:hover { color: var(--text-primary, #fff); }
+.desktop-winctl__btn--close:hover {
+  color: #fff;
+  background: #e5484d;
+  border-color: #e5484d;
+}
+/* In overlay mode the cluster floats over the meeting — give it a solid chip so
+   it stays legible against arbitrary backgrounds. */
+.desktop-winctl--overlay {
+  padding: 4px 6px;
+  border-radius: 999px;
+  background: rgba(10, 12, 20, 0.72);
+  border: 1px solid var(--cam-gold-leaf, #c9a227);
+  backdrop-filter: blur(8px);
+}
+
+/* ══════════════════════════════════════════════════════════════
    ANIMATIONS
    ══════════════════════════════════════════════════════════════ */
 @keyframes shimmer {

@@ -60,6 +60,38 @@ function saveWindowState(win) {
   } catch {}
 }
 
+// ── Overlay mode ──────────────────────────────────────────────────────────
+// Docked  = solid window, custom title bar, catches clicks (≈ the old window).
+// Overlay = transparent, click-through, floats above fullscreen meetings.
+// The renderer owns the visual (background/chrome); main owns the window flags.
+let _overlayMode = false;
+let _dockedBounds = null;
+
+function applyOverlayMode(mode) {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const overlay = mode === 'overlay';
+  if (overlay === _overlayMode) return;
+  _overlayMode = overlay;
+  if (overlay) {
+    _dockedBounds = mainWindow.getBounds();
+    // Cover the full work area of the display the cursor is on so the floating
+    // panel can sit anywhere over the meeting and click-through spans the screen.
+    const display = electronScreen.getDisplayNearestPoint(electronScreen.getCursorScreenPoint());
+    mainWindow.setBounds(display.workArea);
+    mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    // Default to click-through; the renderer flips this off while the pointer is
+    // over the answer panel via overlay:set-interactive.
+    mainWindow.setIgnoreMouseEvents(true, { forward: true });
+  } else {
+    mainWindow.setIgnoreMouseEvents(false);
+    mainWindow.setAlwaysOnTop(false);
+    mainWindow.setVisibleOnAllWorkspaces(false);
+    if (_dockedBounds) mainWindow.setBounds(_dockedBounds);
+  }
+  // content protection is intentionally left ON in both modes.
+}
+
 // ── Window ──────────────────────────────────────────────────────────────
 function createWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -73,9 +105,16 @@ function createWindow() {
     width: state.width, height: state.height, x: state.x, y: state.y,
     minWidth: 900, minHeight: 600,
     title: 'Camora',
-    backgroundColor: '#0a0a0a',
-    // Default macOS title bar — keeps traffic lights in their own strip
-    // above the web app so they never overlap the in-app nav header.
+    // Transparent + frameless so the renderer can switch between a solid
+    // "docked" look and a click-through "overlay" that floats above the meeting.
+    // Transparency is fixed at window creation, so we ALWAYS create it transparent
+    // and let the renderer paint a solid background in docked mode. The custom
+    // title bar (drag + window controls) lives in the renderer since there is no
+    // native frame. setContentProtection stays on in BOTH modes.
+    transparent: true,
+    frame: false,
+    hasShadow: false,
+    backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -95,7 +134,9 @@ function createWindow() {
       mainWindow.hide();
     }
   });
-  ['resize', 'move'].forEach((ev) => mainWindow.on(ev, () => saveWindowState(mainWindow)));
+  // Don't persist bounds while in overlay mode — the window is temporarily
+  // resized to the full work area, which must not overwrite the docked bounds.
+  ['resize', 'move'].forEach((ev) => mainWindow.on(ev, () => { if (!_overlayMode) saveWindowState(mainWindow); }));
 
   // External links in default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -227,6 +268,15 @@ app.whenReady().then(async () => {
   });
   globalShortcut.register('CommandOrControl+Shift+R', () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reloadIgnoringCache();
+  });
+  // Toggle transparent overlay ↔ docked. Applies the window flags AND tells the
+  // renderer to repaint (transparent background / panel-only chrome). Chosen to
+  // avoid the capture keys (num0 / F9) and the reload chords above.
+  globalShortcut.register('CommandOrControl+Shift+O', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const next = _overlayMode ? 'docked' : 'overlay';
+    applyOverlayMode(next);
+    mainWindow.webContents.send('overlay:mode-changed', next);
   });
 
   // Capture the HackerRank browser window and push it to the renderer for
@@ -1290,6 +1340,25 @@ ipcMain.handle('set-stealth-mode', (_event, on) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.setContentProtection(!!on);
   }
+});
+
+// ── IPC: transparent overlay ───────────────────────────────────────────────
+// Renderer flips modes (button or hotkey echo); main applies the window flags.
+ipcMain.handle('overlay:set-mode', (_event, mode) => {
+  applyOverlayMode(mode === 'overlay' ? 'overlay' : 'docked');
+});
+// While in overlay mode, the renderer calls this on pointer enter/leave of the
+// answer panel so only the panel captures clicks and the rest passes through.
+ipcMain.handle('overlay:set-interactive', (_event, interactive) => {
+  if (!mainWindow || mainWindow.isDestroyed() || !_overlayMode) return;
+  mainWindow.setIgnoreMouseEvents(!interactive, { forward: true });
+});
+// Custom (frameless) title-bar window controls.
+ipcMain.handle('window:minimize', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.minimize();
+});
+ipcMain.handle('window:close', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
 });
 
 // ── IPC: per-interview session folder ──────────────────────────────────────

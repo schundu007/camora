@@ -94,4 +94,30 @@ contextBridge.exposeInMainWorld('camo', {
 
   // Open a file on disk with the system default app (Preview for images).
   openFile: (filePath) => ipcRenderer.invoke('open-file', filePath),
+
+  // Transparent overlay — toggle between docked (solid, catches clicks) and
+  // overlay (transparent, click-through, floats above the meeting).
+  overlay: {
+    // mode: 'docked' | 'overlay'
+    setMode: (mode) => ipcRenderer.invoke('overlay:set-mode', mode),
+    // While in overlay mode: true → the answer panel captures clicks; false →
+    // clicks pass through to the meeting. Call on pointer enter/leave of the panel.
+    setInteractive: (interactive) => ipcRenderer.invoke('overlay:set-interactive', interactive),
+    // Fired when the global hotkey (Cmd/Ctrl+Shift+O) toggles the mode.
+    onModeChanged: (callback) => {
+      const handler = (_event, mode) => callback(mode);
+      ipcRenderer.on('overlay:mode-changed', handler);
+      return handler;
+    },
+    offModeChanged: (handler) => {
+      if (handler) ipcRenderer.removeListener('overlay:mode-changed', handler);
+      else ipcRenderer.removeAllListeners('overlay:mode-changed');
+    },
+  },
+
+  // Custom title-bar controls (the window is frameless — no native buttons).
+  window: {
+    minimize: () => ipcRenderer.invoke('window:minimize'),
+    close: () => ipcRenderer.invoke('window:close'),
+  },
 });

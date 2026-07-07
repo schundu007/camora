@@ -12,6 +12,7 @@ import { CelebrationProvider } from './components/shared/Celebration';
 import { caraRegistry } from '@/lib/cara-registry';
 import { useSessionStore } from '@/stores/session-store';
 import CaraBar from '@/components/shared/cara/CaraBar';
+import { DesktopWindowControls } from '@/components/lumora/shell/DesktopWindowControls';
 
 // ── Shared pages ────────────────────────────────────────
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -492,6 +493,7 @@ export const App = () => {
         <CaraKeyListener />
         <LumoraSessionSync />
         <CaraBar />
+        <DesktopWindowControls />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />
