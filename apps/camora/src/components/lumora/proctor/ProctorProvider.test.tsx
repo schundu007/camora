@@ -16,7 +16,11 @@ vi.mock('./api', () => ({
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let hook: ReturnType<typeof useProctor>;
-const Probe = () => { hook = useProctor(); return null; };
+const Probe = () => {
+  // eslint-disable-next-line react-hooks/globals -- test probe captures the hook's return for assertions
+  hook = useProctor();
+  return null;
+};
 
 let activeRoot: ReturnType<typeof createRoot> | null = null;
 let activeContainer: HTMLDivElement | null = null;
