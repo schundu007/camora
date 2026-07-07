@@ -426,8 +426,11 @@ export const LumoraShellPage = () => {
             always find Home/Coding/Design/Behavioral at the same spot.
             Gradient + shadow give the header a high-fidelity modern
             feel in both themes via design tokens. */}
+        {/* Header — mobile only. On desktop the icon rail provides all
+            navigation (Back, tool switchers, tools, context chip), so the
+            top bar would be empty and just waste vertical space; hide it. */}
         <div
-          className="flex items-center h-11 px-3 shrink-0 lumora-shell-topbar gap-2"
+          className="md:hidden flex items-center h-11 px-3 shrink-0 lumora-shell-topbar gap-2"
           style={{
             borderBottom: '2px solid var(--cam-gold-leaf)',
             background: 'var(--cam-hero-strip)',
