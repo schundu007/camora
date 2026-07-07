@@ -200,6 +200,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Manual Reset — wipes the pasted code AND the solution so the user can
+  // start a fresh problem in the same session (mirrors Coding / Design Reset).
+  const handleReset = useCallback(() => {
+    resetSolution();
+    setInputCode('');
+  }, [resetSolution]);
+
   // Pick up a problem injected from the Coding tab via navigate state, and
   // clear the previous solution first so the old fix never lingers.
   useEffect(() => {
@@ -873,6 +880,25 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               → Coding
             </button>
           </div>
+        )}
+
+        {/* Reset — clears pasted code + solution for a fresh problem */}
+        {(inputCode || fixedCode) && (
+          <button
+            onClick={handleReset}
+            title="Reset — clear code and solution"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 shrink-0"
+            style={{
+              background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
+              border: '1px solid var(--cam-gold-leaf-dk)',
+              color: 'var(--cam-gold-leaf-dk)',
+            }}
+          >
+            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Reset</span>
+          </button>
         )}
 
         {/* Divider */}
