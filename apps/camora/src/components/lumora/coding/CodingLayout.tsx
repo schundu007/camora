@@ -29,6 +29,17 @@ const MAX_SNAP_PAGES = 12;
 // problemText → starterCode so the backend completes-in-place rather than
 // generating a standalone function that loses the surrounding boilerplate.
 function isCodeTemplate(text: string): boolean {
+  // HackerRank / CoderPad "bare-script" templates: an `if __name__ == '__main__':`
+  // harness (or a top-level block with several stdin reads) that has NO function to
+  // fill and NO stub marker — the candidate simply appends the solution after the
+  // provided input-reading lines (e.g. HackerRank "Finding the Percentage", whose
+  // starter ends at `query_name = input()`). This is pure platform boilerplate that
+  // must be preserved verbatim, so promote it to starterCode even though there is no
+  // def/class. Checked BEFORE hasStructure, which these templates deliberately lack.
+  const mainGuard = /^\s*if\s+__name__\s*==\s*['"]__main__['"]\s*:/m.test(text);
+  const stdinReads = (text.match(/\binput\s*\(|\bsys\.stdin\b|\.nextInt\s*\(|\bcin\s*>>|\breadline\s*\(/g) || []).length;
+  if (mainGuard || stdinReads >= 2) return true;
+
   const hasStructure = /\bdef\s+\w+\s*\(|\bclass\s+\w+[:(]|void\s+\w+\s*\(|public\s+\w+\s+\w+\s*\(|function\s+\w+\s*\(|^\s*\w+\s*\(\)\s*\{/m.test(text);
   if (!hasStructure) return false;
   if (/\breturn\s+\[\]\s*$|\breturn\s+\{\}\s*$|\bpass\s*$|raise\s+NotImplementedError|\/\/\s*TODO|\bTODO\b|\/\*\s*TODO/m.test(text)) return true;
@@ -1579,7 +1590,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ url: urlToFetch }),
+        body: JSON.stringify({ url: urlToFetch, language }),
       });
 
       if (!resp.ok) {
@@ -1601,6 +1612,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
       const data = await resp.json();
       const text = String(data.problem || '').trim();
+      // Backend now returns the platform's editor stub (HackerRank `<lang>_template`,
+      // LeetCode codeSnippets). Keep it so the solve preserves the harness verbatim
+      // instead of writing from scratch — matches the screenshot/OCR path.
+      const fetchedStarter = typeof data.starter_code === 'string' && data.starter_code.trim()
+        ? data.starter_code
+        : null;
+      // Solve in the SAME language the template is in (detect from the concrete
+      // starter code when present, so template-language and solve-language can't
+      // diverge). resolveLanguage still honors an explicit dropdown choice.
+      const effectiveLang = resolveLanguage(fetchedStarter || text);
       if (!text) {
         // Empty response — same fallback
         const camo = (window as any).camo;
@@ -1609,7 +1630,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         return;
       }
       setProblemText(text);
-      setStarterCode(null);
+      setStarterCode(fetchedStarter);
       setInputMode('paste');
       // Auto URL-mode fetch (mode switch / initialUrl) dedupes so re-entering
       // URL mode on the same problem can't re-solve. An explicit Fetch click
@@ -1627,12 +1648,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       clearStreamChunks();
       setParsedBlocks([]);
       setJsonSolution(null);
-      setCode(getDefaultCode(resolveLanguage(text)));
+      setCode(getDefaultCode(effectiveLang));
       setCollapsedCards(new Set());
       setActiveSolutionIdx(0);
       setIsOutputCollapsed(true);
       setProblemTab('solution');
-      onSubmit(text, resolveLanguage(text));
+      onSubmit(text, effectiveLang, fetchedStarter ? { starterCode: fetchedStarter } : undefined);
     } catch {
       // Network error — fall back to OCR on desktop, show nothing on web.
       const camo = (window as any).camo;

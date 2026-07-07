@@ -15,7 +15,7 @@ class APIError extends Error {
   }
 }
 
-async function fetchAPI<T>(
+export async function fetchAPI<T>(
   endpoint: string,
   options: RequestInit = {},
   token?: string
