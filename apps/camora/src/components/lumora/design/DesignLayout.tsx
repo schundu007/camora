@@ -36,11 +36,30 @@ function cleanErrorMsg(raw: string | undefined | null): string {
 }
 
 const SNAP_CHIPS = [
-  { label: 'Find Issues', emoji: '🔍', prompt: 'Analyze this system design and identify all bottlenecks, single points of failure, scalability gaps, and design flaws. For each issue explain what is wrong and provide a concrete fix.' },
-  { label: 'Explain', emoji: '💡', prompt: 'Explain this system design step by step. Describe what each component does, how they interact, and why they are designed this way.' },
-  { label: 'Improve', emoji: '✨', prompt: 'Suggest prioritized, concrete improvements to make this design more scalable, reliable, and cost-effective. Be specific about what to change and why.' },
-  { label: 'Estimate Scale', emoji: '📊', prompt: 'Estimate the scale this design can handle. Calculate storage requirements, throughput limits, latency bounds, and compute needs with specific numbers.' },
+  { id: 'find', label: 'Find Issues', prompt: 'Analyze this system design and identify all bottlenecks, single points of failure, scalability gaps, and design flaws. For each issue explain what is wrong and provide a concrete fix.' },
+  { id: 'explain', label: 'Explain', prompt: 'Explain this system design step by step. Describe what each component does, how they interact, and why they are designed this way.' },
+  { id: 'improve', label: 'Improve', prompt: 'Suggest prioritized, concrete improvements to make this design more scalable, reliable, and cost-effective. Be specific about what to change and why.' },
+  { id: 'scale', label: 'Estimate Scale', prompt: 'Estimate the scale this design can handle. Calculate storage requirements, throughput limits, latency bounds, and compute needs with specific numbers.' },
 ] as const;
+
+/* Custom line-art icons for the Quick-ask chips. Purpose-drawn to match
+   the navy/gold strip's other SVG glyphs (collapse chevron, reset) — no
+   full-colour emoji, which read as "glary" against the strip. */
+const SnapChipIcon = ({ id }: { id: string }) => {
+  const p = { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.85, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  switch (id) {
+    case 'find': // magnifier scanning for flaws
+      return (<svg {...p}><circle cx="10" cy="10" r="6.5" /><line x1="14.8" y1="14.8" x2="20.5" y2="20.5" /><line x1="10" y1="7" x2="10" y2="10.4" /><circle cx="10" cy="12.8" r="0.35" fill="currentColor" stroke="none" /></svg>);
+    case 'explain': // open book
+      return (<svg {...p}><path d="M12 6.6C10.3 5.3 7.8 5 4.5 5.3V17.9c3.3-.3 5.8 0 7.5 1.3 1.7-1.3 4.2-1.6 7.5-1.3V5.3C16.2 5 13.7 5.3 12 6.6Z" /><line x1="12" y1="6.6" x2="12" y2="19.2" /></svg>);
+    case 'improve': // magic wand + sparkle (enhance)
+      return (<svg {...p}><line x1="4.5" y1="19.5" x2="14" y2="10" /><path d="M16.5 3.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z" /></svg>);
+    case 'scale': // gauge / speedometer
+      return (<svg {...p}><path d="M4.5 16.8a7.5 7.5 0 0 1 15 0" /><line x1="12" y1="16.8" x2="15.6" y2="12.2" /><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none" /></svg>);
+    default:
+      return null;
+  }
+};
 
 /* Some responses (especially cached ones from earlier prompt
    versions) glue the entire structured response — REQUIREMENTS,
@@ -1039,11 +1058,11 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   {SNAP_CHIPS.map(chip => (
                     <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
                       title={chip.label} aria-label={chip.label}
-                      className="shrink-0 flex items-center justify-center w-7 h-6 text-[13px] leading-none rounded transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
+                      className="shrink-0 flex items-center justify-center w-7 h-6 leading-none rounded transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
                       style={snapChipCode
-                        ? { background: 'var(--cam-chip-active-bg)' }
-                        : { background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}>
-                      <span aria-hidden>{chip.emoji}</span>
+                        ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
+                        : { background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-gold-leaf-lt)' }}>
+                      <SnapChipIcon id={chip.id} />
                     </button>
                   ))}
                   {snapChipCode && (
