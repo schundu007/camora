@@ -1733,6 +1733,93 @@ async function fetchLeetcodeProblem(url) {
   return header + text;
 }
 
+/**
+ * Convert inline LaTeX / TeX (as delivered in HackerRank's clean REST fields —
+ * `$n$`, `$1 \le n \le 100$`) into readable Unicode. Without this the math is
+ * either lost (MathJax SVG in the HTML body) or shows as raw `$...$`.
+ * Ported from ascend-backend/src/services/scraper.js to keep the two backends
+ * in sync — the fix originally landed only in ascend, but production
+ * /lumora/coding hits THIS backend, so HackerRank silently fell back to a raw
+ * HTML fetch that Cloudflare 403s from Railway. See fetchHackerRankProblem.
+ */
+function latexToText(s) {
+  if (!s || typeof s !== 'string') return '';
+  let t = s;
+  t = t.replace(/\$\$([\s\S]*?)\$\$/g, '$1').replace(/\$([^$]*)\$/g, '$1');
+  t = t.replace(/\\\(([\s\S]*?)\\\)/g, '$1').replace(/\\\[([\s\S]*?)\\\]/g, '$1');
+  const SYMBOLS = [
+    [/\\leq\b/g, '≤'], [/\\le\b/g, '≤'], [/\\geq\b/g, '≥'], [/\\ge\b/g, '≥'],
+    [/\\neq\b/g, '≠'], [/\\ne\b/g, '≠'], [/\\lt\b/g, '<'], [/\\gt\b/g, '>'],
+    [/\\times\b/g, '×'], [/\\cdot\b/g, '·'], [/\\div\b/g, '÷'], [/\\pm\b/g, '±'],
+    [/\\ldots\b/g, '…'], [/\\dots\b/g, '…'], [/\\cdots\b/g, '…'], [/\\infty\b/g, '∞'],
+    [/\\rightarrow\b/g, '→'], [/\\to\b/g, '→'], [/\\leftarrow\b/g, '←'],
+    [/\\Rightarrow\b/g, '⇒'], [/\\sum\b/g, '∑'], [/\\prod\b/g, '∏'], [/\\sqrt\b/g, '√'],
+    [/\\alpha\b/g, 'α'], [/\\beta\b/g, 'β'], [/\\gamma\b/g, 'γ'], [/\\theta\b/g, 'θ'],
+    [/\\lambda\b/g, 'λ'], [/\\mu\b/g, 'μ'], [/\\pi\b/g, 'π'], [/\\mod\b/g, 'mod'],
+    [/\\%/g, '%'], [/\\\$/g, '$'], [/\\&/g, '&'], [/\\_/g, '_'], [/\\#/g, '#'],
+    [/\\,/g, ' '], [/\\;/g, ' '], [/\\:/g, ' '], [/\\!/g, ''], [/\\ /g, ' '],
+  ];
+  for (const [re, rep] of SYMBOLS) t = t.replace(re, rep);
+  t = t.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
+  t = t.replace(/\^\{([^{}]*)\}/g, '^$1').replace(/_\{([^{}]*)\}/g, '_$1');
+  t = t.replace(/\\[a-zA-Z]+\s*\{([^{}]*)\}/g, '$1').replace(/\\[a-zA-Z]+/g, '');
+  t = t.replace(/[{}]/g, '');
+  return t;
+}
+
+/**
+ * Fetch a HackerRank challenge via its REST API instead of scraping the page.
+ * The problem page is a Cloudflare-guarded React SPA that 403s from datacenter
+ * IPs (like Railway) and renders math as MathJax SVG (no text nodes), so a raw
+ * HTML fetch either fails outright or drops every variable/number. The REST
+ * payload returns clean, LaTeX-bearing JSON. Returns null when the URL isn't a
+ * challenge or the payload lacks a statement (caller then falls through).
+ */
+async function fetchHackerRankProblem(url) {
+  const m = url.match(/hackerrank\.com\/(?:contests\/([^/]+)\/)?challenges\/([^/?#]+)/i);
+  if (!m) return null;
+  const contest = m[1] || 'master';
+  const slug = m[2];
+  const restUrl = `https://www.hackerrank.com/rest/contests/${contest}/challenges/${slug}`;
+  const resp = await fetch(restUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json',
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!resp.ok) throw new Error(`HackerRank REST returned ${resp.status}`);
+  const json = await resp.json();
+  const d = json?.model || json;
+  if (!d || typeof d.problem_statement !== 'string') return null;
+
+  const parts = [];
+  if (d.name) parts.push(String(d.name));
+  parts.push(latexToText(d.problem_statement));
+  if (d.input_format) parts.push('Input Format\n' + latexToText(d.input_format));
+  if (d.constraints) parts.push('Constraints\n' + latexToText(d.constraints));
+  if (d.output_format) parts.push('Output Format\n' + latexToText(d.output_format));
+
+  const text = parts.join('\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<li>/gi, '• ')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return text && text.length >= 40 ? text : null;
+}
+
 function isPrivateIp(ip) {
   if (!ip) return true;
   if (ip === '127.0.0.1' || ip === '::1') return true;
@@ -1773,6 +1860,22 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
     }
     if (lcProblem) {
       return res.json({ problem: lcProblem, source: url });
+    }
+
+    // HackerRank is a Cloudflare-guarded SPA — the raw HTML fetch below 403s
+    // from Railway's datacenter IP and renders math as MathJax SVG. Its REST
+    // API returns clean JSON, so try that FIRST (before the raw fetch can
+    // throw on a 403). Failures fall through to the generic fetch below.
+    if (/hackerrank\.com/i.test(url)) {
+      let hrProblem = null;
+      try {
+        hrProblem = await fetchHackerRankProblem(url);
+      } catch (e) {
+        console.warn('fetchHackerRankProblem failed, falling back to raw fetch:', e.message);
+      }
+      if (hrProblem) {
+        return res.json({ problem: hrProblem, source: url });
+      }
     }
 
     const response = await fetch(url, {

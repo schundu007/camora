@@ -13,6 +13,7 @@ import dns from 'node:dns/promises';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage } from '../middleware/usageLimits.js';
+import { fetchProblemFromUrl } from '../../services/scraper.js';
 
 const router = Router();
 
@@ -1004,38 +1005,16 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
 
     try { await assertPublicHost(url); } catch { return res.status(400).json({ error: 'URL is not allowed.' }); }
 
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Camora/1.0)' },
-      signal: AbortSignal.timeout(10000),
-    });
-
-    if (!response.ok) throw new Error(`Failed to fetch (${response.status})`);
-
-    const html = await response.text();
-
-    // Extract problem text — strip HTML tags, get main content
-    const textContent = html
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 5000); // Limit to 5000 chars
-
-    if (!textContent || textContent.length < 20) {
-      throw new Error('Could not extract problem text from URL');
+    // Delegate to the shared scraper — it handles LeetCode (GraphQL),
+    // HackerRank (REST-first, Cloudflare/SPA-safe), platform auth cookies, and
+    // starter-code templates. This keeps the mirror in sync with the canonical
+    // implementation instead of maintaining a divergent raw-HTML+Claude copy
+    // (the divergence is exactly why HackerRank fetch regressed on lumora-backend).
+    const result = await fetchProblemFromUrl(url, null, req);
+    if (result?.success && result.problemText) {
+      return res.json({ problem: result.problemText, source: url });
     }
-
-    // Use Claude to clean and extract just the problem description
-    const client = anthropicClient;
-    const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: `Extract ONLY the coding problem description from this text. Return just the problem statement, constraints, and examples. No solutions.\n\n${textContent}` }],
-    });
-
-    const problem = msg.content[0]?.type === 'text' ? msg.content[0].text : textContent.slice(0, 2000);
-    res.json({ problem, source: url });
+    return res.status(400).json({ error: result?.error || 'Failed to fetch problem' });
   } catch (err) {
     console.error('fetch-problem error:', err.message);
     res.status(400).json({ error: err.message || 'Failed to fetch problem' });
