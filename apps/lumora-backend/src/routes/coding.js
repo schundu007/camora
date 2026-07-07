@@ -143,8 +143,13 @@ function flattenMessages(msgs) {
 //    admin panel or env is picked up immediately on the next request.
 function buildProviderList() {
   const list = [];
-  if (getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY) list.push('gemini');
+  // Anthropic (Claude Sonnet) FIRST for coding generation — it follows the
+  // multi-rule format + execution contract far more reliably than gemini-flash
+  // (which was emitting bare functions, malformed test-case inputs, and
+  // ignoring platform templates). Gemini → DeepSeek remain as fallbacks if the
+  // Anthropic key is missing or its stream fails.
   if (getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY) list.push('anthropic');
+  if (getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY) list.push('gemini');
   if (getApiKey('openrouter') || process.env.OPENROUTER_API_KEY) list.push('deepseek');
   // Always keep at least gemini (client will fail gracefully if key is missing)
   if (list.length === 0) list.push('gemini');
