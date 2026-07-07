@@ -985,7 +985,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           first-class tool window, not flat chrome. Children below are
           re-themed for white-on-navy contrast. */}
       <div
-        className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? '' : 'cursor-move'} select-none`}
+        className={`flex items-center gap-2 h-10 px-3 shrink-0 ${embedded ? 'md:hidden' : 'cursor-move'} select-none`}
         style={{
           background: 'var(--cam-hero-strip)',
           borderBottom: '1px solid var(--cam-gold-leaf)',
