@@ -527,6 +527,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setAnalysisCache({});
     setAnalysisTab('code');
     const effectiveStarterCode = starterCode || (isCodeTemplate(text) ? text : null);
+    lastAutoGenSigRef.current = genSignature(text); // explicit regenerate — bypass dedup, refresh signature
     onSubmit(text, resolveLanguage(text), { ...(effectiveStarterCode ? { starterCode: effectiveStarterCode } : {}) });
   }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
 
@@ -577,6 +578,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setAnalysisTab('code');
     autoAnalysisFiredForRef.current = -1;
     useSessionStore.getState().setLiveSolveContext(null);
+    lastAutoGenSigRef.current = ''; // clear dedup so re-entering the same problem solves again
     onNewProblemCallback?.();
   }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language, onNewProblemCallback]);
 
@@ -1369,6 +1371,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     const effectiveStarterCode = starterCode || (isCodeTemplate(problemText) ? problemText : null);
     const company = getActiveAssistant()?.company || getActiveAssistant()?.name || '';
     const problemWithContext = company ? `[Company: ${company}]\n\n${problemText.trim()}` : problemText.trim();
+    lastAutoGenSigRef.current = genSignature(problemText); // explicit generate — refresh signature so autos don't re-solve
     onSubmit(problemWithContext, effectiveLang, effectiveStarterCode ? { starterCode: effectiveStarterCode } : undefined);
   };
 
@@ -1520,6 +1523,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setProblemText(result.text);
         if (result.starterCode) setStarterCode(result.starterCode);
         setInputMode('paste');
+        lastAutoGenSigRef.current = genSignature(result.text); // explicit fetch — suppress trailing auto re-solve
         setStreamError(null); setTestResults([]); setTestCases([]); setOutput('');
         setShowFixPrompt(false); clearStreamChunks(); setParsedBlocks([]); setJsonSolution(null);
         setCode(getDefaultCode(lang));
