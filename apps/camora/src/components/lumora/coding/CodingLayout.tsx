@@ -1616,6 +1616,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       const fetchedStarter = typeof data.starter_code === 'string' && data.starter_code.trim()
         ? data.starter_code
         : null;
+      // Solve in the SAME language the template is in (detect from the concrete
+      // starter code when present, so template-language and solve-language can't
+      // diverge). resolveLanguage still honors an explicit dropdown choice.
+      const effectiveLang = resolveLanguage(fetchedStarter || text);
       if (!text) {
         // Empty response — same fallback
         const camo = (window as any).camo;
@@ -1642,12 +1646,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       clearStreamChunks();
       setParsedBlocks([]);
       setJsonSolution(null);
-      setCode(getDefaultCode(resolveLanguage(text)));
+      setCode(getDefaultCode(effectiveLang));
       setCollapsedCards(new Set());
       setActiveSolutionIdx(0);
       setIsOutputCollapsed(true);
       setProblemTab('solution');
-      onSubmit(text, resolveLanguage(text), fetchedStarter ? { starterCode: fetchedStarter } : undefined);
+      onSubmit(text, effectiveLang, fetchedStarter ? { starterCode: fetchedStarter } : undefined);
     } catch {
       // Network error — fall back to OCR on desktop, show nothing on web.
       const camo = (window as any).camo;
