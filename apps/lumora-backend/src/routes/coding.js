@@ -488,7 +488,13 @@ Your code will be tested with completely different inputs. Hardcoded data WILL F
 ##############################################################################
 YOUR CODE WILL BE EXECUTED. If it crashes or produces wrong output, you FAIL.
 
-MANDATORY REASONING SEQUENCE — do this in your head before writing any code:
+MANDATORY REASONING SEQUENCE — this is 100% SILENT/INTERNAL. Do it in your head.
+NONE of these steps, and NO "STEP A/B/C/D" labels, pseudocode, dry-run traces, or
+markdown code fences, may appear in your response. Your response is ONLY the JSON
+object specified at the end — nothing before the opening { and nothing after the
+closing }. Emitting your reasoning as prose wastes the token budget and TRUNCATES
+the JSON so the "code" field is lost — that is a HARD FAILURE. Reason silently,
+then output the JSON directly.
 
 STEP A — UNDERSTAND THE ALGORITHM
   • Identify the data structures, key invariants, and edge cases.
@@ -948,10 +954,19 @@ function isValidAnswer(parsed, isMcq) {
 function extractJsonFromText(text) {
   if (!text || !text.trim()) return null;
 
-  // Strategy 1: strip markdown code fences and parse
-  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (codeBlockMatch) {
-    try { return JSON.parse(codeBlockMatch[1].trim()); } catch { /* continue */ }
+  // Strategy 1: strip markdown code fences and parse. Try a ```json fence FIRST,
+  // then EVERY other fence — a model that leaks reasoning often emits a ```python
+  // block (the code) before the ```json block, so matching only the first fence
+  // grabbed Python and failed. Prefer whichever fence body parses as JSON.
+  const jsonFence = text.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonFence) {
+    try { return JSON.parse(jsonFence[1].trim()); } catch { /* continue */ }
+  }
+  for (const m of text.matchAll(/```(?:\w+)?\s*([\s\S]*?)\s*```/g)) {
+    const body = m[1].trim();
+    if (body.startsWith('{')) {
+      try { return JSON.parse(body); } catch { /* continue */ }
+    }
   }
 
   // Strategy 2: find first { and try to parse from there

@@ -32,6 +32,17 @@ codesign -d --entitlements - "$APP_PATH" 2>&1 | grep -E "audio-input|network.cli
   exit 1
 }
 
+# ── Prevent duplicate/triplicate apps in Spotlight & Launchpad ──────────────
+# electron-builder leaves the extracted app at build/mac-<arch>/Camora.app after
+# the .dmg is already written. LaunchServices indexes that loose bundle as a
+# SECOND (and, across successive builds, THIRD) "Camora" alongside the installed
+# /Applications copy. The DMG is the only artifact we ship, so drop the loose
+# bundle and unregister it every build. Keeps exactly one Camora in Spotlight.
+LSREG=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+"$LSREG" -u "$APP_PATH" 2>/dev/null || true
+rm -rf build/mac-arm64/Camora.app build/mac-x64/Camora.app build/mac/Camora.app build/mac-arm64 build/mac-x64 build/mac 2>/dev/null || true
+echo "→ Removed loose build app bundle (only the .dmg remains) to avoid duplicate Spotlight entries"
+
 echo ""
 VERSION="$(node -p "require('./package.json').version")"
 echo "✓ Build complete: build/Camora-${VERSION}-${ARCH}.dmg"
