@@ -874,6 +874,50 @@ function detectMcq(problem, { hasStarterCode = false } = {}) {
   return false;
 }
 
+// ---------------------------------------------------------------------------
+// I/O contract inference
+// ---------------------------------------------------------------------------
+
+/**
+ * Positive evidence that the problem describes a stdin → stdout contract.
+ * HackerRank / CoderPad phrasing. Checked BEFORE hasExampleEvidence, because
+ * HackerRank problems routinely contain both "Sample Input" and a bare
+ * "Input:" line, and only the former tells us how the program is invoked.
+ */
+function hasStdinEvidence(problem) {
+  const t = typeof problem === 'string' ? problem : '';
+  return /(^|\n)\s*(input|output)\s+format\b/i.test(t)
+    || /(^|\n)\s*sample\s+(input|output)\b/i.test(t)
+    || /\bstdin\b|\bstandard input\b/i.test(t)
+    || /\bthe first line contains\b/i.test(t)
+    || /\bprints?\b[^.\n]{0,40}\boutput\b/i.test(t);
+}
+
+/** LeetCode-style worked example: an "Example N:" header, or Input: + Output:. */
+function hasExampleEvidence(problem) {
+  const t = typeof problem === 'string' ? problem : '';
+  if (/(^|\n)\s*example\s*\d*\s*:/i.test(t)) return true;
+  return /(^|\n)\s*input\s*:/i.test(t) && /(^|\n)\s*output\s*:/i.test(t);
+}
+
+/**
+ * Classify how the generated program will be invoked and graded.
+ *
+ * 'unknown' is the important one. It means we have NO evidence of an I/O
+ * format — no starter code, no stdin phrasing, no worked example. The prompt
+ * must then emit a pure function rather than inventing a print contract,
+ * because a pure function wraps into any driver while an invented print
+ * contract is a Wrong Answer the candidate cannot see.
+ */
+function inferIoContract(problem, starterCode) {
+  if (typeof starterCode === 'string' && starterCode.trim()) return 'template';
+  const t = typeof problem === 'string' ? problem : '';
+  if (/\bclass\s+Solution\b/.test(t)) return 'pure-function';
+  if (hasStdinEvidence(t)) return 'stdin-print';
+  if (hasExampleEvidence(t)) return 'pure-function';
+  return 'unknown';
+}
+
 /**
  * System prompt for answering a multiple-choice question. Returns a
  * distinct JSON schema ({ type:'mcq', mcq:{...} }) so the frontend can
@@ -2735,4 +2779,5 @@ export { stripInjectedComments, remapLine, remapLineRef, sanitizeCofixResult };
 // Exported for unit testing the URL-fetch starter-code extraction.
 export { langCandidates, pickHackerRankTemplate, pickLeetcodeSnippet };
 export { detectPlatformTemplate, templateHasFillableFunction, isMinimalInlineTemplate, buildTemplateShapeDirective, buildCodingSystemPrompt };
+export { hasStdinEvidence, hasExampleEvidence, inferIoContract };
 
