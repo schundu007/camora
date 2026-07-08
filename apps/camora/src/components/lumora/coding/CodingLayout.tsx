@@ -3072,7 +3072,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         {/* ── RIGHT PANEL: Code Editor + Output ── */}
         <div className="flex-1 flex flex-col min-w-0 min-h-0" style={{ background: t.surfaceBg, color: t.text }}>
           {/* Editor Header */}
-          <div className="flex items-center justify-between px-2 py-1" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+          <div className="flex items-center justify-between px-2 py-1 lumora-winctl-safe" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-1.5">
               <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
                 disabled={isTranslating}
