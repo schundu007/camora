@@ -1761,6 +1761,24 @@ html[data-overlay='on'] body,
 html[data-overlay='on'] #root {
   background: transparent !important;
 }
+/* Strip the Lumora shell substrate so the meeting shows through. The dark backdrop
+   is the shell root's var(--bg-app); the content column has no bg of its own, so
+   transparenting the root + hiding the nav rail (first flex child) and the page
+   hero/topbar reveals the desktop behind. The floating Sona answer panel and any
+   element opted-in with data-overlay-keep stay opaque + legible. */
+html[data-overlay='on'] .lumora-shell-root {
+  background: transparent !important;
+}
+html[data-overlay='on'] .lumora-shell-root > *:first-child,
+html[data-overlay='on'] .cam-hero-strip,
+html[data-overlay='on'] .lumora-shell-topbar {
+  display: none !important;
+}
+html[data-overlay='on'] [data-overlay-keep] {
+  background: rgba(10, 12, 20, 0.82) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+}
 /* The top drag strip must not paint a bar over the meeting in overlay mode. */
 html[data-overlay='on'] body.electron-desktop::before {
   -webkit-app-region: no-drag;

@@ -356,7 +356,7 @@ export const LumoraShellPage = () => {
     {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
     {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <SilentStreamBanner />}
     <div
-      className="fixed inset-0 w-full flex overflow-hidden"
+      className="fixed inset-0 w-full flex overflow-hidden lumora-shell-root"
       style={{
         background: 'var(--bg-app)',
         // Electron desktop on macOS uses titleBarStyle: 'hiddenInset', which
