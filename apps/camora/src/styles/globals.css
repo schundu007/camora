@@ -1761,12 +1761,28 @@ html[data-overlay='on'] body,
 html[data-overlay='on'] #root {
   background: transparent !important;
 }
-/* Design-matched translucency: the overlay backdrop uses the app's OWN theme
-   background (--bg-app, the charcoal dark surface) — NOT a random black — mixed with
-   transparency so the meeting shows through while text stays readable on the familiar
-   surface. The slider drives how solid it is (default ~72%). Works in light theme too. */
+/* GRAPHITE GLASS overlay scheme (modeled on macOS Control Center / Raycast / Cluely):
+   a cool graphite tint blended from the app's own --bg-app so it matches the theme,
+   not a random black. A subtle inner hairline gives the glass edge, a faint text-shadow
+   keeps text crisp over anything, and a thin gold brand line rides the top edge. The
+   slider drives solidity (default ~0.7). Works in light theme via --bg-app. */
 html[data-overlay='on'] .lumora-shell-root {
-  background: color-mix(in srgb, var(--bg-app, #16161a) calc(var(--overlay-opacity, 0.72) * 100%), transparent) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
+    color-mix(in srgb, var(--bg-app, #14161c) calc(var(--overlay-opacity, 0.7) * 100%), transparent) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.055), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+/* Thin gold brand line along the very top of the overlay — ties it to navy-gold. */
+html[data-overlay='on'] .lumora-shell-root::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cam-gold-leaf, #c9a227) 25%, var(--cam-gold-leaf, #c9a227) 75%, transparent);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 2;
 }
 /* Strip the inner panel/editor backgrounds so ONLY that one design-matched backdrop
    shows through (no double-dark stacking, no solid black editor block). Keep the
