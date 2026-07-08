@@ -1386,6 +1386,15 @@ ipcMain.handle('window:minimize', () => {
 ipcMain.handle('window:close', () => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
 });
+// JS-based window drag — macOS blocks -webkit-app-region:drag on transparent
+// windows, so the renderer sends pointer deltas from the grip and we move the
+// window here. Fire-and-forget (ipcMain.on) for low-latency dragging.
+ipcMain.on('window:drag-move', (_e, { dx, dy } = {}) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (typeof dx !== 'number' || typeof dy !== 'number') return;
+  const [x, y] = mainWindow.getPosition();
+  mainWindow.setPosition(Math.round(x + dx), Math.round(y + dy));
+});
 
 // ── IPC: per-interview session folder ──────────────────────────────────────
 // Called by the renderer when company context becomes known (e.g. NVIDIA).
