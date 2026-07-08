@@ -125,6 +125,7 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
         {createElement('webview', {
           ref: webviewRef,
           src: CLAUDE_URL,
+          className: 'claude-webview',
           partition: 'persist:claude',
           allowpopups: 'true',
           // Present a standard desktop-Chrome UA so Google doesn't reject sign-in

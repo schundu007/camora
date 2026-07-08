@@ -1803,6 +1803,16 @@ html[data-overlay='on'] .lumora-shell-root :not(h1):not(h2):not(h3):not(h4):not(
   color: #ffffff !important;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.75) !important;
 }
+/* The embedded Claude webview renders claude.ai's own opaque page on a SEPARATE
+   surface, so the parent's overlay tint can't reach it — it stays a solid block
+   while the rest of the overlay is see-through. Tie its element opacity to the
+   SAME slider so it matches: solid at 0.9 (default), see-through as you drag down.
+   Only in overlay mode; docked stays fully solid/readable. */
+html[data-overlay='on'] .claude-webview {
+  opacity: var(--overlay-opacity, 0.9);
+  background-color: transparent !important;
+  transition: opacity 150ms ease;
+}
 /* Transparency slider in the window controls. */
 .desktop-winctl__slider {
   width: 70px;
