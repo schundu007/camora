@@ -1406,34 +1406,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // a second whenever Sona was streaming, and any transcript arriving
   // during a null window fell through to Sona instead of filling the
   // problem field. Anchoring to refs eliminates the race entirely.
-  const onSubmitRef = useRef(onSubmit);
-  useEffect(() => { onSubmitRef.current = onSubmit; }, [onSubmit]);
   useEffect(() => { languageRef.current = language; }, [language]);
   useEffect(() => { problemTextRef.current = problemText; }, [problemText]);
   useEffect(() => { multiPageCountRef.current = multiPageCount; }, [multiPageCount]);
 
   useEffect(() => {
     if (!onVoiceProblemRef) return;
-    onVoiceProblemRef.current = (text: string) => {
-      // Voice on the coding tab always fills the problem and runs the
-      // solver. Sona is not co-resident here — follow-ups happen on
-      // the Behavioral tab or via the typed input on Home.
-      setProblemText(text);
-      setProblemTab('solution');
-      if (!claimAutoGen(text)) return; // same dictation re-delivered — don't re-solve
-      setTestCases([]);
-      setTestResults([]);
-      setOutput('');
-      setIsOutputCollapsed(true);
-      clearStreamChunks();
-      setParsedBlocks([]);
-      setJsonSolution(null);
-      const rl = resolveLanguage(text);
-      setCode(getDefaultCode(rl));
-      onSubmitRef.current(text.trim(), rl);
-    };
+    // Voice is NOT a coding-problem source. The problem must come from a
+    // deliberate input — pasted text, a fetched URL, or an added screenshot —
+    // so ambient interviewer speech can never be turned into a "problem" and
+    // solved into a nonsense solution. The voice-router already stops routing
+    // transcripts here; this handler is a no-op as belt-and-suspenders so no
+    // future caller can accidentally fill/solve from voice.
+    onVoiceProblemRef.current = () => {};
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onVoiceProblemRef]);
 
   useEffect(() => {

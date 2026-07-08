@@ -1,11 +1,14 @@
 /* ── Voice router ─────────────────────────────────────────────────────────
    Single dispatch point for every transcript produced by the page-level
-   AudioCapture. Sona is no longer co-resident on Coding / Design, so
-   routing is now trivially deterministic:
+   AudioCapture. Routing:
 
-     Coding / Design tab → fill the corresponding problem field
-                           and run the solver. Same path for AUTO
-                           and manual mic press.
+     Coding / Design tab → voice is NOT a problem source. The coding/design
+                           problem must come from a deliberate input — pasted
+                           text, a fetched URL, or an added screenshot — so
+                           ambient interviewer speech can never be turned into
+                           a "problem" and solved into nonsense. Voice here is
+                           purely a Sona Q&A channel: once a solution is loaded,
+                           interviewer follow-up questions go to the Sona sidebar.
      Behavioral / Interview tab → ask Sona.
 
    `opts.manual === true` only affects Sona's isQuestion gating; it
@@ -32,34 +35,23 @@ export function dispatchTranscript({
   text,
   opts,
   activeTab,
-  codingProblemRef,
-  designProblemRef,
 }: DispatchArgs): void {
   const trimmed = (text || '').trim();
   if (!trimmed) return;
 
   if (activeTab === 'coding' || activeTab === 'design') {
-    // After a solution is loaded: route interviewer questions to Sona
-    // (same pattern as behavioral tab). Manual presses always go to
-    // the problem field regardless.
+    // Voice is NOT a problem source on Coding / Design — the problem must come
+    // from a deliberate input (pasted text, fetched URL, or added screenshot).
+    // Once a solution is loaded, route interviewer follow-up questions to the
+    // Sona sidebar. Everything else (ambient speech, dictation with no solution
+    // yet) is dropped so it can never be solved into a nonsense solution.
     const hasSolution = !!useSessionStore.getState().liveSolveContext;
-    if (hasSolution && !opts?.manual && isQuestion(trimmed)) {
+    if (hasSolution && isQuestion(trimmed)) {
       log(`${activeTab} → sona (question after solve)`, trimmed.slice(0, 60));
       window.dispatchEvent(new CustomEvent('lumora:coding-question', { detail: { text: trimmed } }));
       return;
     }
-
-    const ref = activeTab === 'coding' ? codingProblemRef : designProblemRef;
-    const setter = ref?.current;
-    if (setter) {
-      log(`${activeTab} problem field${opts?.manual ? ' (manual)' : ''}`, trimmed.slice(0, 60));
-      setter(trimmed);
-      return;
-    }
-    // Defensive — ref not wired yet (component still mounting). Fall
-    // through to Sona so the utterance isn't silently lost.
-    log(`${activeTab} ref missing → sona fallback`, trimmed.slice(0, 60));
-    sonaRegistry.ask(trimmed, opts);
+    log(`${activeTab} voice dropped (not a problem source)`, trimmed.slice(0, 60));
     return;
   }
 
