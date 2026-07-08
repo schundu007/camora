@@ -1826,12 +1826,29 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
   "hackerrank_compatible": true | false,
   "walkthrough": [
     {
-      "lines": "7",
-      "context": "optional label like 'brute' or 'optimised' — omit if not relevant",
-      "text": "First-person plain English the candidate says aloud. Reference variable names with backticks. Max 30 words."
+      "lines": "1-3",
+      "context": "phase: 'read' | 'insight' | 'build' | 'trace' | 'complexity' (omit if not relevant)",
+      "text": "First-person DERIVATION the candidate says aloud — obey the WALK-THROUGH rules below. Cite REAL variable names in backticks and REAL line numbers. 25-45 words."
     }
   ]
 }
+
+WALK-THROUGH — this is the standout: the THOUGHT PROCESS of how we arrived at the
+working solution, not a line-by-line paraphrase. Produce 4-7 ordered steps forming
+a clear derivation arc:
+  1) READ — restate what the problem actually asks and pinpoint the ONE thing that
+     makes it non-trivial (the constraint / edge case / goal).
+  2) INSIGHT — the key realisation that unlocks it ("the trick is…"). If there is an
+     obvious naive approach, name it in one breath and say why we do better. This is
+     the WOW moment — make it crisp and genuinely illuminating.
+  3..N) BUILD / TRACE — walk the ACTUAL fixed_code in order, tying each part back to
+     the insight: what each variable holds, why this loop/branch, what invariant is
+     kept. Use REAL variable names (backticks) and REAL line numbers.
+  LAST) COMPLEXITY — time and space with a one-line WHY, and why it's the right trade-off.
+Voice: confident, specific first-person interview prose ("I start by…", "the key
+realisation is…", "so I keep a running…"). ACCURACY OVER FLAIR — every claim must be
+true to the code; never describe code that isn't there. No markdown, no filler, no
+restating the obvious.
 
 RULES:
 - PLATFORM TEMPLATE — HIGHEST PRIORITY, OVERRIDES THE EXECUTION CONTRACT BELOW:
