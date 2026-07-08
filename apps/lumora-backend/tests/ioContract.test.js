@@ -121,7 +121,9 @@ describe('buildCodingSystemPrompt — RULE #2.7 (unknown I/O contract)', () => {
     const p = unknown();
     expect(p).toContain('NO input(), NO sys.stdin, NO print()');
     expect(p).toContain('ONE algorithm. Never two algorithms in one file.');
-    expect(p).toContain('"hackerrank_compatible": false');
+    // /solve's schema has no hackerrank_compatible field — that belongs to /cofix.
+    // RULE #2.7 must not instruct the model to emit a key the schema never declares.
+    expect(p).not.toContain('hackerrank_compatible');
   });
 
   it('omitting the 5th argument behaves identically to passing null', () => {
