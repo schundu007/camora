@@ -1771,7 +1771,7 @@ html[data-overlay='on'] #root {
    Descendant panels are stripped so only this one translucent layer shows (no
    opaque panels/editor blocking the view). Tune the alpha to taste. */
 html[data-overlay='on'] .lumora-shell-root {
-  background: rgba(10, 12, 20, 0.6) !important;
+  background: rgba(10, 12, 20, 0.85) !important;
 }
 html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not([data-overlay-keep] *) {
   background-color: transparent !important;

@@ -94,23 +94,18 @@ function applyOverlayMode(mode) {
   if (overlay === _overlayMode) return;
   _overlayMode = overlay;
   if (overlay) {
-    _dockedBounds = mainWindow.getBounds();
-    // Cover the full work area of the display the cursor is on so the floating
-    // panel can sit anywhere over the meeting and click-through spans the screen.
-    const display = electronScreen.getDisplayNearestPoint(electronScreen.getCursorScreenPoint());
-    mainWindow.setBounds(display.workArea);
+    // Keep the window at its NORMAL bounds (do NOT resize to fullscreen) so it stays
+    // a movable window the user can drag aside to reach the meeting/browser behind it.
+    // Float above everything (incl. a fullscreen HackerRank/Zoom) and stay FULLY
+    // CLICKABLE — semi-transparent, not click-through. content protection stays on.
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
     mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-    // Default to click-through; the renderer flips this off while the pointer is
-    // over the answer panel via overlay:set-interactive.
-    mainWindow.setIgnoreMouseEvents(true, { forward: true });
-  } else {
     mainWindow.setIgnoreMouseEvents(false);
+  } else {
     mainWindow.setAlwaysOnTop(false);
     mainWindow.setVisibleOnAllWorkspaces(false);
-    if (_dockedBounds) mainWindow.setBounds(_dockedBounds);
+    mainWindow.setIgnoreMouseEvents(false);
   }
-  // content protection is intentionally left ON in both modes.
 }
 
 // ── Window ──────────────────────────────────────────────────────────────
