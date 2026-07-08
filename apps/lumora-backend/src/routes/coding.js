@@ -1943,7 +1943,23 @@ Every changes[] entry MUST reference a line you ADDED — a filled function body
     try { abortController.abort(); } catch {}
   });
 
-  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}${templateModeSection}
+  // When a USER HINT is present the call is a REFINEMENT of already-working code
+  // (e.g. "add print steps", "add type hints", or fix a specific error). Template
+  // mode above says "add ONLY the missing implementation" — which would ignore the
+  // hint and return the code unchanged. This directive overrides that so the hint
+  // is actually applied, while still keeping the harness runnable.
+  const refineDirective = hint
+    ? `\n══════════════════════════════════════════════════════════════════════════
+REFINEMENT — HIGHEST PRIORITY. This OVERRIDES the "add ONLY the missing implementation" limit above.
+══════════════════════════════════════════════════════════════════════════
+The USER HINT is a DIRECT edit instruction on the code below. You MUST apply it and return VISIBLY CHANGED code — NEVER return the input unchanged. Add or modify whatever lines are needed to satisfy the hint (print statements, comments, docstrings, type hints, error handling, a different approach, etc.).
+Keep only what must stay for it to still run: imports, the \`if __name__ == '__main__':\`/driver block, the stdin reads and print/fptr output, and the function NAME + parameter names/order (so the harness's call still resolves). Everything else — the body, annotations, added lines — is fair game.
+Each changes[] entry references a line you ADDED or MODIFIED to satisfy the hint.
+══════════════════════════════════════════════════════════════════════════
+`
+    : '';
+
+  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}${templateModeSection}${refineDirective}
 
 CODE:
 \`\`\`${lang}

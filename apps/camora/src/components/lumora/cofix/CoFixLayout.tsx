@@ -147,6 +147,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
   const [showRefinePopup, setShowRefinePopup] = useState(false);
   const [refinePrompt, setRefinePrompt] = useState('');
+  const [refineSnapping, setRefineSnapping] = useState(false);
   const refineTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   type LogLine = { elapsed: string; icon: React.ReactNode; status?: 'error' | 'success'; msg: string };
@@ -728,6 +729,52 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     abortRef.current = controller;
   }, [fixedCode, refinePrompt, isLoading, effectiveLang, token, activeAssistant, addLog]);
 
+  // Screenshot → text into the refine box. Lets the user snap an error message,
+  // a failing test case, or extra requirements and fold it into the refinement.
+  // Prefers the desktop's exact DOM text; falls back to OCR of the captured image.
+  const handleRefineSnap = useCallback(async () => {
+    if (!token || refineSnapping) return;
+    setRefineSnapping(true);
+    try {
+      const camo = (window as any).camo;
+      let domText: string | null = null;
+      let imageBlob: Blob | null = null;
+      if (camo?.snapActiveBrowser) {
+        const result = await camo.snapActiveBrowser();
+        if (typeof result?.text === 'string' && result.text.trim()) domText = result.text.trim();
+        if (result?.dataUrl) { try { imageBlob = await (await fetch(result.dataUrl)).blob(); } catch { /* image optional */ } }
+      } else {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const track = stream.getVideoTracks()[0];
+        try {
+          const bmp = await new (window as any).ImageCapture(track).grabFrame();
+          const canvas = document.createElement('canvas');
+          canvas.width = bmp.width; canvas.height = bmp.height;
+          canvas.getContext('2d')?.drawImage(bmp, 0, 0);
+          imageBlob = await new Promise<Blob | null>(res => canvas.toBlob(b => res(b), 'image/png'));
+        } finally { track.stop(); }
+      }
+      let extracted = domText;
+      if (!extracted && imageBlob) {
+        const fd = new FormData();
+        fd.append('image', new File([imageBlob], 'refine.png', { type: 'image/png' }));
+        const resp = await fetch(`${API_URL}/api/v1/coding/extract-from-image`, {
+          method: 'POST', credentials: 'include',
+          headers: { Authorization: `Bearer ${token}` }, body: fd,
+        });
+        if (resp.ok) {
+          const d = await resp.json();
+          extracted = (d.problem && d.problem !== 'NO_PROBLEM_FOUND') ? d.problem : (d.text || d.starter_code || '');
+        }
+      }
+      if (extracted && extracted.trim()) {
+        setRefinePrompt(prev => prev.trim() ? `${prev.trim()}\n\n${extracted.trim()}` : extracted.trim());
+        setTimeout(() => refineTextareaRef.current?.focus(), 30);
+      }
+    } catch { /* snap cancelled or failed — leave the box as-is */ }
+    finally { setRefineSnapping(false); }
+  }, [token, refineSnapping]);
+
   const guessEdgeCases = (inputFormat: string): string[] => {
     const f = inputFormat.toLowerCase();
     if (/list|array/.test(f)) return ['print(solution([]))', 'print(solution([1]))'];
@@ -1161,6 +1208,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                         style={{ fontFamily: 'var(--font-mono)', background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab, var(--accent) 35%, transparent)', color: 'var(--text-primary)' }}
                       />
                       <div className="flex items-center gap-2 justify-end">
+                        <button
+                          onClick={handleRefineSnap}
+                          disabled={refineSnapping || isLoading}
+                          title="Screenshot an error, failing case, or extra context and add it to the refinement"
+                          className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5"
+                          style={{ background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 12%, transparent) 0%, var(--bg-elevated) 100%)', border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)' }}
+                        >
+                          {refineSnapping
+                            ? <span className="w-3 h-3 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf-dk)', borderTopColor: 'transparent' }} />
+                            : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>}
+                          {refineSnapping ? 'Reading…' : 'Snap'}
+                        </button>
                         <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>⌘↵ to submit</span>
                         <button
                           onClick={() => setShowRefinePopup(false)}
