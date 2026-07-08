@@ -457,10 +457,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   }, []);
   const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
 
+  // The submitter promotes a pasted template to starter code (handleGenerateSolution).
+  // The chip MUST read the same value, or it warns about a template the backend will
+  // happily detect — the textarea's onChange nulls `starterCode` on every keystroke.
+  const effectiveStarterCode = starterCode || (isCodeTemplate(problemText) ? problemText : null);
+
   const readinessChecks = codingChecks({
     problemText,
-    starterCode,
+    starterCode: effectiveStarterCode,
     company: activeAssistant?.company ?? null,
+    captureInFlight: multiPageCapturing,
   });
   const { blocking, degrading, dismiss } = useToolReadiness(readinessChecks);
 
@@ -572,10 +578,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (!text || isLoading || isStreaming) return;
     setAnalysisCache({});
     setAnalysisTab('code');
-    const effectiveStarterCode = starterCode || (isCodeTemplate(text) ? text : null);
     lastAutoGenSigRef.current = genSignature(text); // explicit regenerate — bypass dedup, refresh signature
     onSubmit(text, resolveLanguage(text), { ...(effectiveStarterCode ? { starterCode: effectiveStarterCode } : {}) });
-  }, [problemText, language, starterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
+  }, [problemText, language, effectiveStarterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
 
   // Auto-switch to the Solution tab when a stream error fires. The
   // error card lives in the Solution tab — without this, a user who
@@ -1419,7 +1424,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     // If the user pasted a code file with placeholder bodies (return [], pass,
     // TODO) but didn't go through OCR/extract, promote problemText to starterCode
     // so the backend completes-in-place and preserves the surrounding boilerplate.
-    const effectiveStarterCode = starterCode || (isCodeTemplate(problemText) ? problemText : null);
+    // (effectiveStarterCode is hoisted to the component body — see readinessChecks —
+    // so the readiness chip and this submit path always agree.)
     const company = getActiveAssistant()?.company || getActiveAssistant()?.name || '';
     const problemWithContext = company ? `[Company: ${company}]\n\n${problemText.trim()}` : problemText.trim();
     lastAutoGenSigRef.current = genSignature(problemText); // explicit generate — refresh signature so autos don't re-solve

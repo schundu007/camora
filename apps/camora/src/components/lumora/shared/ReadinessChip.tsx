@@ -72,8 +72,8 @@ export function ReadinessChip({ blocking, degrading, onDismiss, actions }: Readi
   if (items.length === 0) return null;
 
   const isBlocked = blocking.length > 0;
-  // --danger and --warning/--warning-text are the real tokens (globals.css:55-56,
-  // 235-236). There is no --error or --error-text in this codebase.
+  // --danger, --warning and --warning-text are the real tokens (see globals.css).
+  // There is no --error or --error-text in this codebase.
   const tone = isBlocked
     ? { border: 'var(--danger)', color: 'var(--danger)', bg: 'color-mix(in oklab, var(--danger) 10%, transparent)' }
     : { border: 'var(--warning)', color: 'var(--warning-text)', bg: 'color-mix(in oklab, var(--warning) 10%, transparent)' };

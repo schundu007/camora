@@ -2,7 +2,8 @@
  * Prerequisite checks for the Lumora tools.
  *
  * Two severities, and only one of them blocks:
- *   blocking  — the tool cannot run. Primary button disabled.
+ *   blocking  — the tool cannot run. The host's own `disabled` guard encodes this;
+ *               the chip reports it, it does not enforce it.
  *   degrading — the tool runs, silently worse. Button turns amber, never disables.
  *
  * Nothing here ever blocks mid-session. A modal that interrupts a live interview
@@ -50,6 +51,8 @@ export function codingChecks(input: {
   problemText: string;
   starterCode: string | null;
   company: string | null;
+  /** True while multi-page OCR is capturing: the problem is en route, not missing. */
+  captureInFlight?: boolean;
 }): Check[] {
   const problem = (input.problemText || '').trim();
   return [
@@ -58,7 +61,7 @@ export function codingChecks(input: {
       label: 'Problem captured',
       consequence: 'Nothing to solve.',
       severity: 'blocking',
-      satisfied: problem.length > 0,
+      satisfied: problem.length > 0 || Boolean(input.captureInFlight),
     },
     {
       id: 'io-contract',
@@ -66,14 +69,16 @@ export function codingChecks(input: {
       consequence: 'Solve will invent an I/O contract — an output format the grader never asked for.',
       severity: 'degrading',
       // Starter code IS the contract, so it satisfies this check on its own.
-      satisfied: Boolean(input.starterCode?.trim()) || hasIoEvidence(problem),
+      // A capture in flight means neither the problem NOR its I/O contract has
+      // arrived yet — that's not the same as the user never providing one.
+      satisfied: Boolean(input.starterCode?.trim()) || hasIoEvidence(problem) || Boolean(input.captureInFlight),
     },
     {
       id: 'starter',
       label: 'Starter template',
       consequence: "Solve will write from scratch instead of filling the platform's locked stub.",
       severity: 'degrading',
-      satisfied: Boolean(input.starterCode?.trim()),
+      satisfied: Boolean(input.starterCode?.trim()) || Boolean(input.captureInFlight),
     },
     {
       id: 'company',
@@ -96,7 +101,7 @@ export function cofixChecks(input: {
       label: 'Broken code',
       consequence: 'Nothing to fix.',
       severity: 'blocking',
-      // Mirrors the existing disabled= guard at CoFixLayout.tsx:1009.
+      // Mirrors CoFixLayout's own disabled= guard on the CoFix button.
       satisfied: (input.inputCode || '').trim().length >= 5,
     },
     {
