@@ -5,7 +5,7 @@
    RebuttalsPanel when the response declares them.
 
    Modernized to match the LeetCode-inspired chrome used elsewhere
-   (StreamingAnswer, LumoraTopBar, CodingLayout): every block header gets
+   (StreamingAnswer, CodingLayout): every block header gets
    the cam-hero-strip navy gradient + 2px gold-leaf underline + white
    uppercase title. Body type bumps to 14 px on the --font-answer family so
    answers read like a textbook article rather than a side-panel chip.
