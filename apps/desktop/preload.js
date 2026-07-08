@@ -12,7 +12,7 @@ contextBridge.exposeInMainWorld('camo', {
   // frameless only when CAMORA_OVERLAY=1). The renderer gates its custom title-
   // bar controls + overlay toggle on this so they never render over a normal
   // framed window's native traffic lights.
-  overlayEnabled: process.env.CAMORA_OVERLAY === '1',
+  overlayEnabled: process.argv.includes('--camora-overlay') || process.env.CAMORA_OVERLAY === '1',
 
   // Permissions — both read-only status check and prompt-trigger.
   // The audio setup wizard uses these to make permission flow explicit

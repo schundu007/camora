@@ -40,9 +40,17 @@ const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 // that strips the docked background, a slow first paint against the live site — leaves
 // a see-through, controlless, blank window. Forcing this on for `app.isPackaged`
 // previously shipped exactly that broken blank window to the installed DMG.
-// So: default OFF → normal framed, opaque window with native traffic lights.
-// Enable the transparent overlay explicitly with CAMORA_OVERLAY=1.
-const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1';
+// ROOT CAUSE of that breakage: main enabled the frameless window but the preload
+// bridge kept exposing camo.overlayEnabled=false (it read the same env, which
+// wasn't set), so the renderer NEVER rendered the custom controls → frameless +
+// controlless. Fixed below by normalizing the env so main AND preload agree, which
+// makes the controls + ⌘⇧O toggle actually render. Packaged builds are overlay-
+// capable again; they still LAUNCH docked (normal look), ⌘⇧O toggles transparent.
+const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1' || app.isPackaged;
+// Set BEFORE any window/renderer spawns so the preload bridge (separate process,
+// inherits this env at spawn) exposes camo.overlayEnabled=true and the renderer's
+// window controls render. This is the missing piece that made the DMG ship broken.
+if (OVERLAY_ENABLED) process.env.CAMORA_OVERLAY = '1';
 
 // Electron 40+ regression: setDisplayMediaRequestHandler with
 // audio:'loopback' returns a silent stream when Chromium routes through
@@ -124,19 +132,27 @@ function createWindow() {
     // (the default) we use a normal framed, opaque window with native traffic
     // lights. setContentProtection stays on in both configurations.
     ...(OVERLAY_ENABLED
-      ? { transparent: true, frame: false, hasShadow: false, backgroundColor: '#00000000' }
+      // show:false + ready-to-show avoids a see-through blank flash before the
+      // renderer paints the docked background on a transparent window.
+      ? { transparent: true, frame: false, hasShadow: false, backgroundColor: '#00000000', show: false }
       : { backgroundColor: '#0a0a0a' }),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      // GUARANTEED overlay signal to preload — passed straight into the renderer's
+      // process.argv, so camo.overlayEnabled can't disagree with OVERLAY_ENABLED
+      // (env inheritance across the renderer spawn proved unreliable).
+      additionalArguments: OVERLAY_ENABLED ? ['--camora-overlay'] : [],
     },
   });
 
   mainWindow.loadURL(APP_URL);
   // Match Zustand default — isStealthActive starts true, so protect on launch.
   mainWindow.setContentProtection(true);
+  // Overlay build starts hidden (show:false) — reveal once the renderer has painted.
+  if (OVERLAY_ENABLED) mainWindow.once('ready-to-show', () => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show(); });
 
   mainWindow.on('close', (e) => {
     if (!isQuitting) {
