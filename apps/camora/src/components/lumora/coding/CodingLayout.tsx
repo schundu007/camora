@@ -14,6 +14,7 @@ import { CustomInputPanel } from '@/components/shared/CustomInputPanel';
 import { codingChecks } from '@/components/lumora/shared/readiness';
 import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
 import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
+import { isProblemPageUrl } from '@/lib/problemPageUrl';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -1182,8 +1183,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
         // First capture: try URL-first (full problem via backend scraper).
         const camo = (window as any).camo;
-        const activeUrl: string | null = camo?.getActiveBrowserUrl ? await camo.getActiveBrowserUrl() : null;
-        if (activeUrl && token) {
+        // getActiveBrowserUrl resolves to { ok, url, browser } (or { ok:false, error }),
+        // never a bare string — extract .url before using it.
+        const activeInfo = camo?.getActiveBrowserUrl ? await camo.getActiveBrowserUrl() : null;
+        const activeUrl: string | null = activeInfo?.ok && activeInfo.url ? activeInfo.url : null;
+        if (activeUrl && token && isProblemPageUrl(activeUrl)) {
           try {
             const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fetch-problem`, {
               credentials: 'include',
@@ -1703,7 +1707,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     if (inputMode !== 'url') return;
     const camo = (window as any).camo;
     if (!camo?.getActiveBrowserUrl) return;
-    const CODING_DOMAINS = ['hackerrank.com', 'leetcode.com', 'coderpad.io', 'codesignal.com', 'glider.ai'];
     const platformDomain: Record<string, string> = {
       hackerrank: 'hackerrank.com',
       leetcode: 'leetcode.com',
@@ -1714,8 +1717,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     camo.getActiveBrowserUrl().then((result: any) => {
       if (!result?.ok || !result.url) return;
       const url: string = result.url;
-      const isCodingUrl = CODING_DOMAINS.some(d => url.includes(d));
-      if (!isCodingUrl) return;
+      if (!isProblemPageUrl(url)) return;   // was: isCodingUrl domain check
       if (codingPlatform && codingPlatform !== 'auto' && codingPlatform !== 'none') {
         const expected = platformDomain[codingPlatform];
         if (expected && !url.includes(expected)) return;
