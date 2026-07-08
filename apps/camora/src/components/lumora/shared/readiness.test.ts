@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { hasIoEvidence, codingChecks, cofixChecks, summarize } from './readiness';
+import { dismissReducer } from './useToolReadiness';
 
 // ─────────────────────────────────────────────────────────────────────────
 // SHARED FIXTURES — these strings are duplicated verbatim in
@@ -125,5 +126,23 @@ describe('summarize — dismissal', () => {
     const { blocking, ready } = summarize(blocked, new Set(['problem']));
     expect(blocking.map(c => c.id)).toEqual(['problem']);
     expect(ready).toBe(false);
+  });
+});
+
+describe('dismissReducer', () => {
+  it('adds an id without mutating the input set', () => {
+    const before = new Set(['a']);
+    const after = dismissReducer(before, 'b');
+    expect([...after].sort()).toEqual(['a', 'b']);
+    expect([...before]).toEqual(['a']); // no mutation — stale-closure safety
+  });
+
+  it('is idempotent', () => {
+    expect([...dismissReducer(new Set(['a']), 'a')]).toEqual(['a']);
+  });
+
+  it('returns a NEW reference every call so React re-renders', () => {
+    const before = new Set(['a']);
+    expect(dismissReducer(before, 'a')).not.toBe(before);
   });
 });
