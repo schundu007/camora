@@ -91,9 +91,25 @@ describe('codingChecks', () => {
     expect(io.consequence).toBe('Solve will invent an I/O contract — an output format the grader never asked for.');
   });
 
-  it('a satisfied io-contract check does not appear when evidence exists', () => {
+  it('the io-contract check is satisfied when the problem carries evidence', () => {
     const checks = codingChecks({ ...base, starterCode: null });
     expect(checks.find(c => c.id === 'io-contract')!.satisfied).toBe(true);
+  });
+
+  it('THE TEMPLATE-PASTE CASE: starter code satisfies BOTH io-contract and starter', () => {
+    const template = "if __name__ == '__main__':\n    n = int(input())\n    print(solve(n))";
+    const checks = codingChecks({ problemText: template, starterCode: template, company: null });
+    const { degrading } = summarize(checks, new Set());
+    expect(degrading.map(c => c.id)).toEqual(['company']);
+  });
+
+  it('a capture in flight means the problem is en route, not missing', () => {
+    const { blocking, ready } = summarize(
+      codingChecks({ problemText: '', starterCode: null, company: 'X', captureInFlight: true }),
+      new Set(),
+    );
+    expect(blocking).toHaveLength(0);
+    expect(ready).toBe(true);
   });
 });
 
