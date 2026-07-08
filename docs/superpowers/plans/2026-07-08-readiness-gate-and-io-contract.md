@@ -561,6 +561,18 @@ describe('hasIoEvidence — must agree with coding.js', () => {
   it('false for empty input', () => {
     expect(hasIoEvidence('')).toBe(false);
   });
+  // These four mirror the same cases in ioContract.test.js. If either side's
+  // regex is edited without the other, exactly one of the two suites goes red.
+  it('does not fire on an output-prediction quiz prompt', () => {
+    expect(hasIoEvidence('Print the output of the following program.')).toBe(false);
+  });
+  it('fires when the PROGRAM is the thing that prints', () => {
+    expect(hasIoEvidence('Your program prints True or False.')).toBe(true);
+    expect(hasIoEvidence('The function prints each element on its own line.')).toBe(true);
+  });
+  it('fires on an explicit stdout target', () => {
+    expect(hasIoEvidence('Print the sum to standard output.')).toBe(true);
+  });
 });
 
 describe('codingChecks', () => {
@@ -681,7 +693,11 @@ export function hasIoEvidence(problem: string): boolean {
     /(^|\n)\s*sample\s+(input|output)\b/i.test(t) ||
     /\bstdin\b|\bstandard input\b/i.test(t) ||
     /\bthe first line contains\b/i.test(t) ||
-    /\bprints?\b[^.\n]{0,40}\boutput\b/i.test(t);
+    // Subject-anchored: the PROGRAM prints, not the reader. A bare
+    // /\bprints?\b.{0,40}\boutput\b/ fires on "Print the output of the
+    // following program." — an output-prediction quiz, not a stdin contract.
+    /\bprints?\b[^.\n]{0,40}\bto\s+(stdout|standard\s+output)\b/i.test(t) ||
+    /\b(your|the)\s+(program|solution|script|function)\b[^.\n]{0,60}\bprints?\b/i.test(t);
   if (stdin) return true;
   if (/\bclass\s+Solution\b/.test(t)) return true;
   if (/(^|\n)\s*example\s*\d*\s*:/i.test(t)) return true;
