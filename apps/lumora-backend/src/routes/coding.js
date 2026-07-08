@@ -1177,7 +1177,8 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // code always means "write code", never MCQ.
   const isMcq = questionType === 'mcq'
     || (questionType !== 'code' && detectMcq(problem, { hasStarterCode: !!starterCode }));
-  console.log(`[solve] lang=${lang} mcq=${isMcq} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
+  const ioContract = isMcq ? null : inferIoContract(problem, starterCode);
+  console.log(`[solve] lang=${lang} mcq=${isMcq} io=${ioContract} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({
       error: `Unsupported language: ${language}. Supported: ${SUPPORTED_LANGUAGES.join(', ')}`,
@@ -1369,7 +1370,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   const systemPrompt = isMcq
     ? buildMcqSystemPrompt(typeof systemContext === 'string' ? systemContext : undefined)
-    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true);
+    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true, ioContract);
   // Anthropic prompt cache — wraps the large coding system prompt as a
   // single ephemeral cache block. Subsequent /solve calls within the
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting

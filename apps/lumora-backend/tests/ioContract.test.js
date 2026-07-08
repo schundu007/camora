@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { hasStdinEvidence, hasExampleEvidence, inferIoContract } from '../src/routes/coding.js';
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -164,5 +165,17 @@ describe('buildCodingSystemPrompt — RULE #2.7 (unknown I/O contract)', () => {
     expect(unknownPrompt).toMatch(
       /NOT rewrite from scratch\.\n\n##############################################################################\n# RULE #2\.7:/
     );
+  });
+});
+
+describe('/solve wiring', () => {
+  const src = readFileSync(new URL('../src/routes/coding.js', import.meta.url), 'utf8');
+
+  it('computes ioContract from problem + starterCode', () => {
+    expect(src).toMatch(/const ioContract = isMcq \? null : inferIoContract\(problem, starterCode\);/);
+  });
+
+  it('passes ioContract as the 5th argument to buildCodingSystemPrompt', () => {
+    expect(src).toMatch(/buildCodingSystemPrompt\(lang,[^)]*starterCode \|\| undefined, true, ioContract\)/s);
   });
 });
