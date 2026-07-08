@@ -1761,17 +1761,18 @@ html[data-overlay='on'] body,
 html[data-overlay='on'] #root {
   background: transparent !important;
 }
-/* READABLE overlay: use a translucent BACKDROP (not element opacity — opacity faded
-   the TEXT and made everything hard to read). The backdrop lets the meeting show
-   through, while text/icons on top stay FULLY OPAQUE and crisp. The slider drives the
-   backdrop alpha (higher = more solid + more readable, lower = more see-through). */
+/* SEE-THROUGH overlay done right: strip ALL panel backgrounds (incl. the code editor)
+   so the meeting shows through the whole tool — NO black panel. Text stays fully
+   opaque and is made legible over any background with a text-shadow, not a dark box.
+   The slider adds a light optional tint (default barely-there) if the user wants more. */
 html[data-overlay='on'] .lumora-shell-root {
-  background: rgba(9, 11, 18, var(--overlay-opacity, 0.92)) !important;
+  background: rgba(9, 11, 18, var(--overlay-opacity, 0.18)) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 3px rgba(0, 0, 0, 0.85);
 }
-/* Strip the big inner panel backgrounds so ONLY that one backdrop shows through
-   (no double-dark stacking) — but keep interactive colors (chips/buttons/tabs) and
-   the code editor, and keep ALL text fully opaque for readability. */
-html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']):not([class*='monaco']):not([class*='view-line']) {
+/* Strip EVERY inner background — including the Monaco editor and its lines — so
+   nothing paints a solid block over the meeting. Keep only interactive controls
+   (chips/buttons/tabs/badges) with their own colors for contrast. */
+html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']) {
   background-color: transparent !important;
   background-image: none !important;
 }
