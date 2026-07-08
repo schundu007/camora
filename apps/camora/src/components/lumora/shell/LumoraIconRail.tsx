@@ -6,6 +6,7 @@ import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
 import { dialogAlert } from '../../shared/Dialog';
 import { AudioCheckModal } from './AudioCheckModal';
+import { useStealth, useSyncStealthOnLaunch } from '../../../lib/stealth';
 
 export type LumoraTab = 'session' | 'coding' | 'design' | 'cofix' | 'behavioral' | 'claude' | 'practice' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits';
 
@@ -106,6 +107,11 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
   const [expanded, setExpanded] = useState(false);
   const [audioCheckOpen, setAudioCheckOpen] = useState(false);
   const { theme, toggle: toggleTheme } = useTheme();
+  // Global stealth (screen-share invisibility) — reachable from EVERY Lumora tab,
+  // not just the coding/design strip. Reconcile the persisted choice with the
+  // desktop window's actual content protection once on mount.
+  const { isStealthActive, available: stealthAvailable, toggleStealth } = useStealth();
+  useSyncStealthOnLaunch();
 
   // The Electron desktop build uses titleBarStyle: 'hiddenInset' on macOS,
   // which keeps the red/yellow/green traffic-light buttons at (14, 14) over
@@ -357,6 +363,30 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
 
       {/* Bottom items */}
       <div className="flex flex-col gap-0.5 px-2">
+        {/* Global Stealth toggle — hides the WHOLE Camora window (every tab,
+            incl. the embedded Claude webview) from screen share. Active = gold
+            with a live "on" dot; reachable from any tab. Desktop only. */}
+        {stealthAvailable && (
+          <button
+            onClick={toggleStealth}
+            title={isStealthActive ? 'Stealth ON — Camora is hidden from screen share. Click to disable.' : 'Stealth OFF — Camora is visible to screen share. Click to hide it.'}
+            aria-label={isStealthActive ? 'Stealth on, click to disable' : 'Stealth off, click to enable'}
+            aria-pressed={isStealthActive}
+            className={`relative flex items-center ${expanded ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] active:scale-[0.98] ${isStealthActive ? '' : 'hover:bg-[var(--bg-elevated)]'} text-left w-full`}
+            style={itemStyle(isStealthActive)}
+          >
+            <span className="relative flex items-center justify-center">
+              {isStealthActive
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><line x1="4.5" y1="4.5" x2="19.5" y2="19.5" /></svg>}
+              {/* Live state dot on the collapsed icon so status reads at a glance. */}
+              {!expanded && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: isStealthActive ? '#34d399' : 'var(--text-muted)', boxShadow: '0 0 0 1.5px var(--bg-surface)' }} />
+              )}
+            </span>
+            {expanded && <span className="whitespace-nowrap flex items-center gap-2">Stealth<span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isStealthActive ? 'inherit' : 'var(--text-muted)' }}>{isStealthActive ? 'On' : 'Off'}</span></span>}
+          </button>
+        )}
         {[
           { label: 'Audio Check', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>,
             onClick: () => setAudioCheckOpen(true) },
