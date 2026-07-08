@@ -813,8 +813,11 @@ Rules:
 - Each solution MUST have a patternTag from the canonical list above (pick the single most accurate one)
 - Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
 - Each solution MUST have a trace field — 4-10 step-by-step dry-run entries showing variable state as the algorithm runs on examples[0]. Each step: { step: number, action: short verb phrase, state: key variables formatted as 'name=value' joined with commas }. No code in state, just names and values. Shows the candidate how to talk through the first test case at a whiteboard.
-- Do NOT add comments in the code
-- Do NOT add main blocks or hard-coded test calls
+${starterCode
+  ? `- Preserve the template's own comments verbatim; add NO new comments of your own
+- KEEP the template's driver/main block EXACTLY — the \`if __name__ == '__main__':\` block, the stdin reads, the wrapper call, and the print/fptr output are part of the LOCKED template and MUST appear in your "code" unchanged. Do NOT strip them. (This overrides the generic "no main blocks" rule — that rule is ONLY for from-scratch problems with no starter code.)`
+  : `- Do NOT add comments in the code
+- Do NOT add main blocks or hard-coded test calls`}
 - ${singleSolution ? 'The pitch should explain the chosen approach and complexity' : 'The pitch should compare the 3 approaches conversationally'}
 - Generate COMPLETE, RUNNABLE code that includes all necessary imports for each solution
 - Examples must have exact input/output pairs
