@@ -355,7 +355,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Screen Recording permission status — checked once on mount (desktop only).
   // 'granted' | 'denied' | 'restricted' | 'not-determined' | null (non-desktop)
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
-  const isStealthActive = useSessionStore(s => s.isStealthActive);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
   // Analysis tabs — Explain / Issues / Deep Dive generated from the active solution code
@@ -1302,13 +1301,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   }, []);
 
   // Turn off content protection when leaving the coding page so the app
-  // doesn't stay invisible after the user navigates away.
-  useEffect(() => {
-    return () => {
-      const camo = (window as any).camo;
-      if (camo?.setStealthMode) camo.setStealthMode(false);
-    };
-  }, []);
+  // Stealth is now a GLOBAL, persistent setting (rail toggle) — do NOT force it
+  // off on unmount, or navigating between tabs would silently drop the user's
+  // app-wide stealth choice.
 
 
   // ── Actions ─────────────────────────────────────────────────────────────

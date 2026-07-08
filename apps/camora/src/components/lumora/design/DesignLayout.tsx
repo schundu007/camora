@@ -207,8 +207,6 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
   const [timerRunning, setTimerRunning] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Desktop stealth (read from store — set by ScreenshotStrip in parent shell)
-  const isStealthActive = useSessionStore(s => s.isStealthActive);
   const [screenPermStatus, setScreenPermStatus] = useState<string | null>(null);
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
@@ -869,13 +867,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
     return () => { camo.setSessionFolder(null); };
   }, []);
 
-  // Turn off content protection when leaving the design page.
-  useEffect(() => {
-    return () => {
-      const camo = (window as any).camo;
-      if (camo?.setStealthMode) camo.setStealthMode(false);
-    };
-  }, []);
+  // Stealth is now a GLOBAL, persistent setting (rail toggle) — do NOT force it
+  // off when leaving this page, or navigating between tabs would silently drop
+  // the user's app-wide stealth choice.
 
   // Listen for Cmd+Shift+3/4 screenshots while the app is in the foreground
   // and auto-extract + generate the design answer from the captured image.

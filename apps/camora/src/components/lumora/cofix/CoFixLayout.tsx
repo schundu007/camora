@@ -16,7 +16,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
-import { dialogAlert } from '@/components/shared/Dialog';
 import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
@@ -92,8 +91,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const { token } = useAuth();
   const { theme } = useTheme();
   const monacoTheme: 'vs' | 'vs-dark' = theme === 'light' ? 'vs' : 'vs-dark';
-  const isStealthActive = useSessionStore(s => s.isStealthActive);
-  const setIsStealthActive = useSessionStore(s => s.setIsStealthActive);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [pendingSnapIds, setPendingSnapIds] = useState<string[]>([]);
   const onSnappedRef = useRef(onSnapped);
@@ -313,16 +310,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     }
   }, [changes, monaco, fixedCode]);
 
-  const handleStealthMode = useCallback(async () => {
-    const camo = (window as any).camo;
-    if (!camo?.setStealthMode) {
-      await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
-      return;
-    }
-    const next = !isStealthActive;
-    await camo.setStealthMode(next);
-    setIsStealthActive(next);
-  }, [isStealthActive, setIsStealthActive]);
 
   const handleSnap = useCallback(async () => {
     if (!onSnappedRef.current) return;
@@ -985,27 +972,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
         {/* VoiceEnrollment */}
         {onTranscription && <VoiceEnrollment disabled={false} variant="light" />}
-
-        {/* Stealth — desktop only */}
-        {!!(window as any).camo?.isDesktop && (
-          <button
-            onClick={handleStealthMode}
-            title={isStealthActive ? 'Stealth ON' : 'Block mouse tracking'}
-            className={pillBase}
-            style={isStealthActive
-              ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }
-              : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
-            }
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              {isStealthActive
-                ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
-                : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></>
-              }
-            </svg>
-            {isStealthActive ? 'Stealth ON' : 'Stealth'}
-          </button>
-        )}
+        {/* Stealth moved to the global rail toggle (LumoraIconRail). */}
       </div>
 
       {/* ── Split pane ── */}

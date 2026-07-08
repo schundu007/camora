@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionStore } from '@/stores/session-store';
-import { dialogAlert } from '@/components/shared/Dialog';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 
@@ -53,8 +52,6 @@ const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-b
 
 export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform, inline }: ScreenshotStripProps) => {
   const { token } = useAuth();
-  const isStealthActive = useSessionStore(s => s.isStealthActive);
-  const setIsStealthActive = useSessionStore(s => s.setIsStealthActive);
   const answerMode = useSessionStore(s => s.answerMode);
   const setAnswerMode = useSessionStore(s => s.setAnswerMode);
   const sonaExport = useSessionStore(s => s.sonaExport);
@@ -68,17 +65,6 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
   const onSnappedRef = useRef(onSnapped);
   useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
   const handleSnapRef = useRef<() => Promise<void>>(async () => {});
-
-  const handleStealthMode = useCallback(async () => {
-    const camo = (window as any).camo;
-    if (!camo?.setStealthMode) {
-      await dialogAlert({ title: 'Desktop only', message: 'Stealth mode requires the Camora desktop app.' });
-      return;
-    }
-    const next = !isStealthActive;
-    await camo.setStealthMode(next);
-    setIsStealthActive(next);
-  }, [isStealthActive, setIsStealthActive]);
 
   const handleSnap = useCallback(async () => {
     const camo = (window as any).camo;
@@ -426,27 +412,9 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       )}
 
       {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" />}
-
-      {/* Stealth — desktop only, all tabs (global tool) */}
-      {!!(window as any).camo?.isDesktop && (
-        <button
-          onClick={handleStealthMode}
-          title={isStealthActive ? 'Stealth ON — mouse tracking blocked app-wide' : 'Block mouse tracking (app-wide)'}
-          className={pillBase}
-          style={isStealthActive
-            ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }
-            : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text-muted)', border: '1px solid var(--cam-strip-icon-border)' }
-          }
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-            {isStealthActive
-              ? <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
-              : <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></>
-            }
-          </svg>
-          {isStealthActive ? 'Stealth ON' : 'Stealth'}
-        </button>
-      )}
+      {/* Stealth toggle intentionally NOT here — it's a single GLOBAL control in the
+          left rail (LumoraIconRail) that applies to the whole window/all tabs. A
+          per-page chip was a duplicate that could drift out of sync. */}
     </div>
   );
 }
