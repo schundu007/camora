@@ -32,18 +32,17 @@ const {
 const APP_URL = process.env.CAMORA_URL || 'https://camora.cariara.com';
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 
-// Transparent-overlay mode is OPT-IN. It requires the renderer to paint a solid
-// background in docked mode AND to render the custom min/close/overlay controls
-// (a frameless window has no native traffic lights). That renderer code only
-// exists once the camora.cariara.com frontend is deployed — until then a
-// transparent+frameless window loaded against the live site is unusable (no
-// window controls, see-through chrome). Default OFF → normal framed, opaque
-// window. Enable with CAMORA_OVERLAY=1 once the frontend is live.
-// Packaged builds (the installed DMG) are overlay-capable by default now that the
-// camora.cariara.com renderer ships the overlay controls + see-through CSS. The app
-// still launches in DOCKED mode (normal look); ⌘⇧O toggles the transparent overlay.
-// Dev runs stay framed unless CAMORA_OVERLAY=1 so localhost work isn't see-through.
-const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1' || app.isPackaged;
+// Transparent-overlay mode is STRICTLY OPT-IN — never on by default, not even for
+// packaged builds. Transparency is fixed at window creation, so an overlay-capable
+// window is created transparent + frameless and relies ENTIRELY on the renderer to
+// paint a solid background in docked mode + render custom min/close controls (a
+// frameless window has no native traffic lights). Any hiccup there — a CSS regression
+// that strips the docked background, a slow first paint against the live site — leaves
+// a see-through, controlless, blank window. Forcing this on for `app.isPackaged`
+// previously shipped exactly that broken blank window to the installed DMG.
+// So: default OFF → normal framed, opaque window with native traffic lights.
+// Enable the transparent overlay explicitly with CAMORA_OVERLAY=1.
+const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1';
 
 // Electron 40+ regression: setDisplayMediaRequestHandler with
 // audio:'loopback' returns a silent stream when Chromium routes through

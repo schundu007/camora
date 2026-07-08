@@ -370,11 +370,12 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
               <button
                 key={cp.name}
                 onClick={cp.onClick}
-                className="group text-left rounded-2xl p-5 relative overflow-hidden"
+                className="group text-left rounded-2xl p-4 relative overflow-hidden flex flex-col gap-3 min-w-0"
                 style={{
                   background: 'var(--bg-elevated)',
                   border: '1px solid var(--border)',
                   borderTop: `3px solid ${cp.accent}`,
+                  minHeight: 132,
                   transition: 'box-shadow .18s, transform .18s',
                 }}
                 onMouseEnter={e => {
@@ -388,15 +389,13 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
                   el.style.transform = 'none';
                 }}
               >
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                  <div style={{ width:40, height:40, borderRadius:10, background:`${cp.accent}18`, border:`1px solid ${cp.accent}30`, display:'flex', alignItems:'center', justifyContent:'center', color:cp.accent, flexShrink:0 }}>
-                    {cp.icon}
-                  </div>
-                  <div style={{ fontFamily:'var(--font-display)', fontSize:15, fontWeight:700, color:'var(--text-primary)' }}>
-                    {cp.name}
-                  </div>
+                <div style={{ width:38, height:38, borderRadius:10, background:`${cp.accent}18`, border:`1px solid ${cp.accent}30`, display:'flex', alignItems:'center', justifyContent:'center', color:cp.accent, flexShrink:0 }}>
+                  {cp.icon}
                 </div>
-                <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, fontWeight:700, fontFamily:'var(--font-code)', color:cp.accent, letterSpacing:'0.06em', textTransform:'uppercase' }}>
+                <div style={{ fontFamily:'var(--font-display)', fontSize:14, fontWeight:700, lineHeight:1.25, color:'var(--text-primary)', overflowWrap:'anywhere', flex:1 }}>
+                  {cp.name}
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, fontWeight:700, fontFamily:'var(--font-code)', color:cp.accent, letterSpacing:'0.06em', textTransform:'uppercase' }}>
                   Launch
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
                     <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
