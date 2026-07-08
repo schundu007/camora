@@ -133,6 +133,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   type CustomTest = { id: string; input: string; expected: string; result: string | null; running: boolean; isErr: boolean };
   const mkTest = (seed = ''): CustomTest => ({ id: `t${Date.now()}-${Math.random()}`, input: seed, expected: '', result: null, running: false, isErr: false });
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  // Problem statement to thread into every CoFix request so the backend can SOLVE
+  // an empty platform-template stub (not just repair broken code). Sourced from the
+  // snapped screenshots' OCR text, falling back to the generated analysis problem.
+  // Read via ref inside the stream callbacks to avoid stale closures.
+  const problemContextRef = useRef('');
+  useEffect(() => {
+    const snapped = screenshots.map(s => s.text).filter(Boolean).join('\n\n').trim();
+    problemContextRef.current = snapped || analysis?.problem?.trim() || '';
+  }, [screenshots, analysis]);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
@@ -350,7 +359,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         });
         if (!resp.ok) throw new Error(`OCR ${resp.status}`);
         const data = await resp.json();
-        onSnappedRef.current?.({ ...tempEntry, text: data.text || data.problem_text || '' });
+        // /extract-from-image returns the OCR'd statement under `problem`. Store it as
+        // the screenshot's text so problemContextRef can thread it into the CoFix SOLVE
+        // request (fills the template stub against the real problem, not the fn name alone).
+        const snappedProblem = data.problem && data.problem !== 'NO_PROBLEM_FOUND'
+          ? data.problem
+          : (data.text || data.problem_text || '');
+        onSnappedRef.current?.({ ...tempEntry, text: snappedProblem });
         // The snapped screenshot usually shows the platform's editor template (e.g. a
         // HackerRank function stub + locked __main__ harness). Load it into the editor
         // as the code to complete so the fix preserves that EXACT structure — fills the
@@ -407,6 +422,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       code,
       hint: undefined,
       company: activeAssistant?.company || undefined,
+      problem: problemContextRef.current || undefined,
       language: effectiveLang,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
@@ -600,6 +616,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       code,
       hint: errorHint,
       company: activeAssistant?.company || undefined,
+      problem: problemContextRef.current || undefined,
       language: effectiveLang,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
@@ -666,6 +683,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       code: fixedCode,
       hint: prompt,
       company: activeAssistant?.company || undefined,
+      problem: problemContextRef.current || undefined,
       language: effectiveLang,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {

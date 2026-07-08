@@ -172,6 +172,80 @@ describe('POST /api/v1/coding/cofix/stream', () => {
     expect(sentText).toContain('typo in return');
   });
 
+  it('threads the problem statement into the prompt when provided', async () => {
+    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+
+    await request(app)
+      .post('/api/v1/coding/cofix/stream')
+      .send({
+        code: 'def solution(n):\n  retrun n * 2',
+        language: 'python',
+        problem: 'Given an integer n, return n doubled.',
+      })
+      .buffer(true)
+      .parse((res, cb) => {
+        let d = '';
+        res.on('data', (c) => { d += c; });
+        res.on('end', () => cb(null, d));
+      });
+
+    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    expect(sentText).toContain('PROBLEM STATEMENT');
+    expect(sentText).toContain('return n doubled');
+  });
+
+  it('activates TEMPLATE-SOLVE mode for a locked HackerRank template (empty body + __main__ harness)', async () => {
+    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+
+    const template = [
+      'def count_substring(string, sub_string):',
+      '    return',
+      '',
+      "if __name__ == '__main__':",
+      '    string = input().strip()',
+      '    sub_string = input().strip()',
+      '    count = count_substring(string, sub_string)',
+      '    print(count)',
+    ].join('\n');
+
+    await request(app)
+      .post('/api/v1/coding/cofix/stream')
+      .send({
+        code: template,
+        language: 'python',
+        problem: 'Count occurrences of sub_string in string (overlapping).',
+      })
+      .buffer(true)
+      .parse((res, cb) => {
+        let d = '';
+        res.on('data', (c) => { d += c; });
+        res.on('end', () => cb(null, d));
+      });
+
+    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    expect(sentText).toContain('TEMPLATE-SOLVE MODE');
+    expect(sentText).toContain('CHARACTER-FOR-CHARACTER');
+    // the problem must also be threaded so the empty body gets solved, not guessed
+    expect(sentText).toContain('Count occurrences of sub_string');
+  });
+
+  it('does NOT activate TEMPLATE-SOLVE mode for ordinary broken code', async () => {
+    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+
+    await request(app)
+      .post('/api/v1/coding/cofix/stream')
+      .send({ code: 'def solution(n):\n  retrun n * 2', language: 'python' })
+      .buffer(true)
+      .parse((res, cb) => {
+        let d = '';
+        res.on('data', (c) => { d += c; });
+        res.on('end', () => cb(null, d));
+      });
+
+    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    expect(sentText).not.toContain('TEMPLATE-SOLVE MODE');
+  });
+
   it('returns 400 for unsupported language', async () => {
     const res = await request(app)
       .post('/api/v1/coding/cofix/stream')
