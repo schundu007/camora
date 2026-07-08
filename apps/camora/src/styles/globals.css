@@ -1769,7 +1769,7 @@ html[data-overlay='on'] #root {
 html[data-overlay='on'] .lumora-shell-root {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
-    color-mix(in srgb, var(--bg-app, #14161c) calc(var(--overlay-opacity, 0.5) * 100%), transparent) !important;
+    color-mix(in srgb, var(--bg-app, #14161c) calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
   /* CSS frost (replaces native vibrancy, which rendered milky/opaque). The window is
      genuinely transparent now — the meeting shows through the tint, blurred here. */
   backdrop-filter: blur(14px) saturate(1.4) !important;

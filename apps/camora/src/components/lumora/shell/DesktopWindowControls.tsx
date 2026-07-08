@@ -29,7 +29,7 @@ export function DesktopWindowControls() {
     try { localStorage.setItem('lumora.overlayOpacity', String(v)); } catch { /* ignore */ }
   };
   const savedOpacity = (() => {
-    try { return Number(localStorage.getItem('lumora.overlayOpacity')) || 0.5; } catch { return 0.5; }
+    try { return Number(localStorage.getItem('lumora.overlayOpacity')) || 0.9; } catch { return 0.9; }
   })();
 
   const camo = (window as any).camo;
@@ -93,7 +93,7 @@ export function DesktopWindowControls() {
         aria-label="Minimize"
       >
         {/* minus */}
-        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4.5" width="8" height="1" rx="0.5" fill="currentColor" /></svg>
+        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4.5" width="8" height="1" rx="0.9" fill="currentColor" /></svg>
       </button>
       <button
         type="button"
