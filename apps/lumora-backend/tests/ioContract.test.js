@@ -103,3 +103,38 @@ describe('inferIoContract', () => {
     expect(inferIoContract(null)).toBe('unknown');
   });
 });
+
+import { buildCodingSystemPrompt } from '../src/routes/coding.js';
+
+describe('buildCodingSystemPrompt — RULE #2.7 (unknown I/O contract)', () => {
+  const unknown = () => buildCodingSystemPrompt('python', undefined, undefined, true, 'unknown');
+  const known = () => buildCodingSystemPrompt('python', undefined, undefined, true, 'stdin-print');
+  const legacy = () => buildCodingSystemPrompt('python', undefined, undefined, true);
+
+  it('emits RULE #2.7 only when the contract is unknown', () => {
+    expect(unknown()).toContain('RULE #2.7: I/O CONTRACT UNKNOWN');
+    expect(known()).not.toContain('RULE #2.7');
+  });
+
+  it('forbids drivers and invented labels when unknown', () => {
+    const p = unknown();
+    expect(p).toContain('NO input(), NO sys.stdin, NO print()');
+    expect(p).toContain('ONE algorithm. Never two algorithms in one file.');
+    expect(p).toContain('"hackerrank_compatible": false');
+  });
+
+  it('a null ioContract preserves the legacy prompt byte-for-byte', () => {
+    expect(legacy()).toBe(buildCodingSystemPrompt('python', undefined, undefined, true, null));
+    expect(legacy()).not.toContain('RULE #2.7');
+  });
+
+  it('starter code and unknown never co-occur, but starter wins if they do', () => {
+    const p = buildCodingSystemPrompt('python', undefined, 'def solve():\n    pass', true, 'unknown');
+    expect(p).not.toContain('RULE #2.7');
+    expect(p).toContain('STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM');
+  });
+
+  it('declares the assumptions field in the JSON schema', () => {
+    expect(unknown()).toContain('"assumptions"');
+  });
+});
