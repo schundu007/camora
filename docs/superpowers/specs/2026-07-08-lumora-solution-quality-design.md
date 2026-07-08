@@ -46,7 +46,15 @@ Today the prompt resolves that ambiguity by guessing `stdin/print`.
 
 > **Absent evidence, emit the least-committed artifact.**
 > `shape: unknown` → a pure function. No driver. No `input()`. No `print()`.
-> No invented labels. `hackerrank_compatible: false`. Populate `assumptions[]`.
+> No invented labels. Populate `assumptions[]`.
+
+**Correction, 2026-07-08 (found in final review).** An earlier draft of this spec
+required `hackerrank_compatible: false` here. **`/solve`'s JSON schema has no such
+field** — it belongs to `/cofix` (`coding.js:2033, 2079, 2090`). Instructing the
+model to emit it would have violated the prompt's own *"Respond with valid JSON in
+EXACTLY this format"* contract, which is the precise failure class A0 exists to
+eliminate. If `/solve` ever needs the flag, it must be **declared in the schema
+first**, not smuggled in via a rule.
 
 The asymmetry is total: a pure function is trivially wrappable in any driver; an
 invented print contract is a Wrong Answer the candidate cannot see.
@@ -194,8 +202,8 @@ regression fixture, a verifier goes behind a flag.
 test case. Assert on generated output:
 
 1. `shape: unknown` (no problem, no starter) → **no `print(`, no `input(`, no
-   `sys.stdin` in `code`**; `hackerrank_compatible: false`; `assumptions[]`
-   non-empty. *(defect G)*
+   `sys.stdin` in `code`**; `assumptions[]` non-empty. *(defect G)*
+   The prompt must **not** mention `hackerrank_compatible` — see the correction above.
 2. Exactly one algorithm per `solutions[]` entry. *(defect E)*
 3. No `except` clause naming an exception the guarded block cannot raise.
    *(defects A, B)*
@@ -207,6 +215,27 @@ test case. Assert on generated output:
 
 Then, with a problem statement supplied, assert the same problem produces a
 driver **matching the stated output format** rather than invented labels.
+
+## Known hole in A0's guarantee (pre-existing; A1 must close it)
+
+`coding.js:1167-1169` resolves `starterCode` with a fallback:
+`detectPlatformTemplate(problem) ? problem : undefined`. That predicate is
+**strictly looser** than the client's `isCodeTemplate`: it fires on a bare
+`\bTODO\b`, or on any line ending `return 0;`, with **no structure gate**.
+
+Consequence: a prose problem statement containing the word *TODO* makes the
+backend treat the entire statement as locked starter code, set
+`ioContract: 'template'`, and **suppress RULE #2.7** — exactly where a bare prompt
+most needs it.
+
+```
+"Reverse a singly linked list.\nTODO: handle empty list."   → backend: template
+"Write a function. On failure return 0;"                     → backend: template
+```
+
+Fix in A1: gate `detectPlatformTemplate`'s `TODO` / `return 0` clauses behind a
+`hasStructure` test, as `isCodeTemplate` already does. Not a B0/A0 blocker — the
+behaviour predates this work (`git show a370558e`).
 
 ## Risks
 
