@@ -848,11 +848,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           Explain
         </button>
 
-        {explainMode && (
-          <span className="text-[11px] italic shrink-0 animate-pulse" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}>
-            hover any line →
-          </span>
-        )}
 
         {/* Divider */}
         <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
@@ -876,9 +871,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
               No issues found
             </span>
-          )}
-          {!isLoading && !fixedCode && (
-            <span className="text-[12px]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Paste broken code on the left, then click Fix</span>
           )}
         </div>
 
