@@ -890,7 +890,8 @@ function hasStdinEvidence(problem) {
     || /(^|\n)\s*sample\s+(input|output)\b/i.test(t)
     || /\bstdin\b|\bstandard input\b/i.test(t)
     || /\bthe first line contains\b/i.test(t)
-    || /\bprints?\b[^.\n]{0,40}\boutput\b/i.test(t);
+    || /\bprints?\b[^.\n]{0,40}\bto\s+(stdout|standard\s+output)\b/i.test(t)
+    || /\b(your|the)\s+(program|solution|script|function)\b[^.\n]{0,60}\bprints?\b/i.test(t);
 }
 
 /** LeetCode-style worked example: an "Example N:" header, or Input: + Output:. */

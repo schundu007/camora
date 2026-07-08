@@ -47,6 +47,16 @@ describe('hasStdinEvidence', () => {
   it('detects an explicit stdin mention', () => {
     expect(hasStdinEvidence('Read n from stdin and print n*2.')).toBe(true);
   });
+  it('does not fire on an output-prediction quiz prompt', () => {
+    expect(hasStdinEvidence('Print the output of the following program.')).toBe(false);
+  });
+  it('fires when the PROGRAM is the thing that prints', () => {
+    expect(hasStdinEvidence('Your program prints True or False.')).toBe(true);
+    expect(hasStdinEvidence('The function prints each element on its own line.')).toBe(true);
+  });
+  it('fires on an explicit stdout target', () => {
+    expect(hasStdinEvidence('Print the sum to standard output.')).toBe(true);
+  });
 });
 
 describe('hasExampleEvidence', () => {
@@ -84,6 +94,9 @@ describe('inferIoContract', () => {
     expect(inferIoContract(BARE_PROBLEM)).toBe('unknown');
     expect(inferIoContract(BARE_PROBLEM, undefined)).toBe('unknown');
     expect(inferIoContract(BARE_PROBLEM, '')).toBe('unknown');
+  });
+  it('an output-prediction prompt with no other signal is unknown', () => {
+    expect(inferIoContract('Print the output of the following program.')).toBe('unknown');
   });
   it('tolerates a non-string problem', () => {
     expect(inferIoContract(undefined)).toBe('unknown');
