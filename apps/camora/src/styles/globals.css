@@ -1761,17 +1761,16 @@ html[data-overlay='on'] body,
 html[data-overlay='on'] #root {
   background: transparent !important;
 }
-/* SEE-THROUGH overlay done right: strip ALL panel backgrounds (incl. the code editor)
-   so the meeting shows through the whole tool — NO black panel. Text stays fully
-   opaque and is made legible over any background with a text-shadow, not a dark box.
-   The slider adds a light optional tint (default barely-there) if the user wants more. */
+/* Design-matched translucency: the overlay backdrop uses the app's OWN theme
+   background (--bg-app, the charcoal dark surface) — NOT a random black — mixed with
+   transparency so the meeting shows through while text stays readable on the familiar
+   surface. The slider drives how solid it is (default ~72%). Works in light theme too. */
 html[data-overlay='on'] .lumora-shell-root {
-  background: rgba(9, 11, 18, var(--overlay-opacity, 0.18)) !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 3px rgba(0, 0, 0, 0.85);
+  background: color-mix(in srgb, var(--bg-app, #16161a) calc(var(--overlay-opacity, 0.72) * 100%), transparent) !important;
 }
-/* Strip EVERY inner background — including the Monaco editor and its lines — so
-   nothing paints a solid block over the meeting. Keep only interactive controls
-   (chips/buttons/tabs/badges) with their own colors for contrast. */
+/* Strip the inner panel/editor backgrounds so ONLY that one design-matched backdrop
+   shows through (no double-dark stacking, no solid black editor block). Keep the
+   interactive controls (chips/buttons/tabs/badges) with their own colors. */
 html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']) {
   background-color: transparent !important;
   background-image: none !important;
