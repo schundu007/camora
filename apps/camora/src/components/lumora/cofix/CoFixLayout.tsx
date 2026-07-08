@@ -147,6 +147,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  // Minimize (not close): collapses the analysis drawer to a thin restore bar so
+  // there is always a way back — never an ✕ that hides chrome with no return.
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [panelTab, setPanelTab] = useState<'problem' | 'learn'>('problem');
   const [customTests, setCustomTests] = useState<CustomTest[]>([mkTest()]);
 
@@ -440,6 +443,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     setAnalysisError(false);
     setCustomTests([mkTest()]);
     setShowPanel(true);
+    setPanelCollapsed(false); // a fresh fix always expands — never leave results hidden behind a prior minimize
     setPanelTab('problem');
 
     const controller = await streamCoFixResponse({
@@ -1329,8 +1333,24 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
       {/* ── Analysis panel — 2 columns ── */}
       {showPanel && (
-        <div ref={panelRef} className="shrink-0 flex flex-col" style={{ height: panelHeight, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
+        <div ref={panelRef} className="shrink-0 flex flex-col" style={{ height: panelCollapsed ? 34 : panelHeight, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
 
+          {panelCollapsed ? (
+            /* Collapsed → thin restore bar. Clicking anywhere reopens the drawer. */
+            <button
+              onClick={() => setPanelCollapsed(false)}
+              className="h-full w-full flex items-center gap-3 px-4 text-left transition-opacity hover:opacity-80"
+              style={{ background: 'var(--cam-hero-strip)' }}
+              title="Expand analysis"
+            >
+              <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
+                Problem · Tests · Output
+              </span>
+              <div className="flex-1" />
+              <span className="text-[12px]" style={{ color: 'var(--cam-gold-leaf)' }}>▴</span>
+            </button>
+          ) : (
+          <>
           {/* Drag handle */}
           <div
             onMouseDown={handlePanelDragStart}
@@ -1361,7 +1381,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                     Analyzing…
                   </span>
                 )}
-                <button onClick={() => setShowPanel(false)} className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>✕</button>
+                <button onClick={() => setPanelCollapsed(true)} title="Minimize" className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>▾</button>
               </div>
 
               <div className="flex-1 overflow-y-auto px-4 py-3">
@@ -1627,6 +1647,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
           </Allotment>
           </div>
+          </>
+          )}
         </div>
       )}
     </div>
