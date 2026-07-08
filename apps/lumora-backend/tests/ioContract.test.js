@@ -123,9 +123,19 @@ describe('buildCodingSystemPrompt — RULE #2.7 (unknown I/O contract)', () => {
     expect(p).toContain('"hackerrank_compatible": false');
   });
 
-  it('a null ioContract preserves the legacy prompt byte-for-byte', () => {
+  it('omitting the 5th argument behaves identically to passing null', () => {
+    // Guards the default-parameter value, which existing 4-arg callers rely on.
     expect(legacy()).toBe(buildCodingSystemPrompt('python', undefined, undefined, true, null));
-    expect(legacy()).not.toContain('RULE #2.7');
+  });
+
+  it('the known/null paths carry an empty assumptions array, never RULE #2.7', () => {
+    for (const p of [legacy(), known()]) {
+      expect(p).not.toContain('RULE #2.7');
+      expect(p).toContain('"assumptions": []');
+    }
+    // ...while the unknown path demands the model populate it.
+    expect(unknown()).not.toContain('"assumptions": []');
+    expect(unknown()).toContain('"assumptions"');
   });
 
   it('starter code and unknown never co-occur, but starter wins if they do', () => {
