@@ -1102,12 +1102,21 @@ async function recordCodingUsage(userId, language, inputTokens, outputTokens, la
 // ---------------------------------------------------------------------------
 
 router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async (req, res) => {
-  const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache, starter_code: starterCode, question_type: questionType } = req.body;
+  const { problem, language, conversationHistory, system_context: systemContext, bypass_cache: bypassCache, starter_code: rawStarterCode, question_type: questionType } = req.body;
 
   // ── Validate ────────────────────────────────────────────────────────────
   if (!problem || typeof problem !== 'string') {
     return res.status(400).json({ error: 'Missing required field: problem' });
   }
+
+  // Safety net: if the client didn't send starter_code but the problem text
+  // itself IS a locked platform template (pasted editor content — HackerRank
+  // stub + __main__ harness, minimal inline skeleton, etc.), treat it as the
+  // starter so we FILL it instead of writing a from-scratch script. Backstops
+  // any capture path that fails to thread starter_code separately.
+  const starterCode = (typeof rawStarterCode === 'string' && rawStarterCode.trim())
+    ? rawStarterCode
+    : (detectPlatformTemplate(problem) ? problem : undefined);
   if (!language || typeof language !== 'string') {
     return res.status(400).json({ error: 'Missing required field: language' });
   }
