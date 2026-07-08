@@ -330,6 +330,29 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       if (camo?.snapActiveBrowser) {
         const result = await camo.snapActiveBrowser();
         if (result?.error) throw new Error(result.error);
+        // Prefer the desktop's EXACT DOM extraction (verbatim editor template +
+        // problem text) over screenshot OCR. When a coding-platform tab is open,
+        // snapActiveBrowser returns the real editor content — load it straight
+        // into the editor as the code to complete and skip OCR entirely.
+        const domStarter = typeof result?.starterCode === 'string' && result.starterCode.trim()
+          ? result.starterCode
+          : null;
+        const domText = typeof result?.text === 'string' && result.text.trim()
+          ? result.text
+          : null;
+        if (domStarter || domText) {
+          let thumb = '';
+          if (result?.dataUrl) {
+            try {
+              const b = await fetch(result.dataUrl).then(r => r.blob());
+              thumb = await new Promise<string>(res => { const reader = new FileReader(); reader.onloadend = () => res(reader.result as string); reader.readAsDataURL(b); });
+            } catch { /* thumbnail is optional */ }
+          }
+          if (domStarter) setInputCode(domStarter);
+          onSnappedRef.current?.({ id, dataUrl: thumb, text: domText || '' });
+          setSnapState('idle');
+          return;
+        }
         const blob = await fetch(result.dataUrl || result).then(r => r.blob());
         dataUrl = await new Promise<string>(res => { const reader = new FileReader(); reader.onloadend = () => res(reader.result as string); reader.readAsDataURL(blob); });
       } else {

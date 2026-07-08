@@ -440,16 +440,23 @@ async function getActiveBrowserInfo() {
 
   for (const browser of BROWSERS) {
     try {
-      // Get ALL windows (not just front) and check each tab's URL
+      // Search EVERY tab of EVERY window (not just the active/front tab). The user
+      // constantly switches tabs (HackerRank ↔ claude.ai), so the coding platform is
+      // frequently a BACKGROUND tab while claude.ai is focused. Iterating all tabs
+      // finds the HackerRank tab regardless of which tab currently has focus.
       const result = await runAppleScript(`
 tell application "${browser}"
   set output to ""
   set winCount to count of windows
   repeat with w from 1 to winCount
     try
-      set u to URL of active tab of window w
       set t to name of window w
-      set output to output & u & "|||" & t & "|||WINSEP|||"
+      repeat with tb in (tabs of window w)
+        try
+          set u to URL of tb
+          set output to output & u & "|||" & t & "|||WINSEP|||"
+        end try
+      end repeat
     end try
   end repeat
   return output
@@ -528,12 +535,16 @@ tell application "${browser}"
   set winCount to count of windows
   repeat with w from 1 to winCount
     try
-      set tabUrl to URL of active tab of window w
-      if tabUrl contains "${urlFragment}" then
-        set r to execute active tab of window w javascript "${escapedJs}"
-        if r is missing value then return ""
-        return r as string
-      end if
+      repeat with tb in (tabs of window w)
+        try
+          set tabUrl to URL of tb
+          if tabUrl contains "${urlFragment}" then
+            set r to execute tb javascript "${escapedJs}"
+            if r is missing value then return ""
+            return r as string
+          end if
+        end try
+      end repeat
     end try
   end repeat
   return ""
@@ -602,12 +613,16 @@ tell application "${browser}"
   set winCount to count of windows
   repeat with w from 1 to winCount
     try
-      set tabUrl to URL of active tab of window w
-      if tabUrl contains "${urlFragment}" then
-        set r to execute active tab of window w javascript "${escapedJs}"
-        if r is missing value then return ""
-        return r as string
-      end if
+      repeat with tb in (tabs of window w)
+        try
+          set tabUrl to URL of tb
+          if tabUrl contains "${urlFragment}" then
+            set r to execute tb javascript "${escapedJs}"
+            if r is missing value then return ""
+            return r as string
+          end if
+        end try
+      end repeat
     end try
   end repeat
   return ""
@@ -1325,23 +1340,43 @@ ipcMain.handle('snap-active-browser', async () => {
   try {
     const info = await getActiveBrowserInfo();
     if (!info) return { ok: false, error: 'No browser window found. Make sure Chrome/Brave/Edge is open.' };
-    const dataUrl = await captureExactBrowserWindow(info.windowTitle);
-    if (!dataUrl) return { ok: false, error: 'Could not capture the browser window. Make sure it is visible and not minimised.' };
-    // Save to session folder (~/Documents/Camora/{company}/screenshots/) so
-    // the user can click the thumbnail to open it in Preview/Finder.
-    let filePath = null;
-    try {
-      const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Camora', 'screenshots');
-      fs.mkdirSync(folder, { recursive: true });
-      const ext = dataUrl.startsWith('data:image/jpeg') ? 'jpg' : 'png';
-      const filename = `snap-${Date.now()}.${ext}`;
-      filePath = path.join(folder, filename);
-      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
-    } catch (saveErr) {
-      console.log('[snap] save to disk failed:', saveErr.message);
+
+    // Prefer EXACT DOM extraction over screenshot OCR whenever a supported coding
+    // platform tab is open (found by all-tabs search above, even if it's a
+    // background tab). This gives CoFix the verbatim editor template + problem
+    // text instead of fragile OCR. OCR remains the fallback in the renderer when
+    // DOM extraction is unavailable (dev-menu "Allow JavaScript from Apple Events"
+    // off) and only the screenshot comes back.
+    let text = null;
+    let starterCode = null;
+    const isPlatform = Object.values(PLATFORM_URL_MATCH).some((fn) => fn(info.url));
+    if (isPlatform) {
+      try { text = await extractProblemTextFromBrowser(info.browser, info.url); } catch {}
+      try { starterCode = await extractStarterCodeFromBrowser(info.browser, info.url); } catch {}
     }
-    return { ok: true, dataUrl, filePath };
+
+    const dataUrl = await captureExactBrowserWindow(info.windowTitle);
+    // Only hard-fail if we got NOTHING usable — no screenshot AND no DOM template.
+    if (!dataUrl && !starterCode && !text) {
+      return { ok: false, error: 'Could not capture the browser window. Make sure it is visible and not minimised.' };
+    }
+    // Save the screenshot (when present) to the session folder so the user can
+    // click the thumbnail to open it in Preview/Finder.
+    let filePath = null;
+    if (dataUrl) {
+      try {
+        const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Camora', 'screenshots');
+        fs.mkdirSync(folder, { recursive: true });
+        const ext = dataUrl.startsWith('data:image/jpeg') ? 'jpg' : 'png';
+        const filename = `snap-${Date.now()}.${ext}`;
+        filePath = path.join(folder, filename);
+        const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+        fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+      } catch (saveErr) {
+        console.log('[snap] save to disk failed:', saveErr.message);
+      }
+    }
+    return { ok: true, dataUrl, filePath, text, starterCode, url: info.url };
   } catch (err) {
     return { ok: false, error: err?.message || 'Capture failed' };
   }
