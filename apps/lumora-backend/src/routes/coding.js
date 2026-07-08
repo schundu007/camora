@@ -447,11 +447,14 @@ const SUPPORTED_LANGUAGES = [
  * Build the coding system prompt for a given language.
  * Directly ported from Python `build_coding_system_prompt()`.
  */
-function buildCodingSystemPrompt(language, systemContext, starterCode, forceSingle = false) {
+function buildCodingSystemPrompt(language, systemContext, starterCode, forceSingle = false, ioContract = null) {
   // Bash problems on HackerRank always supply a starter template (function
   // stub + wrapper call). Even when OCR misses it, multiple "approaches"
   // for bash don't make sense — there's one right implementation.
   const singleSolution = forceSingle || !!starterCode || language === 'bash';
+  // Starter code means we HAVE a contract — the template is it. RULE #2.7 only
+  // fires when we have no evidence at all.
+  const ioUnknown = ioContract === 'unknown' && !starterCode;
   const contextBlock = systemContext
     ? `\n##############################################################################
 # CANDIDATE CONTEXT
@@ -593,6 +596,26 @@ Detect and complete partial/starter code from the problem. When you detect
 partial code with markers like "complete the function", "TODO", or empty body,
 you MUST complete the given template, NOT rewrite from scratch.
 ${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour single solution must follow this exact structure — return only 1 solution in the solutions array.\n` : ''}
+${ioUnknown ? `
+##############################################################################
+# RULE #2.7: I/O CONTRACT UNKNOWN — DO NOT INVENT ONE (HIGHEST PRIORITY)
+##############################################################################
+The problem statement specifies NO input/output format, and NO starter code was
+captured. You have NO evidence of how this program is invoked or graded.
+
+Emit the LEAST-COMMITTED artifact:
+- ONE pure function. Its PARAMETERS are the inputs. It RETURNS the answer.
+- NO input(), NO sys.stdin, NO print(), NO if __name__ block, NO driver.
+- NO invented output labels. Printing "Iterative:" before a result is FORBIDDEN.
+- ONE algorithm. Never two algorithms in one file. If several approaches exist,
+  pick the one you would submit and describe the others in "tradeoffs".
+- Set "hackerrank_compatible": false
+- Populate "assumptions" with exactly what you assumed about the inputs and the
+  expected return value.
+
+This OVERRIDES the stdin/print EXCEPTION in RULE #3. A pure function wraps into
+any driver; an invented print contract is a Wrong Answer the candidate cannot see.
+` : ''}
 
 ##############################################################################
 # RULE #3: CODE STRUCTURE
@@ -793,6 +816,9 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
     {"input": "nums = [2,7,11,15], target = 9", "expected": "[0, 1]"},
     {"input": "nums = [3,2,4], target = 6", "expected": "[1, 2]"}
   ]
+  ,"assumptions": ${ioUnknown
+    ? `["Each assumption you made about the input types or the expected return value. REQUIRED — at least one entry."]`
+    : `[]`}
 }
 
 ##############################################################################
@@ -829,7 +855,7 @@ ${starterCode
 - Examples must have exact input/output pairs
 - ${singleSolution ? 'The 1 solution must produce correct output for the given examples' : 'ALL 3 solutions must produce correct output for the given examples'}
 - Use the LATEST modern patterns and APIs for ${language}
-- ${singleSolution ? '' : 'Order solutions from simplest (brute force) to most optimal'}`;
+- ${singleSolution ? '' : 'Order solutions from simplest (brute force) to most optimal'}${ioUnknown ? `\n- The I/O contract is UNKNOWN. Return a pure function with no driver, no print, no invented labels, and populate "assumptions".` : ''}`;
 }
 
 // ---------------------------------------------------------------------------
