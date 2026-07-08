@@ -29,7 +29,7 @@ export function DesktopWindowControls() {
     try { localStorage.setItem('lumora.overlayOpacity', String(v)); } catch { /* ignore */ }
   };
   const savedOpacity = (() => {
-    try { return Number(localStorage.getItem('lumora.overlayOpacity')) || 0.72; } catch { return 0.72; }
+    try { return Number(localStorage.getItem('lumora.overlayOpacity')) || 0.5; } catch { return 0.5; }
   })();
 
   const camo = (window as any).camo;
