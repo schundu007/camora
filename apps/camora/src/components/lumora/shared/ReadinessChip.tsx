@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Check } from './readiness';
 
 export interface ReadinessChipProps {
@@ -12,24 +13,48 @@ export interface ReadinessChipProps {
  * Renders nothing when every check passes and nothing is blocking — an always-on
  * "● Ready" pill is chrome that teaches nothing. It appears only when it has
  * something to say.
+ *
+ * The popover is portaled to document.body and positioned `fixed`. It cannot be
+ * `absolute`: CoFixLayout mounts this inside an <Allotment.Pane>, and allotment's
+ * own stylesheet puts `overflow: hidden` on every pane, which clips a 306px
+ * popover the moment the pane is dragged near its 220px minimum.
  */
 export function ReadinessChip({ blocking, degrading, onDismiss, actions }: ReadinessChipProps) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
   const hostRef = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  const place = useCallback(() => {
+    const r = hostRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 8, right: Math.max(8, window.innerWidth - r.right) });
+  }, []);
+
+  // Measure before paint so the popover never flashes at the wrong coordinates.
+  useLayoutEffect(() => { if (open) place(); }, [open, place]);
 
   useEffect(() => {
     if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (!hostRef.current?.contains(e.target as Node)) setOpen(false);
+    const onDocPointer = (e: MouseEvent) => {
+      const t = e.target as Node;
+      // The popover is portaled OUT of hostRef, so it must be checked separately —
+      // otherwise clicking "Ignore this session" reads as an outside click and closes.
+      if (hostRef.current?.contains(t) || popRef.current?.contains(t)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', onDocClick);
+    // `capture` so a scroll inside any ancestor (the editor, the pane) repositions us.
+    document.addEventListener('mousedown', onDocPointer);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
     return () => {
-      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('mousedown', onDocPointer);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
     };
-  }, [open]);
+  }, [open, place]);
 
   const items = [...blocking, ...degrading];
   if (items.length === 0) return null;
@@ -41,75 +66,79 @@ export function ReadinessChip({ blocking, degrading, onDismiss, actions }: Readi
     ? { border: 'var(--danger)', color: 'var(--danger)', bg: 'color-mix(in oklab, var(--danger) 10%, transparent)' }
     : { border: 'var(--warning)', color: 'var(--warning-text)', bg: 'color-mix(in oklab, var(--warning) 10%, transparent)' };
 
+  const popover = open && pos ? createPortal(
+    <div
+      ref={popRef}
+      role="group"
+      aria-label="Readiness checks"
+      className="fixed z-[1000] w-[min(306px,calc(100vw-16px))] rounded-lg p-1.5"
+      style={{
+        top: pos.top,
+        right: pos.right,
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
+        boxShadow: '0 12px 40px -12px rgba(0,0,0,0.55)',
+      }}
+    >
+      {items.map((c, i) => (
+        <div
+          key={c.id}
+          className="p-2.5 rounded"
+          style={i > 0 ? { borderTop: '1px solid var(--border)' } : undefined}
+        >
+          <div className="flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <span aria-hidden="true" className="text-[10px]" style={{ color: c.severity === 'blocking' ? 'var(--danger)' : 'var(--warning)' }}>▲</span>
+            {c.label}
+          </div>
+          <p className="mt-1.5 ml-[18px] text-[12px] leading-[1.5]" style={{ color: 'var(--text-secondary)' }}>
+            {c.consequence}
+          </p>
+          <div className="mt-2 ml-[18px] flex gap-1.5 flex-wrap">
+            {(actions?.[c.id] ?? []).map((a) => (
+              <button
+                key={a.label}
+                type="button"
+                onClick={() => { a.onClick(); setOpen(false); }}
+                className="h-6 px-2 rounded text-[10px] font-bold tracking-[0.06em]"
+                style={{
+                  border: `1px solid ${a.primary ? 'var(--cam-primary)' : 'var(--border)'}`,
+                  color: a.primary ? 'var(--cam-primary)' : 'var(--text-secondary)',
+                  background: 'transparent',
+                }}
+              >
+                {a.label}
+              </button>
+            ))}
+            {c.severity === 'degrading' && (
+              <button
+                type="button"
+                onClick={() => onDismiss(c.id)}
+                className="h-6 px-2 rounded text-[10px] font-bold tracking-[0.06em]"
+                style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
+              >
+                Ignore this session
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>,
+    document.body,
+  ) : null;
+
   return (
     <div ref={hostRef} className="relative inline-flex">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-haspopup="dialog"
         className="h-6 px-2.5 rounded text-[11px] font-bold tracking-[0.04em] inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
         style={{ border: `1px solid ${tone.border}`, color: tone.color, background: tone.bg }}
       >
         <span aria-hidden="true">▲</span>
         {items.length} {items.length === 1 ? 'check' : 'checks'}
       </button>
-
-      {open && (
-        <div
-          role="dialog"
-          aria-label="Readiness checks"
-          className="absolute top-[calc(100%+8px)] right-0 z-30 w-[306px] rounded-lg p-1.5"
-          style={{
-            background: 'var(--bg-elevated)',
-            border: '1px solid var(--border)',
-            boxShadow: '0 12px 40px -12px rgba(0,0,0,0.55)',
-          }}
-        >
-          {items.map((c, i) => (
-            <div
-              key={c.id}
-              className="p-2.5 rounded"
-              style={i > 0 ? { borderTop: '1px solid var(--border)' } : undefined}
-            >
-              <div className="flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-                <span aria-hidden="true" className="text-[10px]" style={{ color: c.severity === 'blocking' ? 'var(--danger)' : 'var(--warning)' }}>▲</span>
-                {c.label}
-              </div>
-              <p className="mt-1.5 ml-[18px] text-[12px] leading-[1.5]" style={{ color: 'var(--text-secondary)' }}>
-                {c.consequence}
-              </p>
-              <div className="mt-2 ml-[18px] flex gap-1.5 flex-wrap">
-                {(actions?.[c.id] ?? []).map((a) => (
-                  <button
-                    key={a.label}
-                    type="button"
-                    onClick={() => { a.onClick(); setOpen(false); }}
-                    className="h-6 px-2 rounded text-[10px] font-bold tracking-[0.06em]"
-                    style={{
-                      border: `1px solid ${a.primary ? 'var(--cam-primary)' : 'var(--border)'}`,
-                      color: a.primary ? 'var(--cam-primary)' : 'var(--text-secondary)',
-                      background: 'transparent',
-                    }}
-                  >
-                    {a.label}
-                  </button>
-                ))}
-                {c.severity === 'degrading' && (
-                  <button
-                    type="button"
-                    onClick={() => onDismiss(c.id)}
-                    className="h-6 px-2 rounded text-[10px] font-bold tracking-[0.06em]"
-                    style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
-                  >
-                    Ignore this session
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {popover}
     </div>
   );
 }
