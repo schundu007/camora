@@ -2,6 +2,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 import type { Check } from './readiness';
 
+/** Keep in sync with the popover's `w-[min(306px,...)]` class below. */
+const POPOVER_WIDTH = 306;
+
 export interface ReadinessChipProps {
   blocking: Check[];
   degrading: Check[];
@@ -27,7 +30,16 @@ export function ReadinessChip({ blocking, degrading, onDismiss, actions }: Readi
 
   const place = useCallback(() => {
     const r = hostRef.current?.getBoundingClientRect();
-    if (r) setPos({ top: r.bottom + 8, right: Math.max(8, window.innerWidth - r.right) });
+    if (!r) return;
+    // Keep 8px clear of BOTH viewport edges. Clamping only the right edge pushes the
+    // popover's left edge off-screen when the chip sits in a narrow left-hand pane
+    // (CoFixLayout's Allotment.Pane has minSize={220}; the popover is 306px wide).
+    const width = Math.min(POPOVER_WIDTH, window.innerWidth - 16);
+    const right = Math.min(
+      Math.max(8, window.innerWidth - r.right),
+      window.innerWidth - width - 8,
+    );
+    setPos({ top: r.bottom + 8, right });
   }, []);
 
   // Measure before paint so the popover never flashes at the wrong coordinates.
