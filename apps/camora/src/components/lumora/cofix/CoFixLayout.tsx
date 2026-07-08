@@ -16,6 +16,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
+import { cofixChecks } from '@/components/lumora/shared/readiness';
+import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
+import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
 import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
@@ -135,9 +138,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // snapped screenshots' OCR text, falling back to the generated analysis problem.
   // Read via ref inside the stream callbacks to avoid stale closures.
   const problemContextRef = useRef('');
+  const [problemContext, setProblemContext] = useState('');
   useEffect(() => {
     const snapped = screenshots.map(s => s.text).filter(Boolean).join('\n\n').trim();
-    problemContextRef.current = snapped || analysis?.problem?.trim() || '';
+    const next = snapped || analysis?.problem?.trim() || '';
+    problemContextRef.current = next;
+    setProblemContext(next);   // ref alone never re-renders the chip
   }, [screenshots, analysis]);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState(false);
@@ -246,6 +252,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, handler);
   }, []);
   const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
+
+  const { blocking, degrading, dismiss } = useToolReadiness(
+    cofixChecks({ inputCode, problemContext, company: activeAssistant?.company ?? null }),
+  );
 
   useEffect(() => {
     cofixHoverDisposable.current?.dispose();
@@ -1006,14 +1016,26 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         <div className="flex flex-col h-full border-r border-[var(--border)]">
           <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
             <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Broken Code</span>
-            <button
-              onClick={() => handleFix()}
-              disabled={inputCode.trim().length < 5 || isLoading}
-              className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
-            >
-              {isLoading ? 'Analyzing…' : 'CoFix'}
-            </button>
+            <div className="flex items-center gap-2">
+              <ReadinessChip
+                blocking={blocking}
+                degrading={degrading}
+                onDismiss={dismiss}
+                actions={{ problem: [{ label: 'Snap', primary: true, onClick: () => handleSnap() }] }}
+              />
+              <button
+                onClick={() => handleFix()}
+                disabled={inputCode.trim().length < 5 || isLoading}
+                className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+                style={
+                  degrading.length > 0
+                    ? { background: 'transparent', border: '1px solid var(--warning)', color: 'var(--warning-text)' }
+                    : { background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }
+                }
+              >
+                {isLoading ? 'Analyzing…' : degrading.length > 0 ? 'CoFix ▲' : 'CoFix'}
+              </button>
+            </div>
           </div>
 
           {lineCount > 500 && (
