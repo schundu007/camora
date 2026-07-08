@@ -1773,9 +1773,19 @@ html[data-overlay='on'] #root {
 html[data-overlay='on'] .lumora-shell-root {
   background: rgba(10, 12, 20, 0.85) !important;
 }
-html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not([data-overlay-keep] *) {
+/* Strip the big flat panel backgrounds so the meeting shows through — BUT keep the
+   colored backgrounds on interactive elements (buttons, chips, badges, tabs, pills)
+   so they stay legible with proper contrast against the meeting behind. Stripping
+   those too was what made the CoFix chips vanish in transparent mode. */
+html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not([data-overlay-keep] *):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']) {
   background-color: transparent !important;
   background-image: none !important;
+}
+/* Extra insurance: give any still-low-contrast interactive control a legible chip
+   backing in overlay mode (covers controls whose color came from a stripped parent). */
+html[data-overlay='on'] .lumora-shell-root button:not([style*='background']),
+html[data-overlay='on'] .lumora-shell-root [role='tab']:not([style*='background']) {
+  background-color: rgba(12, 16, 28, 0.88) !important;
 }
 html[data-overlay='on'] .lumora-shell-root > *:first-child,
 html[data-overlay='on'] .cam-hero-strip,
