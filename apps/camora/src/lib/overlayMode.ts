@@ -34,6 +34,10 @@ export function setOverlayMode(next: OverlayMode) {
   mode = next;
   applyDom(mode);
   camo()?.overlay?.setMode?.(mode);
+  // Keep the WHOLE window clickable in overlay mode (semi-transparent, not
+  // click-through) — otherwise only the tiny control cluster captures clicks and
+  // the app is unusable. Runs after setMode so it overrides main's default.
+  if (mode === 'overlay') camo()?.overlay?.setInteractive?.(true);
   emit();
 }
 
@@ -55,6 +59,7 @@ export function initOverlayModeBridge() {
     if (next === mode) return;
     mode = next;
     applyDom(mode);
+    if (mode === 'overlay') c.overlay?.setInteractive?.(true);
     emit();
   });
 }

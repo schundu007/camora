@@ -1766,13 +1766,13 @@ html[data-overlay='on'] #root {
    transparenting the root + hiding the nav rail (first flex child) and the page
    hero/topbar reveals the desktop behind. The floating Sona answer panel and any
    element opted-in with data-overlay-keep stay opaque + legible. */
+/* Semi-transparent, not fully see-through: the shell root gets a translucent dark
+   backdrop so the meeting shows through (~40%) while the UI stays legible + usable.
+   Descendant panels are stripped so only this one translucent layer shows (no
+   opaque panels/editor blocking the view). Tune the alpha to taste. */
 html[data-overlay='on'] .lumora-shell-root {
-  background: transparent !important;
+  background: rgba(10, 12, 20, 0.6) !important;
 }
-/* THE key rule: strip the solid background off every descendant of the shell
-   (content columns, cards, and the Monaco editor at rgb(30,30,30)) so the meeting
-   shows through the whole surface — not just the shell root. Verified live via CDP.
-   Elements opted into data-overlay-keep (and their subtree) stay opaque + legible. */
 html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not([data-overlay-keep] *) {
   background-color: transparent !important;
   background-image: none !important;

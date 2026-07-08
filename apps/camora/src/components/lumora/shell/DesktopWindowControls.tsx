@@ -11,7 +11,6 @@ import {
   isElectron,
   useOverlayMode,
   toggleOverlayMode,
-  setOverlayInteractive,
   initOverlayModeBridge,
 } from '../../../lib/overlayMode';
 
@@ -33,10 +32,9 @@ export function DesktopWindowControls() {
   return createPortal(
     <div
       className={`desktop-winctl${overlay ? ' desktop-winctl--overlay' : ''}`}
-      // In overlay mode the window is click-through by default; keep this cluster
-      // clickable while the pointer is over it, then release on leave.
-      onPointerEnter={() => setOverlayInteractive(true)}
-      onPointerLeave={() => setOverlayInteractive(false)}
+      // Overlay mode keeps the WHOLE window clickable (set once on overlay entry in
+      // overlayMode.ts), so no per-element click-through toggling here — that was
+      // what locked the rest of the UI out.
     >
       <button
         type="button"
