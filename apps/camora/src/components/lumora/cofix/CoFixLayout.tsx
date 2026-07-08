@@ -76,7 +76,7 @@ const LANGUAGES = [
 ];
 
 interface CoFixLayoutProps {
-  onScreenshotAppendRef?: { current: ((text: string) => void) | null };
+  onScreenshotAppendRef?: { current: ((text: string, starterCode?: string) => void) | null };
   /** Parent sets this ref; calling it injects code into the left editor and optionally sets the language. */
   onInjectCodeRef?: { current: ((code: string, lang?: string) => void) | null };
   screenshots?: ScreenshotEntry[];
@@ -284,7 +284,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // Screenshot append ref — appends OCR text to the left pane input
   useEffect(() => {
     if (!onScreenshotAppendRef) return;
-    onScreenshotAppendRef.current = (text: string) => {
+    onScreenshotAppendRef.current = (text: string, starter?: string) => {
+      // Prefer the captured editor template as the code to fix — that's the locked
+      // answer block CoFix must complete in place. Fall back to OCR/problem text.
+      const clean = typeof starter === 'string' && starter.trim() ? starter : null;
+      if (clean) { setInputCode(clean); return; }
       setInputCode(prev => prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text);
     };
     return () => { onScreenshotAppendRef.current = null; };

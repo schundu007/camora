@@ -56,9 +56,9 @@ export const LumoraShellPage = () => {
   // Global screenshot strip state
   const [screenshots, setScreenshots] = useState<ScreenshotEntry[]>([]);
   // Per-layout refs: set by each layout to receive screenshot OCR text
-  const codingScreenshotRef = useRef<((text: string) => void) | null>(null);
-  const designScreenshotRef = useRef<((text: string) => void) | null>(null);
-  const cofixScreenshotRef = useRef<((text: string) => void) | null>(null);
+  const codingScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
+  const designScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
+  const cofixScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
   const cofixInjectRef = useRef<((code: string, lang?: string) => void) | null>(null);
 
   // Input mode state lifted to shell so the global strip can own the pills
@@ -337,11 +337,13 @@ export const LumoraShellPage = () => {
       if (existing >= 0) { const next = [...prev]; next[existing] = entry; return next; }
       return [...prev, entry];
     });
-    if (!entry.text) return;
+    // A HackerRank minimal template can yield an empty problem statement but a real
+    // starter block — don't drop those. Only bail when BOTH are empty.
+    if (!entry.text && !entry.starterCode) return;
     const tab = activeTabRef.current;
-    if (tab === 'coding') codingScreenshotRef.current?.(entry.text);
-    else if (tab === 'design') designScreenshotRef.current?.(entry.text);
-    else if (tab === 'cofix') cofixScreenshotRef.current?.(entry.text);
+    if (tab === 'coding') codingScreenshotRef.current?.(entry.text, entry.starterCode);
+    else if (tab === 'design') designScreenshotRef.current?.(entry.text, entry.starterCode);
+    else if (tab === 'cofix') cofixScreenshotRef.current?.(entry.text, entry.starterCode);
   }, []);
 
   const handleRemoveScreenshot = useCallback((id: string) => {
