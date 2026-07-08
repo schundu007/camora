@@ -2463,6 +2463,10 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
 
     try { await assertPublicHost(url); } catch { return res.status(400).json({ error: 'URL is not allowed.' }); }
 
+    if (!isProblemPageUrl(url)) {
+      return res.status(422).json({ error: 'not_a_problem_page', detail: 'This URL is not a single coding-problem page (looks like a landing or list page). Open a specific problem, or screenshot it.' });
+    }
+
     // LeetCode SPAs need the GraphQL path — raw fetch returns no content.
     // Failures here fall through to the generic fetch below (e.g. premium problems
     // that aren't accessible via GraphQL may still have a readable HTML page).
@@ -2780,6 +2784,33 @@ Rules:
   }
 });
 
+// True only when `raw` is a SINGLE coding-problem page — not a landing page, a
+// problem LIST, a dashboard, or an unknown page. Strict allowlist: anything not
+// explicitly recognized returns false, so auto-scrape never fires on junk.
+//
+// Mirror of the frontend copy in apps/camora/src/lib/problemPageUrl.ts. Keep
+// the two in sync; both are covered by the same ALLOW/BLOCK test cases.
+function isProblemPageUrl(raw) {
+  if (!raw || typeof raw !== 'string') return false;
+  let u;
+  try { u = new URL(raw); } catch { return false; }
+  const host = u.hostname.replace(/^www\./, '').toLowerCase();
+  const path = u.pathname.replace(/\/+$/, '');
+  if (/(^|\.)leetcode\.(com|cn)$/.test(host)) return /^\/problems\/[^/]+/.test(path);
+  if (/(^|\.)hackerrank\.com$/.test(host)) return /\/challenges\/[^/]+/.test(path);
+  if (/(^|\.)coderpad\.io$/.test(host)) {
+    const seg = path.split('/').filter(Boolean);
+    if (seg.length === 0) return false;
+    const MARKETING = new Set(['pricing','resources','blog','login','signup','dashboard','questions','question-bank','company','about','careers','contact','product','solutions','customers','terms','privacy']);
+    const first = seg[0].toLowerCase();
+    if (MARKETING.has(first)) return false;
+    return first === 'sandbox' || /^[a-z0-9]{5,}$/i.test(seg[0]);
+  }
+  if (/(^|\.)codesignal\.com$/.test(host)) return /^\/(interview|test|challenge|coding|assessment)\//.test(path);
+  if (/(^|\.)glider\.ai$/.test(host)) return /^\/(test|assessment|oa|invite)\//.test(path);
+  return false;
+}
+
 export default router;
 // Exported for unit testing the CoFix output sanitizer.
 export { stripInjectedComments, remapLine, remapLineRef, sanitizeCofixResult };
@@ -2787,4 +2818,5 @@ export { stripInjectedComments, remapLine, remapLineRef, sanitizeCofixResult };
 export { langCandidates, pickHackerRankTemplate, pickLeetcodeSnippet };
 export { detectPlatformTemplate, templateHasFillableFunction, isMinimalInlineTemplate, buildTemplateShapeDirective, buildCodingSystemPrompt };
 export { hasStdinEvidence, hasExampleEvidence, inferIoContract };
+export { isProblemPageUrl };
 
