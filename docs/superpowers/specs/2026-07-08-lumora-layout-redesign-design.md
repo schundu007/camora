@@ -2,7 +2,18 @@
 
 **Date:** 2026-07-08
 **Status:** Approved (design)
-**Depends on:** Project D (dead controls removed first)
+**Split into two:**
+
+- **B0 — Readiness gate.** Ships *first, ahead of everything*, alongside A0.
+  `useToolReadiness.ts` + `<ReadinessChip>` + the popover. Depends on nothing.
+  Reordered after the baseline measurement showed an un-gated Solve button
+  running on a failed OCR — see the "Readiness gate" section below and
+  `2026-07-08-lumora-solution-quality-design.md`.
+- **B1 — Layout redesign.** Everything else here. Depends on Project D.
+
+The gate reuses the prerequisite chips B1 introduces, but does not require them:
+in B0 it renders as a standalone `▲ N` chip in the existing toolbar. B1 then
+folds it into `<PrereqStrip>`.
 
 ## Problem
 
