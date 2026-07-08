@@ -1761,14 +1761,19 @@ html[data-overlay='on'] body,
 html[data-overlay='on'] #root {
   background: transparent !important;
 }
-/* UNIFORM TRANSLUCENCY (works identically on Coding, Design, Behavioral, CoFix):
-   the shell keeps its normal solid background but the whole subtree fades together
-   via opacity, so the meeting shows through evenly AND every element — chips, cards,
-   the editor, text — keeps its color and relative contrast. This replaces the old
-   per-element background stripping, which made chips/panels vanish and caused the
-   contrast issues. Tune the alpha (0 = invisible, 1 = solid). */
+/* READABLE overlay: use a translucent BACKDROP (not element opacity — opacity faded
+   the TEXT and made everything hard to read). The backdrop lets the meeting show
+   through, while text/icons on top stay FULLY OPAQUE and crisp. The slider drives the
+   backdrop alpha (higher = more solid + more readable, lower = more see-through). */
 html[data-overlay='on'] .lumora-shell-root {
-  opacity: var(--overlay-opacity, 0.82);
+  background: rgba(9, 11, 18, var(--overlay-opacity, 0.92)) !important;
+}
+/* Strip the big inner panel backgrounds so ONLY that one backdrop shows through
+   (no double-dark stacking) — but keep interactive colors (chips/buttons/tabs) and
+   the code editor, and keep ALL text fully opaque for readability. */
+html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']):not([class*='monaco']):not([class*='view-line']) {
+  background-color: transparent !important;
+  background-image: none !important;
 }
 /* Transparency slider in the window controls. */
 .desktop-winctl__slider {
