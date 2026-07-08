@@ -39,7 +39,11 @@ const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 // transparent+frameless window loaded against the live site is unusable (no
 // window controls, see-through chrome). Default OFF → normal framed, opaque
 // window. Enable with CAMORA_OVERLAY=1 once the frontend is live.
-const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1';
+// Packaged builds (the installed DMG) are overlay-capable by default now that the
+// camora.cariara.com renderer ships the overlay controls + see-through CSS. The app
+// still launches in DOCKED mode (normal look); ⌘⇧O toggles the transparent overlay.
+// Dev runs stay framed unless CAMORA_OVERLAY=1 so localhost work isn't see-through.
+const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1' || app.isPackaged;
 
 // Electron 40+ regression: setDisplayMediaRequestHandler with
 // audio:'loopback' returns a silent stream when Chromium routes through
