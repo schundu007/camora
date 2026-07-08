@@ -8,6 +8,7 @@ import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
 import Chip from '@/components/shared/ui/Chip';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
+import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
 import { CustomInputPanel } from '@/components/shared/CustomInputPanel';
 import { codingChecks } from '@/components/lumora/shared/readiness';
@@ -444,11 +445,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // a plain closure would capture the stale null and drop the HackerRank harness).
   const starterCodeRef = useRef(starterCode);
 
-  // getActiveAssistant() reads localStorage, so it must not be called during
-  // render on every keystroke. CoFixLayout.tsx:242-248 memoises it against an
-  // `assistantVersion` counter; here there is no mutation path, so mount-once
-  // is correct and sufficient.
-  const activeAssistant = useMemo(() => getActiveAssistant(), []);
+  // Re-render when company context changes. LumoraShellPage lazy-mounts this
+  // component once and hides it with display:none on tab switch — it never
+  // remounts — so an empty dep array would pin `company` for the whole session
+  // and the readiness chip would keep warning about a company the user has since set.
+  const [assistantVersion, setAssistantVersion] = useState(0);
+  useEffect(() => {
+    const handler = () => setAssistantVersion(v => v + 1);
+    window.addEventListener(ASSISTANT_UPDATED_EVENT, handler);
+    return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, handler);
+  }, []);
+  const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
 
   const readinessChecks = codingChecks({
     problemText,
