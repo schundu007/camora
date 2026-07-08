@@ -490,6 +490,9 @@ export interface CoFixStreamOptions {
   code: string;
   hint?: string;
   company?: string;
+  /** Problem statement (screenshot OCR / DOM / problem panel) so CoFix can SOLVE
+   *  an empty platform-template stub instead of only repairing broken code. */
+  problem?: string;
   language: string;
   token: string;
   signal?: AbortSignal;
@@ -500,7 +503,7 @@ export interface CoFixStreamOptions {
 }
 
 export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<AbortController> {
-  const { code, hint, company, language, token, signal: externalSignal, onToken, onAnswer, onError, onComplete } = options;
+  const { code, hint, company, problem, language, token, signal: externalSignal, onToken, onAnswer, onError, onComplete } = options;
 
   const abortController = new AbortController();
   if (externalSignal) {
@@ -526,6 +529,7 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
         language,
         ...(hint ? { hint } : {}),
         ...(company ? { company } : {}),
+        ...(problem && problem.trim() ? { problem: problem.trim() } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

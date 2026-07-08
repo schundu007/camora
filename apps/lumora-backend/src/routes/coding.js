@@ -598,8 +598,8 @@ STEP 1 — Read the problem description AND examples. Determine EXACTLY what to 
 STEP 2 — Fill in ONLY the missing implementation inside the given function/method body.
 STEP 3 — Mentally trace on example[0]: confirm your output matches expected.
 
-PRESERVATION RULES (ALL LANGUAGES — this is what makes the solution actually run on the platform):
-1. Keep EVERYTHING outside the function body VERBATIM: imports / package / using lines, shebang, the class and function SIGNATURE exactly as given, and the ENTIRE input/output harness — Python input()/sys.stdin/print(), Java Scanner/BufferedReader/System.out, C++ cin/cout/scanf/printf, JS readline, Go bufio, bash readarray + wrapper call + exit 0.
+PRESERVATION RULES (ALL LANGUAGES — this is what makes the solution actually run on the platform). These OVERRIDE any "execution contract / you may restructure" guidance — the starter code is a LOCKED editor template and the output must be it, CHARACTER-FOR-CHARACTER, with ONLY the stub body filled:
+1. Keep EVERYTHING outside the function body VERBATIM — byte-for-byte, same order: imports / package / using lines, shebang, comments, the class and function SIGNATURE exactly as given, and the ENTIRE input/output harness — Python input()/sys.stdin/print(), Java Scanner/BufferedReader/System.out, C++ cin/cout/scanf/printf, JS readline, Go bufio, bash readarray + wrapper call + exit 0.
 2. DO NOT rename functions, change the parameter list, or replace the platform's stdin-reading / printing with your own parsing — the candidate pastes this WHOLE file back into the platform and it must run unmodified.
 3. ONLY fill in the body marked by "Write your code here" / "Complete the function" / TODO / an empty or pass/return-placeholder body. Add nothing outside it except an import your implementation strictly needs.
 4. Return the COMPLETE file: the untouched harness PLUS your filled-in body — never a bare function with the harness stripped off.
@@ -1753,11 +1753,40 @@ function sanitizeCofixResult(parsed, lang) {
 }
 
 // ---------------------------------------------------------------------------
+// detectPlatformTemplate — is this pasted code a LOCKED editor template that the
+// candidate can only fill (HackerRank / Codility / CoderPad), rather than a piece
+// of broken code to repair? Language-agnostic. Triggers on ANY of:
+//   • an `if __name__ == '__main__':` driver (Python) / equivalent harness that
+//     reads input and calls a function
+//   • two or more stdin reads (bare-script HR templates that lack a function)
+//   • an empty / `pass` / `return`-only / `...` / NotImplementedError function
+//     body, or a platform stub marker ("write your code here", "complete the … below", TODO)
+// When true, CoFix switches to TEMPLATE-SOLVE mode: fill only the stub body/bodies
+// and reproduce everything else byte-for-byte, instead of "fix only what's broken".
+// Mirrors the frontend isCodeTemplate() heuristic so both entry points agree.
+// ---------------------------------------------------------------------------
+function detectPlatformTemplate(code) {
+  if (!code || typeof code !== 'string') return false;
+  const mainGuard = /^\s*if\s+__name__\s*==\s*['"]__main__['"]\s*:/m.test(code)
+    || /public\s+static\s+void\s+main\s*\(/.test(code)   // Java driver
+    || /\bfunc\s+main\s*\(\s*\)/.test(code);              // Go driver
+  const stdinReads = (code.match(/\binput\s*\(|\bsys\.stdin\b|\.nextInt\s*\(|\.nextLine\s*\(|\bcin\s*>>|\breadLine\s*\(|\breadline\s*\(|\breadarray\b|bufio\.New/g) || []).length;
+  // Empty / stub / placeholder function body — the thing the candidate must fill.
+  const emptyStub =
+    /\bdef\s+\w+\s*\([^)]*\)\s*(?:->[^\n:]+)?:\s*(?:\n\s*(?:#[^\n]*\n\s*|"""[\s\S]*?"""\s*\n\s*|'''[\s\S]*?'''\s*\n\s*)*)?(?:return\s*(?:None)?\s*$|pass\s*$|\.\.\.\s*$)/m.test(code)
+    || /\braise\s+NotImplementedError/.test(code)
+    || /(?:#|\/\/)\s*(?:write your code here|your code goes here|complete the\b[^\n]*\b(?:function|method))/i.test(code)
+    || /\bTODO\b/.test(code)
+    || /\breturn\s+(?:\[\]|\{\}|""|''|0)\s*;?\s*$/m.test(code);
+  return !!(mainGuard || stdinReads >= 2 || emptyStub);
+}
+
+// ---------------------------------------------------------------------------
 // POST /cofix/stream — CoFix: fix broken code, stream structured change annotations
 // ---------------------------------------------------------------------------
 
 router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { code, hint, language, company } = req.body;
+  const { code, hint, language, company, problem } = req.body;
 
   if (!code || code.trim().length < 5) {
     return res.status(400).json({ error: 'Missing or too-short code' });
@@ -1777,6 +1806,34 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
 
   // Strip any residual [Key: Value] metadata headers in case they appear in pasted code
   const cleanedCode = code.replace(/^\s*\[[^\]]+:[^\]]+\]\s*\n?/gm, '').trim();
+
+  // Is the pasted code a locked platform editor template (function stub +
+  // __main__/driver harness)? If so we SOLVE-in-place rather than repair.
+  const isTemplate = detectPlatformTemplate(cleanedCode);
+  // Thread the problem statement (from screenshot OCR / DOM / problem panel) so
+  // CoFix can actually SOLVE the empty stub instead of guessing from the fn name.
+  const problemText = (typeof problem === 'string' ? problem : '').trim().slice(0, 8000);
+  const problemSection = problemText
+    ? `\nPROBLEM STATEMENT — implement the code so it correctly solves THIS (read constraints + examples carefully; trace your body on the first example before answering):\n"""\n${problemText}\n"""\n`
+    : '';
+  const templateModeSection = isTemplate
+    ? `\n══════════════════════════════════════════════════════════════════════════
+TEMPLATE-SOLVE MODE — HIGHEST PRIORITY. OVERRIDES EVERY "only fix what is broken" AND "EXECUTION CONTRACT" RULE BELOW.
+══════════════════════════════════════════════════════════════════════════
+The CODE below is a LOCKED editor template from a coding platform (HackerRank / Codility / CoderPad). The candidate can ONLY type inside the empty / stub / \`return\`-only / \`pass\` / \`...\` function body(ies). EVERYTHING ELSE is uneditable and MUST be reproduced BYTE-FOR-BYTE.
+
+SOLVE, don't just fix: an empty or placeholder body is NOT "already correct" — it is precisely the thing you must complete so the program solves the PROBLEM STATEMENT above (or, if none is given, what the function name + harness clearly imply). Return the value the harness prints/uses.
+
+fixed_code MUST satisfy ALL of these:
+1. Reproduce every import / package / using / shebang line, every comment, every class and function SIGNATURE, and the ENTIRE input-output harness (\`if __name__ == '__main__':\`, input()/sys.stdin/print(), Scanner/BufferedReader/System.out, cin/cout/scanf/printf, readline, bufio, bash readarray + wrapper call + exit 0) CHARACTER-FOR-CHARACTER, in the same order, as given.
+2. Do NOT rename functions, change parameter lists, reorder lines, restructure into a stdin-reading script, or replace the platform's stdin-reading / printing with your own. The candidate pastes fixed_code straight back into the locked editor and it must run unmodified.
+3. Fill ONLY the stub body(ies). Add nothing outside them except an import your implementation strictly needs — placed exactly where the template's existing imports are. If there are several stub functions, fill EVERY one.
+4. Return the COMPLETE file: the untouched template PLUS your filled body(ies) — never a bare function with the harness stripped off.
+5. Set "hackerrank_compatible": true — this IS the platform's own template, so it is submission-ready as-is; do NOT tell the candidate to strip I/O.
+Every changes[] entry MUST reference a line INSIDE a filled body — never a harness/signature line (those are unchanged).
+══════════════════════════════════════════════════════════════════════════
+`
+    : '';
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -1803,7 +1860,7 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
     try { abortController.abort(); } catch {}
   });
 
-  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}
+  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}${templateModeSection}
 
 CODE:
 \`\`\`${lang}
