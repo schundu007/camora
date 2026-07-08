@@ -148,12 +148,21 @@ describe('buildCodingSystemPrompt — RULE #2.7 (unknown I/O contract)', () => {
     expect(unknown()).toContain('"assumptions"');
   });
 
-  it('a false ioUnknown guard leaves no stray blank line', () => {
-    // Regression: the null-path (legacy) prompt should have no extra blank lines
-    // from the ioUnknown conditional. The line count includes the approved
-    // "assumptions": [] line (263 total = 262 baseline + 1 for assumptions).
-    const result = legacy();
-    const lineCount = result.split('\n').length;
-    expect(lineCount).toBe(263);
+  it('the legacy path leaves exactly one blank line after RULE #2.6', () => {
+    // Scoped to the "NOT rewrite from scratch." -> next-section transition.
+    // A whole-file line count would break on any unrelated prompt edit and say
+    // nothing about this invariant. The legacy (null ioUnknown) path must not
+    // emit a stray blank line from the ioUnknown conditional.
+    const legacyPrompt = legacy();
+    expect(legacyPrompt).toMatch(/NOT rewrite from scratch\.\n\n#/);
+    expect(legacyPrompt).not.toMatch(/NOT rewrite from scratch\.\n\n\n/);
+  });
+
+  it('the unknown path renders RULE #2.7 immediately after the same marker', () => {
+    // The unknown (non-null ioUnknown) path injects RULE #2.7 with correct spacing.
+    const unknownPrompt = unknown();
+    expect(unknownPrompt).toMatch(
+      /NOT rewrite from scratch\.\n\n##############################################################################\n# RULE #2\.7:/
+    );
   });
 });
