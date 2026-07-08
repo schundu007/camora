@@ -1770,6 +1770,10 @@ html[data-overlay='on'] .lumora-shell-root {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
     color-mix(in srgb, var(--bg-app, #14161c) calc(var(--overlay-opacity, 0.7) * 100%), transparent) !important;
+  /* CSS frost (replaces native vibrancy, which rendered milky/opaque). The window is
+     genuinely transparent now — the meeting shows through the tint, blurred here. */
+  backdrop-filter: blur(14px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.4) !important;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.055), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
@@ -1790,6 +1794,14 @@ html[data-overlay='on'] .lumora-shell-root::after {
 html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']) {
   background-color: transparent !important;
   background-image: none !important;
+}
+/* All BODY text WHITE so it's readable on the frosted glass — headings/subheadings,
+   code (Monaco), and colored chips/buttons KEEP their own colors. A strong dark
+   text-shadow keeps white legible over a light OR dark frost, which lets us keep the
+   backdrop very see-through. */
+html[data-overlay='on'] .lumora-shell-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not([class*='heading']):not([class*='Heading']):not([class*='title']):not([class*='Title']):not([class*='eyebrow']):not(button):not(button *):not([class*='chip']):not([class*='chip'] *):not([class*='badge']):not([class*='badge'] *):not([class*='pill']):not([class*='mtk']):not(.monaco-editor):not(.monaco-editor *):not([class*='view-line']):not([class*='view-line'] *) {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.75) !important;
 }
 /* Transparency slider in the window controls. */
 .desktop-winctl__slider {

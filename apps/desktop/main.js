@@ -129,10 +129,11 @@ function createWindow() {
     ...(OVERLAY_ENABLED
       // show:false + ready-to-show avoids a see-through blank flash before the
       // renderer paints the docked background on a transparent window.
-      // vibrancy: native macOS frosted-glass blur of whatever's behind the window
-      // (the meeting) — the premium Control-Center/Raycast look. Shows through the
-      // renderer's translucent backdrop.
-      ? { transparent: true, frame: false, hasShadow: false, backgroundColor: '#00000000', show: false, vibrancy: 'under-window', visualEffectState: 'active' }
+      // NO vibrancy: the 'under-window' material renders as a milky/near-opaque
+      // frost that reads as "not transparent". Genuine see-through comes from
+      // transparent:true + the renderer's color-mix tint at the slider alpha, so
+      // the meeting shows through directly. Vibrancy fought that and won (opaque).
+      ? { transparent: true, frame: false, hasShadow: false, backgroundColor: '#00000000', show: false }
       : { backgroundColor: '#0a0a0a' }),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
