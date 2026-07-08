@@ -594,6 +594,8 @@ ${starterCode ? `\n#############################################################
 ${starterCode
   ? `STARTER CODE IS PRESENT — you are COMPLETING the platform's exact template, NOT writing a new program.
 
+${buildTemplateShapeDirective(starterCode)}
+
 STEP 1 — Read the problem description AND examples. Determine EXACTLY what to compute (count what? sum what? output what format?).
 STEP 2 — Fill in ONLY the missing implementation inside the given function/method body.
 STEP 3 — Mentally trace on example[0]: confirm your output matches expected.
@@ -1753,6 +1755,56 @@ function sanitizeCofixResult(parsed, lang) {
 }
 
 // ---------------------------------------------------------------------------
+// templateHasFillableFunction — does the captured editor template DEFINE a
+// function/method whose body the candidate completes (STUB mode), or is it a
+// MINIMAL/INLINE skeleton (e.g. just `import numpy`, or an empty main) where the
+// expected answer is an inline stdin-read + compute + print appended in place
+// (INLINE mode)? Language-agnostic. `main` is deliberately NOT counted as a
+// fillable function — completing inside main is still INLINE completion, and the
+// rule that matters is "never introduce a NEW wrapper the template lacks".
+// ---------------------------------------------------------------------------
+function templateHasFillableFunction(code) {
+  if (!code || typeof code !== 'string') return false;
+  return (
+    /^[ \t]*def\s+\w+\s*\(/m.test(code) ||                 // Python def (HR/LeetCode stub)
+    /\bfunction\s+\w+\s*\(/.test(code) ||                  // JS/TS function decl
+    /\bfunc\s+(?!main\b)\w+\s*\(/.test(code) ||            // Go func (excluding main)
+    // C-family method/function (Java, C++, C#, C) whose name is not `main`:
+    // "<type> name(...) {". Keywords like if/for/while have no <type> before
+    // the name, so they don't match.
+    /(?:^|[;{}\n])\s*(?:public|private|protected|static|final|virtual|inline|[A-Za-z_][\w:<>\[\],&*\s]*?)\s+(?!main\b)[A-Za-z_]\w*\s*\([^;{)]*\)\s*(?:const\s*)?(?:throws\s+[\w.,\s]+)?\{/m.test(code)
+  );
+}
+
+// isMinimalInlineTemplate — a tiny editor skeleton that is import/using/package
+// lines only (plus comments/blanks). This is HackerRank's numpy-style "Zeros and
+// Ones" template: `import numpy` with NO function stub and NO harness. There is
+// literally nothing to "fix" — everything is to be ADDED inline. Treating it as a
+// platform template (rather than broken code) is exactly the intended behaviour.
+// ---------------------------------------------------------------------------
+function isMinimalInlineTemplate(code) {
+  if (!code || typeof code !== 'string') return false;
+  const lines = code
+    .split('\n')
+    .map((l) => l.replace(/#.*$|\/\/.*$/, '').trim())
+    .filter(Boolean);
+  if (lines.length === 0 || lines.length > 6) return false;
+  const importish = /^(?:import\b|from\b.+\bimport\b|#include\b|using\b|package\b|require\s*\(|const\s+\w+\s*=\s*require\b)/;
+  return lines.every((l) => importish.test(l));
+}
+
+// buildTemplateShapeDirective — the single universal rule that makes generation
+// reproduce the captured editor content in its own shape and NEVER invent a
+// wrapper function the template does not declare. Shared by /solve and /cofix.
+// ---------------------------------------------------------------------------
+function buildTemplateShapeDirective(starterCode) {
+  const hasFn = templateHasFillableFunction(starterCode);
+  return `TEMPLATE SHAPE — the captured editor content is the AUTHORITATIVE skeleton the candidate will submit. Reproduce it VERBATIM and complete it in ITS OWN shape:
+${hasFn
+  ? '• This template DEFINES a function/method to complete. Fill ONLY its body. Do NOT add any new top-level function, class, or wrapper around it.'
+  : '• This template has NO function to fill — it is a MINIMAL / INLINE skeleton (e.g. just imports, or an empty main). The expected answer is the template PLUS an inline script in the SAME style: read the input the problem describes (input()/sys.stdin/cin/Scanner/readline), compute, and print the result, written at top level exactly where the template leaves off. DO NOT invent a wrapper function (no def solve(...), no create_arrays(...), no helper, no class) that the template does not already declare — match how a candidate would type directly under the given imports.'}`;
+}
+
 // detectPlatformTemplate — is this pasted code a LOCKED editor template that the
 // candidate can only fill (HackerRank / Codility / CoderPad), rather than a piece
 // of broken code to repair? Language-agnostic. Triggers on ANY of:
@@ -1778,7 +1830,9 @@ function detectPlatformTemplate(code) {
     || /(?:#|\/\/)\s*(?:write your code here|your code goes here|complete the\b[^\n]*\b(?:function|method))/i.test(code)
     || /\bTODO\b/.test(code)
     || /\breturn\s+(?:\[\]|\{\}|""|''|0)\s*;?\s*$/m.test(code);
-  return !!(mainGuard || stdinReads >= 2 || emptyStub);
+  // Minimal/inline editor skeleton (imports-only, e.g. numpy "Zeros and Ones"):
+  // there is nothing to fix, everything to add — treat it as a template to solve.
+  return !!(mainGuard || stdinReads >= 2 || emptyStub || isMinimalInlineTemplate(code));
 }
 
 // ---------------------------------------------------------------------------
@@ -1820,17 +1874,19 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
     ? `\n══════════════════════════════════════════════════════════════════════════
 TEMPLATE-SOLVE MODE — HIGHEST PRIORITY. OVERRIDES EVERY "only fix what is broken" AND "EXECUTION CONTRACT" RULE BELOW.
 ══════════════════════════════════════════════════════════════════════════
-The CODE below is a LOCKED editor template from a coding platform (HackerRank / Codility / CoderPad). The candidate can ONLY type inside the empty / stub / \`return\`-only / \`pass\` / \`...\` function body(ies). EVERYTHING ELSE is uneditable and MUST be reproduced BYTE-FOR-BYTE.
+The CODE below is a LOCKED editor template from a coding platform (HackerRank / Codility / CoderPad). EVERYTHING already present is uneditable and MUST be reproduced BYTE-FOR-BYTE; you only ADD the missing implementation.
 
-SOLVE, don't just fix: an empty or placeholder body is NOT "already correct" — it is precisely the thing you must complete so the program solves the PROBLEM STATEMENT above (or, if none is given, what the function name + harness clearly imply). Return the value the harness prints/uses.
+${buildTemplateShapeDirective(cleanedCode)}
+
+SOLVE, don't just fix: an empty body — or a bare imports-only skeleton — is NOT "already correct" — it is precisely the thing you must complete so the program solves the PROBLEM STATEMENT above (or, if none is given, what the template + harness clearly imply). Produce the value/output the harness (or the problem) expects.
 
 fixed_code MUST satisfy ALL of these:
 1. Reproduce every import / package / using / shebang line, every comment, every class and function SIGNATURE, and the ENTIRE input-output harness (\`if __name__ == '__main__':\`, input()/sys.stdin/print(), Scanner/BufferedReader/System.out, cin/cout/scanf/printf, readline, bufio, bash readarray + wrapper call + exit 0) CHARACTER-FOR-CHARACTER, in the same order, as given.
 2. Do NOT rename functions, change parameter lists, reorder lines, restructure into a stdin-reading script, or replace the platform's stdin-reading / printing with your own. The candidate pastes fixed_code straight back into the locked editor and it must run unmodified.
-3. Fill ONLY the stub body(ies). Add nothing outside them except an import your implementation strictly needs — placed exactly where the template's existing imports are. If there are several stub functions, fill EVERY one.
-4. Return the COMPLETE file: the untouched template PLUS your filled body(ies) — never a bare function with the harness stripped off.
+3. Add ONLY the missing implementation, per TEMPLATE SHAPE above: fill the stub body(ies) if the template defines a function (fill EVERY one), or append the inline script under the imports if it defines none. Add nothing else except an import your implementation strictly needs — placed exactly where the template's existing imports are. Never introduce a wrapper function the template does not already declare.
+4. Return the COMPLETE file: the untouched template PLUS your added implementation — never a bare function with the harness stripped off.
 5. Set "hackerrank_compatible": true — this IS the platform's own template, so it is submission-ready as-is; do NOT tell the candidate to strip I/O.
-Every changes[] entry MUST reference a line INSIDE a filled body — never a harness/signature line (those are unchanged).
+Every changes[] entry MUST reference a line you ADDED — a filled function body, or an inline line you appended under the imports — never a harness/import/signature line (those are unchanged).
 ══════════════════════════════════════════════════════════════════════════
 `
     : '';
@@ -2635,4 +2691,5 @@ export default router;
 export { stripInjectedComments, remapLine, remapLineRef, sanitizeCofixResult };
 // Exported for unit testing the URL-fetch starter-code extraction.
 export { langCandidates, pickHackerRankTemplate, pickLeetcodeSnippet };
+export { detectPlatformTemplate, templateHasFillableFunction, isMinimalInlineTemplate, buildTemplateShapeDirective, buildCodingSystemPrompt };
 

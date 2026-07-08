@@ -82,16 +82,24 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
     try {
       let dataUrl: string;
       let filePath: string | undefined;
+      // When the desktop returns EXACT DOM-extracted problem text (a coding-platform
+      // tab was open), use it verbatim and skip fragile screenshot OCR.
+      let domText: string | null = null;
       if (camo?.snapActiveBrowser) {
         const result = await camo.snapActiveBrowser();
-        if (!result?.ok || !result.dataUrl) throw new Error(result?.error || 'Snap failed');
+        if (!result?.ok || (!result.dataUrl && !result.text)) throw new Error(result?.error || 'Snap failed');
         filePath = result.filePath ?? undefined;
-        const blob = await fetch(result.dataUrl).then(r => r.blob());
-        dataUrl = await new Promise<string>(res => {
-          const reader = new FileReader();
-          reader.onloadend = () => res(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
+        domText = typeof result?.text === 'string' && result.text.trim() ? result.text : null;
+        if (result.dataUrl) {
+          const blob = await fetch(result.dataUrl).then(r => r.blob());
+          dataUrl = await new Promise<string>(res => {
+            const reader = new FileReader();
+            reader.onloadend = () => res(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+        } else {
+          dataUrl = '';
+        }
       } else {
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const track = stream.getVideoTracks()[0];
@@ -111,6 +119,12 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       }
       // Show loading spinner for this snap
       const tempEntry: ScreenshotEntry = { id, dataUrl, text: '', filePath };
+      // Exact DOM text present — no OCR needed.
+      if (domText) {
+        onSnappedRef.current({ ...tempEntry, text: domText });
+        setSnapState('idle');
+        return;
+      }
       setPendingIds(prev => [...prev, id]);
       setSnapState('idle');
       // OCR

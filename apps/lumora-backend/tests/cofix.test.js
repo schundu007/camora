@@ -229,6 +229,30 @@ describe('POST /api/v1/coding/cofix/stream', () => {
     expect(sentText).toContain('Count occurrences of sub_string');
   });
 
+  it('activates TEMPLATE-SOLVE mode for a MINIMAL imports-only template (numpy) and forbids inventing a wrapper', async () => {
+    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+
+    await request(app)
+      .post('/api/v1/coding/cofix/stream')
+      .send({
+        code: 'import numpy\n',
+        language: 'python',
+        problem: 'Print a numpy array of zeros then ones with the given shape.',
+      })
+      .buffer(true)
+      .parse((res, cb) => {
+        let d = '';
+        res.on('data', (c) => { d += c; });
+        res.on('end', () => cb(null, d));
+      });
+
+    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    expect(sentText).toContain('TEMPLATE-SOLVE MODE');
+    // The minimal template must complete INLINE, never wrapped in a new function.
+    expect(sentText).toMatch(/MINIMAL \/ INLINE skeleton/i);
+    expect(sentText).toMatch(/DO NOT invent a wrapper function/i);
+  });
+
   it('does NOT activate TEMPLATE-SOLVE mode for ordinary broken code', async () => {
     sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
 
