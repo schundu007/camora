@@ -1769,6 +1769,14 @@ html[data-overlay='on'] #root {
 html[data-overlay='on'] .lumora-shell-root {
   background: transparent !important;
 }
+/* THE key rule: strip the solid background off every descendant of the shell
+   (content columns, cards, and the Monaco editor at rgb(30,30,30)) so the meeting
+   shows through the whole surface — not just the shell root. Verified live via CDP.
+   Elements opted into data-overlay-keep (and their subtree) stay opaque + legible. */
+html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not([data-overlay-keep] *) {
+  background-color: transparent !important;
+  background-image: none !important;
+}
 html[data-overlay='on'] .lumora-shell-root > *:first-child,
 html[data-overlay='on'] .cam-hero-strip,
 html[data-overlay='on'] .lumora-shell-topbar {
