@@ -568,6 +568,7 @@ export const App = () => {
           <Route path="/lumora/profile" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/credits" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/fix" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          <Route path="/lumora/claude" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/playground" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/playground/s/:snippetId" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/ask" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />

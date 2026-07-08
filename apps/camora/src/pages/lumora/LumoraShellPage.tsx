@@ -34,6 +34,7 @@ import { InterviewContextDrawer } from '../../components/lumora/shell/InterviewC
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
 const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
+const ClaudePanel = lazy(() => import('../../components/lumora/claude/ClaudePanel').then(m => ({ default: m.ClaudePanel })));
 
 export const LumoraShellPage = () => {
   const navigate = useNavigate();
@@ -118,6 +119,7 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/design') ? 'design' :
     location.pathname.includes('/fix') ? 'cofix' :
     location.pathname.includes('/behavioral') ? 'behavioral' :
+    location.pathname.includes('/claude') ? 'claude' :
     location.pathname.includes('/practice') ? 'practice' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
@@ -649,6 +651,19 @@ export const LumoraShellPage = () => {
                     onTranscription={handleTranscription}
                     isTabActive={activeTab === 'cofix'}
                   />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {/* Claude tab — claude.ai embedded in a webview (desktop) so the user
+              never leaves Lumora. Keep-alive so the login + chat survive tab
+              switches (a remount would reload claude.ai and drop the session). */}
+          {mountedTabs.has('claude') && (
+            <div style={{ display: activeTab === 'claude' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
+              <ErrorBoundary>
+                <Suspense fallback={<TabLoading label="Claude" />}>
+                  <ClaudePanel isActive={activeTab === 'claude'} />
                 </Suspense>
               </ErrorBoundary>
             </div>

@@ -140,6 +140,10 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      // Enable <webview> so the renderer can embed claude.ai inside Lumora (the
+      // Claude tab). A webview is a separate top-level browsing context, so
+      // claude.ai's frame-ancestors CSP doesn't block it the way an iframe is.
+      webviewTag: true,
       // GUARANTEED overlay signal to preload — passed straight into the renderer's
       // process.argv, so camo.overlayEnabled can't disagree with OVERLAY_ENABLED
       // (env inheritance across the renderer spawn proved unreliable).
@@ -168,6 +172,20 @@ function createWindow() {
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http')) shell.openExternal(url);
     return { action: 'deny' };
+  });
+
+  // The embedded claude.ai <webview> (Claude tab) is a separate webContents. Let
+  // its sign-in/OAuth popups open as real in-app child windows so login can
+  // complete without bouncing to the system browser (which wouldn't share the
+  // webview's persist:claude session). Anything unrelated still opens externally.
+  mainWindow.webContents.on('did-attach-webview', (_e, guest) => {
+    guest.setWindowOpenHandler(({ url }) => {
+      if (/accounts\.google\.com|claude\.ai|anthropic\.com|login|oauth|auth/i.test(url)) {
+        return { action: 'allow' };
+      }
+      if (url.startsWith('http')) shell.openExternal(url);
+      return { action: 'deny' };
+    });
   });
 
   // Right-click context menu — Electron doesn't ship one by default, so the
