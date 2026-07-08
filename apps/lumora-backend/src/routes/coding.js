@@ -1834,6 +1834,18 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
 }
 
 RULES:
+- PLATFORM TEMPLATE — HIGHEST PRIORITY, OVERRIDES THE EXECUTION CONTRACT BELOW:
+  If the code contains an \`if __name__ == '__main__':\` block (or equivalent) that
+  reads input and CALLS a function, it is the platform's LOCKED editor template
+  (HackerRank / Codility). The candidate CANNOT edit those blocks. You MUST:
+    • keep that ENTIRE harness (the input-reading, the function call, the print)
+      EXACTLY as given — do not touch it;
+    • keep every function SIGNATURE exactly as given (e.g. def count_substring(string, sub_string));
+    • ONLY fill in the empty / stub / \`return\`-only function body so it solves the
+      problem and RETURNS the value the harness prints.
+  Do NOT restructure into a stdin-reading script, do NOT strip the harness, do NOT
+  rename functions or change parameters. Return the COMPLETE file (harness verbatim
+  + your filled-in body). This is what makes the answer paste-able into HackerRank.
 - EXECUTION CONTRACT: this code is run by a test harness that parses each test
   Input into arguments, CALLS the top-level function, and compares its RETURN
   VALUE to the expected output. If the code reads stdin (input()/sys.stdin),

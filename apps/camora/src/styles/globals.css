@@ -1781,7 +1781,11 @@ html[data-overlay='on'] .lumora-shell-root {
    app's own top toolbars (COFIX button, reset/copy icons) don't sit under them.
    Applies on every desktop build (controls are always top-right when frameless). */
 body.electron-desktop .lumora-winctl-safe {
-  padding-right: 112px !important;
+  padding-right: 150px !important;
+}
+/* Overlay mode adds the transparency slider, so the cluster is wider — reserve more. */
+html[data-overlay='on'] .lumora-winctl-safe {
+  padding-right: 250px !important;
 }
 /* The grip drives a JS drag (see DesktopWindowControls) since macOS blocks
    -webkit-app-region:drag on transparent windows. Keep everything no-drag so the
