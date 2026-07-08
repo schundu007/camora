@@ -12,35 +12,58 @@ independent bodies of work. Mixing them into one change would make regressions
 unbisectable — a prompt regression and a layout regression landing in the same
 commit.
 
-## The four projects
+## The projects
 
 | | Project | Surface | Depends on |
 |---|---|---|---|
-| **A** | Solution-quality contract | `apps/lumora-backend/src/routes/coding.js` | Baseline measurement; platform chip from B |
-| **B** | Layout redesign + prerequisite chips + readiness gate | `CodingLayout.tsx`, `CoFixLayout.tsx`, `DesignLayout.tsx`, `globals.css` | D |
-| **C** | Stray `VoiceEnrollment` in CoFix toolbar | `CoFixLayout.tsx:992` | — |
+| **B0** | Readiness gate | `CodingLayout.tsx`, `CoFixLayout.tsx`, `useToolReadiness.ts` | — |
+| **A0** | `shape: unknown` → least-committed artifact | `coding.js` (one policy block) | — |
 | **D** | Dead and broken controls | Multiple | — |
+| **B1** | Layout redesign + prerequisite chips | `CodingLayout.tsx`, `CoFixLayout.tsx`, `DesignLayout.tsx`, `globals.css` | D |
+| **A1** | Full solution-quality contract | `coding.js`, `inferSubmissionContext` | D3 (platform chip) |
 
 **C folds into D.** Both are "a control that is wrong or shouldn't be there."
 
-## Order: D → B → A
+## Order: B0 + A0 → D → B1 → A1
 
-D first because it deletes code that B would otherwise waste effort restyling.
-There is no point giving the timer block a chip-dropdown in two places before
-merging the two copies of it.
+**Reordered 2026-07-08 after the baseline measurement.** The readiness gate was
+originally scheduled inside B1 as part of the layout work. The baseline proved it
+is the highest-value item in all four projects, and it does not depend on the
+redesign.
 
-A last because its central mechanism — `inferSubmissionContext()` — is
-strictly improved by an explicit platform selector, and that selector is a dead
-`<select>` that D repairs and B relocates into a chip.
+Camora displayed `Could not extract problem from screenshots` and offered a live
+**Solve** button directly beneath it. With no problem statement, `coding.js` guessed
+the `stdin/print` branch on zero evidence, invented the output labels `"Iterative:"`
+and `"Recursive:"`, and emitted a program that solves the problem twice. Two local
+tests passed — because the generator wrote the code, then wrote the tests that grade
+it. Neither was ever shown the problem.
+
+Every defect in that submission flows from one un-gated moment. B0 and A0 close it;
+both are small, and neither waits on anything.
+
+D next, because it deletes code B1 would otherwise waste effort restyling — no point
+giving the timer block a chip-dropdown in two places before merging the two copies.
+D3 also repairs the inert `<select>` at `Header.tsx:198`, whose options
+(`hackerrank | coderpad | codility`) are precisely the explicit override A1 wants.
+
+A1 last: its central mechanism is strictly improved by that selector existing.
 
 ## Settled decisions
 
 Approved during brainstorming; not to be relitigated without new evidence.
 
-1. **Code style flips globally.** The current prompt forbids helper functions,
-   comments, and defensive branches (`coding.js:527-541`). Three of the four
-   grading axes reward exactly those. Minimal-code rules are replaced, not
-   toggled — no "graded mode" switch.
+1. **Error containment lives in the driver; the algorithm stays total over its
+   declared domain.** This is a *location* rule, not a platform rule — it
+   dissolves the apparent Axis 1 ↔ Axis 3 conflict (guard clauses score as
+   resilience but read as dead code) without splitting on HackerRank vs LeetCode.
+   A base case is not a guard: `if not head` in a recursion is load-bearing and
+   required under every `inputTrust`.
+
+   *Supersedes the original decision ("code style flips globally"). The baseline
+   measurement showed the model already decomposes and names well unprompted —
+   `reverse_iterative` / `build_list` / `to_list`. The debt was concentrated in
+   four specific places, not diffuse. Do not rewrite the style rules as though the
+   model cannot decompose; it can.*
 
 2. **Infer the submission context, never branch on a platform name.** Four
    orthogonal inferred fields (`shape`, `inputTrust`, `qualityGraded`,
@@ -96,9 +119,19 @@ and integrity warnings on keystroke playback. Streaming the accepted solution
 into the editor at human cadence is an Electron/editor concern with zero overlap
 with prompt or layout work. Separate spec, later.
 
+## Specs
+
+- `2026-07-08-lumora-dead-controls-design.md` — D (absorbs C)
+- `2026-07-08-lumora-layout-redesign-design.md` — B0 + B1
+- `2026-07-08-lumora-solution-quality-design.md` — A0 + A1, with the measured baseline
+
 ## Open
 
-**Project A cannot be specced yet.** It needs a measured baseline: one real
-problem plus Camora's current output for it, assessed cold against the four
-axes. Designing against a reading of the prompt file rather than against
-observed failures would encode assumptions, not fixes.
+**One unverified assumption, in A1.** Generated code gets longer, and `code` is the
+field least affordable to truncate. Field ordering protects the tail; it does
+nothing if `code` itself runs long. `max_tokens` must be measured against a
+decomposed Java locked-template solution before A1 ships.
+
+**One design guess, in B0.** Amber chrome that appears every session becomes
+wallpaper. Per-session dismissal mitigates it, but that is a guess about users,
+not a fact — the part of the design most likely to be wrong.
