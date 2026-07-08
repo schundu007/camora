@@ -1768,7 +1768,14 @@ html[data-overlay='on'] #root {
    per-element background stripping, which made chips/panels vanish and caused the
    contrast issues. Tune the alpha (0 = invisible, 1 = solid). */
 html[data-overlay='on'] .lumora-shell-root {
-  opacity: 0.82;
+  opacity: var(--overlay-opacity, 0.82);
+}
+/* Transparency slider in the window controls. */
+.desktop-winctl__slider {
+  width: 70px;
+  height: 4px;
+  cursor: pointer;
+  accent-color: var(--cam-gold-leaf, #c9a227);
 }
 /* Reserve the top-right corner for the frameless window controls (Dock/−/✕) so the
    app's own top toolbars (COFIX button, reset/copy icons) don't sit under them.
