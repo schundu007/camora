@@ -1186,7 +1186,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
  * starts/stops continuous listening. The audio meter sits beside it.
  *
  * compact=false (default): renders in a navy box with border — used in
- *   the global LumoraTopBar where it floats on its own.
+ *   the session Header where it floats on its own.
  * compact=true: renders flat with no wrapper background/border — used
  *   when embedded in the coding/design toolbar strips that are already
  *   styled navy; the box-in-a-box otherwise looks like a popup overlay.

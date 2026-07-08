@@ -711,7 +711,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ description: question, cloudProvider, detailLevel: 'detailed' }),
+        body: JSON.stringify({ description: question, cloudProvider, detailLevel }),
       });
       const data = await r.json();
       if (data.imageUrl) {

@@ -21,7 +21,6 @@ import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
 import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
 import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
-import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { useSessionStore } from '@/stores/session-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -998,8 +997,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           </div>
         )}
 
-        {/* VoiceEnrollment */}
-        {onTranscription && <VoiceEnrollment disabled={false} variant="light" />}
         {/* Stealth moved to the global rail toggle (LumoraIconRail). */}
       </div>
 
