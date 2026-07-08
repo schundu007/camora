@@ -595,27 +595,7 @@ NOTE: "Simulation" patternTag = DS&A pattern (game of life, queue sim). NOT a li
 Detect and complete partial/starter code from the problem. When you detect
 partial code with markers like "complete the function", "TODO", or empty body,
 you MUST complete the given template, NOT rewrite from scratch.
-${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour single solution must follow this exact structure — return only 1 solution in the solutions array.\n` : ''}
-${ioUnknown ? `
-##############################################################################
-# RULE #2.7: I/O CONTRACT UNKNOWN — DO NOT INVENT ONE (HIGHEST PRIORITY)
-##############################################################################
-The problem statement specifies NO input/output format, and NO starter code was
-captured. You have NO evidence of how this program is invoked or graded.
-
-Emit the LEAST-COMMITTED artifact:
-- ONE pure function. Its PARAMETERS are the inputs. It RETURNS the answer.
-- NO input(), NO sys.stdin, NO print(), NO if __name__ block, NO driver.
-- NO invented output labels. Printing "Iterative:" before a result is FORBIDDEN.
-- ONE algorithm. Never two algorithms in one file. If several approaches exist,
-  pick the one you would submit and describe the others in "tradeoffs".
-- Set "hackerrank_compatible": false
-- Populate "assumptions" with exactly what you assumed about the inputs and the
-  expected return value.
-
-This OVERRIDES the stdin/print EXCEPTION in RULE #3. A pure function wraps into
-any driver; an invented print contract is a Wrong Answer the candidate cannot see.
-` : ''}
+${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour single solution must follow this exact structure — return only 1 solution in the solutions array.\n` : ''}${ioUnknown ? `\n##############################################################################\n# RULE #2.7: I/O CONTRACT UNKNOWN — DO NOT INVENT ONE (HIGHEST PRIORITY)\n##############################################################################\nThe problem statement specifies NO input/output format, and NO starter code was\ncaptured. You have NO evidence of how this program is invoked or graded.\n\nEmit the LEAST-COMMITTED artifact:\n- ONE pure function. Its PARAMETERS are the inputs. It RETURNS the answer.\n- NO input(), NO sys.stdin, NO print(), NO if __name__ block, NO driver.\n- NO invented output labels. Printing "Iterative:" before a result is FORBIDDEN.\n- ONE algorithm. Never two algorithms in one file. If several approaches exist,\n  pick the one you would submit and describe the others in "tradeoffs".\n- Set "hackerrank_compatible": false\n- Populate "assumptions" with exactly what you assumed about the inputs and the\n  expected return value.\n\nThis OVERRIDES the stdin/print EXCEPTION in RULE #3. A pure function wraps into\nany driver; an invented print contract is a Wrong Answer the candidate cannot see.\n` : ''}
 
 ##############################################################################
 # RULE #3: CODE STRUCTURE

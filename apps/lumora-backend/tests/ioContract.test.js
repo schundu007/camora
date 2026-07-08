@@ -147,4 +147,13 @@ describe('buildCodingSystemPrompt — RULE #2.7 (unknown I/O contract)', () => {
   it('declares the assumptions field in the JSON schema', () => {
     expect(unknown()).toContain('"assumptions"');
   });
+
+  it('a false ioUnknown guard leaves no stray blank line', () => {
+    // Regression: the null-path (legacy) prompt should have no extra blank lines
+    // from the ioUnknown conditional. The line count includes the approved
+    // "assumptions": [] line (263 total = 262 baseline + 1 for assumptions).
+    const result = legacy();
+    const lineCount = result.split('\n').length;
+    expect(lineCount).toBe(263);
+  });
 });
