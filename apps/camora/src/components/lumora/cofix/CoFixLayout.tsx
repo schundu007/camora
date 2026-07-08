@@ -351,6 +351,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         if (!resp.ok) throw new Error(`OCR ${resp.status}`);
         const data = await resp.json();
         onSnappedRef.current?.({ ...tempEntry, text: data.text || data.problem_text || '' });
+        // The snapped screenshot usually shows the platform's editor template (e.g. a
+        // HackerRank function stub + locked __main__ harness). Load it into the editor
+        // as the code to complete so the fix preserves that EXACT structure — fills the
+        // function body, keeps the harness — instead of writing a from-scratch solution.
+        const starter = typeof data.starter_code === 'string' && data.starter_code.trim()
+          ? data.starter_code
+          : null;
+        if (starter) {
+          setInputCode(starter);
+          if (data.detected_language) setLanguage(data.detected_language);
+        }
       } catch { onSnappedRef.current?.({ ...tempEntry, text: '' }); }
       finally { setPendingSnapIds(prev => prev.filter(p => p !== id)); }
     } catch {
