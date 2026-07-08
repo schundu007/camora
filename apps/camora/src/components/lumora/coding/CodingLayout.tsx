@@ -259,7 +259,7 @@ interface CodingLayoutProps {
    *  Used by LumoraShellPage so coding's mic doesn't conflict with behavioral's. */
   isTabActive?: boolean;
   /** Ref that parent sets to receive screenshot OCR text — appended to problem textarea. */
-  onScreenshotAppendRef?: React.MutableRefObject<((text: string) => void) | null>;
+  onScreenshotAppendRef?: React.MutableRefObject<((text: string, starterCode?: string) => void) | null>;
   /** Called when user clicks New Problem — parent uses this to clear the screenshot strip. */
   onNewProblemCallback?: () => void;
   /** Input mode controlled from global strip in LumoraShellPage. When provided, internal
@@ -1424,8 +1424,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   useEffect(() => {
     if (!onScreenshotAppendRef) return;
-    onScreenshotAppendRef.current = (text: string) => {
-      setProblemText(prev => prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text);
+    onScreenshotAppendRef.current = (text: string, starter?: string) => {
+      const clean = typeof starter === 'string' && starter.trim() ? starter : null;
+      // Set the captured editor template as the authoritative starter code so the
+      // backend FILLS it (function stub + locked harness) instead of writing a
+      // from-scratch solution HackerRank rejects.
+      if (clean) setStarterCode(clean);
+      setProblemText(prev => {
+        const base = text ? (prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text) : prev;
+        // Also surface the answer block IN the box so the user can see it was captured
+        // (their explicit ask: the box must show problem statement AND the starter block).
+        if (!clean) return base;
+        return base ? `${base}\n\n--- Starter code (template to complete) ---\n${clean}` : `--- Starter code (template to complete) ---\n${clean}`;
+      });
       setInputMode('paste');
       setIsInputCollapsed(false);
       scheduleAutoGenerate();

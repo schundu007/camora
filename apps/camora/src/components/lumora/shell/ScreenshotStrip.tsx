@@ -12,6 +12,11 @@ export interface ScreenshotEntry {
   dataUrl: string;
   text: string;
   filePath?: string;
+  /** The editor's locked starter/answer block (HackerRank function stub + __main__
+      harness, LeetCode class stub, etc.), extracted verbatim from the page DOM or OCR.
+      Threaded to the Coding/CoFix layouts so generation FILLS this template instead of
+      writing a from-scratch solution the platform won't accept. */
+  starterCode?: string;
 }
 
 interface ScreenshotStripProps {
@@ -85,11 +90,14 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       // When the desktop returns EXACT DOM-extracted problem text (a coding-platform
       // tab was open), use it verbatim and skip fragile screenshot OCR.
       let domText: string | null = null;
+      // The locked editor template (answer block) that MUST be filled, not rewritten.
+      let domStarter: string | null = null;
       if (camo?.snapActiveBrowser) {
         const result = await camo.snapActiveBrowser();
-        if (!result?.ok || (!result.dataUrl && !result.text)) throw new Error(result?.error || 'Snap failed');
+        if (!result?.ok || (!result.dataUrl && !result.text && !result.starterCode)) throw new Error(result?.error || 'Snap failed');
         filePath = result.filePath ?? undefined;
         domText = typeof result?.text === 'string' && result.text.trim() ? result.text : null;
+        domStarter = typeof result?.starterCode === 'string' && result.starterCode.trim() ? result.starterCode : null;
         if (result.dataUrl) {
           const blob = await fetch(result.dataUrl).then(r => r.blob());
           dataUrl = await new Promise<string>(res => {
@@ -119,9 +127,11 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       }
       // Show loading spinner for this snap
       const tempEntry: ScreenshotEntry = { id, dataUrl, text: '', filePath };
-      // Exact DOM text present — no OCR needed.
-      if (domText) {
-        onSnappedRef.current({ ...tempEntry, text: domText });
+      // Exact DOM extraction present (problem text and/or the editor's starter
+      // template) — no OCR needed. Pass BOTH through so the layout shows the problem
+      // AND loads the answer block to complete.
+      if (domText || domStarter) {
+        onSnappedRef.current({ ...tempEntry, text: domText || '', ...(domStarter ? { starterCode: domStarter } : {}) });
         setSnapState('idle');
         return;
       }
@@ -141,7 +151,9 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         if (!resp.ok) throw new Error(`OCR failed: ${resp.status}`);
         const data = await resp.json();
         const text = data.problem || data.text || data.problem_text || '';
-        onSnappedRef.current({ ...tempEntry, text });
+        // OCR also returns the recognized editor template under starter_code — thread it.
+        const ocrStarter = typeof data.starter_code === 'string' && data.starter_code.trim() ? data.starter_code : null;
+        onSnappedRef.current({ ...tempEntry, text, ...(ocrStarter ? { starterCode: ocrStarter } : {}) });
       } catch {
         setSnapState('error');
         setTimeout(() => setSnapState('idle'), 3000);
