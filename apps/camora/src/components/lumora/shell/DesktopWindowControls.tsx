@@ -6,7 +6,6 @@
 //
 // Gated on Electron: renders nothing in the web build.
 import { useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import {
   isElectron,
   useOverlayMode,
@@ -27,9 +26,10 @@ export function DesktopWindowControls() {
   if (!isElectron() || !camo?.overlayEnabled || typeof document === 'undefined') return null;
   const overlay = mode === 'overlay';
 
-  // Portal to <body> so the cluster sits outside #root — it stays visible even
-  // if overlay mode later hides the shell, and always paints above app content.
-  return createPortal(
+  // Rendered in the React tree (NOT portaled to body — that put it outside React's
+  // event root #root, so the grip's onMouseDown never fired). position:fixed keeps
+  // it pinned top-right and above app content regardless of DOM position.
+  return (
     <div
       className={`desktop-winctl${overlay ? ' desktop-winctl--overlay' : ''}`}
       // Overlay mode keeps the WHOLE window clickable (set once on overlay entry in
@@ -80,7 +80,6 @@ export function DesktopWindowControls() {
         {/* x */}
         <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg>
       </button>
-    </div>,
-    document.body,
+    </div>
   );
 }
