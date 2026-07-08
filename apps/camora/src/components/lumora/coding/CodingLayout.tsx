@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useSessionStore } from '@/stores/session-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme as useGlobalTheme } from '@/hooks/useTheme';
@@ -10,6 +10,9 @@ import Chip from '@/components/shared/ui/Chip';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
 import { CustomInputPanel } from '@/components/shared/CustomInputPanel';
+import { codingChecks } from '@/components/lumora/shared/readiness';
+import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
+import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -440,6 +443,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // captured template (a snap sets starterCode, then the timer fires 8s later —
   // a plain closure would capture the stale null and drop the HackerRank harness).
   const starterCodeRef = useRef(starterCode);
+
+  // getActiveAssistant() reads localStorage, so it must not be called during
+  // render on every keystroke. CoFixLayout.tsx:242-248 memoises it against an
+  // `assistantVersion` counter; here there is no mutation path, so mount-once
+  // is correct and sufficient.
+  const activeAssistant = useMemo(() => getActiveAssistant(), []);
+
+  const readinessChecks = codingChecks({
+    problemText,
+    starterCode,
+    company: activeAssistant?.company ?? null,
+  });
+  const { blocking, degrading, dismiss } = useToolReadiness(readinessChecks);
+
   const resolveLanguage = useCallback((text?: string) => {
     const lang = languageRef.current;
     if (lang !== 'auto') return lang;
@@ -2487,33 +2504,49 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   )}
 
                   {/* Generate Button */}
-                  <button
-                    onClick={() => {
-                      if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
-                      multiPageCapturingRef.current = false;
-                      setMultiPageCapturing(false);
-                      setMultiPageCount(0);
-                      const snapUrls = pendingSnapUrlsRef.current;
-                      pendingSnapUrlsRef.current = [];
-                      setSnapImageUrls([]);
-                      setImagePreview(null);
-                      if (snapUrls.length) {
-                        void extractAndGenerateFromDataUrls(snapUrls, true);
-                      } else {
-                        handleGenerateSolution();
-                      }
-                    }}
-                    disabled={isLoading || (!problemText.trim() && !multiPageCapturing)}
-                    className="w-full py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
-                    style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}>
-                    {isLoading ? (
-                      <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
-                    ) : multiPageCapturing ? (
-                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding ({multiPageCount} page{multiPageCount > 1 ? 's' : ''})</>
-                    ) : (
-                      <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-2 w-full">
+                    <ReadinessChip
+                      blocking={blocking}
+                      degrading={degrading}
+                      onDismiss={dismiss}
+                      actions={{
+                        'io-contract': [{ label: 'Paste problem', primary: true, onClick: () => setProblemTab('description') }],
+                        starter: [{ label: 'Paste template', onClick: () => setProblemTab('description') }],
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+                        multiPageCapturingRef.current = false;
+                        setMultiPageCapturing(false);
+                        setMultiPageCount(0);
+                        const snapUrls = pendingSnapUrlsRef.current;
+                        pendingSnapUrlsRef.current = [];
+                        setSnapImageUrls([]);
+                        setImagePreview(null);
+                        if (snapUrls.length) {
+                          void extractAndGenerateFromDataUrls(snapUrls, true);
+                        } else {
+                          handleGenerateSolution();
+                        }
+                      }}
+                      disabled={isLoading || (!problemText.trim() && !multiPageCapturing)}
+                      className="flex-1 py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
+                      style={
+                        degrading.length > 0
+                          ? { background: 'transparent', border: '1px solid var(--warning)', color: 'var(--warning-text)', borderRadius: '10px' }
+                          : { background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }
+                      }>
+                      {isLoading ? (
+                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+                      ) : multiPageCapturing ? (
+                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding ({multiPageCount} page{multiPageCount > 1 ? 's' : ''})</>
+                      ) : (
+                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
+                      )}
+                      {degrading.length > 0 && !isLoading && <span aria-hidden="true">▲</span>}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
