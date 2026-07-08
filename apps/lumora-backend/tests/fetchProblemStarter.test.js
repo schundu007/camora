@@ -49,13 +49,15 @@ describe('pickHackerRankTemplate — extract the editor stub the candidate must 
     const m = { cpp20_template: 'int main(){}', languages: ['cpp20'] };
     expect(pickHackerRankTemplate(m, 'cpp')).toBe('int main(){}');
   });
-  it('never confuses c with cpp/csharp', () => {
+  it('never confuses c with cpp/csharp — returns null rather than a wrong-language stub', () => {
     const m = { cpp_template: 'CPP', csharp_template: 'CS' };
-    // No c_template and no c<digits>_template → falls back to first, not cpp by prefix
-    expect(pickHackerRankTemplate(m, 'c')).toBe('CPP'); // first key fallback, not a false c→cpp match
+    // No c_template and no c<digits>_template → null, NOT a cpp/csharp stub.
+    expect(pickHackerRankTemplate(m, 'c')).toBeNull();
   });
-  it('falls back to any non-empty template for an unknown language', () => {
-    expect(pickHackerRankTemplate(hrModel, 'brainfuck')).toBe(HR_PY3_TEMPLATE);
+  it('returns null for a language with no matching template (no wrong-language fallback)', () => {
+    // HackerRank omits python templates for many problems; must not return a C stub.
+    expect(pickHackerRankTemplate(hrModel, 'brainfuck')).toBeNull();
+    expect(pickHackerRankTemplate({ c_template: 'int main(){}', java_template: 'X' }, 'python')).toBeNull();
   });
   it('returns null when no template fields are present', () => {
     expect(pickHackerRankTemplate({ problem_statement: 'x', languages: [] }, 'python')).toBeNull();
