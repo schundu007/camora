@@ -1315,8 +1315,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         </div>
         </Allotment.Pane>
 
-        {/* WALK-THROUGH / CHANGES — 3rd pane */}
-        <Allotment.Pane minSize={160}>
+        {/* WALK-THROUGH / CHANGES — 3rd pane. Hidden until CoFix produces content,
+            so Broken|Fixed get the full width instead of an empty bordered box
+            occupying ~1/3 of the viewport pre-run. `visible` collapses the pane
+            and redistributes space WITHOUT remounting panes 1-2 (no Monaco flicker). */}
+        <Allotment.Pane minSize={160} visible={changes.length > 0 || walkthrough.length > 0}>
           <AnnotationPanel changes={changes} walkthrough={walkthrough} />
         </Allotment.Pane>
 
