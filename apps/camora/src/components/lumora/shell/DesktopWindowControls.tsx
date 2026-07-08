@@ -17,7 +17,20 @@ export function DesktopWindowControls() {
   const mode = useOverlayMode();
   useEffect(() => {
     initOverlayModeBridge();
+    // Restore the saved overlay transparency.
+    try {
+      const saved = localStorage.getItem('lumora.overlayOpacity');
+      if (saved) document.documentElement.style.setProperty('--overlay-opacity', saved);
+    } catch { /* ignore */ }
   }, []);
+
+  const setOpacity = (v: number) => {
+    document.documentElement.style.setProperty('--overlay-opacity', String(v));
+    try { localStorage.setItem('lumora.overlayOpacity', String(v)); } catch { /* ignore */ }
+  };
+  const savedOpacity = (() => {
+    try { return Number(localStorage.getItem('lumora.overlayOpacity')) || 0.82; } catch { return 0.82; }
+  })();
 
   const camo = (window as any).camo;
   // Only render when the desktop window was actually created frameless (opt-in
@@ -52,6 +65,18 @@ export function DesktopWindowControls() {
       >
         <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><circle cx="3" cy="3" r="1.3"/><circle cx="8" cy="3" r="1.3"/><circle cx="13" cy="3" r="1.3"/><circle cx="3" cy="9" r="1.3"/><circle cx="8" cy="9" r="1.3"/><circle cx="13" cy="9" r="1.3"/></svg>
       </div>
+      {overlay && (
+        <input
+          type="range"
+          className="desktop-winctl__slider"
+          min={0.3}
+          max={1}
+          step={0.02}
+          defaultValue={savedOpacity}
+          title="Transparency (left = more see-through, right = more solid)"
+          onInput={(e) => setOpacity(Number((e.target as HTMLInputElement).value))}
+        />
+      )}
       <button
         type="button"
         className="desktop-winctl__toggle"
