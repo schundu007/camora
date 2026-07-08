@@ -1761,41 +1761,30 @@ html[data-overlay='on'] body,
 html[data-overlay='on'] #root {
   background: transparent !important;
 }
-/* Strip the Lumora shell substrate so the meeting shows through. The dark backdrop
-   is the shell root's var(--bg-app); the content column has no bg of its own, so
-   transparenting the root + hiding the nav rail (first flex child) and the page
-   hero/topbar reveals the desktop behind. The floating Sona answer panel and any
-   element opted-in with data-overlay-keep stay opaque + legible. */
-/* Semi-transparent, not fully see-through: the shell root gets a translucent dark
-   backdrop so the meeting shows through (~40%) while the UI stays legible + usable.
-   Descendant panels are stripped so only this one translucent layer shows (no
-   opaque panels/editor blocking the view). Tune the alpha to taste. */
+/* UNIFORM TRANSLUCENCY (works identically on Coding, Design, Behavioral, CoFix):
+   the shell keeps its normal solid background but the whole subtree fades together
+   via opacity, so the meeting shows through evenly AND every element — chips, cards,
+   the editor, text — keeps its color and relative contrast. This replaces the old
+   per-element background stripping, which made chips/panels vanish and caused the
+   contrast issues. Tune the alpha (0 = invisible, 1 = solid). */
 html[data-overlay='on'] .lumora-shell-root {
-  background: rgba(10, 12, 20, 0.85) !important;
+  opacity: 0.82;
 }
-/* Strip the big flat panel backgrounds so the meeting shows through — BUT keep the
-   colored backgrounds on interactive elements (buttons, chips, badges, tabs, pills)
-   so they stay legible with proper contrast against the meeting behind. Stripping
-   those too was what made the CoFix chips vanish in transparent mode. */
-html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not([data-overlay-keep] *):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']) {
-  background-color: transparent !important;
-  background-image: none !important;
+/* Reserve the top-right corner for the frameless window controls (Dock/−/✕) so the
+   app's own top toolbars (COFIX button, reset/copy icons) don't sit under them.
+   Applies on every desktop build (controls are always top-right when frameless). */
+body.electron-desktop .lumora-winctl-safe {
+  padding-right: 112px !important;
 }
-/* Extra insurance: give any still-low-contrast interactive control a legible chip
-   backing in overlay mode (covers controls whose color came from a stripped parent). */
-html[data-overlay='on'] .lumora-shell-root button:not([style*='background']),
-html[data-overlay='on'] .lumora-shell-root [role='tab']:not([style*='background']) {
-  background-color: rgba(12, 16, 28, 0.88) !important;
+/* Let the user drag the frameless window by the controls cluster (buttons stay
+   clickable). Real element + app-region:drag is reliable (the pseudo drag strip
+   with pointer-events:none is not), so this is the dependable move handle. */
+.desktop-winctl {
+  -webkit-app-region: drag;
 }
-html[data-overlay='on'] .lumora-shell-root > *:first-child,
-html[data-overlay='on'] .cam-hero-strip,
-html[data-overlay='on'] .lumora-shell-topbar {
-  display: none !important;
-}
-html[data-overlay='on'] [data-overlay-keep] {
-  background: rgba(10, 12, 20, 0.82) !important;
-  backdrop-filter: blur(8px);
-  border-radius: 12px;
+.desktop-winctl button,
+.desktop-winctl a {
+  -webkit-app-region: no-drag;
 }
 /* The top drag strip must not paint a bar over the meeting in overlay mode. */
 html[data-overlay='on'] body.electron-desktop::before {

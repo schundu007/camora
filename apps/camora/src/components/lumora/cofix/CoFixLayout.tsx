@@ -765,7 +765,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     <div className="flex flex-col h-full">
 
       {/* ── Toolbar — single combined row ── */}
-      <div className="flex items-center gap-2 px-3 py-2 shrink-0 overflow-x-auto no-scrollbar" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+      <div className="flex items-center gap-2 px-3 py-2 shrink-0 overflow-x-auto no-scrollbar lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         {/* Language */}
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[11px] font-bold tracking-wider uppercase" style={{ color: 'var(--cam-gold-leaf)' }}>Lang</span>
@@ -1097,7 +1097,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   onClick={() => handleRefine(prompt)}
                   disabled={isLoading}
                   className="shrink-0 text-[9px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40 whitespace-nowrap"
-                  style={{ background: 'color-mix(in oklab, var(--accent) 10%, transparent)', border: '1px solid color-mix(in oklab, var(--accent) 28%, transparent)', color: 'var(--cam-gold-leaf-dk)' }}
+                  style={{ background: 'color-mix(in oklab, var(--accent) 16%, transparent)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)' }}
                 >
                   {label}
                 </button>
