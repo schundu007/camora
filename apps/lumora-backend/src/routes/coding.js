@@ -2035,10 +2035,14 @@ function pickHackerRankTemplate(model, lang) {
     const versioned = keys.find((k) => new RegExp(`^${root}\\d+_template$`).test(k));
     if (versioned) return model[versioned];
   }
-  if (model.default_language && model[`${model.default_language}_template`]) {
+  if (model.default_language && langCandidates(lang).includes(model.default_language) && model[`${model.default_language}_template`]) {
     return model[`${model.default_language}_template`];
   }
-  return model[keys[0]];
+  // No template for the requested language (HackerRank omits e.g. python3_template
+  // for many problems, rendering it client-side). Return null rather than a
+  // WRONG-language template (a C stub for a Python solve) — a wrong harness is
+  // worse than none. The editor-DOM scrape / OCR path is the fallback source.
+  return null;
 }
 
 /**
