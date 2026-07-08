@@ -54,10 +54,16 @@ let hotkeyHandler: unknown = null;
 export function initOverlayModeBridge() {
   const c = camo();
   if (!c?.overlay) return;
-  // Sync main → renderer on (re)load. The renderer resets to 'docked' on load, but
-  // the MAIN process keeps its last overlay state across renderer reloads — leaving
-  // the window transparent + click-through while the UI shows docked (= "can't click
-  // anything"). Force main to match the renderer's current mode.
+  // ALWAYS OPEN IN OVERLAY on packaged (overlay-capable) builds — user preference.
+  // The renderer otherwise defaults to 'docked' on every (re)load.
+  if (c.overlayEnabled && mode !== 'overlay') {
+    mode = 'overlay';
+    applyDom(mode);
+    emit();
+  }
+  // Sync main → renderer on (re)load. The renderer + main can otherwise disagree
+  // across reloads (main keeps its last state), leaving the window click-through
+  // while the UI shows the other mode. Force main to match the renderer's mode.
   c.overlay.setMode?.(mode);
   if (mode === 'overlay') c.overlay.setInteractive?.(true);
   if (!c.overlay.onModeChanged || hotkeyHandler) return;

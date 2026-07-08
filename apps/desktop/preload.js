@@ -125,5 +125,8 @@ contextBridge.exposeInMainWorld('camo', {
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     close: () => ipcRenderer.invoke('window:close'),
+    // Move the frameless window by a pointer delta (JS drag — app-region:drag is
+    // blocked on transparent windows on macOS). Fire-and-forget for smooth drags.
+    dragMove: (dx, dy) => ipcRenderer.send('window:drag-move', { dx, dy }),
   },
 });

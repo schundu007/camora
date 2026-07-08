@@ -1776,14 +1776,11 @@ html[data-overlay='on'] .lumora-shell-root {
 body.electron-desktop .lumora-winctl-safe {
   padding-right: 112px !important;
 }
-/* Let the user drag the frameless window by the controls cluster (buttons stay
-   clickable). Real element + app-region:drag is reliable (the pseudo drag strip
-   with pointer-events:none is not), so this is the dependable move handle. */
-.desktop-winctl {
-  -webkit-app-region: drag;
-}
-.desktop-winctl button,
-.desktop-winctl a {
+/* The grip drives a JS drag (see DesktopWindowControls) since macOS blocks
+   -webkit-app-region:drag on transparent windows. Keep everything no-drag so the
+   grip's mousedown actually fires. */
+.desktop-winctl,
+.desktop-winctl__grip {
   -webkit-app-region: no-drag;
 }
 .desktop-winctl__grip {
@@ -1792,7 +1789,6 @@ body.electron-desktop .lumora-winctl-safe {
   padding: 0 5px;
   color: var(--text-secondary, #9aa4b2);
   cursor: grab;
-  -webkit-app-region: drag;
 }
 .desktop-winctl__grip:active { cursor: grabbing; }
 .desktop-winctl__grip:hover { color: var(--cam-gold-leaf, #c9a227); }

@@ -38,7 +38,18 @@ export function DesktopWindowControls() {
     >
       {/* Wide drag handle — a non-button element so -webkit-app-region:drag actually
           catches (buttons are no-drag). This is the reliable way to move the window. */}
-      <div className="desktop-winctl__grip" title="Drag to move the window" aria-hidden="true">
+      <div
+        className="desktop-winctl__grip"
+        title="Drag to move the window"
+        aria-hidden="true"
+        onMouseDown={(e) => {
+          e.preventDefault();
+          const onMove = (ev: MouseEvent) => camo?.window?.dragMove?.(ev.movementX, ev.movementY);
+          const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        }}
+      >
         <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><circle cx="3" cy="3" r="1.3"/><circle cx="8" cy="3" r="1.3"/><circle cx="13" cy="3" r="1.3"/><circle cx="3" cy="9" r="1.3"/><circle cx="8" cy="9" r="1.3"/><circle cx="13" cy="9" r="1.3"/></svg>
       </div>
       <button
