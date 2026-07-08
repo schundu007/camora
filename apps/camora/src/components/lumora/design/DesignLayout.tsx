@@ -620,12 +620,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
   useEffect(() => {
     if (!onVoiceProblemRef) return;
-    onVoiceProblemRef.current = (text: string) => {
-      setProblemText(text);
-      handleSubmitRef.current(text);
-    };
+    // Voice is NOT a design-problem source. The problem must come from a
+    // deliberate input (pasted text, fetched URL, or added screenshot) so
+    // ambient interviewer speech can never be turned into a "problem" and
+    // solved into nonsense. The voice-router already stops routing transcripts
+    // here; this no-op is belt-and-suspenders against any future caller.
+    onVoiceProblemRef.current = () => {};
     return () => { if (onVoiceProblemRef) onVoiceProblemRef.current = null; };
-
   }, [onVoiceProblemRef]);
 
   useEffect(() => {
