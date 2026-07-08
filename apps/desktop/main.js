@@ -129,7 +129,10 @@ function createWindow() {
     ...(OVERLAY_ENABLED
       // show:false + ready-to-show avoids a see-through blank flash before the
       // renderer paints the docked background on a transparent window.
-      ? { transparent: true, frame: false, hasShadow: false, backgroundColor: '#00000000', show: false }
+      // vibrancy: native macOS frosted-glass blur of whatever's behind the window
+      // (the meeting) — the premium Control-Center/Raycast look. Shows through the
+      // renderer's translucent backdrop.
+      ? { transparent: true, frame: false, hasShadow: false, backgroundColor: '#00000000', show: false, vibrancy: 'under-window', visualEffectState: 'active' }
       : { backgroundColor: '#0a0a0a' }),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
