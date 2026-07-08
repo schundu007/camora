@@ -711,7 +711,13 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ description: question, cloudProvider, detailLevel }),
+        // NOTE: /api/diagram/eraser ignores detailLevel for GENERATION (eraser.js
+        // generateDiagram takes only `description`); it uses detailLevel ONLY as a
+        // cache-key discriminator. A stable constant keeps every basic/full toggle
+        // on one cache row for an identical image — sending the live toggle here
+        // fragments the cache and re-spends Eraser credits for no visual change.
+        // Do NOT "fix" this to `detailLevel`. See diagram.js:90/130.
+        body: JSON.stringify({ description: question, cloudProvider, detailLevel: 'detailed' }),
       });
       const data = await r.json();
       if (data.imageUrl) {
