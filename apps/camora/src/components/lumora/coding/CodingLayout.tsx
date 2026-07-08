@@ -437,6 +437,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // immediately when useCallback runs, so resolveLanguage must exist first.
   const languageRef = useRef(language);
   const problemTextRef = useRef(problemText);
+  // Mirror starterCode into a ref so the auto-generate timer reads the LATEST
+  // captured template (a snap sets starterCode, then the timer fires 8s later —
+  // a plain closure would capture the stale null and drop the HackerRank harness).
+  const starterCodeRef = useRef(starterCode);
   const resolveLanguage = useCallback((text?: string) => {
     const lang = languageRef.current;
     if (lang !== 'auto') return lang;
@@ -1110,7 +1114,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setActiveSolutionIdx(0);
       setIsOutputCollapsed(true);
       setProblemTab('solution');
-      onSubmit(text, lang, undefined);
+      // Thread the captured platform template so the backend FILLS the locked
+      // HackerRank harness instead of writing a from-scratch stdin script. This
+      // path (fired after every snap/capture) previously passed undefined and
+      // dropped the starter code — the root cause of "not matching HackerRank".
+      const sc = starterCodeRef.current || (isCodeTemplate(text) ? text : null);
+      onSubmit(text, lang, sc ? { starterCode: sc } : undefined);
     }, 8000);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolveLanguage, clearStreamChunks, onSubmit]);
@@ -1408,6 +1417,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // problem field. Anchoring to refs eliminates the race entirely.
   useEffect(() => { languageRef.current = language; }, [language]);
   useEffect(() => { problemTextRef.current = problemText; }, [problemText]);
+  useEffect(() => { starterCodeRef.current = starterCode; }, [starterCode]);
   useEffect(() => { multiPageCountRef.current = multiPageCount; }, [multiPageCount]);
 
   useEffect(() => {
@@ -1794,7 +1804,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).detail || 'Failed to extract');
       const data = await resp.json();
       const text = String(data.problem || '').trim();
-      if (!text) return false;
+      // Capture the platform's editor template too — this path (F9/desktop
+      // capture) previously read only the problem and dropped the starter code,
+      // so generation had no HackerRank harness to fill. Set it so the auto-gen
+      // timer threads it through as starterCode.
+      const ocrStarter = typeof data.starter_code === 'string' && data.starter_code.trim()
+        ? data.starter_code
+        : null;
+      if (ocrStarter) setStarterCode(ocrStarter);
+      if (!text) return !!ocrStarter;
       // Skip duplicates: if this OCR text is already present in what we've captured,
       // it's the same screen re-snapped — don't append it again.
       const norm = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
