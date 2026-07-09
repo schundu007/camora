@@ -9,8 +9,8 @@
 //
 // Invariant: stealth is ON by default and is only ever OFF while a 30-minute
 // countdown is running. Switching it off starts that countdown; when it elapses
-// stealth turns back on automatically. The deadline is persisted, so it holds
-// even across an app restart — stealth is never off longer than the window.
+// stealth turns back on automatically. The countdown is in-memory only — quitting
+// and reopening the app always relaunches with stealth ON (see useSyncStealthOnLaunch).
 import { useCallback, useEffect } from 'react';
 import { useSessionStore } from '@/stores/session-store';
 import { dialogAlert } from '@/components/shared/Dialog';
@@ -19,8 +19,8 @@ import { dialogAlert } from '@/components/shared/Dialog';
 const AUTO_REENABLE_MS = 30 * 60 * 1000;
 
 // Module-level so a single timer is shared no matter how many components call
-// useStealth(), and so it survives component re-renders (but not a full window
-// reload — that's what the persisted deadline + useSyncStealthOnLaunch handle).
+// useStealth(), and so it survives component re-renders. It is NOT persisted and
+// dies with the process — a relaunch always starts fresh with stealth ON.
 let reenableTimer: ReturnType<typeof setTimeout> | null = null;
 
 function clearReenableTimer() {
@@ -30,21 +30,9 @@ function clearReenableTimer() {
   }
 }
 
-// Schedule the auto-re-enable for `deadline` (epoch ms). Fires immediately when
-// the deadline is already in the past (e.g. the app was closed past it).
-function scheduleReenable(deadline: number) {
-  clearReenableTimer();
-  const delay = Math.max(0, deadline - Date.now());
-  reenableTimer = setTimeout(() => {
-    reenableTimer = null;
-    void applyStealth(true);
-  }, delay);
-}
-
 // Single choke point for changing stealth: pushes protection to the Electron
-// window, updates the persisted flag, and manages the auto-re-enable
-// deadline/timer — so the UI toggle, the persisted state, and the real window
-// protection can never drift apart.
+// window, updates the persisted flag, and manages the auto-re-enable timer — so
+// the UI toggle, the stored state, and the real window protection can't drift.
 async function applyStealth(on: boolean) {
   const store = useSessionStore.getState();
   const camo = (window as any).camo;
@@ -52,13 +40,15 @@ async function applyStealth(on: boolean) {
     try { await camo.setStealthMode(on); } catch { /* ignore */ }
   }
   store.setIsStealthActive(on);
-  if (on) {
-    store.setStealthOffUntil(null);
-    clearReenableTimer();
-  } else {
-    const deadline = Date.now() + AUTO_REENABLE_MS;
-    store.setStealthOffUntil(deadline);
-    scheduleReenable(deadline);
+  clearReenableTimer();
+  if (!on) {
+    // Start the 30-min countdown that flips stealth back on. In-memory only, so
+    // quitting mid-countdown and reopening relaunches with stealth ON instead of
+    // resuming the timer.
+    reenableTimer = setTimeout(() => {
+      reenableTimer = null;
+      void applyStealth(true);
+    }, AUTO_REENABLE_MS);
   }
 }
 
@@ -88,30 +78,16 @@ export function useStealth() {
   return { isStealthActive, available, toggleStealth, setStealth };
 }
 
-// Reconcile the persisted stealth choice with the desktop window once on mount.
-// main.js applies content protection at window creation (default ON), but the
-// renderer's persisted flag is the user's actual choice. Enforce the invariant:
-// stealth is only OFF while a live countdown is running — otherwise turn it back
-// on. Runs once; safe on the web build (no camo → no-op).
+// Force stealth ON once on mount. main.js already applies content protection at
+// window creation (default ON); this makes the renderer's state agree and, more
+// importantly, overrides any previously-persisted OFF choice — so quitting and
+// reopening the app always relaunches with stealth ON, never off. Runs once;
+// safe on the web build (no camo → no-op).
 export function useSyncStealthOnLaunch() {
   useEffect(() => {
     const camo = (window as any).camo;
     if (!camo?.setStealthMode) return;
-
-    const { isStealthActive, stealthOffUntil } = useSessionStore.getState();
-    if (isStealthActive) {
-      try { camo.setStealthMode(true); } catch { /* ignore */ }
-      return;
-    }
-    // Stealth is persisted OFF. Resume the countdown for its remaining time; if
-    // the deadline already elapsed while the app was closed — or there is none
-    // (legacy off-state from before auto-re-enable existed) — turn it back on.
-    if (stealthOffUntil && Date.now() < stealthOffUntil) {
-      try { camo.setStealthMode(false); } catch { /* ignore */ }
-      scheduleReenable(stealthOffUntil);
-    } else {
-      void applyStealth(true);
-    }
+    void applyStealth(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

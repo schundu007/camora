@@ -75,12 +75,26 @@ describe('buildCodingSystemPrompt — RULE #2.8 (solution quality contract)', ()
     expect(legacy4()).not.toContain('RULE #2.8');
   });
 
-  it('the adversarial guard sentence tells the driver to validate malformed input', () => {
+  it('the adversarial guard sentence tells you to validate malformed input', () => {
     const p = adversarial();
     expect(p).toContain('Input may be malformed (hidden/destructive tests)');
-    expect(p).toContain('produce a DEFINED failure output — never an uncaught exception/traceback');
+    expect(p).toContain('produce a DEFINED failure output');
     // must NOT contain the guaranteed-path sentence
     expect(p).not.toContain('Input is guaranteed well-formed by the stated constraints');
+  });
+
+  it('adversarial validation does not contradict RULE #2.7 (no driver) on a bare problem', () => {
+    // The bare-problem /solve path renders BOTH: RULE #2.7 (unknown -> pure function,
+    // "NO driver") and RULE #2.8 adversarial. The #2.8 wording must reconcile with #2.7
+    // instead of ordering a driver #2.7 just forbade.
+    const p = adversarial(); // ioContract='unknown' + inputTrust='adversarial'
+    expect(p).toContain('RULE #2.7'); // both blocks present together
+    expect(p).toContain('RULE #2.8');
+    // #2.8 must NOT flatly demand "The driver that reads input MUST validate"
+    expect(p).not.toContain('The driver that reads input MUST validate');
+    // it MUST tell the model to validate inline + return a sentinel, not add a driver
+    expect(p).toContain('do NOT add input()/print()/a driver');
+    expect(p).toMatch(/validation INSIDE the function and RETURN the defined failure value/);
   });
 
   it('the guaranteed guard sentence forbids dead-code validation guards', () => {

@@ -132,11 +132,6 @@ interface SessionState {
 
   // Stealth mode — hides live answers on-screen during sessions
   isStealthActive: boolean;
-  // When stealth is switched OFF, this holds the epoch-ms deadline at which it
-  // auto-re-enables (30 min later). null whenever stealth is ON. Persisted so
-  // the deadline survives an app restart — stealth is never off longer than the
-  // window, even across relaunches.
-  stealthOffUntil: number | null;
 
   // Sona response verbosity — shared across AICompanionPanel and ScreenshotStrip
   answerMode: 'short' | 'detailed';
@@ -186,7 +181,6 @@ interface SessionState {
   setLastFromCache: (fromCache: boolean | null) => void;
   setLiveSolveContext: (ctx: SessionState['liveSolveContext']) => void;
   setIsStealthActive: (v: boolean) => void;
-  setStealthOffUntil: (v: number | null) => void;
   setAnswerMode: (mode: 'short' | 'detailed') => void;
   setSonaActions: (actions: { export: (() => void) | null; clear: (() => void) | null; close: (() => void) | null; hasMessages: boolean }) => void;
   reset: () => void;
@@ -239,7 +233,6 @@ const initialState = {
   lastFromCache: null as boolean | null,
   liveSolveContext: null as SessionState['liveSolveContext'],
   isStealthActive: true,
-  stealthOffUntil: null as number | null,
   popupVisible: false,
   popupMinimized: false,
   answerMode: 'short' as const,
@@ -371,7 +364,6 @@ export const useSessionStore = create<SessionState>()(
   setPreferredModel: (preferredModel) => set({ preferredModel }),
 
   setIsStealthActive: (v) => set({ isStealthActive: v }),
-  setStealthOffUntil: (v) => set({ stealthOffUntil: v }),
   setPopupVisible: (visible) => set({ popupVisible: visible }),
   setPopupMinimized: (minimized) => set({ popupMinimized: minimized }),
   setAnswerMode: (mode) => set({ answerMode: mode }),
@@ -410,7 +402,6 @@ export const useSessionStore = create<SessionState>()(
         voiceFilterEnabled: state.voiceFilterEnabled,
         modelOverrides: state.modelOverrides,
         isStealthActive: state.isStealthActive,
-        stealthOffUntil: state.stealthOffUntil,
         answerMode: state.answerMode,
       }),
       migrate: (old: any) => ({
@@ -431,7 +422,6 @@ export const useSessionStore = create<SessionState>()(
         voiceFilterEnabled: old?.voiceFilterEnabled ?? false,
         modelOverrides: old?.modelOverrides ?? { coding: '', behavioral: '', design: '', prep: '' },
         isStealthActive: old?.isStealthActive ?? true,
-        stealthOffUntil: old?.stealthOffUntil ?? null,
         answerMode: old?.answerMode ?? 'short',
       }),
     }

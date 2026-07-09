@@ -606,7 +606,7 @@ Your solution is scored on four axes. Satisfy ALL:
    list / n==0 that the algorithm itself needs) is REQUIRED. Input VALIDATION belongs
    only where input is read.
 ${inputTrust === 'adversarial'
-    ? '   • Input may be malformed (hidden/destructive tests). The driver that reads input MUST validate it and, on bad input, produce a DEFINED failure output — never an uncaught exception/traceback.'
+    ? '   • Input may be malformed (hidden/destructive tests). Validate at the point input ENTERS your code and, on bad input, produce a DEFINED failure output (a sentinel value or the problem\'s specified error string) — never an uncaught exception/traceback. If RULE #2.7 applies (no driver — a pure function), do this validation INSIDE the function and RETURN the defined failure value; do NOT add input()/print()/a driver to satisfy this rule.'
     : '   • Input is guaranteed well-formed by the stated constraints. Do NOT add validation guards for cases the constraints exclude — they are unreachable DEAD CODE and cost quality points. State the boundary handling in edgeScenarios instead.'}
 
 2. EVERY EXCEPTION HANDLER MUST BE REACHABLE.
