@@ -386,6 +386,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [activeSolutionIdx, setActiveSolutionIdx] = useState(0);
   const [openSection, setOpenSection] = useState<string>('approach');
 
+  // ── Line-binding: Code Walkthrough row → Monaco editor line (row → editor only) ──
+  const editorRef = useRef<any>(null);
+  const decoColRef = useRef<any>(null); // Monaco decorations collection
+  const highlightLine = useCallback((line: number) => {
+    const ed = editorRef.current;
+    if (!ed || !line || line < 1) return;
+    ed.revealLineInCenter(line);
+    if (!decoColRef.current) decoColRef.current = ed.createDecorationsCollection([]);
+    decoColRef.current.set([{
+      range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
+      options: { isWholeLine: true, className: 'cam-line-highlight', linesDecorationsClassName: 'cam-line-highlight-gutter' },
+    }]);
+  }, []);
+  const clearHighlight = useCallback(() => {
+    decoColRef.current?.clear();
+  }, []);
+  // Stale-decoration guard: a highlight from solution A must not linger after
+  // switching solutions or regenerating.
+  useEffect(() => { clearHighlight(); }, [activeSolutionIdx, jsonSolution, clearHighlight]);
+  useEffect(() => () => { decoColRef.current?.clear(); }, []);
+
   // Timer state
   const [timerDuration, setTimerDuration] = useState(0); // 0 = off
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -2175,6 +2196,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             transition-duration: 0.01ms !important;
           }
         }
+        .cam-line-highlight { background: color-mix(in oklab, var(--cam-primary) 16%, transparent); }
+        .cam-line-highlight-gutter { border-left: 2px solid var(--cam-primary); }
       `}</style>
       {/* ═══ HEADER — hidden when embedded in LumoraShell ═══ */}
       {!embedded && (
@@ -3118,7 +3141,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         {openSection === 'walkthrough' && (
                         <div className="divide-y" style={{ borderColor: t.cardBorder }}>
                           {sd.explanations.map((ex: any, i: number) => (
-                            <div key={i} className="flex flex-col gap-1 px-3 py-2 transition-colors">
+                            <div key={i} className="flex flex-col gap-1 px-3 py-2 transition-colors"
+                              onMouseEnter={() => highlightLine(ex.line)}
+                              onMouseLeave={clearHighlight}
+                              onClick={() => highlightLine(ex.line)}
+                              style={{ cursor: 'pointer' }}>
                               <div className="flex items-center gap-2">
                                 <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0" style={{ background: t.badgeBg, color: t.badgeText }}>L{ex.line}</span>
                                 {ex.code && <code className="text-[10px] font-mono overflow-x-auto whitespace-pre flex-1 min-w-0 block" style={{ color: t.codeText }}>{ex.code}</code>}
@@ -3250,12 +3277,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 onChange={setCode}
                 theme="vs-dark"
                 fontSize={11}
-                onMount={(editor) => editor.updateOptions({
-                  fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
-                  fontLigatures: true,
-                  letterSpacing: -0.3,
-                  lineHeight: 19,
-                })}
+                onMount={(editor) => {
+                  editorRef.current = editor;
+                  editor.updateOptions({
+                    fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                    fontLigatures: true,
+                    letterSpacing: -0.3,
+                    lineHeight: 19,
+                  });
+                }}
               />
             )}
           </EditorContainer>
