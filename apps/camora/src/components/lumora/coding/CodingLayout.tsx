@@ -836,16 +836,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             .join('\n');
           setFixError(failingDetails);
           setShowFixPrompt(true);
+        } else {
+          // Tests passed — disarm the silent-fix loop. Otherwise `active` stayed
+          // true after a first-try pass and any LATER manual Run that failed
+          // silently overwrote the candidate's hand-edited code (the visible
+          // Auto-Fix button never showing).
+          autoGenRef.current.active = false;
         }
       } else if (data.direct_output !== undefined && data.direct_output !== null) {
+        autoGenRef.current.active = false;
         const directOut = data.direct_output || '(no output)';
         setOutput(directOut);
         setOutputLog(prev => [...prev, { ts: new Date(), text: directOut }]);
       } else {
+        autoGenRef.current.active = false;
         setOutput('(no output)');
         setOutputLog(prev => [...prev, { ts: new Date(), text: '(no output)' }]);
       }
     } catch (err: any) {
+      autoGenRef.current.active = false;
       setOutput(`Error: ${err.message}`);
       setOutputLog(prev => [...prev, { ts: new Date(), text: `Error: ${err.message}` }]);
     } finally {
@@ -911,6 +920,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // isTabActive===false means this mounted-but-hidden coding tab isn't the
+      // visible one — don't run code from a background tab. undefined = the
+      // standalone CodingPage (no shell), which is always active.
+      if (isTabActive === false) return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         if (!isRunning) handleRun();
@@ -918,7 +931,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isRunning, handleRun]);
+  }, [isRunning, handleRun, isTabActive]);
 
   // ── Copy ────────────────────────────────────────────────────────────────
 

@@ -298,6 +298,19 @@ function getOpenRouterClient() {
   return _openrouterClient;
 }
 
+// OpenAI-compatible fallback providers for /cofix and /analyze when the primary
+// (Anthropic/Gemini) errors. Resolved at call time so an admin key change (or a
+// missing key → empty list → clean error instead of a ReferenceError) takes
+// effect without a restart. Previously referenced but never defined.
+function getFallbackProviders() {
+  const client = getOpenRouterClient();
+  if (!client) return [];
+  return [
+    { client, model: 'deepseek/deepseek-chat-v3-0324', label: 'DeepSeek-V3' },
+    { client, model: 'qwen/qwen-2.5-72b-instruct', label: 'Qwen-2.5-72B' },
+  ];
+}
+
 // Detects Anthropic "spending limit reached" errors (returned as 400
 // invalid_request_error, distinct from transient 429/529 errors).
 function isApiExhaustedError(err) {
@@ -1581,6 +1594,15 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   // ── Terminal failure path ───────────────────────────────────────────────
   if (!parsedJson) {
+    // Release the pre-reserved free-tier daily slot — a failed generation must
+    // not burn the user's quota. (Success updates this row instead, at ~1665.)
+    if (freeTierReservationId) {
+      try {
+        await query('DELETE FROM coding_usage WHERE id=$1', [freeTierReservationId]);
+      } catch (relErr) {
+        console.warn('[coding/solve] free-tier reservation release failed:', relErr.message);
+      }
+    }
     // Never surface raw Anthropic SDK error bodies (they contain 400 JSON blobs).
     // Show a human-readable message instead.
     let msg = terminalFailure?.msg || "Couldn't generate a solution. Please tap retry.";
@@ -2209,9 +2231,10 @@ RULES:
     clearInterval(keepaliveTimer);
     if (clientDisconnected) return;
 
-    if (isApiExhaustedError(err) && FALLBACK_PROVIDERS.length > 0) {
+    const cofixFallbacks = getFallbackProviders();
+    if (isApiExhaustedError(err) && cofixFallbacks.length > 0) {
       console.warn('[cofix] Claude exhausted — trying fallback providers:', err.message);
-      for (const provider of FALLBACK_PROVIDERS) {
+      for (const provider of cofixFallbacks) {
         sendEvent('status', { state: 'warn', msg: `Switching to ${provider.label}…` });
         try {
           const fbStream = await provider.client.chat.completions.create({
@@ -2831,9 +2854,10 @@ Rules:
     const raw = analyzeResult.response.text().trim();
     return res.json(parseAnalyzeResponse(raw));
   } catch (err) {
-    if (FALLBACK_PROVIDERS.length > 0) {
+    const analyzeFallbacks = getFallbackProviders();
+    if (analyzeFallbacks.length > 0) {
       console.warn('[analyze] Anthropic failed — trying fallback providers:', err.message);
-      for (const provider of FALLBACK_PROVIDERS) {
+      for (const provider of analyzeFallbacks) {
         try {
           const resp = await provider.client.chat.completions.create({
             model: provider.model,
