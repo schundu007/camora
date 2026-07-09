@@ -2927,6 +2927,39 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       </div>
                     )}
 
+                    {/* ── END-TO-END APPROACH (always visible) ──
+                       The direct answer to "walk me through your approach".
+                       Promotes the spoken narration to a standalone top card so
+                       it's readable at a glance without expanding anything. */}
+                    {(() => {
+                      const activeSol = sd.solutions?.[activeSolutionIdx];
+                      const script = activeSol?.narration || activeSol?.approach;
+                      if (!script) return null;
+                      return (
+                        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.35)' }}>
+                          <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
+                            <div className="flex items-center gap-1.5">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                <line x1="12" y1="19" x2="12" y2="22" />
+                              </svg>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)' }}>End-to-End Approach</span>
+                            </div>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(script)}
+                              className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5"
+                              style={{ color: 'var(--cam-primary-dk)' }}>
+                              Copy
+                            </button>
+                          </div>
+                          <p className="px-3 py-2.5 text-[13px] leading-[1.6]" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
+                            {script}
+                          </p>
+                        </div>
+                      );
+                    })()}
+
                     {/* ── ACTIVE SOLUTION APPROACH ── */}
                     {(() => {
                       const activeSol = sd.solutions?.[activeSolutionIdx];
@@ -2974,36 +3007,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                 ))}
                               </div>
                             )}
-                            {activeSol.narration && (
-                              <div
-                                className="rounded-lg mt-2"
-                                style={{
-                                  background: 'var(--accent-subtle)',
-                                  border: '1px solid rgba(38,97,156,0.35)',
-                                }}>
-                                <div
-                                  className="flex items-center justify-between px-2.5 py-1.5"
-                                  style={{ borderBottom: '1px solid var(--border)' }}>
-                                  <div className="flex items-center gap-1.5">
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-                                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                      <line x1="12" y1="19" x2="12" y2="22" />
-                                    </svg>
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)' }}>Say this out loud</span>
-                                  </div>
-                                  <button
-                                    onClick={() => navigator.clipboard.writeText(activeSol.narration)}
-                                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5"
-                                    style={{ color: 'var(--cam-primary-dk)' }}>
-                                    Copy
-                                  </button>
-                                </div>
-                                <p className="px-2.5 py-2 text-[12px] leading-[1.55]" style={{ color: 'var(--text-primary)', fontFamily: "var(--font-sans)", opacity: 1 }}>
-                                  {activeSol.narration}
-                                </p>
-                              </div>
-                            )}
+                            {/* Narration promoted to the always-visible
+                                End-to-End Approach card above — not duplicated here. */}
                             {Array.isArray(activeSol.trace) && activeSol.trace.length > 0 && (
                               <div className="rounded-lg mt-2 overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
                                 <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
