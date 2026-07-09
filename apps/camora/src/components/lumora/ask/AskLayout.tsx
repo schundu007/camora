@@ -470,7 +470,7 @@ export const AskLayout = () => {
                 <button
                   onClick={e => deleteConversation(c.id, e)}
                   className="shrink-0 mr-3 p-1 rounded hover:bg-red-900/40 transition-colors"
-                  title="Delete conversation"
+                  data-tip="Delete conversation"
                   style={{ color: '#f87171' }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -624,7 +624,7 @@ export const AskLayout = () => {
                     it works in both web and the Electron desktop app). The
                     transcript is appended after whatever was already typed.
                     Space toggles it (single-stroke) when not mid-typing. */}
-                <span className="hidden sm:inline" style={kbdStyle} title="Toggle dictation">Space</span>
+                <span className="hidden sm:inline" style={kbdStyle} data-tip="Toggle dictation">Space</span>
                 <StreamingMicButton
                   toggleSignal={micToggle}
                   onStart={() => { dictationBaseRef.current = input; }}
@@ -640,7 +640,7 @@ export const AskLayout = () => {
                   }}
                   disabled={streaming}
                 />
-                <span className="hidden sm:inline" style={kbdStyle} title="Send">↵</span>
+                <span className="hidden sm:inline" style={kbdStyle} data-tip="Send">↵</span>
                 <button
                   onClick={() => handleSubmit()}
                   disabled={(!input.trim() && pending.length === 0) || streaming}

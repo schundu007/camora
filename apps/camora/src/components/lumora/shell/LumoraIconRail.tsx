@@ -158,7 +158,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           background: 'var(--cam-hero-strip)',
           borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
-        title="Camora home"
+        data-tip="Camora home"
       >
         <CamoraLogo size={expanded ? 22 : 20} />
         {expanded && <span className="text-sm font-bold whitespace-nowrap" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-heading)' }}>Camora</span>}
@@ -171,7 +171,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           <button
             type="button"
             onClick={onBack}
-            title="Back"
+            data-tip="Back"
             aria-label="Back"
             className={`flex items-center w-full ${expanded ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] active:scale-[0.98] hover:bg-[var(--bg-elevated)]`}
             style={{ color: 'var(--text-secondary)' }}
@@ -192,7 +192,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               to={item.path}
               className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
-              title={expanded ? undefined : item.label}
+              data-tip={expanded ? undefined : item.label}
             >
               {item.icon}
               {expanded && <span className="whitespace-nowrap">{item.label}</span>}
@@ -213,7 +213,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               to={item.path}
               className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
-              title={expanded ? undefined : item.label}
+              data-tip={expanded ? undefined : item.label}
             >
               {item.icon}
               {expanded && <span className="whitespace-nowrap">{item.label}</span>}
@@ -233,7 +233,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               <button
                 type="button"
                 onClick={onOpenContext}
-                title={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
+                data-tip={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
                 aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
                 className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 mb-0.5 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
                 style={companyKey
@@ -245,7 +245,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               </button>
             )}
             {onMeetingPlatformChange && (
-              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} title={expanded ? undefined : `Meeting: ${meetingPlatform}`}>
+              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} data-tip={expanded ? undefined : `Meeting: ${meetingPlatform}`}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
                 {expanded && (
                   <select value={meetingPlatform} onChange={e => onMeetingPlatformChange(e.target.value)}
@@ -260,7 +260,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               </div>
             )}
             {onCodingPlatformChange && (
-              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} title={expanded ? undefined : `Coding: ${codingPlatform}`}>
+              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} data-tip={expanded ? undefined : `Coding: ${codingPlatform}`}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                 {expanded && (
                   <select value={codingPlatform} onChange={e => onCodingPlatformChange(e.target.value)}
@@ -293,7 +293,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               to={item.path}
               className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
-              title={expanded ? undefined : item.label}
+              data-tip={expanded ? undefined : item.label}
             >
               {item.icon}
               {expanded && <span className="whitespace-nowrap">{item.label}</span>}
@@ -314,7 +314,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
               to={item.path}
               className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
-              title={expanded ? undefined : item.label}
+              data-tip={expanded ? undefined : item.label}
             >
               {item.icon}
               {expanded && <span className="whitespace-nowrap">{item.label}</span>}
@@ -334,7 +334,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
           onClick={() => setAccountOpen(!accountOpen)}
           className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] hover:bg-[var(--bg-elevated)]`}
           style={{ color: 'var(--text-secondary)' }}
-          title={expanded ? undefined : 'Account'}
+          data-tip={expanded ? undefined : 'Account'}
         >
           <div className="flex items-center gap-3">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
@@ -369,7 +369,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         {stealthAvailable && (
           <button
             onClick={toggleStealth}
-            title={isStealthActive ? 'Stealth ON — Camora is hidden from screen share. Click to disable.' : 'Stealth OFF — Camora is visible to screen share. Auto re-enables after 30 min; click to re-enable now.'}
+            data-tip={isStealthActive ? 'Stealth ON — Camora is hidden from screen share. Click to disable.' : 'Stealth OFF — Camora is visible to screen share. Auto re-enables after 30 min; click to re-enable now.'}
             aria-label={isStealthActive ? 'Stealth on, click to disable' : 'Stealth off, click to enable'}
             aria-pressed={isStealthActive}
             className={`relative flex items-center ${expanded ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] active:scale-[0.98] ${isStealthActive ? '' : 'hover:bg-[var(--bg-elevated)]'} text-left w-full`}
@@ -401,7 +401,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
             onClick={item.onClick}
             className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium hover:bg-[var(--bg-elevated)] transition-[background-color,color,transform] text-left w-full`}
             style={{ color: 'var(--text-secondary)' }}
-            title={expanded ? undefined : item.label}
+            data-tip={expanded ? undefined : item.label}
           >
             {item.icon}
             {expanded && <span className="whitespace-nowrap">{item.label}</span>}

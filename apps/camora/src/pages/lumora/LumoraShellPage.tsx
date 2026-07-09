@@ -451,7 +451,7 @@ export const LumoraShellPage = () => {
               color: 'var(--lumora-chrome-text)',
               boxShadow: 'var(--lumora-chrome-shadow)',
             }}
-            title="Back"
+            data-tip="Back"
             aria-label="Back"
           >
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -812,7 +812,7 @@ export const LumoraShellPage = () => {
                           <button
                             type="button"
                             aria-label="Delete session"
-                            title="Delete session"
+                            data-tip="Delete session"
                             onClick={async (e) => {
                               e.stopPropagation();
                               const ok = await dialogConfirm({ title: 'Delete session?', message: 'This will permanently remove the question and its stored answer from your history.', confirmLabel: 'Delete', tone: 'danger' });

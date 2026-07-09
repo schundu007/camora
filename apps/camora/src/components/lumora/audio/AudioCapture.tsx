@@ -1255,7 +1255,7 @@ const UnifiedMicButton = ({
                 fontFamily: 'var(--font-mono)',
                 boxShadow: liveOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
               }}
-              title={liveControlsSpeaker
+              data-tip={liveControlsSpeaker
                 ? (liveOn
                     ? 'LIVE — Sona is listening to the interviewer audio and answers each question. Click to pause.'
                     : 'Paused — interviewer audio capture is stopped. Click to resume listening.')
@@ -1287,7 +1287,7 @@ const UnifiedMicButton = ({
               fontFamily: 'var(--font-mono)',
               boxShadow: isAsking ? '0 0 0 2px var(--accent-subtle)' : 'none',
             }}
-            title={isAsking
+            data-tip={isAsking
               ? 'Listening to your question — click to send it to Sona.'
               : 'Ask Sona in your own voice — click, speak your question, click again to send.'}
             aria-pressed={isAsking}
@@ -1320,7 +1320,7 @@ const UnifiedMicButton = ({
             fontFamily: 'var(--font-mono)',
             boxShadow: isAutoOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
           }}
-          title={isAutoOn
+          data-tip={isAutoOn
             ? 'AUTO is ON — Sona listens continuously. Click or press ` to stop.'
             : 'Turn on AUTO — Sona listens continuously and answers each question. Click or press `.'}
           aria-pressed={isAutoOn}

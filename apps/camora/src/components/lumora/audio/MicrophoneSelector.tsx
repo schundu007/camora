@@ -40,7 +40,7 @@ export const MicrophoneSelector = ({ disabled, onDeviceChange }: MicrophoneSelec
         backgroundPosition: 'right 4px center',
         paddingRight: '18px',
       }}
-      title={devices.find(d => d.deviceId === selectedDeviceId)?.label || 'Select microphone'}
+      data-tip={devices.find(d => d.deviceId === selectedDeviceId)?.label || 'Select microphone'}
     >
       {isLoading ? (
         <option value="" className="bg-[var(--bg-surface)] text-[var(--text-primary)]">Loading...</option>

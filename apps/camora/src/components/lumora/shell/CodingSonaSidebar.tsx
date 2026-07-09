@@ -307,7 +307,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
             onMouseDown={handleDragStart}
             className="absolute left-0 top-0 h-full z-10 cursor-ew-resize"
             style={{ width: 6, background: 'transparent' }}
-            title="Drag to resize"
+            data-tip="Drag to resize"
           />
           {/* Header — navy hero strip + gold underline, matches the
               app's other tool-window chrome. */}
@@ -329,7 +329,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
                   style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                  title="Clear chat history"
+                  data-tip="Clear chat history"
                   aria-label="Clear chat history"
                 >
                   Clear
@@ -341,7 +341,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
                 style={{ color: 'var(--cam-strip-text)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                title="Close sidebar"
+                data-tip="Close sidebar"
                 aria-label="Close Sona sidebar"
               >
                 <Icon name="close" size={14} aria-hidden="true" />
@@ -516,7 +516,7 @@ export const CodingSonaSidebarToggle = ({ open, onToggle, hasSolve }: { open: bo
           'inset 0 -2px 6px rgba(0,0,0,0.30)',
         cursor: 'pointer',
       }}
-      title={hasSolve ? 'Sona has live context — ask a follow-up about your solution' : 'Open Sona Q&A sidebar'}
+      data-tip={hasSolve ? 'Sona has live context — ask a follow-up about your solution' : 'Open Sona Q&A sidebar'}
       aria-label="Open Sona Q&A sidebar"
     >
       {/* Pulsing gold halo — same animation as the Home Sona icon
@@ -545,7 +545,7 @@ export const CodingSonaSidebarToggle = ({ open, onToggle, hasSolve }: { open: bo
         <span
           className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
           aria-label="Live context ready"
-          title="Live context ready"
+          data-tip="Live context ready"
           style={{
             background: 'var(--cam-gold-leaf)',
             border: '1.5px solid var(--cam-primary-dk)',

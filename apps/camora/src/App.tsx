@@ -13,6 +13,7 @@ import { caraRegistry } from '@/lib/cara-registry';
 import { useSessionStore } from '@/stores/session-store';
 import CaraBar from '@/components/shared/cara/CaraBar';
 import { DesktopWindowControls } from '@/components/lumora/shell/DesktopWindowControls';
+import { TooltipLayer } from '@/components/shared/TooltipLayer';
 
 // ── Shared pages ────────────────────────────────────────
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -494,6 +495,7 @@ export const App = () => {
         <LumoraSessionSync />
         <CaraBar />
         <DesktopWindowControls />
+        <TooltipLayer />
         <Routes>
           {/* ── Public ─────────────────────────────────── */}
           <Route path="/" element={<LandingPage />} />

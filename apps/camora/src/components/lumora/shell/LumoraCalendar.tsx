@@ -59,7 +59,7 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
             src={calendarSrc}
             className="w-full h-full border-0"
             style={{ colorScheme: 'light' }}
-            title="Google Calendar"
+            data-tip="Google Calendar"
           />
         </div>
       ) : (

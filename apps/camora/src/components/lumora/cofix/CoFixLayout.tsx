@@ -931,7 +931,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         {(inputCode || fixedCode) && (
           <button
             onClick={handleReset}
-            title="Reset — clear code and solution"
+            data-tip="Reset — clear code and solution"
             className="flex items-center gap-1 px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 shrink-0"
             style={{
               background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
@@ -954,7 +954,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           <button
             onClick={handleSnap}
             disabled={snapState === 'capturing'}
-            title={snapState === 'error' ? 'Snap failed' : 'Snap screen'}
+            data-tip={snapState === 'error' ? 'Snap failed' : 'Snap screen'}
             className={pillBase}
             style={snapState === 'error'
               ? { background: 'var(--danger)', color: '#ffffff' }
@@ -980,11 +980,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
         {/* Completed thumbnails */}
         {screenshots.map((s, i) => (
-          <div key={s.id} className="relative group shrink-0" title={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
+          <div key={s.id} className="relative group shrink-0" data-tip={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
             <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
             <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{i + 1}</span>
             {onRemove && (
-              <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} title="Remove">
+              <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} data-tip="Remove">
                 <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             )}
@@ -1074,7 +1074,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   disabled={isLoading}
                   className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
-                  title="Run CoFix again on this fixed code"
+                  data-tip="Run CoFix again on this fixed code"
                 >
                   {isLoading ? 'Analyzing…' : 'CoFix'}
                 </button>
@@ -1233,7 +1233,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                         <button
                           onClick={handleRefineSnap}
                           disabled={refineSnapping || isLoading}
-                          title="Screenshot an error, failing case, or extra context and add it to the refinement"
+                          data-tip="Screenshot an error, failing case, or extra context and add it to the refinement"
                           className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5"
                           style={{ background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 12%, transparent) 0%, var(--bg-elevated) 100%)', border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)' }}
                         >
@@ -1352,7 +1352,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               onClick={() => setPanelCollapsed(false)}
               className="h-full w-full flex items-center gap-3 px-4 text-left transition-opacity hover:opacity-80"
               style={{ background: 'var(--cam-hero-strip)' }}
-              title="Expand analysis"
+              data-tip="Expand analysis"
             >
               <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
                 Problem · Tests · Output
@@ -1367,7 +1367,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             onMouseDown={handlePanelDragStart}
             className="h-1.5 shrink-0 cursor-ns-resize"
             style={{ background: 'var(--cam-gold-leaf)', opacity: 0.35 }}
-            title="Drag to resize"
+            data-tip="Drag to resize"
           />
 
           {/* Single tabbed body — Problem · Learn · Tests · Output, one visible at a time */}
@@ -1387,7 +1387,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 Analyzing…
               </span>
             )}
-            <button onClick={() => setPanelCollapsed(true)} title="Minimize" className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>▾</button>
+            <button onClick={() => setPanelCollapsed(true)} data-tip="Minimize" className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>▾</button>
           </div>
 
           <div className="flex-1 min-h-0 overflow-hidden">

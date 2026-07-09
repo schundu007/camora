@@ -234,7 +234,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         <button
           onClick={snapState === 'capturing' ? undefined : snapArmed ? () => setSnapArmed(false) : () => setSnapArmed(true)}
           disabled={snapState === 'capturing'}
-          title={
+          data-tip={
             snapArmed ? 'Armed — click another window to capture (click here to cancel)'
             : snapState === 'error' ? 'Snap failed — check Screen Recording permission'
             : 'Click to arm, then click the window you want to capture'
@@ -272,7 +272,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
       {/* Completed screenshot thumbnails */}
       {showSnap && screenshots.map((s, i) => (
-        <div key={s.id} className="relative group shrink-0" title={s.filePath ? `Click to open • Page ${i + 1}${s.text ? ': ' + s.text.slice(0, 60) + '…' : ''}` : s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
+        <div key={s.id} className="relative group shrink-0" data-tip={s.filePath ? `Click to open • Page ${i + 1}${s.text ? ': ' + s.text.slice(0, 60) + '…' : ''}` : s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
           <img
             src={s.dataUrl}
             alt={`Screenshot ${i + 1}`}
@@ -290,7 +290,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             onClick={() => onRemove(s.id)}
             className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex"
             style={{ background: '#ef4444', color: '#fff' }}
-            title="Remove screenshot"
+            data-tip="Remove screenshot"
           >
             <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
@@ -314,7 +314,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             <button
               key={mode}
               onClick={() => onInputModeChange(mode)}
-              title={modeLabel(mode)}
+              data-tip={modeLabel(mode)}
               aria-label={modeLabel(mode)}
               className="flex items-center justify-center w-6 h-5 transition-[background-color,color] active:scale-[0.98]"
               style={inputMode === mode
@@ -372,7 +372,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           <button
             onClick={sonaExport ?? undefined}
             disabled={!sonaHasMessages}
-            title="Export session (.md)"
+            data-tip="Export session (.md)"
             className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ color: 'var(--cam-strip-text)' }}
           >
@@ -381,7 +381,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           <button
             onClick={sonaClear ?? undefined}
             disabled={!sonaHasMessages}
-            title="Reset — clear this interview's Q&A"
+            data-tip="Reset — clear this interview's Q&A"
             aria-label="Reset interview"
             className="flex items-center gap-1 px-2 h-6 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ color: 'var(--cam-strip-text)' }}
@@ -391,7 +391,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           </button>
           <button
             onClick={sonaClose ?? undefined}
-            title="Close Sona"
+            data-tip="Close Sona"
             className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-white/10"
             style={{ color: 'var(--cam-strip-text)' }}
           >

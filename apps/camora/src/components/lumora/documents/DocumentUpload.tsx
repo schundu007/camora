@@ -84,7 +84,7 @@ export const DocumentUpload = () => {
         style={documents.length > 0
           ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid var(--border)' }
           : { color: 'var(--cam-strip-text-muted)', border: '1px solid var(--cam-strip-icon-border)' }}
-        title={`Prep docs (${documents.length})`}
+        data-tip={`Prep docs (${documents.length})`}
       >
         <DocIcon />
         <span className="hidden xl:inline">{documents.length > 0 ? documents.length : 'Docs'}</span>
@@ -160,7 +160,7 @@ export const DocumentUpload = () => {
                   <button
                     onClick={() => handleDelete(doc.filename)}
                     className="text-gray-600 hover:text-rose shrink-0"
-                    title="Delete"
+                    data-tip="Delete"
                   >
                     <TrashIcon />
                   </button>

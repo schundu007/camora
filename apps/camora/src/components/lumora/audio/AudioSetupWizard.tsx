@@ -646,7 +646,7 @@ export const AudioSetupWizard = ({
                 onClick={() => { void enumerate(); }}
                 className="px-3 py-2 text-[11px] font-bold rounded-lg"
                 style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                title="Re-enumerate devices (after plugging in a new mic, or granting permission)"
+                data-tip="Re-enumerate devices (after plugging in a new mic, or granting permission)"
               >
                 Refresh
               </button>
@@ -937,7 +937,7 @@ export const AudioSetupWizard = ({
               disabled={!canFinish}
               className="px-4 py-2 text-xs font-bold rounded-lg disabled:opacity-50"
               style={{ background: 'var(--accent)', color: '#fff' }}
-              title={canFinish ? 'Save and start session' : 'Verify the speaker level meter is moving first.'}
+              data-tip={canFinish ? 'Save and start session' : 'Verify the speaker level meter is moving first.'}
             >
               {canFinish ? 'Save and continue' : 'Waiting for audio…'}
             </button>
@@ -998,7 +998,7 @@ const MethodCard = ({
         border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
         opacity: disabled ? 0.5 : 1,
       }}
-      title={disabled ? disabledNote : ''}
+      data-tip={disabled ? disabledNote : ''}
     >
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-bold" style={{ color: selected ? 'var(--accent)' : 'var(--text-primary)' }}>

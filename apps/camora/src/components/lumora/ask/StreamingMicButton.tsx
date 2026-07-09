@@ -224,7 +224,7 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
       type="button"
       onClick={onClick}
       disabled={disabled || busy}
-      title={active ? 'Stop dictation' : 'Dictate — text types in as you talk'}
+      data-tip={active ? 'Stop dictation' : 'Dictate — text types in as you talk'}
       aria-label={active ? 'Stop dictation' : 'Start dictation'}
       className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
       style={{ background: active ? 'var(--danger, #ef4444)' : 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}

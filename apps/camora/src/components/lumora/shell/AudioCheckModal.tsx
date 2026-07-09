@@ -367,7 +367,7 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
                   onClick={() => set(!val)}
                   className="text-left px-3 py-2 rounded-md transition-colors"
                   style={{ background: val ? 'var(--accent-subtle)' : 'var(--bg-surface)', border: `1px solid ${val ? 'var(--cam-primary-lt)' : 'var(--border)'}` }}
-                  title={hint}
+                  data-tip={hint}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-semibold" style={{ color: 'var(--text-primary)' }}>{label}</span>
@@ -430,7 +430,7 @@ export const AudioCheckModal = ({ isOpen, onClose }: Props) => {
               <button
                 onClick={toggleRecording}
                 disabled={permission === 'denied' || speakerActive}
-                title={speakerActive ? 'Stop the live session from the topbar to use the recording test.' : undefined}
+                data-tip={speakerActive ? 'Stop the live session from the topbar to use the recording test.' : undefined}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold rounded-md transition-colors disabled:opacity-40"
                 style={recState === 'recording'
                   ? { color: '#FFFFFF', background: 'var(--danger)', border: '1px solid var(--danger)' }

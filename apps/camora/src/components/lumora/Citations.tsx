@@ -112,7 +112,7 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
               rel="noopener noreferrer"
               className="text-[13px] font-semibold leading-tight truncate hover:underline"
               style={{ color: 'var(--cam-primary)', fontFamily: 'var(--font-answer)' }}
-              title={c.url}
+              data-tip={c.url}
             >
               {primaryLabel}
             </a>

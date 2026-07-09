@@ -285,7 +285,7 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger,
           type="button"
           onClick={handleClick}
           disabled={disabled || isBusy}
-          title={ariaLabel}
+          data-tip={ariaLabel}
           aria-label={ariaLabel}
           aria-pressed={isRecording}
           aria-describedby={error ? errorId : undefined}

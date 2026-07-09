@@ -624,7 +624,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     // the stream running (so onAnswer double-rendered) and never aborted it.
     // armSafety() is reset on every token, so this only fires after a real 60s
     // stall — and then it aborts the stream.
-    let safetyTimer: ReturnType<typeof setTimeout>;
+    let safetyTimer: ReturnType<typeof setTimeout> | undefined;
     const armSafety = () => {
       clearTimeout(safetyTimer);
       safetyTimer = setTimeout(() => {
@@ -933,7 +933,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             'inset 0 -2px 6px rgba(0,0,0,0.30)',
           cursor: 'grab',
         }}
-        title="Drag to reposition · click to open Sona"
+        data-tip="Drag to reposition · click to open Sona"
       >
         {/* Pulsing gold halo behind the button — subtle "alive"
             indicator without pulling focus from the avatar. */}
@@ -1037,7 +1037,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               onClick={() => setMobileRailOpen(v => !v)}
               className="md:hidden p-2 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]"
               style={{ color: 'var(--cam-strip-text)' }}
-              title="Questions"
+              data-tip="Questions"
               aria-label="Open questions panel"
               aria-expanded={mobileRailOpen}
             >
@@ -1050,11 +1050,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 disabled={messages.length === 0}
                 className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)] disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{ color: 'var(--cam-strip-text)' }}
-                title="Export session (.md)"
+                data-tip="Export session (.md)"
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
               </button>
-              <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} title="New chat">
+              <button onClick={() => setMessages([])} className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} data-tip="New chat">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
               </button>
             </>
@@ -1077,7 +1077,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setActiveCompanyKey(null); }}
-                title="Clear company context"
+                data-tip="Clear company context"
                 className="ml-0.5 shrink-0 opacity-60 hover:opacity-100 transition-opacity"
                 style={{ lineHeight: 1 }}
               >
@@ -1090,11 +1090,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         {!embedded && (
           <div className="flex items-center gap-0.5">
             <button onClick={() => setMinimized(true)}
-              className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} title="Minimize">
+              className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} data-tip="Minimize">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 12h16" /></svg>
             </button>
             <button onClick={() => { setMaximized(!maximized); setPosition({ x: 0, y: 0 }); }}
-              className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} title={maximized ? 'Restore' : 'Maximize'}>
+              className="p-1 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]" style={{ color: 'var(--cam-strip-text)' }} data-tip={maximized ? 'Restore' : 'Maximize'}>
               {maximized ? (
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="1" /><path d="M9 3h10a2 2 0 012 2v10" /></svg>
               ) : (
@@ -1245,7 +1245,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}
                     onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger, #DC2626)'; e.currentTarget.style.borderColor = 'var(--danger, #DC2626)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'transparent'; }}
-                    title="Delete this Q&A"
+                    data-tip="Delete this Q&A"
                     aria-label="Delete this Q&A"
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
@@ -1300,7 +1300,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                           style={{ color: 'var(--cam-strip-text)' }}
                           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--cam-strip-heading)'; e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--cam-strip-text)'; e.currentTarget.style.background = 'transparent'; }}
-                          title="Copy answer"
+                          data-tip="Copy answer"
                           aria-label="Copy answer"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
@@ -1311,7 +1311,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                           style={{ color: 'var(--cam-strip-text)' }}
                           onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--cam-strip-heading)'; e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--cam-strip-text)'; e.currentTarget.style.background = 'transparent'; }}
-                          title="Delete this Q&A"
+                          data-tip="Delete this Q&A"
                           aria-label="Delete this Q&A"
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
@@ -1491,7 +1491,7 @@ export const AICompanionToggle = ({ onClick, hasActivity }: { onClick: () => voi
         bottom: 'calc(80px + env(safe-area-inset-bottom))',
         background: 'var(--cam-primary)',
       }}
-      title="Sona"
+      data-tip="Sona"
     >
       <SonaAvatar size={22} active />
       {hasActivity && <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[var(--accent)] border-2" style={{ borderColor: C.base }} />}

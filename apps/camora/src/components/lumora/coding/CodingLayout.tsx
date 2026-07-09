@@ -2268,7 +2268,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-red-400 transition-colors" style={{ color: 'var(--cam-strip-text)' }} title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-red-400 transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -2279,7 +2279,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
                   className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-white/10 rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
-                  title={`${m} min timer`}>
+                  data-tip={`${m} min timer`}>
                   {m}m
                 </button>
               ))}
@@ -2353,7 +2353,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               {/* Description — icon-only (document) */}
               <button
                 onClick={() => setProblemTab('description')}
-                title="Description"
+                data-tip="Description"
                 aria-label="Description"
                 className="flex items-center justify-center w-7 h-6 transition-[background-color,color,transform] active:scale-[0.98]"
                 style={
@@ -2367,7 +2367,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               {/* Solution — icon-only (lightbulb) */}
               <button
                 onClick={() => setProblemTab('solution')}
-                title="Solution"
+                data-tip="Solution"
                 aria-label="Solution"
                 className="flex items-center justify-center gap-1 w-7 h-6 transition-[background-color,color,transform] active:scale-[0.98]"
                 style={
@@ -2405,7 +2405,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-border)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
-              title="Reset — clear everything for a fresh problem"
+              data-tip="Reset — clear everything for a fresh problem"
               aria-label="Reset"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -2738,7 +2738,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         border: '1px solid var(--cam-primary-dk)',
                         fontFamily: 'var(--font-mono)',
                       }}
-                      title="Force a fresh solve, ignoring the cache. The new result is cached too — useful when the cached answer was wrong or you want a different approach."
+                      data-tip="Force a fresh solve, ignoring the cache. The new result is cached too — useful when the cached answer was wrong or you want a different approach."
                     >
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="23 4 23 10 17 10" />
@@ -2984,7 +2984,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: t.headerText }}>{activeSol.name}</h4>
                             {activeSol.patternTag && (
                               <span className="text-[9px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5"
-                                title="Canonical pattern"
+                                data-tip="Canonical pattern"
                                 style={{ color: '#FFFFFF', background: 'var(--cam-primary)', letterSpacing: '0.04em' }}>
                                 {activeSol.patternTag}
                               </span>
@@ -3278,7 +3278,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               )}
               <button onClick={handleRun} disabled={isRunning}
                 className="flex items-center gap-1 px-2.5 py-0.5 text-white text-[11px] font-bold rounded disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--cam-primary)' }}
-                title="Run (Ctrl+Enter)">
+                data-tip="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
                 ) : (
@@ -3288,7 +3288,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               {showFixPrompt && (
                 <button onClick={() => handleAutoFix(false)}
                   className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-md hover:bg-amber-600 transition-colors shadow-sm"
-                  title="Auto-fix failed tests">
+                  data-tip="Auto-fix failed tests">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   Auto-Fix
                 </button>
@@ -3300,17 +3300,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   onClick={() => onSendToCofix(code, language)}
                   className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors"
                   style={{ color: 'var(--cam-gold-leaf-lt)', background: 'color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 28%, transparent)' }}
-                  title="Send solution to CoFix"
+                  data-tip="Send solution to CoFix"
                 >
                   → CoFix
                 </button>
               )}
-              <button onClick={handleReset} className="p-1.5 rounded-md transition-colors" style={{ color: t.textMuted }} title="Reset">
+              <button onClick={handleReset} className="p-1.5 rounded-md transition-colors" style={{ color: t.textMuted }} data-tip="Reset">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
-              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: 'var(--cam-primary)', background: t.badgeBg } : { color: t.textDim }} title="Copy code">
+              <button onClick={handleCopyCode} className="p-1.5 rounded-md transition-colors" style={copyFeedback ? { color: 'var(--cam-primary)', background: t.badgeBg } : { color: t.textDim }} data-tip="Copy code">
                 {copyFeedback ? (
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
                 ) : (

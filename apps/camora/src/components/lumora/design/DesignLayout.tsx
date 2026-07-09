@@ -985,7 +985,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-red-400 transition-colors" style={{ color: 'var(--cam-strip-text)' }} title="Stop timer">
+              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-red-400 transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -996,7 +996,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
                   className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-white/10 rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
-                  title={`${m} min timer`}>
+                  data-tip={`${m} min timer`}>
                   {m}m
                 </button>
               ))}
@@ -1024,7 +1024,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           )}
 
           {/* Reset */}
-          <button onClick={handleReset} className="flex items-center gap-1 px-2.5 py-1 rounded-md opacity-80 hover:opacity-100 hover:bg-white/10 transition-colors" style={{ color: 'var(--cam-strip-text)' }} title="Reset — clear problem and solution">
+          <button onClick={handleReset} className="flex items-center gap-1 px-2.5 py-1 rounded-md opacity-80 hover:opacity-100 hover:bg-white/10 transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Reset — clear problem and solution">
             <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -1069,7 +1069,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   </span>
                   {SNAP_CHIPS.map(chip => (
                     <button key={chip.label} onClick={() => handleSnapChip(chip.prompt)}
-                      title={chip.label} aria-label={chip.label}
+                      data-tip={chip.label} aria-label={chip.label}
                       className="shrink-0 flex items-center justify-center w-7 h-6 leading-none rounded transition-[background-color,color,border-color,opacity] hover:opacity-90 active:scale-[0.97]"
                       style={snapChipCode
                         ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
@@ -1078,7 +1078,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     </button>
                   ))}
                   {snapChipCode && (
-                    <button onClick={() => setSnapChipCode(null)} title="Dismiss snap"
+                    <button onClick={() => setSnapChipCode(null)} data-tip="Dismiss snap"
                       className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
                       style={{ color: 'var(--cam-strip-text-muted)' }}>
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1092,7 +1092,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   onClick={handleReset}
                   className="shrink-0 flex items-center gap-1 px-2 py-0.5 mr-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:bg-white/10 opacity-70 hover:opacity-100"
                   style={{ color: 'var(--cam-strip-text)' }}
-                  title="Reset — clear problem and solution"
+                  data-tip="Reset — clear problem and solution"
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1221,7 +1221,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   { value: 'gcp', label: 'GCP' },
                 ]}
                 onChange={(v) => setCloudProvider(v as 'auto' | 'aws' | 'azure' | 'gcp')}
-                title="Cloud provider for design + diagram"
+                data-tip="Cloud provider for design + diagram"
               />
               <button
                 onClick={() => handleSubmit()}
@@ -1297,7 +1297,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       ref={gvContainerRef}
                       className="overflow-auto rounded-lg"
                       style={{ cursor: gvZoom > 1 ? 'zoom-out' : 'zoom-in' }}
-                      title="Scroll to zoom"
+                      data-tip="Scroll to zoom"
                     >
                       <img
                         src={gvImgUrl}
@@ -1470,7 +1470,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     disabled={isLoading}
                     className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ background: 'var(--cam-primary)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}
-                    title="Force a fresh design, ignoring the cache."
+                    data-tip="Force a fresh design, ignoring the cache."
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="23 4 23 10 17 10" />
@@ -1631,7 +1631,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                               handleSubmit(drill);
                             }}
                             disabled={isLoading}
-                            title={`Drill into ${tier.tech}`}
+                            data-tip={`Drill into ${tier.tech}`}
                             className="rounded-lg p-2 flex flex-col justify-start transition-[box-shadow,transform] hover:shadow-sm active:scale-[0.98] disabled:opacity-60"
                             style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg, cursor: isLoading ? 'not-allowed' : 'pointer' }}
                             onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--cam-primary)'; }}
@@ -1644,7 +1644,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                             </div>
                             {tier.details.length > 0 && (
                               <div className="text-xs leading-relaxed text-left mt-1" style={{ color: t.textMuted }}>
-                                {tier.details.slice(0, 3).map((d, j) => <div key={j} title={d}>- {d}</div>)}
+                                {tier.details.slice(0, 3).map((d, j) => <div key={j} data-tip={d}>- {d}</div>)}
                               </div>
                             )}
                           </button>
@@ -1831,7 +1831,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                           disabled={isLoading}
                           className="rounded-lg p-2.5 text-left transition-[box-shadow,transform] hover:shadow-sm active:scale-[0.98] disabled:opacity-60"
                           style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg, cursor: isLoading ? 'not-allowed' : 'pointer' }}
-                          title="Click to re-stream a focused answer to this follow-up"
+                          data-tip="Click to re-stream a focused answer to this follow-up"
                           onMouseEnter={(e) => { if (!isLoading) (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--cam-primary)'; }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.cardBorder; }}>
                           <div className="flex items-start gap-1.5 mb-1">
