@@ -384,6 +384,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return () => { cancelled = true; clearInterval(interval); };
   }, [codingPlatform]);
   const [activeSolutionIdx, setActiveSolutionIdx] = useState(0);
+  const [openSection, setOpenSection] = useState<string>('approach');
 
   // Timer state
   const [timerDuration, setTimerDuration] = useState(0); // 0 = off
@@ -2880,7 +2881,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       const activeSol = sd.solutions?.[activeSolutionIdx];
                       if (activeSol) return (
                         <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                          <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                          <button type="button" onClick={() => setOpenSection(s => s === 'approach' ? '' : 'approach')}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 flex-wrap text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
                             <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: t.badgeBg, color: t.badgeText }}>{activeSolutionIdx + 1}</div>
                             <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: t.headerText }}>{activeSol.name}</h4>
                             {activeSol.patternTag && (
@@ -2890,13 +2892,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                 {activeSol.patternTag}
                               </span>
                             )}
-                            {activeSol.complexity && (
-                              <div className="ml-auto flex gap-1.5">
-                                <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.time}</span>
-                                <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.space}</span>
-                              </div>
-                            )}
-                          </div>
+                            <div className="ml-auto flex items-center gap-1.5">
+                              {activeSol.complexity && (
+                                <>
+                                  <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.time}</span>
+                                  <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.space}</span>
+                                </>
+                              )}
+                              <svg className="w-3 h-3 shrink-0 transition-transform" style={{ color: t.headerText, transform: openSection === 'approach' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </button>
+                          {openSection === 'approach' && (
                           <div className="p-3 space-y-2">
                             {activeSol.approach && <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{activeSol.approach}</p>}
                             {activeSol.explanations?.length > 0 && (
@@ -2969,6 +2977,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               </div>
                             )}
                           </div>
+                          )}
                         </div>
                       );
 
@@ -3008,10 +3017,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                     {/* ── OVERALL PITCH (key points, tradeoffs, edge cases) ── */}
                     {sd.pitch && typeof sd.pitch !== 'string' && sd.solutions?.length > 1 && (
                       <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                        <button type="button" onClick={() => setOpenSection(s => s === 'summary' ? '' : 'summary')}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
                           <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Summary</span>
-                        </div>
+                          <svg className="w-3 h-3 shrink-0 ml-auto transition-transform" style={{ color: t.headerText, transform: openSection === 'summary' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {openSection === 'summary' && (
                         <div className="p-3 space-y-2">
                           {sd.pitch.opener && <p className="text-xs font-semibold" style={{ color: t.text }}>{sd.pitch.opener}</p>}
                           {sd.pitch.approach && <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{sd.pitch.approach}</p>}
@@ -3025,18 +3039,24 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             </div>
                           )}
                         </div>
+                        )}
                       </div>
                     )}
 
                     {/* ── TRADEOFFS ── */}
                     {sd.pitch?.tradeoffs?.length > 0 && (
                       <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                        <button type="button" onClick={() => setOpenSection(s => s === 'tradeoffs' ? '' : 'tradeoffs')}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
                           <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                           </svg>
                           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Tradeoffs</span>
-                        </div>
+                          <svg className="w-3 h-3 shrink-0 ml-auto transition-transform" style={{ color: t.headerText, transform: openSection === 'tradeoffs' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {openSection === 'tradeoffs' && (
                         <ul className="p-3 space-y-1.5">
                           {sd.pitch.tradeoffs.map((tr: string, i: number) => (
                             <li key={i} className="text-xs flex items-start gap-2 leading-relaxed" style={{ color: t.textMuted }}>
@@ -3047,18 +3067,24 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             </li>
                           ))}
                         </ul>
+                        )}
                       </div>
                     )}
 
                     {/* ── EDGE CASES ── */}
                     {sd.pitch?.edgeCases?.length > 0 && (
                       <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                        <button type="button" onClick={() => setOpenSection(s => s === 'edge' ? '' : 'edge')}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
                           <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                           </svg>
                           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Edge Cases</span>
-                        </div>
+                          <svg className="w-3 h-3 shrink-0 ml-auto transition-transform" style={{ color: t.headerText, transform: openSection === 'edge' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {openSection === 'edge' && (
                         <ul className="p-3 space-y-1.5">
                           {sd.pitch.edgeCases.map((e: string, i: number) => (
                             <li key={i} className="text-xs flex items-start gap-2 leading-relaxed" style={{ color: t.textMuted }}>
@@ -3067,19 +3093,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             </li>
                           ))}
                         </ul>
+                        )}
                       </div>
                     )}
 
                     {/* ── LINE-BY-LINE WALKTHROUGH ── */}
                     {sd.explanations?.length > 0 && (
                       <div className="rounded-xl overflow-hidden shadow-sm" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <div className="flex items-center gap-2 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+                        <button type="button" onClick={() => setOpenSection(s => s === 'walkthrough' ? '' : 'walkthrough')}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
                           <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                           </svg>
                           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Code Walkthrough</span>
-                          <span className="ml-auto text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{sd.explanations.length} lines</span>
-                        </div>
+                          <div className="ml-auto flex items-center gap-1.5">
+                            <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{sd.explanations.length} lines</span>
+                            <svg className="w-3 h-3 shrink-0 transition-transform" style={{ color: t.headerText, transform: openSection === 'walkthrough' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </button>
+                        {openSection === 'walkthrough' && (
                         <div className="divide-y" style={{ borderColor: t.cardBorder }}>
                           {sd.explanations.map((ex: any, i: number) => (
                             <div key={i} className="flex flex-col gap-1 px-3 py-2 transition-colors">
@@ -3091,6 +3125,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             </div>
                           ))}
                         </div>
+                        )}
                       </div>
                     )}
                   </div>
