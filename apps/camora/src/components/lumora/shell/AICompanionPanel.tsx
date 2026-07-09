@@ -619,15 +619,26 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     setStreaming(true);
     setStreamText('');
 
-    const safetyTimer = setTimeout(() => {
-      setStreaming(s => {
-        if (s) {
-          setMessages(m => [...m, { role: 'ai' as const, text: 'Response timed out. Please try again.', time: new Date() }]);
-          setStreamText('');
-        }
-        return false;
-      });
-    }, 60_000);
+    // Inactivity timeout, NOT wall-clock: a healthy answer that streams for over
+    // 60s kept tripping the old fixed timer, which appended "timed out" AND left
+    // the stream running (so onAnswer double-rendered) and never aborted it.
+    // armSafety() is reset on every token, so this only fires after a real 60s
+    // stall — and then it aborts the stream.
+    let safetyTimer: ReturnType<typeof setTimeout>;
+    const armSafety = () => {
+      clearTimeout(safetyTimer);
+      safetyTimer = setTimeout(() => {
+        streamAbortRef.current?.abort();
+        setStreaming(s => {
+          if (s) {
+            setMessages(m => [...m, { role: 'ai' as const, text: 'Response timed out. Please try again.', time: new Date() }]);
+            setStreamText('');
+          }
+          return false;
+        });
+      }, 60_000);
+    };
+    armSafety();
 
     // Reset the pending citations for this new question's stream.
     pendingCitationsRef.current = [];
@@ -650,7 +661,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           pendingCitationsRef.current = citations;
         },
         onToken: (data) => {
-          if (data.t) setStreamText(prev => prev + data.t);
+          if (data.t) { setStreamText(prev => prev + data.t); armSafety(); }
         },
         onAnswer: (data: any) => {
           const answerText = extractAnswer(data.parsed) || data.raw || '';

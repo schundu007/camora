@@ -798,13 +798,21 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
       // mic before we try to claim it, avoiding a double getUserMedia race.
       if (continuousModeRef.current && recordingModeRef.current === 'idle' && !isStartingRef.current) {
         isStartingRef.current = true;
-        window.setTimeout(() => {
+        window.setTimeout(async () => {
           if (!continuousModeRef.current || recordingModeRef.current !== 'idle') {
             isStartingRef.current = false;
             return;
           }
           setRecordingMode('auto');
-          startRecordingRef.current?.();
+          // Only enter the 'listening' state if the mic actually started —
+          // otherwise a getUserMedia failure left a ghost 'listening' UI with
+          // no recorder behind it.
+          const ok = await (startRecordingRef.current?.() ?? Promise.resolve(false));
+          if (!ok) {
+            setRecordingMode('idle');
+            isStartingRef.current = false;
+            return;
+          }
           setIsRecording(true);
           startListenTimer();
           setStatus('listen', 'Live - listening...');
