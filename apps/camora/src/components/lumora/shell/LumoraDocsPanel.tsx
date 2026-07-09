@@ -1510,7 +1510,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
               >
                 <div className="flex items-start justify-between gap-2 mb-1.5">
                   <div className="flex-1 min-w-0">
-                    <div className="text-[14px] font-bold font-mono leading-tight truncate" style={{ color: LC.navy }} title={safeText(t.technology || t.name)}>
+                    <div className="text-[14px] font-bold font-mono leading-tight truncate" style={{ color: LC.navy }} data-tip={safeText(t.technology || t.name)}>
                       {safeText(t.technology || t.name)}
                     </div>
                     {t.category && (
@@ -1895,7 +1895,7 @@ const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPa
           <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <span className="text-xs font-semibold w-full px-2 truncate text-center" style={{ color: 'var(--cam-primary)' }} title={fileName}>{fileName || 'Content added'}</span>
+          <span className="text-xs font-semibold w-full px-2 truncate text-center" style={{ color: 'var(--cam-primary)' }} data-tip={fileName}>{fileName || 'Content added'}</span>
           <span className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{value.length.toLocaleString()} characters</span>
         </>
       ) : (
@@ -2040,7 +2040,7 @@ const MultiUploadZone = ({ docs, onAdd, onRemove }: {
               <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span className="font-semibold truncate max-w-[200px]" title={d.name}>{d.name}</span>
+              <span className="font-semibold truncate max-w-[200px]" data-tip={d.name}>{d.name}</span>
               <span className="text-[9px] opacity-70">{d.content.length.toLocaleString()} ch</span>
               <button
                 type="button"
@@ -2425,7 +2425,7 @@ const FormattedJD = ({ text }: { text: string }) => {
                 <span
                   className="text-[13.5px] font-semibold truncate"
                   style={{ color: 'var(--text-primary)' }}
-                  title={m.value}
+                  data-tip={m.value}
                 >
                   {m.value}
                 </span>
@@ -3157,7 +3157,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               className="sm:hidden shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
               style={{ color: 'var(--cam-strip-text)' }}
               aria-label="Close sections"
-              title="Close"
+              data-tip="Close"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <path d="M6 6l12 12M18 6L6 18" />
@@ -3169,7 +3169,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 on the webapp / any other device after sign-in. */}
             <span
               className="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1"
-              title={
+              data-tip={
                 !token ? 'Not signed in — changes are local-only and will not appear on the webapp.'
                   : syncStatus === 'saving' ? 'Writing to lumora_prep_state…'
                   : syncStatus === 'saved'  ? 'Synced to backend. Reachable from any device while signed in.'
@@ -3204,7 +3204,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             <p
               className="text-[9px] mt-1 leading-snug break-all"
               style={{ color: '#FCA5A5', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
-              title={syncError}
+              data-tip={syncError}
             >
               {syncError}
             </p>
@@ -3250,7 +3250,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                         style={{ color: c === prepData.activeCompany ? 'var(--cam-gold-leaf-text)' : 'var(--text-primary)', background: c === prepData.activeCompany ? 'color-mix(in srgb, var(--cam-gold-leaf) 15%, transparent)' : 'transparent' }}>
                         <span className="truncate font-medium">{c}</span>
                         <button onClick={(e) => { e.stopPropagation(); archiveCompany(c); }}
-                          className="p-0.5 rounded opacity-40 hover:opacity-100" title="Archive" style={{ color: 'var(--text-muted)' }}>
+                          className="p-0.5 rounded opacity-40 hover:opacity-100" data-tip="Archive" style={{ color: 'var(--text-muted)' }}>
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" /></svg>
                         </button>
                       </button>
@@ -3267,7 +3267,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                         {showArchived && (prepData.archivedCompanies || []).map(c => (
                           <button key={c} onClick={(e) => { e.stopPropagation(); unarchiveCompany(c); }}
                             className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] text-left hover:bg-white/5"
-                            style={{ color: 'var(--text-muted)' }} title="Click to restore">
+                            style={{ color: 'var(--text-muted)' }} data-tip="Click to restore">
                             <span className="truncate italic">{c}</span>
                             <span className="text-[9px] opacity-60">Restore</span>
                           </button>
@@ -3358,7 +3358,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           {!generating && (
             <div className="flex gap-1.5 px-3 pt-1 pb-0.5">
               <button
-                title="Select all sections"
+                data-tip="Select all sections"
                 onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
                 disabled={selectedSections.length === GENERATE_SECTIONS.length}
                 className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
@@ -3369,7 +3369,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 </svg>
               </button>
               <button
-                title="Deselect all sections"
+                data-tip="Deselect all sections"
                 onClick={() => setSelectedSections([])}
                 disabled={selectedSections.length === 0}
                 className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
@@ -3645,7 +3645,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   disabled={jdFetching}
                   className="px-3 py-2 rounded-md text-[12px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-                  title="Paste URL or JD text from clipboard"
+                  data-tip="Paste URL or JD text from clipboard"
                 >
                   Paste
                 </button>

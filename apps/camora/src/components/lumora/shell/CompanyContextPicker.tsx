@@ -85,7 +85,7 @@ const CompanyContextPicker = () => {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        title={activeName ? `Active workspace: ${activeName}` : 'Switch which Prep Kit workspace Sona uses for context'}
+        data-tip={activeName ? `Active workspace: ${activeName}` : 'Switch which Prep Kit workspace Sona uses for context'}
         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors min-w-0"
         style={{
           background: 'rgba(3,19,46,0.88)',

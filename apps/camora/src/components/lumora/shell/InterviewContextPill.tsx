@@ -36,7 +36,7 @@ export const InterviewContextPill = ({ onOpen }: Props) => {
             color: 'var(--lumora-chrome-text)',
           }
       }
-      title={activeKey ? `Interview: ${activeKey}` : 'Set interview context for Sona'}
+      data-tip={activeKey ? `Interview: ${activeKey}` : 'Set interview context for Sona'}
       aria-label={activeKey ? `Interview: ${activeKey} — click to change` : 'Set interview context'}
     >
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

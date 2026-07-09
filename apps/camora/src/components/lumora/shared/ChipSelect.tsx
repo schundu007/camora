@@ -117,7 +117,7 @@ export function ChipSelect({ value, options, onChange, label, disabled, title }:
       <button
         type="button"
         disabled={disabled}
-        title={title}
+        data-tip={title}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"

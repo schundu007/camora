@@ -53,7 +53,7 @@ export function DesktopWindowControls() {
           catches (buttons are no-drag). This is the reliable way to move the window. */}
       <div
         className="desktop-winctl__grip"
-        title="Drag to move the window"
+        data-tip="Drag to move the window"
         aria-hidden="true"
         onMouseDown={(e) => {
           e.preventDefault();
@@ -73,7 +73,7 @@ export function DesktopWindowControls() {
           max={1}
           step={0.02}
           defaultValue={savedOpacity}
-          title="Transparency (left = more see-through, right = more solid)"
+          data-tip="Transparency (left = more see-through, right = more solid)"
           onInput={(e) => setOpacity(Number((e.target as HTMLInputElement).value))}
         />
       )}
@@ -81,7 +81,7 @@ export function DesktopWindowControls() {
         type="button"
         className="desktop-winctl__toggle"
         onClick={() => toggleOverlayMode()}
-        title={overlay ? 'Dock the window (⌘⇧O)' : 'Float over the meeting (⌘⇧O)'}
+        data-tip={overlay ? 'Dock the window (⌘⇧O)' : 'Float over the meeting (⌘⇧O)'}
       >
         {overlay ? 'Dock' : 'Overlay'}
       </button>
@@ -89,7 +89,7 @@ export function DesktopWindowControls() {
         type="button"
         className="desktop-winctl__btn"
         onClick={() => camo?.window?.minimize?.()}
-        title="Minimize"
+        data-tip="Minimize"
         aria-label="Minimize"
       >
         {/* minus */}
@@ -99,7 +99,7 @@ export function DesktopWindowControls() {
         type="button"
         className="desktop-winctl__btn desktop-winctl__btn--close"
         onClick={() => camo?.window?.close?.()}
-        title="Close"
+        data-tip="Close"
         aria-label="Close"
       >
         {/* x */}

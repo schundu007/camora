@@ -197,7 +197,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
             <span className="text-xs font-mono text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
             <button onClick={() => setScale(s => Math.max(s - 0.25, 0.25))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">-</button>
             <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
-            <button onClick={() => setIsFullscreen(true)} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1" title="View full size">
+            <button onClick={() => setIsFullscreen(true)} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1" data-tip="View full size">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
                 <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
@@ -323,7 +323,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
                 style={{ color: 'var(--cam-strip-heading)' }}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                title="Close"
+                data-tip="Close"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>

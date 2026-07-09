@@ -101,7 +101,7 @@ export const OutputPane = ({ runs, language, onClear }: Props) => {
                 .join('\n---\n');
               navigator.clipboard.writeText(text);
             }}
-            title="Copy all output"
+            data-tip="Copy all output"
             style={{ color: 'var(--text-muted)' }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -109,7 +109,7 @@ export const OutputPane = ({ runs, language, onClear }: Props) => {
               <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
             </svg>
           </button>
-          <button onClick={onClear} title="Clear output" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={onClear} data-tip="Clear output" style={{ color: 'var(--text-muted)' }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>

@@ -196,7 +196,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
                 <span
                   className="flex-1 text-[12px] font-medium truncate min-w-0"
                   style={{ color: 'var(--text-primary)' }}
-                  title={doc.filename}
+                  data-tip={doc.filename}
                 >
                   {doc.filename}
                 </span>

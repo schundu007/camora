@@ -88,7 +88,7 @@ export const SessionSidebar = ({ isOpen, onClose, onSelectEntry }: SessionSideba
                     onClick={async () => { const ok = await dialogConfirm({ title: 'Clear all history?', message: 'This will permanently remove every saved session.', confirmLabel: 'Clear all', tone: 'danger' }); if (ok) clearHistory(); }}
                     className="text-[10px] font-mono px-2 py-1 rounded transition-colors hover:bg-[var(--bg-elevated)]"
                     style={{ color: 'var(--text-muted)' }}
-                    title="Clear all"
+                    data-tip="Clear all"
                   >
                     Clear
                   </button>
@@ -161,7 +161,7 @@ export const SessionSidebar = ({ isOpen, onClose, onSelectEntry }: SessionSideba
                             onClick={(e) => { e.stopPropagation(); removeHistoryEntry(item.index); }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors hover:bg-[var(--bg-elevated)]"
                             style={{ color: 'var(--danger)' }}
-                            title="Remove"
+                            data-tip="Remove"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

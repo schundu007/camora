@@ -69,7 +69,7 @@ const SayThisCard = ({ text }: { text: string | null }) => {
             style={{ background: 'transparent' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-            title="Copy to clipboard"
+            data-tip="Copy to clipboard"
           >
             <svg className="w-3 h-3" style={{ color: 'var(--text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <rect x="9" y="9" width="13" height="13" rx="2" />
@@ -278,13 +278,13 @@ export const FollowUpPopup = () => {
               LIVE
             </span>
             {/* Minimize */}
-            <button onClick={() => setPopupMinimized(true)} className="p-1 rounded transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }} title="Minimize">
+            <button onClick={() => setPopupMinimized(true)} className="p-1 rounded transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }} data-tip="Minimize">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             {/* Close */}
-            <button onClick={() => setPopupVisible(false)} className="p-1 rounded transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }} title="Close (Cmd+J to reopen)">
+            <button onClick={() => setPopupVisible(false)} className="p-1 rounded transition-colors" style={{ color: 'var(--text-muted)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-elevated)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }} data-tip="Close (Cmd+J to reopen)">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>

@@ -194,7 +194,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
             background: isRecording ? 'var(--accent-subtle)' : 'transparent',
             border: '1px solid var(--border)',
           }}
-          title="Record 5 s of your voice — the app will learn to filter it during sessions"
+          data-tip="Record 5 s of your voice — the app will learn to filter it during sessions"
         >
           {isRecording ? (
             <>
@@ -218,14 +218,14 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
             <div className="h-full rounded-full transition-all" style={{ width: `${recordingProgress}%`, background: 'var(--danger)' }} />
           </div>
         )}
-        {error && <span className="text-xs max-w-full truncate" style={{ color: 'var(--danger)' }} title={error}>{error}</span>}
+        {error && <span className="text-xs max-w-full truncate" style={{ color: 'var(--danger)' }} data-tip={error}>{error}</span>}
       </div>
     );
   }
 
   return (
     <div className={isLight ? 'flex flex-row items-center gap-2 shrink-0 flex-wrap' : 'flex items-center gap-1 shrink-0'}>
-      {error && <span className="text-xs max-w-[180px] truncate" style={{ color: 'var(--danger)' }} title={error}>{error}</span>}
+      {error && <span className="text-xs max-w-[180px] truncate" style={{ color: 'var(--danger)' }} data-tip={error}>{error}</span>}
       <button
         onClick={handleToggleFilter}
         disabled={disabled}
@@ -244,7 +244,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
           background: voiceFilterEnabled ? 'var(--accent-subtle)' : 'transparent',
           border: '1px solid var(--border)',
         }}
-        title={voiceFilterEnabled ? 'Voice filter active — only speaker is transcribed' : 'Voice filter disabled'}
+        data-tip={voiceFilterEnabled ? 'Voice filter active — only speaker is transcribed' : 'Voice filter disabled'}
       >
         <VoiceIcon filled={voiceFilterEnabled} />
         <span>{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>
@@ -266,7 +266,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
           color: 'var(--text-secondary)',
           border: '1px solid var(--border)',
         }}
-        title="Remove voice enrollment"
+        data-tip="Remove voice enrollment"
       >
         {isLight ? 'Remove Enrollment' : <XIcon />}
       </button>

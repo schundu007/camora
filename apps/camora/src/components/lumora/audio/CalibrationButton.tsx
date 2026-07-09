@@ -43,7 +43,7 @@ export const CalibrationButton = ({ deviceId, disabled, variant = 'dark' }: Cali
           color: 'var(--cam-strip-text-muted)',
           border: '1px solid var(--cam-strip-icon-border)',
         }}
-        title="Calibrate VAD threshold based on ambient noise"
+        data-tip="Calibrate VAD threshold based on ambient noise"
       >
         {isCalibrating ? (
           <>
