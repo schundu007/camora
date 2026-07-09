@@ -289,6 +289,30 @@ app.whenReady().then(async () => {
     return Boolean(trusted && allowed.includes(permission));
   });
 
+  // Google's sign-in flow classifies our default UA (which carries "Electron/41")
+  // as an embedded browser and serves the degraded `GeneralOAuthLite` flow, which
+  // ends in "This browser or app may not be secure". Login is a same-window
+  // navigation (window.location.href = oauthUrl), so it happens right here in
+  // mainWindow. Present a plain Chrome UA to Google's sign-in hosts only.
+  //
+  // This rewrites the outgoing request header, NOT navigator.userAgent. Do not
+  // "simplify" this to webContents.setUserAgent(): the renderer sniffs
+  // /Electron/i.test(navigator.userAgent) to detect desktop (see
+  // apps/camora/src/lib/audio-preferences.ts), and a global override silently
+  // breaks audio-preference persistence.
+  const SAFE_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+  const GOOGLE_SIGNIN_HOSTS = /^(accounts\.google\.com|accounts\.youtube\.com)$/i;
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    try {
+      if (GOOGLE_SIGNIN_HOSTS.test(new URL(details.url).hostname)) {
+        details.requestHeaders['User-Agent'] = SAFE_UA;
+      }
+    } catch {
+      // non-URL scheme (devtools://, blob:) — leave headers untouched
+    }
+    callback({ requestHeaders: details.requestHeaders });
+  });
+
   // Guard: `activate` may have already created the window if the user
   // clicked the Dock while the async cache-clear / mic-prompt was running.
   if (!mainWindow || mainWindow.isDestroyed()) createWindow();
