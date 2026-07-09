@@ -177,7 +177,12 @@ describe('/solve wiring', () => {
     expect(src).toMatch(/const ioContract = isMcq \? null : inferIoContract\(problem, starterCode\);/);
   });
 
-  it('passes ioContract as the 5th argument to buildCodingSystemPrompt', () => {
-    expect(src).toMatch(/buildCodingSystemPrompt\(lang,[^)]*starterCode \|\| undefined, true, ioContract\)/s);
+  it('passes ioContract then inputTrust as the 5th & 6th args to buildCodingSystemPrompt', () => {
+    // A1 added a 6th arg (inputTrust). Pin both so a future refactor can't drop either.
+    expect(src).toMatch(/buildCodingSystemPrompt\(lang,[^)]*starterCode \|\| undefined, true, ioContract, inputTrust\)/s);
+  });
+
+  it('computes inputTrust from problem + starterCode', () => {
+    expect(src).toMatch(/const inputTrust = isMcq \? null : inferInputTrust\(problem, starterCode\);/);
   });
 });
