@@ -369,7 +369,7 @@ export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggl
         {stealthAvailable && (
           <button
             onClick={toggleStealth}
-            title={isStealthActive ? 'Stealth ON — Camora is hidden from screen share. Click to disable.' : 'Stealth OFF — Camora is visible to screen share. Click to hide it.'}
+            title={isStealthActive ? 'Stealth ON — Camora is hidden from screen share. Click to disable.' : 'Stealth OFF — Camora is visible to screen share. Auto re-enables after 30 min; click to re-enable now.'}
             aria-label={isStealthActive ? 'Stealth on, click to disable' : 'Stealth off, click to enable'}
             aria-pressed={isStealthActive}
             className={`relative flex items-center ${expanded ? 'gap-3 px-3 justify-start' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] active:scale-[0.98] ${isStealthActive ? '' : 'hover:bg-[var(--bg-elevated)]'} text-left w-full`}
