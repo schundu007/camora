@@ -447,7 +447,7 @@ const SUPPORTED_LANGUAGES = [
  * Build the coding system prompt for a given language.
  * Directly ported from Python `build_coding_system_prompt()`.
  */
-function buildCodingSystemPrompt(language, systemContext, starterCode, forceSingle = false, ioContract = null) {
+function buildCodingSystemPrompt(language, systemContext, starterCode, forceSingle = false, ioContract = null, inputTrust = null) {
   // Bash problems on HackerRank always supply a starter template (function
   // stub + wrapper call). Even when OCR misses it, multiple "approaches"
   // for bash don't make sense — there's one right implementation.
@@ -595,7 +595,46 @@ NOTE: "Simulation" patternTag = DS&A pattern (game of life, queue sim). NOT a li
 Detect and complete partial/starter code from the problem. When you detect
 partial code with markers like "complete the function", "TODO", or empty body,
 you MUST complete the given template, NOT rewrite from scratch.
-${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour single solution must follow this exact structure — return only 1 solution in the solutions array.\n` : ''}${ioUnknown ? `\n##############################################################################\n# RULE #2.7: I/O CONTRACT UNKNOWN — DO NOT INVENT ONE (HIGHEST PRIORITY)\n##############################################################################\nThe problem statement specifies NO input/output format, and NO starter code was\ncaptured. You have NO evidence of how this program is invoked or graded.\n\nEmit the LEAST-COMMITTED artifact:\n- ONE pure function. Its PARAMETERS are the inputs. It RETURNS the answer.\n- NO input(), NO sys.stdin, NO print(), NO if __name__ block, NO driver.\n- NO invented output labels. Printing "Iterative:" before a result is FORBIDDEN.\n- ONE algorithm. Never two algorithms in one file. If several approaches exist,\n  pick the one you would submit and describe the others in "tradeoffs".\n- Populate "assumptions" with exactly what you assumed about the inputs and the\n  expected return value.\n\nThis OVERRIDES the stdin/print EXCEPTION in RULE #3. A pure function wraps into\nany driver; an invented print contract is a Wrong Answer the candidate cannot see.\n` : ''}
+${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour single solution must follow this exact structure — return only 1 solution in the solutions array.\n` : ''}${ioUnknown ? `\n##############################################################################\n# RULE #2.7: I/O CONTRACT UNKNOWN — DO NOT INVENT ONE (HIGHEST PRIORITY)\n##############################################################################\nThe problem statement specifies NO input/output format, and NO starter code was\ncaptured. You have NO evidence of how this program is invoked or graded.\n\nEmit the LEAST-COMMITTED artifact:\n- ONE pure function. Its PARAMETERS are the inputs. It RETURNS the answer.\n- NO input(), NO sys.stdin, NO print(), NO if __name__ block, NO driver.\n- NO invented output labels. Printing "Iterative:" before a result is FORBIDDEN.\n- ONE algorithm. Never two algorithms in one file. If several approaches exist,\n  pick the one you would submit and describe the others in "tradeoffs".\n- Populate "assumptions" with exactly what you assumed about the inputs and the\n  expected return value.\n\nThis OVERRIDES the stdin/print EXCEPTION in RULE #3. A pure function wraps into\nany driver; an invented print contract is a Wrong Answer the candidate cannot see.\n` : ''}${inputTrust !== null ? `
+##############################################################################
+# RULE #2.8: SOLUTION QUALITY — YOU ARE GRADED ON THESE
+##############################################################################
+Your solution is scored on four axes. Satisfy ALL:
+
+1. ERROR CONTAINMENT LIVES IN THE DRIVER, NOT THE ALGORITHM.
+   The core function stays TOTAL over its declared domain. A base case (e.g. empty
+   list / n==0 that the algorithm itself needs) is REQUIRED. Input VALIDATION belongs
+   only where input is read.
+${inputTrust === 'adversarial'
+    ? '   • Input may be malformed (hidden/destructive tests). The driver that reads input MUST validate it and, on bad input, produce a DEFINED failure output — never an uncaught exception/traceback.'
+    : '   • Input is guaranteed well-formed by the stated constraints. Do NOT add validation guards for cases the constraints exclude — they are unreachable DEAD CODE and cost quality points. State the boundary handling in edgeScenarios instead.'}
+
+2. EVERY EXCEPTION HANDLER MUST BE REACHABLE.
+   Never catch an exception the guarded block cannot raise (e.g. \`except EOFError\`
+   around code that cannot EOF). A handler that catches nothing scores as false
+   resilience — worse than none.
+
+3. ONE ALGORITHM PER SOLUTION. Never put two algorithms in one file/function. If
+   several approaches exist, pick the one you would submit; mention the others in
+   pitch.tradeoffs. (A driver that runs the solution twice is a correctness risk.)
+
+4. DECOMPOSE AND NAME HONESTLY. Use small helper functions with descriptive names
+   where it aids clarity; a docstring on the entry function stating time/space is good.
+   No dead code, no redundant checks, no golf: prefer a plain multi-line form over a
+   clever one-liner a reviewer must decode (e.g. no \`a,b,c = c,a,b.next\` where a
+   sequential form is clearer).
+
+5. NARRATION MUST BE TRUE TO THE CODE. Every claim in narration/explanations must
+   match what the code actually does — never say "atomic", "thread-safe", "lazy", or
+   "O(1)" unless the emitted code is exactly that.
+
+Also: derive optimality from the STATED CONSTRAINTS, not from your own solution. If
+n can reach a size where your time complexity times out, that solution is a TLE risk —
+say so, and prefer the complexity the constraints demand.
+
+STEP E (silent, internal — after STEP D): re-check your solution against axes 1-5 and
+the constraint-derived optimality before emitting. Fix violations. Emit no reasoning.
+` : ''}
 ##############################################################################
 # RULE #3: CODE STRUCTURE
 ##############################################################################
@@ -728,7 +767,10 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)" },
+      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
+      "submittable": true|false,
+      "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
       "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose.",
       "trace": [
         {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
@@ -744,7 +786,10 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code for this approach with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)" },
+      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
+      "submittable": true|false,
+      "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
       "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose. Example: 'So my first instinct here is to brute-force it by comparing every pair — that's O(n squared). But we can do better: as I scan the array, I'll track values I've already seen in a hash map. For each element, I check if its complement — target minus current — is already in the map. That drops us to O(n) time with O(n) extra space for the map.'",
       "trace": [
         {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
@@ -758,7 +803,10 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for second approach",
-      "complexity": { "time": "O(...)", "space": "O(...)" },
+      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
+      "submittable": true|false,
+      "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
       "narration": "First-person spoken script, 4-6 sentences, conversational prose",
       "explanations": [
         {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
@@ -769,7 +817,10 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for third approach",
-      "complexity": { "time": "O(...)", "space": "O(...)" },
+      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
+      "submittable": true|false,
+      "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
       "narration": "First-person spoken script, 4-6 sentences, conversational prose",
       "explanations": [
         {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
@@ -797,7 +848,9 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
   ]
   ,"assumptions": ${ioUnknown
     ? `["Each assumption you made about the input types or the expected return value. REQUIRED — at least one entry."]`
-    : `[]`}
+    : `[]`}${inputTrust !== null ? `
+  ,"edgeScenarios": ["two concrete edge/failure scenarios the candidate should raise proactively"]
+  ,"assistantPrompts": ["2-3 well-scoped prompts the candidate could give a coding-assistant to validate/extend the solution"]` : ''}
 }
 
 ##############################################################################
@@ -922,6 +975,21 @@ function inferIoContract(problem, starterCode) {
   if (hasStdinEvidence(t)) return 'stdin-print';
   if (hasExampleEvidence(t)) return 'pure-function';
   return 'unknown';
+}
+
+/**
+ * Does the grader feed well-formed input (LeetCode-style: constraints guarantee
+ * shape) or adversarial/malformed input (HackerRank hidden/destructive suites)?
+ * Decides whether guard clauses are resilience (adversarial) or dead code (guaranteed).
+ *   'guaranteed'  → class Solution / an explicit Constraints block
+ *   'adversarial' → everything else, including unknown (a spurious guard costs a
+ *                   debt point; a missing guard crashes — so default to adversarial)
+ */
+function inferInputTrust(problem, starterCode) {
+  const t = typeof problem === 'string' ? problem : '';
+  if (/\bclass\s+Solution\b/.test(t)) return 'guaranteed';
+  if (/(^|\n)\s*constraints\s*:?\s*(\n|$)/i.test(t) && /\d+\s*<=?\s*\w/.test(t)) return 'guaranteed';
+  return 'adversarial';
 }
 
 /**
@@ -1178,7 +1246,8 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   const isMcq = questionType === 'mcq'
     || (questionType !== 'code' && detectMcq(problem, { hasStarterCode: !!starterCode }));
   const ioContract = isMcq ? null : inferIoContract(problem, starterCode);
-  console.log(`[solve] lang=${lang} mcq=${isMcq} io=${ioContract} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
+  const inputTrust = isMcq ? null : inferInputTrust(problem, starterCode);
+  console.log(`[solve] lang=${lang} mcq=${isMcq} io=${ioContract} trust=${inputTrust} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({
       error: `Unsupported language: ${language}. Supported: ${SUPPORTED_LANGUAGES.join(', ')}`,
@@ -1370,7 +1439,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   const systemPrompt = isMcq
     ? buildMcqSystemPrompt(typeof systemContext === 'string' ? systemContext : undefined)
-    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true, ioContract);
+    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true, ioContract, inputTrust);
   // Anthropic prompt cache — wraps the large coding system prompt as a
   // single ephemeral cache block. Subsequent /solve calls within the
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting
@@ -2817,6 +2886,6 @@ export { stripInjectedComments, remapLine, remapLineRef, sanitizeCofixResult };
 // Exported for unit testing the URL-fetch starter-code extraction.
 export { langCandidates, pickHackerRankTemplate, pickLeetcodeSnippet };
 export { detectPlatformTemplate, templateHasFillableFunction, isMinimalInlineTemplate, buildTemplateShapeDirective, buildCodingSystemPrompt };
-export { hasStdinEvidence, hasExampleEvidence, inferIoContract };
+export { hasStdinEvidence, hasExampleEvidence, inferIoContract, inferInputTrust };
 export { isProblemPageUrl };
 
