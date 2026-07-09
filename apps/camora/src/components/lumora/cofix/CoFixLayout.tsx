@@ -1383,7 +1383,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
             {/* ── Problem tab ── */}
             {panelTab === 'problem' && (
-              <div className="h-full overflow-y-auto px-4 py-3" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+              <div className="h-full overflow-y-auto px-4 py-3">
                 {/* Loading */}
                 {!analysis && analysisLoading && (
                   <div className="flex flex-col items-center justify-center h-full gap-3">
@@ -1440,7 +1440,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
             {/* ── Learn tab ── */}
             {panelTab === 'learn' && (
-              <div className="h-full overflow-y-auto px-4 py-3" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+              <div className="h-full overflow-y-auto px-4 py-3">
                 {/* Loading */}
                 {!analysis && analysisLoading && (
                   <div className="flex flex-col items-center justify-center h-full gap-3">
