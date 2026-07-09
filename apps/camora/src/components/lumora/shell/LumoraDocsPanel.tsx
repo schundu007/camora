@@ -489,10 +489,11 @@ const LC = {
   pageRule:    'rgba(30,77,120,0.22)',
 };
 
-/** Card surface with accent tint. Emerald for informational, amber for caution sections. */
+/** Card surface with accent tint. Navy for informational, amber for caution sections. */
 const paperCard = (accent: string) => {
   const isAmber = accent === LC.gold;
-  const rgb = isAmber ? '245,158,11' : '16,185,129';
+  // Navy (not emerald) for informational cards — matches the Camora navy-gold palette.
+  const rgb = isAmber ? '245,158,11' : '38,97,156';
   return {
     background: `linear-gradient(180deg, rgba(${rgb},0.07) 0%, rgba(${rgb},0.03) 100%), var(--bg-surface)`,
     border: `1px solid rgba(${rgb},0.22)`,
@@ -3386,20 +3387,26 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         <div className="p-3 flex flex-col gap-2" style={{ borderTop: '1px solid var(--border)' }}>
 
           {/* Progress bar — only while generating */}
-          {generating && (
+          {generating && (() => {
+            // Clamp: `done` can exceed selectedSections.length (stale/extra
+            // section statuses), which showed >100% and a wrong X/Y.
+            const done = Object.values(sectionStatus).filter(s => s === 'done').length;
+            const total = Math.max(selectedSections.length, done, 1);
+            return (
             <div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[9px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
                 <span className="text-[9px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
-                  {Object.values(sectionStatus).filter(s => s === 'done').length}/{selectedSections.length}
+                  {done}/{total}
                 </span>
               </div>
               <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
                 <div className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${(Object.values(sectionStatus).filter(s => s === 'done').length / selectedSections.length) * 100}%`, background: 'var(--cam-primary)' }} />
+                  style={{ width: `${Math.min(100, (done / total) * 100)}%`, background: 'var(--cam-primary)' }} />
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* Cloud provider */}
           <div className="flex justify-center">
