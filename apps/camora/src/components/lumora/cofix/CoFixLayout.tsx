@@ -19,6 +19,7 @@ import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
 import { cofixChecks } from '@/components/lumora/shared/readiness';
 import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
 import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
+import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { useSessionStore } from '@/stores/session-store';
@@ -871,19 +872,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       <div className="flex items-center gap-2 px-3 py-2 shrink-0 overflow-x-auto no-scrollbar lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         {/* Language */}
         <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[11px] font-bold tracking-wider uppercase" style={{ color: 'var(--cam-gold-leaf)' }}>Lang</span>
-          <select
+          <ChipSelect
+            label="Lang"
             value={language}
-            onChange={e => setLanguage(e.target.value)}
-            className="text-[12px] rounded px-2 py-1 cursor-pointer focus:outline-none"
-            style={{
-              background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
-              border: '1px solid var(--cam-gold-leaf-dk)',
-              color: 'var(--cam-gold-leaf)',
-            }}
-          >
-            {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-          </select>
+            options={LANGUAGES.map(l => ({ value: l.id, label: l.label }))}
+            onChange={setLanguage}
+          />
         </div>
 
         {/* Divider */}
