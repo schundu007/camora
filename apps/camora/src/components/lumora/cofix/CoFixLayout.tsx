@@ -150,7 +150,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // Minimize (not close): collapses the analysis drawer to a thin restore bar so
   // there is always a way back — never an ✕ that hides chrome with no return.
   const [panelCollapsed, setPanelCollapsed] = useState(false);
-  const [panelTab, setPanelTab] = useState<'problem' | 'learn'>('problem');
+  const [panelTab, setPanelTab] = useState<'problem' | 'learn' | 'tests' | 'output'>('problem');
   const [customTests, setCustomTests] = useState<CustomTest[]>([mkTest()]);
 
   const [showRefinePopup, setShowRefinePopup] = useState(false);
@@ -1359,38 +1359,37 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             title="Drag to resize"
           />
 
-          {/* Two-column body — Allotment for drag-resize */}
-          <div className="flex-1 min-h-0">
-          <Allotment defaultSizes={[40, 60]}>
+          {/* Single tabbed body — Problem · Learn · Tests · Output, one visible at a time */}
+          <div className="flex-1 min-h-0 flex flex-col">
+          <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
+            {(['problem', 'learn', 'tests', 'output'] as const).map(tab => (
+              <button key={tab} onClick={() => setPanelTab(tab)}
+                className="h-full px-4 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors"
+                style={{ color: panelTab === tab ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)', borderBottom: panelTab === tab ? '2px solid var(--cam-gold-leaf)' : '2px solid transparent', background: 'none' }}>
+                {tab === 'problem' ? 'Problem' : tab === 'learn' ? 'Learn' : tab === 'tests' ? 'Tests' : 'Output'}
+              </button>
+            ))}
+            <div className="flex-1" />
+            {analysisLoading && (
+              <span className="flex items-center gap-1.5 text-[11px] px-3" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
+                <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf-dk)', borderTopColor: 'transparent' }} />
+                Analyzing…
+              </span>
+            )}
+            <button onClick={() => setPanelCollapsed(true)} title="Minimize" className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>▾</button>
+          </div>
 
-            {/* ── LEFT: Problem / Learn ── */}
-            <Allotment.Pane minSize={120}>
-            <div className="flex flex-col h-full" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
-              <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
-                {(['problem', 'learn'] as const).map(tab => (
-                  <button key={tab} onClick={() => setPanelTab(tab)}
-                    className="h-full px-4 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors"
-                    style={{ color: panelTab === tab ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)', borderBottom: panelTab === tab ? '2px solid var(--cam-gold-leaf)' : '2px solid transparent', background: 'none' }}>
-                    {tab === 'problem' ? 'Problem' : 'Learn'}
-                  </button>
-                ))}
-                <div className="flex-1" />
-                {analysisLoading && (
-                  <span className="flex items-center gap-1.5 text-[11px] px-3" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
-                    <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf-dk)', borderTopColor: 'transparent' }} />
-                    Analyzing…
-                  </span>
-                )}
-                <button onClick={() => setPanelCollapsed(true)} title="Minimize" className="px-3 text-[13px] hover:opacity-70 transition-opacity" style={{ color: 'var(--text-muted)' }}>▾</button>
-              </div>
+          <div className="flex-1 min-h-0 overflow-hidden">
 
-              <div className="flex-1 overflow-y-auto px-4 py-3">
+            {/* ── Problem tab ── */}
+            {panelTab === 'problem' && (
+              <div className="h-full overflow-y-auto px-4 py-3" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
                 {/* Loading */}
                 {!analysis && analysisLoading && (
                   <div className="flex flex-col items-center justify-center h-full gap-3">
                     <span className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
                     <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                      {panelTab === 'problem' ? 'Generating problem statement…' : 'Building step-by-step walkthrough…'}
+                      Generating problem statement…
                     </span>
                   </div>
                 )}
@@ -1412,8 +1411,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   </div>
                 )}
 
-                {/* Problem tab */}
-                {analysis && panelTab === 'problem' && (
+                {analysis && (
                   <div>
                     <h3 className="text-[14px] font-bold mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>{analysis.title}</h3>
                     <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
@@ -1437,9 +1435,40 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                     </div>
                   </div>
                 )}
+              </div>
+            )}
 
-                {/* Learn tab */}
-                {analysis && panelTab === 'learn' && (
+            {/* ── Learn tab ── */}
+            {panelTab === 'learn' && (
+              <div className="h-full overflow-y-auto px-4 py-3" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+                {/* Loading */}
+                {!analysis && analysisLoading && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <span className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                      Building step-by-step walkthrough…
+                    </span>
+                  </div>
+                )}
+                {/* Error */}
+                {!analysis && !analysisLoading && analysisError && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Could not generate analysis</span>
+                    <button onClick={retryAnalyze} disabled={!fixedCode}
+                      className="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
+                      style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}>
+                      ↺ Retry
+                    </button>
+                  </div>
+                )}
+                {/* Empty */}
+                {!analysis && !analysisLoading && !analysisError && (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Run CoFix to generate analysis</span>
+                  </div>
+                )}
+
+                {analysis && (
                   <div>
                     {analysis.concepts.length > 0 && (
                       <div className="mb-4">
@@ -1483,16 +1512,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   </div>
                 )}
               </div>
-            </div>
-            </Allotment.Pane>
+            )}
 
-            {/* ── RIGHT: Tests | Output (drag-resizable) ── */}
-            <Allotment.Pane minSize={160}>
-            <Allotment defaultSizes={[50, 50]}>
-
-              {/* Tests column */}
-              <Allotment.Pane minSize={120}>
-              <div className="flex flex-col h-full" style={{ borderRight: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
+            {/* ── Tests tab ── */}
+            {panelTab === 'tests' && (
+              <div className="flex flex-col h-full">
                 <div className="flex items-center shrink-0 gap-2 px-3" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
                   <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
                     Tests
@@ -1582,10 +1606,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   })}
                 </div>
               </div>
-              </Allotment.Pane>
+            )}
 
-              {/* Output column */}
-              <Allotment.Pane minSize={100}>
+            {/* ── Output tab ── */}
+            {panelTab === 'output' && (
               <div className="flex flex-col h-full">
                 <div className="flex items-center shrink-0 px-4 gap-2" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
                   <span className="text-[11px] font-bold uppercase tracking-[0.1em] flex-1"
@@ -1640,12 +1664,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   )}
                 </div>
               </div>
-              </Allotment.Pane>
+            )}
 
-            </Allotment>
-            </Allotment.Pane>
-
-          </Allotment>
+          </div>
           </div>
           </>
           )}
