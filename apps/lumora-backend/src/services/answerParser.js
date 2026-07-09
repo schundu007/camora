@@ -64,27 +64,33 @@ function parseBareHeadings(text) {
  * falls back to bare-heading parsing (TAG on its own line).
  */
 export function parseAnswer(raw) {
-  // Clean markdown artifacts
-  let cleaned = raw.replace(/^#{1,4}\s+.*$/gm, '');
-  cleaned = cleaned.replace(/^\s*[-*]{3,}\s*$/gm, '');
-  cleaned = cleaned.replace(/\*\*/g, '');
+  // Markdown cleanup for PROSE ONLY. Never run over CODE bodies: `**` is
+  // exponentiation / **kwargs / pointer deref, and a column-0 `#` is a shell or
+  // Python comment — stripping them corrupts the code the candidate reads.
+  const cleanMarkdown = (s) => s
+    .replace(/^#{1,4}\s+.*$/gm, '')
+    .replace(/^\s*[-*]{3,}\s*$/gm, '')
+    .replace(/\*\*/g, '');
 
   const blocks = [];
 
-  // Strategy 1: Bracketed tags [TAG]...[/TAG]
+  // Strategy 1: Bracketed tags [TAG]...[/TAG] — parsed from RAW so code stays
+  // intact; only non-CODE bodies get the markdown cleanup.
   let match;
   // Reset regex lastIndex for global regex
   BLOCK_RE.lastIndex = 0;
-  while ((match = BLOCK_RE.exec(cleaned)) !== null) {
+  while ((match = BLOCK_RE.exec(raw)) !== null) {
     const tag = match[1].toUpperCase();
     let lang = match[2] || '';
-    const body = match[3].trim();
+    let body = match[3];
 
     // Extract language for CODE blocks
     if (tag === 'CODE' && !lang) {
       const langMatch = CODE_LANG_RE.exec(raw.slice(match.index, match.index + match[0].length));
       lang = langMatch ? langMatch[1] : 'bash';
     }
+
+    body = (tag === 'CODE' ? body : cleanMarkdown(body)).trim();
 
     if (body) {
       blocks.push({
@@ -95,15 +101,19 @@ export function parseAnswer(raw) {
     }
   }
 
-  // Strategy 1.5: Recover truncated blocks (opening [TAG] without closing [/TAG])
+  // Cleaned prose for the fallback strategies below (they target non-CODE tags).
+  const cleaned = cleanMarkdown(raw);
+
+  // Strategy 1.5: Recover truncated blocks (opening [TAG] without closing [/TAG]).
+  // Match against RAW and shield CODE bodies, same as Strategy 1.
   if (blocks.length > 0) {
     const foundTags = new Set(blocks.map(b => b.type));
     for (const tag of KNOWN_TAGS) {
       if (foundTags.has(tag)) continue;
       const openRe = new RegExp(`\\[${tag}(?:\\s+lang=\\w+)?\\](.*)$`, 's');
-      const openMatch = openRe.exec(cleaned);
+      const openMatch = openRe.exec(raw);
       if (openMatch) {
-        const body = openMatch[1].trim();
+        const body = (tag === 'CODE' ? openMatch[1] : cleanMarkdown(openMatch[1])).trim();
         if (body) {
           blocks.push({ type: tag, content: body, lang: null });
         }
