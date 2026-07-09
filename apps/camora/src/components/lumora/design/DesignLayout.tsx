@@ -814,6 +814,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         handleSubmit();
       }
       if (e.key === 'Escape') {
+        // Don't wipe the problem the user is actively typing — Escape only
+        // resets when focus is outside an editable field.
+        const el = document.activeElement as HTMLElement | null;
+        if (el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable)) return;
         e.preventDefault();
         setResult(null);
         setStreamingText('');

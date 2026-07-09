@@ -294,6 +294,18 @@ export function useSpeakerCapture(options: CaptureOptions) {
           try {
             mediaRecorderRef.current?.start();
             setState((p) => ({ ...p, isCapturing: true }));
+            // Re-arm the max-duration ceiling — it was only set on the first
+            // start, so every segment after the first recorded unbounded until
+            // silence, never flushing on the cap.
+            if (maxRecordingDuration > 0) {
+              maxRecordingTimerRef.current = window.setTimeout(() => {
+                if (mediaRecorderRef.current?.state === 'recording') {
+                  if (!speechStartTimeRef.current) speechStartTimeRef.current = Date.now() - minSpeechDuration - 100;
+                  pendingRestartRef.current = true;
+                  mediaRecorderRef.current.stop();
+                }
+              }, maxRecordingDuration);
+            }
           } catch (err) {
             console.warn('[SpeakerCapture] restart failed', err);
           }
