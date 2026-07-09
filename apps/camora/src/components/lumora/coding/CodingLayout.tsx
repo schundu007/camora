@@ -1115,7 +1115,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     autoUrlFetchDone.current = true;
     setInputMode('url');
     setProblemUrl(initialUrl);
-    handleFetchFromUrl(initialUrl, { auto: true });
+    // Only AUTO-fetch a single-problem page — never a landing/list page. Prefill the
+    // URL either way so the user can still fetch manually if they know it's a problem.
+    if (isProblemPageUrl(initialUrl)) handleFetchFromUrl(initialUrl, { auto: true });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl, token]);
 
