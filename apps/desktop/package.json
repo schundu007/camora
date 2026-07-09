@@ -29,6 +29,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "stealth-dom.js",
       "icon.icns",
       "node_modules/docx/**/*"
     ],

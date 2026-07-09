@@ -18,39 +18,78 @@ export const HistoryAnswerViewer = ({
   // { json: {...}, format: 'ascend_json' } payload from the coding backend
   // instead of a ParsedBlock[]. Convert on-the-fly so those sessions still
   // render instead of hitting "No answer saved".
+  // Expand a raw coding-answer JSON object (the ascend_json shape) into the
+  // ParsedBlock[] the coding renderer understands.
+  const expandCodingJson = (json: any): ParsedBlock[] => {
+    const out: any[] = [];
+    const sol = json.solutions?.[0] || json;
+    const lang = json.language || 'python';
+    if (sol.approach) out.push({ type: 'APPROACH', content: sol.approach });
+    if (sol.code) out.push({ type: 'CODE', content: sol.code, language: lang });
+    if (sol.complexity?.time || sol.complexity?.space) {
+      out.push({ type: 'COMPLEXITY', content: `TIME: ${sol.complexity.time || 'n/a'}\nSPACE: ${sol.complexity.space || 'n/a'}` });
+    }
+    if (sol.narration) out.push({ type: 'WALKTHROUGH', content: sol.narration });
+    if (Array.isArray(sol.trace) && sol.trace.length) {
+      out.push({ type: 'WALKTHROUGH', content: sol.trace.map((s: any) => `${s.step}. ${s.action} → ${s.state}`).join('\n') });
+    }
+    const edgeCases = Array.isArray(json.pitch?.edgeCases) ? json.pitch.edgeCases : [];
+    if (edgeCases.length) {
+      out.push({ type: 'EDGECASES', content: edgeCases.map((e: any) => `- ${typeof e === 'string' ? e : JSON.stringify(e)}`).join('\n') });
+    }
+    const examples = Array.isArray(json.examples) ? json.examples : [];
+    if (examples.length) {
+      out.push({ type: 'TESTCASES', content: examples.map((ex: any) => `Input: ${ex.input} -> Output: ${ex.expected}`).join('\n') });
+    }
+    return out;
+  };
+
+  // Older saves stored the model's raw coding JSON as a single text block, so
+  // it renders verbatim as a JSON blob in the viewer's fallback "Answer" card.
+  // Detect that string and expand it into real cards instead of dumping it.
+  const salvageCodingJsonString = (str: string): ParsedBlock[] | null => {
+    const t = str.trim();
+    if (!t.startsWith('{') || !/["']?(?:solutions|approach|code)["']?\s*:/.test(t)) return null;
+    try {
+      const j = JSON.parse(t);
+      const json = j.json || j;
+      if (json && typeof json === 'object') {
+        const expanded = expandCodingJson(json);
+        if (expanded.length) return expanded;
+      }
+    } catch { /* not valid JSON — fall through and keep the block as-is */ }
+    return null;
+  };
+
   const normaliseBlocks = (raw: any): ParsedBlock[] => {
-    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw)) {
+      // Keep structured blocks, but rescue any block that is really a
+      // serialized coding-JSON blob so it never dumps as raw text.
+      const out: ParsedBlock[] = [];
+      for (const b of raw) {
+        const salvaged = b && typeof b.content === 'string' ? salvageCodingJsonString(b.content) : null;
+        if (salvaged) out.push(...salvaged);
+        else if (b) out.push(b);
+      }
+      return out;
+    }
     if (raw && typeof raw === 'object') {
       const json = raw.json || (raw.solutions ? raw : null);
-      if (json && typeof json === 'object') {
-        const out: any[] = [];
-        const sol = json.solutions?.[0] || json;
-        const lang = json.language || 'python';
-        if (sol.approach) out.push({ type: 'APPROACH', content: sol.approach });
-        if (sol.code) out.push({ type: 'CODE', content: sol.code, language: lang });
-        if (sol.complexity?.time || sol.complexity?.space) {
-          out.push({ type: 'COMPLEXITY', content: `TIME: ${sol.complexity.time || 'n/a'}\nSPACE: ${sol.complexity.space || 'n/a'}` });
-        }
-        if (sol.narration) out.push({ type: 'WALKTHROUGH', content: sol.narration });
-        if (Array.isArray(sol.trace) && sol.trace.length) {
-          out.push({ type: 'WALKTHROUGH', content: sol.trace.map((s: any) => `${s.step}. ${s.action} → ${s.state}`).join('\n') });
-        }
-        const edgeCases = Array.isArray(json.pitch?.edgeCases) ? json.pitch.edgeCases : [];
-        if (edgeCases.length) {
-          out.push({ type: 'EDGECASES', content: edgeCases.map((e: any) => `- ${typeof e === 'string' ? e : JSON.stringify(e)}`).join('\n') });
-        }
-        const examples = Array.isArray(json.examples) ? json.examples : [];
-        if (examples.length) {
-          out.push({ type: 'TESTCASES', content: examples.map((ex: any) => `Input: ${ex.input} -> Output: ${ex.expected}`).join('\n') });
-        }
-        return out;
-      }
+      if (json && typeof json === 'object') return expandCodingJson(json);
+    }
+    if (typeof raw === 'string') {
+      const salvaged = salvageCodingJsonString(raw);
+      if (salvaged) return salvaged;
     }
     return [];
   };
   const blocks = normaliseBlocks(entry.blocks);
   const isDesign = blocks.some(b => (DESIGN_BLOCK_TYPES as readonly string[]).includes(b.type));
-  const isCoding = !isDesign && blocks.some(b => (CODING_BLOCK_TYPES as readonly string[]).includes(b.type));
+  // Coding detection includes CODE + EDGECASES beyond the strict CODING_BLOCK_TYPES
+  // so a coding answer is never misrouted into the behavioral renderer (which
+  // would dump each block's content verbatim as a plain "Answer" paragraph).
+  const CODING_ISH: readonly string[] = [...CODING_BLOCK_TYPES, 'CODE', 'EDGECASES'];
+  const isCoding = !isDesign && blocks.some(b => CODING_ISH.includes(b.type));
   const ts = entry.timestamp instanceof Date ? entry.timestamp : new Date(entry.timestamp);
 
   return (

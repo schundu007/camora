@@ -3,6 +3,12 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
+// setContentProtection() only hides our own NSWindow. Native tooltips, HTML5
+// drag ghosts and the pointer shape all live outside it and stay visible in a
+// screen share, so they're neutralized at the DOM level instead.
+const stealthDom = require('./stealth-dom');
+stealthDom.install();
+
 contextBridge.exposeInMainWorld('camo', {
   isDesktop: true,
   platform: process.platform,
@@ -64,8 +70,12 @@ contextBridge.exposeInMainWorld('camo', {
   // not the full screen.
   snapActiveBrowser: () => ipcRenderer.invoke('snap-active-browser'),
   // App-level stealth — setContentProtection(on) makes the Camora window
-  // invisible to screen recording and screen share.
-  setStealthMode: (on) => ipcRenderer.invoke('set-stealth-mode', on),
+  // invisible to screen recording and screen share. The cursor is composited by
+  // the OS on top of that, so mask its shape in lockstep with the window flag.
+  setStealthMode: (on) => {
+    stealthDom.setStealth(!!on);
+    return ipcRenderer.invoke('set-stealth-mode', on);
+  },
   // Chrome tracking neutralizer — injects JS into HackerRank to block mouse/focus detection.
   // Returns { ok, browser? } on success, { ok: false, needsDevMenu?, error } on failure.
   injectTrackingNeutralizer: () => ipcRenderer.invoke('inject-tracking-neutralizer'),

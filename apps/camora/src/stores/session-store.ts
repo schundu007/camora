@@ -389,8 +389,18 @@ export const useSessionStore = create<SessionState>()(
           timestamp,
           messageId,
           conversationId,
-          // Cap at 6 blocks × 2000 chars to stay under localStorage quota.
-          blocks: (blocks ?? []).slice(0, 6).map(b => ({
+          // Cap at 16 blocks × 2000 chars to stay under localStorage quota.
+          // 6 was too low: a coding answer pushes up to 8 blocks in the fixed
+          // order PROBLEM, APPROACH, CODE, COMPLEXITY, WALKTHROUGH×2, EDGECASES,
+          // TESTCASES — so slicing at 6 silently dropped exactly EDGE/TEST cases
+          // from every reopened session (design answers, ~15 blocks, lost even
+          // more). 16 covers every distinct block type with headroom; worst case
+          // 30 × 16 × 2000 ≈ 0.9 MB, well under the ~5 MB quota.
+          // Array.isArray guard: a legacy coding entry could hold the raw
+          // { json, format } wrapper here instead of a ParsedBlock[]; calling
+          // .slice on that object throws and aborts the ENTIRE persist write,
+          // so no session saves at all. Non-arrays degrade to [] rather than crash.
+          blocks: (Array.isArray(blocks) ? blocks : []).slice(0, 16).map(b => ({
             type: String(b?.type ?? ''),
             content: typeof b?.content === 'string' ? b.content.slice(0, 2000) : '',
             ...(b?.lang ? { lang: String(b.lang) } : {}),
