@@ -419,6 +419,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const clearHighlight = useCallback(() => {
     decoColRef.current?.clear();
   }, []);
+  // The approach card's inline explanations lack a `line` field. Resolve the editor
+  // line by matching the row's code text against the current editor content; fall
+  // back to 1-based row order when there's no exact match.
+  const lineForCode = useCallback((exCode: string, fallbackIdx: number): number => {
+    const target = (exCode || '').trim();
+    if (!target) return fallbackIdx + 1;
+    const idx = code.split('\n').findIndex(l => l.trim() === target);
+    return idx >= 0 ? idx + 1 : fallbackIdx + 1;
+  }, [code]);
   // Stale-decoration guard: a highlight from solution A must not linger after
   // switching solutions or regenerating.
   useEffect(() => { clearHighlight(); }, [activeSolutionIdx, jsonSolution, clearHighlight]);
@@ -2952,7 +2961,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                             {activeSol.explanations?.length > 0 && (
                               <div className="space-y-2 pt-1" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
                                 {activeSol.explanations.map((ex: any, j: number) => (
-                                  <div key={j} className="flex flex-col gap-0.5 text-[10px] md:text-[11px]">
+                                  <div
+                                    key={j}
+                                    className="flex flex-col gap-0.5 text-[10px] md:text-[11px] rounded cursor-pointer"
+                                    onMouseEnter={() => highlightLine(lineForCode(ex.code, j))}
+                                    onMouseLeave={clearHighlight}
+                                    onClick={() => highlightLine(lineForCode(ex.code, j))}
+                                  >
                                     {ex.code && <code className="font-mono px-1.5 py-1 rounded block overflow-x-auto whitespace-pre max-w-full" style={{ color: t.codeText, background: t.codeBg }}>{ex.code}</code>}
                                     {ex.explanation && <span className="leading-relaxed pl-0.5" style={{ color: t.textMuted }}>{ex.explanation}</span>}
                                   </div>
