@@ -533,8 +533,12 @@ export const LumoraShellPage = () => {
 
         {/* Tab content — display toggling preserves state */}
         <div className="flex-1 min-h-0 overflow-hidden relative">
-          {/* Session tab */}
-          <div style={{ display: activeTab === 'session' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
+          {/* Session tab. Yield (display:none) while the history viewer is open
+              so the home dashboard isn't stacked beneath it. In overlay mode the
+              viewer's background is stripped see-through (globals.css:1794), so it
+              can't occlude the dashboard via opacity alone — the dashboard must
+              actually unmount from view, matching how tabs hide each other. */}
+          <div style={{ display: activeTab === 'session' && focusedEntry === null ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
             <ErrorBoundary>
               <SessionPanel
                 onAskQuestion={(q) => navigate(q ? `/lumora/behavioral?q=${encodeURIComponent(q)}` : '/lumora/behavioral')}

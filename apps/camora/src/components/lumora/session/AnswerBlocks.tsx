@@ -34,7 +34,7 @@ export const AnswerBlocks = ({ blocks, isDesign, isCoding, question }: AnswerBlo
   }
 
   if (isCoding) {
-    return <CodingView blocks={blocks} />;
+    return <CodingView blocks={blocks} question={question} />;
   }
 
   return <BehavioralView blocks={blocks} />;
@@ -220,7 +220,7 @@ const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
   }
 }
 
-const CodingView = ({ blocks }: { blocks: ParsedBlock[] }) => {
+const CodingView = ({ blocks, question }: { blocks: ParsedBlock[]; question?: string }) => {
   const codeRef = useRef<HTMLElement>(null);
   const byType: Record<string, ParsedBlock> = {};
   blocks.forEach(b => { byType[b.type] = b; });
@@ -238,18 +238,18 @@ const CodingView = ({ blocks }: { blocks: ParsedBlock[] }) => {
       {/* Problem & Approach Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <GridCard title="PROBLEM" titleColor="text-[var(--accent)]">
-          {byType.PROBLEM ? (
+          {byType.PROBLEM || question ? (
             <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
-              {cleanText(byType.PROBLEM.content)}
+              {cleanText(byType.PROBLEM ? byType.PROBLEM.content : question!)}
             </p>
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
         <GridCard title="APPROACH" titleColor="text-[var(--text-secondary)]">
           {byType.APPROACH ? (
             <p className="text-[13px] text-[var(--text-muted)] leading-relaxed">
               {cleanText(byType.APPROACH.content)}
             </p>
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
       </div>
 
@@ -281,7 +281,7 @@ const CodingView = ({ blocks }: { blocks: ParsedBlock[] }) => {
               {byType.CODE.content}
             </code>
           </pre>
-        ) : <div className="p-4"><Shimmer /></div>}
+        ) : <div className="p-4"><EmptyBlock /></div>}
       </div>
 
       {/* Complexity & Walkthrough Row */}
@@ -289,12 +289,12 @@ const CodingView = ({ blocks }: { blocks: ParsedBlock[] }) => {
         <GridCard title="COMPLEXITY" titleColor="text-[var(--accent)]" className="border-[var(--accent)]/15 bg-[var(--accent)]/[0.02]">
           {byType.COMPLEXITY ? (
             <ComplexityList content={byType.COMPLEXITY.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
         <GridCard title="WALKTHROUGH" titleColor="text-[var(--text-secondary)]">
           {byType.WALKTHROUGH ? (
             <WalkthroughList content={byType.WALKTHROUGH.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
       </div>
 
@@ -303,12 +303,12 @@ const CodingView = ({ blocks }: { blocks: ParsedBlock[] }) => {
         <GridCard title="EDGE CASES" titleColor="text-[var(--warning-text)]" className="border-[var(--warning)]/15 bg-[var(--warning)]/[0.02]">
           {byType.EDGECASES ? (
             <EdgeCasesList content={byType.EDGECASES.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
         <GridCard title="TEST CASES" titleColor="text-[var(--accent)]" className="border-[var(--accent)]/15 bg-[var(--accent)]/[0.02]">
           {byType.TESTCASES ? (
             <TestCasesList content={byType.TESTCASES.content} />
-          ) : <Shimmer />}
+          ) : <EmptyBlock />}
         </GridCard>
       </div>
 

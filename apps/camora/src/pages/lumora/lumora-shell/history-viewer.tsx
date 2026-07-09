@@ -35,6 +35,14 @@ export const HistoryAnswerViewer = ({
         if (Array.isArray(sol.trace) && sol.trace.length) {
           out.push({ type: 'WALKTHROUGH', content: sol.trace.map((s: any) => `${s.step}. ${s.action} → ${s.state}`).join('\n') });
         }
+        const edgeCases = Array.isArray(json.pitch?.edgeCases) ? json.pitch.edgeCases : [];
+        if (edgeCases.length) {
+          out.push({ type: 'EDGECASES', content: edgeCases.map((e: any) => `- ${typeof e === 'string' ? e : JSON.stringify(e)}`).join('\n') });
+        }
+        const examples = Array.isArray(json.examples) ? json.examples : [];
+        if (examples.length) {
+          out.push({ type: 'TESTCASES', content: examples.map((ex: any) => `Input: ${ex.input} -> Output: ${ex.expected}`).join('\n') });
+        }
         return out;
       }
     }

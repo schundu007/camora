@@ -225,6 +225,11 @@ export function useStreamingSession() {
           if (codingJson && typeof codingJson === 'object') {
             const sol = codingJson.solutions?.[0] || codingJson;
             const lang = codingJson.language || language;
+            // The coding JSON has no problem-restatement field — the problem
+            // statement lives only in the submitted text. Store it as PROBLEM so
+            // the history viewer's PROBLEM card shows content instead of an
+            // empty state.
+            if (trimmedProblem) historyBlocks.push({ type: 'PROBLEM', content: trimmedProblem });
             if (sol.approach) historyBlocks.push({ type: 'APPROACH', content: sol.approach });
             if (sol.code) historyBlocks.push({ type: 'CODE', content: sol.code, language: lang });
             if (sol.complexity?.time || sol.complexity?.space) {
@@ -233,6 +238,17 @@ export function useStreamingSession() {
             if (sol.narration) historyBlocks.push({ type: 'WALKTHROUGH', content: sol.narration });
             if (Array.isArray(sol.trace) && sol.trace.length) {
               historyBlocks.push({ type: 'WALKTHROUGH', content: sol.trace.map((s: any) => `${s.step}. ${s.action} → ${s.state}`).join('\n') });
+            }
+            // Edge cases live on the top-level pitch object; test cases on
+            // examples[]. Both were previously dropped, leaving the history
+            // viewer's EDGE CASES / TEST CASES cards permanently empty.
+            const edgeCases = Array.isArray(codingJson.pitch?.edgeCases) ? codingJson.pitch.edgeCases : [];
+            if (edgeCases.length) {
+              historyBlocks.push({ type: 'EDGECASES', content: edgeCases.map((e: any) => `- ${typeof e === 'string' ? e : JSON.stringify(e)}`).join('\n') });
+            }
+            const examples = Array.isArray(codingJson.examples) ? codingJson.examples : [];
+            if (examples.length) {
+              historyBlocks.push({ type: 'TESTCASES', content: examples.map((ex: any) => `Input: ${ex.input} -> Output: ${ex.expected}`).join('\n') });
             }
           }
           addHistoryEntry({
