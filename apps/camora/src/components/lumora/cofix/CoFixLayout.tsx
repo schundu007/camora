@@ -181,6 +181,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
   const decorationCollectionRef = useRef<any>(null);
+  // Auto-height for the read-only fixed-code editor: track its content height so
+  // it grows downward with the fixed code's line count (its wrapper scrolls).
+  const [fixedEditorH, setFixedEditorH] = useState(160);
 
   // Clear every solution-derived output so a freshly injected problem never
   // shows the previous fix. Mirrors the reset block in handleFix but does NOT
@@ -1039,13 +1042,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             </div>
           )}
 
-          <div className="flex-1 min-h-0" style={{ background: 'var(--bg-surface)' }}>
+          {/* Scrolls the pane; the editor auto-heights so it grows downward with the code's line count. */}
+          <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: 'var(--bg-surface)' }}>
             <SharedCodeEditor
               code={inputCode}
               onChange={setInputCode}
               language={toMonacoLang(effectiveLang)}
               readOnly={false}
-              height="100%"
+              autoHeight
+              minHeight={160}
               showLineNumbers
               fontSize={11}
               onMount={handleLeftEditorMount}
@@ -1165,7 +1170,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
           <div className="flex flex-1 min-h-0">
             {/* Monaco editor — read-only with line decorations */}
-            <div className="flex-1 min-w-0 relative">
+            <div className="flex-1 min-w-0 relative overflow-y-auto">
               {/* Streaming log popup */}
               {showLogPopup && (
                 <div className="absolute top-3 right-3 z-20 w-72 flex flex-col rounded-lg overflow-hidden shadow-2xl"
@@ -1271,6 +1276,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 value={fixedCode}
                 language={toMonacoLang(effectiveLang)}
                 theme={monacoTheme}
+                height={`${fixedEditorH}px`}
                 options={{
                   readOnly: true,
                   minimap: { enabled: false },
@@ -1285,8 +1291,19 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   folding: false,
                   wordWrap: 'on',
                   automaticLayout: true,
+                  // Editor height tracks content (see fixedEditorH); hide the
+                  // vertical scrollbar and let the wrapper scroll instead.
+                  scrollbar: { vertical: 'hidden', alwaysConsumeMouseWheel: false },
                 }}
-                onMount={editor => { rightEditorRef.current = editor; }}
+                onMount={editor => {
+                  rightEditorRef.current = editor;
+                  const sync = () => setFixedEditorH((prev) => {
+                    const h = Math.max(160, Math.ceil(editor.getContentHeight()));
+                    return prev === h ? prev : h;
+                  });
+                  editor.onDidContentSizeChange(sync);
+                  sync();
+                }}
               />
             </div>
 
