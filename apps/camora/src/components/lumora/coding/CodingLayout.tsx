@@ -14,6 +14,7 @@ import { CustomInputPanel } from '@/components/shared/CustomInputPanel';
 import { codingChecks } from '@/components/lumora/shared/readiness';
 import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
 import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
+import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 import { isProblemPageUrl } from '@/lib/problemPageUrl';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -3210,13 +3211,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           {/* Editor Header */}
           <div className="flex items-center justify-between px-2 py-1 lumora-winctl-safe" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-1.5">
-              <select id="language-select" name="language" value={language} onChange={(e) => handleLanguageChange(e.target.value)}
+              <ChipSelect
+                label="Lang"
+                value={language}
                 disabled={isTranslating}
-                className="rounded px-1.5 py-0.5 text-[11px] font-mono focus:outline-none cursor-pointer disabled:opacity-60"
-                style={{ background: language === 'auto' ? 'var(--cam-primary)' : t.inputBg, border: `1px solid ${language === 'auto' ? 'var(--cam-primary)' : t.inputBorder}`, color: language === 'auto' ? '#fff' : t.inputText }}>
-                <option value="auto">Auto-detect</option>
-                {LANGUAGES.map(l => <option key={l.id} value={l.id}>{l.label}</option>)}
-              </select>
+                options={[{ value: 'auto', label: 'Auto-detect' }, ...LANGUAGES.map(l => ({ value: l.id, label: l.label }))]}
+                onChange={handleLanguageChange}
+              />
               {isTranslating && (
                 <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: 'var(--cam-primary)' }}>
                   <div className="w-3 h-3 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--cam-primary)] rounded-full animate-spin" />

@@ -19,6 +19,7 @@ import { ScaleCalculator } from './scale-calculator';
 import { SectionCopyBtn } from './section-helpers';
 import Chip from '@/components/shared/ui/Chip';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
+import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 const CAPRA_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -1200,18 +1201,18 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               </div>
             )}
             <div className="flex items-center gap-2">
-              <select
+              <ChipSelect
+                label="Cloud"
                 value={cloudProvider}
-                onChange={(e) => setCloudProvider(e.target.value as 'auto' | 'aws' | 'azure' | 'gcp')}
-                className="shrink-0 text-xs font-mono rounded-lg px-2 py-2.5"
-                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText }}
+                options={[
+                  { value: 'auto', label: 'Auto' },
+                  { value: 'aws', label: 'AWS' },
+                  { value: 'azure', label: 'Azure' },
+                  { value: 'gcp', label: 'GCP' },
+                ]}
+                onChange={(v) => setCloudProvider(v as 'auto' | 'aws' | 'azure' | 'gcp')}
                 title="Cloud provider for design + diagram"
-              >
-                <option value="auto">Auto</option>
-                <option value="aws">AWS</option>
-                <option value="azure">Azure</option>
-                <option value="gcp">GCP</option>
-              </select>
+              />
               <button
                 onClick={() => handleSubmit()}
                 disabled={!problemText.trim() || isLoading}
