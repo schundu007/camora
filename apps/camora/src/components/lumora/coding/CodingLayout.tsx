@@ -390,10 +390,26 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // ── Line-binding: Code Walkthrough row → Monaco editor line (row → editor only) ──
   const editorRef = useRef<any>(null);
   const decoColRef = useRef<any>(null); // Monaco decorations collection
+  // The editor auto-heights, so it has no internal scroll — its scrolling
+  // ancestor (the right column) must scroll to bring a line into view.
+  const editorColRef = useRef<HTMLDivElement>(null);
   const highlightLine = useCallback((line: number) => {
     const ed = editorRef.current;
     if (!ed || !line || line < 1) return;
-    ed.revealLineInCenter(line);
+    // Scroll the editor's column so the target line is centered. getTopForLineNumber
+    // gives the line's y within the (fully-expanded) editor content; translate that
+    // to the scroll container via bounding rects.
+    const col = editorColRef.current;
+    if (col) {
+      try {
+        const node = ed.getDomNode();
+        if (node) {
+          const top = ed.getTopForLineNumber(line);
+          const delta = (node.getBoundingClientRect().top + top) - (col.getBoundingClientRect().top + col.clientHeight / 2);
+          col.scrollTo({ top: col.scrollTop + delta, behavior: 'smooth' });
+        }
+      } catch { /* ignore */ }
+    }
     if (!decoColRef.current) decoColRef.current = ed.createDecorationsCollection([]);
     decoColRef.current.set([{
       range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
@@ -3206,10 +3222,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
         </div>
 
-        {/* ── RIGHT PANEL: Code Editor + Output ── */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-0" style={{ background: t.surfaceBg, color: t.text }}>
-          {/* Editor Header */}
-          <div className="flex items-center justify-between px-2 py-1 lumora-winctl-safe" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+        {/* ── RIGHT PANEL: Code Editor + Output ──
+            Scrolls as a whole: the editor auto-heights to the code (grows
+            downward with the line count) and the output panel flows beneath it,
+            so both are reached by scrolling this column when the code is long. */}
+        <div ref={editorColRef} className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto" style={{ background: t.surfaceBg, color: t.text }}>
+          {/* Editor Header — sticky so Run / language / reset stay reachable while the column scrolls */}
+          <div className="flex items-center justify-between px-2 py-1 lumora-winctl-safe sticky top-0 z-10" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-1.5">
               <ChipSelect
                 label="Lang"
@@ -3268,28 +3287,27 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             </div>
           </div>
 
-          {/* ── Code Editor — uses ref-based height instead of 100% for reliable Monaco rendering ── */}
-          <EditorContainer embedded={!!embedded}>
-            {(height) => (
-              <SharedCodeEditor
-                height={`${height}px`}
-                language={getLanguageById(language)?.monaco || 'python'}
-                code={code}
-                onChange={setCode}
-                theme="vs-dark"
-                fontSize={11}
-                onMount={(editor) => {
-                  editorRef.current = editor;
-                  editor.updateOptions({
-                    fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
-                    fontLigatures: true,
-                    letterSpacing: -0.3,
-                    lineHeight: 19,
-                  });
-                }}
-              />
-            )}
-          </EditorContainer>
+          {/* ── Code Editor — auto-heights to the code so it grows downward with
+              the line count (no fixed box, no wasted empty space). The column
+              above scrolls when the code exceeds the viewport. ── */}
+          <SharedCodeEditor
+            autoHeight
+            minHeight={160}
+            language={getLanguageById(language)?.monaco || 'python'}
+            code={code}
+            onChange={setCode}
+            theme="vs-dark"
+            fontSize={11}
+            onMount={(editor) => {
+              editorRef.current = editor;
+              editor.updateOptions({
+                fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                fontLigatures: true,
+                letterSpacing: -0.3,
+                lineHeight: 19,
+              });
+            }}
+          />
 
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
@@ -3479,31 +3497,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         </div>
       </div>
 
-    </div>
-  );
-}
-
-// ── Editor Container — measures its own height via ResizeObserver for Monaco ──
-function EditorContainer({ children, embedded: _embedded }: { children: (height: number) => React.ReactNode; embedded: boolean }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(300);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const h = Math.floor(entry.contentRect.height);
-        if (h > 50) setHeight(h);
-      }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  return (
-    <div ref={ref} className="flex-1 min-h-0 overflow-hidden" style={{ minHeight: 120 }}>
-      {children(height)}
     </div>
   );
 }
