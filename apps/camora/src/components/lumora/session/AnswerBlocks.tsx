@@ -402,6 +402,24 @@ const TestCasesList = ({ content }: { content: string }) => {
   );
 }
 
+// Generic line-based renderer for the design blocks that have no bespoke
+// formatter (API design, data model, technologies, cloud services). Each line
+// is one bullet; keeps the parser's recognized content from being dropped.
+const SimpleLinesList = ({ content, mono = false }: { content: string; mono?: boolean }) => {
+  const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '').trim()).filter(Boolean);
+  if (lines.length === 0) return <EmptyBlock />;
+  return (
+    <ul className="space-y-1.5">
+      {lines.map((l, i) => (
+        <li key={i} className={`flex items-start gap-2 leading-relaxed text-[var(--text-muted)] ${mono ? 'font-mono text-[12px]' : 'text-[13px]'}`}>
+          <span className="inline-block w-1 h-1 rounded-full bg-[var(--accent)] shrink-0 mt-2" />
+          <span>{l}</span>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
 const SystemDesignView = ({ blocks, question }: { blocks: ParsedBlock[]; question?: string }) => {
   const byType: Record<string, ParsedBlock> = {};
   blocks.forEach(b => { byType[b.type] = b; });
@@ -467,6 +485,28 @@ const SystemDesignView = ({ blocks, question }: { blocks: ParsedBlock[]; questio
           {byType.DEEPDESIGN && (
             <GridCard title="LAYER DESIGN" titleColor="text-[var(--text-secondary)]" compact>
               <DeepDesignList content={byType.DEEPDESIGN.content} />
+            </GridCard>
+          )}
+          {/* API Design / Data Model / Technologies / Cloud Services —
+              recognized by the parser but previously never rendered. */}
+          {byType.APIDESIGN && (
+            <GridCard title="API DESIGN" titleColor="text-[var(--accent)]" compact>
+              <SimpleLinesList content={byType.APIDESIGN.content} mono />
+            </GridCard>
+          )}
+          {byType.DATAMODEL && (
+            <GridCard title="DATA MODEL" titleColor="text-[var(--accent)]" compact>
+              <SimpleLinesList content={byType.DATAMODEL.content} />
+            </GridCard>
+          )}
+          {byType.TECHNOLOGIES && (
+            <GridCard title="TECHNOLOGIES" titleColor="text-[var(--text-secondary)]" compact>
+              <SimpleLinesList content={byType.TECHNOLOGIES.content} />
+            </GridCard>
+          )}
+          {byType.CLOUDSERVICES && (
+            <GridCard title="CLOUD SERVICES" titleColor="text-[var(--accent)]" compact>
+              <SimpleLinesList content={byType.CLOUDSERVICES.content} />
             </GridCard>
           )}
           {/* Follow-up Q&A */}
@@ -600,16 +640,24 @@ const EmptyBlock = () => {
 }
 
 const RequirementsList = ({ content, type }: { content: string; type: 'functional' | 'nonfunctional' }) => {
-  const lines = content.split('\n').map(l => cleanText(l).replace(/^[-*]\s*/, '')).filter(Boolean);
   const items: string[] = [];
   let mode: string | null = null;
 
-  lines.forEach(l => {
-    if (/^FUNCTIONAL/i.test(l)) { mode = 'f'; return; }
-    if (/^NON.?FUNCTIONAL/i.test(l)) { mode = 'n'; return; }
+  // Detect the section header on the RAW line (NON-FUNCTIONAL first so it isn't
+  // captured by the FUNCTIONAL branch). Unlabeled lines default to functional,
+  // matching parsers.tsx, so a flat bullet list never renders as two empty cards.
+  content.split('\n').forEach(raw => {
+    const t = raw.trim();
+    if (/^\[?\/?NON.?FUNCTIONAL\b/i.test(t)) { mode = 'n'; return; }
+    if (/^\[?\/?FUNCTIONAL\b/i.test(t)) { mode = 'f'; return; }
+    const l = cleanText(raw).replace(/^[-*]\s*/, '').trim();
+    if (!l) return;
+    if (mode === null) mode = 'f';
     if (mode === 'f' && type === 'functional') items.push(l);
     if (mode === 'n' && type === 'nonfunctional') items.push(l);
   });
+
+  if (items.length === 0) return <EmptyBlock />;
 
   return (
     <ul className="space-y-2">
@@ -1083,18 +1131,27 @@ const parseFollowups = (content: string): { question: string; answer: string }[]
   const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
   const pairs: { question: string; answer: string }[] = [];
   let currentQ: string | null = null;
+  let currentA: string[] = [];
+
+  // Mirror StreamingFollowupList: accumulate continuation lines into the answer
+  // once an A-line has started, so multi-line answers aren't truncated to their
+  // first line after streaming settles / when reopened from history.
+  const flush = () => {
+    if (currentQ && currentA.length > 0) pairs.push({ question: currentQ, answer: currentA.join(' ') });
+  };
 
   for (const line of lines) {
     if (/^Q\d*:/i.test(line)) {
+      flush();
       currentQ = line.replace(/^Q\d*:\s*/i, '');
-    } else if (/^A\d*:/i.test(line) && currentQ) {
-      pairs.push({
-        question: currentQ,
-        answer: line.replace(/^A\d*:\s*/i, ''),
-      });
-      currentQ = null;
+      currentA = [];
+    } else if (/^A\d*:/i.test(line)) {
+      currentA.push(line.replace(/^A\d*:\s*/i, ''));
+    } else if (currentQ && currentA.length > 0) {
+      currentA.push(line);
     }
   }
+  flush();
 
   return pairs;
 }

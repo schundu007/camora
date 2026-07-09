@@ -109,19 +109,27 @@ export function useStreamingSession() {
         token,
         signal: controller.signal,
         bypassCache: bypassCache || undefined,
+        // stale() drops any callback from a stream that has since been
+        // superseded/cancelled — abortControllerRef points at the newest
+        // controller, so an old stream's late onComplete can't flip
+        // isStreaming=false for the answer that replaced it.
         onStreamStart: (data: any) => {
+          if (abortControllerRef.current !== controller) return;
           setIsDesignQuestion(data.isDesign ?? data.is_design ?? false);
           setIsCodingQuestion(data.isCoding ?? data.is_coding ?? false);
           const convId = data.conversationId ?? data.conversation_id;
           if (convId) setConversationId(convId);
         },
         onCitations: (citations) => {
+          if (abortControllerRef.current !== controller) return;
           setActiveCitations(citations);
         },
         onToken: (data) => {
+          if (abortControllerRef.current !== controller) return;
           if (data.t) appendStreamChunk(data.t);
         },
         onAnswer: (data: any) => {
+          if (abortControllerRef.current !== controller) return;
           setIsDesignQuestion(data.isDesign ?? data.is_design ?? false);
           setIsCodingQuestion(data.isCoding ?? data.is_coding ?? false);
           setParsedBlocks(data.parsed || []);
@@ -138,15 +146,18 @@ export function useStreamingSession() {
           setStatus('ready', data.fromCache ? 'Loaded from cache' : 'Ready');
         },
         onStatus: (data) => {
+          if (abortControllerRef.current !== controller) return;
           if (data.state && data.msg) setStatus(data.state, data.msg);
         },
         onError: (data) => {
+          if (abortControllerRef.current !== controller) return;
           const errorMsg = data.msg || 'An error occurred';
           setError(errorMsg);
           setStatus('error', errorMsg);
           stopAnswerTimer();
         },
         onComplete: () => {
+          if (abortControllerRef.current !== controller) return;
           setIsStreaming(false);
         },
       });
@@ -158,10 +169,10 @@ export function useStreamingSession() {
       setIsStreaming(false);
       stopAnswerTimer();
     }
-  }, [token, useSearch, responseFormat, preferredModel, resetForNewQuestion, setQuestion, setIsStreaming,
-      setStatus, startAnswerTimer, setIsDesignQuestion, setIsCodingQuestion,
+  }, [token, useSearch, responseFormat, preferredModel, conversationId, resetForNewQuestion, setQuestion, setIsStreaming,
+      setStatus, startAnswerTimer, setIsDesignQuestion, setIsCodingQuestion, setLastFromCache,
       setConversationId, appendStreamChunk, setParsedBlocks, addHistoryEntry,
-      stopAnswerTimer, setError, setActiveCitations]);
+      stopAnswerTimer, setError, setActiveCitations, getSystemContext]);
 
   const handleCodingSubmit = useCallback(async (problem: string, language: string, options?: { bypassCache?: boolean; starterCode?: string }) => {
     const validation = validateInput(problem);
@@ -203,15 +214,18 @@ export function useStreamingSession() {
         starterCode: options?.starterCode,
         signal: controller.signal,
         onStreamStart: (data: any) => {
+          if (abortControllerRef.current !== controller) return;
           setIsCodingQuestion(true);
           setIsDesignQuestion(false);
           const convId = data.conversationId ?? data.conversation_id;
           if (convId) setConversationId(convId);
         },
         onToken: (data) => {
+          if (abortControllerRef.current !== controller) return;
           if (data.t) appendStreamChunk(data.t);
         },
         onAnswer: (data: any) => {
+          if (abortControllerRef.current !== controller) return;
           setIsCodingQuestion(true);
           setIsDesignQuestion(false);
           setParsedBlocks(data.parsed || []);
@@ -231,7 +245,7 @@ export function useStreamingSession() {
             // empty state.
             if (trimmedProblem) historyBlocks.push({ type: 'PROBLEM', content: trimmedProblem });
             if (sol.approach) historyBlocks.push({ type: 'APPROACH', content: sol.approach });
-            if (sol.code) historyBlocks.push({ type: 'CODE', content: sol.code, language: lang });
+            if (sol.code) historyBlocks.push({ type: 'CODE', content: sol.code, lang });
             if (sol.complexity?.time || sol.complexity?.space) {
               historyBlocks.push({ type: 'COMPLEXITY', content: `TIME: ${sol.complexity.time || 'n/a'}\nSPACE: ${sol.complexity.space || 'n/a'}` });
             }
@@ -260,9 +274,11 @@ export function useStreamingSession() {
           setStatus('ready', data.fromCache ? 'Solution loaded from cache' : 'Solution ready');
         },
         onStatus: (data) => {
+          if (abortControllerRef.current !== controller) return;
           if (data.state && data.msg) setStatus(data.state, data.msg);
         },
         onError: (data) => {
+          if (abortControllerRef.current !== controller) return;
           const errorMsg = data.msg || 'Failed to generate solution';
           setError(errorMsg);
           setStatus('error', errorMsg);
@@ -273,6 +289,7 @@ export function useStreamingSession() {
           setIsStreaming(false);
         },
         onComplete: () => {
+          if (abortControllerRef.current !== controller) return;
           setIsStreaming(false);
         },
       });
