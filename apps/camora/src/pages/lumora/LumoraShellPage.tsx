@@ -193,6 +193,12 @@ export const LumoraShellPage = () => {
     }
   }, [activeTab, location.search, location.pathname]);
 
+  // Leaving the session tab clears any open past-answer viewer, so returning
+  // to Home shows the dashboard instead of re-overlaying a stale saved answer.
+  useEffect(() => {
+    if (activeTab !== 'session') setFocusedEntry(null);
+  }, [activeTab]);
+
   // Trigger Monaco editor resize when switching to coding/design tab
   useEffect(() => {
     if (activeTab === 'coding' || activeTab === 'design' || activeTab === 'cofix') {
