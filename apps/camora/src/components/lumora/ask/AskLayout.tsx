@@ -202,6 +202,9 @@ export const AskLayout = () => {
   const inputRef  = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const dictationBaseRef = useRef(''); // input text captured when dictation starts
+  // Aborts the in-flight Ask stream so a stale answer can't land in a fresh /
+  // switched / deleted conversation.
+  const askAbortRef = useRef<AbortController | null>(null);
   const hasMessages = messages.length > 0;
 
   const MAX_PENDING = 4;
@@ -246,6 +249,8 @@ export const AskLayout = () => {
   }, []);
 
   const loadConversation = useCallback(async (id: string) => {
+    askAbortRef.current?.abort();
+    setStreaming(false); setStreamText('');
     try {
       const r = await fetch(`${API_URL}/api/v1/ask/history/${id}`, { credentials: 'include' });
       const d = await r.json();
@@ -261,11 +266,13 @@ export const AskLayout = () => {
     try {
       await fetch(`${API_URL}/api/v1/ask/history/${id}`, { method: 'DELETE', credentials: 'include' });
       setHistory(prev => prev.filter(c => c.id !== id));
-      if (convId === id) { setMessages([]); setConvId(null); }
+      if (convId === id) { askAbortRef.current?.abort(); setStreaming(false); setStreamText(''); setMessages([]); setConvId(null); }
     } catch {}
   }, [convId]);
 
   const clearAllHistory = useCallback(async () => {
+    askAbortRef.current?.abort();
+    setStreaming(false); setStreamText('');
     try {
       await fetch(`${API_URL}/api/v1/ask/history`, { method: 'DELETE', credentials: 'include' });
       setHistory([]);
@@ -285,6 +292,11 @@ export const AskLayout = () => {
     setStreaming(true);
     setStreamText('');
 
+    // Supersede any prior in-flight stream and track this one.
+    askAbortRef.current?.abort();
+    const controller = new AbortController();
+    askAbortRef.current = controller;
+
     try {
       const body = JSON.stringify({
         message: msg,
@@ -298,6 +310,7 @@ export const AskLayout = () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body,
+        signal: controller.signal,
       });
       if (!resp.ok || !resp.body) throw new Error('stream failed');
 
@@ -325,6 +338,9 @@ export const AskLayout = () => {
         }
       }
 
+      // Superseded mid-flight → don't append into the conversation that replaced it.
+      if (askAbortRef.current !== controller) return;
+
       if (full) {
         setMessages(prev => [...prev, { role: 'assistant', content: full }]);
         if (!full.startsWith('Error:')) {
@@ -334,16 +350,25 @@ export const AskLayout = () => {
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: 'No response received. Please try again.' }]);
       }
-    } catch {
+    } catch (err: any) {
+      // Aborted by a supersede (New/switch/load/delete) — stay silent.
+      if (err?.name === 'AbortError' || askAbortRef.current !== controller) return;
       setMessages(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }]);
     } finally {
-      setStreaming(false);
-      setStreamText('');
-      inputRef.current?.focus();
+      // Only the current stream owns the UI state; a superseded one must not
+      // flip streaming off for the answer that replaced it.
+      if (askAbortRef.current === controller) {
+        askAbortRef.current = null;
+        setStreaming(false);
+        setStreamText('');
+        inputRef.current?.focus();
+      }
     }
   }, [input, pending, messages, streaming, provider, convId]);
 
   const startNew = () => {
+    askAbortRef.current?.abort();
+    setStreaming(false);
     setMessages([]);
     setConvId(null);
     setStreamText('');
@@ -540,6 +565,8 @@ export const AskLayout = () => {
                 key={p}
                 onClick={() => {
                   if (p === provider) return;
+                  askAbortRef.current?.abort();
+                  setStreaming(false);
                   setProvider(p);
                   setMessages([]);
                   setConvId(null);

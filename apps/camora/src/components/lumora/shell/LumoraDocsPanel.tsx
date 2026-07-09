@@ -1072,9 +1072,10 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                 {(q.situation || q.task || q.action || q.result) && (() => {
                   qRendered.add('situation'); qRendered.add('task'); qRendered.add('action'); qRendered.add('result');
                   const stars = [
-    { key: 'situation', label: 'Situation', accent: '#2B6394' },
-
-    { key: 'result',    label: 'Result',    accent: '#1E4D78' },
+                    { key: 'situation', label: 'Situation', accent: '#2B6394' },
+                    { key: 'task',      label: 'Task',      accent: '#265C93' },
+                    { key: 'action',    label: 'Action',    accent: '#22558A' },
+                    { key: 'result',    label: 'Result',    accent: '#1E4D78' },
                   ];
                   return (
                     <div>

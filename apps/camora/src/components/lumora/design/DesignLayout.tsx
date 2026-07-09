@@ -364,8 +364,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
         setSnapChipCode(text); // power quick-action chips after snap
         setInputTab('text');
         setErrorMsg(null);
-        // Auto-generate the design solution — image in, answer out.
-        if (text) handleSubmit(text);
+        // Auto-generate via the stable ref so this [token]-memoized callback
+        // doesn't fire a frozen handleSubmit (stale isLoading/cloud/detail).
+        if (text) handleSubmitRef.current(text);
       } else {
         setErrorMsg('Could not extract text from this image. Try a clearer screenshot.');
       }
@@ -591,7 +592,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       setIsLoading(false);
       setErrorMsg(err?.message || 'Network error. Please check your connection and try again.');
     }
-  }, [problemText, token, isLoading, setStatus]);
+    // cloudProvider + detailLevel are read from closure above, so they MUST be
+    // deps — otherwise changing the Cloud chip / Basic-Full toggle after the
+    // last keystroke leaves the memoized handleSubmit generating with the old
+    // provider/detail (and handleSubmitRef, refreshed via the line-618 effect,
+    // would stay stale too).
+  }, [problemText, token, isLoading, setStatus, cloudProvider, detailLevel]);
 
   // Set problemText from initialProblem
   useEffect(() => {
