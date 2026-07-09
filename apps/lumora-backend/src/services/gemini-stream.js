@@ -209,6 +209,15 @@ ${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}`;
           }
         }
         if (signal?.aborted) return;
+        // Record Gemini's token usage — without this the fallback logged 0/0 to
+        // lumora_usage_logs and AI-hours metering for a real, billed generation.
+        try {
+          const aggregated = await result.response;
+          if (aggregated?.usageMetadata) {
+            inputTokens = aggregated.usageMetadata.promptTokenCount || 0;
+            outputTokens = aggregated.usageMetadata.candidatesTokenCount || 0;
+          }
+        } catch { /* usage metadata is best-effort */ }
       } catch (gerr) {
         if (signal?.aborted) return;
         console.error('Gemini fallback stream error:', gerr);
