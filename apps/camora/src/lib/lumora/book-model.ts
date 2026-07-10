@@ -92,11 +92,17 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   const pitchObj = pitch && typeof pitch === 'object' ? pitch : null;
   const pitchStr = typeof pitch === 'string' ? txt(pitch) : '';
 
-  // Solution — narration is the spoken script and reads best; fall back to approach.
+  // Solution — narration is the spoken script and reads best; sol.approach is the
+  // terse written approach (schema-distinct from narration, shown alongside it when
+  // they differ); pitch.opener/approach are the object-pitch summary paragraphs.
   const keyPoints = strList(pitchObj?.keyPoints);
+  const narration = txt(sol?.narration);
+  const solApproach = txt(sol?.approach);
   push(sections, 'approach', [
-    proseOrNull(sol?.narration || sol?.approach),
+    narration ? { kind: 'prose', text: narration } : null,
+    solApproach && solApproach !== narration ? { kind: 'prose', text: solApproach } : null,
     pitchStr ? { kind: 'prose', text: pitchStr } : proseOrNull(pitchObj?.opener),
+    proseOrNull(pitchObj?.approach),
     keyPoints.length ? { kind: 'callout', label: 'Key points', items: keyPoints } : null,
   ]);
 
