@@ -6,7 +6,6 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
-import Chip from '@/components/shared/ui/Chip';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
@@ -16,6 +15,8 @@ import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
 import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
 import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 import { isProblemPageUrl } from '@/lib/problemPageUrl';
+import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
+import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -338,7 +339,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [testCases, setTestCases] = useState<Array<{ input: string; expected: string }>>([{ input: '', expected: '' }]);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [copyFeedback, setCopyFeedback] = useState(false);
-  const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
   const [showFixPrompt, setShowFixPrompt] = useState(false);
   const [fixError, setFixError] = useState('');
 
@@ -375,7 +375,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return () => { cancelled = true; clearInterval(interval); };
   }, [codingPlatform]);
   const [activeSolutionIdx, setActiveSolutionIdx] = useState(0);
-  const [openSection, setOpenSection] = useState<string>('approach');
 
   // ── Line-binding: Code Walkthrough row → Monaco editor line (row → editor only) ──
   const editorRef = useRef<any>(null);
@@ -657,7 +656,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setFixError('');
     setIsOutputCollapsed(true);
     setActiveSolutionIdx(0);
-    setCollapsedCards(new Set());
     setCode(getDefaultCode(language));
     clearStreamChunks();
     setParsedBlocks([]);
@@ -1191,7 +1189,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setParsedBlocks([]);
       setJsonSolution(null);
       setCode(getDefaultCode(lang));
-      setCollapsedCards(new Set());
       setActiveSolutionIdx(0);
       setIsOutputCollapsed(true);
       setProblemTab('solution');
@@ -1266,7 +1263,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 setParsedBlocks([]);
                 setJsonSolution(null);
                 setCode(getDefaultCode(resolveLanguage(text)));
-                setCollapsedCards(new Set());
                 setActiveSolutionIdx(0);
                 setIsOutputCollapsed(true);
                 setProblemTab('solution');
@@ -1322,7 +1318,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     clearStreamChunks();
     setParsedBlocks([]);
     setJsonSolution(null);
-    setCollapsedCards(new Set());
     setActiveSolutionIdx(0);
     setIsOutputCollapsed(true);
     setProblemTab('solution');
@@ -1445,7 +1440,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setParsedBlocks([]);
     setJsonSolution(null);
     setProblemTab('description');
-    setCollapsedCards(new Set());
     setTestCases([{ input: '', expected: '' }]);
     testCasesUserEdited.current = false;
   }, [language, clearStreamChunks, setParsedBlocks]);
@@ -1474,7 +1468,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setAnalysisTab('code');
     const effectiveLang = language === 'auto' ? detectLanguage(problemText) : language;
     setCode(getDefaultCode(effectiveLang));
-    setCollapsedCards(new Set());
     setActiveSolutionIdx(0);
     setIsOutputCollapsed(true); // Collapse test panel — auto-expands when new tests arrive
     // If the user pasted a code file with placeholder bodies (return [], pass,
@@ -1599,7 +1592,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setStreamError(null); setTestResults([]); setTestCases([]); setOutput('');
         setShowFixPrompt(false); clearStreamChunks(); setParsedBlocks([]); setJsonSolution(null);
         setCode(getDefaultCode(effectiveLang));
-        setCollapsedCards(new Set()); setActiveSolutionIdx(0); setIsOutputCollapsed(true);
+        setActiveSolutionIdx(0); setIsOutputCollapsed(true);
         setProblemTab('solution');
         onSubmit(combinedText, effectiveLang, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
       }
@@ -1637,7 +1630,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setStreamError(null); setTestResults([]); setTestCases([]); setOutput('');
         setShowFixPrompt(false); clearStreamChunks(); setParsedBlocks([]); setJsonSolution(null);
         setCode(getDefaultCode(lang));
-        setCollapsedCards(new Set()); setActiveSolutionIdx(0); setIsOutputCollapsed(true);
+        setActiveSolutionIdx(0); setIsOutputCollapsed(true);
         setProblemTab('solution');
         onSubmit(result.text, lang, result.starterCode ? { starterCode: result.starterCode } : undefined);
       } else if (result.dataUrls) {
@@ -1732,7 +1725,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setParsedBlocks([]);
       setJsonSolution(null);
       setCode(getDefaultCode(effectiveLang));
-      setCollapsedCards(new Set());
       setActiveSolutionIdx(0);
       setIsOutputCollapsed(true);
       setProblemTab('solution');
@@ -1812,7 +1804,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setParsedBlocks([]);
         setJsonSolution(null);
         setCode(getDefaultCode(effectiveLang));
-        setCollapsedCards(new Set());
         setActiveSolutionIdx(0);
         setIsOutputCollapsed(true);
         setProblemTab('solution');
@@ -2880,297 +2871,23 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       </div>
                     )}
 
-                    {/* ── END-TO-END APPROACH (always visible) ──
-                       The direct answer to "walk me through your approach".
-                       Promotes the spoken narration to a standalone top card so
-                       it's readable at a glance without expanding anything. */}
-                    {(() => {
-                      const activeSol = sd.solutions?.[activeSolutionIdx];
-                      const script = activeSol?.narration || activeSol?.approach;
-                      if (!script) return null;
-                      return (
-                        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.35)' }}>
-                          <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                            <div className="flex items-center gap-1.5">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                                <line x1="12" y1="19" x2="12" y2="22" />
-                              </svg>
-                              <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)' }}>End-to-End Approach</span>
-                            </div>
-                            <button
-                              onClick={() => navigator.clipboard.writeText(script)}
-                              className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5"
-                              style={{ color: 'var(--cam-primary-dk)' }}>
-                              Copy
-                            </button>
-                          </div>
-                          <p className="px-3 py-2.5 text-[13px] leading-[1.6]" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>
-                            {script}
-                          </p>
-                        </div>
-                      );
-                    })()}
-
-                    {/* ── ACTIVE SOLUTION APPROACH ── */}
-                    {(() => {
-                      const activeSol = sd.solutions?.[activeSolutionIdx];
-                      if (activeSol) return (
-                        <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                          <button type="button" onClick={() => setOpenSection(s => s === 'approach' ? '' : 'approach')}
-                            className="w-full flex items-center gap-2 px-3 py-2.5 flex-wrap text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                            <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold" style={{ background: t.badgeBg, color: t.badgeText }}>{activeSolutionIdx + 1}</div>
-                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: t.headerText }}>{activeSol.name}</h4>
-                            {activeSol.patternTag && (
-                              <span className="text-[9px] font-bold uppercase tracking-wider rounded-md px-2 py-0.5"
-                                data-tip="Canonical pattern"
-                                style={{ color: '#FFFFFF', background: 'var(--cam-primary)', letterSpacing: '0.04em' }}>
-                                {activeSol.patternTag}
-                              </span>
-                            )}
-                            <div className="ml-auto flex items-center gap-1.5">
-                              {activeSol.complexity && (
-                                <>
-                                  <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.time}</span>
-                                  <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{activeSol.complexity.space}</span>
-                                </>
-                              )}
-                              <svg className="w-3 h-3 shrink-0 transition-transform" style={{ color: t.headerText, transform: openSection === 'approach' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </div>
-                          </button>
-                          {openSection === 'approach' && (
-                          <div className="p-3 space-y-2">
-                            {activeSol.approach && <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{activeSol.approach}</p>}
-                            {activeSol.explanations?.length > 0 && (
-                              <div className="space-y-2 pt-1" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
-                                {activeSol.explanations.map((ex: any, j: number) => (
-                                  <div
-                                    key={j}
-                                    className="flex flex-col gap-0.5 text-[10px] md:text-[11px] rounded cursor-pointer"
-                                    onMouseEnter={() => highlightLine(lineForCode(ex.code, j))}
-                                    onMouseLeave={clearHighlight}
-                                    onClick={() => highlightLine(lineForCode(ex.code, j))}
-                                  >
-                                    {ex.code && <code className="font-mono px-1.5 py-1 rounded block overflow-x-auto whitespace-pre max-w-full" style={{ color: t.codeText, background: t.codeBg }}>{ex.code}</code>}
-                                    {ex.explanation && <span className="leading-relaxed pl-0.5" style={{ color: t.textMuted }}>{ex.explanation}</span>}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {/* Narration promoted to the always-visible
-                                End-to-End Approach card above — not duplicated here. */}
-                            {Array.isArray(activeSol.trace) && activeSol.trace.length > 0 && (
-                              <div className="rounded-lg mt-2 overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                                <div className="flex items-center gap-1.5 px-2.5 py-1.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={t.headerText} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                                  </svg>
-                                  <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: t.headerText }}>Dry-run trace</span>
-                                  <span className="ml-auto text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg }}>{activeSol.trace.length} steps</span>
-                                </div>
-                                <table className="w-full text-[10px] md:text-[11px]" style={{ borderCollapse: 'collapse' }}>
-                                  <thead>
-                                    <tr style={{ borderBottom: `1px solid ${t.cardBorder}` }}>
-                                      <th className="text-left font-mono font-bold uppercase tracking-wider px-2 py-1" style={{ color: t.textDim, width: '32px' }}>#</th>
-                                      <th className="text-left font-mono font-bold uppercase tracking-wider px-2 py-1" style={{ color: t.textDim }}>Action</th>
-                                      <th className="text-left font-mono font-bold uppercase tracking-wider px-2 py-1" style={{ color: t.textDim }}>State</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {activeSol.trace.map((tr: any, j: number) => (
-                                      <tr key={j} style={{ borderBottom: `1px solid ${t.cardBorder}` }}>
-                                        <td className="px-2 py-1 font-mono font-bold" style={{ color: t.headerText }}>{tr.step ?? j + 1}</td>
-                                        <td className="px-2 py-1" style={{ color: t.text }}>{tr.action}</td>
-                                        <td className="px-2 py-1 font-mono" style={{ color: t.textMuted }}>{tr.state}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </div>
-                          )}
-                        </div>
-                      );
-
-                      // Fallback: old single-solution format
-                      if (sd.pitch) return (
-                        <div className="rounded-xl overflow-hidden shadow-sm" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                          <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                            <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: t.badgeBg, color: t.badgeText }}>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                            </div>
-                            <h4 className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Approach</h4>
-                          </div>
-                          <div className="p-3 space-y-2">
-                            {typeof sd.pitch === 'string' ? (
-                              <p className="text-xs md:text-sm leading-relaxed" style={{ color: t.textMuted }}>{sd.pitch}</p>
-                            ) : (
-                              <>
-                                {sd.pitch.opener && <p className="text-xs md:text-sm font-semibold" style={{ color: t.text }}>{sd.pitch.opener}</p>}
-                                {sd.pitch.approach && <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{sd.pitch.approach}</p>}
-                                {sd.pitch.keyPoints?.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 pt-1">
-                                    {sd.pitch.keyPoints.map((p: string, j: number) => (
-                                      <Chip key={j} variant="default" className="gap-1">
-                                        <span className="w-1 h-1 rounded-full" style={{ background: t.dotColor }} />{p}
-                                      </Chip>
-                                    ))}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      );
-                      return null;
-                    })()}
-
-                    {/* ── OVERALL PITCH (key points, tradeoffs, edge cases) ── */}
-                    {sd.pitch && typeof sd.pitch !== 'string' && sd.solutions?.length > 1 && (
-                      <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <button type="button" onClick={() => setOpenSection(s => s === 'summary' ? '' : 'summary')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                          <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
-                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Summary</span>
-                          <svg className="w-3 h-3 shrink-0 ml-auto transition-transform" style={{ color: t.headerText, transform: openSection === 'summary' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        {openSection === 'summary' && (
-                        <div className="p-3 space-y-2">
-                          {sd.pitch.opener && <p className="text-xs font-semibold" style={{ color: t.text }}>{sd.pitch.opener}</p>}
-                          {sd.pitch.approach && <p className="text-xs leading-relaxed" style={{ color: t.textMuted }}>{sd.pitch.approach}</p>}
-                          {sd.pitch.keyPoints?.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                              {sd.pitch.keyPoints.map((p: string, i: number) => (
-                                <Chip key={i} variant="default" className="gap-1">
-                                  <span className="w-1 h-1 rounded-full" style={{ background: t.dotColor }} />{p}
-                                </Chip>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── TRADEOFFS ── */}
-                    {sd.pitch?.tradeoffs?.length > 0 && (
-                      <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <button type="button" onClick={() => setOpenSection(s => s === 'tradeoffs' ? '' : 'tradeoffs')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                          <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                          </svg>
-                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Tradeoffs</span>
-                          <svg className="w-3 h-3 shrink-0 ml-auto transition-transform" style={{ color: t.headerText, transform: openSection === 'tradeoffs' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        {openSection === 'tradeoffs' && (
-                        <ul className="p-3 space-y-1.5">
-                          {sd.pitch.tradeoffs.map((tr: string, i: number) => (
-                            <li key={i} className="text-xs flex items-start gap-2 leading-relaxed" style={{ color: t.textMuted }}>
-                              <svg className="w-3 h-3 shrink-0 mt-0.5" style={{ color: t.dotColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                              </svg>
-                              {tr}
-                            </li>
-                          ))}
-                        </ul>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── EDGE CASES ── */}
-                    {sd.pitch?.edgeCases?.length > 0 && (
-                      <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <button type="button" onClick={() => setOpenSection(s => s === 'edge' ? '' : 'edge')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                          <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Edge Cases</span>
-                          <svg className="w-3 h-3 shrink-0 ml-auto transition-transform" style={{ color: t.headerText, transform: openSection === 'edge' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                        {openSection === 'edge' && (
-                        <ul className="p-3 space-y-1.5">
-                          {sd.pitch.edgeCases.map((e: string, i: number) => (
-                            <li key={i} className="text-xs flex items-start gap-2 leading-relaxed" style={{ color: t.textMuted }}>
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: t.dotColor }} />
-                              {e}
-                            </li>
-                          ))}
-                        </ul>
-                        )}
-                      </div>
-                    )}
-
-                    {/* ── LINE-BY-LINE WALKTHROUGH ── */}
-                    {sd.explanations?.length > 0 && (
-                      <div className="rounded-xl overflow-hidden shadow-sm" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                        <button type="button" onClick={() => setOpenSection(s => s === 'walkthrough' ? '' : 'walkthrough')}
-                          className="w-full flex items-center gap-2 px-3 py-2 text-left" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                          <svg className="w-3.5 h-3.5" style={{ color: t.headerText }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                          </svg>
-                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.headerText }}>Code Walkthrough</span>
-                          <div className="ml-auto flex items-center gap-1.5">
-                            <span className="text-[9px] font-mono rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>{sd.explanations.length} lines</span>
-                            <svg className="w-3 h-3 shrink-0 transition-transform" style={{ color: t.headerText, transform: openSection === 'walkthrough' ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </button>
-                        {openSection === 'walkthrough' && (
-                        <div className="divide-y" style={{ borderColor: t.cardBorder }}>
-                          {sd.explanations.map((ex: any, i: number) => (
-                            <div key={i} className="flex flex-col gap-1 px-3 py-2 transition-colors"
-                              onMouseEnter={() => highlightLine(ex.line)}
-                              onMouseLeave={clearHighlight}
-                              onClick={() => highlightLine(ex.line)}
-                              style={{ cursor: 'pointer' }}>
-                              <div className="flex items-center gap-2">
-                                <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0" style={{ background: t.badgeBg, color: t.badgeText }}>L{ex.line}</span>
-                                {ex.code && <code className="text-[10px] font-mono overflow-x-auto whitespace-pre flex-1 min-w-0 block" style={{ color: t.codeText }}>{ex.code}</code>}
-                              </div>
-                              {ex.explanation && <span className="text-[10px] md:text-xs leading-relaxed pl-7" style={{ color: t.textMuted }}>{ex.explanation}</span>}
-                            </div>
-                          ))}
-                        </div>
-                        )}
-                      </div>
-                    )}
+                    <AnswerBook
+                      doc={docFromSolution(sd, activeSolutionIdx)}
+                      onLineHover={(line, code, idx) => {
+                        const resolved = line ?? (code ? lineForCode(code, idx ?? 0) : 0);
+                        if (resolved) highlightLine(resolved); else clearHighlight();
+                      }}
+                      onLineClick={(line, code, idx) => {
+                        const resolved = line ?? (code ? lineForCode(code, idx ?? 0) : 0);
+                        if (resolved) highlightLine(resolved);
+                      }}
+                    />
                   </div>
                 )}
 
                 {/* Legacy block display */}
                 {!sd && parsedBlocks && Array.isArray(parsedBlocks) && parsedBlocks.length > 0 && (
-                  <LegacySolutionCards
-                    blocks={parsedBlocks}
-                    collapsedCards={collapsedCards}
-                    onToggle={(t) => { const n = new Set(collapsedCards); if (n.has(t)) n.delete(t); else n.add(t); setCollapsedCards(n); }}
-                    onTestCaseClick={(input, expected) => {
-                      const hasEmpty = testCases.some(tc => !String(tc.input ?? '').trim());
-                      if (hasEmpty) {
-                        let replaced = false;
-                        setTestCases(testCases.map(tc => {
-                          if (!replaced && !String(tc.input ?? '').trim()) { replaced = true; return { input, expected }; }
-                          return tc;
-                        }));
-                      } else if (testCases.length < MAX_TEST_CASES) {
-                        setTestCases([...testCases, { input, expected }]);
-                      }
-                      setOutputTab('testcases');
-                      setIsOutputCollapsed(false);
-                    }}
-                  />
+                  <AnswerBook doc={docFromBlocks(parsedBlocks)} />
                 )}
 
                 {/* Empty state */}
@@ -3470,80 +3187,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         </div>
       </div>
 
-    </div>
-  );
-}
-
-// ── Legacy Solution Cards (for tag-based responses) ──────────────────────────
-
-function LegacySolutionCards({ blocks, collapsedCards, onToggle, onTestCaseClick }: {
-  blocks: any[];
-  collapsedCards: Set<string>;
-  onToggle: (type: string) => void;
-  onTestCaseClick?: (input: string, expected: string) => void;
-}) {
-  const byType: Record<string, any> = {};
-  blocks.forEach(b => { byType[b.type] = b; });
-
-  const cards = [
-    { type: 'APPROACH', title: 'Approach', color: 'accent' },
-    { type: 'COMPLEXITY', title: 'Complexity', color: 'accent' },
-    { type: 'WALKTHROUGH', title: 'Walkthrough', color: 'accent' },
-    { type: 'EDGECASES', title: 'Edge Cases', color: 'warning' },
-    { type: 'TESTCASES', title: 'Test Cases', color: 'accent' },
-  ];
-
-  const colorMap: Record<string, { header: string; border: string; bg: string; text: string }> = {
-    accent: { header: 'bg-[var(--accent-subtle)]', border: 'border-[var(--border)]', bg: 'bg-[var(--bg-surface)]', text: 'text-[var(--accent)]' },
-    warning: { header: 'bg-[rgba(201,162,39,0.06)]', border: 'border-[rgba(201,162,39,0.25)]', bg: 'bg-[var(--bg-surface)]', text: 'text-[var(--warning-text)]' },
-  };
-
-  return (
-    <div className="space-y-2 solution-cards-appear">
-      {cards.map(({ type, title, color }) => {
-        if (!byType[type]) return null;
-        const c = colorMap[color];
-        const isCollapsed = collapsedCards.has(type);
-        const lines = byType[type].content.split('\n').map((l: string) => l.replace(/\*\*/g, '').replace(/\*/g, '').trim()).filter(Boolean);
-
-        return (
-          <div key={type} className={`rounded-xl border ${c.border} ${c.bg} overflow-hidden shadow-sm`}>
-            <button onClick={() => onToggle(type)}
-              className={`w-full flex items-center justify-between px-3 py-2 ${c.header} border-b ${c.border} transition-colors`}>
-              <span className={`text-[10px] font-bold uppercase tracking-wider ${c.text}`}>{title}</span>
-              <svg className={`w-3 h-3 text-[var(--text-dimmed)] transition-transform ${isCollapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {!isCollapsed && (
-              <div className="p-3">
-                {type === 'TESTCASES' && onTestCaseClick ? (
-                  <div className="space-y-1">
-                    {lines.map((line: string, i: number) => {
-                      const arrowMatch = line.match(/(.+?)\s*(?:->|=>|→)\s*(.+)/);
-                      if (arrowMatch) {
-                        return (
-                          <button key={i} onClick={() => onTestCaseClick(arrowMatch[1].trim(), arrowMatch[2].trim())}
-                            className="w-full text-left px-2 py-1 bg-[rgba(38,97,156,0.04)] border border-[rgba(38,97,156,0.1)] rounded-md hover:border-[var(--accent)] text-[10px] text-[var(--text-muted)] font-mono hover:text-[var(--accent)] transition-colors">
-                            {line}
-                          </button>
-                        );
-                      }
-                      return <div key={i} className="text-[10px] text-[var(--text-secondary)] font-mono">{line}</div>;
-                    })}
-                  </div>
-                ) : (
-                  <div className="space-y-0.5">
-                    {lines.map((line: string, i: number) => (
-                      <div key={i} className="text-xs text-[var(--text-muted)] leading-relaxed">{line}</div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 }

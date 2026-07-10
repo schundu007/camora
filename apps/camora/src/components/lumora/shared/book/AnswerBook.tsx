@@ -5,8 +5,8 @@ import type { BookBlock, BookDoc } from '@/lib/lumora/book-model';
 
 type Props = {
   doc: BookDoc;
-  onLineHover?: (line?: number) => void;
-  onLineClick?: (line: number) => void;
+  onLineHover?: (line: number | undefined, code?: string, index?: number) => void;
+  onLineClick?: (line: number | undefined, code?: string, index?: number) => void;
 };
 
 const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
@@ -93,14 +93,16 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
     case 'walk':
       return (
         <div className="my-3">
-          {block.rows.map((r, i) => (
+          {block.rows.map((r, i) => {
+            const bindable = r.line != null || !!r.code;
+            return (
             <div
               key={i}
               className="py-2 border-b border-[var(--border)] last:border-0"
-              style={r.line != null ? { cursor: 'pointer' } : undefined}
-              onMouseEnter={() => r.line != null && onLineHover?.(r.line)}
+              style={bindable ? { cursor: 'pointer' } : undefined}
+              onMouseEnter={() => bindable && onLineHover?.(r.line, r.code, i)}
               onMouseLeave={() => onLineHover?.(undefined)}
-              onClick={() => r.line != null && onLineClick?.(r.line)}
+              onClick={() => bindable && onLineClick?.(r.line, r.code, i)}
             >
               {(r.line != null || r.code) && (
                 <div className="flex items-center gap-2 mb-1">
@@ -114,7 +116,8 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
               )}
               <span className="text-[13px] leading-relaxed">{r.explanation}</span>
             </div>
-          ))}
+            );
+          })}
         </div>
       );
 

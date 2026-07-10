@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { AnswerBook } from './AnswerBook';
 import type { BookDoc } from '@/lib/lumora/book-model';
 
@@ -55,5 +55,16 @@ describe('AnswerBook', () => {
     // highlight.js splits the code into <span> children for syntax highlighting,
     // so assert on the concatenated textContent rather than a single text node.
     expect(container.querySelector('code')?.textContent).toBe('print(42)');
+  });
+
+  it('fires walk callbacks with (line, code, index) even when line is absent', () => {
+    const onClick = vi.fn();
+    render(<AnswerBook onLineClick={onClick} doc={{ sections: [
+      { id: 'walkthrough', heading: 'Walkthrough', blocks: [
+        { kind: 'walk', rows: [{ code: 'words = s.split()', explanation: 'split' }] },
+      ]},
+    ] }} />);
+    fireEvent.click(screen.getByText('split'));
+    expect(onClick).toHaveBeenCalledWith(undefined, 'words = s.split()', 0);
   });
 });
