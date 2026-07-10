@@ -182,7 +182,14 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
         const token = chunk.text();
         if (token) { chunks.push(token); onToken(token); }
       }
-      return { raw: chunks.join(''), model: GEMINI_MODEL };
+      let usage = { input: 0, output: 0 };
+      if (!isAborted()) {
+        try {
+          const agg = await streamResult.response;
+          if (agg?.usageMetadata) usage = { input: agg.usageMetadata.promptTokenCount || 0, output: agg.usageMetadata.candidatesTokenCount || 0 };
+        } catch { /* usage best-effort */ }
+      }
+      return { raw: chunks.join(''), model: GEMINI_MODEL, usage };
     }
 
     if (providerName === 'anthropic') {
@@ -205,7 +212,14 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
           if (token) { chunks.push(token); onToken(token); }
         }
       }
-      return { raw: chunks.join(''), model: ANTHROPIC_MODEL };
+      let usage = { input: 0, output: 0 };
+      if (!isAborted()) {
+        try {
+          const final = await stream.finalMessage();
+          if (final?.usage) usage = { input: final.usage.input_tokens || 0, output: final.usage.output_tokens || 0 };
+        } catch { /* usage best-effort */ }
+      }
+      return { raw: chunks.join(''), model: ANTHROPIC_MODEL, usage };
     }
 
     if (providerName === 'deepseek') {
@@ -218,14 +232,17 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
         model: 'deepseek/deepseek-chat-v3-0324',
         max_tokens: MAX_TOKENS,
         stream: true,
+        stream_options: { include_usage: true },
         messages: oaiMsgs,
       });
+      let usage = { input: 0, output: 0 };
       for await (const chunk of stream) {
         if (isAborted()) break;
         const token = chunk.choices?.[0]?.delta?.content || '';
         if (token) { chunks.push(token); onToken(token); }
+        if (chunk.usage) usage = { input: chunk.usage.prompt_tokens || 0, output: chunk.usage.completion_tokens || 0 };
       }
-      return { raw: chunks.join(''), model: 'deepseek/deepseek-chat-v3-0324' };
+      return { raw: chunks.join(''), model: 'deepseek/deepseek-chat-v3-0324', usage };
     }
 
     return { raw: '', model: null, error: `Unknown provider: ${providerName}` };
@@ -1464,6 +1481,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       }
       rawAnswer = result.raw;
       modelUsed = result.model || provider;
+      if (result.usage) { inputTokens = result.usage.input || 0; outputTokens = result.usage.output || 0; }
       console.log(
         `[coding/solve] pass=primary_stream provider=${provider} model=${result.model} ok=true ` +
         `rawLen=${rawAnswer.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
