@@ -177,7 +177,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
   return (
     <div
-      className={`flex items-center shrink-0 ${inline ? 'gap-1 overflow-x-auto no-scrollbar' : 'gap-2 px-3 py-1.5 flex-wrap sm:flex-nowrap sm:overflow-x-auto'}`}
+      className={`flex items-center shrink-0 ${inline ? 'gap-1 overflow-x-auto no-scrollbar' : `gap-2 px-3 py-1.5 flex-wrap sm:flex-nowrap sm:overflow-x-auto${surface === 'behavioral' ? ' lumora-winctl-safe' : ''}`}`}
       style={inline
         ? {}
         : {
@@ -412,6 +412,11 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       )}
 
       {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" />}
+      {/* Trailing spacer — pairs with the flex-1 above so the behavioral chip
+          cluster sits CENTERED in the strip instead of pinned under the fixed
+          top-right window controls (Dock/−/✕). lumora-winctl-safe on the root
+          keeps a hard reserve for that cluster on narrow windows. */}
+      {surface === 'behavioral' && <div className="flex-1" />}
       {/* Stealth toggle intentionally NOT here — it's a single GLOBAL control in the
           left rail (LumoraIconRail) that applies to the whole window/all tabs. A
           per-page chip was a duplicate that could drift out of sync. */}
