@@ -197,7 +197,7 @@ export function useSpeakerCapture(options: CaptureOptions) {
   const autoRestartCountRef = useRef(0);
   // Always points at the latest startCapture so the onended closure can
   // re-acquire without capturing a stale callback.
-  const startCaptureRef = useRef<() => Promise<void>>();
+  const startCaptureRef = useRef<() => Promise<void>>(undefined);
 
   const cleanup = useCallback(() => {
     // Any track end that happens from here on is our own doing.
