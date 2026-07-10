@@ -177,10 +177,11 @@ export function docFromCoFix(
     output_format?: string;
     examples?: { input?: string; output?: string; explanation?: string }[];
   },
+  view: 'all' | 'problem' | 'learn' = 'all',
 ): BookDoc {
   const sections: BookSection[] = [];
 
-  if (analysis) {
+  if (analysis && (view === 'all' || view === 'problem')) {
     const inputFmt = txt(analysis.input_format);
     const outputFmt = txt(analysis.output_format);
     const ioPairs: [string, string][] = [];
@@ -203,7 +204,9 @@ export function docFromCoFix(
       ioPairs.length ? { kind: 'kv', pairs: ioPairs } : null,
       exampleItems.length ? { kind: 'list', items: exampleItems } : null,
     ]);
+  }
 
+  if (analysis && (view === 'all' || view === 'learn')) {
     push(sections, 'concepts', [listOrNull(analysis.concepts)]);
 
     const steps = (analysis.steps || [])
@@ -212,18 +215,20 @@ export function docFromCoFix(
     push(sections, 'steps', [steps.length ? { kind: 'walk', rows: steps } : null]);
   }
 
-  const walk = (answer.walkthrough || [])
-    .map((w: any) => ({
-      explanation: [txt(w.context) && `(${txt(w.context)})`, txt(w.text)].filter(Boolean).join(' '),
-      code: typeof w.lines === 'string' ? `L${w.lines}` : undefined,
-    }))
-    .filter((r: any) => r.explanation);
-  push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
+  if (view === 'all') {
+    const walk = (answer.walkthrough || [])
+      .map((w: any) => ({
+        explanation: [txt(w.context) && `(${txt(w.context)})`, txt(w.text)].filter(Boolean).join(' '),
+        code: typeof w.lines === 'string' ? `L${w.lines}` : undefined,
+      }))
+      .filter((r: any) => r.explanation);
+    push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
 
-  const changes = (answer.changes || [])
-    .map((c: any) => [txt(c.label), txt(c.note)].filter(Boolean).join(' — '))
-    .filter(Boolean);
-  push(sections, 'changes', [changes.length ? { kind: 'list', items: changes } : null]);
+    const changes = (answer.changes || [])
+      .map((c: any) => [txt(c.label), txt(c.note)].filter(Boolean).join(' — '))
+      .filter(Boolean);
+    push(sections, 'changes', [changes.length ? { kind: 'list', items: changes } : null]);
+  }
 
   return { title: txt(analysis?.title) || undefined, sections };
 }

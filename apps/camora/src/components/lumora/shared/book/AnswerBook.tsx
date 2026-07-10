@@ -130,6 +130,7 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
 
 export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => (
   <div className="lumora-book">
+    {doc.title && <h1 className="lumora-book-section" style={{ marginTop: 0 }}>{doc.title}</h1>}
     {doc.sections.map(section => (
       <section key={section.id}>
         <h2 className="lumora-book-section">{section.heading}</h2>

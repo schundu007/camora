@@ -67,4 +67,19 @@ describe('AnswerBook', () => {
     fireEvent.click(screen.getByText('split'));
     expect(onClick).toHaveBeenCalledWith(undefined, 'words = s.split()', 0);
   });
+
+  it('renders doc.title as a lead heading when present', () => {
+    render(<AnswerBook doc={{ title: 'Two Pointers', sections: [
+      { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+    ] }} />);
+    expect(screen.getByRole('heading', { name: 'Two Pointers' })).toHaveClass('lumora-book-section');
+  });
+
+  it('renders no lead heading when doc.title is absent', () => {
+    const { container } = render(<AnswerBook doc={{ sections: [
+      { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+    ] }} />);
+    // only the section h2 heading, no extra lead h1
+    expect(container.querySelectorAll('h1')).toHaveLength(0);
+  });
 });
