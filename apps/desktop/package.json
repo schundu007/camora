@@ -22,6 +22,7 @@
     "appId": "com.cariara.camora",
     "productName": "Camora",
     "artifactName": "Camora-${version}-${arch}.${ext}",
+    "afterPack": "build-hooks/after-pack.js",
     "afterAllArtifactBuild": "build-hooks/after-all-artifact-build.js",
     "directories": {
       "output": "build"

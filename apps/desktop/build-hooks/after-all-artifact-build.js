@@ -18,32 +18,9 @@ const MAC_OUT_DIRS = ['mac', 'mac-arm64', 'mac-x64', 'mac-universal']
 
 const sh = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
 
-/** Re-sign with our entitlements and assert they stuck to the cdhash. */
-function resignAndVerify(appPath, entitlements) {
-  console.log(`  → re-signing ${path.basename(path.dirname(appPath))}/Camora.app with entitlements`)
-  try {
-    sh('codesign', ['--remove-signature', appPath])
-  } catch {
-    // unsigned already — fine
-  }
-  sh('codesign', ['--force', '--deep', '--sign', '-', '--entitlements', entitlements, appPath])
-  sh('codesign', ['--verify', '--verbose=2', appPath])
-
-  let dumped = ''
-  try {
-    dumped = execFileSync('codesign', ['-d', '--entitlements', '-', appPath], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
-  } catch (err) {
-    dumped = String(err.stdout || '') + String(err.stderr || '')
-  }
-  for (const ent of ['audio-input', 'network.client', 'apple-events']) {
-    if (!dumped.includes(ent)) {
-      throw new Error(`entitlement "${ent}" missing after re-sign of ${appPath}`)
-    }
-  }
-}
+// NOTE: entitlement re-signing moved to build-hooks/after-pack.js — it MUST run
+// before the DMG is packaged, otherwise the shipped installer carries the raw
+// unsigned Electron binary. This hook now only does post-artifact CLEANUP.
 
 /** Drop the loose bundle and unregister it so Spotlight keeps exactly one Camora. */
 function unregisterAndRemove(dir, appPath) {
@@ -74,7 +51,6 @@ exports.default = async function afterAllArtifactBuild(buildResult) {
   if (process.platform !== 'darwin') return []
 
   const outDir = buildResult.outDir
-  const entitlements = path.join(__dirname, '..', 'entitlements.mac.plist')
   const { version } = require('../package.json')
 
   for (const name of MAC_OUT_DIRS) {
@@ -82,7 +58,8 @@ exports.default = async function afterAllArtifactBuild(buildResult) {
     const appPath = path.join(dir, 'Camora.app')
     if (!existsSync(appPath)) continue
 
-    resignAndVerify(appPath, entitlements)
+    // Signing already happened in afterPack; here we only clear the loose
+    // bundle so LaunchServices keeps exactly one indexed "Camora".
     unregisterAndRemove(dir, appPath)
   }
 
