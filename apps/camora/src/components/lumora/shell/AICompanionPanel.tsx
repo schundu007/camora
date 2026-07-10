@@ -664,6 +664,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           if (data.t) { setStreamText(prev => prev + data.t); armSafety(); }
         },
         onAnswer: (data: any) => {
+          // Clear the inactivity timer NOW. It's a per-ask `let`, but the abort
+          // it fires targets the SHARED streamAbortRef — if left armed after the
+          // answer lands (a stream that ends on the answer frame without a
+          // trailing onComplete), it can later abort the NEXT question's stream
+          // and stamp it "timed out". Belt-and-suspenders with onComplete.
+          clearTimeout(safetyTimer);
           const answerText = extractAnswer(data.parsed) || data.raw || '';
           const citations = pendingCitationsRef.current;
           pendingCitationsRef.current = [];

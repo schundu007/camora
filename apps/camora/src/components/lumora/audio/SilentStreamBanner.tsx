@@ -12,18 +12,26 @@ import { useSpeakerAudio } from './SpeakerAudio';
  *   • Watch level every animation frame the provider updates.
  *   • Reset the silent-since timer whenever level crosses the speech
  *     threshold.
+ *   • If the stream DIED on its own (`droppedUnexpectedly`), surface the
+ *     banner IMMEDIATELY — a dead stream is `active === false`, which the
+ *     old `active`-only guard silently skipped, so the exact failure this
+ *     watchdog exists for (share picker stopping) produced no warning at all.
  *   • If the stream is `active === true` and silent-since is older
  *     than STALE_AFTER_MS, surface a banner with one-click reconnect.
  *   • The banner is dismissable; once dismissed for the current
  *     active session, it stays dismissed until the next reconnect.
  */
 
-const STALE_AFTER_MS = 30 * 60 * 1000;    // 30 minutes
+// Live-but-silent ceiling. Was 30 min — uselessly long for an interview that
+// often runs shorter than that, so a stuck-but-"connected" stream never got
+// flagged. 4 min tolerates a candidate's long spoken answer (interviewer
+// stream is quiet meanwhile) without false-firing every question.
+const STALE_AFTER_MS = 4 * 60 * 1000;     // 4 minutes
 const SPEECH_THRESHOLD = 0.012;
 const SAMPLE_INTERVAL_MS = 5000;          // sample the level every 5s — cheap
 
 export const SilentStreamBanner = () => {
-  const { active, level, start, stop } = useSpeakerAudio();
+  const { active, level, droppedUnexpectedly, start, stop } = useSpeakerAudio();
   const [silentForMs, setSilentForMs] = useState(0);
   const [dismissed, setDismissed] = useState(false);
   const lastHeardRef = useRef<number>(Date.now());
@@ -68,32 +76,43 @@ export const SilentStreamBanner = () => {
     await start();
   }, [start, stop]);
 
-  if (!active) return null;
-  if (dismissed) return null;
-  if (silentForMs < STALE_AFTER_MS) return null;
+  // A dead stream (dropped on its own) takes priority and shows instantly —
+  // this is the failure that leaves Sona permanently deaf mid-interview.
+  // Otherwise fall back to the live-but-silent watchdog.
+  const dead = droppedUnexpectedly && !active;
+  if (dismissed) return null;   // honored for both paths; auto-resets on reconnect
+  if (!dead) {
+    if (!active) return null;
+    if (silentForMs < STALE_AFTER_MS) return null;
+  }
 
   const minutes = Math.floor(silentForMs / 60000);
+  const accent = dead ? '#dc2626' : '#f59e0b';
 
   return (
     <div
-      role="status"
-      aria-live="polite"
+      role="alert"
+      aria-live="assertive"
       className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 max-w-md w-[92%] rounded-xl px-4 py-3 flex items-start gap-3"
       style={{
-        background: 'rgba(245,158,11,0.14)',
-        border: '1px solid rgba(245,158,11,0.55)',
+        background: dead ? 'rgba(220,38,38,0.16)' : 'rgba(245,158,11,0.14)',
+        border: `1px solid ${dead ? 'rgba(220,38,38,0.6)' : 'rgba(245,158,11,0.55)'}`,
         backdropFilter: 'blur(10px)',
         boxShadow: '0 12px 32px rgba(0,0,0,0.35)',
         color: 'var(--text-primary)',
       }}
     >
-      <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2">
+      <svg className="w-5 h-5 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2">
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 4h.01M4.93 19h14.14a2 2 0 001.74-3l-7.07-12.25a2 2 0 00-3.48 0L3.19 16a2 2 0 001.74 3z" />
       </svg>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-bold">Speaker audio has been silent for {minutes || 'several'} min</div>
+        <div className="text-sm font-bold">
+          {dead ? 'Speaker audio disconnected — Sona can’t hear the interviewer' : `Speaker audio has been silent for ${minutes || 'several'} min`}
+        </div>
         <div className="text-[12px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
-          The capture is technically connected but no voice has been detected. The most common cause is the screen-share picker stopping in the background. Reconnect to be safe.
+          {dead
+            ? 'The capture stream stopped (usually the screen-share picker closing in the background). Sona won’t answer new questions until you reconnect.'
+            : 'The capture is technically connected but no voice has been detected. The most common cause is the screen-share picker stopping in the background. Reconnect to be safe.'}
         </div>
         <div className="flex gap-2 mt-2">
           <button

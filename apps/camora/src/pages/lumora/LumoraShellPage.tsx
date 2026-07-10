@@ -4,7 +4,6 @@ import { CodingSonaSidebar, CodingSonaSidebarToggle } from '../../components/lum
 import { AICompanionPanel } from '../../components/lumora/shell/AICompanionPanel';
 import { dispatchTranscript } from '../../lib/voice-router';
 import { SessionPanel } from '../../components/lumora/session/SessionPanel';
-import { SessionSidebar } from '../../components/lumora/session/SessionSidebar';
 import { LumoraDocsPanel } from '../../components/lumora/shell/LumoraDocsPanel';
 import { PracticePanel } from '../../components/lumora/shell/PracticePanel';
 import { LumoraCalendar } from '../../components/lumora/shell/LumoraCalendar';
@@ -43,7 +42,6 @@ export const LumoraShellPage = () => {
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const { theme: currentTheme, toggle: toggleTheme } = useTheme();
-  const [sessionsOpen, setSessionsOpen] = useState(false);
   const [contextDrawerOpen, setContextDrawerOpen] = useState(false);
   const [, setCopilotOpen] = useState(false);
   const [copilotQuestion, setCopilotQuestion] = useState<string | undefined>();
@@ -316,17 +314,26 @@ export const LumoraShellPage = () => {
       //     virtual mic) — tagged source:'interviewer' at the provider, and
       //   • the candidate's own mic (ScreenshotStrip AudioCapture, locked) —
       //     untagged.
-      // Once a separate interviewer stream has connected this session
-      // (speakerAudio.everConnected), the candidate mic's AUTO transcripts are
-      // the candidate ANSWERING — they used to be dispatched as "questions",
+      // While a separate interviewer stream is CURRENTLY LIVE
+      // (speakerAudio.active), the candidate mic's AUTO transcripts are the
+      // candidate ANSWERING — they used to be dispatched as "questions",
       // polluting the panel and making Sona answer the candidate's own voice
       // (the "captures my voice, misses 90% of the interviewer" bug). Drop them.
+      //
+      // Keyed on `active` (live now), NOT `everConnected` (ever, this session):
+      // when the interviewer stream DIES mid-interview (share picker stops, tab
+      // closes, loopback drops) the mic must become the fallback question
+      // source again — otherwise Sona goes permanently deaf after one Q&A. The
+      // gesture-free methods auto-reconnect within ~1-2s, so the un-suppressed
+      // window is tiny; during it the mic may leak one candidate utterance as a
+      // question — an acceptable trade vs. total silence, and the reconnect
+      // banner tells the user to restore the interviewer stream.
       // Manual mic presses (deliberate "ask Sona this") always go through. When
       // no separate stream ever connected (mic-only fallback) the mic IS the
       // interviewer source, so nothing is suppressed.
       const isManual = opts?.manual === true;
       const fromInterviewer = opts?.source === 'interviewer';
-      if (!isManual && !fromInterviewer && useSessionStore.getState().speakerAudio.everConnected) {
+      if (!isManual && !fromInterviewer && useSessionStore.getState().speakerAudio.active) {
         return;
       }
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: isManual } }));
@@ -388,8 +395,6 @@ export const LumoraShellPage = () => {
       {/* Left icon rail */}
       <LumoraIconRail
         activeTab={activeTab}
-        sessionsOpen={sessionsOpen}
-        onToggleSessions={() => setSessionsOpen(prev => !prev)}
         meetingPlatform={meetingPlatform}
         onMeetingPlatformChange={setMeetingPlatform}
         codingPlatform={codingPlatform}
@@ -397,15 +402,6 @@ export const LumoraShellPage = () => {
         onBack={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
         onOpenContext={() => setContextDrawerOpen(true)}
       />
-
-      {/* Sessions sidebar — only when on session tab */}
-      {activeTab === 'session' && sessionsOpen && (
-        <SessionSidebar
-          isOpen={true}
-          onClose={() => setSessionsOpen(false)}
-          onSelectEntry={(idx) => setFocusedEntry(idx)}
-        />
-      )}
 
       {/* Main area — bottom padding accounts for fixed mobile nav + iOS home indicator */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">

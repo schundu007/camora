@@ -42,6 +42,12 @@ interface CaptureOptions {
   onAudioData?: (blob: Blob) => void;
   onAudioLevel?: (level: number) => void;
   onRecordingStop?: () => void;
+  /** Fired when the capture STREAM itself dies unexpectedly (track ended —
+   *  share picker auto-stopped, tab closed, loopback dropped) rather than via
+   *  our own stopCapture()/cleanup(). Distinct from onRecordingStop, which
+   *  fires on every VAD silence boundary. Lets the caller surface a reconnect
+   *  prompt / fall back to another source. */
+  onUnexpectedStop?: () => void;
   onMethodResolved?: (method: Exclude<CaptureMethod, 'auto'>) => void;
   silenceThreshold?: number;
   silenceDuration?: number;
@@ -145,6 +151,7 @@ export function useSpeakerCapture(options: CaptureOptions) {
     onAudioData,
     onAudioLevel,
     onRecordingStop,
+    onUnexpectedStop,
     onMethodResolved,
     silenceThreshold = 0.012,
     silenceDuration = 1200,
@@ -179,8 +186,22 @@ export function useSpeakerCapture(options: CaptureOptions) {
   // chunks-cleared-before-onstop race that previously dropped the
   // last segment of every utterance.
   const pendingRestartRef = useRef(false);
+  // True while a track end is the RESULT of our own cleanup()/stopCapture().
+  // The MediaStreamTrack `onended` handler reads this to tell an intentional
+  // teardown apart from an unexpected stream death (share picker stopping,
+  // tab close, loopback dropping) so only the latter triggers reconnect.
+  const intentionalStopRef = useRef(false);
+  // Guards against a tight reconnect loop if re-acquire keeps ending
+  // immediately. Reset to 0 whenever a real audio blob is delivered (proof
+  // the stream is healthy again).
+  const autoRestartCountRef = useRef(0);
+  // Always points at the latest startCapture so the onended closure can
+  // re-acquire without capturing a stale callback.
+  const startCaptureRef = useRef<() => Promise<void>>();
 
   const cleanup = useCallback(() => {
+    // Any track end that happens from here on is our own doing.
+    intentionalStopRef.current = true;
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (maxRecordingTimerRef.current) clearTimeout(maxRecordingTimerRef.current);
@@ -280,7 +301,12 @@ export function useSpeakerCapture(options: CaptureOptions) {
         const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
         if (blob.size > 0 && speechStartTimeRef.current) {
           const speechDuration = Date.now() - speechStartTimeRef.current;
-          if (speechDuration >= minSpeechDuration) onAudioData?.(blob);
+          if (speechDuration >= minSpeechDuration) {
+            // A real utterance flushed → the stream is healthy; clear the
+            // reconnect-loop guard so a genuine drop later still gets retries.
+            autoRestartCountRef.current = 0;
+            onAudioData?.(blob);
+          }
         }
         chunksRef.current = [];
         speechStartTimeRef.current = null;
@@ -313,12 +339,29 @@ export function useSpeakerCapture(options: CaptureOptions) {
       };
 
       audioStream.getAudioTracks()[0].onended = () => {
+        const wasIntentional = intentionalStopRef.current;
         setState((p) => ({ ...p, isCapturing: false, audioLevel: 0 }));
         cleanup();
         onRecordingStop?.();
+        if (wasIntentional) return;
+        // Unexpected death: the dedicated speaker stream is the ONLY question
+        // source in behavioral mode, so a silent drop = Sona goes permanently
+        // deaf. Tell the caller, then auto-reconnect for the gesture-free
+        // methods (Electron loopback + getUserMedia paths). tab-share needs a
+        // fresh user gesture, so we can't silently re-acquire it — the caller
+        // surfaces a reconnect prompt instead.
+        onUnexpectedStop?.();
+        const canSilentlyReacquire =
+          resolved === 'electron-loopback' || resolved === 'virtual-mic' || resolved === 'room-mic';
+        if (canSilentlyReacquire && autoRestartCountRef.current < 3) {
+          autoRestartCountRef.current += 1;
+          startCaptureRef.current?.().catch(() => { /* error surfaces in state */ });
+        }
       };
 
       mediaRecorder.start();
+      // The new stream is live; a subsequent track end is now unexpected.
+      intentionalStopRef.current = false;
       setState((p) => ({ ...p, isCapturing: true, error: null }));
 
       if (maxRecordingDuration > 0) {
@@ -381,12 +424,16 @@ export function useSpeakerCapture(options: CaptureOptions) {
     onAudioData,
     onAudioLevel,
     onRecordingStop,
+    onUnexpectedStop,
     onMethodResolved,
     silenceThreshold,
     silenceDuration,
     minSpeechDuration,
     maxRecordingDuration,
   ]);
+
+  // Keep the reconnect closure pointed at the latest startCapture.
+  useEffect(() => { startCaptureRef.current = startCapture; }, [startCapture]);
 
   const stopCapture = useCallback(() => {
     cleanup();
