@@ -3432,6 +3432,28 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             <p className="text-[9px] text-center -mt-1" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>
           )}
 
+          {/* Download — export the generated sections (was fully built but had no UI) */}
+          {generatedCount > 0 && (
+            <div className="flex flex-col gap-1">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleDownload('pdf')}
+                  disabled={!!downloading}
+                  className="flex-1 py-2 text-[11px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
+                  style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+                  {downloading === 'pdf' ? 'Saving…' : 'Download PDF'}
+                </button>
+                <button
+                  onClick={() => handleDownload('docx')}
+                  disabled={!!downloading}
+                  className="flex-1 py-2 text-[11px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
+                  style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
+                  {downloading === 'docx' ? 'Saving…' : 'Download DOCX'}
+                </button>
+              </div>
+              {downloadMsg && <p className="text-[9px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</p>}
+            </div>
+          )}
 
           {/* Clear */}
           <button
