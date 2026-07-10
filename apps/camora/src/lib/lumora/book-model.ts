@@ -32,6 +32,9 @@ export const SECTION_TITLES: Record<string, string> = {
   datamodel: 'Data model',
   technologies: 'Technologies',
   cloudservices: 'Cloud services',
+  changes: 'Changes',
+  concepts: 'Concepts',
+  steps: 'Step by step',
 };
 
 const txt = (v: unknown): string => (typeof v === 'string' ? cleanText(v) : '');
@@ -160,4 +163,67 @@ export function docFromBlocks(blocks: ParsedBlock[]): BookDoc {
     }
   }
   return { sections };
+}
+
+/** CoFix: the fix answer (changes + walkthrough) plus an optional problem analysis. */
+export function docFromCoFix(
+  answer: { changes?: any[]; walkthrough?: any[] },
+  analysis?: {
+    title?: string;
+    problem?: string;
+    concepts?: string[];
+    steps?: { code?: string; text?: string }[];
+    input_format?: string;
+    output_format?: string;
+    examples?: { input?: string; output?: string; explanation?: string }[];
+  },
+): BookDoc {
+  const sections: BookSection[] = [];
+
+  if (analysis) {
+    const inputFmt = txt(analysis.input_format);
+    const outputFmt = txt(analysis.output_format);
+    const ioPairs: [string, string][] = [];
+    if (inputFmt) ioPairs.push(['Input format', inputFmt]);
+    if (outputFmt) ioPairs.push(['Output format', outputFmt]);
+
+    const exampleItems = (analysis.examples || [])
+      .map(ex => {
+        const input = txt(ex.input);
+        const output = txt(ex.output);
+        const base = [input, output].filter(Boolean).join(' → ');
+        if (!base) return '';
+        const explanation = txt(ex.explanation);
+        return explanation ? `${base} — ${explanation}` : base;
+      })
+      .filter(Boolean);
+
+    push(sections, 'problem', [
+      proseOrNull(analysis.problem),
+      ioPairs.length ? { kind: 'kv', pairs: ioPairs } : null,
+      exampleItems.length ? { kind: 'list', items: exampleItems } : null,
+    ]);
+
+    push(sections, 'concepts', [listOrNull(analysis.concepts)]);
+
+    const steps = (analysis.steps || [])
+      .map(s => ({ code: s.code, explanation: txt(s.text) }))
+      .filter(s => s.explanation || s.code);
+    push(sections, 'steps', [steps.length ? { kind: 'walk', rows: steps } : null]);
+  }
+
+  const walk = (answer.walkthrough || [])
+    .map((w: any) => ({
+      explanation: [txt(w.context) && `(${txt(w.context)})`, txt(w.text)].filter(Boolean).join(' '),
+      code: typeof w.lines === 'string' ? `L${w.lines}` : undefined,
+    }))
+    .filter((r: any) => r.explanation);
+  push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
+
+  const changes = (answer.changes || [])
+    .map((c: any) => [txt(c.label), txt(c.note)].filter(Boolean).join(' — '))
+    .filter(Boolean);
+  push(sections, 'changes', [changes.length ? { kind: 'list', items: changes } : null]);
+
+  return { title: txt(analysis?.title) || undefined, sections };
 }
