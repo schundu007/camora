@@ -130,6 +130,51 @@ interface AudioCaptureProps {
   locked?: boolean;
 }
 
+/**
+ * Lightweight always-on mic level. The recorder's own analyser is torn down
+ * during LIVE (the interviewer stream owns capture), so nothing measures the
+ * candidate's own voice — the meter looked dead when you talked to test it.
+ * This dedicated analyser runs whenever behavioral is active and you're not
+ * mid-Ask, giving a true "your mic is live" reading independent of recording.
+ */
+function useMicLevel(enabled: boolean): number {
+  const [level, setLevel] = useState(0);
+  useEffect(() => {
+    if (!enabled) { setLevel(0); return; }
+    let stream: MediaStream | null = null;
+    let ctx: AudioContext | null = null;
+    let raf = 0;
+    let cancelled = false;
+    (async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+        ctx = new AudioContext();
+        const src = ctx.createMediaStreamSource(stream);
+        const an = ctx.createAnalyser();
+        an.fftSize = 256;
+        src.connect(an);
+        const data = new Uint8Array(an.frequencyBinCount);
+        const tick = () => {
+          an.getByteFrequencyData(data);
+          let sum = 0;
+          for (let i = 0; i < data.length; i++) { const v = data[i] / 255; sum += v * v; }
+          setLevel(Math.sqrt(sum / data.length));
+          raf = requestAnimationFrame(tick);
+        };
+        tick();
+      } catch { /* mic unavailable — leave level at 0 */ }
+    })();
+    return () => {
+      cancelled = true;
+      if (raf) cancelAnimationFrame(raf);
+      if (ctx && ctx.state !== 'closed') { try { ctx.close(); } catch { /* already closing */ } }
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    };
+  }, [enabled]);
+  return level;
+}
+
 export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart = true, active, compact, locked }: AudioCaptureProps) => {
   // Use centralized auth
   const { token } = useAuth();
@@ -275,6 +320,10 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // know to resume it once the Ask finishes. LISTENING and Ask are mutually
   // exclusive: only one source feeds Sona at a time.
   const speakerPausedForAskRef = useRef(false);
+  // Always-on candidate-mic level (behavioral, when not mid-Ask). Feeds the
+  // meter so talking into your OWN mic moves the bars during LIVE — the
+  // recorder's mic analyser is stopped then, so this is the only mic reading.
+  const micLevel = useMicLevel(!!locked && active !== false && recordingModeUI !== 'manual');
 
   // Accumulated transcription text for Live mode (chunks build up a full question)
   const accumulatedTextRef = useRef('');
@@ -1216,6 +1265,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     speakerEverConnected={speakerEverConnected}
     speakerActive={speakerActive}
     speakerLevel={speakerLevel}
+    micLevel={micLevel}
     compact={compact}
     locked={locked}
   />;
@@ -1234,7 +1284,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
  */
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
-  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, speakerActive, speakerLevel, compact, locked,
+  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, speakerActive, speakerLevel, micLevel, compact, locked,
 }: {
   continuousMode: boolean;
   audioLevel: number;
@@ -1244,6 +1294,7 @@ const UnifiedMicButton = ({
   speakerEverConnected: boolean;
   speakerActive: boolean;
   speakerLevel: number;
+  micLevel: number;
   compact?: boolean;
   locked?: boolean;
 }) => {
@@ -1262,9 +1313,10 @@ const UnifiedMicButton = ({
   // interviewer stream when LIVE drives it (loopback/tab/virtual mic), the
   // candidate mic while you're asking a question. Without this the bars sat
   // flat during LIVE because they only ever read the (idle) candidate mic.
-  const meterLevel = isAsking
-    ? audioLevel
-    : (liveControlsSpeaker && speakerActive ? speakerLevel : audioLevel);
+  const meterLevel = Math.max(
+    micLevel,
+    isAsking ? audioLevel : (liveControlsSpeaker && speakerActive ? speakerLevel : audioLevel),
+  );
   const listenTip = locked
     ? (liveControlsSpeaker
         ? (listenOn
