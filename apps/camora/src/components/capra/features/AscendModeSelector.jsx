@@ -76,7 +76,7 @@ export default function AscendModeSelector({
               background: codingDetailLevel === 'basic' ? 'var(--cam-gold-leaf)' : 'transparent',
               color: codingDetailLevel === 'basic' ? '#020617' : 'var(--text-muted)',
             }}
-            title="Basic solution with essential explanation"
+            data-tip="Basic solution with essential explanation"
           >
             Basic
           </button>
@@ -88,7 +88,7 @@ export default function AscendModeSelector({
               background: codingDetailLevel === 'detailed' ? 'var(--cam-gold-leaf)' : 'transparent',
               color: codingDetailLevel === 'detailed' ? '#020617' : 'var(--text-muted)',
             }}
-            title="Full solution with detailed explanations"
+            data-tip="Full solution with detailed explanations"
           >
             Full
           </button>

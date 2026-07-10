@@ -92,7 +92,7 @@ export function HourMeterChip({ variant = 'light' }: { variant?: 'light' | 'dark
       to="/account/team"
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-[opacity,transform] hover:opacity-80 active:scale-[0.98]"
       style={{ background: bgColor }}
-      title={`${formatHours(budget.remaining_hours)} of AI hours remaining${isExhausted ? ' — buy a top-up to keep going' : ''}`}
+      data-tip={`${formatHours(budget.remaining_hours)} of AI hours remaining${isExhausted ? ' — buy a top-up to keep going' : ''}`}
       aria-label={`${formatHours(budget.remaining_hours)} AI hours remaining`}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: dotColor }} aria-hidden="true" />

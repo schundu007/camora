@@ -559,7 +559,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                         opacity: fetchingUrl ? 0.5 : 1,
                         cursor: fetchingUrl ? 'not-allowed' : 'pointer',
                       }}
-                      title="Paste URL or JD text from clipboard"
+                      data-tip="Paste URL or JD text from clipboard"
                     >
                       Paste
                     </button>

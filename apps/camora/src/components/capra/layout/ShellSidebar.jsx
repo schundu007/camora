@@ -129,7 +129,7 @@ export default function ShellSidebar() {
             <button
               key={item.id}
               onClick={() => handleNav(item.href, item.id)}
-              title={isCollapsed ? item.label : undefined}
+              data-tip={isCollapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-lg transition-all mb-0.5 ${
                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
               } ${
@@ -155,7 +155,7 @@ export default function ShellSidebar() {
             <button
               key={item.id}
               onClick={() => handleNav(item.href)}
-              title={isCollapsed ? item.label : undefined}
+              data-tip={isCollapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-lg transition-all mb-0.5 ${
                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
               } ${
@@ -181,7 +181,7 @@ export default function ShellSidebar() {
             <button
               key={item.id}
               onClick={() => handleNav(item.href)}
-              title={isCollapsed ? item.label : undefined}
+              data-tip={isCollapsed ? item.label : undefined}
               className={`w-full flex items-center rounded-lg transition-all mb-0.5 ${
                 isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5'
               } ${
@@ -234,7 +234,7 @@ export default function ShellSidebar() {
         )}
         <button
           onClick={handleSettingsClick}
-          title={isCollapsed ? 'Settings' : undefined}
+          data-tip={isCollapsed ? 'Settings' : undefined}
           className={`w-full flex items-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all font-medium ${
             isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
           }`}
@@ -245,7 +245,7 @@ export default function ShellSidebar() {
         <Link
           to="/pricing"
           onClick={() => { if (isMobile) closeSidebar(); }}
-          title={isCollapsed ? 'Upgrade' : undefined}
+          data-tip={isCollapsed ? 'Upgrade' : undefined}
           className={`w-full flex items-center rounded-lg text-[var(--accent)] hover:bg-[var(--accent-subtle)] transition-all font-medium ${
             isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
           }`}
@@ -270,7 +270,7 @@ export default function ShellSidebar() {
         {!isMobile && (
           <button
             onClick={toggleCollapsed}
-            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            data-tip={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             className={`w-full flex items-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-all mt-1 ${
               isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2 text-[13px]'
             }`}

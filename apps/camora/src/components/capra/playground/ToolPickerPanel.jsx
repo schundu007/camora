@@ -338,7 +338,7 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
                       key={tool.id}
                       type="button"
                       onClick={() => toggle(tool.id)}
-                      title={tool.desc}
+                      data-tip={tool.desc}
                       style={{
                         padding: '5px 12px', borderRadius: 6, cursor: 'pointer',
                         border: active ? `1px solid ${cat.color}` : '1px solid rgba(255,255,255,0.1)',

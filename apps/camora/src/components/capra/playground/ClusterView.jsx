@@ -59,7 +59,7 @@ export default function ClusterView({ session, onClose }) {
         <button
           type="button"
           onClick={handleReconnect}
-          title="Reconnect terminal"
+          data-tip="Reconnect terminal"
           style={{
             padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 600,
             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',

@@ -24,7 +24,7 @@ export default function IdePane({ ideUrl }) {
       )}
       <iframe
         src={ideUrl}
-        title="Camora IDE"
+        data-tip="Camora IDE"
         onLoad={() => setLoaded(true)}
         style={{ width: '100%', height: '100%', border: 'none', display: 'block', opacity: loaded ? 1 : 0, transition: 'opacity 0.2s' }}
         allow="clipboard-read; clipboard-write"

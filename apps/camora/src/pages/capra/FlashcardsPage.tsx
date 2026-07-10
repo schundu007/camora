@@ -190,7 +190,7 @@ export default function FlashcardsPage() {
                     style={{ background: 'var(--bg-elevated)' }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = `${r.hue}14`)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-                    title={`${r.label} — press ${i + 1}`}
+                    data-tip={`${r.label} — press ${i + 1}`}
                   >
                     <span className="text-sm font-bold" style={{ color: r.hue }}>{r.label}</span>
                     <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{r.hint} · {i + 1}</span>

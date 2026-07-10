@@ -285,7 +285,7 @@ export default function AdminPanel({ token, onClose }) {
                         onClick={() => handleDeleteUser(user.username)}
                         className="px-2 py-1 text-xs font-medium rounded transition-colors"
                         style={{ color: 'var(--danger)' }}
-                        title="Delete user"
+                        data-tip="Delete user"
                       >
                         Delete
                       </button>

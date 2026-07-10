@@ -241,12 +241,12 @@ export default function JobSeekerProfilePanel() {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); }} />
           <button onClick={() => fileRef.current?.click()} disabled={uploading}
             className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60" style={T.ghostBtn}
-            title="Upload your base resume (PDF, DOCX, or TXT)">
+            data-tip="Upload your base resume (PDF, DOCX, or TXT)">
             {uploading ? 'Uploading…' : '⬆ Upload base resume'}
           </button>
           <button onClick={onAutofill} disabled={autofilling || loading}
             className="rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-60" style={T.subtleBtn}
-            title="Fill these fields from your uploaded base resume">
+            data-tip="Fill these fields from your uploaded base resume">
             {autofilling ? 'Reading your resume…' : '✨ Autofill from my base resume'}
           </button>
         </div>

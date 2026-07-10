@@ -1484,7 +1484,7 @@ export default function Blind75Page() {
                     {/* Mark practiced button */}
                     <button
                       onClick={(e) => { e.stopPropagation(); togglePracticed(practiceKey); }}
-                      title={isPracticed ? 'Mark as not practiced' : 'Mark as practiced'}
+                      data-tip={isPracticed ? 'Mark as not practiced' : 'Mark as practiced'}
                       style={{
                         width: '28px', height: '28px', borderRadius: '6px', flexShrink: 0,
                         border: isPracticed ? '2px solid var(--success)' : '2px solid var(--border)',

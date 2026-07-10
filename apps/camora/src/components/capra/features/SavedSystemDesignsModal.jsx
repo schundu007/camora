@@ -198,7 +198,7 @@ export default function SavedSystemDesignsModal({
                           ? 'bg-error-500/10 text-error-400 border border-error-500/30'
                           : 'text-[var(--text-muted)] hover:text-error-400 hover:bg-error-500/10 border border-transparent'
                       }`}
-                      title={deleteConfirmId === session.id ? 'Click again to confirm' : 'Delete'}
+                      data-tip={deleteConfirmId === session.id ? 'Click again to confirm' : 'Delete'}
                     >
                       {deleteConfirmId === session.id ? 'Confirm?' : 'Delete'}
                     </button>

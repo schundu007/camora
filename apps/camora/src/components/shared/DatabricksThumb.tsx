@@ -49,7 +49,7 @@ export function DatabricksThumb({
   return (
     <div
       className={`relative shrink-0 overflow-hidden flex items-center justify-center ${className}`}
-      title={title}
+      data-tip={title}
       style={{
         width: size,
         height: size,

@@ -321,7 +321,7 @@ export default function AdminTeamsPage() {
                             onClick={() => disableAutoTopup(t.id, t.owner_email)}
                             className="px-2.5 py-1 text-[11px] font-semibold rounded-md"
                             style={{ background: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.3)' }}
-                            title="Force-disable auto top-up"
+                            data-tip="Force-disable auto top-up"
                           >
                             Disable auto
                           </button>

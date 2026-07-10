@@ -55,7 +55,7 @@ export default function TrackJobButton({ job }: { job: TrackJob }) {
       type="button"
       onClick={onTrack}
       disabled={!interactive}
-      title={state === 'error' ? 'Could not track — click to retry' : 'Save to your application tracker'}
+      data-tip={state === 'error' ? 'Could not track — click to retry' : 'Save to your application tracker'}
       style={{
         fontSize: '13px',
         fontWeight: 500,

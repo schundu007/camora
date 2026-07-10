@@ -48,7 +48,7 @@ function DocCardLink({ card }: { card: DocCard }) {
         <span
           role="button"
           tabIndex={0}
-          title="Click to copy link"
+          data-tip="Click to copy link"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
