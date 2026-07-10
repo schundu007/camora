@@ -65,6 +65,17 @@ describe('docFromSolution', () => {
     const prose = s.blocks.find(b => b.kind === 'prose') as { text: string };
     expect(prose.text).not.toMatch(/\*/);
   });
+
+  it('keeps pitch.approach (the summary paragraph), not just opener', () => {
+    const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
+    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'Two pointers converge.' });
+  });
+
+  it('keeps both sol.approach and sol.narration when they differ', () => {
+    const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
+    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'So my instinct is a two-pointer scan.' });
+    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'Scan from both ends, shrinking inward.' });
+  });
 });
 
 describe('docFromBlocks', () => {
@@ -197,4 +208,24 @@ describe('docFromCoFix', () => {
     expect(ids).not.toContain('walkthrough');
     expect(ids).not.toContain('changes');
   });
+});
+
+it('live and history agree on the section ids they both emit (parity guard)', () => {
+  const solDoc = docFromSolution(SD);
+  const blockDoc = docFromBlocks([
+    { type: 'APPROACH', content: 'Scan from both ends.' },
+    { type: 'COMPLEXITY', content: 'Time: O(n)\nSpace: O(1)' },
+    { type: 'EDGECASES', content: '- empty\n- all equal' },
+    { type: 'TRADEOFFS', content: '- space vs readability' },
+  ]);
+  const solIds = new Set(solDoc.sections.map(s => s.id));
+  const blockIds = new Set(blockDoc.sections.map(s => s.id));
+  const overlap = [...solIds].filter(id => blockIds.has(id));
+  // every shared id must be produced by BOTH paths — neither silently drops it
+  for (const id of overlap) {
+    expect(solIds.has(id)).toBe(true);
+    expect(blockIds.has(id)).toBe(true);
+  }
+  // and they genuinely share the core answer sections
+  expect(overlap).toEqual(expect.arrayContaining(['approach', 'complexity', 'edgecases', 'tradeoffs']));
 });

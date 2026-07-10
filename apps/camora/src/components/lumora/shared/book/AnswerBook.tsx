@@ -90,18 +90,19 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
         </div>
       );
 
-    case 'walk':
+    case 'walk': {
+      const interactive = !!(onLineHover || onLineClick);
       return (
         <div className="my-3">
           {block.rows.map((r, i) => {
-            const bindable = r.line != null || !!r.code;
+            const bindable = interactive && (r.line != null || !!r.code);
             return (
             <div
               key={i}
               className="py-2 border-b border-[var(--border)] last:border-0"
               style={bindable ? { cursor: 'pointer' } : undefined}
               onMouseEnter={() => bindable && onLineHover?.(r.line, r.code, i)}
-              onMouseLeave={() => onLineHover?.(undefined)}
+              onMouseLeave={() => bindable && onLineHover?.(undefined)}
               onClick={() => bindable && onLineClick?.(r.line, r.code, i)}
             >
               {(r.line != null || r.code) && (
@@ -120,6 +121,7 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
           })}
         </div>
       );
+    }
 
     default: {
       const _exhaustive: never = block;
