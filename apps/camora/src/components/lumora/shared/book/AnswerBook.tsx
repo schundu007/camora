@@ -36,17 +36,34 @@ const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
   );
 };
 
+// Render inline `code` spans within otherwise-plain prose. Only backticks are
+// styled — cleanText() already strips ** and # upstream, so nothing else can
+// smuggle markdown in. Restores the inline-code styling the old CoFix
+// inlineFormat parser gave walkthrough text.
+const InlineText = ({ text }: { text: string }): ReactElement => {
+  if (!text || !text.includes('`')) return <>{text}</>;
+  return (
+    <>
+      {text.split(/(`[^`]+`)/g).map((part, i) =>
+        part.length > 2 && part.startsWith('`') && part.endsWith('`')
+          ? <code key={i} className="font-mono text-[0.92em] px-1 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent-text)]">{part.slice(1, -1)}</code>
+          : <span key={i}>{part}</span>,
+      )}
+    </>
+  );
+};
+
 const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<Props, 'doc'>): ReactElement | null => {
   switch (block.kind) {
     case 'prose':
-      return <p className="mb-3">{block.text}</p>;
+      return <p className="mb-3"><InlineText text={block.text} /></p>;
 
     case 'callout':
       return (
         <div className="lumora-book-callout">
           <div className="lumora-book-label !mt-0">{block.label}</div>
           <ul className="space-y-1">
-            {block.items.map((it, i) => <li key={i}>{it}</li>)}
+            {block.items.map((it, i) => <li key={i}><InlineText text={it} /></li>)}
           </ul>
         </div>
       );
@@ -115,7 +132,7 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
                   {r.code && <code className="font-mono text-[12px] text-[var(--text-muted)] truncate">{r.code}</code>}
                 </div>
               )}
-              <span className="text-[13px] leading-relaxed">{r.explanation}</span>
+              <span className="text-[13px] leading-relaxed"><InlineText text={r.explanation} /></span>
             </div>
             );
           })}
