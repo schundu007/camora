@@ -4,6 +4,7 @@
  * Lifted out of AICompanionPanel so the same helpers can be reused by the
  * STAR / RichText renderers without dragging in the panel's React tree.
  */
+import { blockTagStripRe } from '@/lib/constants';
 
 export function extractAnswer(parsed: any): string {
   if (!parsed) return '';
@@ -41,7 +42,10 @@ export function cleanTags(text: string): string {
 
   // Generic tag strip — opening + closing forms of every known section.
   // Handles optional lang= attribute on CODE and optional whitespace padding.
-  t = t.replace(/\[\/?\s*(?:FOLLOWUP|HEADLINE|ANSWER|CODE(?:\s+lang=[\w-]+)?|DIAGRAM|REQUIREMENTS|SCALEMATH|DEEPDESIGN|EDGECASES|TRADEOFFS|PROBLEM|APPROACH|COMPLEXITY|WALKTHROUGH|TESTCASES|PITCH|JD_COVERAGE)\s*\]/gi, '');
+  // Canonical strip list (shared with cleanText) so Sona can't leak a tag one
+  // list was missing. PITCH/JD_COVERAGE are converted to headings above, before
+  // this runs, so re-listing them here is a harmless no-op.
+  t = t.replace(blockTagStripRe(), '');
 
   // Fenced JSON — ```json { ... } ``` — keep inner content (prose, not code).
   // Only matches json/JSON explicitly; other language fences (bash, python, etc.)
