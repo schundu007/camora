@@ -19,13 +19,6 @@ import { isProblemPageUrl } from '@/lib/problemPageUrl';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-const SNAP_CHIPS = [
-  { label: 'Find Issues', prompt: 'Find all bugs, security vulnerabilities, and issues in this code. For each issue explain what is wrong and provide a specific fix with corrected code.' },
-  { label: 'Explain', prompt: 'Explain what this code does step by step. Describe the purpose of each key section.' },
-  { label: 'Optimize', prompt: 'Suggest concrete performance and quality improvements for this code with specific examples.' },
-  { label: 'Write Tests', prompt: 'Write comprehensive unit tests covering happy paths, edge cases, and error conditions for this code.' },
-] as const;
-
 // Hard cap on multi-page SNAP captures — a backstop so the page count can never
 // run away even if a capture source keeps delivering new (non-duplicate) frames.
 const MAX_SNAP_PAGES = 12;
@@ -348,8 +341,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
   const [showFixPrompt, setShowFixPrompt] = useState(false);
   const [fixError, setFixError] = useState('');
-  // Auto-collapse input panel in autopilot mode (platform selected) so solution fills the screen.
-  const [isInputCollapsed, setIsInputCollapsed] = useState(() => !!(codingPlatform && codingPlatform !== 'none'));
 
   // Silent auto-fix loop: after solution generation, auto-run fires. If tests
   // fail we silently call fix → re-run up to 3 times before surfacing the
@@ -370,7 +361,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   useEffect(() => { analysisCacheRef.current = analysisCache; }, [analysisCache]);
   const [analysisLoading, setAnalysisLoading] = useState<string | null>(null);
   const analysisAbortRef = useRef<AbortController | null>(null);
-  const autoAnalysisFiredForRef = useRef<number>(-1);
 
   useEffect(() => {
     const camo = (window as any).camo;
@@ -676,7 +666,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     analysisAbortRef.current?.abort();
     setAnalysisCache({});
     setAnalysisTab('code');
-    autoAnalysisFiredForRef.current = -1;
     useSessionStore.getState().setLiveSolveContext(null);
     lastAutoGenSigRef.current = ''; // clear dedup so re-entering the same problem solves again
     onNewProblemCallback?.();
@@ -1540,7 +1529,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         return base ? `${base}\n\n--- Starter code (template to complete) ---\n${clean}` : `--- Starter code (template to complete) ---\n${clean}`;
       });
       setInputMode('paste');
-      setIsInputCollapsed(false);
       scheduleAutoGenerate();
     };
     return () => { onScreenshotAppendRef.current = null; };
@@ -1668,10 +1656,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   };
 
 
-  // Ref so acceptImage can be called without a forward-reference TDZ.
-  // acceptImage is declared ~150 lines below; putting it in the
-  // useCallback deps array would access the const before initialization.
-  const acceptImageRef = useRef<((file: File) => void) | null>(null);
 
   const handleFetchFromUrl = async (overrideUrl?: string, opts?: { auto?: boolean }) => {
     const urlToFetch = overrideUrl ?? problemUrl;
@@ -1791,36 +1775,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputMode]);
 
-  // Extract → set problem text → optionally chain into solution generation.
-  // Takes an explicit file (not state) so it can be called the moment an
-  // image is dropped/picked, before setImageFile React-renders.
-  const handleSnapChip = useCallback((prompt: string) => {
-    // Source priority: snapped screen code > editor code (if non-default) > problem text
-    const defaultCode = getDefaultCode(language);
-    const editorHasCode = code.trim() && code.trim() !== defaultCode.trim();
-    const source = snapChipCode
-      || (editorHasCode ? `\`\`\`${language}\n${code.trim()}\n\`\`\`` : null)
-      || problemText;
-    if (!source?.trim()) return;
-    if (snapChipCode) setSnapChipCode(null);
-    const combined = `${prompt}\n\n${source}`;
-    setProblemText(combined);
-    setStreamError(null);
-    setTestResults([]);
-    setTestCases([{ input: '', expected: '' }]);
-    setOutput('');
-    setShowFixPrompt(false);
-    clearStreamChunks();
-    setParsedBlocks([]);
-    setJsonSolution(null);
-    setCode(defaultCode);
-    setCollapsedCards(new Set());
-    setActiveSolutionIdx(0);
-    setIsOutputCollapsed(true);
-    setProblemTab('solution');
-    onSubmit(combined, language, {});
-  }, [snapChipCode, code, problemText, language, clearStreamChunks, setParsedBlocks, setStreamError, onSubmit, getDefaultCode]);
-
   const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {
     if (!token) { setError('Not authenticated'); return; }
     setIsProcessing(true);
@@ -1921,19 +1875,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     }
   }, [token]);
 
-  // Drop/select an image → preview + auto-extract + auto-generate solution.
-  // No more manual click chain: image in, answer out.
-  const acceptImage = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
-    setError(null);
-    void extractAndMaybeGenerate(file, true);
-  }, [extractAndMaybeGenerate]);
-  // Keep ref in sync so handleSnap (defined above) always calls the latest version
-  acceptImageRef.current = acceptImage;
 
   // Add a dataUrl to the IMAGE chip collection and update display state.
   const addToSnapCollection = useCallback((dataUrl: string) => {
@@ -2515,7 +2456,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               setProblemText(problem);
                               if (starterCode) setStarterCode(starterCode);
                               if (lang) setLanguage(lang);
-                              setIsInputCollapsed(false);
                             }}
                           />
 

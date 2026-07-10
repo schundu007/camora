@@ -336,46 +336,6 @@ function isApiExhaustedError(err) {
 const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '16000', 10);
 const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2', 10);
 
-// ── Reliability config ────────────────────────────────────────────────
-//
-// Live interviews can't tolerate a failed solve. The /solve handler
-// therefore performs automatic recovery *before* surfacing any error:
-//
-//   1. Transient transport errors (529 overloaded / 503 / network / timeout):
-//      retry the stream up to CLAUDE_MAX_TRANSPORT_RETRIES times with
-//      500 ms + 1500 ms back-off. User never sees a 529.
-//
-//   2. Stream completes but output is empty or not parseable as JSON:
-//      re-issue the request ONCE in non-streaming mode with a stricter
-//      "return ONLY valid JSON, no prose" reminder prepended. The JSON
-//      extractor already tolerates truncation via brace stitching, so
-//      this second pass covers the remaining "model prefixed prose"
-//      and "model stopped mid-field" cases.
-//
-//   3. If the strict-reminder retry *also* fails to parse, fall back
-//      to the other tier model (Sonnet <-> Haiku) for one final
-//      non-streaming attempt. Better a slightly weaker answer than
-//      no answer on interview day.
-//
-// Backoff is intentionally tight so the whole recovery path stays
-// within the ~15 s hard budget (8 s happy path + up to 7 s recovery).
-const CLAUDE_MAX_TRANSPORT_RETRIES = 2;
-const CLAUDE_TRANSPORT_BACKOFFS_MS = [500, 1500]; // per reinforcement note
-const FALLBACK_MODEL_PAID = 'claude-haiku-4-5-20251001';
-const FALLBACK_MODEL_FREE = 'claude-sonnet-4-6';
-
-function isRetryableClaudeError(err) {
-  if (!err) return false;
-  const status = err.status || err.statusCode || err?.response?.status;
-  if (status === 529 || status === 503 || status === 502 || status === 504 || status === 429) return true;
-  const msg = (err.message || '').toLowerCase();
-  return /overloaded|timeout|timed out|econnreset|fetch failed|socket hang up|network/.test(msg);
-}
-
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 /**
  * Tag-truncate raw model output for server logs. Keeps individual log
  * lines under ~2 KB per the telemetry spec.
@@ -1447,7 +1407,6 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   let outputTokens = 0;
   let modelUsed = primaryModel;
   let terminalFailure = null; // { msg, category } when all passes give up
-  let anthropicExhausted = false; // true when Anthropic spending/quota limit hit
   let passTag = 'primary_stream';
 
   const systemPrompt = isMcq
@@ -1606,14 +1565,12 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     // Never surface raw Anthropic SDK error bodies (they contain 400 JSON blobs).
     // Show a human-readable message instead.
     let msg = terminalFailure?.msg || "Couldn't generate a solution. Please tap retry.";
-    if (anthropicExhausted) {
-      msg = 'AI service is at capacity right now. Tap Regenerate to retry — it will use a backup model.';
-    } else if (msg.startsWith('4') && msg.includes('"type"')) {
+    if (msg.startsWith('4') && msg.includes('"type"')) {
       msg = "Couldn't generate a solution. Please tap retry.";
     }
     console.error(
       `[coding/solve] TERMINAL_FAILURE lang=${lang} model=${modelUsed} pass=${passTag} ` +
-      `durMs=${latencyMs} category=${terminalFailure?.category || 'unknown'} exhausted=${anthropicExhausted} ua=${JSON.stringify(userAgent)}`,
+      `durMs=${latencyMs} category=${terminalFailure?.category || 'unknown'} ua=${JSON.stringify(userAgent)}`,
     );
     sendEvent('error', {
       msg,
