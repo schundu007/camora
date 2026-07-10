@@ -84,6 +84,14 @@ describe('docFromBlocks', () => {
     expect(doc.sections[0].blocks[0]).toEqual({ kind: 'kv', pairs: [['Time', 'O(n)'], ['Space', 'O(1)']] });
   });
 
+  it('keeps a bare line in a COMPLEXITY block instead of dropping it', () => {
+    const doc = docFromBlocks([{ type: 'COMPLEXITY', content: 'Time: O(n)\nAmortized over all ops' }]);
+    expect(doc.sections[0].blocks).toEqual([
+      { kind: 'kv', pairs: [['Time', 'O(n)']] },
+      { kind: 'list', items: ['Amortized over all ops'] },
+    ]);
+  });
+
   it('covers every design block type the renderer supports', () => {
     const designTypes = [
       'REQUIREMENTS', 'SCALEMATH', 'DEEPDESIGN', 'TRADEOFFS', 'EDGECASES',
