@@ -20,6 +20,12 @@ const {
   Menu, MenuItem, clipboard, screen: electronScreen,
 } = require('electron');
 const path = require('path');
+
+// Synchronous version lookup for preload's `window.camo.version`. Returns the
+// real CFBundleShortVersionString (1.0.0) so the UI never hardcodes a version
+// that can drift stale. The per-build CFBundleVersion (stamped by CI) is what
+// macOS uses to distinguish builds; the marketing version stays 1.0.0.
+ipcMain.on('app:get-version', (e) => { e.returnValue = app.getVersion(); });
 const fs = require('fs');
 const os = require('os');
 const { execFile, spawn } = require('child_process');
