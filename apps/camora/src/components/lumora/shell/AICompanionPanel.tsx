@@ -4,7 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
 import { dialogConfirm } from '@/components/shared/Dialog';
-import { isQuestion, isWhisperHallucination, isBehavioralPrompt } from '@/lib/questionDetector';
+import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
@@ -587,6 +587,24 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const coalesceBufferRef = useRef<string>('');
   const coalesceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Behavioral tap-to-answer: transcribed interviewer lines land here as
+  // PENDING questions and Sona answers NONE of them automatically. The user
+  // taps the one they actually want answered. Kills the auto-answer garbage
+  // flood from meeting chatter / Whisper hallucinations in noisy rooms.
+  const [detectedQuestions, setDetectedQuestions] = useState<{ id: number; text: string; time: Date }[]>([]);
+  const detectedIdRef = useRef(0);
+  const addDetectedQuestion = useCallback((text: string) => {
+    const t = (text || '').trim();
+    if (!t || isWhisperHallucination(t)) return;
+    setDetectedQuestions(prev => {
+      // Drop near-duplicates of the last few entries (continuation fragments,
+      // same utterance from two paths).
+      if (prev.slice(-4).some(q => isDuplicateQuestion(q.text, t))) return prev;
+      const next = [...prev, { id: ++detectedIdRef.current, text: t, time: new Date() }];
+      return next.slice(-40); // cap the list so a long session doesn't grow unbounded
+    });
+  }, []);
+
   // Ask a question — streams independently
   const ask = useCallback(async (question: string) => {
     // Defensive: an upstream caller occasionally hands us a non-string
@@ -761,9 +779,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       // is where narration is filtered now that the per-fragment isQuestion()
       // gate in LumoraShellPage was removed (it ate ~90% of real questions).
       // Manual mic presses never reach here — they ask() directly upstream.
-      if (full && isBehavioralPrompt(full)) askRef.current?.(full);
+      // Tap-to-answer: LIST the transcribed line as a pending question instead
+      // of auto-answering it. The user taps the ones they actually want. This
+      // is the single control point that stops the auto-answer garbage flood.
+      if (full) addDetectedQuestion(full);
     }, COALESCE_MS);
-  }, []);
+  }, [addDetectedQuestion]);
 
   // On unmount: drop any buffered fragment and abort an in-flight stream so we
   // stop billing tokens the browser will never render.
@@ -1183,6 +1204,42 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     <p className="break-words">{liveTranscript}</p>
                     <span className="text-[8px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
                   </div>
+                </div>
+              )}
+              {/* Pending detected questions (behavioral tap-to-answer). Nothing
+                  is auto-answered — these are transcribed interviewer lines and
+                  the user taps the one they want Sona to answer. */}
+              {embedded && detectedQuestions.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>Tap to answer</span>
+                    <button onClick={() => setDetectedQuestions([])} className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear all detected questions">Clear</button>
+                  </div>
+                  {[...detectedQuestions].reverse().map(q => (
+                    <div
+                      key={q.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => { setDetectedQuestions(prev => prev.filter(x => x.id !== q.id)); ask(q.text); setMobileRailOpen(false); }}
+                      className="group flex items-start gap-2 px-3 py-2.5 md:py-2 rounded-lg cursor-pointer transition-colors"
+                      style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--text-primary)' }}
+                      data-tip="Answer this with Sona"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="break-words text-[13px] md:text-[11px] font-medium">{q.text}</p>
+                        <span className="text-[8px] mt-1 block font-bold uppercase tracking-wide" style={{ color: 'var(--cam-gold-leaf)' }}>tap to answer · {q.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDetectedQuestions(prev => prev.filter(x => x.id !== q.id)); }}
+                        className="shrink-0 p-1 rounded-md transition-colors"
+                        style={{ color: 'var(--text-muted)' }}
+                        data-tip="Dismiss (don't answer)"
+                        aria-label="Dismiss question"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
               {/* Iterate the full messages array (not a filtered copy) so
