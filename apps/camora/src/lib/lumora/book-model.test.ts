@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { docFromSolution, docFromBlocks } from './book-model';
+import { docFromSolution, docFromBlocks, docFromCoFix } from './book-model';
 
 const SD = {
   language: 'python',
@@ -108,5 +108,65 @@ describe('docFromBlocks', () => {
 
   it('drops blocks whose content is whitespace', () => {
     expect(docFromBlocks([{ type: 'APPROACH', content: '   ' }]).sections).toEqual([]);
+  });
+});
+
+describe('docFromCoFix', () => {
+  it('maps changes and walkthrough to sections', () => {
+    const doc = docFromCoFix({
+      changes: [{ line: 3, type: 'fix', badge: '1', label: 'Off-by-one', note: 'Use <=' }],
+      walkthrough: [{ lines: '3-4', context: 'loop', text: 'Bounds corrected.' }],
+    });
+    expect(doc.sections.map(s => s.id)).toEqual(['walkthrough', 'changes']);
+  });
+
+  it('prepends analysis sections when analysis is supplied', () => {
+    const doc = docFromCoFix(
+      { changes: [], walkthrough: [] },
+      { title: 'Two Sum', problem: 'Find a pair.', concepts: ['Hash Map'], steps: [], examples: [] } as any,
+    );
+    expect(doc.sections.map(s => s.id)).toEqual(['problem', 'concepts']);
+  });
+
+  it('returns no sections for an empty answer', () => {
+    expect(docFromCoFix({ changes: [], walkthrough: [] }).sections).toEqual([]);
+  });
+
+  // Note: the brief's Step 1 tests only exercise `problem`/`concepts` text and bare
+  // arrays. Per the brief's own Step 3 note, Input/Output format and Examples must
+  // NOT be dropped — they fold into the `problem` section as a `kv` block and a
+  // `list` block respectively, alongside the prose. This test asserts that richer,
+  // no-drop behavior explicitly since the Step 1 tests don't cover it.
+  it('folds Input/Output format and Examples into the problem section instead of dropping them', () => {
+    const doc = docFromCoFix(
+      { changes: [], walkthrough: [] },
+      {
+        title: 'Two Sum',
+        problem: 'Find a pair that sums to target.',
+        input_format: 'Array of ints, target int',
+        output_format: 'Indices of the two numbers',
+        examples: [{ input: '[2,7,11,15], target=9', output: '[0,1]', explanation: 'nums[0]+nums[1]==9' }],
+        concepts: [],
+        steps: [],
+      } as any,
+    );
+    const problem = doc.sections.find(s => s.id === 'problem')!;
+    expect(problem.blocks).toContainEqual({
+      kind: 'kv',
+      pairs: [['Input format', 'Array of ints, target int'], ['Output format', 'Indices of the two numbers']],
+    });
+    expect(problem.blocks).toContainEqual({
+      kind: 'list',
+      items: ['[2,7,11,15], target=9 → [0,1] — nums[0]+nums[1]==9'],
+    });
+  });
+
+  it('drops the Input/Output kv block entirely when neither format string is present', () => {
+    const doc = docFromCoFix(
+      { changes: [], walkthrough: [] },
+      { problem: 'x', input_format: '', output_format: '', examples: [], concepts: [], steps: [] } as any,
+    );
+    const problem = doc.sections.find(s => s.id === 'problem')!;
+    expect(problem.blocks.some(b => b.kind === 'kv')).toBe(false);
   });
 });

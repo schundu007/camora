@@ -9,6 +9,8 @@ import 'allotment/dist/style.css';
 import { Editor, useMonaco } from '@monaco-editor/react';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { AnnotationPanel } from './AnnotationPanel';
+import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
+import { docFromCoFix } from '@/lib/lumora/book-model';
 import { streamCoFixResponse } from '@/lib/sse-client';
 import { playgroundAPI } from '@/lib/capra-api';
 import type { CoFixAnswer, CoFixChange, CoFixWalkStep } from '@/lib/sse-client';
@@ -1426,27 +1428,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 )}
 
                 {analysis && (
-                  <div>
-                    <h3 className="text-[14px] font-bold mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>{analysis.title}</h3>
-                    <p className="text-[12px] leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      {[['Input', analysis.input_format], ['Output', analysis.output_format]].map(([label, val]) => (
-                        <div key={label} className="p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                          <div className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{label}</div>
-                          <div className="text-[12px]" style={{ color: 'var(--text-primary)' }}>{val}</div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="space-y-1.5">
-                      {analysis.examples.map((ex, i) => (
-                        <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg text-[12px]" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                          <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-primary)' }}>{ex.input}</code>
-                          <span style={{ color: 'var(--text-muted)' }}>→</span>
-                          <code style={{ fontFamily: 'var(--font-mono)', color: 'var(--cam-gold-leaf)', fontWeight: 600 }}>{ex.output}</code>
-                          {ex.explanation && <span className="italic text-[11px]" style={{ color: 'var(--text-muted)' }}>{'// '}{ex.explanation}</span>}
-                        </div>
-                      ))}
-                    </div>
+                  <div className="h-full overflow-y-auto">
+                    <AnswerBook doc={docFromCoFix({ changes, walkthrough }, analysis)} />
                   </div>
                 )}
               </div>
@@ -1483,46 +1466,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 )}
 
                 {analysis && (
-                  <div>
-                    {analysis.concepts.length > 0 && (
-                      <div className="mb-4">
-                        <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Concepts used</div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {analysis.concepts.map((c, i) => (
-                            <span key={i} className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
-                              style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', border: '1px solid color-mix(in oklab,var(--cam-primary) 30%,transparent)', color: 'var(--cam-primary)' }}>
-                              {c}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {analysis.problem && (
-                      <div className="mb-4 p-3 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 25%,transparent)' }}>
-                        <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Why this approach</div>
-                        <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{analysis.problem}</p>
-                      </div>
-                    )}
-                    <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>How it works — step by step</div>
-                    <div className="space-y-2.5">
-                      {analysis.steps.map((s, i) => (
-                        <div key={i} className="flex gap-3 items-start p-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                          <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5"
-                            style={{ background: 'color-mix(in oklab,var(--cam-gold-leaf) 20%,var(--bg-surface))', color: 'var(--cam-gold-leaf)', border: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 40%,transparent)' }}>
-                            {i + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            {s.code && (
-                              <code className="block text-[11px] px-2.5 py-1.5 rounded mb-1.5 leading-relaxed"
-                                style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', background: 'var(--bg-app)', border: '1px solid var(--border)' }}>
-                                {s.code}
-                              </code>
-                            )}
-                            <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--text-secondary)' }}>{s.text}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="h-full overflow-y-auto">
+                    <AnswerBook doc={docFromCoFix({ changes, walkthrough }, analysis)} />
                   </div>
                 )}
               </div>
