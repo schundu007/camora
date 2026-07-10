@@ -233,12 +233,20 @@ const CodingView = ({ blocks, question }: { blocks: ParsedBlock[]; question?: st
   return <AnswerBook doc={docFromBlocks(withQuestion)} />;
 };
 
-const SystemDesignView = ({ blocks, question }: { blocks: ParsedBlock[]; question?: string }) => (
-  <div className="flex flex-col gap-3">
-    {question && <ArchitectureCard question={question} />}
-    <AnswerBook doc={docFromBlocks(blocks)} />
-  </div>
-);
+const SystemDesignView = ({ blocks, question }: { blocks: ParsedBlock[]; question?: string }) => {
+  const headline = blocks.find(b => b.type === 'HEADLINE');
+  const headlineText = headline ? cleanText(headline.content) : '';
+  const diagramQuestion = question || headlineText;
+  return (
+    <div className="flex flex-col gap-3">
+      {headlineText && (
+        <h2 className="lumora-book-section" style={{ marginTop: 0 }}>{headlineText}</h2>
+      )}
+      {diagramQuestion && <ArchitectureCard question={diagramQuestion} />}
+      <AnswerBook doc={docFromBlocks(blocks)} />
+    </div>
+  );
+};
 
 const GridCard = ({
   title,
