@@ -1215,122 +1215,103 @@ const UnifiedMicButton = ({
 }) => {
   const isAutoOn = continuousMode;
   const isAsking = recordingModeUI === 'manual';
-  // Behavioral: always show a LIVE chip so the candidate can see (and toggle)
-  // whether Sona is listening — on every platform, desktop included.
-  //   • mic-only fallback  → LIVE reflects/controls the candidate mic loop.
-  //   • interviewer stream → LIVE reflects/controls THAT stream (desktop
-  //     loopback / shared tab / virtual mic) via the shared SpeakerAudio
-  //     context, so it mirrors the same start/stop the pill would.
-  const showLiveToggle = locked;
+  // "Is Sona listening?" state for the switch.
+  //   • mic-only fallback  → reflects/controls the candidate mic loop.
+  //   • interviewer stream → reflects/controls THAT stream (desktop loopback /
+  //     shared tab / virtual mic) via the shared SpeakerAudio context.
   const liveControlsSpeaker = locked && speakerEverConnected;
   const liveOn = liveControlsSpeaker ? speakerActive : isAutoOn;
+  // Unified listen state — behavioral LIVE and coding/design AUTO are now the
+  // same self-describing switch (on = "Listening", off = "Paused").
+  const listenOn = locked ? liveOn : isAutoOn;
+  const listenTip = locked
+    ? (liveControlsSpeaker
+        ? (listenOn
+            ? 'On — Sona is listening to the interviewer and answers each question. Click to pause.'
+            : 'Paused — interviewer audio is stopped. Click to resume listening.')
+        : (listenOn
+            ? 'On — Sona is listening and answers each question. Click or press ` to pause.'
+            : 'Paused — Sona is not listening. Click or press ` to resume.'))
+    : (listenOn
+        ? 'On — Sona listens continuously and answers each question. Click or press ` to pause.'
+        : 'Off — click to have Sona listen continuously and answer each question. Or press `.');
 
   const inner = (
     <>
-      {/* MIC label — hidden in compact mode (toolbar already has enough labels) */}
-      {!compact && (
+      {/* Listen switch — a REAL on/off switch (track + sliding knob) with an
+          explicit state word, so "is Sona listening?" is unmistakable at a
+          glance instead of a color-only cue. Unified across behavioral (LIVE)
+          and coding/design (AUTO). */}
+      <button
+        type="button"
+        role="switch"
+        aria-checked={listenOn}
+        onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
+        data-tip={listenTip}
+        className="inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full transition-colors shrink-0"
+        style={{
+          background: listenOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
+          border: `1px solid ${listenOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
+          boxShadow: listenOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
+        }}
+      >
+        {/* track + knob */}
         <span
-          className="hidden md:inline font-mono text-[9px] font-bold tracking-[0.18em] uppercase shrink-0"
-          style={{ color: 'var(--cam-strip-text)' }}
           aria-hidden="true"
+          className="relative inline-block rounded-full transition-colors"
+          style={{ width: 24, height: 13, background: listenOn ? 'var(--cam-primary-dk)' : 'var(--cam-strip-icon-border)' }}
         >
-          MIC
-        </span>
-      )}
-
-      {/* Behavioral mode — LIVE toggle. Same on/off control as AUTO (so the
-          candidate can pause Sona mid-interview), just branded LIVE and tuned
-          for the faster behavioral timing. ON = pulsing accent, OFF = paused. */}
-      {locked ? (
-        <>
-          {showLiveToggle && (
-            <button
-              type="button"
-              onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
-              className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
-              style={{
-                color: liveOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
-                background: liveOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
-                border: `1px solid ${liveOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
-                fontFamily: 'var(--font-mono)',
-                boxShadow: liveOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
-              }}
-              data-tip={liveControlsSpeaker
-                ? (liveOn
-                    ? 'LIVE — Sona is listening to the interviewer audio and answers each question. Click to pause.'
-                    : 'Paused — interviewer audio capture is stopped. Click to resume listening.')
-                : (liveOn
-                    ? 'LIVE is ON — Sona is listening and answers each question. Click or press ` to pause.'
-                    : 'LIVE is OFF — Sona is paused. Click or press ` to resume listening.')}
-              aria-pressed={liveOn}
-            >
-              {liveOn ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
-                  LIVE
-                </span>
-              ) : 'LIVE'}
-            </button>
-          )}
-          {/* Manual press-to-ask — speak a question in your OWN voice and Sona
-              answers it. Click once to start, click again to send (no hold).
-              Bypasses the interviewer-only gate via the manual flag, and runs
-              alongside the always-on interviewer stream. */}
-          <button
-            type="button"
-            onClick={(e) => { handleToggle(); e.currentTarget.blur(); }}
-            className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors inline-flex items-center gap-1.5"
+          <span
+            className="absolute rounded-full transition-[left]"
             style={{
-              color: isAsking ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
-              background: isAsking ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
-              border: `1px solid ${isAsking ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
-              fontFamily: 'var(--font-mono)',
-              boxShadow: isAsking ? '0 0 0 2px var(--accent-subtle)' : 'none',
+              width: 9, height: 9, top: 2, left: listenOn ? 13 : 2,
+              background: listenOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+              boxShadow: listenOn ? '0 0 6px var(--cam-accent-fill-text)' : 'none',
+              animation: listenOn ? 'mic-pulse 1.4s ease-out infinite' : undefined,
             }}
-            data-tip={isAsking
-              ? 'Listening to your question — click to send it to Sona.'
-              : 'Ask Sona in your own voice — click, speak your question, click again to send.'}
-            aria-pressed={isAsking}
-          >
-            {isAsking ? (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
-                SEND
-              </>
-            ) : (
-              <>
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 7v4m0-4a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z" />
-                </svg>
-                ASK
-              </>
-            )}
-          </button>
-        </>
-      ) : (
-        /* AUTO toggle — coding/design tabs */
+          />
+        </span>
+        <span
+          className="text-[10px] font-bold uppercase tracking-[0.14em]"
+          style={{ color: listenOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)', fontFamily: 'var(--font-mono)' }}
+        >
+          {listenOn ? 'Listening' : 'Paused'}
+        </span>
+      </button>
+
+      {/* Ask — momentary, in your OWN voice. ONE click: it records and
+          auto-sends to Sona when you pause (VAD). Styled as a BUTTON (not a
+          switch) so it can't be mistaken for a second toggle. No ASK→SEND
+          morph — while recording it just shows the live state. */}
+      {locked && (
         <button
           type="button"
-          onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
-          className="relative text-[11px] font-bold uppercase tracking-[0.16em] px-3 py-1.5 rounded transition-colors"
+          onClick={(e) => { handleToggle(); e.currentTarget.blur(); }}
+          aria-pressed={isAsking}
+          data-tip={isAsking
+            ? 'Recording your question — it sends to Sona automatically when you pause (or click to send now).'
+            : 'Ask in your own voice — click once, speak, and it sends to Sona when you pause.'}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-[0.14em] transition-colors shrink-0"
           style={{
-            color: isAutoOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
-            background: isAutoOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
-            border: `1px solid ${isAutoOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
+            color: isAsking ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+            background: isAsking ? 'var(--cam-accent-fill)' : 'transparent',
+            border: `1px solid ${isAsking ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
             fontFamily: 'var(--font-mono)',
-            boxShadow: isAutoOn ? '0 0 0 2px var(--accent-subtle)' : 'none',
           }}
-          data-tip={isAutoOn
-            ? 'AUTO is ON — Sona listens continuously. Click or press ` to stop.'
-            : 'Turn on AUTO — Sona listens continuously and answers each question. Click or press `.'}
-          aria-pressed={isAutoOn}
         >
-          {isAutoOn ? (
-            <span className="inline-flex items-center gap-1.5">
+          {isAsking ? (
+            <>
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
-              AUTO
-            </span>
-          ) : 'AUTO'}
+              Recording…
+            </>
+          ) : (
+            <>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 7v4m0-4a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z" />
+              </svg>
+              Ask
+            </>
+          )}
         </button>
       )}
 
