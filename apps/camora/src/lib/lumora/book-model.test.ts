@@ -169,4 +169,32 @@ describe('docFromCoFix', () => {
     const problem = doc.sections.find(s => s.id === 'problem')!;
     expect(problem.blocks.some(b => b.kind === 'kv')).toBe(false);
   });
+
+  it('problem view shows problem/examples but not concepts/steps or fix changes', () => {
+    const doc = docFromCoFix(
+      { changes: [{ line: 1, label: 'x', note: 'y' }], walkthrough: [{ lines: '1', text: 'w' }] },
+      { title: 'T', problem: 'P', concepts: ['C'], steps: [{ text: 'S' }], examples: [{ input: 'i', output: 'o' }] } as any,
+      'problem',
+    );
+    const ids = doc.sections.map(s => s.id);
+    expect(ids).toContain('problem');
+    expect(ids).not.toContain('concepts');
+    expect(ids).not.toContain('steps');
+    expect(ids).not.toContain('walkthrough');
+    expect(ids).not.toContain('changes');
+  });
+
+  it('learn view shows concepts/steps but not problem or fix changes', () => {
+    const doc = docFromCoFix(
+      { changes: [{ line: 1, label: 'x', note: 'y' }], walkthrough: [{ lines: '1', text: 'w' }] },
+      { title: 'T', problem: 'P', concepts: ['C'], steps: [{ text: 'S' }] } as any,
+      'learn',
+    );
+    const ids = doc.sections.map(s => s.id);
+    expect(ids).toContain('concepts');
+    expect(ids).toContain('steps');
+    expect(ids).not.toContain('problem');
+    expect(ids).not.toContain('walkthrough');
+    expect(ids).not.toContain('changes');
+  });
 });

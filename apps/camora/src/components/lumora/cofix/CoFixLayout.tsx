@@ -1429,7 +1429,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
                 {analysis && (
                   <div className="h-full overflow-y-auto">
-                    <AnswerBook doc={docFromCoFix({ changes, walkthrough }, analysis)} />
+                    <AnswerBook doc={docFromCoFix({ changes, walkthrough }, analysis, 'problem')} />
                   </div>
                 )}
               </div>
@@ -1467,7 +1467,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
                 {analysis && (
                   <div className="h-full overflow-y-auto">
-                    <AnswerBook doc={docFromCoFix({ changes, walkthrough }, analysis)} />
+                    <AnswerBook doc={docFromCoFix({ changes, walkthrough }, analysis, 'learn')} />
                   </div>
                 )}
               </div>
