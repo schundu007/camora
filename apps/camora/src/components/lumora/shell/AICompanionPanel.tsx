@@ -4,7 +4,7 @@ import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
 import { dialogConfirm } from '@/components/shared/Dialog';
-import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
+import { isQuestion, isWhisperHallucination, isBehavioralPrompt } from '@/lib/questionDetector';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
@@ -27,6 +27,24 @@ const isDuplicateQuestion = (a: string, b: string): boolean => {
   const nb = normalizeQ(b);
   if (!na || !nb) return false;
   return na === nb || na.includes(nb) || nb.includes(na);
+};
+
+// Whisper hallucinations in a noisy room are low-content loops — a single word
+// repeated, or a 2-word phrase repeated ("the next thing… the next step…").
+// Catches the garbage isBehavioralPrompt lets through so the tap-to-answer list
+// stays clean.
+const looksLowContent = (s: string): boolean => {
+  const words = s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+  if (words.length < 4) return true;
+  const counts: Record<string, number> = {};
+  for (const w of words) counts[w] = (counts[w] || 0) + 1;
+  if (words.length <= 14 && Math.max(...Object.values(counts)) >= 3) return true;
+  const bigrams: Record<string, number> = {};
+  for (let i = 0; i < words.length - 1; i++) {
+    const b = words[i] + ' ' + words[i + 1];
+    bigrams[b] = (bigrams[b] || 0) + 1;
+  }
+  return Object.values(bigrams).some((c) => c >= 2);
 };
 
 /* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
@@ -595,11 +613,16 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const detectedIdRef = useRef(0);
   const addDetectedQuestion = useCallback((text: string) => {
     const t = (text || '').trim();
-    if (!t || isWhisperHallucination(t)) return;
+    // Keep the tap-to-answer list clean in a noisy room. Layered filter:
+    if (!t || t.length < 15) return;                                   // fragments: "of the", "with the"
+    if (/https?:\/\/|www\.|\.(?:com|net|org|io|ai|co)\b/i.test(t)) return; // hallucinated URLs ("www.Versa.gbias.com")
+    if (isWhisperHallucination(t)) return;                             // known Whisper phantoms
+    if (!isBehavioralPrompt(t)) return;                               // pleasantries, wrap-ups, non-prompts
+    if (looksLowContent(t)) return;                                   // repetitive "next thing… next step" loops
     setDetectedQuestions(prev => {
       // Drop near-duplicates of the last few entries (continuation fragments,
       // same utterance from two paths).
-      if (prev.slice(-4).some(q => isDuplicateQuestion(q.text, t))) return prev;
+      if (prev.slice(-6).some(q => isDuplicateQuestion(q.text, t))) return prev;
       const next = [...prev, { id: ++detectedIdRef.current, text: t, time: new Date() }];
       return next.slice(-40); // cap the list so a long session doesn't grow unbounded
     });
