@@ -47,4 +47,13 @@ describe('AnswerBook', () => {
     const { container } = render(<AnswerBook doc={{ sections: [] }} />);
     expect(container.querySelector('.lumora-book')?.children.length ?? 0).toBe(0);
   });
+
+  it('renders a code block with its source text', () => {
+    const { container } = render(<AnswerBook doc={{ sections: [
+      { id: 'code', heading: 'Code', blocks: [{ kind: 'code', lang: 'python', code: 'print(42)' }] },
+    ] }} />);
+    // highlight.js splits the code into <span> children for syntax highlighting,
+    // so assert on the concatenated textContent rather than a single text node.
+    expect(container.querySelector('code')?.textContent).toBe('print(42)');
+  });
 });
