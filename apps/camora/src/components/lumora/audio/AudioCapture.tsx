@@ -266,6 +266,15 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // otherwise the bars sit flat while Sona is actually hearing the interviewer.
   const speakerLevel = useSessionStore((s) => s.speakerAudio.level);
   const speaker = useSpeakerAudio();
+  // Stable ref so callbacks (handleRecordingStop) can pause/resume the speaker
+  // stream without listing `speaker` in their deps (its identity changes on
+  // every level tick, which would rebuild the whole recorder closure).
+  const speakerRef = useRef(speaker);
+  useEffect(() => { speakerRef.current = speaker; }, [speaker]);
+  // True while LISTENING was paused *by us* to give an Ask its own turn, so we
+  // know to resume it once the Ask finishes. LISTENING and Ask are mutually
+  // exclusive: only one source feeds Sona at a time.
+  const speakerPausedForAskRef = useRef(false);
 
   // Accumulated transcription text for Live mode (chunks build up a full question)
   const accumulatedTextRef = useRef('');
@@ -651,6 +660,11 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     dlog('recorder_stopped', { stoppedMode, continuous: continuousModeRef.current, paused: userPausedRef.current });
 
     if (stoppedMode === 'manual') {
+      // Resume LISTENING if we paused it for this Ask (mutual exclusion).
+      if (speakerPausedForAskRef.current) {
+        speakerPausedForAskRef.current = false;
+        void speakerRef.current?.start();
+      }
       // Manual one-shot just finished. If AUTO is configured ON,
       // resume the continuous loop from where it left off — but only
       // after a beat so the manual blob's transcription request has
@@ -755,7 +769,10 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     // covers nearly all real interview questions while still preventing
     // a runaway recording if VAD silence detection misfires.
     // Manual mode: 5 min — a forgotten hot mic eventually closes itself.
-    maxRecordingDuration: continuousMode ? 30000 : 300000,
+    // Behavioral: 20 s hard cap on an Ask so it always resolves — with speakers
+    // on, the mic can hear the interviewer and never detect silence, which used
+    // to leave "Recording…" stuck forever. Other modes keep the longer ceilings.
+    maxRecordingDuration: locked ? 20000 : (continuousMode ? 30000 : 300000),
     deviceId: selectedDeviceId,
   });
 
@@ -989,6 +1006,16 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         }
       }, 700);
       return;
+    }
+
+    // Starting an Ask (not the second-click send). LISTENING and Ask are
+    // mutually exclusive: pause the interviewer stream so (a) the two don't
+    // both feed Sona, and (b) its audio doesn't bleed through the speakers into
+    // the mic and stop the Ask from ever detecting silence. Resumed when the
+    // Ask finishes (handleRecordingStop).
+    if (locked && speakerRef.current?.active) {
+      speakerRef.current.stop();
+      speakerPausedForAskRef.current = true;
     }
 
     if (recordingModeRef.current === 'auto') {
