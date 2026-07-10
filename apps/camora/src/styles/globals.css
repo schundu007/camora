@@ -990,7 +990,7 @@
 [data-theme="light"] .prep-content > p,
 [data-theme="light"] .prep-content > section > p,
 [data-theme="light"] .docs-page p {
-  max-width: 68ch;
+  max-width: none;
 }
 
 /* ── Book reading mode ────────────────────────────────────────────────────
@@ -1004,7 +1004,7 @@
    Newsreader for body, Fraunces for headings (loaded in index.html). Each
    family also carries its own accent hue so no two topics feel identical. */
 .prep-content.flex-1 {
-  max-width: 66rem;
+  max-width: none;
   margin-inline: auto;
   --topic-accent: var(--accent); /* per-family override below; default = base blue */
 }
@@ -1240,11 +1240,20 @@
 .heading-4 { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); line-height: 1.5; font-family: var(--font-sans); }
 /* text-body: raised to 16px floor (DESIGN.md §3 rule). max-width caps line
    length at ~72ch — comfortable measure for sustained reading. */
-.text-body { font-size: 16px; color: var(--text-secondary); line-height: 1.65; max-width: 72ch; }
-/* text-body-lg retains the same size but gets a slightly tighter measure
-   (70ch) since it's used on wider editorial surfaces. */
-.text-body-lg { font-size: 16px; color: var(--text-secondary); line-height: 1.75; max-width: 70ch; }
+.text-body { font-size: 16px; color: var(--text-secondary); line-height: 1.65; }
+/* text-body-lg retains the same size. Full width — no reading-measure cap. */
+.text-body-lg { font-size: 16px; color: var(--text-secondary); line-height: 1.75; }
 .text-small { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* Diagrams read best CENTERED, not left-aligned — while prose now fills the
+   full column width. Scoped to reading surfaces so inline icons/avatars aren't
+   affected. Covers <img>, <figure>, and diagram wrappers. */
+.prep-content :where(img, figure, .diagram, .architecture-diagram),
+.docs-page   :where(img, figure, .diagram, .architecture-diagram),
+.lumora-book :where(img, figure, .diagram, .architecture-diagram) {
+  display: block;
+  margin-inline: auto;
+}
 
 /* ── Extended typography ────────────────────────────────────────── */
 /* Mono eyebrow — 10px, all-caps, wide tracking. Figures, labels, IDs. */
@@ -2782,7 +2791,6 @@ figure:has(> .viz-caption) {
   line-height: 1.75;
   letter-spacing: -0.003em;
   text-wrap: pretty;
-  max-width: 72ch;
 }
 .docs-page p,
 .prep-content > p,
@@ -3339,7 +3347,7 @@ figure:has(> .viz-caption) {
    three-tier heading scale, scoped to its own class so prep is untouched.
    One scroll lives on the column — never on individual sections. */
 .lumora-book {
-  max-width: 68ch;
+  max-width: none;
   margin-inline: auto;
   padding: 1.25rem 1.5rem 2.5rem;
 }
