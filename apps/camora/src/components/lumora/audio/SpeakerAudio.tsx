@@ -28,6 +28,11 @@ type Ctx = {
   isSupported: boolean;
   level: number;
   error: string | null;
+  /** The stream died on its own (share picker stopped / tab closed / loopback
+   *  dropped) and has not recovered yet. Gesture-free methods auto-reconnect
+   *  and clear this within a second or two; tab-share stays true until the
+   *  user reconnects. Drives the immediate "disconnected" banner. */
+  droppedUnexpectedly: boolean;
   start: () => Promise<void>;
   stop: () => void;
 };
@@ -56,6 +61,15 @@ export const SpeakerAudioProvider = ({
   const handleMethodResolved = useCallback((m: Exclude<CaptureMethod, 'auto'>) => {
     resolvedMethodRef.current = m;
   }, []);
+
+  // Set when the capture stream dies on its own. Cleared once capture is live
+  // again (see the isCapturing effect below).
+  const [droppedUnexpectedly, setDroppedUnexpectedly] = useState(false);
+  const handleUnexpectedStop = useCallback(() => {
+    setDroppedUnexpectedly(true);
+    setStatus('error', 'Speaker audio disconnected');
+    console.warn('[SpeakerAudio] stream ended unexpectedly — attempting reconnect / prompting user');
+  }, [setStatus]);
 
   const handleAudioData = useCallback(
     async (blob: Blob) => {
@@ -128,6 +142,7 @@ export const SpeakerAudioProvider = ({
     micDeviceId: prefs.micDeviceId,
     onAudioData: handleAudioData,
     onAudioLevel: handleAudioLevel,
+    onUnexpectedStop: handleUnexpectedStop,
     onMethodResolved: handleMethodResolved,
     silenceThreshold: 0.012,
     silenceDuration: 1200,
@@ -144,6 +159,8 @@ export const SpeakerAudioProvider = ({
     if (isCapturing) {
       setSpeakerAudio({ everConnected: true });
       setStatus('listen', 'Speaker audio live');
+      // Recovered — clear any pending "disconnected" prompt.
+      setDroppedUnexpectedly(false);
     }
   }, [isCapturing, error, setSpeakerAudio, setStatus]);
 
@@ -177,10 +194,11 @@ export const SpeakerAudioProvider = ({
       isSupported,
       level: audioLevel,
       error,
+      droppedUnexpectedly,
       start: startCapture,
       stop,
     }),
-    [isCapturing, isSupported, audioLevel, error, startCapture, stop],
+    [isCapturing, isSupported, audioLevel, error, droppedUnexpectedly, startCapture, stop],
   );
 
   return (
@@ -193,7 +211,7 @@ export const useSpeakerAudio = (): Ctx  => {
   if (!ctx) {
     // Fall back to a stub so components rendered outside the provider
     // (e.g. legacy DesignLayout / CodingLayout entry points) don't crash.
-    return { active: false, isSupported: false, level: 0, error: null, start: async () => {}, stop: () => {} };
+    return { active: false, isSupported: false, level: 0, error: null, droppedUnexpectedly: false, start: async () => {}, stop: () => {} };
   }
   return ctx;
 }
