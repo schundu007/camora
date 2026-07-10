@@ -82,4 +82,14 @@ describe('AnswerBook', () => {
     // only the section h2 heading, no extra lead h1
     expect(container.querySelectorAll('h1')).toHaveLength(0);
   });
+
+  it('renders inline `code` spans in prose as <code>', () => {
+    const { container } = render(<AnswerBook doc={{ sections: [
+      { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'call `foo()` here' }] },
+    ] }} />);
+    const codes = container.querySelectorAll('p code');
+    expect(codes).toHaveLength(1);
+    expect(codes[0].textContent).toBe('foo()');
+  });
+
 });
