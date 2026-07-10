@@ -463,7 +463,7 @@ function SidebarSection({
                     onClick={onItemClick}
                     className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                     style={linkStyles}
-                    title={collapsed ? item.label : undefined}
+                    data-tip={collapsed ? item.label : undefined}
                   >
                     {iconEl}
                     {!collapsed && item.label}
@@ -479,7 +479,7 @@ function SidebarSection({
                   onClick={onItemClick}
                   className={collapsed ? 'flex rounded-md no-underline sidebar-item' : 'flex items-center gap-2.5 px-2.5 rounded-md no-underline sidebar-item'}
                   style={linkStyles}
-                  title={collapsed ? item.label : undefined}
+                  data-tip={collapsed ? item.label : undefined}
                 >
                   {iconEl}
                   {!collapsed && item.label}
@@ -560,7 +560,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               fontSize: '13px',
               fontWeight: 500,
             }}
-            title={pinned ? 'Unpin sidebar' : 'Pin sidebar open'}
+            data-tip={pinned ? 'Unpin sidebar' : 'Pin sidebar open'}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill={pinned ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: pinned ? 'rotate(0deg)' : 'rotate(45deg)', transition: 'transform 0.2s' }}>
               <path d="M12 17v5M9 2h6l-1 7h4l-7 8 1-5H8l1-10z" />

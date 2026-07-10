@@ -51,7 +51,7 @@ export function HexBadge({
     <div
       className={`relative inline-flex items-center justify-center shrink-0 ${className}`}
       style={{ width: size, height: size }}
-      title={title}
+      data-tip={title}
     >
       <svg
         viewBox="0 0 100 100"

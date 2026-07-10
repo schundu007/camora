@@ -491,7 +491,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 onClick={goPrev}
                 disabled={currentIndex === 0}
                 className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-500 transition-colors"
-                title="Previous problem"
+                data-tip="Previous problem"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6" />
@@ -508,7 +508,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 onClick={goNext}
                 disabled={currentIndex === SQL_PROBLEMS.length - 1}
                 className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-500 transition-colors"
-                title="Next problem"
+                data-tip="Next problem"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6" />
@@ -569,7 +569,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                       outline: isDropTarget ? '2px solid var(--accent)' : 'none',
                       outlineOffset: '-2px',
                     }}
-                    title="Drag to reorder"
+                    data-tip="Drag to reorder"
                   >
                     {isExpected ? (
                       <>
@@ -704,7 +704,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 }}
                 className="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
-                title="Reset to starter code"
+                data-tip="Reset to starter code"
               >
                 Reset
               </button>
@@ -713,7 +713,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                   onClick={() => initDb()}
                   className="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors flex items-center gap-1"
                   style={{ background: '#7f1d1d', color: '#fca5a5', border: '1px solid #b91c1c' }}
-                  title="SQL engine failed to load"
+                  data-tip="SQL engine failed to load"
                 >
                   ↺ Retry
                 </button>

@@ -105,7 +105,7 @@ export function CheatSheetCard({ card }) {
         {(card.items || []).map((item, i) => (
           hasBarData ? (
             <div key={i} className="flex items-center gap-2 group">
-              <span className="text-xs text-[var(--text-secondary)] landing-body w-[45%] flex-shrink-0 truncate" title={item.label}>{item.label}</span>
+              <span className="text-xs text-[var(--text-secondary)] landing-body w-[45%] flex-shrink-0 truncate" data-tip={item.label}>{item.label}</span>
               <div className="flex-1 h-5 rounded-full bg-[var(--bg-elevated)] overflow-hidden relative">
                 <div
                   className="h-full rounded-full transition-colors duration-500 ease-out bg-[var(--accent)]"

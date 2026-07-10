@@ -119,7 +119,7 @@ function DiagramModal({ isOpen, onClose, title, children }) {
           <button
             onClick={onClose}
             className="p-2 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--bg-elevated)] transition-colors"
-            title="Close (ESC)"
+            data-tip="Close (ESC)"
           >
             <svg className="w-5 h-5 text-[var(--text-primary)] hover:text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -589,7 +589,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 onClick={() => setDiagramScale(s => Math.max(0.3, s - 0.15))}
                 className="w-6 h-6 flex items-center justify-center text-xs font-bold"
                 style={{ color: 'var(--cam-strip-text)', borderRadius: 999 }}
-                title="Zoom out"
+                data-tip="Zoom out"
               >−</button>
               <span className="text-[10px] font-mono w-9 text-center tabular-nums" style={{ color: 'var(--cam-strip-text-muted)' }}>
                 {Math.round(diagramScale * 100)}%
@@ -598,19 +598,19 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 onClick={() => setDiagramScale(s => Math.min(4, s + 0.15))}
                 className="w-6 h-6 flex items-center justify-center text-xs font-bold"
                 style={{ color: 'var(--cam-strip-text)', borderRadius: 999 }}
-                title="Zoom in"
+                data-tip="Zoom in"
               >+</button>
               <button
                 onClick={() => { setDiagramScale(1); setDiagramTranslate({ x: 0, y: 0 }); }}
                 className="px-3 h-6 text-[10px] font-bold uppercase tracking-wider"
                 style={{ background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
-                title="Reset to fit"
+                data-tip="Reset to fit"
               >Fit</button>
               <button
                 onClick={() => setDiagramModal(true)}
                 className="w-6 h-6 flex items-center justify-center"
                 style={{ color: 'var(--cam-strip-text)', borderRadius: 999 }}
-                title="Full screen"
+                data-tip="Full screen"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
               </button>

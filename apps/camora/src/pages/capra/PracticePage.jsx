@@ -1240,7 +1240,7 @@ export default function PracticePage() {
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
               style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-              title="Clear problem and solution"
+              data-tip="Clear problem and solution"
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" /></svg>
               Reset
@@ -1659,7 +1659,7 @@ export default function PracticePage() {
                         <button
                           onClick={generateSolution}
                           disabled={disabled}
-                          title={!hasAttempt ? 'Try writing something first to unlock the solution' : ''}
+                          data-tip={!hasAttempt ? 'Try writing something first to unlock the solution' : ''}
                           style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid var(--cam-gold-leaf, #c9a84c)', background: 'rgba(201,168,76,0.1)', color: 'var(--cam-gold-leaf, #c9a84c)', fontSize: 12, fontWeight: 600, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.4 : 1, transition: 'opacity 0.15s' }}
                         >
                           {generatingSolution ? 'Generating...' : alreadyGenerated ? 'Solution Generated' : !hasAttempt ? 'Try first, then Generate Solution' : 'Generate Solution'}

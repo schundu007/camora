@@ -69,7 +69,7 @@ export default function ProgressTracker() {
         </div>
         <div className="flex items-center gap-1 flex-wrap">
           {CATEGORIES.map(cat => (
-            <span key={cat.id} className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: cat.color }} title={`${cat.name}: ${cat.total}`} />
+            <span key={cat.id} className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: cat.color }} data-tip={`${cat.name}: ${cat.total}`} />
           ))}
         </div>
       </div>

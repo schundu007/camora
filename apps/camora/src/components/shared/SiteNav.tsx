@@ -70,7 +70,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               type="button"
               onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
               className="hidden sm:flex items-center ml-3"
-              title="Back"
+              data-tip="Back"
               aria-label="Back"
             >
               <Chip variant="default" className="gap-1">
@@ -110,7 +110,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                 type="button"
                 onClick={() => caraRegistry.open()}
                 aria-label="Ask Cara (⌘K)"
-                title="Ask Cara (⌘K)"
+                data-tip="Ask Cara (⌘K)"
               >
                 <Chip variant="gold" className={`gap-1.5 cursor-pointer${theme === 'light' ? ' !bg-white !text-[#0047AB] !border-[#0047AB]/40' : ''}`}>
                   <span>✦</span>

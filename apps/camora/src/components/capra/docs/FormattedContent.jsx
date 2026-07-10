@@ -544,7 +544,7 @@ export default function FormattedContent({ content, inline = false }) {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                   }}
-                  title={row.cmd}
+                  data-tip={row.cmd}
                 >
                   {row.cmd}
                 </code>

@@ -149,7 +149,7 @@ export default function GamificationWidget() {
             <div style={{ width: 1, height: 36, background: 'var(--border)' }} />
             <div style={{ display: 'flex', gap: 6 }}>
               {badges.map(badge => (
-                <div key={badge.key} title={badge.desc}
+                <div key={badge.key} data-tip={badge.desc}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--accent)' }}>
                   {MINI_ICONS[badge.icon] || <span style={{ fontSize: 12 }}>{badge.icon}</span>}
                   <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>{badge.title}</span>

@@ -87,7 +87,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               type="button"
               onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
               className="hidden sm:flex items-center"
-              title="Back"
+              data-tip="Back"
               aria-label="Back"
             >
               <Chip variant="default" className="gap-1">
@@ -189,7 +189,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               type="button"
               onClick={() => caraRegistry.open()}
               aria-label="Ask Cara (⌘K)"
-              title="Ask Cara (⌘K)"
+              data-tip="Ask Cara (⌘K)"
               className="hidden sm:block"
             >
               <Chip variant="gold" className="gap-1.5 cursor-pointer">
@@ -221,7 +221,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               background: 'var(--cam-strip-icon-bg)',
             }}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            data-tip={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           >
             {theme === 'dark' ? (
               /* Sun icon */

@@ -758,7 +758,7 @@ export default function HRLibraryPage() {
             {activeCount > 0 && (
               <button
                 onClick={() => { setSearchInput(''); setSearchParams({}); setDsaPage(1); setDsaTag(''); }}
-                title="Clear all filters"
+                data-tip="Clear all filters"
                 style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   width: 30, height: 30, borderRadius: '50%',

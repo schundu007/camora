@@ -220,7 +220,7 @@ function EraserDiagramSection({ topicId, count }) {
         <button
           onClick={() => setExpanded(true)}
           className="ml-auto chip"
-          title="View full size"
+          data-tip="View full size"
           style={{ fontSize: 11 }}
         >
           ⤢ Expand
@@ -595,7 +595,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
       <div className="mt-2 flex items-center justify-between text-xs text-[var(--text-muted)]" style={{ fontFamily: 'var(--font-mono)' }}>
         <span>{provider.toUpperCase()} Architecture</span>
         <div className="flex items-center gap-3">
-          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors" title="Generate a fresh diagram using AI">Regenerate →</button>
+          <button onClick={onGenerate} className="hover:text-[var(--accent)] transition-colors" data-tip="Generate a fresh diagram using AI">Regenerate →</button>
           <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="text-[var(--accent)]">Full Size →</a>
         </div>
       </div>
@@ -884,7 +884,7 @@ export default function TopicDetail({
             <span className="text-[var(--text-dimmed)]" aria-hidden="true">›</span>
             <button onClick={() => setSelectedTopic(null)} className="text-[var(--text-muted)] hover:text-[var(--accent)] font-medium whitespace-nowrap transition-colors">{pageConfig.title}</button>
             <span className="text-[var(--text-dimmed)]" aria-hidden="true">›</span>
-            <span className="text-[var(--text-primary)] font-semibold truncate" aria-current="page" title={topicDetails.title}>{topicDetails.title}</span>
+            <span className="text-[var(--text-primary)] font-semibold truncate" aria-current="page" data-tip={topicDetails.title}>{topicDetails.title}</span>
           </nav>
           <div className="flex items-center gap-1 shrink-0">
             {currentIndex >= 0 && filteredTopics && <span className="text-[var(--text-muted)] text-[10px] mr-2" style={{ fontFamily: 'var(--font-mono)' }}>{currentIndex + 1}/{filteredTopics.length}</span>}
@@ -996,7 +996,7 @@ export default function TopicDetail({
           {/* Bookmark */}
           <button
             onClick={() => toggleStar(selectedTopic)}
-            title={starredTopics[selectedTopic] ? 'Bookmarked' : 'Bookmark this topic'}
+            data-tip={starredTopics[selectedTopic] ? 'Bookmarked' : 'Bookmark this topic'}
             className="flex items-center justify-center w-9 h-9 rounded transition-colors border"
             style={starredTopics[selectedTopic]
               ? { color: '#ca8a04', borderColor: 'rgba(202,138,4,0.35)', background: 'rgba(202,138,4,0.08)' }
@@ -1042,7 +1042,7 @@ export default function TopicDetail({
             onClick={() => setShowVoice(true)}
             className="flex items-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors landing-body border"
             style={{ background: 'transparent', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
-            title="Talk to Sona about this topic"
+            data-tip="Talk to Sona about this topic"
           >
             <Icon name="mic" size={15} />
             <span className="hidden sm:inline">Voice</span>
@@ -3021,7 +3021,7 @@ export default function TopicDetail({
                         <div style={{ position: 'relative', width: '85%', maxWidth: 900, aspectRatio: '16/9' }}>
                           <iframe
                             src={`https://www.youtube.com/embed/${new URL(viz.video).searchParams.get('v') || viz.video.split('/').pop()}`}
-                            title={viz.title}
+                            data-tip={viz.title}
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
                             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', borderRadius: 6 }}
@@ -3214,7 +3214,7 @@ export default function TopicDetail({
                 <div style={{ position: 'relative', width: '85%', maxWidth: 900, aspectRatio: '16/9', borderRadius: 10, overflow: 'hidden' }}>
                 <iframe
                   src={topicDetails.video.embedUrl}
-                  title={topicDetails.video.title || 'Video'}
+                  data-tip={topicDetails.video.title || 'Video'}
                   style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen

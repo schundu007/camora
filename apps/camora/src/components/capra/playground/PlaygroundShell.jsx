@@ -235,11 +235,11 @@ export default function PlaygroundShell() {
               animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
             }}>{timerStr}</span>
             <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-            <button type="button" onClick={() => setMinimized(true)} style={iconBtn} title="Back to picker">‹ Exit</button>
+            <button type="button" onClick={() => setMinimized(true)} style={iconBtn} data-tip="Back to picker">‹ Exit</button>
             {slotsMax > 0 && (
               <button type="button" onClick={() => setSaveDialogOpen(true)} style={{ ...iconBtn, color: '#d4a043' }}>Save VM</button>
             )}
-            <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#ef4444', padding: '3px 8px' }} title="End session">■</button>
+            <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#ef4444', padding: '3px 8px' }} data-tip="End session">■</button>
           </div>
 
           {/* Content pane */}
@@ -478,7 +478,7 @@ function TabButton({ active, onClick, label, icon, mono, onReconnect }) {
         <button
           type="button"
           onClick={onReconnect}
-          title="Reconnect terminal"
+          data-tip="Reconnect terminal"
           style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 22, height: '100%', padding: '3px 0',

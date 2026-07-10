@@ -1237,7 +1237,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
             onClick={() => setShowHistory(!showHistory)}
             className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-elevated)]"
             style={{ color: showHistory ? 'var(--accent)' : '#94a3b8' }}
-            title="Conversation History"
+            data-tip="Conversation History"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1246,7 +1246,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg transition-colors hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-            title="Close"
+            data-tip="Close"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1426,7 +1426,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                     else prepFileRef.current?.click();
                   }}
                   className="p-2 rounded-lg bg-[var(--bg-elevated)] hover:bg-info-500/20 text-[var(--text-secondary)] hover:text-info-400 border border-[var(--border)]"
-                  title="Upload PDF/DOCX"
+                  data-tip="Upload PDF/DOCX"
                 >
                   {uploadingFile === expandedContext ? (
                     <div className="w-4 h-4 border-2 border-info-400 border-t-transparent rounded-full animate-spin" />
@@ -1443,7 +1443,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                     else setPrepMaterial('');
                   }}
                   className="p-2 rounded-lg bg-[var(--bg-elevated)] hover:bg-error-500/20 text-[var(--text-secondary)] hover:text-error-400 border border-[var(--border)]"
-                  title="Clear"
+                  data-tip="Clear"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1482,7 +1482,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
             <button
               onClick={() => setShowBlackholeSetup(true)}
               className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-all"
-              title="Setup guide for capturing speaker audio"
+              data-tip="Setup guide for capturing speaker audio"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1518,7 +1518,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               <button
                 onClick={() => setTranscriptionProvider('openai')}
                 disabled={isRecording}
-                title="OpenAI Whisper API"
+                data-tip="OpenAI Whisper API"
                 className={`flex-1 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
                   transcriptionProvider === 'openai'
                     ? 'bg-brand-400 text-[var(--text-primary)]'
@@ -1530,7 +1530,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               <button
                 onClick={() => setTranscriptionProvider('deepgram')}
                 disabled={isRecording}
-                title="Deepgram Nova-2 API"
+                data-tip="Deepgram Nova-2 API"
                 className={`flex-1 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
                   transcriptionProvider === 'deepgram'
                     ? 'bg-brand-400 text-[var(--text-primary)]'
@@ -1621,7 +1621,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                 <button
                   onClick={clearAll}
                   className="px-3 py-2 rounded-lg transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
-                  title="Clear"
+                  data-tip="Clear"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

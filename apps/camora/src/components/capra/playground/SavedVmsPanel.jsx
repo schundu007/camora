@@ -68,7 +68,7 @@ export default function SavedVmsPanel({ saves, slotsUsed, slotsMax, onRestore, o
                 padding: '4px 8px', borderRadius: 5, fontSize: 11, flexShrink: 0,
                 background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
                 color: '#f87171', cursor: isRestoring ? 'not-allowed' : 'pointer',
-              }} title="Delete saved VM">Del</button>
+              }} data-tip="Delete saved VM">Del</button>
             </div>
           );
         })}

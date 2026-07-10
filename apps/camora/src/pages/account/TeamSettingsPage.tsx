@@ -920,7 +920,7 @@ export default function TeamSettingsPage() {
                                   }}
                                   className="px-2 py-1 text-[10px] font-semibold rounded-md"
                                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                                  title="Set or clear an hour cap for this member"
+                                  data-tip="Set or clear an hour cap for this member"
                                 >
                                   {m.per_member_hour_cap != null ? 'Edit cap' : 'Set cap'}
                                 </button>

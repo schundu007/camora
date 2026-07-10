@@ -133,7 +133,7 @@ export function SessionTimer({
         <button
           onClick={togglePause}
           className="ml-1 hover:opacity-70 transition-opacity"
-          title={paused ? 'Resume' : 'Pause'}
+          data-tip={paused ? 'Resume' : 'Pause'}
         >
           {paused ? (
             // Play icon

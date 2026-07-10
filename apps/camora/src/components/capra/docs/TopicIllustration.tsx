@@ -60,7 +60,7 @@ export default function TopicIllustration({ name, className = '', style }: Topic
     <div
       className={`relative w-full overflow-hidden ${className}`}
       style={wrapperStyle}
-      title={credit}
+      data-tip={credit}
     >
       {photo && (
         <img

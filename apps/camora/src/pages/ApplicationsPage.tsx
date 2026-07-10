@@ -196,7 +196,7 @@ export default function ApplicationsPage() {
                             <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                           ))}
                         </select>
-                        <button onClick={() => onDelete(app)} className="rounded px-2 py-1 text-xs hover:opacity-80" style={T.muted} aria-label="Delete application" title="Delete">
+                        <button onClick={() => onDelete(app)} className="rounded px-2 py-1 text-xs hover:opacity-80" style={T.muted} aria-label="Delete application" data-tip="Delete">
                           ✕
                         </button>
                       </div>

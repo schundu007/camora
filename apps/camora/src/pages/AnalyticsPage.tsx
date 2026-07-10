@@ -794,7 +794,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                                   if (u.is_admin) { e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-gold-leaf) 16%, var(--bg-surface))'; }
                                   else { e.currentTarget.style.background = 'var(--bg-elevated)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }
                                 }}
-                                title={u.is_admin ? 'Revoke admin' : 'Grant admin'}>
+                                data-tip={u.is_admin ? 'Revoke admin' : 'Grant admin'}>
                                 {togglingAdmin === u.id ? '…' : u.is_admin ? 'Admin ✓' : 'Admin'}
                               </button>
 
@@ -806,7 +806,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                                   style={{ color: 'var(--text-muted)', background: 'transparent' }}
                                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'color-mix(in oklab, var(--danger) 12%, var(--bg-surface))'; (e.currentTarget as HTMLElement).style.color = 'var(--danger)'; }}
                                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-muted)'; }}
-                                  title={`Delete ${u.email}`}>
+                                  data-tip={`Delete ${u.email}`}>
                                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                                   </svg>

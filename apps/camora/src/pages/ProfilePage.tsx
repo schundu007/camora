@@ -566,7 +566,7 @@ function ActivityHeatmap() {
                       return (
                         <div
                           key={d}
-                          title={cell && cell.value >= 0 ? `${cell.date}: ${cell.value} activit${cell.value === 1 ? 'y' : 'ies'}` : undefined}
+                          data-tip={cell && cell.value >= 0 ? `${cell.date}: ${cell.value} activit${cell.value === 1 ? 'y' : 'ies'}` : undefined}
                           style={{
                             width: '11px', height: '11px',
                             borderRadius: '2px',
