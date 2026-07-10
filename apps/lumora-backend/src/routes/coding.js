@@ -1833,8 +1833,13 @@ function stripInjectedComments(code, lang) {
     const isWholeComment = !insideString
       && trimmed.startsWith(token)
       && !(token === '#' && trimmed.startsWith('#!')); // keep shebang
+    // Also drop blank lines (outside strings) IN THIS PASS so the lineMap
+    // accounts for them. The frontend strips blanks for display; doing it here
+    // too keeps changes[].line / walkthrough[].lines aligned to what's shown
+    // (previously the highlights landed N lines too high, N = blanks above).
+    const isBlank = !insideString && trimmed === '';
 
-    if (isWholeComment) { removedAny = true; continue; }
+    if (isWholeComment || isBlank) { removedAny = true; continue; }
     kept.push({ old0: i, text: line });
 
     // Advance string state using only the lines we keep.

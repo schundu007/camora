@@ -58,6 +58,23 @@ export const INPUT_LIMITS = {
   MIN_QUESTION_LENGTH: 3,
 } as const;
 
+/**
+ * Every block/section tag the models emit — the SINGLE source for the
+ * tag-strip regexes so they can't drift (they previously diverged across
+ * text-utils and companion/text-formatting, leaking whichever tags one list
+ * was missing). EDGE_?CASES matches both EDGECASES and EDGE_CASES.
+ */
+export const BLOCK_TAG_NAMES = [
+  'HEADLINE', 'ANSWER', 'REQUIREMENTS', 'NON-FUNCTIONAL', 'FUNCTIONAL', 'SCALEMATH', 'SCALE',
+  'ARCHITECTURE', 'COMPONENTS', 'DEEPDESIGN', 'DEEP_DIVE', 'TRADEOFFS', 'EDGE_?CASES', 'SUMMARY',
+  'CODE', 'DIAGRAM', 'TESTCASES', 'COMPLEXITY', 'WALKTHROUGH', 'FOLLOWUP', 'PROBLEM', 'APPROACH',
+  'API_DESIGN', 'DATA_MODEL', 'MONITORING', 'PITCH', 'JD_COVERAGE',
+] as const;
+
+/** Fresh regex (stateful /g) matching a leaked block tag: [CODE], [/HEADLINE], [CODE lang=python]. */
+export const blockTagStripRe = () =>
+  new RegExp(`\\[\\/?\\s*(?:${BLOCK_TAG_NAMES.join('|')})(?:\\s+lang=[\\w-]+)?\\s*\\]`, 'gi');
+
 /** Shared navigation links used by SiteNav and SiteFooter */
 export const NAV_LINKS = [
   { label: 'Apply', href: '/jobs' },
