@@ -210,6 +210,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     setAnalysisLoading(false);
     setCustomTests([mkTest()]);
     autoFixAttemptsRef.current = 0;
+    decorationCollectionRef.current?.clear();
     decorationCollectionRef.current = null;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -435,6 +436,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     setHackerrankCompatible(null);
     setError(null);
     setRunOutputLog([]);
+    decorationCollectionRef.current?.clear();
     decorationCollectionRef.current = null;
 
     addLog(<LogIconBolt />, 'Starting CoFix…');
@@ -705,6 +707,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     setHackerrankCompatible(null);
     setError(null);
     setRunOutputLog([]);
+    decorationCollectionRef.current?.clear();
     decorationCollectionRef.current = null;
 
     addLog(<LogIconSpark />, `Refining: "${prompt.slice(0, 50)}${prompt.length > 50 ? '…' : ''}"`);
