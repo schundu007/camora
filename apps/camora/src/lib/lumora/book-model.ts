@@ -39,15 +39,15 @@ const txt = (v: unknown): string => (typeof v === 'string' ? cleanText(v) : '');
 const strList = (v: unknown): string[] =>
   Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
 
-/** Split a block body into bullet lines, tolerating `-`, `*`, and bare lines. */
+/** Split a block body into bullet lines. Strips leading `-`/`•` markers; stray `*` is removed by cleanText(). */
 const bullets = (content: string): string[] =>
   content
     .split('\n')
     .map(l => cleanText(l.replace(/^\s*[-•]\s*/, '')))
     .filter(Boolean);
 
-/** `Time: O(n)` / `Space: O(1)` → kv pairs. Lines without a colon become bullets. */
-const parseKv = (content: string): BookBlock => {
+/** `Time: O(n)` / `Space: O(1)` → kv pairs. Lines without a colon become a trailing list block. */
+const parseKv = (content: string): BookBlock[] => {
   const pairs: [string, string][] = [];
   const rest: string[] = [];
   for (const raw of content.split('\n')) {
@@ -57,7 +57,10 @@ const parseKv = (content: string): BookBlock => {
     if (i > 0) pairs.push([line.slice(0, i).trim(), line.slice(i + 1).trim()]);
     else rest.push(line);
   }
-  return pairs.length ? { kind: 'kv', pairs } : { kind: 'list', items: rest };
+  const out: BookBlock[] = [];
+  if (pairs.length) out.push({ kind: 'kv', pairs });
+  if (rest.length) out.push({ kind: 'list', items: rest });
+  return out;
 };
 
 /** Append a section only when it has at least one block. */
@@ -145,7 +148,7 @@ export function docFromBlocks(blocks: ParsedBlock[]): BookDoc {
     if (type === 'CODE') {
       push(sections, id, [{ kind: 'code', lang: b.lang || 'python', code: body }]);
     } else if (type === 'COMPLEXITY') {
-      push(sections, id, [parseKv(body)]);
+      push(sections, id, parseKv(body));
     } else if (type === 'WALKTHROUGH') {
       const rows = bullets(body).map(explanation => ({ explanation }));
       push(sections, id, [rows.length ? { kind: 'walk', rows } : null]);
