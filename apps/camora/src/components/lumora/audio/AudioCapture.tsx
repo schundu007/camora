@@ -260,6 +260,11 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // reflects and controls THIS stream (start/stop) instead of the candidate
   // mic, so desktop users still get a visible, clickable LIVE chip.
   const speakerActive = useSessionStore((s) => s.speakerAudio.active);
+  // Live RMS of the dedicated interviewer stream. In behavioral mode with a
+  // loopback/tab/virtual-mic source, LIVE captures THAT stream (system audio),
+  // not the candidate mic — so the level meter must reflect the speaker stream,
+  // otherwise the bars sit flat while Sona is actually hearing the interviewer.
+  const speakerLevel = useSessionStore((s) => s.speakerAudio.level);
   const speaker = useSpeakerAudio();
 
   // Accumulated transcription text for Live mode (chunks build up a full question)
@@ -1183,6 +1188,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     recordingModeUI={recordingModeUI}
     speakerEverConnected={speakerEverConnected}
     speakerActive={speakerActive}
+    speakerLevel={speakerLevel}
     compact={compact}
     locked={locked}
   />;
@@ -1201,7 +1207,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
  */
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
-  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, speakerActive, compact, locked,
+  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, speakerActive, speakerLevel, compact, locked,
 }: {
   continuousMode: boolean;
   audioLevel: number;
@@ -1210,6 +1216,7 @@ const UnifiedMicButton = ({
   recordingModeUI: 'idle' | 'auto' | 'manual';
   speakerEverConnected: boolean;
   speakerActive: boolean;
+  speakerLevel: number;
   compact?: boolean;
   locked?: boolean;
 }) => {
@@ -1224,6 +1231,13 @@ const UnifiedMicButton = ({
   // Unified listen state — behavioral LIVE and coding/design AUTO are now the
   // same self-describing switch (on = "Listening", off = "Paused").
   const listenOn = locked ? liveOn : isAutoOn;
+  // The level meter must track whatever is ACTUALLY being captured: the
+  // interviewer stream when LIVE drives it (loopback/tab/virtual mic), the
+  // candidate mic while you're asking a question. Without this the bars sat
+  // flat during LIVE because they only ever read the (idle) candidate mic.
+  const meterLevel = isAsking
+    ? audioLevel
+    : (liveControlsSpeaker && speakerActive ? speakerLevel : audioLevel);
   const listenTip = locked
     ? (liveControlsSpeaker
         ? (listenOn
@@ -1322,7 +1336,7 @@ const UnifiedMicButton = ({
         aria-hidden="true"
       >
         {[0, 1, 2, 3, 4].map((i) => {
-          const lit = audioLevel > i * 0.02;
+          const lit = meterLevel > i * 0.02;
           return (
             <div
               key={i}
