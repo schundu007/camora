@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { ReactElement } from 'react';
 import hljs from 'highlight.js';
 import type { BookBlock, BookDoc } from '@/lib/lumora/book-model';
 
@@ -10,7 +11,13 @@ type Props = {
 
 const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
   const ref = useRef<HTMLElement>(null);
-  useEffect(() => { if (ref.current) hljs.highlightElement(ref.current); }, [code, lang]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.removeAttribute('data-highlighted');
+    el.textContent = code;
+    hljs.highlightElement(el);
+  }, [code, lang]);
   return (
     <div className="lumora-book-breakout my-4 rounded-lg overflow-hidden border border-[var(--border)]">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)]">
@@ -23,13 +30,13 @@ const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
         </button>
       </div>
       <pre className="overflow-x-auto p-3 m-0">
-        <code ref={ref} className={`language-${lang} text-[13px] leading-relaxed`}>{code}</code>
+        <code ref={ref} className={`language-${lang} text-[13px] leading-relaxed`} />
       </pre>
     </div>
   );
 };
 
-const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<Props, 'doc'>) => {
+const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<Props, 'doc'>): ReactElement | null => {
   switch (block.kind) {
     case 'prose':
       return <p className="mb-3">{block.text}</p>;
@@ -110,6 +117,11 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
           ))}
         </div>
       );
+
+    default: {
+      const _exhaustive: never = block;
+      return _exhaustive;
+    }
   }
 };
 
