@@ -12,7 +12,10 @@ stealthDom.install();
 contextBridge.exposeInMainWorld('camo', {
   isDesktop: true,
   platform: process.platform,
-  version: '2.1.0',
+  // Read the REAL app version from main (CFBundleShortVersionString) instead of
+  // a hardcoded string — the old '2.1.0' literal drifted and showed a stale
+  // version in the UI. Synchronous so `window.camo.version` stays a plain value.
+  version: ipcRenderer.sendSync('app:get-version'),
 
   // Transparent-overlay mode is opt-in (main creates the window transparent +
   // frameless only when CAMORA_OVERLAY=1). The renderer gates its custom title-

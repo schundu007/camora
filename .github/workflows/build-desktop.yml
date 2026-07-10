@@ -25,6 +25,14 @@ jobs:
         working-directory: apps/desktop
         run: npm install
 
+      # Stamp a UNIQUE build number every run. Marketing version stays 1.0.0
+      # (CFBundleShortVersionString); this becomes CFBundleVersion, which macOS
+      # uses to tell builds apart. Without it, every build was byte-identical
+      # "1.0.0" and LaunchServices kept launching the stale cached app.
+      - name: Stamp unique build version
+        working-directory: apps/desktop
+        run: npm pkg set build.buildVersion="1.0.${{ github.run_number }}"
+
       - name: Build arm64 DMG
         working-directory: apps/desktop
         run: npm run build:dmg
@@ -50,6 +58,10 @@ jobs:
       - name: Install dependencies
         working-directory: apps/desktop
         run: npm install
+
+      - name: Stamp unique build version
+        working-directory: apps/desktop
+        run: npm pkg set build.buildVersion="1.0.${{ github.run_number }}"
 
       - name: Build Windows installer
         working-directory: apps/desktop
@@ -86,9 +98,13 @@ jobs:
             echo "prerelease=false" >> $GITHUB_OUTPUT
             echo "name=${{ inputs.tag }}" >> $GITHUB_OUTPUT
           else
-            echo "tag=desktop-latest" >> $GITHUB_OUTPUT
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-            echo "name=Desktop latest ($(date -u +%Y-%m-%d))" >> $GITHUB_OUTPUT
+            # Branch push → single canonical rolling release, always marked
+            # Latest so GitHub's "Latest" download is ALWAYS the newest build
+            # (never a frozen old tag). The DMG name is stable; assets are
+            # replaced in place each push.
+            echo "tag=desktop-v1.0.0" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+            echo "name=Camora Desktop v1.0.0 (build 1.0.${{ github.run_number }})" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload to GitHub release
@@ -97,5 +113,6 @@ jobs:
           tag_name: ${{ steps.rel.outputs.tag }}
           name: ${{ steps.rel.outputs.name }}
           prerelease: ${{ steps.rel.outputs.prerelease }}
+          make_latest: 'true'
           files: dist/**
           fail_on_unmatched_files: true
