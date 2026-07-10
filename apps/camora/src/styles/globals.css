@@ -3332,3 +3332,63 @@ figure:has(> .viz-caption) {
 .split-view-view > .sash-container > .sash.active {
   opacity: 0.7 !important;
 }
+
+/* ── Lumora answer book ───────────────────────────────────────────────
+   A single reading column for Coding / CoFix / saved-session answers,
+   replacing the old multi-box GridCard grids. Mirrors the .prep-content
+   three-tier heading scale, scoped to its own class so prep is untouched.
+   One scroll lives on the column — never on individual sections. */
+.lumora-book {
+  max-width: 68ch;
+  margin-inline: auto;
+  padding: 1.25rem 1.5rem 2.5rem;
+}
+
+/* Tier 1 — section heading */
+.lumora-book-section {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent-text);
+  margin: 2.25rem 0 0.9rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.lumora-book-section:first-child { margin-top: 0; }
+
+/* Tier 2 — subsection */
+.lumora-book-sub {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 1.4rem 0 0.5rem;
+}
+
+/* Tier 3 — micro-label */
+.lumora-book-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+  margin: 1.2rem 0 0.4rem;
+}
+
+/* Highlighted key points — a book-style aside with an accent rule. */
+.lumora-book-callout {
+  border-left: 2px solid var(--accent);
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  margin: 1.25rem 0;
+  color: var(--text-primary);
+}
+
+/* Code, traces and diagrams break out wider than the text measure. */
+.lumora-book-breakout {
+  width: min(100%, calc(68ch + 6rem));
+  margin-inline: calc(50% - min(50%, calc(34ch + 3rem)));
+}
+
+.lumora-book p { line-height: 1.75; color: var(--text-primary); }
+.lumora-book li { line-height: 1.7; }
