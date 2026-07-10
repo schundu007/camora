@@ -508,7 +508,7 @@ const DifficultyPill = ({ value }: { value: string }) => {
   return <Chip variant={variant}>{value}</Chip>;
 }
 
-const TagChip = ({ label }: { label: string; color?: string }) => {
+const TagChip = ({ label }: { label: string }) => {
   return <Chip variant="default">{label}</Chip>;
 }
 
@@ -1004,7 +1004,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                     <h3 className="text-[16px] font-bold leading-snug tracking-tight" style={{ color: 'var(--text-primary)' }}>{safeText(title)}</h3>
                     <div className="flex items-center gap-1.5 flex-wrap mt-2">
                       {q.difficulty && <DifficultyPill value={q.difficulty} />}
-                      {chips.map((c, ci) => <TagChip key={ci} label={c.label} color={c.color} />)}
+                      {chips.map((c, ci) => <TagChip key={ci} label={c.label} />)}
                     </div>
                   </div>
                 </div>
@@ -1711,7 +1711,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                   <SectionHeading label="Performance Topics" color={LC.examples} />
                   <div className="flex flex-wrap gap-1.5">
                     {tech.performanceTopics.map((p: any, pi: number) => (
-                      <TagChip key={pi} label={safeText(p)} color={LC.examples} />
+                      <TagChip key={pi} label={safeText(p)} />
                     ))}
                   </div>
                 </div>

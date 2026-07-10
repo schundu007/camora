@@ -183,7 +183,6 @@ interface SessionState {
   setIsStealthActive: (v: boolean) => void;
   setAnswerMode: (mode: 'short' | 'detailed') => void;
   setSonaActions: (actions: { export: (() => void) | null; clear: (() => void) | null; close: (() => void) | null; hasMessages: boolean }) => void;
-  reset: () => void;
 }
 
 const initialState = {
@@ -373,8 +372,6 @@ export const useSessionStore = create<SessionState>()(
     sonaClose: close,
     sonaHasMessages: hasMessages,
   }),
-
-  reset: () => set(initialState),
     }),
     {
       name: 'lumora-session-store',

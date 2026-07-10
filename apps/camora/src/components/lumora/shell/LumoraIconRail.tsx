@@ -12,8 +12,6 @@ export type LumoraTab = 'session' | 'coding' | 'design' | 'cofix' | 'behavioral'
 
 interface LumoraIconRailProps {
   activeTab: LumoraTab;
-  sessionsOpen: boolean;
-  onToggleSessions: () => void;
   /** Meeting + coding platform selectors, relocated here from the top bar as
       their own "Tools" group below Practice. Collapsed rail shows just the
       icons; hover-expand reveals the selects. */
@@ -65,7 +63,7 @@ const TOOL_ITEMS = [
   { id: 'claude', label: 'Claude', path: '/lumora/claude', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.6 1.9 5 5.5 5.5C13.9 8 12.5 9.4 12 13c-.5-3.6-1.9-5-5.5-5.5C10.1 7 11.5 5.6 12 2zM18.5 12c.3 2.2 1.1 3 3.3 3.3-2.2.3-3 1.1-3.3 3.3-.3-2.2-1.1-3-3.3-3.3 2.2-.3 3-1.1 3.3-3.3zM6 14c.2 1.5.8 2.1 2.3 2.3C6.8 16.5 6.2 17.1 6 18.6c-.2-1.5-.8-2.1-2.3-2.3C5.2 16.1 5.8 15.5 6 14z" /></svg> },
 ];
 
-export const LumoraIconRail = ({ activeTab, sessionsOpen: _sessionsOpen, onToggleSessions: _onToggleSessions, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack, onOpenContext }: LumoraIconRailProps) => {
+export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack, onOpenContext }: LumoraIconRailProps) => {
   const [accountOpen, setAccountOpen] = useState(false);
   // Active interview/company key drives the context chip label (below Tools).
   const [companyKey, setCompanyKey] = useState<string | null>(() => getActiveCompanyKey());
