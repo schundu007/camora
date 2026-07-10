@@ -17,7 +17,7 @@ import type { CoFixAnswer, CoFixChange, CoFixWalkStep } from '@/lib/sse-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
-import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
+import { ASSISTANT_UPDATED_EVENT, getActiveCompanyKey } from '@/lib/companyContext';
 import { cofixChecks } from '@/components/lumora/shared/readiness';
 import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
 import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
@@ -261,9 +261,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, handler);
   }, []);
   const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
+  // The active assistant is null until a JD/resume is uploaded, but a company
+  // can be SELECTED (Prep Kit activeCompany) with no docs yet — that's what the
+  // sidebar shows. Fall back to the selected key so the readiness check agrees
+  // with the sidebar instead of claiming "no company" for a selected workspace.
+  const activeCompany = useMemo(
+    () => activeAssistant?.company ?? getActiveCompanyKey(),
+    [activeAssistant, assistantVersion],
+  );
 
   const { blocking, degrading, dismiss } = useToolReadiness(
-    cofixChecks({ inputCode, problemContext, company: activeAssistant?.company ?? null }),
+    cofixChecks({ inputCode, problemContext, company: activeCompany }),
   );
 
   useEffect(() => {
@@ -457,7 +465,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     const controller = await streamCoFixResponse({
       code,
       hint: undefined,
-      company: activeAssistant?.company || undefined,
+      company: activeCompany || undefined,
       problem: problemContextRef.current || undefined,
       language: effectiveLang,
       token: token!,
@@ -651,7 +659,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     const controller = await streamCoFixResponse({
       code,
       hint: errorHint,
-      company: activeAssistant?.company || undefined,
+      company: activeCompany || undefined,
       problem: problemContextRef.current || undefined,
       language: effectiveLang,
       token: token!,
@@ -719,7 +727,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     const controller = await streamCoFixResponse({
       code: fixedCode,
       hint: prompt,
-      company: activeAssistant?.company || undefined,
+      company: activeCompany || undefined,
       problem: problemContextRef.current || undefined,
       language: effectiveLang,
       token: token!,

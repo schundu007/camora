@@ -7,7 +7,7 @@ import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
-import { ASSISTANT_UPDATED_EVENT } from '@/lib/companyContext';
+import { ASSISTANT_UPDATED_EVENT, getActiveCompanyKey } from '@/lib/companyContext';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
 import { CustomInputPanel } from '@/components/shared/CustomInputPanel';
 import { codingChecks } from '@/components/lumora/shared/readiness';
@@ -494,6 +494,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     return () => window.removeEventListener(ASSISTANT_UPDATED_EVENT, handler);
   }, []);
   const activeAssistant = useMemo(() => getActiveAssistant(), [assistantVersion]);
+  // A company can be SELECTED (Prep Kit activeCompany, shown in the sidebar)
+  // before any JD/resume is uploaded — at which point the assistant is still
+  // null. Fall back to the selected key so the readiness check matches the
+  // sidebar rather than warning "no company" for a selected workspace.
+  const activeCompany = useMemo(
+    () => activeAssistant?.company ?? getActiveCompanyKey(),
+    [activeAssistant, assistantVersion],
+  );
 
   // The submitter promotes a pasted template to starter code (handleGenerateSolution).
   // The chip MUST read the same value, or it warns about a template the backend will
@@ -503,7 +511,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const readinessChecks = codingChecks({
     problemText,
     starterCode: effectiveStarterCode,
-    company: activeAssistant?.company ?? null,
+    company: activeCompany,
     captureInFlight: multiPageCapturing,
   });
   const { blocking, degrading, dismiss } = useToolReadiness(readinessChecks);
