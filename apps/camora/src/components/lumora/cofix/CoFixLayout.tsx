@@ -185,7 +185,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const decorationCollectionRef = useRef<any>(null);
   // Auto-height for the read-only fixed-code editor: track its content height so
   // it grows downward with the fixed code's line count (its wrapper scrolls).
-  const [fixedEditorH, setFixedEditorH] = useState(60);
+  const [fixedEditorH, setFixedEditorH] = useState(44);
 
   // Clear every solution-derived output so a freshly injected problem never
   // shows the previous fix. Mirrors the reset block in handleFix but does NOT
@@ -968,9 +968,19 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       {/* On narrow screens the 3-pane min-width (220+220+160) would push the
           whole page sideways; contain it to a local horizontal scroll instead.
           Desktop (md+) is unchanged: min-w-0 + overflow visible. */}
+      {/* Main area: LEFT column (Broken|Fixed on top, analysis panel below) +
+          full-height Walkthrough on the right. Splitting this way keeps the tall
+          Walkthrough content filling its column and lets the analysis panel use
+          the empty space under the short code editors — no vacant space. */}
+      <div className="flex-1 min-h-0">
+      <Allotment defaultSizes={[66, 34]}>
+
+      {/* ── LEFT COLUMN ── */}
+      <Allotment.Pane minSize={360}>
+      <div className="flex flex-col h-full">
       <div className="flex-1 min-h-0 overflow-x-auto md:overflow-x-visible">
-      <div className="h-full min-w-[680px] md:min-w-0">
-      <Allotment defaultSizes={[34, 33, 33]}>
+      <div className="h-full min-w-[440px] md:min-w-0">
+      <Allotment defaultSizes={[50, 50]}>
 
         {/* LEFT — broken code input */}
         <Allotment.Pane minSize={220}>
@@ -1005,17 +1015,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             </div>
           )}
 
-          {/* Input editor FILLS the pane with its own internal scroll — a stable
-              height (no auto collapse/expand jitter as you paste/edit). Resize by
-              dragging the analysis-panel divider (height) or the column sashes
-              (width). */}
-          <div className="flex-1 min-h-0" style={{ background: 'var(--bg-surface)' }}>
+          {/* Input editor hugs its content (auto-height) so the card never
+              carries vacant space; the pane scrolls for long code. A bottom edge
+              marks where the code ends. */}
+          <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: 'var(--bg-surface)' }}>
             <SharedCodeEditor
               code={inputCode}
               onChange={setInputCode}
               language={toMonacoLang(effectiveLang)}
               readOnly={false}
-              height="100%"
+              autoHeight
+              minHeight={44}
+              className="border-b border-[var(--cam-gold-leaf-dk)]"
               showLineNumbers
               fontSize={11}
               onMount={handleLeftEditorMount}
@@ -1134,8 +1145,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           )}
 
           <div className="flex flex-1 min-h-0">
-            {/* Monaco editor — read-only with line decorations */}
-            <div className="flex-1 min-w-0 relative overflow-y-auto">
+            {/* Monaco editor — read-only with line decorations. The pane bg is a
+                distinct surface so the empty space below the auto-fit editor
+                reads as empty pane, never as a giant editor. */}
+            <div className="flex-1 min-w-0 relative overflow-y-auto" style={{ background: 'var(--bg-surface)' }}>
               {/* Streaming log popup */}
               {showLogPopup && (
                 <div className="absolute top-3 right-3 z-20 w-72 flex flex-col rounded-lg overflow-hidden shadow-2xl"
@@ -1237,6 +1250,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   </button>
                 </div>
               )}
+              <div className="shrink-0" style={{ borderBottom: '1px solid var(--cam-gold-leaf-dk)' }}>
               <Editor
                 value={fixedCode}
                 language={toMonacoLang(effectiveLang)}
@@ -1265,13 +1279,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   const sync = () => setFixedEditorH((prev) => {
                     // Tight floor so short solutions stay compact (save space);
                     // grows to fit the fixed code's content height.
-                    const h = Math.max(60, Math.ceil(editor.getContentHeight()));
+                    const h = Math.max(44, Math.ceil(editor.getContentHeight()));
                     return prev === h ? prev : h;
                   });
                   editor.onDidContentSizeChange(sync);
                   sync();
                 }}
               />
+              </div>
             </div>
 
           </div>
@@ -1297,19 +1312,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         </div>
         </Allotment.Pane>
 
-        {/* WALK-THROUGH / CHANGES — 3rd pane. Hidden until CoFix produces content,
-            so Broken|Fixed get the full width instead of an empty bordered box
-            occupying ~1/3 of the viewport pre-run. `visible` collapses the pane
-            and redistributes space WITHOUT remounting panes 1-2 (no Monaco flicker). */}
-        <Allotment.Pane minSize={160} visible={changes.length > 0 || walkthrough.length > 0}>
-          <AnnotationPanel changes={changes} walkthrough={walkthrough} />
-        </Allotment.Pane>
-
       </Allotment>
       </div>
       </div>
 
-      {/* ── Analysis panel — 2 columns ── */}
+      {/* ── Analysis panel — sits UNDER Broken|Fixed, spanning their combined
+          width (inside the left column). ── */}
       {showPanel && (
         <div ref={panelRef} className="shrink-0 flex flex-col" style={{ height: panelCollapsed ? 34 : panelHeight, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
 
@@ -1593,6 +1601,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           )}
         </div>
       )}
+      </div>
+      </Allotment.Pane>
+
+      {/* ── RIGHT — full-height Walkthrough / changes. Extends the whole page
+          height; hidden until CoFix produces content so the left column gets the
+          full width pre-run (no empty bordered box). ── */}
+      <Allotment.Pane minSize={220} visible={changes.length > 0 || walkthrough.length > 0}>
+        <AnnotationPanel changes={changes} walkthrough={walkthrough} />
+      </Allotment.Pane>
+
+      </Allotment>
+      </div>
 
       {/* ── Footer bar — capture / audio controls ──
           Snap, screenshot thumbnails, and the audio-capture chips live here
