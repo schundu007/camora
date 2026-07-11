@@ -167,9 +167,11 @@ const HERO_STATS = [
   { value: STATS.latency, label: 'AI latency' },
 ];
 
-// Six features in a 3-column grid → exactly two even rows. All span 1 so
-// nothing overflows into a third row.
-const FEATURE_SPANS = [1, 1, 1, 1, 1, 1];
+// Alternating large/small bento rhythm instead of six identical clones. Each
+// row pairs one span-2 feature (big stat + bullets, horizontal) with one span-1
+// supporting card; 2+1 per row × 3 rows tiles the 3-col grid with no gaps. The
+// large slots land on the three hero capabilities (Live AI, Prep, Playground).
+const FEATURE_SPANS = [2, 1, 2, 1, 2, 1];
 
 /* ── Hooks ────────────────────────────────────────────── */
 function Reveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {

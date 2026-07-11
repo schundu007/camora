@@ -25,25 +25,51 @@ const SCENE_LABEL: Record<SceneId, { eyebrow: string; title: string; hint: strin
 export default function CapabilityDeck() {
   const [sceneIdx, setSceneIdx] = useState(0);
   const [pulse, setPulse] = useState(0);
+  // User control (WCAG 2.2.2) + prefers-reduced-motion: the deck must not
+  // auto-advance forever with no way to stop it. `userPaused` is the explicit
+  // toggle; `hovering` pauses while the pointer/focus is on the deck so it
+  // doesn't slide out from under a reader; `reduced` disables auto-rotation
+  // entirely for users who asked the OS for less motion (they drive via dots).
+  const [userPaused, setUserPaused] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const [reduced, setReduced] = useState(false);
   const scene = SCENES[sceneIdx];
   const { theme } = useTheme();
   const lt = theme === 'light';
   const tx = (light: string, dark: string) => lt ? light : dark;
 
   useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => setReduced(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
+
+  const rotating = !userPaused && !hovering && !reduced;
+  useEffect(() => {
+    if (!rotating) return;
     const t = setInterval(() => setSceneIdx((i) => (i + 1) % SCENES.length), SCENE_MS);
     return () => clearInterval(t);
-  }, []);
+  }, [rotating]);
   useEffect(() => { setPulse((p) => p + 1); }, [sceneIdx]);
+
+  const goTo = (i: number) => setSceneIdx(i);
 
   const meta = SCENE_LABEL[scene];
 
   return (
     <div
       className="rounded-xl overflow-hidden relative"
+      role="group"
+      aria-label="Camora capability demo, auto-advancing"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onFocusCapture={() => setHovering(true)}
+      onBlurCapture={() => setHovering(false)}
       style={{
         background: tx('var(--bg-elevated)', 'linear-gradient(180deg, #0A0A0C 0%, #0D1117 100%)'),
-        border: tx('1px solid var(--border)', '1px solid rgba(201,162,39,0.35)'),
+        border: tx('1px solid var(--border)', '1px solid color-mix(in oklab, var(--cam-gold-leaf) 35%, transparent)'),
         boxShadow: tx('var(--shadow-lg)', '0 30px 80px -20px rgba(15,23,42,0.4), 0 12px 30px -10px rgba(15,23,42,0.25)'),
         minHeight: 560,
       }}
@@ -60,7 +86,7 @@ export default function CapabilityDeck() {
         @keyframes cd-gauge { to { stroke-dashoffset: var(--cd-offset); } }
         @keyframes cd-count-up { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes cd-grid-drift { 0% { transform: translate(0,0); } 100% { transform: translate(48px,48px); } }
-        @keyframes cd-glow-ring { 0% { box-shadow: 0 0 0 0 rgba(38,97,156,0.33); } 80%,100% { box-shadow: 0 0 0 18px rgba(38,97,156,0); } }
+        @keyframes cd-glow-ring { 0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--cam-primary) 33%, transparent); } 80%,100% { box-shadow: 0 0 0 18px transparent; } }
         @keyframes cd-provider-sweep { 0% { left: 0; } 33% { left: calc(33.333% + 4px); } 66% { left: calc(66.666% + 8px); } 100% { left: 0; } }
         .cd-cursor { display:inline-block; width:2px; height:14px; background: var(--border); vertical-align:text-bottom; margin-left:1px; animation: cd-blink 0.9s step-end infinite; }
       `}</style>
@@ -128,20 +154,46 @@ export default function CapabilityDeck() {
       }}>
         <div className="flex items-center gap-2">
           {SCENES.map((s, i) => (
-            <span
+            <button
               key={s}
-              style={{
-                width: i === sceneIdx ? 24 : 6,
-                height: 6, borderRadius: 999,
-                background: i === sceneIdx ? ACCENT : 'var(--text-dimmed)',
-                transition: 'width 0.35s ease, background 0.35s ease',
-              }}
-            />
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Show ${SCENE_LABEL[s].eyebrow}`}
+              aria-current={i === sceneIdx ? 'true' : undefined}
+              className="p-0 border-0 bg-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={{ outlineColor: ACCENT, borderRadius: 999 }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  width: i === sceneIdx ? 24 : 6,
+                  height: 6, borderRadius: 999,
+                  background: i === sceneIdx ? ACCENT : 'var(--text-dimmed)',
+                  transition: 'width 0.35s ease, background 0.35s ease',
+                }}
+              />
+            </button>
           ))}
         </div>
         <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.15em' }}>
           {String(sceneIdx + 1).padStart(2, '0')} / {String(SCENES.length).padStart(2, '0')}
         </span>
+        {!reduced && (
+          <button
+            type="button"
+            onClick={() => setUserPaused((p) => !p)}
+            aria-label={userPaused ? 'Play the demo' : 'Pause the demo'}
+            aria-pressed={userPaused}
+            className="inline-flex items-center justify-center cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+            style={{ width: 20, height: 20, marginLeft: 4, color: 'var(--text-muted)', background: 'transparent', border: 0, borderRadius: 4, outlineColor: ACCENT }}
+          >
+            {userPaused ? (
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+            ) : (
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
+            )}
+          </button>
+        )}
         <div className="flex-1" />
         <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.14em' }}>
           APPLY · PREPARE · PRACTICE · ATTEND
@@ -180,8 +232,8 @@ function SceneLive({ lt }: { lt: boolean }) {
           {typed >= Q.length && '"'}
         </p>
       </div>
-      <div style={{ background: tx('var(--accent-subtle)', 'linear-gradient(180deg, rgba(38,97,156,0.08), rgba(38,97,156,0.02))'), border: tx('1px solid var(--border-focus)', '1px solid rgba(38,97,156,0.20)'), borderRadius: 10, padding: 14, position: 'relative', overflow: 'hidden' }}>
-        <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 40, background: 'linear-gradient(180deg, transparent, rgba(38,97,156,0.15), transparent)', animation: 'cd-scan 2.6s ease-in-out 0.8s infinite', pointerEvents: 'none' }} />
+      <div style={{ background: tx('var(--accent-subtle)', 'linear-gradient(180deg, color-mix(in oklab, var(--cam-primary) 8%, transparent), color-mix(in oklab, var(--cam-primary) 2%, transparent))'), border: tx('1px solid var(--border-focus)', '1px solid color-mix(in oklab, var(--cam-primary) 20%, transparent)'), borderRadius: 10, padding: 14, position: 'relative', overflow: 'hidden' }}>
+        <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 40, background: 'linear-gradient(180deg, transparent, color-mix(in oklab, var(--cam-primary) 15%, transparent), transparent)', animation: 'cd-scan 2.6s ease-in-out 0.8s infinite', pointerEvents: 'none' }} />
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
           <span style={{ fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>AI · RESPONSE</span>
@@ -189,7 +241,7 @@ function SceneLive({ lt }: { lt: boolean }) {
         </div>
         <div className="flex flex-wrap gap-1.5">
           {chips.map((c, i) => (
-            <span key={c} style={{ fontSize: 11, fontWeight: 700, color: ACCENT, background: 'rgba(38,97,156,0.07)', border: '1px solid rgba(38,97,156,0.20)', padding: '4px 10px', borderRadius: 999, fontFamily: MONO, opacity: 0, animation: `cd-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) ${1.2 + i * 0.24}s forwards` }}>
+            <span key={c} style={{ fontSize: 11, fontWeight: 700, color: ACCENT, background: 'color-mix(in oklab, var(--cam-primary) 7%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-primary) 20%, transparent)', padding: '4px 10px', borderRadius: 999, fontFamily: MONO, opacity: 0, animation: `cd-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) ${1.2 + i * 0.24}s forwards` }}>
               {c}
             </span>
           ))}
@@ -239,7 +291,7 @@ function SceneCompany({ lt }: { lt: boolean }) {
             fontSize: 9, fontWeight: 800,
             color: i === coIdx ? GOLD_DK : 'var(--text-muted)',
             background: i === coIdx ? GOLD : 'transparent',
-            border: `1px solid ${i === coIdx ? GOLD : 'rgba(201,162,39,0.25)'}`,
+            border: `1px solid ${i === coIdx ? GOLD : 'color-mix(in oklab, var(--cam-gold-leaf) 25%, transparent)'}`,
             padding: '4px 10px', borderRadius: 999, fontFamily: MONO, letterSpacing: '0.16em',
             transition: 'all 0.35s',
           }}>
@@ -253,16 +305,16 @@ function SceneCompany({ lt }: { lt: boolean }) {
         {FLAVOR[co]}
       </div>
 
-      <div style={{ background: tx('var(--bg-surface)', 'rgba(255,255,255,0.03)'), border: tx('1px solid var(--border)', '1px solid rgba(201,162,39,0.2)'), borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ background: tx('var(--bg-surface)', 'rgba(255,255,255,0.03)'), border: tx('1px solid var(--border)', '1px solid color-mix(in oklab, var(--cam-gold-leaf) 20%, transparent)'), borderRadius: 10, overflow: 'hidden' }}>
         {STAGES.map((s, i) => (
           <div key={s.n} style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: '9px 14px',
-            borderBottom: i < STAGES.length - 1 ? tx('1px solid var(--border)', '1px solid rgba(201,162,39,0.12)') : 'none',
+            borderBottom: i < STAGES.length - 1 ? tx('1px solid var(--border)', '1px solid color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent)') : 'none',
             opacity: 0, animation: `cd-fade-up 0.35s ease-out ${0.15 + i * 0.12}s forwards`,
           }}>
             <span style={{
               fontSize: 9, fontWeight: 800, color: GOLD, fontFamily: MONO,
-              background: 'rgba(201,162,39,0.08)', border: '1px solid rgba(201,162,39,0.3)',
+              background: 'color-mix(in oklab, var(--cam-gold-leaf) 8%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 30%, transparent)',
               padding: '3px 6px', borderRadius: 4, letterSpacing: '0.14em',
             }}>
               {s.n}
@@ -326,8 +378,8 @@ function SceneCode({ lt }: { lt: boolean }) {
           <span key={a.label} style={{
             fontSize: 10, fontWeight: 700,
             color: i === tab ? ACCENT : 'var(--text-muted)',
-            background: i === tab ? 'rgba(38,97,156,0.08)' : 'transparent',
-            border: `1px solid ${i === tab ? 'rgba(38,97,156,0.33)' : 'var(--cam-primary-dk)'}`,
+            background: i === tab ? 'color-mix(in oklab, var(--cam-primary) 8%, transparent)' : 'transparent',
+            border: `1px solid ${i === tab ? 'color-mix(in oklab, var(--cam-primary) 33%, transparent)' : 'var(--cam-primary-dk)'}`,
             padding: '4px 10px', borderRadius: 6, fontFamily: MONO, letterSpacing: '0.08em',
             transition: 'all 0.3s',
           }}>
@@ -511,7 +563,7 @@ function ScenePrep({ lt }: { lt: boolean }) {
               { m: 'GET',  p: '/{code}/stats' },
             ].map((e, i) => (
               <div key={e.p} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.6 + i * 0.1}s forwards` }}>
-                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : 'var(--text-muted)', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'rgba(38,97,156,0.33)' : 'var(--border)'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
+                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : 'var(--text-muted)', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'color-mix(in oklab, var(--cam-primary) 33%, transparent)' : 'var(--border)'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
                   {e.m}
                 </span>
                 <code style={{ fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: MONO }}>{e.p}</code>
@@ -589,7 +641,7 @@ function SceneScore({ lt }: { lt: boolean }) {
               92<span style={{ color: 'var(--text-muted)', fontSize: 18, fontWeight: 700 }}>&nbsp;/&nbsp;100</span>
             </div>
           </div>
-          <div style={{ padding: '8px 16px', borderRadius: 999, background: 'rgba(38,97,156,0.08)', border: '1px solid rgba(38,97,156,0.33)', fontSize: 11, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.14em', animation: 'cd-glow-ring 1.6s ease-out 2s infinite' }}>
+          <div style={{ padding: '8px 16px', borderRadius: 999, background: 'color-mix(in oklab, var(--cam-primary) 8%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-primary) 33%, transparent)', fontSize: 11, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.14em', animation: 'cd-glow-ring 1.6s ease-out 2s infinite' }}>
             READY FOR FAANG
           </div>
         </div>

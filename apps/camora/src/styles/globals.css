@@ -119,10 +119,15 @@
 
        Navy  = action, focus, success, the institution.
        Gold  = signal, highlights, what's next.
-       Warm  = editorial comfort, reduced fatigue.            */
-    --cam-primary:      #3683DC;
-    --cam-primary-lt:   #4D94E8;
-    --cam-primary-dk:   #2265BF;
+       Warm  = editorial comfort, reduced fatigue.
+
+       Navy Atlas canon = #26619C (per DESIGN.md). This :root block is the
+       DARK default; base #26619C is too dark on the charcoal substrate
+       (~2.9:1), so dark mode lifts navy to #6E96C0 (~7:1) per DESIGN.md.
+       Light theme uses the base #26619C ramp (see [data-theme="light"]). */
+    --cam-primary:      #6E96C0;
+    --cam-primary-lt:   #8CB0D6;
+    --cam-primary-dk:   #4E7BA8;
     --cam-primary-900:  #0B1B3F;
     --cam-gold-leaf:    #D4A043;
     --cam-gold-leaf-lt: #E0B155;
@@ -260,9 +265,9 @@
     --shadow-gold-xs: 0 1px 3px rgba(194,150,62,0.04), 0 4px 16px rgba(194,150,62,0.02);
     --shadow-gold-sm: 0 2px 8px rgba(194,150,62,0.06);
 
-    --cam-primary:      #3683DC;
-    --cam-primary-lt:   #4D94E8;
-    --cam-primary-dk:   #2265BF;
+    --cam-primary:      #26619C;
+    --cam-primary-lt:   #3C7AAB;
+    --cam-primary-dk:   #1A4F86;
     --cam-primary-900:  #0B1B3F;
     --cam-gold-leaf:    #C2963E;
     --cam-gold-leaf-lt: #D4A84A;

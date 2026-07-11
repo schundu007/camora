@@ -86,7 +86,7 @@ export function ApplyAnim() {
           right: 0,
           top: 0,
           height: '48px',
-          background: 'linear-gradient(180deg, transparent, rgba(38,97,156,0.15), transparent)',
+          background: 'linear-gradient(180deg, transparent, color-mix(in oklab, var(--cam-primary) 15%, transparent), transparent)',
           animation: 'card-scan 3.2s linear infinite',
           pointerEvents: 'none',
         }}
@@ -143,7 +143,7 @@ export function PrepareAnim() {
             key={t}
             style={{
               background: 'var(--bg-surface)',
-              border: '1px solid rgba(38,97,156,0.20)',
+              border: '1px solid color-mix(in oklab, var(--cam-primary) 20%, transparent)',
               borderRadius: 4,
               padding: '7px 4px',
               textAlign: 'center',
@@ -366,9 +366,9 @@ export function FeatureLiveAIAnim() {
                 fontWeight: 700,
                 padding: '2px 7px',
                 borderRadius: 10,
-                background: 'rgba(38,97,156,0.13)',
+                background: 'color-mix(in oklab, var(--cam-primary) 13%, transparent)',
                 color: ACCENT,
-                border: '1px solid rgba(38,97,156,0.33)',
+                border: '1px solid color-mix(in oklab, var(--cam-primary) 33%, transparent)',
                 opacity: 0,
                 animation: `feat-chip-enter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${2 + i * 0.28}s forwards`,
               }}
@@ -445,7 +445,7 @@ export function FeatureJobMatchAnim() {
             height: 26,
             borderRadius: '50%',
             background: `linear-gradient(135deg, ${ACCENT}, var(--cam-primary-lt))`,
-            boxShadow: '0 2px 8px rgba(38,97,156,0.27)',
+            boxShadow: '0 2px 8px color-mix(in oklab, var(--cam-primary) 27%, transparent)',
             marginBottom: 4,
           }}
         />
@@ -459,7 +459,7 @@ export function FeatureJobMatchAnim() {
               borderRadius: 3,
               background: 'var(--bg-surface)',
               color: ACCENT,
-              border: '1px solid rgba(38,97,156,0.27)',
+              border: '1px solid color-mix(in oklab, var(--cam-primary) 27%, transparent)',
               alignSelf: 'flex-start',
               opacity: 0,
               animation: `feat-chip-enter 0.4s ease-out ${0.2 + i * 0.12}s forwards`,
