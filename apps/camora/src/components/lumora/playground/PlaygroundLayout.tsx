@@ -35,7 +35,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
 
   return (
     <div className="flex flex-col h-full bg-[#0a0d12] overflow-auto">
-      <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2">
+      <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2 lumora-winctl-safe">
         <span className="text-[9px] uppercase tracking-widest text-[#334155] font-medium" style={sans}>Line {line}</span>
         {loading && (
           <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"

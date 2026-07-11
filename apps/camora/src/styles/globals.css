@@ -1835,14 +1835,18 @@ html[data-overlay='on'] .claude-webview {
   accent-color: var(--cam-gold-leaf, #c9a227);
 }
 /* Reserve the top-right corner for the frameless window controls (Dock/−/✕) so the
-   app's own top toolbars (COFIX button, reset/copy icons) don't sit under them.
-   Applies on every desktop build (controls are always top-right when frameless). */
+   app's own top toolbars (COFIX button, reset/copy icons, Enroll, mic) don't sit
+   under them. Applies on every desktop build (controls are always top-right when
+   frameless). The docked cluster measures ~166px (grip + Dock pill + − + ✕ + gaps
+   + right margin), so 150px was too tight and chips still clipped; 184px clears it
+   with margin. Every top-of-surface toolbar carries this class — see the sweep in
+   ScreenshotStrip, DesignLayout, AskLayout, PlaygroundLayout, CodingLayout, CoFix. */
 body.electron-desktop .lumora-winctl-safe {
-  padding-right: 150px !important;
+  padding-right: 184px !important;
 }
-/* Overlay mode adds the transparency slider, so the cluster is wider — reserve more. */
+/* Overlay mode adds the transparency slider (~70px), so the cluster is wider. */
 html[data-overlay='on'] .lumora-winctl-safe {
-  padding-right: 250px !important;
+  padding-right: 272px !important;
 }
 /* The grip drives a JS drag (see DesktopWindowControls) since macOS blocks
    -webkit-app-region:drag on transparent windows. Keep everything no-drag so the

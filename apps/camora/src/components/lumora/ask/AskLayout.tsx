@@ -410,7 +410,7 @@ export const AskLayout = () => {
     <div className="flex flex-col h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
 
       {/* Top bar — navy strip with gold-leaf border */}
-      <div className="flex items-center justify-between px-5 h-12 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+      <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2">
           {hasMessages && (
             <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:bg-white/10" style={{ color: 'var(--cam-gold-leaf)', border: '1px solid rgba(217,181,67,0.35)', ...sans }}>
