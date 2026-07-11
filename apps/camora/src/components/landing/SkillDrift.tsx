@@ -23,7 +23,7 @@ function SkillDriftImpl({ skills, duration = 48 }: Props) {
           rather than getting clipped by a hard edge. */}
       <div className="pointer-events-none absolute left-0 inset-y-0 w-12 z-10 bg-gradient-to-r from-[var(--bg-surface)] to-transparent" />
       <div className="pointer-events-none absolute right-0 inset-y-0 w-12 z-10 bg-gradient-to-l from-[var(--bg-surface)] to-transparent" />
-      <div className="flex gap-2 group" style={style}>
+      <div className="skill-drift-track flex gap-2" style={style}>
         {[...skills, ...skills].map((s, i) => (
           <span
             key={`${s}-${i}`}
@@ -38,7 +38,12 @@ function SkillDriftImpl({ skills, duration = 48 }: Props) {
           from { transform: translateX(0); }
           to   { transform: translateX(-50%); }
         }
-        .group:hover { animation-play-state: paused; }
+        /* Scoped to this marquee only — a bare .group:hover rule here leaked
+           onto every Tailwind .group on the page and froze their animations. */
+        .skill-drift-track:hover { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) {
+          .skill-drift-track { animation: none !important; transform: none !important; }
+        }
       `}</style>
     </div>
   );
