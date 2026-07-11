@@ -14,7 +14,7 @@ const SCENES: SceneId[] = ['live', 'company', 'code', 'design', 'prep', 'score']
 const SCENE_MS = 5600;
 
 const SCENE_LABEL: Record<SceneId, { eyebrow: string; title: string; hint: string }> = {
-  live:    { eyebrow: 'Live session assistant',    title: 'Voice → AI, in 0.3s',            hint: 'Transcribe, reason, answer — while you talk.' },
+  live:    { eyebrow: 'Live session assistant',    title: 'Voice → AI, in 0.4s',            hint: 'Transcribe, reason, answer — while you talk.' },
   company: { eyebrow: 'Company-specific prep',       title: 'The whole loop, per company',    hint: 'HR · Hiring Manager · Coding · Design · Behavioral.' },
   code:    { eyebrow: 'Coding — 3 approaches',       title: 'Brute · Optimal · Space-tight',  hint: '50+ languages. Follow-ups included.' },
   design:  { eyebrow: 'Multi-cloud architecture',    title: 'AWS · GCP · Azure',              hint: 'Same design, every cloud, rendered live.' },
@@ -94,7 +94,7 @@ export default function CapabilityDeck() {
         <span style={{ fontSize: 10, fontWeight: 800, color: tx('var(--text-muted)', 'var(--text-dimmed)'), fontFamily: MONO, letterSpacing: '0.2em' }}>CAMORA · AI COPILOT</span>
         <div className="flex-1" />
         <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO }}>
-          latency&nbsp;<span style={{ color: ACCENT, fontWeight: 700 }}>0.3s</span>
+          latency&nbsp;<span style={{ color: ACCENT, fontWeight: 700 }}>0.4s</span>
         </span>
       </div>
 

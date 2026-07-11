@@ -38,11 +38,24 @@ const Glyph = (path: JSX.Element) => (
   </svg>
 );
 
+// Single source of truth for every headline metric on the page. Before this,
+// "Topics" read 750+ in the hero but 1,500+ in APPA and the feature grid, and
+// latency drifted between <1s / 0.3s / 0.4s. Every claim now derives from here
+// so the numbers can never contradict each other again. If the real DB count
+// changes, update it once.
+const STATS = {
+  roles: '1,000+',
+  topics: '1,500+',
+  problems: '9,500+',
+  latency: '<1s',
+  envReady: '<5s',
+} as const;
+
 const APPA: Step[] = [
   {
     key: 'apply', label: 'Apply', href: '/jobs',
     headline: 'Roles matched to your skills',
-    desc: '1,000+ matched roles · tailored resume + cover letter',
+    desc: `${STATS.roles} matched roles · tailored resume + cover letter`,
     color: 'var(--cam-primary)',
     cta: 'Find roles',
     Anim: ApplyAnim,
@@ -50,7 +63,7 @@ const APPA: Step[] = [
   },
   {
     key: 'prepare', label: 'Prepare', href: '/capra/prepare',
-    headline: '1,500+ curated study topics',
+    headline: `${STATS.topics} curated study topics`,
     desc: 'System design, DSA, behavioral, databases · diagrams included',
     color: 'var(--cam-gold-leaf)',
     cta: 'Start studying',
@@ -59,7 +72,7 @@ const APPA: Step[] = [
   },
   {
     key: 'practice', label: 'Practice', href: '/capra/practice',
-    headline: '9,500+ problems with AI feedback',
+    headline: `${STATS.problems} problems with AI feedback`,
     desc: 'Coding, DSA, MCQ, SQL · 50+ domains · AI scoring',
     color: 'var(--cam-primary-dk)',
     cta: 'Browse problems',
@@ -92,21 +105,21 @@ const FEATURES = [
     label: 'Live AI',
     title: 'Real-time AI during sessions',
     bullets: ['Live voice capture + instant answers', 'Architecture diagrams in seconds', 'Works during actual interviews'],
-    stat: '<1s',
+    stat: STATS.latency,
     statLabel: 'avg answer latency',
   },
   {
     label: 'Job Matching',
     title: 'AI-powered job discovery',
-    bullets: ['1,000+ roles matched to your skills', 'Auto-generate resume + cover letter', 'One-click application tracking'],
-    stat: '1,000+',
+    bullets: [`${STATS.roles} roles matched to your skills`, 'Auto-generate resume + cover letter', 'One-click application tracking'],
+    stat: STATS.roles,
     statLabel: 'matched roles',
   },
   {
     label: 'Prep',
-    title: '1,500+ topics with diagrams',
+    title: `${STATS.topics} topics with diagrams`,
     bullets: ['System design, DSA, behavioral, databases', 'AI explanations + architecture diagrams', 'Company-specific study paths'],
-    stat: '1,500+',
+    stat: STATS.topics,
     statLabel: 'study topics',
   },
   {
@@ -119,15 +132,15 @@ const FEATURES = [
   {
     label: 'Playground',
     title: 'Real terminals. Real Docker. Real Kubernetes.',
-    bullets: ['Ubuntu, Docker, Kubernetes — live in browser', 'No VM, no setup, ready in 5 seconds', 'Build real muscle memory before the screen'],
-    stat: '<5s',
+    bullets: ['Ubuntu, Docker, Kubernetes: live in browser', 'No VM, no setup, ready in 5 seconds', 'Build real muscle memory before the screen'],
+    stat: STATS.envReady,
     statLabel: 'env ready time',
   },
   {
     label: 'Practice',
-    title: '9,500+ problems with AI feedback',
+    title: `${STATS.problems} problems with AI feedback`,
     bullets: ['DSA, SQL, MCQ, system design, coding', 'AI explains why your approach was wrong', '50+ domains, difficulty-graduated'],
-    stat: '9,500+',
+    stat: STATS.problems,
     statLabel: 'problems',
   },
 ];
@@ -148,10 +161,10 @@ const HIGHLIGHTS = [
 ];
 
 const HERO_STATS = [
-  { value: '1,000+', label: 'Matched roles' },
-  { value: '750+', label: 'Topics' },
-  { value: '9,500+', label: 'Problems' },
-  { value: '<1s', label: 'AI latency' },
+  { value: STATS.roles, label: 'Matched roles' },
+  { value: STATS.topics, label: 'Topics' },
+  { value: STATS.problems, label: 'Problems' },
+  { value: STATS.latency, label: 'AI latency' },
 ];
 
 // Six features in a 3-column grid → exactly two even rows. All span 1 so
