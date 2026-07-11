@@ -53,7 +53,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
         style={{ background: 'var(--cam-hero-strip)', borderBottom: '3px solid var(--cam-gold-leaf)', boxShadow: '0 6px 22px rgba(0,0,0,0.28)' }}
         aria-label="Primary"
       >
-        <div className="mx-auto flex h-[60px] items-center px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="mx-auto flex h-[60px] items-center px-4 sm:px-6 lg:px-8 max-w-7xl lumora-winctl-safe">
           <Link to="/" aria-label="Camora — home" className="flex items-center gap-2.5 flex-shrink-0">
             <CamoraLogo size={30} />
             <span className="hidden sm:inline-block font-display text-[17px] font-semibold tracking-tight" style={{ color: 'var(--cam-strip-heading)' }}>
