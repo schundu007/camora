@@ -185,7 +185,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const decorationCollectionRef = useRef<any>(null);
   // Auto-height for the read-only fixed-code editor: track its content height so
   // it grows downward with the fixed code's line count (its wrapper scrolls).
-  const [fixedEditorH, setFixedEditorH] = useState(160);
+  const [fixedEditorH, setFixedEditorH] = useState(60);
 
   // Clear every solution-derived output so a freshly injected problem never
   // shows the previous fix. Mirrors the reset block in handleFix but does NOT
@@ -1005,15 +1005,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             </div>
           )}
 
-          {/* Scrolls the pane; the editor auto-heights so it grows downward with the code's line count. */}
-          <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: 'var(--bg-surface)' }}>
+          {/* Input editor FILLS the pane with its own internal scroll — a stable
+              height (no auto collapse/expand jitter as you paste/edit). Resize by
+              dragging the analysis-panel divider (height) or the column sashes
+              (width). */}
+          <div className="flex-1 min-h-0" style={{ background: 'var(--bg-surface)' }}>
             <SharedCodeEditor
               code={inputCode}
               onChange={setInputCode}
               language={toMonacoLang(effectiveLang)}
               readOnly={false}
-              autoHeight
-              minHeight={160}
+              height="100%"
               showLineNumbers
               fontSize={11}
               onMount={handleLeftEditorMount}
@@ -1261,7 +1263,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 onMount={editor => {
                   rightEditorRef.current = editor;
                   const sync = () => setFixedEditorH((prev) => {
-                    const h = Math.max(160, Math.ceil(editor.getContentHeight()));
+                    // Tight floor so short solutions stay compact (save space);
+                    // grows to fit the fixed code's content height.
+                    const h = Math.max(60, Math.ceil(editor.getContentHeight()));
                     return prev === h ? prev : h;
                   });
                   editor.onDidContentSizeChange(sync);
