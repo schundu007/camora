@@ -175,8 +175,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const pendingAnalyzeRef = useRef(false);
   const handleFixRef = useRef<() => void>(() => {});
 
-  const [panelHeight, setPanelHeight] = useState(300);
-  const panelRef = useRef<HTMLDivElement | null>(null);
+  // Manual override for the code-area (Broken|Fixed) height; null = auto-fit to
+  // the code's line count so the analysis panel below fills the rest (no vacant
+  // space). The drag handle between the code area and the panel sets this.
+  const [codeH, setCodeH] = useState<number | null>(null);
+  const codeAreaRef = useRef<HTMLDivElement | null>(null);
   const panelDragRef = useRef<{ startY: number; startH: number } | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -858,15 +861,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
 
   const handlePanelDragStart = useCallback((e: React.MouseEvent) => {
-    if (!panelRef.current) return;
+    if (!codeAreaRef.current) return;
     e.preventDefault();
     const startY = e.clientY;
-    const startH = panelRef.current.offsetHeight;
+    const startH = codeAreaRef.current.offsetHeight;
     panelDragRef.current = { startY, startH };
     const onMove = (ev: MouseEvent) => {
       if (!panelDragRef.current) return;
-      const delta = panelDragRef.current.startY - ev.clientY;
-      setPanelHeight(Math.max(80, Math.min(640, panelDragRef.current.startH + delta)));
+      // Handle sits at the code/panel boundary: drag DOWN grows the code area
+      // (and shrinks the panel), drag UP does the reverse.
+      const delta = ev.clientY - panelDragRef.current.startY;
+      setCodeH(Math.max(120, Math.min(720, panelDragRef.current.startH + delta)));
     };
     const onUp = () => {
       panelDragRef.current = null;
@@ -880,6 +885,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
   const lastRun = runOutputLog[runOutputLog.length - 1];
   const isErr = lastRun !== undefined && (lastRun.text.startsWith('Error:') || lastRun.text.startsWith('Traceback') || /^error:/i.test(lastRun.text));
+
+  // Auto-fit the code area (Broken|Fixed) to the taller block's line count so the
+  // analysis panel below fills the rest — the editors never leave a big void.
+  // Manual drag (codeH) overrides. Only applied once the analysis panel is shown;
+  // pre-fix the code area fills the column (a roomy paste canvas).
+  const LINE_H = 18;
+  const brokenBlockH = 32 + Math.max(1, inputCode.split('\n').length) * LINE_H + 16;
+  const fixedBlockH = fixedCode
+    ? 32 + 28 + (complexity ? 34 : 0) + Math.max(1, fixedCode.split('\n').length) * LINE_H + 16
+    : 0;
+  const autoCodeH = Math.min(560, Math.max(150, brokenBlockH, fixedBlockH));
+  const effectiveCodeH = codeH ?? autoCodeH;
 
   return (
     <div className="flex flex-col h-full">
@@ -978,7 +995,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       {/* ── LEFT COLUMN ── */}
       <Allotment.Pane minSize={360}>
       <div className="flex flex-col h-full">
-      <div className="flex-1 min-h-0 overflow-x-auto md:overflow-x-visible">
+      <div
+        ref={codeAreaRef}
+        className={showPanel ? 'shrink-0 overflow-x-auto md:overflow-x-visible' : 'flex-1 min-h-0 overflow-x-auto md:overflow-x-visible'}
+        style={showPanel ? { height: effectiveCodeH } : undefined}
+      >
       <div className="h-full min-w-[440px] md:min-w-0">
       <Allotment defaultSizes={[50, 50]}>
 
@@ -1015,18 +1036,19 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             </div>
           )}
 
-          {/* Input editor hugs its content (auto-height) so the card never
-              carries vacant space; the pane scrolls for long code. A bottom edge
-              marks where the code ends. */}
-          <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: 'var(--bg-surface)' }}>
+          {/* Input editor FILLS its pane with its OWN internal scroll. An
+              editable editor must own its scrolling so the caret and
+              click-to-place land on the correct line — auto-height gives up
+              Monaco's scrollbar and lets an ancestor scroll instead, which
+              desyncs the cursor coordinates while typing. The empty area below
+              the last line is the editing canvas, not vacant space. */}
+          <div className="flex-1 min-h-0" style={{ background: 'var(--bg-surface)' }}>
             <SharedCodeEditor
               code={inputCode}
               onChange={setInputCode}
               language={toMonacoLang(effectiveLang)}
               readOnly={false}
-              autoHeight
-              minHeight={44}
-              className="border-b border-[var(--cam-gold-leaf-dk)]"
+              height="100%"
               showLineNumbers
               fontSize={11}
               onMount={handleLeftEditorMount}
@@ -1319,7 +1341,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       {/* ── Analysis panel — sits UNDER Broken|Fixed, spanning their combined
           width (inside the left column). ── */}
       {showPanel && (
-        <div ref={panelRef} className="shrink-0 flex flex-col" style={{ height: panelCollapsed ? 34 : panelHeight, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
+        <div className={panelCollapsed ? 'shrink-0 flex flex-col' : 'flex-1 min-h-0 flex flex-col'} style={{ height: panelCollapsed ? 34 : undefined, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
 
           {panelCollapsed ? (
             /* Collapsed → thin restore bar. Clicking anywhere reopens the drawer. */
