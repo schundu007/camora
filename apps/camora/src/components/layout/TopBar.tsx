@@ -60,7 +60,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
   return (
     <>
       <header
-        className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar"
+        className="flex items-center justify-between px-4 sm:px-6 shrink-0 z-50 no-scrollbar lumora-winctl-safe"
         style={{
           height: 60,
           background: 'var(--cam-hero-strip)',
