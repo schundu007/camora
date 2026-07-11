@@ -916,42 +916,41 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         {/* Divider */}
         <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
 
-        {/* Explain chip */}
+        {/* Explain toggle — icon only (lightbulb) */}
         <button
           onClick={() => setExplainMode(v => !v)}
-          className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 shrink-0"
+          data-tip="Explain — hover a line of code for an AI explanation"
+          aria-label="Explain"
+          className="flex items-center justify-center w-7 h-7 rounded-md transition-opacity hover:opacity-90 shrink-0"
           style={explainMode ? {
-            fontFamily: 'var(--font-sans)',
             background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
             border: '1px solid var(--cam-gold-leaf)',
             color: '#0a0e1a',
           } : {
-            fontFamily: 'var(--font-sans)',
             background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
             border: '1px solid var(--cam-gold-leaf-dk)',
             color: 'var(--cam-gold-leaf-dk)',
           }}
         >
-          Explain
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.5.5 1 1.2 1 2h6c0-.8.5-1.5 1-2A6 6 0 0012 3z"/></svg>
         </button>
 
-        {/* Reset — next to Explain (left cluster, always visible, never clipped
-            by the overflow toolbar). Wipes pasted code + solution. */}
+        {/* Reset — icon only (next to Explain, always visible). Wipes code + solution. */}
         {(inputCode || fixedCode) && (
           <button
             onClick={handleReset}
             data-tip="Reset — clear code and solution"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 shrink-0"
+            aria-label="Reset"
+            className="flex items-center justify-center w-7 h-7 rounded-md transition-opacity hover:opacity-90 shrink-0"
             style={{
               background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
               border: '1px solid var(--cam-gold-leaf-dk)',
               color: 'var(--cam-gold-leaf-dk)',
             }}
           >
-            <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span className="text-[10px] font-bold uppercase tracking-wider">Reset</span>
           </button>
         )}
 
@@ -965,14 +964,16 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={handleSendToCoding}
-              className="text-[11px] font-bold uppercase tracking-[0.12em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap"
+              data-tip="Send to Coding"
+              aria-label="Send to Coding"
+              className="flex items-center justify-center w-7 h-7 rounded-md transition-opacity hover:opacity-90"
               style={{
                 background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
                 border: '1px solid var(--cam-gold-leaf-dk)',
                 color: 'var(--cam-gold-leaf-dk)',
               }}
             >
-              → Coding
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </button>
           </div>
         )}
@@ -1070,28 +1071,37 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 <button
                   onClick={() => { setInputCode(fixedCode); handleFix(fixedCode); }}
                   disabled={isLoading}
-                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                   style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
                   data-tip="Run CoFix again on this fixed code"
+                  aria-label="CoFix"
                 >
-                  {isLoading ? 'Analyzing…' : 'CoFix'}
+                  {isLoading
+                    ? <span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />
+                    : <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill="currentColor"/></svg>}
                 </button>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
                 <button
                   onClick={handleRun}
                   disabled={isRunning}
-                  className="shrink-0 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+                  data-tip="Run"
+                  aria-label="Run"
+                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
                   style={{
                     background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
                     color: '#0a0e1a',
                   }}
                 >
-                  {isRunning ? <><span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />Run</> : <>▶ Run</>}
+                  {isRunning
+                    ? <span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />
+                    : <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>}
                 </button>
                 <button
                   onClick={handleCopy}
                   disabled={!fixedCode || copyFeedback !== 'idle'}
-                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-all disabled:cursor-not-allowed"
+                  data-tip={copyFeedback === 'copied' ? 'Copied' : copyFeedback === 'failed' ? 'Copy failed' : 'Copy fixed code'}
+                  aria-label="Copy"
+                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-all disabled:cursor-not-allowed"
                   style={copyFeedback === 'copied' ? {
                     background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)',
                     border: '1px solid #10b981',
@@ -1106,12 +1116,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                     color: 'var(--cam-gold-leaf)',
                   }}
                 >
-                  {copyFeedback === 'copied' ? '✓ Copied' : copyFeedback === 'failed' ? '✕ Failed' : 'Copy'}
+                  {copyFeedback === 'copied'
+                    ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    : copyFeedback === 'failed'
+                    ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>}
                 </button>
                 <button
                   onClick={() => setShowRefinePopup(v => !v)}
                   disabled={isLoading}
-                  className="shrink-0 text-[10px] font-bold uppercase tracking-[0.1em] px-2.5 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
+                  data-tip="Refine fixed code"
+                  aria-label="Refine"
+                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
                   style={showRefinePopup ? {
                     background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
                     color: '#0a0e1a',
@@ -1121,7 +1137,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                     color: 'var(--cam-gold-leaf-dk)',
                   }}
                 >
-                  Refine
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.2 6.3L21 11l-5.8 1.7L13 19l-2.2-6.3L5 11l5.8-1.7L13 3z"/></svg>
                 </button>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
               </>
@@ -1147,20 +1163,27 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           {fixedCode && (
             <div className="flex items-center gap-1.5 px-2 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 28, borderBottom: '1px solid color-mix(in oklab, var(--accent) 18%, transparent)', background: 'color-mix(in oklab, var(--accent) 4%, transparent)' }}>
               {[
-                { label: '+ Print steps',    prompt: 'Add print() statements before and after each key step to show intermediate values' },
-                { label: '+ Type hints',     prompt: 'Add type hints to all function parameters and return types' },
-                { label: '+ Docstrings',     prompt: 'Add a concise docstring to every function' },
-                { label: '+ Error handling', prompt: 'Wrap the main logic in try/except and print a clear error message on failure' },
-                { label: '+ Comments',       prompt: 'Add a short inline comment on every non-obvious line' },
-              ].map(({ label, prompt }) => (
+                { label: 'Add print steps',    prompt: 'Add print() statements before and after each key step to show intermediate values',
+                  icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 9 12 4 17"/><line x1="12" y1="17" x2="20" y2="17"/></svg> },
+                { label: 'Add type hints',     prompt: 'Add type hints to all function parameters and return types',
+                  icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.6 13.4 12.4 5.2A2 2 0 0 0 11 4.6H5a1 1 0 0 0-1 1v6a2 2 0 0 0 .6 1.4l8.2 8.2a2 2 0 0 0 2.8 0l4.2-4.2a2 2 0 0 0 0-2.8Z"/><circle cx="7.5" cy="7.5" r="1" fill="currentColor"/></svg> },
+                { label: 'Add docstrings',     prompt: 'Add a concise docstring to every function',
+                  icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg> },
+                { label: 'Add error handling', prompt: 'Wrap the main logic in try/except and print a clear error message on failure',
+                  icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
+                { label: 'Add comments',       prompt: 'Add a short inline comment on every non-obvious line',
+                  icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> },
+              ].map(({ label, prompt, icon }) => (
                 <button
                   key={label}
                   onClick={() => handleRefine(prompt)}
                   disabled={isLoading}
-                  className="shrink-0 text-[9px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40 whitespace-nowrap"
+                  data-tip={label}
+                  aria-label={label}
+                  className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40"
                   style={{ background: 'color-mix(in oklab, var(--accent) 16%, transparent)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)' }}
                 >
-                  {label}
+                  {icon}
                 </button>
               ))}
             </div>
