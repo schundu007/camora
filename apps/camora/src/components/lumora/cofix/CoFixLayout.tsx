@@ -940,62 +940,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           </div>
         )}
 
-        {/* Reset moved to the "Broken Code" pane header (always visible, never
-            clipped by the overflow toolbar / window-control reserve). */}
-
-        {/* Divider */}
-        <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
-
-        {/* SNAP */}
-        {onSnapped && (
-          <button
-            onClick={handleSnap}
-            disabled={snapState === 'capturing'}
-            data-tip={snapState === 'error' ? 'Snap failed' : 'Snap screen'}
-            className={pillBase}
-            style={snapState === 'error'
-              ? { background: 'var(--danger)', color: '#ffffff' }
-              : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
-            }
-          >
-            {snapState === 'capturing'
-              ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-              : snapState === 'error'
-              ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
-            }
-            {snapState === 'error' ? 'Failed' : snapState === 'capturing' ? '…' : 'Snap'}
-          </button>
-        )}
-
-        {/* Pending snap thumbnails */}
-        {pendingSnapIds.map(pid => (
-          <div key={pid} className="w-10 h-7 rounded shrink-0 flex items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'color-mix(in oklab, var(--text-primary) 25%, transparent)', borderTopColor: 'var(--text-primary)' }} />
-          </div>
-        ))}
-
-        {/* Completed thumbnails */}
-        {screenshots.map((s, i) => (
-          <div key={s.id} className="relative group shrink-0" data-tip={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
-            <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
-            <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{i + 1}</span>
-            {onRemove && (
-              <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} data-tip="Remove">
-                <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-            )}
-          </div>
-        ))}
-
-        {/* AudioCapture */}
-        {onTranscription && (
-          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <AudioCapture onTranscription={onTranscription} autoStart={false} active={isTabActive} compact />
-          </div>
-        )}
-
-        {/* Stealth moved to the global rail toggle (LumoraIconRail). */}
+        {/* Reset moved to the "Broken Code" pane header. Snap / screenshots /
+            audio capture moved to the bottom footer bar (see below). */}
       </div>
 
       {/* ── Split pane ── */}
@@ -1639,6 +1585,62 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           </div>
           </div>
           </>
+          )}
+        </div>
+      )}
+
+      {/* ── Footer bar — capture / audio controls ──
+          Snap, screenshot thumbnails, and the audio-capture chips live here
+          (moved out of the top toolbar) so they sit anchored at the bottom. */}
+      {(onSnapped || onTranscription) && (
+        <div className="flex items-center gap-2 px-3 py-1.5 shrink-0 overflow-x-auto no-scrollbar" style={{ background: 'var(--cam-hero-strip)', borderTop: '1px solid var(--cam-gold-leaf)' }}>
+          {/* SNAP */}
+          {onSnapped && (
+            <button
+              onClick={handleSnap}
+              disabled={snapState === 'capturing'}
+              data-tip={snapState === 'error' ? 'Snap failed' : 'Snap screen'}
+              className={pillBase}
+              style={snapState === 'error'
+                ? { background: 'var(--danger)', color: '#ffffff' }
+                : { background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
+              }
+            >
+              {snapState === 'capturing'
+                ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                : snapState === 'error'
+                ? <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
+              }
+              {snapState === 'error' ? 'Failed' : snapState === 'capturing' ? '…' : 'Snap'}
+            </button>
+          )}
+
+          {/* Pending snap thumbnails */}
+          {pendingSnapIds.map(pid => (
+            <div key={pid} className="w-10 h-7 rounded shrink-0 flex items-center justify-center" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              <div className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'color-mix(in oklab, var(--text-primary) 25%, transparent)', borderTopColor: 'var(--text-primary)' }} />
+            </div>
+          ))}
+
+          {/* Completed thumbnails */}
+          {screenshots.map((s, i) => (
+            <div key={s.id} className="relative group shrink-0" data-tip={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
+              <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
+              <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{i + 1}</span>
+              {onRemove && (
+                <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} data-tip="Remove">
+                  <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
+              )}
+            </div>
+          ))}
+
+          {/* AudioCapture */}
+          {onTranscription && (
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+              <AudioCapture onTranscription={onTranscription} autoStart={false} active={isTabActive} compact />
+            </div>
           )}
         </div>
       )}
