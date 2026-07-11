@@ -27,21 +27,24 @@ function VisitorCountLineImpl() {
   }, []);
 
   return (
-    <p className="mt-7 text-[13px] text-white/55">
+    <p className="mt-7 text-[13px] text-[var(--text-muted)]">
       Trusted by{' '}
       {count === null ? (
         <span
           className="inline-block align-middle h-3 w-12 rounded-sm"
           style={{
+            // Token-based shimmer so the skeleton is visible in BOTH themes.
+            // --text-muted is dark in light mode / light in dark mode, so the
+            // color-mix tints resolve correctly against either hero surface.
             background:
-              'linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.06) 100%)',
+              'linear-gradient(90deg, color-mix(in oklab, var(--text-muted) 8%, transparent) 0%, color-mix(in oklab, var(--text-muted) 22%, transparent) 50%, color-mix(in oklab, var(--text-muted) 8%, transparent) 100%)',
             backgroundSize: '200% 100%',
             animation: 'shimmer-line 1.6s ease-in-out infinite',
           }}
           aria-label="Loading visitor count"
         />
       ) : (
-        <strong className="text-white font-semibold tabular-nums">{count.toLocaleString()}+</strong>
+        <strong className="text-[var(--text-primary)] font-semibold tabular-nums">{count.toLocaleString()}+</strong>
       )}{' '}
       engineers worldwide
       <style>{`
