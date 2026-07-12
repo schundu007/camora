@@ -940,7 +940,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       {!embedded && (
       <header className="flex items-center justify-between h-11 px-3 shrink-0 relative z-20 lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }}>
+          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-strip-text)' }}>
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -995,7 +995,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-white/10 rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
+                  className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
                   data-tip={`${m} min timer`}>
                   {m}m
                 </button>
@@ -1024,7 +1024,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           )}
 
           {/* Reset */}
-          <button onClick={handleReset} className="flex items-center gap-1 px-2.5 py-1 rounded-md opacity-80 hover:opacity-100 hover:bg-white/10 transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Reset — clear problem and solution">
+          <button onClick={handleReset} className="flex items-center gap-1 px-2.5 py-1 rounded-md opacity-80 hover:opacity-100 hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Reset — clear problem and solution">
             <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -1079,7 +1079,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   ))}
                   {snapChipCode && (
                     <button onClick={() => setSnapChipCode(null)} data-tip="Dismiss snap"
-                      className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/10"
+                      className="shrink-0 w-4 h-4 flex items-center justify-center rounded-full hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]"
                       style={{ color: 'var(--cam-strip-text-muted)' }}>
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
@@ -1090,7 +1090,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {(result || question) && (
                 <button
                   onClick={handleReset}
-                  className="shrink-0 flex items-center gap-1 px-2 py-0.5 mr-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:bg-white/10 opacity-70 hover:opacity-100"
+                  className="shrink-0 flex items-center gap-1 px-2 py-0.5 mr-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] opacity-70 hover:opacity-100"
                   style={{ color: 'var(--cam-strip-text)' }}
                   data-tip="Reset — clear problem and solution"
                 >
@@ -1102,7 +1102,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               )}
               <button
                 onClick={() => setInputCollapsed(!inputCollapsed)}
-                className="shrink-0 flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-white/10 active:scale-[0.98]"
+                className="shrink-0 flex items-center justify-center w-7 h-7 transition-[background-color,transform] hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] active:scale-[0.98]"
                 style={{ color: 'var(--cam-strip-heading)', border: '1px solid var(--cam-strip-icon-border)', borderRadius: 999, background: 'var(--cam-strip-icon-bg)' }}
                 aria-label={inputCollapsed ? 'Expand input' : 'Collapse input'}
               >

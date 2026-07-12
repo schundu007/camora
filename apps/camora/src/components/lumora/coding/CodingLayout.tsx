@@ -2174,7 +2174,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       {!embedded && (
       <header className="flex items-center justify-between h-11 px-3 shrink-0 relative z-20 lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2 md:gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-white/10" style={{ color: 'var(--cam-strip-text)' }}>
+          <button onClick={onBack} className="flex items-center gap-1 px-1.5 py-1 text-xs md:text-sm font-bold rounded transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-strip-text)' }}>
             <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -2210,7 +2210,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-white/10 rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
+                  className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
                   data-tip={`${m} min timer`}>
                   {m}m
                 </button>

@@ -373,7 +373,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             onClick={sonaExport ?? undefined}
             disabled={!sonaHasMessages}
             data-tip="Export session (.md)"
-            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ color: 'var(--cam-strip-text)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
@@ -383,7 +383,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             disabled={!sonaHasMessages}
             data-tip="Reset — clear this interview's Q&A"
             aria-label="Reset interview"
-            className="flex items-center gap-1 px-2 h-6 rounded-md transition-colors hover:bg-white/10 disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center gap-1 px-2 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ color: 'var(--cam-strip-text)' }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
@@ -392,7 +392,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           <button
             onClick={sonaClose ?? undefined}
             data-tip="Close Sona"
-            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-white/10"
+            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]"
             style={{ color: 'var(--cam-strip-text)' }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>

@@ -3154,7 +3154,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(false)}
-              className="sm:hidden shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-white/10"
+              className="sm:hidden shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]"
               style={{ color: 'var(--cam-strip-text)' }}
               aria-label="Close sections"
               data-tip="Close"
@@ -3246,7 +3246,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   >
                     {prepData.companies.map(c => (
                       <button key={c} onClick={() => switchCompany(c)}
-                        className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors hover:bg-white/5"
+                        className="w-full flex items-center justify-between px-3 py-2 text-xs text-left transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)]"
                         style={{ color: c === prepData.activeCompany ? 'var(--cam-gold-leaf-text)' : 'var(--text-primary)', background: c === prepData.activeCompany ? 'color-mix(in srgb, var(--cam-gold-leaf) 15%, transparent)' : 'transparent' }}>
                         <span className="truncate font-medium">{c}</span>
                         <button onClick={(e) => { e.stopPropagation(); archiveCompany(c); }}
@@ -3266,7 +3266,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                         </button>
                         {showArchived && (prepData.archivedCompanies || []).map(c => (
                           <button key={c} onClick={(e) => { e.stopPropagation(); unarchiveCompany(c); }}
-                            className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] text-left hover:bg-white/5"
+                            className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] text-left hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)]"
                             style={{ color: 'var(--text-muted)' }} data-tip="Click to restore">
                             <span className="truncate italic">{c}</span>
                             <span className="text-[9px] opacity-60">Restore</span>
@@ -3640,7 +3640,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 <button
                   onClick={closeJdModal}
                   aria-label="Close"
-                  className="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:bg-white/10"
+                  className="w-8 h-8 rounded-md flex items-center justify-center transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]"
                   style={{ color: 'rgba(255,255,255,0.7)' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M6 18L18 6M6 6l12 12" /></svg>
