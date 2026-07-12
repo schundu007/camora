@@ -388,17 +388,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     // Scroll the editor's column so the target line is centered. getTopForLineNumber
     // gives the line's y within the (fully-expanded) editor content; translate that
     // to the scroll container via bounding rects.
-    const col = editorColRef.current;
-    if (col) {
-      try {
-        const node = ed.getDomNode();
-        if (node) {
-          const top = ed.getTopForLineNumber(line);
-          const delta = (node.getBoundingClientRect().top + top) - (col.getBoundingClientRect().top + col.clientHeight / 2);
-          col.scrollTo({ top: col.scrollTop + delta, behavior: 'smooth' });
-        }
-      } catch { /* ignore */ }
-    }
+    // The editor fills its pane and owns its own scroll now, so reveal the line
+    // via Monaco directly instead of scrolling the surrounding column.
+    try { ed.revealLineInCenter(line); } catch { /* ignore */ }
     if (!decoColRef.current) decoColRef.current = ed.createDecorationsCollection([]);
     decoColRef.current.set([{
       range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
@@ -2921,10 +2913,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ──
-            Scrolls as a whole: the editor auto-heights to the code (grows
-            downward with the line count) and the output panel flows beneath it,
-            so both are reached by scrolling this column when the code is long. */}
-        <div ref={editorColRef} className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto" style={{ background: t.surfaceBg, color: t.text }}>
+            IDE layout: the editor FILLS the space with its own internal scroll
+            (so the caret/click land on the right line) and the Test Cases/Output
+            panel is pinned at the bottom. No vacant space, no whole-column scroll. */}
+        <div ref={editorColRef} className="flex-1 flex flex-col min-w-0 min-h-0" style={{ background: t.surfaceBg, color: t.text }}>
           {/* Editor Header — sticky so Run / language / reset stay reachable while the column scrolls */}
           <div className="flex items-center justify-between px-2 py-1 lumora-winctl-safe sticky top-0 z-10" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-1.5">
@@ -2985,12 +2977,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             </div>
           </div>
 
-          {/* ── Code Editor — auto-heights to the code so it grows downward with
-              the line count (no fixed box, no wasted empty space). The column
-              above scrolls when the code exceeds the viewport. ── */}
+          {/* ── Code Editor — FILLS the pane with its own internal scroll. An
+              editable editor must own its scrolling so the caret and
+              click-to-place land on the correct line. ── */}
+          <div className="flex-1 min-h-0">
           <SharedCodeEditor
-            autoHeight
-            minHeight={160}
+            height="100%"
             language={getLanguageById(language)?.monaco || 'python'}
             code={code}
             onChange={setCode}
@@ -3006,6 +2998,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               });
             }}
           />
+          </div>
 
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
