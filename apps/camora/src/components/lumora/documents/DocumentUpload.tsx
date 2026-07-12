@@ -91,26 +91,26 @@ export const DocumentUpload = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed mt-1 w-72 bg-gray-900 border border-white/10 shadow-2xl z-[100] rounded-xl" style={{ top: containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 50, right: 16 }}>
-          <div className="p-3 border-b border-white/10">
+        <div data-overlay-keep className="fixed mt-1 w-72 bg-[var(--bg-elevated)] border border-[var(--border)] shadow-2xl z-[100] rounded-xl" style={{ top: containerRef.current ? containerRef.current.getBoundingClientRect().bottom + 4 : 50, right: 16 }}>
+          <div className="p-3 border-b border-[var(--border)]">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-sm font-bold text-white">
+              <span className="font-mono text-sm font-bold text-[var(--text-primary)]">
                 PREPARATION DOCS
               </span>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white/75 hover:text-white"
+                className="text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
                 <CloseIcon />
               </button>
             </div>
-            <p className="text-sm text-white/85">
+            <p className="text-sm text-[var(--text-secondary)]">
               Upload prep guides. Answers will use these for context.
             </p>
           </div>
 
           {/* Upload button */}
-          <div className="p-3 border-b border-white/10">
+          <div className="p-3 border-b border-[var(--border)]">
             <input
               ref={fileInputRef}
               type="file"
@@ -125,7 +125,7 @@ export const DocumentUpload = () => {
             >
               {isLoading ? 'Uploading...' : '+ Upload Document'}
             </button>
-            <p className="text-sm text-gray-600 mt-1 text-center">
+            <p className="text-sm text-[var(--text-muted)] mt-1 text-center">
               .txt, .docx, .pdf, .md (max 5MB)
             </p>
           </div>
@@ -140,7 +140,7 @@ export const DocumentUpload = () => {
           {/* Documents list */}
           <div className="max-h-48 overflow-y-auto">
             {documents.length === 0 ? (
-              <div className="p-4 text-center text-sm text-gray-600">
+              <div className="p-4 text-center text-sm text-[var(--text-muted)]">
                 No documents uploaded yet
               </div>
             ) : (
@@ -153,13 +153,13 @@ export const DocumentUpload = () => {
                     <div className="font-mono text-sm font-medium text-[var(--text-secondary)] truncate">
                       {doc.filename}
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-[var(--text-muted)]">
                       {Math.round(doc.size / 1024)}KB
                     </div>
                   </div>
                   <button
                     onClick={() => handleDelete(doc.filename)}
-                    className="text-gray-600 hover:text-rose shrink-0"
+                    className="text-[var(--text-muted)] hover:text-rose shrink-0"
                     data-tip="Delete"
                   >
                     <TrashIcon />
