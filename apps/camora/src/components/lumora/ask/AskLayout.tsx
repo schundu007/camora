@@ -413,7 +413,7 @@ export const AskLayout = () => {
       <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2">
           {hasMessages && (
-            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:bg-white/10" style={{ color: 'var(--cam-gold-leaf)', border: '1px solid rgba(217,181,67,0.35)', ...sans }}>
+            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-gold-leaf)', border: '1px solid rgba(217,181,67,0.35)', ...sans }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New
             </button>
@@ -454,7 +454,7 @@ export const AskLayout = () => {
             ) : history.map(c => (
               <div
                 key={c.id}
-                className="flex items-center gap-2 border-b hover:bg-white/5 transition-colors"
+                className="flex items-center gap-2 border-b hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)] transition-colors"
                 style={{ borderColor: 'rgba(217,181,67,0.15)' }}
               >
                 <button
