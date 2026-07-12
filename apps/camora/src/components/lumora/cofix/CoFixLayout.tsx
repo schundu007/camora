@@ -1073,7 +1073,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         <div className="flex h-full">
           {/* Code editor column */}
           <div className="flex flex-col flex-1 min-w-0 relative">
-          <div className="h-8 flex items-center gap-1.5 px-2 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0 overflow-x-auto no-scrollbar">
+          <div className="h-9 flex items-center gap-2 px-3 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0 overflow-x-auto no-scrollbar">
             {fixedCode && (
               <>
                 <button
@@ -1169,7 +1169,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
           {/* Quick-refine chip strip — always visible when fixed code exists */}
           {fixedCode && (
-            <div className="flex items-center gap-1.5 px-2 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 28, borderBottom: '1px solid color-mix(in oklab, var(--accent) 18%, transparent)', background: 'color-mix(in oklab, var(--accent) 4%, transparent)' }}>
+            <div className="flex items-center gap-2.5 px-3 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 40, borderBottom: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--bg-elevated)' }}>
+              {/* Section marker so the quick-refine row reads as its own toolbar
+                  band, clearly separated from the code below (not chips crowding it). */}
+              <span className="shrink-0 flex items-center pr-2.5 mr-0.5 border-r border-[var(--border)]" style={{ color: 'var(--cam-gold-leaf-dk)' }} aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.2 6.3L21 11l-5.8 1.7L13 19l-2.2-6.3L5 11l5.8-1.7L13 3z"/></svg>
+              </span>
               {[
                 { label: 'Add print steps',    prompt: 'Add print() statements before and after each key step to show intermediate values',
                   icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 7 9 12 4 17"/><line x1="12" y1="17" x2="20" y2="17"/></svg> },
@@ -1188,7 +1193,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   disabled={isLoading}
                   data-tip={label}
                   aria-label={label}
-                  className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40"
+                  className="shrink-0 flex items-center justify-center w-7 h-7 rounded-full transition-opacity hover:opacity-90 disabled:opacity-40"
                   style={{ background: 'color-mix(in oklab, var(--accent) 16%, transparent)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)' }}
                 >
                   {icon}
