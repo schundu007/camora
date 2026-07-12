@@ -238,11 +238,11 @@
     --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 8%, transparent);
     --accent-secondary-text:   #7A5C0A;
 
-    --success: #1D4ED8;
+    --success: #1B1D22;  /* B&W: was blue #1D4ED8 — neutral near-black (danger stays red) */
     --warning: #C2963E;
     --warning-text: #7A5C0A;
     --danger:  #DC2626;
-    --info:    #1D4ED8;
+    --info:    #1B1D22;  /* B&W: was blue #1D4ED8 */
 
     --easy:        #6B7280;
     --easy-bg:     rgba(107,114,128,0.06);
@@ -254,7 +254,7 @@
     --hard-bg:     color-mix(in oklab, var(--hard) 8%, transparent);
     --hard-border: color-mix(in oklab, var(--hard) 20%, transparent);
 
-    --cat-primary:    #1D4ED8;
+    --cat-primary:    #1B1D22;  /* B&W: was blue #1D4ED8 */
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 8%, transparent);
 
     --shadow-xs: 0 1px 2px rgba(15,23,42,0.05);
@@ -282,7 +282,7 @@
 
     --cam-on-accent: #ffffff;
 
-    --lumora-hero-gradient: linear-gradient(160deg, #0C2B8A 0%, #1545C8 55%, #0E3399 100%);
+    --lumora-hero-gradient: linear-gradient(160deg, #2A2D34 0%, #1B1D22 55%, #17181C 100%);  /* B&W: was deep-blue */
     --lumora-chrome-bg:     var(--cam-hero-strip);
     --lumora-chrome-border: var(--border);
     --lumora-chrome-shadow: 0 1px 0 var(--border);
