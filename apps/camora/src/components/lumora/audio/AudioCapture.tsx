@@ -1341,7 +1341,7 @@ const UnifiedMicButton = ({
         aria-checked={listenOn}
         onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
         data-tip={listenTip}
-        className="inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full transition-colors shrink-0"
+        className="inline-flex items-center px-1.5 py-1 rounded-full transition-colors shrink-0"
         style={{
           background: listenOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
           border: `1px solid ${listenOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
@@ -1363,12 +1363,6 @@ const UnifiedMicButton = ({
               animation: listenOn ? 'mic-pulse 1.4s ease-out infinite' : undefined,
             }}
           />
-        </span>
-        <span
-          className="text-[10px] font-bold uppercase tracking-[0.14em]"
-          style={{ color: listenOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)', fontFamily: 'var(--font-mono)' }}
-        >
-          {listenOn ? 'Listening' : 'Paused'}
         </span>
       </button>
 
