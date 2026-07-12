@@ -3392,49 +3392,59 @@ figure:has(> .viz-caption) {
    replacing the old multi-box GridCard grids. Mirrors the .prep-content
    three-tier heading scale, scoped to its own class so prep is untouched.
    One scroll lives on the column — never on individual sections. */
+/* ── Editorial reading system (refined dark) ──────────────────────────────
+   Prose in an editorial serif (Newsreader), headings in Fraunces, labels in a
+   clean sans (sentence case, not mono-uppercase), code stays mono. Gold is used
+   only as a hairline; text carries the hierarchy, not colour. */
 .lumora-book {
   max-width: none;
   margin-inline: auto;
-  padding: 1.25rem 1.5rem 2.5rem;
+  padding: 1.5rem 1.75rem 2.75rem;
+  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+  font-size: 15.5px;
+  color: var(--text-primary);
 }
 
-/* Tier 1 — section heading */
+/* Tier 1 — section heading (Fraunces, neutral text + gold hairline) */
 .lumora-book-section {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--accent-text);
-  margin: 2.25rem 0 0.9rem;
-  padding-bottom: 0.4rem;
-  border-bottom: 1px solid var(--border);
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin: 2.4rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--cam-gold-leaf) 42%, transparent);
 }
 .lumora-book-section:first-child { margin-top: 0; }
 
-/* Tier 2 — subsection */
+/* Tier 2 — subsection (Fraunces) */
 .lumora-book-sub {
-  font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 1.18rem;
   font-weight: 600;
+  letter-spacing: -0.005em;
   color: var(--text-primary);
-  margin: 1.4rem 0 0.5rem;
+  margin: 1.6rem 0 0.5rem;
 }
 
-/* Tier 3 — micro-label */
+/* Tier 3 — label (clean sans, sentence case, muted) */
 .lumora-book-label {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--accent-text);
-  margin: 1.2rem 0 0.4rem;
+  font-family: 'Inter', var(--font-display), sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: var(--text-muted);
+  margin: 1.4rem 0 0.45rem;
 }
 
-/* Highlighted key points — a book-style aside with an accent rule. */
+/* Highlighted key points — a book-style aside with a gold hairline rule. */
 .lumora-book-callout {
-  border-left: 2px solid var(--accent);
-  padding: 0.2rem 0 0.2rem 1.1rem;
-  margin: 1.25rem 0;
+  border-left: 2px solid color-mix(in oklab, var(--cam-gold-leaf) 55%, transparent);
+  padding: 0.15rem 0 0.15rem 1.15rem;
+  margin: 1.35rem 0;
   color: var(--text-primary);
 }
 
@@ -3444,5 +3454,12 @@ figure:has(> .viz-caption) {
   margin-inline: calc(50% - min(50%, calc(34ch + 3rem)));
 }
 
-.lumora-book p { line-height: 1.75; color: var(--text-primary); }
-.lumora-book li { line-height: 1.7; }
+.lumora-book p  { line-height: 1.62; color: var(--text-primary); margin-bottom: 0.9rem; }
+.lumora-book li { line-height: 1.6; }
+/* Labels, code and interactive chrome opt out of the serif. */
+.lumora-book code,
+.lumora-book pre,
+.lumora-book .lumora-book-label,
+.lumora-book button { font-family: var(--font-mono); }
+.lumora-book .lumora-book-label,
+.lumora-book button { font-family: 'Inter', var(--font-display), sans-serif; }
