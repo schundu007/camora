@@ -82,7 +82,7 @@ export function ProblemCaptureStrip({ kind, onProblemBuilt }: Props) {
           onClick={handleCapture}
           disabled={isCapturing || captures.length >= MAX_CAPTURES}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors disabled:opacity-50"
-          style={{ background: 'var(--cam-primary)', color: 'white' }}
+          style={{ background: 'var(--cam-primary-dk)', color: 'white' }}
         >
           <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -121,7 +121,7 @@ export function ProblemCaptureStrip({ kind, onProblemBuilt }: Props) {
               <img src={url} alt={`Page ${i + 1}`} className="w-full h-full object-cover" />
               <span
                 className="absolute top-0.5 left-0.5 text-[9px] font-bold px-1 rounded leading-4"
-                style={{ background: 'var(--cam-primary)', color: 'white' }}
+                style={{ background: 'var(--cam-primary-dk)', color: 'white' }}
               >
                 {i + 1}
               </span>

@@ -1185,7 +1185,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 touch users have an obvious dismiss. The scrim handles taps
                 outside, but a visible X is the discoverable affordance. */}
             <div className="md:hidden flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)' }}>Menu</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-primary)' }}>Menu</span>
               <button
                 onClick={() => setMobileRailOpen(false)}
                 className="p-2 rounded-md"

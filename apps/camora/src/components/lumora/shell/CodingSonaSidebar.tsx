@@ -354,7 +354,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
           {liveSolveContext && (
             <div
               className="flex items-center gap-2 px-3 py-1.5 text-[10px]"
-              style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)', color: 'var(--cam-primary-dk)' }}
+              style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}
             >
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary)' }} />
               <span className="font-bold uppercase tracking-wider">Live context loaded</span>

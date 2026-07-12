@@ -31,12 +31,12 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'var(--cam-strip-icon-bg)' }}>
             <button onClick={() => setView('week')}
               className="px-2 py-1 text-[10px] font-bold rounded transition-[background-color,color,transform] active:scale-[0.98]"
-              style={view === 'week' ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' } : { color: 'var(--cam-strip-text-muted)' }}>
+              style={view === 'week' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text-muted)' }}>
               Week
             </button>
             <button onClick={() => setView('month')}
               className="px-2 py-1 text-[10px] font-bold rounded transition-[background-color,color,transform] active:scale-[0.98]"
-              style={view === 'month' ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' } : { color: 'var(--cam-strip-text-muted)' }}>
+              style={view === 'month' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text-muted)' }}>
               Month
             </button>
           </div>
@@ -75,7 +75,7 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
             Sign in to view your session schedule
           </p>
           <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer"
-            className="px-4 py-2 rounded-xl text-xs font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]" style={{ background: 'var(--cam-primary)', color: '#fff' }}>
+            className="px-4 py-2 rounded-xl text-xs font-bold transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]" style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}>
             Open Google Calendar
           </a>
         </div>

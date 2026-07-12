@@ -816,7 +816,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
       <div key="pitch" className="space-y-4">
         {sections.map((s: any, i: number) => (
           <div key={i} className="flex gap-3">
-            <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>{i + 1}</span>
+            <span className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>{i + 1}</span>
             <div className="flex-1 pt-0.5">
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
                 {(s.bullets || []).map((b: string, j: number) => (
@@ -1892,7 +1892,7 @@ const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPa
         onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ''; }} />
       {value ? (
         <>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           </div>
           <span className="text-xs font-semibold w-full px-2 truncate text-center" style={{ color: 'var(--cam-primary)' }} data-tip={fileName}>{fileName || 'Content added'}</span>
@@ -1966,7 +1966,7 @@ const GitHubRepoFetcher = ({ onDocs }: { onDocs: (docs: StudyDoc[]) => void }) =
           onClick={handleFetch}
           disabled={!url.trim() || status === 'loading'}
           className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide shrink-0 disabled:opacity-40 transition-opacity"
-          style={{ background: 'var(--cam-primary)', color: '#fff' }}
+          style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
         >
           {status === 'loading' ? '…' : 'Fetch'}
         </button>
@@ -3221,7 +3221,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
               <div className="flex gap-1.5">
-                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>Create</button>
+                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>Create</button>
                 <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: 'var(--text-muted)' }}>Cancel</button>
               </div>
             </div>
@@ -3285,7 +3285,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             </div>
           ) : (
             <button onClick={() => { setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
-              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
+              className="w-full py-2 text-xs font-bold rounded-lg" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
               + Add Company
             </button>
           )}
@@ -3675,7 +3675,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   onClick={() => fetchJdUrl(jdUrl)}
                   disabled={!jdUrl.trim() || jdFetching}
                   className="px-4 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background: 'var(--cam-primary)', color: '#FFFFFF', boxShadow: (!jdUrl.trim() || jdFetching) ? 'none' : '0 4px 12px rgba(38,97,156,0.32)' }}
+                  style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', boxShadow: (!jdUrl.trim() || jdFetching) ? 'none' : '0 4px 12px rgba(38,97,156,0.32)' }}
                 >
                   {jdFetching ? 'Fetching…' : 'Fetch JD'}
                 </button>
@@ -3722,7 +3722,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 }}
                 disabled={!jdEditText.trim()}
                 className="px-5 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: 'var(--cam-primary)', color: '#FFFFFF', boxShadow: jdEditText.trim() ? '0 4px 12px rgba(38,97,156,0.32)' : 'none' }}
+                style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', boxShadow: jdEditText.trim() ? '0 4px 12px rgba(38,97,156,0.32)' : 'none' }}
               >
                 Save
               </button>
