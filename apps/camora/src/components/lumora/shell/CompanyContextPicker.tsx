@@ -88,9 +88,9 @@ const CompanyContextPicker = () => {
         data-tip={activeName ? `Active workspace: ${activeName}` : 'Switch which Prep Kit workspace Sona uses for context'}
         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors min-w-0"
         style={{
-          background: 'rgba(3,19,46,0.88)',
-          border: '1px solid rgba(201,162,39,0.50)',
-          color: 'rgba(255,255,255,0.90)',
+          background: 'var(--cam-hero-strip)',
+          border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)',
+          color: 'var(--text-primary)',
           maxWidth: 160,
         }}
       >
@@ -117,6 +117,7 @@ const CompanyContextPicker = () => {
           }}
         >
           <div
+            data-overlay-keep
             onClick={(e) => e.stopPropagation()}
             className="rounded-2xl overflow-hidden flex flex-col"
             style={{
@@ -188,8 +189,8 @@ const CompanyContextPicker = () => {
                     onClick={() => setOpen(false)}
                     className="inline-flex items-center px-3 py-1.5 rounded-md text-[12px] font-bold"
                     style={{
-                      background: 'var(--cam-primary)',
-                      color: '#fff',
+                      background: 'var(--accent)',
+                      color: 'var(--cam-on-accent)',
                     }}
                   >
                     Open Prep Kit →
@@ -254,8 +255,8 @@ const CompanyContextPicker = () => {
                             <span
                               className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full"
                               style={{
-                                background: 'var(--cam-primary)',
-                                color: '#fff',
+                                background: 'var(--accent)',
+                                color: 'var(--cam-on-accent)',
                               }}
                             >
                               Active
