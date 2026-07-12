@@ -2100,7 +2100,12 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
       "note": "One sentence explaining why."
     }
   ],
-  "complexity": { "time": "O(...)", "space": "O(...)" },
+  "complexity": {
+    "time": "O(...)",
+    "space": "O(...)",
+    "timeWhy": "2-4 sentences explaining WHY this time complexity holds for THIS specific problem — name the dominant operation, tie it to the input size (e.g. 'the single pass over n elements'), and say why a lower bound isn't achievable or isn't needed given the constraints. Reference the actual approach, not generic definitions.",
+    "spaceWhy": "2-4 sentences explaining WHY this space complexity holds — name what extra memory the approach allocates (the hash map, the recursion stack, the output array) and how it grows with the input, or why it's O(1) auxiliary. Be specific to THIS solution."
+  },
   "hackerrank_compatible": true | false,
   "walkthrough": [
     {

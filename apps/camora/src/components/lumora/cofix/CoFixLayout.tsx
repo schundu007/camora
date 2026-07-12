@@ -120,7 +120,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const [fixedCode, setFixedCode] = useState('');
   const [changes, setChanges] = useState<CoFixChange[]>([]);
   const [walkthrough, setWalkthrough] = useState<CoFixWalkStep[]>([]);
-  const [complexity, setComplexity] = useState<{ time: string; space: string } | null>(null);
+  const [complexity, setComplexity] = useState<{ time: string; space: string; timeWhy?: string; spaceWhy?: string } | null>(null);
   const [hackerrankCompatible, setHackerrankCompatible] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -901,7 +901,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const LINE_H = 18;
   const brokenBlockH = 32 + Math.max(1, inputCode.split('\n').length) * LINE_H + 16;
   const fixedBlockH = fixedCode
-    ? 32 + 28 + (complexity ? 34 : 0) + Math.max(1, fixedCode.split('\n').length) * LINE_H + 16
+    ? 32 + 28 + (complexity ? (complexity.timeWhy || complexity.spaceWhy ? 110 : 34) : 0) + Math.max(1, fixedCode.split('\n').length) * LINE_H + 16
     : 0;
   // No upper cap: the code area grows to fit the taller of the two blocks so the
   // fixed code is shown in FULL (auto-expand). When the code area + analysis panel
@@ -1328,19 +1328,37 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
           </div>
 
-          {/* Complexity strip */}
+          {/* Complexity strip — Big-O plus a WHY for each (not just the answer). */}
           {complexity && (
-            <div className="flex items-center gap-4 px-4 py-2 border-t border-[var(--border)] bg-[var(--bg-secondary)] text-[11px] flex-wrap shrink-0">
-              <span className="text-[var(--text-muted)]">
-                Time: <span className="text-[var(--text-primary)] font-mono">{complexity.time}</span>
-              </span>
-              <span className="text-[var(--text-muted)]">
-                Space: <span className="text-[var(--text-primary)] font-mono">{complexity.space}</span>
-              </span>
-              {hackerrankCompatible !== null && (
-                <span style={{ color: hackerrankCompatible ? "var(--accent-text)" : "var(--warning-text)" }}>
-                  {hackerrankCompatible ? '✓ HackerRank Compatible' : '⚠ Strip I/O boilerplate before submitting'}
+            <div className="flex flex-col gap-2 px-4 py-2.5 border-t border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
+              <div className="flex items-center gap-4 text-[11px] flex-wrap">
+                <span className="text-[var(--text-muted)]">
+                  Time: <span className="text-[var(--text-primary)] font-mono">{complexity.time}</span>
                 </span>
+                <span className="text-[var(--text-muted)]">
+                  Space: <span className="text-[var(--text-primary)] font-mono">{complexity.space}</span>
+                </span>
+                {hackerrankCompatible !== null && (
+                  <span style={{ color: hackerrankCompatible ? "var(--accent-text)" : "var(--warning-text)" }}>
+                    {hackerrankCompatible ? '✓ HackerRank Compatible' : '⚠ Strip I/O boilerplate before submitting'}
+                  </span>
+                )}
+              </div>
+              {(complexity.timeWhy || complexity.spaceWhy) && (
+                <div className="flex flex-col gap-1.5">
+                  {complexity.timeWhy && (
+                    <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">
+                      <span className="font-semibold text-[var(--text-primary)]">Why {complexity.time} time — </span>
+                      {complexity.timeWhy}
+                    </p>
+                  )}
+                  {complexity.spaceWhy && (
+                    <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">
+                      <span className="font-semibold text-[var(--text-primary)]">Why {complexity.space} space — </span>
+                      {complexity.spaceWhy}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           )}
