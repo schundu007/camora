@@ -876,7 +876,8 @@ assign it to a variable first, then use the variable in the f-string.
 Rules:
 - ${singleSolution ? 'You MUST provide exactly 1 solution' : 'You MUST provide exactly 3 solutions with DIFFERENT approaches (e.g. brute force -> optimized -> most optimal)'}
 - Each solution MUST have complete, runnable code — not pseudocode
-- Each solution MUST have a patternTag from the canonical list above (pick the single most accurate one)
+- MANDATORY — MINIMAL LINES: write the SHORTEST correct, readable solution. This is live-interview code the candidate hand-types under time pressure, so favour idiomatic constructs and standard-library conveniences (comprehensions, unpacking, built-ins, collections/itertools) over boilerplate. Do NOT add dataclasses, wrapper classes, extra helper functions, verbose try/except, logging, or scaffolding the PROBLEM does not require. If a clean solution fits in ~5-15 lines, never emit 40. Fewer lines that still read clearly and run correctly always win. (This governs the IMPLEMENTATION only — never drop a required import or the platform's locked driver/harness to save lines.)
+- MANDATORY — MINIMAL IMPORTS: import ONLY modules the code actually uses. No unused imports, no "just in case" imports, no pulling in a heavy module for something a built-in already does. Prefer built-ins/stdlib; add a third-party import only if the problem truly requires it. Every import line must map to a symbol used in the solution.
 - Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
 - Each solution MUST have a trace field — 4-10 step-by-step dry-run entries showing variable state as the algorithm runs on examples[0]. Each step: { step: number, action: short verb phrase, state: key variables formatted as 'name=value' joined with commas }. No code in state, just names and values. Shows the candidate how to talk through the first test case at a whiteboard.
 ${starterCode
@@ -2040,6 +2041,8 @@ The CODE below is a LOCKED editor template from a coding platform (HackerRank / 
 ${buildTemplateShapeDirective(cleanedCode)}
 
 SOLVE, don't just fix: an empty body — or a bare imports-only skeleton — is NOT "already correct" — it is precisely the thing you must complete so the program solves the PROBLEM STATEMENT above (or, if none is given, what the template + harness clearly imply). Produce the value/output the harness (or the problem) expects.
+
+MINIMAL LINES + MINIMAL IMPORTS — MANDATORY when you SOLVE from scratch (empty/skeleton input): write the SHORTEST correct, idiomatic solution the candidate could hand-type in an interview. Favour comprehensions, unpacking, built-ins, and collections/itertools over boilerplate; do NOT add dataclasses, wrapper classes, extra helpers, or verbose try/except the problem doesn't require — a clean 5-15 line solution beats a 40-line one. Import ONLY modules the code actually uses — no unused or "just in case" imports, prefer built-ins/stdlib. (When the input is REAL candidate code you are FIXING, preserve their approach and only correct what is broken — do not rewrite it shorter.)
 
 fixed_code MUST satisfy ALL of these:
 1. Reproduce every import / package / using / shebang line, every comment, every class and function SIGNATURE, and the ENTIRE input-output harness (\`if __name__ == '__main__':\`, input()/sys.stdin/print(), Scanner/BufferedReader/System.out, cin/cout/scanf/printf, readline, bufio, bash readarray + wrapper call + exit 0) CHARACTER-FOR-CHARACTER, in the same order, as given.
