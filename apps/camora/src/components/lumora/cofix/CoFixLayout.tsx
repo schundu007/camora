@@ -1086,7 +1086,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           full-height Walkthrough on the right. Splitting this way keeps the tall
           Walkthrough content filling its column and lets the analysis panel use
           the empty space under the short code editors — no vacant space. */}
-      <div className="flex-1 min-h-0">
+      {/* pt-2 gives breathing room between the toolbar chips and the code
+          editors (the old pane headers used to provide this separation). */}
+      <div className="flex-1 min-h-0 pt-2">
       <Allotment defaultSizes={[66, 34]}>
 
       {/* ── LEFT COLUMN ── */}
