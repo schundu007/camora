@@ -7,6 +7,7 @@ import UserDropdown from '../../shared/UserDropdown';
 import { dialogAlert } from '../../shared/Dialog';
 import { AudioCheckModal } from './AudioCheckModal';
 import { useStealth, useSyncStealthOnLaunch } from '../../../lib/stealth';
+import { isElectron } from '../../../lib/overlayMode';
 
 export type LumoraTab = 'session' | 'coding' | 'design' | 'cofix' | 'behavioral' | 'claude' | 'practice' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits';
 
@@ -203,7 +204,9 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
         {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
-        {TOOL_ITEMS.map(item => {
+        {/* Claude tab embeds claude.ai in a webview, which only works in the
+            Electron desktop app — hide it in the web build. */}
+        {TOOL_ITEMS.filter(item => item.id !== 'claude' || isElectron()).map(item => {
           const active = activeTab === item.id;
           return (
             <Link
