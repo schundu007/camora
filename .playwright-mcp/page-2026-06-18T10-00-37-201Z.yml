@@ -1,0 +1,237 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - link [ref=e7] [cursor=pointer]:
+        - /url: /posts
+        - img [ref=e9]
+      - img "profile" [ref=e12]
+      - heading "Ivan on the Server Side" [level=1] [ref=e14]
+    - paragraph [ref=e17]: A satellite project of labs.iximiuz.com - an indie learning platform to master Linux, Containers, and Kubernetes the hands-on way 🚀
+    - button "SUBSCRIBE" [ref=e19] [cursor=pointer]
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - heading "Split view, quick constructor UI, and coding agents come to iximiuz Labs playgrounds 🚀" [level=1] [ref=e22]
+      - generic [ref=e24]: Published 11 months ago • 4 min read
+      - separator [ref=e25]
+      - table [ref=e27]:
+        - rowgroup [ref=e28]:
+          - row [ref=e29]:
+            - cell [ref=e30]:
+              - paragraph [ref=e31]: Hello 👋
+              - paragraph [ref=e32]: I've shipped a few features that make the iximiuz Labs playgrounds even more powerful, and I'm eager to share the news with you.
+              - separator [ref=e33]
+              - heading "Terminal Split View" [level=2] [ref=e34]
+              - paragraph [ref=e35]:
+                - text: This is something I've wanted to have for way too long. Before this release, you could achieve a comparable behavior with
+                - strong [ref=e36]: tmux
+                - text: "or within the IDE tab, but it's so much handier to have it supported \"natively\". Just check out this short demo:"
+              - link [ref=e39] [cursor=pointer]:
+                - /url: https://api.filekitcdn.com/e/n2qV5N4FkhT9qZg5ExZtDq/5KQAWGbhEA1CRei5BL1Je5/player
+              - paragraph [ref=e44]: "The split view also works great in challenges, especially when you need to deal with a multi-VM setup:"
+              - table [ref=e45]:
+                - rowgroup [ref=e46]:
+                  - row "Using two terminal panes while solving a networking challenge." [ref=e47]:
+                    - cell "Using two terminal panes while solving a networking challenge." [ref=e48]:
+                      - figure "Using two terminal panes while solving a networking challenge." [ref=e49]:
+                        - link [ref=e50] [cursor=pointer]:
+                          - /url: https://labs.iximiuz.com/challenges/networking-configure-nat-gateway
+                          - img [ref=e51]
+                        - generic [ref=e52]:
+                          - text: Using two terminal panes while solving a
+                          - link "networking challenge" [ref=e53] [cursor=pointer]:
+                            - /url: https://labs.iximiuz.com/challenges/networking-configure-nat-gateway
+                          - text: .
+              - paragraph [ref=e54]:
+                - text: Leveraging the split view, I also added the
+                - strong [ref=e55]: ability to embed HTTP(S) port tabs quickly
+                - text: ". The new HTTP port tab feature complements the good old HTTP(s) port publishing functionality, but unlike the latter, it allows seeing the playground terminal and the exposed web page side by side:"
+              - link [ref=e58] [cursor=pointer]:
+                - /url: https://api.filekitcdn.com/e/n2qV5N4FkhT9qZg5ExZtDq/kcKkzedN9gr543nFdsndRL/player
+              - paragraph [ref=e63]:
+                - text: Last but not least, for playgrounds with rich markdown descriptions, you can now
+                - strong [ref=e64]: review the instructions without leaving the running playground page
+                - text: "- again, via the shiny new split view. To activate it, click the"
+                - strong [ref=e65]: (?)
+                - text: "button in the top right corner of the page:"
+              - link [ref=e68] [cursor=pointer]:
+                - /url: https://api.filekitcdn.com/e/n2qV5N4FkhT9qZg5ExZtDq/pLeaKou8SHjkZd7bJGQHat/player
+              - paragraph [ref=e73]:
+                - emphasis [ref=e74]: "Featured in the video:"
+                - link "Kubernetes the Hard Way Playground" [ref=e75] [cursor=pointer]:
+                  - /url: https://labs.iximiuz.com/playgrounds/kubernetes-the-hard-way-7df4f945/
+                  - emphasis [ref=e76]: Kubernetes the Hard Way Playground
+                - emphasis [ref=e77]: by
+                - link "Márk Sági-Kazár" [ref=e78] [cursor=pointer]:
+                  - /url: https://sagikazarmark.com/
+                  - emphasis [ref=e79]: Márk Sági-Kazár
+                - emphasis [ref=e80]: (yes, this guy keeps rocking - and I've heard he's also working on a Kubernetes course, so stay tuned).
+              - separator [ref=e81]
+              - heading "Coding Agent Playground" [level=2] [ref=e82]
+              - paragraph [ref=e83]:
+                - text: While the above features are useful on their own, my primary motivation for adding them
+                - emphasis [ref=e84]: now
+                - text: was to prepare a new playground for... agentic coding 🙈
+              - paragraph [ref=e85]: I'm an avid user of Claude Code and Cursor's agent mode. While in my experience the quality of agent work degrades rather quickly when left unattended, I believe that with the right balance of oversight and autonomy, combined with a pragmatic "separation of duties", one can become much more productive with their coding tasks by leveraging agents.
+              - paragraph [ref=e86]: Most of the features I've shipped at iximiuz Labs in the past 6 months, I wouldn't have even dared to take on single-handedly without my new AI-powered toolset. Yes, I said it out loud. And no, I don't feel that this technology is replacing programmers. But it does give us more power.
+              - table [ref=e87]:
+                - rowgroup [ref=e88]:
+                  - row "The cover image is AI slop, but the playground isn't - I handcrafted it carefully." [ref=e89]:
+                    - cell "The cover image is AI slop, but the playground isn't - I handcrafted it carefully." [ref=e90]:
+                      - figure "The cover image is AI slop, but the playground isn't - I handcrafted it carefully." [ref=e91]:
+                        - link [ref=e92] [cursor=pointer]:
+                          - /url: https://labs.iximiuz.com/playgrounds/coding-agent-base
+                          - img [ref=e93]
+                        - generic [ref=e94]:
+                          - text: The cover image is AI slop, but
+                          - link "the playground" [ref=e95] [cursor=pointer]:
+                            - /url: https://labs.iximiuz.com/playgrounds/coding-agent-base
+                          - text: isn't - I handcrafted it carefully.
+              - paragraph [ref=e96]:
+                - text: My main concern with agents has been the fear that they will compromise my primary system or leak sensitive data outside the current project context. Even with explicit confirmation of command execution, there is no guarantee that the agent won't sneakily replace the content of a shell script you previously allowed it to run without asking. This is how a simple
+                - strong [ref=e97]: make lint
+                - text: command can become something much more disastrous.
+              - paragraph [ref=e98]: "At the same time, relying on a service like Lovable, Bolt, v0, or even Replit isn't realistic for my tasks. I find the opinionated DevEx they offer rather too limiting. Ideally, I need:"
+              - list [ref=e99]:
+                - listitem [ref=e100]: A real Linux VM with Docker, Python, Node.js, and/or Go preinstalled
+                - listitem [ref=e101]: Full terminal access (via a web page or SSH from the local terminal emulator)
+                - listitem [ref=e102]: A built-in IDE (or Vim) to browse and fine-tune generated code
+                - listitem [ref=e103]: A built-in web page on the right to review changes in real-time (similar to ChatGPT's Canvas or Claude's Artifacts UX)
+                - listitem [ref=e104]:
+                  - generic [ref=e105]:
+                    - text: An agentic CLI toolset preinstalled (Claude Code, ollama,
+                    - link "simonw/llm" [ref=e106] [cursor=pointer]:
+                      - /url: https://github.com/simonw/llm
+                    - text: ", etc.)."
+              - paragraph [ref=e107]:
+                - text: In other words, the
+                - strong [ref=e108]: development environment should provide me with what I know and usually use
+                - text: "-"
+                - strong [ref=e109]
+                - text: an IDE, terminal access, and a browser -
+                - strong [ref=e110]: while being an isolated sandbox for running the agent(s)
+                - text: . This way, I'm not compromising my developer experience while reducing the risks to only messing with at most one project and one ephemeral sandbox
+                - strong [ref=e111]: .
+              - paragraph [ref=e112]:
+                - text: And this is exactly what the new
+                - link "Coding Agent Base Playground" [ref=e113] [cursor=pointer]:
+                  - /url: https://labs.iximiuz.com/playgrounds/coding-agent-base
+                  - strong [ref=e114]: Coding Agent Base Playground
+                - text: offers 🚀
+              - paragraph [ref=e115]:
+                - text: Since different people prefer different tools, the playground comes not only with
+                - strong [ref=e116]: Claude Code
+                - text: but also with
+                - strong [ref=e117]: Codex, Gemini CLI, Opencode,
+                - text: and
+                - strong [ref=e118]: Plandex
+                - text: . And I'm researching the feasibility of adding Aider and Cline.
+              - paragraph [ref=e119]: "Here is a quick demo of me hacking on a simple Vue.js Todo App using Claude Code in YOLO mode (this is exactly what isolated playgrounds are for):"
+              - link "video preview" [ref=e120] [cursor=pointer]:
+                - /url: https://www.youtube.com/watch?v=MkTwOUVOLQw
+                - img "video preview" [ref=e121]
+              - paragraph [ref=e122]:
+                - text: One nice thing about this playground is that you can
+                - strong [ref=e123]: point it to a public GitHub repository, and it'll start with its code cloned into the workspace
+                - text: . And such links are shareable!
+              - paragraph [ref=e124]:
+                - text: Example for
+                - link "mintoolkit/mint" [ref=e125] [cursor=pointer]:
+                  - /url: https://labs.iximiuz.com/playgrounds/coding-agent-base?params=%257B%2522Repository%2522%253A%2522https%253A%252F%252Fgithub.com%252Fmintoolkit%252Fmint%2522%257D
+                - text: (former DockerSlim).
+              - paragraph [ref=e126]:
+                - text: And of course, you can use the playground from the local command line and/or local IDE via
+                - link "labctl" [ref=e127] [cursor=pointer]:
+                  - /url: https://github.com/iximiuz/labctl
+                - text: ":"
+              - paragraph [ref=e128]:
+                - strong [ref=e132]: $ labctl playground start --ide cursor -i Repository=https://github.com/foo/bar coding-agent-base
+              - table [ref=e133]:
+                - rowgroup [ref=e134]:
+                  - row "A quick memo on how to start a playground with the local Cursor IDE attached to it." [ref=e135]:
+                    - cell "A quick memo on how to start a playground with the local Cursor IDE attached to it." [ref=e136]:
+                      - figure "A quick memo on how to start a playground with the local Cursor IDE attached to it." [ref=e137]:
+                        - link [ref=e138] [cursor=pointer]:
+                          - /url: https://github.com/iximiuz/labctl
+                          - img [ref=e139]
+                        - generic [ref=e140]: A quick memo on how to start a playground with the local Cursor IDE attached to it.
+              - paragraph [ref=e141]:
+                - link "Give it a try" [ref=e142] [cursor=pointer]:
+                  - /url: https://labs.iximiuz.com/playgrounds/coding-agent-base
+                - text: and let me know what you think of the DevEx.
+              - separator [ref=e143]
+              - heading "Quick Playground Constructor" [level=2] [ref=e144]
+              - paragraph [ref=e145]:
+                - text: One of the key topics in recent issues of this newsletter has been the revamped Playground 2.0 constructor. While it's very powerful,
+                - link "clicking through all these UI tabs or even writing a YAML manifest" [ref=e146] [cursor=pointer]:
+                  - /url: https://newsletter.iximiuz.com/posts/iximiuz-labs-playgrounds-2-0-dive-in
+                - text: when you simply want to quickly assemble a playground with a Docker host, a single-node K3s cluster, and a vanilla Linux VM can be less than ideal.
+              - paragraph [ref=e147]:
+                - text: So I picked the most frequently used knobs of the constructor and duplicated them on the playground start page (
+                - link "example" [ref=e148] [cursor=pointer]:
+                  - /url: https://labs.iximiuz.com/playgrounds/flexbox
+                - text: ).
+              - paragraph [ref=e149]: "Now, with just a few clicks, you can assemble a single- or multi-VM playground and save it as a reusable template - all without leaving the same page:"
+              - link "video preview" [ref=e150] [cursor=pointer]:
+                - /url: https://www.youtube.com/watch?v=i1NlEx2Xo9g
+                - img "video preview" [ref=e151]
+              - paragraph [ref=e152]:
+                - text: While there is no direct connection with the
+                - strong [ref=e153]: Coding Agent Playground
+                - text: ", here is a cool idea to try out:"
+              - list [ref=e154]:
+                - listitem [ref=e155]:
+                  - link "Go to the Flexbox Base playground" [ref=e157] [cursor=pointer]:
+                    - /url: https://labs.iximiuz.com/playgrounds/flexbox
+                - listitem [ref=e158]: Add five virtual machines
+                - listitem [ref=e159]:
+                  - generic [ref=e160]:
+                    - text: Set the rootfs of each machine to
+                    - link "coding-agent-base" [ref=e161] [cursor=pointer]:
+                      - /url: https://labs.iximiuz.com/api/sources
+                      - strong [ref=e162]: coding-agent-base
+                - listitem [ref=e163]:
+                  - generic [ref=e164]:
+                    - text: Save the template as
+                    - strong [ref=e165]: your personal multi-agent playground
+                    - text: 🔥
+              - paragraph [ref=e166]: Now you can run up to five independent agents, hacking on the same or different codebases - all in parallel, and without stepping on each other's toes.
+              - paragraph [ref=e167]: Enjoy!
+              - separator [ref=e168]
+              - heading "Wrapping up" [level=2] [ref=e169]
+              - paragraph [ref=e170]:
+                - text: This is it for today. If you find these features valuable and want to support my work,
+                - link "getting iximiuz Labs Premium is a win-win" [ref=e171] [cursor=pointer]:
+                  - /url: https://labs.iximiuz.com/premium
+                - text: move. While all the above features work on the free tier, iximiuz Labs is significantly better with full Internet access, 2x larger VMs, and 8x more durable playgrounds. Just saying 😉
+              - paragraph [ref=e172]: Cheers
+              - paragraph [ref=e173]: Ivan
+              - table [ref=e174]:
+                - rowgroup [ref=e175]:
+                  - row [ref=e176]:
+                    - cell [ref=e177]:
+                      - figure [ref=e178]:
+                        - link [ref=e179] [cursor=pointer]:
+                          - /url: https://labs.iximiuz.com/premium
+                          - img [ref=e180]
+    - generic [ref=e182]:
+      - heading "Ivan on the Server Side" [level=1] [ref=e184]
+      - paragraph [ref=e186]: Deep dives and colorful diagrams on Linux, containers, and Kubernetes
+      - paragraph [ref=e188]: A satellite project of labs.iximiuz.com - an indie learning platform to master Linux, Containers, and Kubernetes the hands-on way 🚀
+      - generic [ref=e189]:
+        - textbox "Email Address" [ref=e190]
+        - button "SUBSCRIBE" [ref=e192] [cursor=pointer]
+    - generic [ref=e193]:
+      - generic [ref=e194]: Share this page
+      - generic [ref=e195]:
+        - link [ref=e196] [cursor=pointer]:
+          - /url: https://x.com/intent/tweet/?text=&url=https://newsletter.iximiuz.com/posts/split-view-quick-constructor-ui-and-coding-agents-come-to-iximiuz-labs-playgrounds
+          - img [ref=e198]
+        - link [ref=e200] [cursor=pointer]:
+          - /url: https://facebook.com/sharer/sharer.php?u=https://newsletter.iximiuz.com/posts/split-view-quick-constructor-ui-and-coding-agents-come-to-iximiuz-labs-playgrounds
+          - img [ref=e202]
+        - link [ref=e204] [cursor=pointer]:
+          - /url: mailto:?subject=&body=Visit%20the%20link%20at%20https%3A%2F%2Fnewsletter.iximiuz.com%2Fposts%2Fsplit-view-quick-constructor-ui-and-coding-agents-come-to-iximiuz-labs-playgrounds
+          - img [ref=e206]
+      - link [ref=e209] [cursor=pointer]:
+        - /url: https://kit.com/features/forms?utm_campaign=poweredby&utm_content=newsletter_feed&utm_medium=referral&utm_source=dynamic
+        - img [ref=e210]

@@ -1,0 +1,324 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e286] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e287]
+          - generic [ref=e288]: Sudhakar Chundu
+          - img [ref=e289]
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?" [level=1] [ref=e49]
+          - button "0" [ref=e51]:
+            - img [ref=e52]
+            - generic [ref=e54]: "0"
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 🔧
+            - text: Troubleshooting
+          - generic [ref=e58]: Hard
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - heading "Zero-Downtime Breaking Schema Changes" [level=2] [ref=e291]
+          - paragraph [ref=e292]: A breaking schema change is one where the old version of your application cannot run correctly against the new schema, or vice versa. A non-breaking change (adding a nullable column, adding an index) can be deployed directly. Breaking changes (renaming a column, changing a type, dropping a column) require a more careful approach.
+          - paragraph [ref=e293]:
+            - text: "The core principle:"
+            - strong [ref=e294]: your database schema must be compatible with both the old and new versions of your application simultaneously during the deployment window.
+          - separator [ref=e66]
+          - heading "The Expand-Contract Pattern" [level=2] [ref=e295]
+          - paragraph [ref=e296]: This is the standard approach. It splits what feels like one change into three separate deployments.
+          - heading "Phase 1 - Expand (add, don't remove)" [level=3] [ref=e297]
+          - paragraph [ref=e298]: Add the new column as nullable alongside the old one. Deploy nothing else yet.
+          - code [ref=e300]: "-- Safe: nullable, no default required, no table lock on Postgres 11+ ALTER TABLE orders ADD COLUMN customer_email VARCHAR(255);"
+          - paragraph [ref=e301]:
+            - text: The old app keeps writing to
+            - code [ref=e302]: customer_name
+            - text: (or whatever the old column is). The new column sits empty.
+          - heading "Phase 2 - Dual-write and backfill" [level=3] [ref=e303]
+          - paragraph [ref=e304]: Deploy the new version of your application. It reads from the old column (falling back if new is null) and writes to both columns on every insert/update.
+          - code [ref=e306]: "# Application layer during transition email = row.customer_email or legacy_lookup(row.customer_name)"
+          - paragraph [ref=e307]: "Backfill existing rows in batches - never a single unbounded UPDATE on a large table:"
+          - code [ref=e309]: "-- Run in a loop until 0 rows updated UPDATE orders SET customer_email = legacy_email_lookup(customer_name) WHERE customer_email IS NULL LIMIT 5000;"
+          - paragraph [ref=e310]:
+            - text: Batching keeps locks short and avoids replication lag spikes. On RDS, watch
+            - code [ref=e311]: ReplicaLag
+            - text: in CloudWatch while backfilling.
+          - heading "Phase 3 - Contract (remove the old)" [level=3] [ref=e312]
+          - paragraph [ref=e313]: "Once the old application version is fully gone from your ASG/ECS fleet and the backfill is complete, drop the old column:"
+          - code [ref=e315]: ALTER TABLE orders DROP COLUMN customer_name;
+          - paragraph [ref=e316]:
+            - text: This is now safe because no running code references
+            - code [ref=e317]: customer_name
+            - text: .
+          - separator [ref=e94]
+          - heading "Large Tables Without Locking" [level=2] [ref=e318]
+          - paragraph [ref=e319]:
+            - code [ref=e320]: ALTER TABLE
+            - text: on a table with tens of millions of rows can hold an
+            - code [ref=e321]: ACCESS EXCLUSIVE
+            - text: lock for minutes, blocking all reads and writes. Use tooling that avoids this.
+          - paragraph [ref=e322]:
+            - strong [ref=e323]: "PostgreSQL - pg_repack:"
+          - code [ref=e325]: "# Install and run against a live table pg_repack -h prod-db.internal -U app -d mydb -t orders --no-superuser-check"
+          - paragraph [ref=e326]: pg_repack creates a shadow table, copies data in the background, applies incremental changes via triggers, then performs an atomic swap. The lock window is milliseconds.
+          - paragraph [ref=e327]:
+            - strong [ref=e328]: "MySQL - pt-online-schema-change (Percona Toolkit):"
+          - code [ref=e330]: pt-online-schema-change --alter "ADD COLUMN customer_email VARCHAR(255)" --host=prod-db.internal --user=app --ask-pass --execute D=mydb,t=orders
+          - paragraph [ref=e331]:
+            - text: Both tools follow the same shadow-table-plus-trigger approach. On AWS RDS for MySQL,
+            - code [ref=e332]: gh-ost
+            - text: is often preferred because pt-osc requires super privileges that RDS restricts.
+          - paragraph [ref=e333]:
+            - strong [ref=e334]: "Postgres 12+ native option:"
+            - text: For adding a nullable column with no default, Postgres 11+ no longer rewrites the table at all - it is instant. For adding a column with a non-null default, Postgres 11+ stores the default in metadata and avoids the rewrite too. Always check the Postgres version before reaching for pg_repack.
+          - separator [ref=e114]
+          - heading "Testing and Rollback" [level=2] [ref=e335]
+          - heading "Staging with production-size data" [level=3] [ref=e336]
+          - paragraph [ref=e337]:
+            - text: A migration that runs in 2 seconds on staging with 10k rows may take 8 minutes on production with 50 million rows. Use
+            - code [ref=e338]: pg_dump
+            - text: on production (with anonymized PII) and restore to a staging instance of the same instance class before testing.
+          - paragraph [ref=e339]: "Measure:"
+          - list [ref=e340]:
+            - listitem [ref=e341]: Lock wait time
+            - listitem [ref=e342]: Migration wall-clock duration
+            - listitem [ref=e343]: Replication lag on read replicas
+          - heading "Rollback documentation" [level=3] [ref=e344]
+          - paragraph [ref=e345]: "Write the rollback SQL before you deploy, not after something goes wrong:"
+          - code [ref=e347]: "-- rollback.sql for Phase 1 ALTER TABLE orders DROP COLUMN customer_email;"
+          - paragraph [ref=e348]: For Phase 2/3, rollback is harder - you cannot easily un-backfill. This is why you keep the old column around through Phase 2 rather than deleting it immediately.
+          - heading "Blue-green as a safety net" [level=3] [ref=e349]
+          - paragraph [ref=e350]: On RDS, a blue-green deployment creates a staging clone, applies the migration there, and promotes it with a cutover that typically takes under a minute. This gives you a validated pre-migrated database before touching production traffic. Useful for high-risk changes where the expand-contract window needs to be compressed.
+          - code [ref=e352]: aws rds create-blue-green-deployment --blue-green-deployment-name orders-schema-v2 --source arn:aws:rds:ap-south-1:123456:db:prod-postgres
+          - separator [ref=e135]
+          - heading "Summary" [level=2] [ref=e353]
+          - table [ref=e355]:
+            - rowgroup [ref=e356]:
+              - row "Phase Action Risk" [ref=e357]:
+                - columnheader "Phase" [ref=e358]
+                - columnheader "Action" [ref=e359]
+                - columnheader "Risk" [ref=e360]
+            - rowgroup [ref=e361]:
+              - row "Expand Add nullable column None - instant on modern Postgres" [ref=e362]:
+                - cell "Expand" [ref=e363]
+                - cell "Add nullable column" [ref=e364]
+                - cell "None - instant on modern Postgres" [ref=e365]
+              - row "Dual-write + backfill Deploy new app, batch-update rows Low if batched" [ref=e366]:
+                - cell "Dual-write + backfill" [ref=e367]
+                - cell "Deploy new app, batch-update rows" [ref=e368]
+                - cell "Low if batched" [ref=e369]
+              - row "Contract Drop old column after full cutover Low if old app is gone" [ref=e370]:
+                - cell "Contract" [ref=e371]
+                - cell "Drop old column after full cutover" [ref=e372]
+                - cell "Low if old app is gone" [ref=e373]
+          - paragraph [ref=e374]: The most common mistake is treating this as a one-step database migration rather than a three-phase deployment. Each phase is a separate PR and deployment.
+        - generic [ref=e158]:
+          - paragraph [ref=e159]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e160] [cursor=pointer]:
+            - img [ref=e161]
+            - text: Report incorrect answer
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - generic [ref=e165]:
+            - heading "Asked at" [level=2] [ref=e166]
+            - paragraph [ref=e167]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e168] [cursor=pointer]
+        - paragraph [ref=e169]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - heading "Community" [level=2] [ref=e172]
+          - generic [ref=e173]:
+            - button "Answers" [ref=e174] [cursor=pointer]
+            - button "Discussion" [ref=e175] [cursor=pointer]
+        - paragraph [ref=e176]: Perspectives from other engineers. Reviewed before publishing.
+        - paragraph [ref=e177]:
+          - link "Log in" [ref=e178] [cursor=pointer]:
+            - /url: /login/
+          - text: to share your answer.
+      - generic [ref=e179]:
+        - generic [ref=e180]:
+          - heading "Related questions in 🔧 Troubleshooting" [level=2] [ref=e181]
+          - generic [ref=e182]:
+            - link "A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?" [ref=e183] [cursor=pointer]:
+              - /url: /questions/troubleshooting-multi-region-latency-one-region/
+              - img [ref=e184]
+              - generic [ref=e186]: A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?
+            - link "Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?" [ref=e187] [cursor=pointer]:
+              - /url: /questions/troubleshooting-alerts-stopped-firing/
+              - img [ref=e188]
+              - generic [ref=e190]: Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?
+            - link "An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?" [ref=e191] [cursor=pointer]:
+              - /url: /questions/troubleshooting-ec2-unresponsive/
+              - img [ref=e192]
+              - generic [ref=e194]: An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?
+            - link "Your RDS instance CPU spikes to 100% once a month causing an application slowdown. How do you identify the root cause?" [ref=e195] [cursor=pointer]:
+              - /url: /questions/troubleshooting-rds-cpu-monthly-spike/
+              - img [ref=e196]
+              - generic [ref=e198]: Your RDS instance CPU spikes to 100% once a month causing an application slowdown. How do you identify the root cause?
+          - link "See all Troubleshooting questions ->" [ref=e199] [cursor=pointer]:
+            - /url: /topics/troubleshooting/
+        - generic [ref=e200]:
+          - heading "Resources" [level=2] [ref=e201]
+          - generic [ref=e202]:
+            - link "AWS re:Post" [ref=e203] [cursor=pointer]:
+              - /url: https://repost.aws
+              - img [ref=e204]
+              - text: AWS re:Post
+            - link "kubectl Cheat Sheet" [ref=e206] [cursor=pointer]:
+              - /url: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+              - img [ref=e207]
+              - text: kubectl Cheat Sheet
+  - contentinfo [ref=e209]:
+    - generic [ref=e210]:
+      - generic [ref=e211]:
+        - generic [ref=e212]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e213] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e214]
+            - generic [ref=e215]: Ace Cloud Interviews
+          - paragraph [ref=e216]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e217]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e218]:
+          - heading "Explore" [level=3] [ref=e219]
+          - list [ref=e220]:
+            - listitem [ref=e221]:
+              - link "Questions" [ref=e222] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e223]:
+              - link "Topics" [ref=e224] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e225]:
+              - link "Cheat Sheets" [ref=e226] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e227]:
+              - link "Comparisons" [ref=e228] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e229]:
+              - link "Learning Paths" [ref=e230] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e231]:
+              - link "Cert Study Guides" [ref=e232] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e233]:
+              - link "AWS Tutorials" [ref=e234] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e235]:
+              - link "War Stories" [ref=e236] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e237]:
+              - link "Day in the Life" [ref=e238] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e239]:
+              - link "Architecture Walkthroughs" [ref=e240] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e241]:
+              - link "CV Templates" [ref=e242] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e243]:
+          - heading "Topics" [level=3] [ref=e244]
+          - list [ref=e245]:
+            - listitem [ref=e246]:
+              - link "AWS" [ref=e247] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e248]:
+              - link "Kubernetes" [ref=e249] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e250]:
+              - link "Docker" [ref=e251] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e252]:
+              - link "Terraform" [ref=e253] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e254]:
+              - link "CI/CD" [ref=e255] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e256]:
+              - link "Linux" [ref=e257] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e258]:
+              - link "Networking" [ref=e259] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e260]:
+              - link "Security" [ref=e261] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e262]:
+              - link "Observability" [ref=e263] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e264]:
+              - link "System Design" [ref=e265] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e266]:
+              - link "Troubleshooting" [ref=e267] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e268]:
+          - heading "Company" [level=3] [ref=e269]
+          - list [ref=e270]:
+            - listitem [ref=e271]:
+              - link "About" [ref=e272] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e273]:
+              - link "FAQ" [ref=e274] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e275]:
+              - link "Contact Us" [ref=e276] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e277]:
+              - link "Privacy Policy" [ref=e278] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e279]:
+              - link "Terms of Service" [ref=e280] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e281]:
+        - paragraph [ref=e282]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e283]: Built for engineers.
+  - alert [ref=e284]

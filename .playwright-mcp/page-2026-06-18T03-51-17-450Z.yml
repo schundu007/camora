@@ -1,0 +1,303 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e243] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e244]
+          - generic [ref=e245]: Sudhakar Chundu
+          - img [ref=e246]
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Design a rate limiting system that works across multiple instances of a distributed API gateway." [level=1] [ref=e49]
+          - button "0" [ref=e51] [cursor=pointer]:
+            - img [ref=e52]
+            - generic [ref=e54]: "0"
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 🏛️
+            - text: System Design
+          - generic [ref=e58]: Medium
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - heading "Designing a Rate Limiting System for a Distributed API Gateway" [level=2] [ref=e248]
+          - paragraph [ref=e249]: When rate limiting spans multiple gateway instances, the core challenge is shared state. A single instance can track counters in memory, but with horizontal scaling you need a centralized store that all instances can read and write atomically.
+          - heading "Algorithm Choice" [level=3] [ref=e250]
+          - paragraph [ref=e251]:
+            - strong [ref=e252]: Token Bucket
+            - text: is the most practical for API gateways. Each client gets a bucket with a fixed capacity (e.g. 100 tokens). Tokens refill at a constant rate (e.g. 10/second). Each request consumes one token. Burst traffic is absorbed up to the bucket capacity, then requests are rejected until tokens refill.
+          - paragraph [ref=e253]:
+            - strong [ref=e254]: Sliding Window
+            - text: is stricter. Instead of a fixed replenishment schedule, it counts requests within a rolling time window (e.g. the last 60 seconds). This prevents the "double burst" problem where a client fires 100 requests at 11:59 and another 100 at 12:00 under a fixed-window scheme.
+          - paragraph [ref=e255]: For most production APIs, token bucket is the right default. Use sliding window when you need hard per-minute guarantees, such as payment or SMS APIs.
+          - heading "Redis as the Distributed Store" [level=3] [ref=e256]
+          - paragraph [ref=e257]: Redis is the standard backend for distributed rate limiting. The key operation - check the current count and decrement it - must be atomic. A non-atomic read-then-write creates a race condition across instances.
+          - paragraph [ref=e258]: "Use a Lua script to make the check-and-decrement atomic:"
+          - code [ref=e260]: "-- Token bucket check in Lua (runs atomically in Redis) local key = KEYS[1] local capacity = tonumber(ARGV[1]) local refill_rate = tonumber(ARGV[2]) -- tokens per second local now = tonumber(ARGV[3]) local data = redis.call('HMGET', key, 'tokens', 'last_refill') local tokens = tonumber(data[1]) or capacity local last_refill = tonumber(data[2]) or now local elapsed = now - last_refill local refilled = math.min(capacity, tokens + (elapsed * refill_rate)) if refilled < 1 then return 0 -- rate limited end redis.call('HMSET', key, 'tokens', refilled - 1, 'last_refill', now) redis.call('EXPIRE', key, 3600) return 1 -- allowed"
+          - paragraph [ref=e261]:
+            - text: Call this from your gateway with
+            - code [ref=e262]: EVAL
+            - text: or load it using
+            - code [ref=e263]: SCRIPT LOAD
+            - text: and call via
+            - code [ref=e264]: EVALSHA
+            - text: for efficiency.
+          - paragraph [ref=e265]:
+            - text: "Key naming convention:"
+            - code [ref=e266]: "ratelimit:{client_id}:{window}"
+            - text: "- for example"
+            - code [ref=e267]: ratelimit:user:42:60s
+            - text: .
+          - heading "Sliding Window with Redis Sorted Sets" [level=3] [ref=e268]
+          - paragraph [ref=e269]: "For sliding window, store request timestamps as scores in a sorted set:"
+          - code [ref=e271]: "# On each request for client \"user:42\": MULTI ZREMRANGEBYSCORE ratelimit:user:42 0 (now_ms - window_ms) # remove expired ZADD ratelimit:user:42 now_ms now_ms # add current request ZCARD ratelimit:user:42 # count in window EXPIRE ratelimit:user:42 window_seconds EXEC"
+          - paragraph [ref=e272]:
+            - text: The
+            - code [ref=e273]: ZCARD
+            - text: "result tells you whether the client has exceeded the limit. The downside is memory: each request adds an entry. For high-traffic APIs, token bucket with a compact hash is more memory-efficient."
+          - heading "Redis High Availability" [level=3] [ref=e274]
+          - paragraph [ref=e275]: "A single Redis node is a single point of failure. Two options:"
+          - paragraph [ref=e276]:
+            - strong [ref=e277]: Redis Sentinel
+            - text: "- one primary, two replicas, three Sentinels monitoring them. Automatic failover in 10-30 seconds. Suitable for simpler deployments. On AWS, ElastiCache with Multi-AZ replication handles this."
+          - paragraph [ref=e278]:
+            - strong [ref=e279]: Redis Cluster
+            - text: "- data sharded across multiple primaries, each with replicas. Scales write throughput and tolerates node failures. Use when you have millions of unique client keys or require sub-millisecond latency at scale."
+          - code [ref=e281]: "# Connect to Redis Cluster from your gateway redis-cli -c -h aci-redis-cluster.xxxxx.clustercfg.apse1.cache.amazonaws.com -p 6379"
+          - heading "Fallback When Redis is Unavailable" [level=3] [ref=e282]
+          - paragraph [ref=e283]: "Redis unavailability should not take down your API. Two strategies:"
+          - list [ref=e284]:
+            - listitem [ref=e285]:
+              - strong [ref=e286]: Fail open
+              - text: "- allow all requests when Redis is unreachable. Risk of abuse, but keeps the API available."
+            - listitem [ref=e287]:
+              - strong [ref=e288]: Local fallback cache
+              - text: "- each gateway instance maintains an in-memory counter as a fallback. This is less accurate (instances don't share state) but prevents a total outage. Set a lower local limit (e.g. 50% of normal) to compensate."
+          - paragraph [ref=e289]: "In practice: fail open for most APIs, use local fallback for sensitive endpoints, and set aggressive circuit-breaker timeouts (100-200ms) so a slow Redis doesn't add latency to every request."
+          - heading "Headers and Responses" [level=3] [ref=e290]
+          - paragraph [ref=e291]: "Return rate limit state in response headers so clients can self-throttle:"
+          - code [ref=e292]: "X-RateLimit-Limit: 100 X-RateLimit-Remaining: 43 X-RateLimit-Reset: 1717200060 Retry-After: 30 (only on 429 responses)"
+          - paragraph [ref=e293]:
+            - text: Return HTTP 429 with a
+            - code [ref=e294]: Retry-After
+            - text: header when the limit is exceeded.
+          - heading "AWS-Specific Notes" [level=3] [ref=e295]
+          - paragraph [ref=e296]: On AWS, you can offload this entirely to API Gateway with Usage Plans and API Keys - it handles token bucket rate limiting natively. For custom logic (per-endpoint limits, dynamic limits based on subscription tier), deploy your own gateway (e.g. Kong, Envoy, or a custom FastAPI middleware) backed by ElastiCache Redis in the same VPC to keep latency under 2ms.
+        - generic [ref=e297]:
+          - paragraph [ref=e298]: Did you know this?
+          - generic [ref=e299]:
+            - button "Knew it" [ref=e300] [cursor=pointer]:
+              - img [ref=e301]
+              - text: Knew it
+            - button "Need to review" [ref=e303] [cursor=pointer]:
+              - img [ref=e304]
+              - text: Need to review
+        - generic [ref=e115]:
+          - paragraph [ref=e116]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e117] [cursor=pointer]:
+            - img [ref=e118]
+            - text: Report incorrect answer
+      - generic [ref=e120]:
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - heading "Asked at" [level=2] [ref=e123]
+            - paragraph [ref=e124]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e125] [cursor=pointer]
+        - paragraph [ref=e126]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e127]:
+        - generic [ref=e128]:
+          - heading "Community" [level=2] [ref=e129]
+          - generic [ref=e130]:
+            - button "Answers" [ref=e131] [cursor=pointer]
+            - button "Discussion" [ref=e132] [cursor=pointer]
+        - paragraph [ref=e133]: Perspectives from other engineers. Reviewed before publishing.
+        - generic [ref=e306]:
+          - textbox "Share how you would answer this question in an interview..." [ref=e307]
+          - button "Submit answer" [disabled] [ref=e308]
+          - paragraph [ref=e309]: Answers are reviewed before being published.
+      - generic [ref=e136]:
+        - generic [ref=e137]:
+          - heading "Related questions in 🏛️ System Design" [level=2] [ref=e138]
+          - generic [ref=e139]:
+            - link "Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements." [ref=e140] [cursor=pointer]:
+              - /url: /questions/system-design-secrets-management-org/
+              - img [ref=e141]
+              - generic [ref=e143]: Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements.
+            - link "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [ref=e144] [cursor=pointer]:
+              - /url: /questions/system-design-shared-database-decomposition/
+              - img [ref=e145]
+              - generic [ref=e147]: Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?
+            - link "How would you design an observability stack (logs, metrics, traces) for a microservices platform with 50+ services?" [ref=e148] [cursor=pointer]:
+              - /url: /questions/system-design-observability-stack/
+              - img [ref=e149]
+              - generic [ref=e151]: How would you design an observability stack (logs, metrics, traces) for a microservices platform with 50+ services?
+            - link "Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls." [ref=e152] [cursor=pointer]:
+              - /url: /questions/system-design-batch-autoscaling/
+              - img [ref=e153]
+              - generic [ref=e155]: Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls.
+          - link "See all System Design questions ->" [ref=e156] [cursor=pointer]:
+            - /url: /topics/system-design/
+        - generic [ref=e157]:
+          - heading "Resources" [level=2] [ref=e158]
+          - generic [ref=e159]:
+            - link "AWS Architecture Center" [ref=e160] [cursor=pointer]:
+              - /url: https://aws.amazon.com/architecture/
+              - img [ref=e161]
+              - text: AWS Architecture Center
+            - link "System Design Primer" [ref=e163] [cursor=pointer]:
+              - /url: https://github.com/donnemartin/system-design-primer
+              - img [ref=e164]
+              - text: System Design Primer
+  - contentinfo [ref=e166]:
+    - generic [ref=e167]:
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e170] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e171]
+            - generic [ref=e172]: Ace Cloud Interviews
+          - paragraph [ref=e173]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e174]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e175]:
+          - heading "Explore" [level=3] [ref=e176]
+          - list [ref=e177]:
+            - listitem [ref=e178]:
+              - link "Questions" [ref=e179] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e180]:
+              - link "Topics" [ref=e181] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e182]:
+              - link "Cheat Sheets" [ref=e183] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e184]:
+              - link "Comparisons" [ref=e185] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e186]:
+              - link "Learning Paths" [ref=e187] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e188]:
+              - link "Cert Study Guides" [ref=e189] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e190]:
+              - link "AWS Tutorials" [ref=e191] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e192]:
+              - link "War Stories" [ref=e193] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e194]:
+              - link "Day in the Life" [ref=e195] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e196]:
+              - link "Architecture Walkthroughs" [ref=e197] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e198]:
+              - link "CV Templates" [ref=e199] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e200]:
+          - heading "Topics" [level=3] [ref=e201]
+          - list [ref=e202]:
+            - listitem [ref=e203]:
+              - link "AWS" [ref=e204] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e205]:
+              - link "Kubernetes" [ref=e206] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e207]:
+              - link "Docker" [ref=e208] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e209]:
+              - link "Terraform" [ref=e210] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e211]:
+              - link "CI/CD" [ref=e212] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e213]:
+              - link "Linux" [ref=e214] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e215]:
+              - link "Networking" [ref=e216] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e217]:
+              - link "Security" [ref=e218] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e219]:
+              - link "Observability" [ref=e220] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e221]:
+              - link "System Design" [ref=e222] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e223]:
+              - link "Troubleshooting" [ref=e224] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e225]:
+          - heading "Company" [level=3] [ref=e226]
+          - list [ref=e227]:
+            - listitem [ref=e228]:
+              - link "About" [ref=e229] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e230]:
+              - link "FAQ" [ref=e231] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e232]:
+              - link "Contact Us" [ref=e233] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e234]:
+              - link "Privacy Policy" [ref=e235] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e236]:
+              - link "Terms of Service" [ref=e237] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e238]:
+        - paragraph [ref=e239]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e240]: Built for engineers.
+  - alert [ref=e241]

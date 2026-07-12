@@ -1,0 +1,314 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - button "Search" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - generic [ref=e23]: Cmd K
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Your RDS instance CPU spikes to 100% once a month causing an application slowdown. How do you identify the root cause?" [level=1] [ref=e49]
+          - button "0" [ref=e51]:
+            - img [ref=e52]
+            - generic [ref=e54]: "0"
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 🔧
+            - text: Troubleshooting
+          - generic [ref=e58]: Hard
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - heading "Diagnosing Monthly RDS CPU Spikes" [level=2] [ref=e62]
+          - paragraph [ref=e63]: "A once-a-month CPU spike has a signature: it is almost always triggered by a scheduled event, not random load. Your investigation should start by pinning down the exact trigger before touching the database."
+          - 'heading "Step 1: Establish the Timeline" [level=3] [ref=e64]'
+          - paragraph [ref=e65]: "Pull CloudWatch metrics to get the precise start time, duration, and shape of the spike:"
+          - code [ref=e68]: aws cloudwatch get-metric-statistics --namespace AWS/RDS --metric-name CPUUtilization --dimensions Name=DBInstanceIdentifier,Value=your-db-instance --start-time 2024-01-01T00:00:00Z --end-time 2024-02-01T00:00:00Z --period 300 --statistics Maximum --output table
+          - paragraph [ref=e69]: "Note the exact timestamp. Cross-reference against:"
+          - list [ref=e70]:
+            - listitem [ref=e71]:
+              - text: Cron jobs on application servers (
+              - code [ref=e72]: crontab -l
+              - text: ", systemd timers)"
+            - listitem [ref=e73]: Lambda functions with scheduled EventBridge rules
+            - listitem [ref=e74]:
+              - text: RDS automated maintenance windows (
+              - code [ref=e75]: aws rds describe-db-instances | jq '.DBInstances[].PreferredMaintenanceWindow'
+              - text: )
+            - listitem [ref=e76]: Batch jobs or report generation pipelines
+            - listitem [ref=e77]: Database-level scheduled tasks (pg_cron, SQL Server Agent jobs)
+          - paragraph [ref=e78]: A sudden vertical spike that resolves in minutes points to a fast but expensive query. A gradual climb over 30-60 minutes suggests a batch process doing large sequential reads.
+          - 'heading "Step 2: Identify the Offending Query" [level=3] [ref=e79]'
+          - paragraph [ref=e80]:
+            - strong [ref=e81]: Performance Insights
+            - text: is your primary tool. Enable it if not already on - it adds negligible overhead and retains 7 days free.
+          - paragraph [ref=e82]: "In the console, navigate to Performance Insights for the instance and set the time window to the spike period. Look at:"
+          - list [ref=e83]:
+            - listitem [ref=e84]:
+              - strong [ref=e85]: Top SQL by CPU
+              - text: "- the query consuming the most DB time during the window"
+            - listitem [ref=e86]:
+              - strong [ref=e87]: Wait events
+              - text: "-"
+              - code [ref=e88]: io/file/sql/binlog
+              - text: or
+              - code [ref=e89]: io/aurora_redo_log_flush
+              - text: suggests I/O bound;
+              - code [ref=e90]: CPU
+              - text: wait type confirms compute-bound work
+            - listitem [ref=e91]:
+              - strong [ref=e92]: DB load
+              - text: "- measured in AAS (Average Active Sessions), anything above your vCPU count means queueing"
+          - paragraph [ref=e93]:
+            - text: For PostgreSQL,
+            - code [ref=e94]: pg_stat_statements
+            - text: "gives cumulative query stats:"
+          - code [ref=e97]: SELECT query, calls, total_exec_time / calls AS avg_ms, rows / calls AS avg_rows, 100.0 * total_exec_time / sum(total_exec_time) OVER () AS pct_total_time FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 20;
+          - paragraph [ref=e98]:
+            - text: Run this immediately after a spike before stats roll over. The query with the highest
+            - code [ref=e99]: total_exec_time
+            - text: and low
+            - code [ref=e100]: calls
+            - text: count is the monthly batch culprit.
+          - 'heading "Step 3: Diagnose the Query" [level=3] [ref=e101]'
+          - paragraph [ref=e102]:
+            - text: Run
+            - code [ref=e103]: EXPLAIN (ANALYZE, BUFFERS)
+            - text: "against the suspected query:"
+          - code [ref=e106]: EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) SELECT * FROM orders o JOIN order_items oi ON o.id = oi.order_id WHERE o.created_at >= '2024-01-01' AND o.status = 'pending';
+          - paragraph [ref=e107]: "Look for:"
+          - list [ref=e108]:
+            - listitem [ref=e109]:
+              - code [ref=e110]: Seq Scan
+              - text: on a large table - missing index on the filter column
+            - listitem [ref=e111]:
+              - code [ref=e112]: Nested Loop
+              - text: with high
+              - code [ref=e113]: rows
+              - text: estimates - N+1 pattern from an ORM, often from
+              - code [ref=e114]: SELECT *
+              - text: followed by per-row queries
+            - listitem [ref=e115]:
+              - code [ref=e116]: Hash Join
+              - text: with large memory spills to disk -
+              - code [ref=e117]: work_mem
+              - text: too low for the query
+            - listitem [ref=e118]:
+              - text: Row estimate mismatches (estimated 100, actual 2,000,000) - stale table statistics, run
+              - code [ref=e119]: ANALYZE orders
+          - paragraph [ref=e120]: "The most common monthly spike pattern: a reporting query or cleanup job doing a full table scan on an orders/events table that has grown large enough to tip from fast to catastrophic."
+          - heading "Fix the Query, Not the Instance" [level=3] [ref=e121]
+          - paragraph [ref=e122]: Resizing the RDS instance is the wrong first move. It masks the problem and costs money permanently.
+          - paragraph [ref=e123]: "Common fixes:"
+          - code [ref=e126]: "-- Add a partial index for the batch job's filter CREATE INDEX CONCURRENTLY idx_orders_status_created ON orders (created_at) WHERE status = 'pending'; -- For an ORM N+1, rewrite to a single JOIN query or use eager loading -- Django: Order.objects.select_related('customer').prefetch_related('items') -- SQLAlchemy: session.query(Order).options(joinedload(Order.items))"
+          - paragraph [ref=e127]: "If the job is a monthly archive or delete, run it in batches with a sleep between iterations to avoid locking and sustained CPU load:"
+          - code [ref=e130]: "while True: deleted = db.execute( \"DELETE FROM events WHERE created_at < NOW() - INTERVAL '1 year' LIMIT 10000\" ) if deleted.rowcount == 0: break time.sleep(0.1)"
+          - 'heading "Step 4: Set Up Proactive Monitoring" [level=3] [ref=e131]'
+          - paragraph [ref=e132]: "Create a CloudWatch alarm to catch the next spike before users notice:"
+          - code [ref=e135]: aws cloudwatch put-metric-alarm --alarm-name rds-cpu-high --metric-name CPUUtilization --namespace AWS/RDS --dimensions Name=DBInstanceIdentifier,Value=your-db-instance --threshold 80 --comparison-operator GreaterThanThreshold --evaluation-periods 3 --period 300 --statistic Average --alarm-actions arn:aws:sns:ap-south-1:123456789:alerts
+          - paragraph [ref=e136]: This fires after 15 sustained minutes above 80%, avoiding false alarms from transient spikes. Pair it with a Performance Insights dashboard showing a 30-day baseline so you can visually distinguish normal from anomalous load patterns at a glance.
+        - generic [ref=e137]:
+          - paragraph [ref=e138]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e139] [cursor=pointer]:
+            - img [ref=e140]
+            - text: Report incorrect answer
+      - generic [ref=e142]:
+        - generic [ref=e143]:
+          - generic [ref=e144]:
+            - heading "Asked at" [level=2] [ref=e145]
+            - paragraph [ref=e146]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e147] [cursor=pointer]
+        - paragraph [ref=e148]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - heading "Community" [level=2] [ref=e151]
+          - generic [ref=e152]:
+            - button "Answers" [ref=e153] [cursor=pointer]
+            - button "Discussion" [ref=e154] [cursor=pointer]
+        - paragraph [ref=e155]: Perspectives from other engineers. Reviewed before publishing.
+        - paragraph [ref=e156]:
+          - link "Log in" [ref=e157] [cursor=pointer]:
+            - /url: /login/
+          - text: to share your answer.
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - heading "Related questions in 🔧 Troubleshooting" [level=2] [ref=e160]
+          - generic [ref=e161]:
+            - link "A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?" [ref=e162] [cursor=pointer]:
+              - /url: /questions/troubleshooting-multi-region-latency-one-region/
+              - img [ref=e163]
+              - generic [ref=e165]: A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?
+            - link "Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?" [ref=e166] [cursor=pointer]:
+              - /url: /questions/troubleshooting-alerts-stopped-firing/
+              - img [ref=e167]
+              - generic [ref=e169]: Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?
+            - link "An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?" [ref=e170] [cursor=pointer]:
+              - /url: /questions/troubleshooting-ec2-unresponsive/
+              - img [ref=e171]
+              - generic [ref=e173]: An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?
+            - link "You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?" [ref=e174] [cursor=pointer]:
+              - /url: /questions/troubleshooting-zero-downtime-schema-change/
+              - img [ref=e175]
+              - generic [ref=e177]: You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?
+          - link "See all Troubleshooting questions ->" [ref=e178] [cursor=pointer]:
+            - /url: /topics/troubleshooting/
+        - generic [ref=e179]:
+          - heading "Resources" [level=2] [ref=e180]
+          - generic [ref=e181]:
+            - link "AWS re:Post" [ref=e182] [cursor=pointer]:
+              - /url: https://repost.aws
+              - img [ref=e183]
+              - text: AWS re:Post
+            - link "kubectl Cheat Sheet" [ref=e185] [cursor=pointer]:
+              - /url: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+              - img [ref=e186]
+              - text: kubectl Cheat Sheet
+  - contentinfo [ref=e188]:
+    - generic [ref=e189]:
+      - generic [ref=e190]:
+        - generic [ref=e191]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e192] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e193]
+            - generic [ref=e194]: Ace Cloud Interviews
+          - paragraph [ref=e195]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e196]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e197]:
+          - heading "Explore" [level=3] [ref=e198]
+          - list [ref=e199]:
+            - listitem [ref=e200]:
+              - link "Questions" [ref=e201] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e202]:
+              - link "Topics" [ref=e203] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e204]:
+              - link "Cheat Sheets" [ref=e205] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e206]:
+              - link "Comparisons" [ref=e207] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e208]:
+              - link "Learning Paths" [ref=e209] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e210]:
+              - link "Cert Study Guides" [ref=e211] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e212]:
+              - link "AWS Tutorials" [ref=e213] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e214]:
+              - link "War Stories" [ref=e215] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e216]:
+              - link "Day in the Life" [ref=e217] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e218]:
+              - link "Architecture Walkthroughs" [ref=e219] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e220]:
+              - link "CV Templates" [ref=e221] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e222]:
+          - heading "Topics" [level=3] [ref=e223]
+          - list [ref=e224]:
+            - listitem [ref=e225]:
+              - link "AWS" [ref=e226] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e227]:
+              - link "Kubernetes" [ref=e228] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e229]:
+              - link "Docker" [ref=e230] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e231]:
+              - link "Terraform" [ref=e232] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e233]:
+              - link "CI/CD" [ref=e234] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e235]:
+              - link "Linux" [ref=e236] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e237]:
+              - link "Networking" [ref=e238] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e239]:
+              - link "Security" [ref=e240] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e241]:
+              - link "Observability" [ref=e242] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e243]:
+              - link "System Design" [ref=e244] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e245]:
+              - link "Troubleshooting" [ref=e246] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e247]:
+          - heading "Company" [level=3] [ref=e248]
+          - list [ref=e249]:
+            - listitem [ref=e250]:
+              - link "About" [ref=e251] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e252]:
+              - link "FAQ" [ref=e253] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e254]:
+              - link "Contact Us" [ref=e255] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e256]:
+              - link "Privacy Policy" [ref=e257] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e258]:
+              - link "Terms of Service" [ref=e259] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e260]:
+        - paragraph [ref=e261]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e262]: Built for engineers.
+  - alert [ref=e263]

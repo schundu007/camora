@@ -1,0 +1,373 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e303] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e304]
+          - generic [ref=e305]: Sudhakar Chundu
+          - img [ref=e306]
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "An attacker gains access to a Kubernetes cluster using a stolen service account token. What can they do, and how do you limit blast radius?" [level=1] [ref=e49]
+          - generic [ref=e50]:
+            - button "0" [ref=e51] [cursor=pointer]:
+              - img [ref=e52]
+              - generic [ref=e54]: "0"
+            - button "Bookmark this" [ref=e308] [cursor=pointer]:
+              - img [ref=e309]
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 🔒
+            - text: Security
+          - generic [ref=e58]: Hard
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - 'heading "Kubernetes Service Account Token Compromise: Attack Paths and Blast Radius Reduction" [level=2] [ref=e311]'
+          - heading "What an Attacker Can Do With a Stolen Token" [level=3] [ref=e312]
+          - paragraph [ref=e313]: "A stolen service account token gives an attacker an authenticated identity inside the cluster. Their first move is enumeration:"
+          - code [ref=e315]: kubectl auth can-i --list --token=<stolen-token> -n production
+          - paragraph [ref=e316]:
+            - text: This outputs every verb/resource combination the account is permitted. If the account has
+            - code [ref=e317]: get
+            - text: /
+            - code [ref=e318]: list
+            - text: "on"
+            - code [ref=e319]: secrets
+            - text: or any binding to a
+            - code [ref=e320]: ClusterRole
+            - text: ", the scope of the breach expands quickly."
+          - paragraph [ref=e321]: "From there, typical escalation steps:"
+          - list [ref=e322]:
+            - listitem [ref=e323]:
+              - strong [ref=e324]: Secrets exfiltration
+              - text: "-"
+              - code [ref=e325]: kubectl get secret -A
+              - text: dumps all secrets cluster-wide if the role is
+              - code [ref=e326]: ClusterRole
+              - text: "-scoped. This includes database credentials, TLS certs, and other service account tokens."
+            - listitem [ref=e327]:
+              - strong [ref=e328]: Pod creation with host access
+              - text: "- if"
+              - code [ref=e329]: pods/create
+              - text: "is permitted, the attacker creates a privileged pod:"
+              - code [ref=e332]: "spec: hostPID: true hostNetwork: true containers: - name: attacker image: ubuntu securityContext: privileged: true volumeMounts: - name: host-root mountPath: /host volumes: - name: host-root hostPath: path: /"
+              - text: This pod has full read/write access to the node filesystem, including kubelet credentials and node-level IAM instance profiles (critical in EKS where node roles often carry excessive permissions).
+            - listitem [ref=e333]:
+              - strong [ref=e334]: Lateral namespace movement
+              - text: "- a"
+              - code [ref=e335]: ClusterRoleBinding
+              - text: to even
+              - code [ref=e336]: view
+              - text: exposes workloads, ConfigMaps, and environment variables across every namespace.
+            - listitem [ref=e337]:
+              - strong [ref=e338]: Credential chain abuse in AWS
+              - text: "- on EKS, a node's EC2 instance profile is reachable from any pod without IRSA. If the node role has"
+              - code [ref=e339]: ec2:DescribeInstances
+              - text: ","
+              - code [ref=e340]: s3:GetObject
+              - text: ", or"
+              - code [ref=e341]: iam:PassRole
+              - text: ", the attacker pivots to AWS."
+          - heading "Blast Radius Without Controls" [level=3] [ref=e342]
+          - paragraph [ref=e343]:
+            - text: "A single overly permissive service account can compromise an entire cluster. A common antipattern: a CI/CD runner service account bound to"
+            - code [ref=e344]: "ClusterRole: cluster-admin"
+            - text: so it can deploy to any namespace. One stolen token and the attacker has full cluster control - they can create new
+            - code [ref=e345]: ClusterRoleBindings
+            - text: ", access all secrets, and delete workloads."
+          - paragraph [ref=e346]: "Another common failure: default service account tokens are auto-mounted into every pod. An attacker who achieves code execution inside any pod - through a dependency vulnerability or misconfigured ingress - inherits that token automatically."
+          - heading "Defensive Design" [level=3] [ref=e347]
+          - paragraph [ref=e348]:
+            - strong [ref=e349]: Namespace-scoped Roles, not ClusterRoles
+          - paragraph [ref=e350]:
+            - text: Bind service accounts to
+            - code [ref=e351]: Role
+            - text: +
+            - code [ref=e352]: RoleBinding
+            - text: scoped to one namespace. Reserve
+            - code [ref=e353]: ClusterRole
+            - text: for cluster-level resources (nodes, PVs) only.
+          - code [ref=e355]: "apiVersion: rbac.authorization.k8s.io/v1 kind: Role metadata: namespace: production name: app-reader rules: - apiGroups: [\"\"] resources: [\"configmaps\"] verbs: [\"get\", \"list\"]"
+          - paragraph [ref=e356]:
+            - strong [ref=e357]: Disable automounting by default
+          - paragraph [ref=e358]: "Set at both the ServiceAccount and Pod level:"
+          - code [ref=e360]: "apiVersion: v1 kind: ServiceAccount metadata: name: my-app automountServiceAccountToken: false"
+          - paragraph [ref=e361]: Only pods that genuinely need to call the Kubernetes API should have tokens mounted. Most application pods do not.
+          - paragraph [ref=e362]:
+            - strong [ref=e363]: Use IRSA instead of node-level AWS permissions (EKS)
+          - paragraph [ref=e364]: "Annotate service accounts for IRSA to scope AWS permissions per workload, not per node:"
+          - code [ref=e366]: "metadata: annotations: eks.amazonaws.com/role-arn: arn:aws:iam::123456789:role/my-app-role"
+          - paragraph [ref=e367]: This removes the EC2 instance profile pivot path entirely.
+          - paragraph [ref=e368]:
+            - strong [ref=e369]: Network policies to restrict pod-to-pod communication
+          - paragraph [ref=e370]: "Even if a pod is compromised, a deny-all default NetworkPolicy limits lateral movement:"
+          - code [ref=e372]: "spec: podSelector: {} policyTypes: [\"Ingress\", \"Egress\"]"
+          - heading "Detection and Response" [level=3] [ref=e373]
+          - paragraph [ref=e374]:
+            - strong [ref=e375]: Enable Kubernetes audit logging
+          - paragraph [ref=e376]:
+            - text: On EKS, enable control plane logs (audit, authenticator) to CloudWatch. On self-managed clusters, configure
+            - code [ref=e377]: "--audit-log-path"
+            - text: and ship to a SIEM.
+          - paragraph [ref=e378]: "Alert on these specific audit events:"
+          - table [ref=e380]:
+            - rowgroup [ref=e381]:
+              - row "API Call Risk" [ref=e382]:
+                - columnheader "API Call" [ref=e383]
+                - columnheader "Risk" [ref=e384]
+            - rowgroup [ref=e385]:
+              - row "secrets/get across namespaces Credential theft" [ref=e386]:
+                - cell "secrets/get across namespaces" [ref=e387]:
+                  - code [ref=e388]: secrets/get
+                  - text: across namespaces
+                - cell "Credential theft" [ref=e389]
+              - row "pods/exec Interactive shell access" [ref=e390]:
+                - cell "pods/exec" [ref=e391]:
+                  - code [ref=e392]: pods/exec
+                - cell "Interactive shell access" [ref=e393]
+              - row "clusterrolebindings/create Privilege escalation" [ref=e394]:
+                - cell "clusterrolebindings/create" [ref=e395]:
+                  - code [ref=e396]: clusterrolebindings/create
+                - cell "Privilege escalation" [ref=e397]
+              - 'row "pods/create with hostPID: true Node escape" [ref=e398]':
+                - 'cell "pods/create with hostPID: true" [ref=e399]':
+                  - code [ref=e400]: pods/create
+                  - text: with
+                  - code [ref=e401]: "hostPID: true"
+                - cell "Node escape" [ref=e402]
+          - paragraph [ref=e403]: "A Falco rule for exec detection:"
+          - code [ref=e405]: "- rule: Terminal shell in container desc: Detect shell executed inside a container condition: spawned_process and container and shell_procs output: \"Shell spawned in container (user=%user.name container=%container.name)\" priority: WARNING"
+          - paragraph [ref=e406]:
+            - strong [ref=e407]: Response playbook
+          - list [ref=e408]:
+            - listitem [ref=e409]:
+              - text: "Revoke the service account token immediately:"
+              - code [ref=e410]: kubectl delete secret <sa-token-secret> -n <namespace>
+            - listitem [ref=e411]: "Rotate the service account: delete and recreate it"
+            - listitem [ref=e412]:
+              - text: Audit
+              - code [ref=e413]: ClusterRoleBindings
+              - text: "for unexpected entries:"
+              - code [ref=e414]: kubectl get clusterrolebindings -o yaml | grep -A5 <compromised-sa>
+            - listitem [ref=e415]: Review audit logs for the 72-hour window before detection to determine full scope
+            - listitem [ref=e416]: If node credentials were exposed, rotate the node group and re-issue all pod identities
+          - paragraph [ref=e417]: The most effective long-term control is enforcing least-privilege RBAC from day one, combined with audit log alerting. Most real-world breaches exploit ClusterRole bindings that were added "temporarily" and never removed.
+        - generic [ref=e418]:
+          - paragraph [ref=e419]: Did you know this?
+          - generic [ref=e420]:
+            - button "Knew it" [ref=e421] [cursor=pointer]:
+              - img [ref=e422]
+              - text: Knew it
+            - button "Need to review" [ref=e424] [cursor=pointer]:
+              - img [ref=e425]
+              - text: Need to review
+        - generic [ref=e175]:
+          - paragraph [ref=e176]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e177] [cursor=pointer]:
+            - img [ref=e178]
+            - text: Report incorrect answer
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - generic [ref=e182]:
+            - heading "Asked at" [level=2] [ref=e183]
+            - paragraph [ref=e184]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e185] [cursor=pointer]
+        - paragraph [ref=e186]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e187]:
+        - generic [ref=e188]:
+          - heading "Community" [level=2] [ref=e189]
+          - generic [ref=e190]:
+            - button "Answers" [ref=e191] [cursor=pointer]
+            - button "Discussion" [ref=e192] [cursor=pointer]
+        - paragraph [ref=e193]: Perspectives from other engineers. Reviewed before publishing.
+        - generic [ref=e427]:
+          - textbox "Share how you would answer this question in an interview..." [ref=e428]
+          - button "Submit answer" [disabled] [ref=e429]
+          - paragraph [ref=e430]: Answers are reviewed before being published.
+      - generic [ref=e196]:
+        - generic [ref=e197]:
+          - heading "Related questions in 🔒 Security" [level=2] [ref=e198]
+          - generic [ref=e199]:
+            - link "How do you audit and enforce encryption at rest and in transit across a heterogeneous AWS environment?" [ref=e200] [cursor=pointer]:
+              - /url: /questions/security-encryption-audit-enforcement/
+              - img [ref=e201]
+              - generic [ref=e203]: How do you audit and enforce encryption at rest and in transit across a heterogeneous AWS environment?
+            - link "How would you implement a zero-trust network model for a cloud environment where engineers need access to internal services?" [ref=e204] [cursor=pointer]:
+              - /url: /questions/security-zero-trust-implementation/
+              - img [ref=e205]
+              - generic [ref=e207]: How would you implement a zero-trust network model for a cloud environment where engineers need access to internal services?
+            - link "Your security scan tool is blocking every CI/CD pipeline deployment because it flags vulnerabilities in base images. How do you build a practical policy?" [ref=e208] [cursor=pointer]:
+              - /url: /questions/security-vulnerability-scanning-noise/
+              - img [ref=e209]
+              - generic [ref=e211]: Your security scan tool is blocking every CI/CD pipeline deployment because it flags vulnerabilities in base images. How do you build a practical policy?
+            - link "Explain how you would implement secrets management for a microservices architecture running on Kubernetes." [ref=e212] [cursor=pointer]:
+              - /url: /questions/security-microservices-secrets/
+              - img [ref=e213]
+              - generic [ref=e215]: Explain how you would implement secrets management for a microservices architecture running on Kubernetes.
+          - link "See all Security questions ->" [ref=e216] [cursor=pointer]:
+            - /url: /topics/security/
+        - generic [ref=e217]:
+          - heading "Resources" [level=2] [ref=e218]
+          - generic [ref=e219]:
+            - link "AWS Security Docs" [ref=e220] [cursor=pointer]:
+              - /url: https://docs.aws.amazon.com/security/
+              - img [ref=e221]
+              - text: AWS Security Docs
+            - link "OWASP Top 10" [ref=e223] [cursor=pointer]:
+              - /url: https://owasp.org/www-project-top-ten/
+              - img [ref=e224]
+              - text: OWASP Top 10
+  - contentinfo [ref=e226]:
+    - generic [ref=e227]:
+      - generic [ref=e228]:
+        - generic [ref=e229]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e230] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e231]
+            - generic [ref=e232]: Ace Cloud Interviews
+          - paragraph [ref=e233]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e234]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e235]:
+          - heading "Explore" [level=3] [ref=e236]
+          - list [ref=e237]:
+            - listitem [ref=e238]:
+              - link "Questions" [ref=e239] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e240]:
+              - link "Topics" [ref=e241] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e242]:
+              - link "Cheat Sheets" [ref=e243] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e244]:
+              - link "Comparisons" [ref=e245] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e246]:
+              - link "Learning Paths" [ref=e247] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e248]:
+              - link "Cert Study Guides" [ref=e249] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e250]:
+              - link "AWS Tutorials" [ref=e251] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e252]:
+              - link "War Stories" [ref=e253] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e254]:
+              - link "Day in the Life" [ref=e255] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e256]:
+              - link "Architecture Walkthroughs" [ref=e257] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e258]:
+              - link "CV Templates" [ref=e259] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e260]:
+          - heading "Topics" [level=3] [ref=e261]
+          - list [ref=e262]:
+            - listitem [ref=e263]:
+              - link "AWS" [ref=e264] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e265]:
+              - link "Kubernetes" [ref=e266] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e267]:
+              - link "Docker" [ref=e268] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e269]:
+              - link "Terraform" [ref=e270] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e271]:
+              - link "CI/CD" [ref=e272] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e273]:
+              - link "Linux" [ref=e274] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e275]:
+              - link "Networking" [ref=e276] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e277]:
+              - link "Security" [ref=e278] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e279]:
+              - link "Observability" [ref=e280] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e281]:
+              - link "System Design" [ref=e282] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e283]:
+              - link "Troubleshooting" [ref=e284] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e285]:
+          - heading "Company" [level=3] [ref=e286]
+          - list [ref=e287]:
+            - listitem [ref=e288]:
+              - link "About" [ref=e289] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e290]:
+              - link "FAQ" [ref=e291] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e292]:
+              - link "Contact Us" [ref=e293] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e294]:
+              - link "Privacy Policy" [ref=e295] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e296]:
+              - link "Terms of Service" [ref=e297] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e298]:
+        - paragraph [ref=e299]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e300]: Built for engineers.
+  - alert [ref=e301]

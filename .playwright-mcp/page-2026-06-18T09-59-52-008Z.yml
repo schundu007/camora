@@ -1,0 +1,434 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - link "iximiuz Labs" [ref=e7] [cursor=pointer]:
+        - /url: /dashboard
+        - img "iximiuz Labs" [ref=e8]
+      - generic [ref=e9]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+        - generic [ref=e14] [cursor=pointer]:
+          - text: Catalog
+          - img [ref=e15]
+        - link "Skill Paths" [ref=e18] [cursor=pointer]:
+          - /url: /skill-paths
+        - link "Docker Roadmap" [ref=e20] [cursor=pointer]:
+          - /url: /roadmaps/docker
+        - link "Playgrounds" [ref=e22] [cursor=pointer]:
+          - /url: /playgrounds
+        - link "Vendors" [ref=e24] [cursor=pointer]:
+          - /url: /vendors
+        - link "Docs" [ref=e26] [cursor=pointer]:
+          - /url: /docs
+        - generic [ref=e29] [cursor=pointer]:
+          - text: More
+          - img [ref=e30]
+      - generic [ref=e32]:
+        - generic [ref=e33] [cursor=pointer]: Tinkerer subscription until Jul 17, 2026 Tinkerer
+        - link "Join our Discord community" [ref=e34] [cursor=pointer]:
+          - /url: https://discord.gg/p6nxaHm46p
+          - img [ref=e35]
+        - button [ref=e43] [cursor=pointer]:
+          - img [ref=e44]
+  - generic [ref=e48]:
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e53]:
+          - img [ref=e55]
+          - generic [ref=e57]: Official Playground
+        - generic [ref=e58]:
+          - generic [ref=e59]: "on"
+          - generic [ref=e60]:
+            - link "Generative AI" [ref=e61] [cursor=pointer]:
+              - /url: /playgrounds?category=gen-ai
+              - generic [ref=e62]: Generative AI
+            - link "Programming" [ref=e63] [cursor=pointer]:
+              - /url: /playgrounds?category=programming
+              - generic [ref=e64]: Programming
+        - 'img "Coding Agent Base playground: Get a disposable agentic coding environment in seconds. Claude Code, Codex, Gemini CLI, and Opencode pre-installed and ready to use." [ref=e67] [cursor=pointer]'
+      - generic [ref=e70]:
+        - heading "Actions" [level=3] [ref=e71]
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]:
+              - img [ref=e75]
+              - button "Start playground" [ref=e79] [cursor=pointer]:
+                - generic [ref=e80]: Start playground
+            - generic [ref=e81]:
+              - img [ref=e82]
+              - button "Clone and Share" [ref=e84] [cursor=pointer]:
+                - generic [ref=e85]: Clone and Share
+          - generic [ref=e86]:
+            - img [ref=e87]
+            - link "Configure" [ref=e90] [cursor=pointer]:
+              - /url: /playgrounds/coding-agent-base/settings
+      - generic [ref=e91]:
+        - paragraph [ref=e92]: Prefer servers in the selected region
+        - generic [ref=e93]:
+          - button "Europe" [ref=e94] [cursor=pointer]:
+            - generic [ref=e96]: Europe
+          - button "Asia" [ref=e97] [cursor=pointer]:
+            - generic [ref=e99]: Asia
+    - generic [ref=e101]:
+      - heading "Coding Agent Base Playground" [level=1] [ref=e102]
+      - heading "Get a disposable agentic coding environment in seconds. Claude Code, Codex, Gemini CLI, and Opencode pre-installed and ready to use." [level=2] [ref=e103]
+      - generic [ref=e104]:
+        - generic [ref=e105] [cursor=pointer]:
+          - generic [ref=e106]: Startup configuration
+          - img [ref=e107]
+        - generic [ref=e111]:
+          - generic [ref=e112]: Repository (optional)
+          - textbox "https://github.com/foo/bar" [ref=e113]
+        - generic [ref=e116]:
+          - generic [ref=e118]:
+            - checkbox [checked] [ref=e119] [cursor=pointer]
+            - generic [ref=e120]: base-01
+          - generic [ref=e121]:
+            - generic [ref=e122]:
+              - generic [ref=e124]: Backend
+              - combobox [ref=e125] [cursor=pointer]:
+                - option "Firecracker" [selected]
+                - option "Cloud Hypervisor"
+            - generic [ref=e126]:
+              - generic [ref=e128]: Kernel
+              - combobox [disabled] [ref=e129]:
+                - option "Default:" [selected]
+            - generic [ref=e130]:
+              - generic [ref=e132]: IP Address
+              - textbox "172.16.0.x (auto)" [ref=e133]
+            - generic [ref=e134]:
+              - generic [ref=e136]: Login as
+              - combobox [ref=e137] [cursor=pointer]:
+                - option "root" [selected]
+                - option "laborant"
+      - generic [ref=e139]:
+        - heading "What is This and Why?" [level=2] [ref=e140]
+        - paragraph [ref=e141]:
+          - text: This playground gives you a
+          - strong [ref=e142]: quick way to clone any GitHub repository into a preconfigured coding environment and unleash the full power of coding agents on it
+          - link "without being afraid of damaging your host OS or compromising your sensitive local data" [ref=e143] [cursor=pointer]:
+            - /url: https://simonwillison.net/2025/Aug/15/the-summer-of-johann/
+            - text: without being afraid of damaging your host OS or compromising your sensitive local data
+            - img [ref=e144]
+          - text: .
+        - paragraph [ref=e147]:
+          - text: "⚠️ Warning: This playground is meant to be used only with public repositories and non-critical API keys. However, this restriction is not specific to the playground - this should already be a requirement, given that you're trusting your code and/or access keys to a"
+          - link "potentially vulnerable coding agent" [ref=e148] [cursor=pointer]:
+            - /url: https://docs.anthropic.com/en/docs/claude-code/security#additional-safeguards
+            - text: potentially vulnerable coding agent
+            - img [ref=e149]
+          - text: .
+        - heading "Quick Start" [level=2] [ref=e151]
+        - list [ref=e152]:
+          - listitem [ref=e153]: Enter a repository name (optionally)
+          - listitem [ref=e154]:
+            - text: Click
+            - strong [ref=e155]: Start Playground
+            - text: (or use
+            - code [ref=e156] [cursor=pointer]: labctl playground start --ssh coding-agent-base
+            - text: )
+          - listitem [ref=e157]:
+            - text: The login shell will end up in the
+            - code [ref=e158] [cursor=pointer]: $HOME/workspace
+          - listitem [ref=e159]: Fire up your favorite agent in the YOLO mode 🙈
+        - paragraph [ref=e160]: "Example:"
+        - generic [ref=e161]:
+          - code [ref=e163]:
+            - generic [ref=e164]: "# Authenticate to Claude API"
+            - generic [ref=e165]: claude setup-token
+            - generic [ref=e167]: "# Try out an ad hoc prompt"
+            - generic [ref=e168]: claude -p "what does this project do?"
+            - generic [ref=e170]: "# Add any number of MCP servers"
+            - generic [ref=e171]: claude mcp add postgres-server
+            - generic [ref=e173]: "# Run a coding session with the YOLO mode on"
+            - generic [ref=e174]: claude --dangerously-skip-permissions
+          - button "Copy to clipboard" [ref=e175] [cursor=pointer]:
+            - generic [ref=e176]: Copy to clipboard
+            - img [ref=e178]
+        - paragraph [ref=e180]:
+          - text: If you're developing a web application, ask the agent to start a dev server on
+          - code [ref=e181] [cursor=pointer]: 0.0.0.0:3000
+          - text: ", and use a split view ("
+          - code [ref=e182] [cursor=pointer]: cmd
+          - text: +
+          - code [ref=e183] [cursor=pointer]: \
+          - text: ) with a web tab on the right.
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - img [ref=e187]
+            - img [ref=e190]
+            - generic [ref=e192]:
+              - img "Split view example showing terminal and web preview (screenshot 1)." [ref=e194]
+              - img "Split view example showing terminal and web preview (screenshot 2)." [ref=e196]
+              - img "Split view example showing terminal and web preview (screenshot 3)." [ref=e198]
+              - img "Split view example showing terminal and web preview (screenshot 4)." [ref=e200]
+          - generic [ref=e201]:
+            - generic [ref=e202] [cursor=pointer]: "1"
+            - generic [ref=e203] [cursor=pointer]: "2"
+            - generic [ref=e204] [cursor=pointer]: "3"
+            - generic [ref=e205] [cursor=pointer]: "4"
+        - generic [ref=e207]:
+          - text: Check out the full
+          - link "coding session recording on YouTube" [ref=e208] [cursor=pointer]:
+            - /url: https://youtu.be/MkTwOUVOLQw
+            - text: coding session recording on YouTube
+            - img [ref=e209]
+          - text: .
+        - heading "Familiar Developer Experience" [level=2] [ref=e211]
+        - paragraph [ref=e212]: "The playground provides tools all developers are most familiar with:"
+        - list [ref=e213]:
+          - listitem [ref=e214]: A full-fledged Linux VM with Docker preinstalled
+          - listitem [ref=e215]: Terminal access with tabs and split view support
+          - listitem [ref=e216]: A dynamically reloaded "web page" sidebar to review changes
+          - listitem [ref=e217]: A built-in web IDE (VS Code) for fine-tuning generated code
+          - listitem [ref=e218]:
+            - text: Access from a local terminal via
+            - link "labctl ssh" [ref=e219] [cursor=pointer]:
+              - /url: https://github.com/iximiuz/labctl
+              - code [ref=e220]: labctl ssh
+              - img [ref=e221]
+          - listitem [ref=e223]: Exposing the work with a public (or authentication-protected) URL
+          - listitem [ref=e224]: Sharing playground terminal sessions with colleagues
+          - listitem [ref=e225]:
+            - strong [ref=e226]: Coming soon
+            - text: "- Snapshot and recover the results"
+        - paragraph [ref=e227]: The above capabilities should make development in the playground as convenient as running agents locally. At the same time, the remote nature of the playground allows for publishing results and sharing access, while the fully isolated VM sandbox should provide additional peace of mind.
+        - heading "Supported Application Stacks" [level=2] [ref=e228]
+        - paragraph [ref=e229]: "At the moment, the following language runtimes and the corresponding development tools are preinstalled (but we're happy to add more upon request):"
+        - list [ref=e230]:
+          - listitem [ref=e231]: Python
+          - listitem [ref=e232]: Node.js
+          - listitem [ref=e233]: Go
+        - heading "Agents" [level=2] [ref=e234]
+        - paragraph [ref=e235]: Enjoy all SOTA coding agents and a couple of contenders. Mix, match, and combine them at your own risk 🧪
+        - table [ref=e237]:
+          - rowgroup [ref=e238]:
+            - row "Agent Command Repository Getting Started" [ref=e239]:
+              - columnheader "Agent" [ref=e240]
+              - columnheader "Command" [ref=e241]
+              - columnheader "Repository" [ref=e242]
+              - columnheader "Getting Started" [ref=e243]
+          - rowgroup [ref=e244]:
+            - row "Claude Code claude - Quickstart" [ref=e245]:
+              - cell "Claude Code" [ref=e246]
+              - cell "claude" [ref=e247]:
+                - code [ref=e248] [cursor=pointer]: claude
+              - cell "-" [ref=e249]
+              - cell "Quickstart" [ref=e250]:
+                - link "Quickstart" [ref=e251] [cursor=pointer]:
+                  - /url: https://docs.anthropic.com/en/docs/claude-code/quickstart
+                  - text: Quickstart
+                  - img [ref=e252]
+            - row "OpenAI Codex CLI codex openai/codex OpenAI Codex Documentation" [ref=e254]:
+              - cell "OpenAI Codex CLI" [ref=e255]
+              - cell "codex" [ref=e256]:
+                - code [ref=e257] [cursor=pointer]: codex
+              - cell "openai/codex" [ref=e258]:
+                - link "openai/codex" [ref=e259] [cursor=pointer]:
+                  - /url: https://github.com/openai/codex
+                  - text: openai/codex
+                  - img [ref=e260]
+              - cell "OpenAI Codex Documentation" [ref=e262]:
+                - link "OpenAI Codex Documentation" [ref=e263] [cursor=pointer]:
+                  - /url: https://platform.openai.com/docs/codex/overview
+                  - text: OpenAI Codex Documentation
+                  - img [ref=e264]
+            - row "Gemini CLI gemini google-gemini/gemini-cli Gemini CLI Documentation" [ref=e266]:
+              - cell "Gemini CLI" [ref=e267]
+              - cell "gemini" [ref=e268]:
+                - code [ref=e269] [cursor=pointer]: gemini
+              - cell "google-gemini/gemini-cli" [ref=e270]:
+                - link "google-gemini/gemini-cli" [ref=e271] [cursor=pointer]:
+                  - /url: https://github.com/google-gemini/gemini-cli
+                  - text: google-gemini/gemini-cli
+                  - img [ref=e272]
+              - cell "Gemini CLI Documentation" [ref=e274]:
+                - link "Gemini CLI Documentation" [ref=e275] [cursor=pointer]:
+                  - /url: https://cloud.google.com/gemini/docs/codeassist/gemini-cli
+                  - text: Gemini CLI Documentation
+                  - img [ref=e276]
+            - row "GitHub Copilot CLI copilot github/copilot-cli About GitHub Copilot CLI" [ref=e278]:
+              - cell "GitHub Copilot CLI" [ref=e279]
+              - cell "copilot" [ref=e280]:
+                - code [ref=e281] [cursor=pointer]: copilot
+              - cell "github/copilot-cli" [ref=e282]:
+                - link "github/copilot-cli" [ref=e283] [cursor=pointer]:
+                  - /url: https://github.com/github/copilot-cli
+                  - text: github/copilot-cli
+                  - img [ref=e284]
+              - cell "About GitHub Copilot CLI" [ref=e286]:
+                - link "About GitHub Copilot CLI" [ref=e287] [cursor=pointer]:
+                  - /url: https://docs.github.com/en/copilot/concepts/agents/about-copilot-cli
+                  - text: About GitHub Copilot CLI
+                  - img [ref=e288]
+            - row "OpenHands openhands All-Hands-AI/OpenHands Running OpenHands locally" [ref=e290]:
+              - cell "OpenHands" [ref=e291]
+              - cell "openhands" [ref=e292]:
+                - code [ref=e293] [cursor=pointer]: openhands
+              - cell "All-Hands-AI/OpenHands" [ref=e294]:
+                - link "All-Hands-AI/OpenHands" [ref=e295] [cursor=pointer]:
+                  - /url: https://github.com/All-Hands-AI/OpenHands
+                  - text: All-Hands-AI/OpenHands
+                  - img [ref=e296]
+              - cell "Running OpenHands locally" [ref=e298]:
+                - link "Running OpenHands locally" [ref=e299] [cursor=pointer]:
+                  - /url: https://github.com/All-Hands-AI/OpenHands?tab=readme-ov-file#-running-openhands-locally
+                  - text: Running OpenHands locally
+                  - img [ref=e300]
+            - row "Opencode opencode sst/opencode Opencode Documentation" [ref=e302]:
+              - cell "Opencode" [ref=e303]
+              - cell "opencode" [ref=e304]:
+                - code [ref=e305] [cursor=pointer]: opencode
+              - cell "sst/opencode" [ref=e306]:
+                - link "sst/opencode" [ref=e307] [cursor=pointer]:
+                  - /url: https://github.com/sst/opencode
+                  - text: sst/opencode
+                  - img [ref=e308]
+              - cell "Opencode Documentation" [ref=e310]:
+                - link "Opencode Documentation" [ref=e311] [cursor=pointer]:
+                  - /url: https://opencode.ai/docs/
+                  - text: Opencode Documentation
+                  - img [ref=e312]
+            - row "Aider aider Aider-AI/aider Usage Guide" [ref=e314]:
+              - cell "Aider" [ref=e315]
+              - cell "aider" [ref=e316]:
+                - code [ref=e317] [cursor=pointer]: aider
+              - cell "Aider-AI/aider" [ref=e318]:
+                - link "Aider-AI/aider" [ref=e319] [cursor=pointer]:
+                  - /url: https://github.com/Aider-AI/aider
+                  - text: Aider-AI/aider
+                  - img [ref=e320]
+              - cell "Usage Guide" [ref=e322]:
+                - link "Usage Guide" [ref=e323] [cursor=pointer]:
+                  - /url: https://aider.chat/docs/usage.html
+                  - text: Usage Guide
+                  - img [ref=e324]
+            - row "Qwen Code qwen-code QwenLM/qwen-code Quick Start" [ref=e326]:
+              - cell "Qwen Code" [ref=e327]
+              - cell "qwen-code" [ref=e328]:
+                - code [ref=e329] [cursor=pointer]: qwen-code
+              - cell "QwenLM/qwen-code" [ref=e330]:
+                - link "QwenLM/qwen-code" [ref=e331] [cursor=pointer]:
+                  - /url: https://github.com/QwenLM/qwen-code
+                  - text: QwenLM/qwen-code
+                  - img [ref=e332]
+              - cell "Quick Start" [ref=e334]:
+                - link "Quick Start" [ref=e335] [cursor=pointer]:
+                  - /url: https://github.com/QwenLM/qwen-code?tab=readme-ov-file#quick-start
+                  - text: Quick Start
+                  - img [ref=e336]
+            - row "Crush crush charmbracelet/crush Getting Started" [ref=e338]:
+              - cell "Crush" [ref=e339]
+              - cell "crush" [ref=e340]:
+                - code [ref=e341] [cursor=pointer]: crush
+              - cell "charmbracelet/crush" [ref=e342]:
+                - link "charmbracelet/crush" [ref=e343] [cursor=pointer]:
+                  - /url: https://github.com/charmbracelet/crush
+                  - text: charmbracelet/crush
+                  - img [ref=e344]
+              - cell "Getting Started" [ref=e346]:
+                - link "Getting Started" [ref=e347] [cursor=pointer]:
+                  - /url: https://github.com/charmbracelet/crush?tab=readme-ov-file#getting-started
+                  - text: Getting Started
+                  - img [ref=e348]
+            - row "Cline (via web IDE plugin) cline/cline Getting Started" [ref=e350]:
+              - cell "Cline" [ref=e351]
+              - cell "(via web IDE plugin)" [ref=e352]
+              - cell "cline/cline" [ref=e353]:
+                - link "cline/cline" [ref=e354] [cursor=pointer]:
+                  - /url: https://github.com/cline/cline
+                  - text: cline/cline
+                  - img [ref=e355]
+              - cell "Getting Started" [ref=e357]:
+                - link "Getting Started" [ref=e358] [cursor=pointer]:
+                  - /url: https://docs.cline.bot/getting-started/for-new-coders
+                  - text: Getting Started
+                  - img [ref=e359]
+        - heading "More LLM Tools" [level=2] [ref=e361]
+        - paragraph [ref=e362]: The playground also has a few general-purpose LLM tools in it.
+        - heading "Ollama" [level=3] [ref=e363]
+        - paragraph [ref=e364]:
+          - link "Ollama" [ref=e365] [cursor=pointer]:
+            - /url: https://ollama.ai/
+            - text: Ollama
+            - img [ref=e366]
+          - text: allows you to run large language models locally. It's great for experimenting with different models without sending your code to external services.
+        - paragraph [ref=e368]: "To get started with Ollama:"
+        - generic [ref=e369]:
+          - generic [ref=e370]: Terminal 1
+          - code [ref=e372]:
+            - generic [ref=e373]: "# Start the Ollama server"
+            - generic [ref=e374]: ollama serve
+          - button "Copy to clipboard" [ref=e375] [cursor=pointer]:
+            - generic [ref=e376]: Copy to clipboard
+            - img [ref=e378]
+        - generic [ref=e380]:
+          - generic [ref=e381]: Terminal 2
+          - code [ref=e383]:
+            - generic [ref=e384]: "# Pull a model and start using it"
+            - generic [ref=e385]: ollama pull llama3.2:latest
+            - generic [ref=e386]: ollama run llama3.2:latest
+          - button "Copy to clipboard" [ref=e387] [cursor=pointer]:
+            - generic [ref=e388]: Copy to clipboard
+            - img [ref=e390]
+        - heading "LLM (simonw/llm)" [level=3] [ref=e392]
+        - paragraph [ref=e393]:
+          - link "llm" [ref=e394] [cursor=pointer]:
+            - /url: https://github.com/simonw/llm
+            - text: llm
+            - img [ref=e395]
+          - text: is a command-line tool and Python library for interacting with Large Language Models, both via remote APIs and models that can be installed and run on your own machine.
+        - paragraph [ref=e397]: "To use it with Ollama:"
+        - generic [ref=e398]:
+          - code [ref=e400]:
+            - generic [ref=e401]: "# Use it with local models (assuming you ollama pull'ed llama3.2:latest)"
+            - generic [ref=e402]: llm -m llama3.2:latest 'What is the capital of France?'
+            - generic [ref=e404]: "# Or with remote APIs (requires API key configuration)"
+            - generic [ref=e405]: llm keys set openai
+            - generic [ref=e406]: llm -m gpt-4 'Explain how async/await works in JavaScript'
+          - button "Copy to clipboard" [ref=e407] [cursor=pointer]:
+            - generic [ref=e408]: Copy to clipboard
+            - img [ref=e410]
+        - paragraph [ref=e412]:
+          - text: You can also use
+          - code [ref=e413] [cursor=pointer]: llm
+          - text: to manage different model configurations and maintain conversation history across multiple interactions.
+        - heading "MCP Tools (f/mcptools)" [level=3] [ref=e414]
+        - paragraph [ref=e415]:
+          - link "mcptools" [ref=e416] [cursor=pointer]:
+            - /url: https://github.com/f/mcptools
+            - text: mcptools
+            - img [ref=e417]
+          - text: is a command-line tool for interacting with MCP (Model Context Protocol) servers using both stdio and HTTP transport.
+        - paragraph [ref=e419]: "Example:"
+        - generic [ref=e420]:
+          - code [ref=e422]:
+            - generic [ref=e423]: "# List all available tools from a filesystem server"
+            - generic [ref=e424]: mcptools tools \
+            - generic [ref=e425]: npx -y @modelcontextprotocol/server-filesystem ~
+            - generic [ref=e427]: "# Call a specific tool"
+            - generic [ref=e428]: mcptools call read_file \
+            - generic [ref=e429]: "--params '{\"path\":\"README.md\"}' \\"
+            - generic [ref=e430]: npx -y @modelcontextprotocol/server-filesystem ~
+            - generic [ref=e432]: "# Open an interactive shell"
+            - generic [ref=e433]: mcptools shell \
+            - generic [ref=e434]: npx -y @modelcontextprotocol/server-filesystem ~
+          - button "Copy to clipboard" [ref=e435] [cursor=pointer]:
+            - generic [ref=e436]: Copy to clipboard
+            - img [ref=e438]
+  - contentinfo [ref=e440]:
+    - generic [ref=e441]:
+      - paragraph [ref=e442]:
+        - text: Copyright
+        - link "iximiuz" [ref=e443] [cursor=pointer]:
+          - /url: https://twitter.com/iximiuz
+        - text: © 2026 •
+        - link "Terms and Conditions" [ref=e444] [cursor=pointer]:
+          - /url: /terms-and-conditions
+        - text: •
+        - link "Blog" [ref=e445] [cursor=pointer]:
+          - /url: https://iximiuz.com/en/
+      - paragraph [ref=e446]:
+        - text: Theme by
+        - link "DaisyUI" [ref=e447] [cursor=pointer]:
+          - /url: https://daisyui.com/

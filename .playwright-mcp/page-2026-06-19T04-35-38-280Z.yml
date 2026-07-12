@@ -1,0 +1,265 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - link "iximiuz Labs" [ref=e7] [cursor=pointer]:
+        - /url: /dashboard
+        - img "iximiuz Labs" [ref=e8]
+      - generic [ref=e9]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+        - generic [ref=e14] [cursor=pointer]:
+          - text: Catalog
+          - img [ref=e15]
+        - link "Skill Paths" [ref=e18] [cursor=pointer]:
+          - /url: /skill-paths
+        - link "Docker Roadmap" [ref=e20] [cursor=pointer]:
+          - /url: /roadmaps/docker
+        - link "Playgrounds" [ref=e22] [cursor=pointer]:
+          - /url: /playgrounds
+        - link "Vendors New!" [ref=e24] [cursor=pointer]:
+          - /url: /vendors
+          - text: Vendors
+          - generic [ref=e25]: New!
+        - link "Docs" [ref=e27] [cursor=pointer]:
+          - /url: /docs
+        - generic [ref=e30] [cursor=pointer]:
+          - text: More
+          - img [ref=e31]
+      - generic [ref=e33]:
+        - generic [ref=e34] [cursor=pointer]: Tinkerer subscription until Jul 17, 2026 Tinkerer
+        - link "Join our Discord community" [ref=e35] [cursor=pointer]:
+          - /url: https://discord.gg/p6nxaHm46p
+          - img [ref=e36]
+        - button [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+  - generic [ref=e49]:
+    - generic [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e54]:
+          - img [ref=e56]
+          - generic [ref=e58]: User-defined Playground
+        - generic [ref=e59]:
+          - link "Márk Sági-Kazár" [ref=e61] [cursor=pointer]:
+            - /url: /a/mark-sagi-kazar
+            - img "Márk Sági-Kazár" [ref=e62]
+          - generic [ref=e63]:
+            - generic [ref=e64]: by
+            - link "Márk Sági-Kazár" [ref=e65] [cursor=pointer]:
+              - /url: /a/mark-sagi-kazar
+        - generic [ref=e66]:
+          - generic [ref=e67]: "on"
+          - generic [ref=e68]:
+            - link "Linux" [ref=e69] [cursor=pointer]:
+              - /url: /playgrounds?category=linux
+              - generic [ref=e70]: Linux
+            - link "Cloud" [ref=e71] [cursor=pointer]:
+              - /url: /playgrounds?category=cloud
+              - generic [ref=e72]: Cloud
+        - 'img "etcd Cluster playground: A multi-node etcd cluster for exploring clustering and coordination features." [ref=e75] [cursor=pointer]'
+      - generic [ref=e78]:
+        - heading "Actions" [level=3] [ref=e79]
+        - generic [ref=e80]:
+          - generic [ref=e81]:
+            - generic [ref=e82]:
+              - img [ref=e83]
+              - button "Start playground" [ref=e87] [cursor=pointer]:
+                - generic [ref=e88]: Start playground
+            - generic [ref=e89]:
+              - img [ref=e90]
+              - button "Clone and Share" [ref=e92] [cursor=pointer]:
+                - generic [ref=e93]: Clone and Share
+          - generic [ref=e94]:
+            - img [ref=e95]
+            - link "Configure" [ref=e98] [cursor=pointer]:
+              - /url: /playgrounds/etcd-cluster-e368a3ff/settings
+      - generic [ref=e99]:
+        - paragraph [ref=e100]: Prefer servers in the selected region
+        - generic [ref=e101]:
+          - button "Europe" [ref=e102] [cursor=pointer]:
+            - generic [ref=e104]: Europe
+          - button "Asia" [ref=e105] [cursor=pointer]:
+            - generic [ref=e107]: Asia
+    - generic [ref=e109]:
+      - heading "etcd Cluster Playground" [level=1] [ref=e110]
+      - heading "A multi-node etcd cluster for exploring clustering and coordination features." [level=2] [ref=e111]
+      - generic [ref=e112]:
+        - generic [ref=e113] [cursor=pointer]:
+          - generic [ref=e114]: Startup configuration
+          - img [ref=e115]
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e120]:
+              - checkbox [checked] [ref=e121] [cursor=pointer]
+              - generic [ref=e122]: node-01
+            - generic [ref=e123]:
+              - generic [ref=e124]:
+                - generic [ref=e126]: Backend
+                - combobox [ref=e127] [cursor=pointer]:
+                  - option "Firecracker" [selected]
+                  - option "Cloud Hypervisor"
+              - generic [ref=e128]:
+                - generic [ref=e130]: Kernel
+                - combobox [disabled] [ref=e131]:
+                  - option "Default:" [selected]
+              - generic [ref=e132]:
+                - generic [ref=e134]: IP Address
+                - textbox "172.16.0.x (auto)" [ref=e135]
+              - generic [ref=e136]:
+                - generic [ref=e138]: Login as
+                - combobox [ref=e139] [cursor=pointer]:
+                  - option "root" [selected]
+                  - option "laborant"
+          - generic [ref=e140]:
+            - generic [ref=e142]:
+              - checkbox [checked] [ref=e143] [cursor=pointer]
+              - generic [ref=e144]: node-02
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - generic [ref=e148]: Backend
+                - combobox [ref=e149] [cursor=pointer]:
+                  - option "Firecracker" [selected]
+                  - option "Cloud Hypervisor"
+              - generic [ref=e150]:
+                - generic [ref=e152]: Kernel
+                - combobox [disabled] [ref=e153]:
+                  - option "Default:" [selected]
+              - generic [ref=e154]:
+                - generic [ref=e156]: IP Address
+                - textbox "172.16.0.x (auto)" [ref=e157]
+              - generic [ref=e158]:
+                - generic [ref=e160]: Login as
+                - combobox [ref=e161] [cursor=pointer]:
+                  - option "root" [selected]
+                  - option "laborant"
+          - generic [ref=e162]:
+            - generic [ref=e164]:
+              - checkbox [checked] [ref=e165] [cursor=pointer]
+              - generic [ref=e166]: node-03
+            - generic [ref=e167]:
+              - generic [ref=e168]:
+                - generic [ref=e170]: Backend
+                - combobox [ref=e171] [cursor=pointer]:
+                  - option "Firecracker" [selected]
+                  - option "Cloud Hypervisor"
+              - generic [ref=e172]:
+                - generic [ref=e174]: Kernel
+                - combobox [disabled] [ref=e175]:
+                  - option "Default:" [selected]
+              - generic [ref=e176]:
+                - generic [ref=e178]: IP Address
+                - textbox "172.16.0.x (auto)" [ref=e179]
+              - generic [ref=e180]:
+                - generic [ref=e182]: Login as
+                - combobox [ref=e183] [cursor=pointer]:
+                  - option "root" [selected]
+                  - option "laborant"
+      - generic [ref=e185]:
+        - paragraph [ref=e186]:
+          - text: This environment is set up for learning how to work with
+          - strong [ref=e187]:
+            - link "etcd" [ref=e188] [cursor=pointer]:
+              - /url: https://etcd.io
+              - text: etcd
+              - img [ref=e189]
+          - text: in a
+          - strong [ref=e191]: cluster configuration
+          - text: .
+        - paragraph [ref=e193]:
+          - text: 💡 This is a
+          - strong [ref=e194]: multi-node
+          - text: playground for etcd. For a simpler setup, try the
+          - link "single-node playground" [ref=e195] [cursor=pointer]:
+            - /url: https://labs.iximiuz.com/playgrounds/etcd-io-d6418264
+          - text: .
+        - heading "🔧 System Components" [level=2] [ref=e196]
+        - list [ref=e197]:
+          - listitem [ref=e198]:
+            - code [ref=e199] [cursor=pointer]: etcd
+            - text: ": The distributed key-value store daemon running on multiple nodes."
+        - heading "🛠️ Tools" [level=2] [ref=e200]
+        - list [ref=e201]:
+          - listitem [ref=e202]:
+            - code [ref=e203] [cursor=pointer]: etcdctl
+            - text: ": The official command-line client for etcd."
+          - listitem [ref=e204]:
+            - code [ref=e205] [cursor=pointer]: etcdutl
+            - text: ": Utility for etcd database operations and maintenance."
+        - heading "🎯 Getting Started" [level=2] [ref=e206]
+        - heading "Basic Cluster Operations" [level=3] [ref=e207]
+        - generic [ref=e208]:
+          - code [ref=e210]:
+            - generic [ref=e211]: "# Check etcd version and cluster health"
+            - generic [ref=e212]: etcdctl version
+            - generic [ref=e213]: etcdctl endpoint health
+            - generic [ref=e215]: "# View cluster members"
+            - generic [ref=e216]: etcdctl member list
+            - generic [ref=e218]: "# Check cluster-wide health and status"
+            - generic [ref=e219]: etcdctl endpoint health --cluster
+            - generic [ref=e220]: etcdctl endpoint status --cluster
+          - button "Copy to clipboard" [ref=e221] [cursor=pointer]:
+            - generic [ref=e222]: Copy to clipboard
+            - img [ref=e224]
+        - heading "Client Load Balancing" [level=3] [ref=e226]
+        - paragraph [ref=e227]: "Set endpoints to all cluster nodes for client-side load balancing:"
+        - generic [ref=e228]:
+          - code [ref=e230]:
+            - generic [ref=e231]: export ETCDCTL_ENDPOINTS=$(etcdctl member list -w json | jq -r '[.members[].clientURLs[]] | join(",")')
+          - button "Copy to clipboard" [ref=e232] [cursor=pointer]:
+            - generic [ref=e233]: Copy to clipboard
+            - img [ref=e235]
+        - heading "⚙️ Configuration" [level=2] [ref=e237]
+        - paragraph [ref=e238]:
+          - text: Check out the
+          - link "single-node playground" [ref=e239] [cursor=pointer]:
+            - /url: https://labs.iximiuz.com/playgrounds/etcd-io-d6418264#configuration
+          - text: to learn about configuring etcd.
+        - heading "📚 Learn More" [level=2] [ref=e240]
+        - list [ref=e241]:
+          - listitem [ref=e242]:
+            - link "etcd documentation" [ref=e243] [cursor=pointer]:
+              - /url: https://etcd.io/docs/latest/
+              - text: etcd documentation
+              - img [ref=e244]
+            - list [ref=e246]:
+              - listitem [ref=e247]:
+                - link "Tutorials" [ref=e248] [cursor=pointer]:
+                  - /url: https://etcd.io/docs/latest/tutorials/
+                  - text: Tutorials
+                  - img [ref=e249]
+              - listitem [ref=e251]:
+                - link "Configuration reference" [ref=e252] [cursor=pointer]:
+                  - /url: https://etcd.io/docs/latest/op-guide/configuration/
+                  - text: Configuration reference
+                  - img [ref=e253]
+              - listitem [ref=e255]:
+                - link "Clustering guide" [ref=e256] [cursor=pointer]:
+                  - /url: https://etcd.io/docs/latest/op-guide/clustering/
+                  - text: Clustering guide
+                  - img [ref=e257]
+          - listitem [ref=e259]:
+            - text: "etcdctl reference:"
+            - code [ref=e260] [cursor=pointer]: etcdctl --help
+        - heading "🧩 Related Content" [level=2] [ref=e261]
+        - heading "🧪 Playgrounds" [level=3] [ref=e262]
+        - list [ref=e263]:
+          - listitem [ref=e264]:
+            - link "etcd" [ref=e265] [cursor=pointer]:
+              - /url: https://labs.iximiuz.com/playgrounds/etcd-io-d6418264
+        - paragraph [ref=e266]:
+          - strong [ref=e267]: Happy learning! 🚀
+  - contentinfo [ref=e268]:
+    - generic [ref=e269]:
+      - paragraph [ref=e270]:
+        - text: Copyright
+        - link "iximiuz" [ref=e271] [cursor=pointer]:
+          - /url: https://twitter.com/iximiuz
+        - text: © 2026 •
+        - link "Terms and Conditions" [ref=e272] [cursor=pointer]:
+          - /url: /terms-and-conditions
+        - text: •
+        - link "Blog" [ref=e273] [cursor=pointer]:
+          - /url: https://iximiuz.com/en/
+      - paragraph [ref=e274]:
+        - text: Theme by
+        - link "DaisyUI" [ref=e275] [cursor=pointer]:
+          - /url: https://daisyui.com/

@@ -1,0 +1,226 @@
+- generic [ref=e5]:
+  - banner [ref=e6]:
+    - generic [ref=e7]:
+      - link "Camora — home" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img "Camora" [ref=e9]
+      - button "Back" [ref=e10]:
+        - generic [ref=e11]:
+          - img [ref=e12]
+          - generic [ref=e14]: Back
+      - navigation [ref=e15]:
+        - link "Apply" [ref=e16] [cursor=pointer]:
+          - /url: /jobs
+        - link "Prepare" [ref=e17] [cursor=pointer]:
+          - /url: /capra/prepare
+        - link "Practice" [ref=e18] [cursor=pointer]:
+          - /url: /capra/practice
+        - link "Attend" [ref=e19] [cursor=pointer]:
+          - /url: /lumora
+    - button "Search topics" [ref=e21] [cursor=pointer]:
+      - img [ref=e22]
+      - generic [ref=e25]: Search topics...
+      - generic [ref=e26]:
+        - generic [ref=e27]: ⌘
+        - text: K
+    - generic [ref=e28]:
+      - button "Switch to light mode" [ref=e29]:
+        - img [ref=e30]
+      - button "Account menu" [ref=e34]:
+        - generic [ref=e35]: Sudhakar
+        - img [ref=e36]
+  - generic [ref=e38]:
+    - complementary [ref=e39]:
+      - navigation [ref=e41]:
+        - list [ref=e43]:
+          - listitem [ref=e44]:
+            - link "Jobs" [ref=e45] [cursor=pointer]:
+              - /url: /jobs
+              - img [ref=e47]
+        - list [ref=e52]:
+          - listitem [ref=e53]:
+            - link "Overview" [ref=e54] [cursor=pointer]:
+              - /url: /capra/prepare
+              - img [ref=e56]
+          - listitem [ref=e62]:
+            - link "DSA" [ref=e63] [cursor=pointer]:
+              - /url: /capra/prepare/coding
+              - img [ref=e65]
+          - listitem [ref=e75]:
+            - link "System Design" [ref=e76] [cursor=pointer]:
+              - /url: /capra/prepare/system-design
+              - img [ref=e78]
+          - listitem [ref=e84]:
+            - link "Behavioral" [ref=e85] [cursor=pointer]:
+              - /url: /capra/prepare/behavioral
+              - img [ref=e87]
+          - listitem [ref=e92]:
+            - link "Low Level Design" [ref=e93] [cursor=pointer]:
+              - /url: /capra/prepare/low-level-design
+              - img [ref=e95]
+          - listitem [ref=e101]:
+            - link "Microservices" [ref=e102] [cursor=pointer]:
+              - /url: /capra/prepare/microservices
+              - img [ref=e104]
+          - listitem [ref=e112]:
+            - link "DevOps" [ref=e113] [cursor=pointer]:
+              - /url: /capra/prepare/devops
+              - img [ref=e115]
+          - listitem [ref=e121]:
+            - link "SRE" [ref=e122] [cursor=pointer]:
+              - /url: /capra/prepare/sre
+              - img [ref=e124]
+          - listitem [ref=e127]:
+            - link "Cloud / AWS" [ref=e128] [cursor=pointer]:
+              - /url: /capra/prepare/cloud
+              - img [ref=e130]
+          - listitem [ref=e132]:
+            - link "Linux" [ref=e133] [cursor=pointer]:
+              - /url: /capra/prepare/linux
+              - img [ref=e135]
+          - listitem [ref=e138]:
+            - link "Networking" [ref=e139] [cursor=pointer]:
+              - /url: /capra/prepare/networking
+              - img [ref=e141]
+          - listitem [ref=e146]:
+            - link "Troubleshooting" [ref=e147] [cursor=pointer]:
+              - /url: /capra/prepare/troubleshooting
+              - img [ref=e149]
+          - listitem [ref=e153]:
+            - link "War Stories" [ref=e154] [cursor=pointer]:
+              - /url: /capra/prepare/war-stories
+              - img [ref=e156]
+          - listitem [ref=e158]:
+            - link "This vs That" [ref=e159] [cursor=pointer]:
+              - /url: /capra/prepare/comparisons
+              - img [ref=e161]
+          - listitem [ref=e165]:
+            - link "Databases & SQL" [ref=e166] [cursor=pointer]:
+              - /url: /capra/prepare/databases
+              - img [ref=e168]
+          - listitem [ref=e173]:
+            - link "Projects" [ref=e174] [cursor=pointer]:
+              - /url: /capra/prepare/projects
+              - img [ref=e176]
+          - listitem [ref=e179]:
+            - link "Roadmaps" [ref=e180] [cursor=pointer]:
+              - /url: /capra/prepare/roadmaps
+              - img [ref=e182]
+          - listitem [ref=e189]:
+            - link "Eng Blogs" [ref=e190] [cursor=pointer]:
+              - /url: /capra/prepare/eng-blogs
+              - img [ref=e192]
+        - list [ref=e198]:
+          - listitem [ref=e199]:
+            - link "Practice" [ref=e200] [cursor=pointer]:
+              - /url: /capra/practice
+              - img [ref=e202]
+          - listitem [ref=e205]:
+            - link "Problem Library" [ref=e206] [cursor=pointer]:
+              - /url: /capra/library
+              - img [ref=e208]
+        - list [ref=e213]:
+          - listitem [ref=e214]:
+            - link "Python" [ref=e215] [cursor=pointer]:
+              - /url: /capra/learn/python
+              - img [ref=e217]
+          - listitem [ref=e220]:
+            - link "CodeSignal" [ref=e221] [cursor=pointer]:
+              - /url: /capra/learn/codesignal
+              - img [ref=e223]
+          - listitem [ref=e225]:
+            - link "Programiz" [ref=e226] [cursor=pointer]:
+              - /url: /capra/learn/programiz
+              - img [ref=e228]
+        - list [ref=e232]:
+          - listitem [ref=e233]:
+            - link "Live Session" [ref=e234] [cursor=pointer]:
+              - /url: /lumora
+              - img [ref=e236]
+        - list [ref=e242]:
+          - listitem [ref=e243]:
+            - link "Code Solver" [ref=e244] [cursor=pointer]:
+              - /url: /capra/coding
+              - img [ref=e246]
+          - listitem [ref=e251]:
+            - link "Design Solver" [ref=e252] [cursor=pointer]:
+              - /url: /capra/design
+              - img [ref=e254]
+        - list [ref=e262]:
+          - listitem [ref=e263]:
+            - link "Achievements" [ref=e264] [cursor=pointer]:
+              - /url: /profile?tab=achievements
+              - img [ref=e266]
+    - main [ref=e272]:
+      - generic [ref=e274]:
+        - generic [ref=e275]:
+          - generic [ref=e276]:
+            - generic [ref=e277]:
+              - generic [ref=e278]: ⌨️
+              - generic [ref=e279]: Playground
+              - generic [ref=e280]: BETA
+            - paragraph [ref=e281]: Disposable Linux VMs with VS Code IDE — start in seconds.
+          - generic [ref=e283]:
+            - generic [ref=e288]: root@ubuntu:~$ ▊
+            - generic [ref=e289]: Clean Ubuntu shell
+          - generic [ref=e290]:
+            - generic [ref=e291]:
+              - img "ubuntu.com" [ref=e293]
+              - generic [ref=e294]: Ubuntu 24.04
+            - generic [ref=e295]:
+              - generic [ref=e296]: Linux
+              - generic [ref=e297]: Free
+          - generic [ref=e299]:
+            - paragraph [ref=e300]: Included
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - generic [ref=e303]: Terminal
+                - generic [ref=e304]: bash shell
+              - generic [ref=e305]:
+                - generic [ref=e306]: IDE
+                - generic [ref=e307]: VS Code in browser
+              - generic [ref=e308]:
+                - generic [ref=e309]: Duration
+                - generic [ref=e310]: 60 min
+        - generic [ref=e312]:
+          - generic [ref=e313]:
+            - paragraph [ref=e314]: Choose Environment
+            - generic [ref=e315]:
+              - button "ubuntu.com Ubuntu 24.04 Clean Ubuntu shell Linux ✓ Selected" [ref=e316] [cursor=pointer]:
+                - img "ubuntu.com" [ref=e319]
+                - generic [ref=e320]: Ubuntu 24.04
+                - generic [ref=e321]: Clean Ubuntu shell
+                - generic [ref=e322]:
+                  - generic [ref=e323]: Linux
+                  - generic [ref=e324]: ✓ Selected
+              - button "docker.com Docker Docker + Compose ready Containers" [ref=e325] [cursor=pointer]:
+                - img "docker.com" [ref=e328]
+                - generic [ref=e329]: Docker
+                - generic [ref=e330]: Docker + Compose ready
+                - generic [ref=e332]: Containers
+              - button "anthropic.com NEW AI Agent Sandbox Claude Code · Codex · Gemini CLI AI · Programming" [ref=e333] [cursor=pointer]:
+                - generic [ref=e334]:
+                  - img "anthropic.com" [ref=e336]
+                  - generic [ref=e338]: NEW
+                - generic [ref=e339]: AI Agent Sandbox
+                - generic [ref=e340]: Claude Code · Codex · Gemini CLI
+                - generic [ref=e342]: AI · Programming
+              - button "kubernetes.io K8s Single-node Single-node Kubernetes cluster Kubernetes" [ref=e343] [cursor=pointer]:
+                - img "kubernetes.io" [ref=e346]
+                - generic [ref=e347]: K8s Single-node
+                - generic [ref=e348]: Single-node Kubernetes cluster
+                - generic [ref=e350]: Kubernetes
+              - button "kubernetes.io K8s Multi-node Multi-node cluster with kubeadm Kubernetes" [ref=e351] [cursor=pointer]:
+                - img "kubernetes.io" [ref=e354]
+                - generic [ref=e355]: K8s Multi-node
+                - generic [ref=e356]: Multi-node cluster with kubeadm
+                - generic [ref=e358]: Kubernetes
+              - button "amazon.com google.com microsoft.com Cloud CLI AWS · GCP · Azure · Terraform · K8s Cloud" [ref=e359] [cursor=pointer]:
+                - generic [ref=e362]:
+                  - img "amazon.com" [ref=e363]
+                  - img "google.com" [ref=e364]
+                  - img "microsoft.com" [ref=e365]
+                - generic [ref=e366]: Cloud CLI
+                - generic [ref=e367]: AWS · GCP · Azure · Terraform · K8s
+                - generic [ref=e369]: Cloud
+          - button "Start Playground" [ref=e371] [cursor=pointer]

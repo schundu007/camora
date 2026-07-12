@@ -1,0 +1,331 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - button "Search" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - generic [ref=e23]: Cmd K
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "How would you implement structured logging across a polyglot microservices architecture?" [level=1] [ref=e49]
+          - button "1" [ref=e51]:
+            - img [ref=e52]
+            - generic [ref=e54]: "1"
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 📡
+            - text: Observability
+          - generic [ref=e58]: Hard
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - heading "Structured Logging Across a Polyglot Microservices Architecture" [level=2] [ref=e62]
+          - paragraph [ref=e63]: "Structured logging in a polyglot environment requires solving three distinct problems: agreeing on a canonical schema, propagating correlation context across service boundaries, and enforcing consistency at the tooling level before logs ever reach your aggregator."
+          - heading "Define a Canonical Log Schema" [level=3] [ref=e64]
+          - paragraph [ref=e65]: "Every service, regardless of language, must emit JSON with the same field names and value formats. A minimal canonical schema looks like this:"
+          - code [ref=e68]: "{ \"timestamp\": \"2024-11-15T09:32:17.452Z\", \"level\": \"error\", \"service\": \"payment-svc\", \"version\": \"1.4.2\", \"trace_id\": \"4bf92f3577b34da6a3ce929d0e0e4736\", \"span_id\": \"00f067aa0ba902b7\", \"message\": \"charge failed: card declined\", \"error\": { \"type\": \"CardDeclinedError\", \"message\": \"insufficient funds\", \"stack\": \"...\" }, \"http\": { \"method\": \"POST\", \"path\": \"/v1/charges\", \"status\": 402, \"duration_ms\": 214 } }"
+          - paragraph [ref=e69]:
+            - text: Document this schema in your runbook with field-level descriptions, required vs optional fields, and enum values for
+            - code [ref=e70]: level
+            - text: (debug, info, warn, error, fatal). Treat it as a versioned contract. Breaking changes require a migration plan, just like an API change.
+          - heading "Correlation ID Propagation" [level=3] [ref=e71]
+          - paragraph [ref=e72]:
+            - text: The first service in a request chain generates a
+            - code [ref=e73]: trace_id
+            - text: if one is not already present in the incoming
+            - code [ref=e74]: X-Trace-ID
+            - text: header. Every downstream call passes that same ID forward. This is the minimum viable distributed trace.
+          - paragraph [ref=e75]: "In Python (FastAPI) with middleware:"
+          - code [ref=e78]: "import uuid from structlog import get_logger from starlette.middleware.base import BaseHTTPMiddleware logger = get_logger() class TraceMiddleware(BaseHTTPMiddleware): async def dispatch(self, request, call_next): trace_id = request.headers.get(\"X-Trace-ID\") or uuid.uuid4().hex with structlog.contextvars.bound_contextvars(trace_id=trace_id): response = await call_next(request) response.headers[\"X-Trace-ID\"] = trace_id return response"
+          - paragraph [ref=e79]:
+            - text: In Node.js (Express) with
+            - code [ref=e80]: pino
+            - text: and
+            - code [ref=e81]: AsyncLocalStorage
+            - text: ":"
+          - code [ref=e84]: "const { AsyncLocalStorage } = require('async_hooks'); const store = new AsyncLocalStorage(); app.use((req, res, next) => { const traceId = req.headers['x-trace-id'] || crypto.randomUUID().replace(/-/g, ''); store.run({ traceId }, () => next()); }); const logger = pino({ mixin() { return store.getStore() || {}; } });"
+          - paragraph [ref=e85]:
+            - text: For services on Kubernetes behind an Istio service mesh, Envoy injects and propagates
+            - code [ref=e86]: x-b3-traceid
+            - text: and
+            - code [ref=e87]: x-b3-spanid
+            - text: headers automatically. Your application only needs to forward those headers on outbound calls - not generate them. This integrates directly with Jaeger or Zipkin without application-level tracing libraries.
+          - heading "Language-Specific Thin Wrappers" [level=3] [ref=e88]
+          - paragraph [ref=e89]: Avoid calling logging libraries directly in application code. Instead, publish a thin internal library per language that pre-configures the formatter, enforces required fields, and binds the correlation context.
+          - paragraph [ref=e90]:
+            - text: For Python, wrap
+            - code [ref=e91]: structlog
+            - text: ":"
+          - code [ref=e94]: "# aceci_logging/__init__.py import structlog def configure(): structlog.configure( processors=[ structlog.contextvars.merge_contextvars, structlog.processors.add_log_level, structlog.processors.TimeStamper(fmt=\"iso\"), structlog.processors.JSONRenderer(), ] ) get_logger = structlog.get_logger"
+          - paragraph [ref=e95]:
+            - text: For Node.js, wrap
+            - code [ref=e96]: pino
+            - text: with a preset config that enforces the schema and disables pretty-printing in production.
+          - paragraph [ref=e97]:
+            - text: Publish these as versioned internal packages (
+            - code [ref=e98]: aceci-logging==1.2.0
+            - text: ","
+            - code [ref=e99]: "@aceci/logger@1.2.0"
+            - text: ) and require them in your service templates. A new service should never configure logging from scratch.
+          - heading "Enforcement in CI" [level=3] [ref=e100]
+          - paragraph [ref=e101]:
+            - text: Add a lint step that fails the build if
+            - code [ref=e102]: print()
+            - text: ","
+            - code [ref=e103]: console.log()
+            - text: ", or"
+            - code [ref=e104]: logging.basicConfig()
+            - text: "appear outside the wrapper library:"
+          - code [ref=e107]: "# .github/workflows/ci.yml - name: Check for unstructured logging run: | grep -rn \"console\\.log\\|console\\.error\" src/ --include=\"*.ts\" | grep -v \"node_modules\" | grep -v \"// ok\" && exit 1 || exit 0"
+          - paragraph [ref=e108]:
+            - text: For Python, use a custom
+            - code [ref=e109]: flake8
+            - text: rule or a
+            - code [ref=e110]: pre-commit
+            - text: hook that flags
+            - code [ref=e111]: print()
+            - text: and direct
+            - code [ref=e112]: logging.getLogger()
+            - text: calls outside
+            - code [ref=e113]: aceci_logging/
+            - text: .
+          - heading "Aggregation and Querying" [level=3] [ref=e114]
+          - paragraph [ref=e115]:
+            - text: Ship logs to a centralized system using a log forwarder on each node. On Kubernetes, a Fluent Bit DaemonSet tails
+            - code [ref=e116]: /var/log/containers/*.log
+            - text: ", parses the JSON, and forwards to your backend:"
+          - list [ref=e117]:
+            - listitem [ref=e118]:
+              - strong [ref=e119]: Loki
+              - text: "(self-hosted): use LogQL to filter by label, then query fields -"
+              - code [ref=e120]: "{service=\"payment-svc\"} | json | trace_id=\"4bf92f3577b34da6a3ce929d0e0e4736\""
+            - listitem [ref=e121]:
+              - strong [ref=e122]: OpenSearch
+              - text: ": query with"
+              - code [ref=e123]: GET /logs-*/_search
+              - text: filtering on
+              - code [ref=e124]: trace_id.keyword
+            - listitem [ref=e125]:
+              - strong [ref=e126]: Datadog
+              - text: ":"
+              - code [ref=e127]: service:payment-svc @trace_id:4bf92f3577b34da6a3ce929d0e0e4736
+          - paragraph [ref=e128]:
+            - text: With a consistent
+            - code [ref=e129]: trace_id
+            - text: across every service, reconstructing the full request path is a single filtered query. You get ordered log lines from auth-svc, api-gateway, payment-svc, and notification-svc for the same user request - without grepping multiple CloudWatch log groups or SSH-ing into instances.
+          - heading "Key Tradeoffs" [level=3] [ref=e130]
+          - paragraph [ref=e131]:
+            - text: JSON logging adds roughly 15-25% overhead per log line compared to plaintext. Mitigate this by setting
+            - code [ref=e132]: "level: warn"
+            - text: in production for high-traffic services and using sampling for debug-level traces. Do not log request bodies by default - add a field like
+            - code [ref=e133]: "\"body_logged\": true"
+            - text: only when explicitly enabled, to avoid PII exposure in your log pipeline.
+        - generic [ref=e134]:
+          - paragraph [ref=e135]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e136] [cursor=pointer]:
+            - img [ref=e137]
+            - text: Report incorrect answer
+      - generic [ref=e139]:
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - heading "Asked at" [level=2] [ref=e142]
+            - paragraph [ref=e143]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e144] [cursor=pointer]
+        - paragraph [ref=e145]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - heading "Community" [level=2] [ref=e148]
+          - generic [ref=e149]:
+            - button "Answers" [ref=e150] [cursor=pointer]
+            - button "Discussion" [ref=e151] [cursor=pointer]
+        - paragraph [ref=e152]: Perspectives from other engineers. Reviewed before publishing.
+        - paragraph [ref=e153]:
+          - link "Log in" [ref=e154] [cursor=pointer]:
+            - /url: /login/
+          - text: to share your answer.
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - heading "Related questions in 📡 Observability" [level=2] [ref=e157]
+          - generic [ref=e158]:
+            - link "What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?" [ref=e159] [cursor=pointer]:
+              - /url: /questions/observability-symptom-vs-cause-alerting/
+              - img [ref=e160]
+              - generic [ref=e162]: What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?
+            - link "How do you handle observability for ephemeral infrastructure - containers, spot instances, and Lambda functions?" [ref=e163] [cursor=pointer]:
+              - /url: /questions/observability-ephemeral-infrastructure/
+              - img [ref=e164]
+              - generic [ref=e166]: How do you handle observability for ephemeral infrastructure - containers, spot instances, and Lambda functions?
+            - link "How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?" [ref=e167] [cursor=pointer]:
+              - /url: /questions/observability-high-cardinality-management/
+              - img [ref=e168]
+              - generic [ref=e170]: How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?
+            - link "How have you defined and operated SLOs and error budgets in practice? What happened when the error budget ran out?" [ref=e171] [cursor=pointer]:
+              - /url: /questions/observability-slos-in-practice/
+              - img [ref=e172]
+              - generic [ref=e174]: How have you defined and operated SLOs and error budgets in practice? What happened when the error budget ran out?
+          - link "See all Observability questions ->" [ref=e175] [cursor=pointer]:
+            - /url: /topics/observability/
+        - generic [ref=e176]:
+          - heading "Resources" [level=2] [ref=e177]
+          - generic [ref=e178]:
+            - link "Prometheus vs Datadog" [ref=e179] [cursor=pointer]:
+              - /url: /comparisons/prometheus-vs-datadog/
+              - img [ref=e180]
+              - text: Prometheus vs Datadog
+            - link "OpenTelemetry Docs" [ref=e182] [cursor=pointer]:
+              - /url: https://opentelemetry.io/docs/
+              - img [ref=e183]
+              - text: OpenTelemetry Docs
+            - link "Prometheus Docs" [ref=e185] [cursor=pointer]:
+              - /url: https://prometheus.io/docs/
+              - img [ref=e186]
+              - text: Prometheus Docs
+  - contentinfo [ref=e188]:
+    - generic [ref=e189]:
+      - generic [ref=e190]:
+        - generic [ref=e191]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e192] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e193]
+            - generic [ref=e194]: Ace Cloud Interviews
+          - paragraph [ref=e195]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e196]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e197]:
+          - heading "Explore" [level=3] [ref=e198]
+          - list [ref=e199]:
+            - listitem [ref=e200]:
+              - link "Questions" [ref=e201] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e202]:
+              - link "Topics" [ref=e203] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e204]:
+              - link "Cheat Sheets" [ref=e205] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e206]:
+              - link "Comparisons" [ref=e207] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e208]:
+              - link "Learning Paths" [ref=e209] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e210]:
+              - link "Cert Study Guides" [ref=e211] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e212]:
+              - link "AWS Tutorials" [ref=e213] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e214]:
+              - link "War Stories" [ref=e215] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e216]:
+              - link "Day in the Life" [ref=e217] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e218]:
+              - link "Architecture Walkthroughs" [ref=e219] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e220]:
+              - link "CV Templates" [ref=e221] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e222]:
+          - heading "Topics" [level=3] [ref=e223]
+          - list [ref=e224]:
+            - listitem [ref=e225]:
+              - link "AWS" [ref=e226] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e227]:
+              - link "Kubernetes" [ref=e228] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e229]:
+              - link "Docker" [ref=e230] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e231]:
+              - link "Terraform" [ref=e232] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e233]:
+              - link "CI/CD" [ref=e234] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e235]:
+              - link "Linux" [ref=e236] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e237]:
+              - link "Networking" [ref=e238] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e239]:
+              - link "Security" [ref=e240] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e241]:
+              - link "Observability" [ref=e242] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e243]:
+              - link "System Design" [ref=e244] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e245]:
+              - link "Troubleshooting" [ref=e246] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e247]:
+          - heading "Company" [level=3] [ref=e248]
+          - list [ref=e249]:
+            - listitem [ref=e250]:
+              - link "About" [ref=e251] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e252]:
+              - link "FAQ" [ref=e253] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e254]:
+              - link "Contact Us" [ref=e255] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e256]:
+              - link "Privacy Policy" [ref=e257] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e258]:
+              - link "Terms of Service" [ref=e259] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e260]:
+        - paragraph [ref=e261]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e262]: Built for engineers.
+  - alert [ref=e263]

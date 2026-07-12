@@ -1,0 +1,402 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - button "Search" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - generic [ref=e23]: Cmd K
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - heading "Questions & Answers" [level=1] [ref=e45]
+        - paragraph [ref=e46]: Technical questions across AWS, Kubernetes, Docker, Terraform, and more.
+        - generic [ref=e47]:
+          - img [ref=e48]
+          - text: All questions and answers are free, forever. No login required.
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - textbox "Search questions..." [ref=e52]
+          - button "Search" [ref=e54] [cursor=pointer]
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Topic
+          - generic [ref=e57]:
+            - button "☁️ AWS" [ref=e58] [cursor=pointer]
+            - button "🔄 CI/CD" [ref=e59] [cursor=pointer]
+            - button "🐳 Docker" [ref=e60] [cursor=pointer]
+            - button "⚙️ Kubernetes" [ref=e61] [cursor=pointer]
+            - button "🐧 Linux" [ref=e62] [cursor=pointer]
+            - button "🌐 Networking" [ref=e63] [cursor=pointer]
+            - button "📡 Observability" [ref=e64] [cursor=pointer]
+            - button "🔒 Security" [ref=e65] [cursor=pointer]
+            - button "🏛️ System Design" [ref=e66] [cursor=pointer]
+            - button "🏗️ Terraform" [ref=e67] [cursor=pointer]
+            - button "🔧 Troubleshooting" [ref=e68] [cursor=pointer]
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - paragraph [ref=e71]: Difficulty
+            - generic [ref=e72]:
+              - button "Easy" [ref=e73] [cursor=pointer]
+              - button "Medium" [ref=e74] [cursor=pointer]
+              - button "Hard" [ref=e75] [cursor=pointer]
+          - generic [ref=e76]:
+            - paragraph [ref=e77]: Experience
+            - generic [ref=e78]:
+              - button "Fresher" [ref=e79] [cursor=pointer]
+              - button "2-5 yrs" [ref=e80] [cursor=pointer]
+              - button "5-8 yrs" [ref=e81] [cursor=pointer]
+              - button "8-10 yrs" [ref=e82] [cursor=pointer]
+              - button "10+ yrs" [ref=e83] [cursor=pointer]
+      - paragraph [ref=e84]: 289 questions · Page 1 of 15
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - link "Your team wants to adopt trunk-based development with continuous deployment to production. What organizational, technical, and cultural changes are required, and how do you sequence them?" [ref=e87] [cursor=pointer]:
+            - /url: /questions/cicd-your-team-wants-to-adopt-trunk-based-development-with-c/
+            - heading "Your team wants to adopt trunk-based development with continuous deployment to production. What organizational, technical, and cultural changes are required, and how do you sequence them?" [level=3] [ref=e88]
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - generic [ref=e91]: 🔄
+              - text: CI/CD
+            - generic [ref=e92]: Hard
+            - generic [ref=e93]: 10+ yrs
+        - generic [ref=e94]:
+          - link "How do you design a cost-optimized CI runner fleet that scales to burst capacity during business hours but minimizes cost overnight, across multiple regions and cloud providers?" [ref=e95] [cursor=pointer]:
+            - /url: /questions/cicd-how-do-you-design-a-cost-optimized-ci-runner-fleet-that/
+            - heading "How do you design a cost-optimized CI runner fleet that scales to burst capacity during business hours but minimizes cost overnight, across multiple regions and cloud providers?" [level=3] [ref=e96]
+          - generic [ref=e97]:
+            - generic [ref=e98]:
+              - generic [ref=e99]: 🔄
+              - text: CI/CD
+            - generic [ref=e100]: Hard
+            - generic [ref=e101]: 10+ yrs
+        - generic [ref=e102]:
+          - link "How do you handle database migrations in a CI/CD pipeline for high-traffic production systems where zero-downtime deploys are required and the migration must be reversible?" [ref=e103] [cursor=pointer]:
+            - /url: /questions/cicd-how-do-you-handle-database-migrations-in-a-cicd-pipelin/
+            - heading "How do you handle database migrations in a CI/CD pipeline for high-traffic production systems where zero-downtime deploys are required and the migration must be reversible?" [level=3] [ref=e104]
+          - generic [ref=e105]:
+            - generic [ref=e106]:
+              - generic [ref=e107]: 🔄
+              - text: CI/CD
+            - generic [ref=e108]: Hard
+            - generic [ref=e109]: 10+ yrs
+        - generic [ref=e110]:
+          - link "Walk through designing a multi-cloud or hybrid-cloud CI/CD pipeline that deploys workloads to AWS, GCP, and on-premises Kubernetes clusters with consistent policy enforcement." [ref=e111] [cursor=pointer]:
+            - /url: /questions/cicd-walk-through-designing-a-multi-cloud-or-hybrid-cloud-ci/
+            - heading "Walk through designing a multi-cloud or hybrid-cloud CI/CD pipeline that deploys workloads to AWS, GCP, and on-premises Kubernetes clusters with consistent policy enforcement." [level=3] [ref=e112]
+          - generic [ref=e113]:
+            - generic [ref=e114]:
+              - generic [ref=e115]: 🔄
+              - text: CI/CD
+            - generic [ref=e116]: Hard
+            - generic [ref=e117]: 10+ yrs
+        - generic [ref=e118]:
+          - link "How do you measure and improve CI/CD performance using DORA metrics at an organizational level? What leading and lagging indicators do you track and how do you drive change from them?" [ref=e119] [cursor=pointer]:
+            - /url: /questions/cicd-how-do-you-measure-and-improve-cicd-performance-using-d/
+            - heading "How do you measure and improve CI/CD performance using DORA metrics at an organizational level? What leading and lagging indicators do you track and how do you drive change from them?" [level=3] [ref=e120]
+          - generic [ref=e121]:
+            - generic [ref=e122]:
+              - generic [ref=e123]: 🔄
+              - text: CI/CD
+            - generic [ref=e124]: Hard
+            - generic [ref=e125]: 10+ yrs
+        - generic [ref=e126]:
+          - link "Your organization has 50+ teams, each running their own pipelines with different tools, standards, and security postures. How do you standardize without forcing a rewrite?" [ref=e127] [cursor=pointer]:
+            - /url: /questions/cicd-your-organization-has-50-teams-each-running-their-own-p/
+            - heading "Your organization has 50+ teams, each running their own pipelines with different tools, standards, and security postures. How do you standardize without forcing a rewrite?" [level=3] [ref=e128]
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - generic [ref=e131]: 🔄
+              - text: CI/CD
+            - generic [ref=e132]: Hard
+            - generic [ref=e133]: 10+ yrs
+        - generic [ref=e134]:
+          - link "Describe how you would design a pipeline for deploying machine learning models (MLOps) into production with the same rigour as application code — including data validation, model evaluation gates, and canary rollouts." [ref=e135] [cursor=pointer]:
+            - /url: /questions/cicd-describe-how-you-would-design-a-pipeline-for-deploying/
+            - heading "Describe how you would design a pipeline for deploying machine learning models (MLOps) into production with the same rigour as application code — including data validation, model evaluation gates, and canary rollouts." [level=3] [ref=e136]
+          - generic [ref=e137]:
+            - generic [ref=e138]:
+              - generic [ref=e139]: 🔄
+              - text: CI/CD
+            - generic [ref=e140]: Hard
+            - generic [ref=e141]: 10+ yrs
+        - generic [ref=e142]:
+          - link "How do you design a CI/CD strategy for a platform serving both SaaS (multi-tenant) and on-premises (customer-managed) deployments from a single codebase?" [ref=e143] [cursor=pointer]:
+            - /url: /questions/cicd-how-do-you-design-a-cicd-strategy-for-a-platform-servin/
+            - heading "How do you design a CI/CD strategy for a platform serving both SaaS (multi-tenant) and on-premises (customer-managed) deployments from a single codebase?" [level=3] [ref=e144]
+          - generic [ref=e145]:
+            - generic [ref=e146]:
+              - generic [ref=e147]: 🔄
+              - text: CI/CD
+            - generic [ref=e148]: Hard
+            - generic [ref=e149]: 10+ yrs
+        - generic [ref=e150]:
+          - link "How do you enforce release governance, compliance gates, and change management policies in a CI/CD pipeline without becoming a bottleneck for teams?" [ref=e151] [cursor=pointer]:
+            - /url: /questions/cicd-how-do-you-enforce-release-governance-compliance-gates/
+            - heading "How do you enforce release governance, compliance gates, and change management policies in a CI/CD pipeline without becoming a bottleneck for teams?" [level=3] [ref=e152]
+          - generic [ref=e153]:
+            - generic [ref=e154]:
+              - generic [ref=e155]: 🔄
+              - text: CI/CD
+            - generic [ref=e156]: Hard
+            - generic [ref=e157]: 10+ yrs
+        - generic [ref=e158]:
+          - link "Your CI/CD system is itself a production service. How do you design it for high availability, disaster recovery, and zero-downtime upgrades of the pipeline infrastructure?" [ref=e159] [cursor=pointer]:
+            - /url: /questions/cicd-your-cicd-system-is-itself-a-production-service-how-do/
+            - heading "Your CI/CD system is itself a production service. How do you design it for high availability, disaster recovery, and zero-downtime upgrades of the pipeline infrastructure?" [level=3] [ref=e160]
+          - generic [ref=e161]:
+            - generic [ref=e162]:
+              - generic [ref=e163]: 🔄
+              - text: CI/CD
+            - generic [ref=e164]: Hard
+            - generic [ref=e165]: 10+ yrs
+        - generic [ref=e166]:
+          - link "How do you implement software supply chain security end-to-end in a CI/CD pipeline? Walk through SLSA levels, SBOM generation, artifact signing, and policy enforcement." [ref=e167] [cursor=pointer]:
+            - /url: /questions/cicd-how-do-you-implement-software-supply-chain-security-end/
+            - heading "How do you implement software supply chain security end-to-end in a CI/CD pipeline? Walk through SLSA levels, SBOM generation, artifact signing, and policy enforcement." [level=3] [ref=e168]
+          - generic [ref=e169]:
+            - generic [ref=e170]:
+              - generic [ref=e171]: 🔄
+              - text: CI/CD
+            - generic [ref=e172]: Hard
+            - generic [ref=e173]: 10+ yrs
+        - generic [ref=e174]:
+          - link "How do you design and operate an Internal Developer Platform (IDP) that abstracts CI/CD complexity for hundreds of developers across dozens of teams?" [ref=e175] [cursor=pointer]:
+            - /url: /questions/cicd-how-do-you-design-and-operate-an-internal-developer-pla/
+            - heading "How do you design and operate an Internal Developer Platform (IDP) that abstracts CI/CD complexity for hundreds of developers across dozens of teams?" [level=3] [ref=e176]
+          - generic [ref=e177]:
+            - generic [ref=e178]:
+              - generic [ref=e179]: 🔄
+              - text: CI/CD
+            - generic [ref=e180]: Hard
+            - generic [ref=e181]: 10+ yrs
+        - generic [ref=e182]:
+          - link "A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?" [ref=e183] [cursor=pointer]:
+            - /url: /questions/troubleshooting-multi-region-latency-one-region/
+            - heading "A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?" [level=3] [ref=e184]
+          - generic [ref=e185]:
+            - generic [ref=e186]:
+              - generic [ref=e187]: 🔧
+              - text: Troubleshooting
+            - generic [ref=e188]: Hard
+            - generic [ref=e189]: 8-10 yrs - 10+ yrs
+        - generic [ref=e190]:
+          - link "Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?" [ref=e191] [cursor=pointer]:
+            - /url: /questions/troubleshooting-alerts-stopped-firing/
+            - heading "Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?" [level=3] [ref=e192]
+          - generic [ref=e193]:
+            - generic [ref=e194]:
+              - generic [ref=e195]: 🔧
+              - text: Troubleshooting
+            - generic [ref=e196]: Medium
+            - generic [ref=e197]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e198]:
+          - link "An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?" [ref=e199] [cursor=pointer]:
+            - /url: /questions/troubleshooting-ec2-unresponsive/
+            - heading "An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?" [level=3] [ref=e200]
+          - generic [ref=e201]:
+            - generic [ref=e202]:
+              - generic [ref=e203]: 🔧
+              - text: Troubleshooting
+            - generic [ref=e204]: Medium
+            - generic [ref=e205]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e206]:
+          - link "You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?" [ref=e207] [cursor=pointer]:
+            - /url: /questions/troubleshooting-zero-downtime-schema-change/
+            - heading "You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?" [level=3] [ref=e208]
+          - generic [ref=e209]:
+            - generic [ref=e210]:
+              - generic [ref=e211]: 🔧
+              - text: Troubleshooting
+            - generic [ref=e212]: Hard
+            - generic [ref=e213]: 8-10 yrs - 10+ yrs
+        - generic [ref=e214]:
+          - link "Your RDS instance CPU spikes to 100% once a month causing an application slowdown. How do you identify the root cause?" [ref=e215] [cursor=pointer]:
+            - /url: /questions/troubleshooting-rds-cpu-monthly-spike/
+            - heading "Your RDS instance CPU spikes to 100% once a month causing an application slowdown. How do you identify the root cause?" [level=3] [ref=e216]
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - generic [ref=e219]: 🔧
+              - text: Troubleshooting
+            - generic [ref=e220]: Hard
+            - generic [ref=e221]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e222]:
+          - link "A deployment succeeds in staging but fails in production. What are the most likely causes and how do you systematically identify them?" [ref=e223] [cursor=pointer]:
+            - /url: /questions/troubleshooting-staging-passes-prod-fails/
+            - heading "A deployment succeeds in staging but fails in production. What are the most likely causes and how do you systematically identify them?" [level=3] [ref=e224]
+          - generic [ref=e225]:
+            - generic [ref=e226]:
+              - generic [ref=e227]: 🔧
+              - text: Troubleshooting
+            - generic [ref=e228]: Hard
+            - generic [ref=e229]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e230]:
+          - link "Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements." [ref=e231] [cursor=pointer]:
+            - /url: /questions/system-design-secrets-management-org/
+            - heading "Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements." [level=3] [ref=e232]
+          - generic [ref=e233]:
+            - generic [ref=e234]:
+              - generic [ref=e235]: 🏛️
+              - text: System Design
+            - generic [ref=e236]: Medium
+            - generic [ref=e237]: 8-10 yrs - 10+ yrs
+        - generic [ref=e238]:
+          - link "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [ref=e239] [cursor=pointer]:
+            - /url: /questions/system-design-shared-database-decomposition/
+            - heading "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [level=3] [ref=e240]
+          - generic [ref=e241]:
+            - generic [ref=e242]:
+              - generic [ref=e243]: 🏛️
+              - text: System Design
+            - generic [ref=e244]: Hard
+            - generic [ref=e245]: 8-10 yrs - 10+ yrs
+      - generic [ref=e246]:
+        - button "Previous" [disabled] [ref=e247]:
+          - img [ref=e248]
+          - text: Previous
+        - generic [ref=e250]: Page 1 of 15
+        - button "Next" [ref=e251] [cursor=pointer]:
+          - text: Next
+          - img [ref=e252]
+  - contentinfo [ref=e254]:
+    - generic [ref=e255]:
+      - generic [ref=e256]:
+        - generic [ref=e257]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e258] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e259]
+            - generic [ref=e260]: Ace Cloud Interviews
+          - paragraph [ref=e261]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e262]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e263]:
+          - heading "Explore" [level=3] [ref=e264]
+          - list [ref=e265]:
+            - listitem [ref=e266]:
+              - link "Questions" [ref=e267] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e268]:
+              - link "Topics" [ref=e269] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e270]:
+              - link "Cheat Sheets" [ref=e271] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e272]:
+              - link "Comparisons" [ref=e273] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e274]:
+              - link "Learning Paths" [ref=e275] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e276]:
+              - link "Cert Study Guides" [ref=e277] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e278]:
+              - link "AWS Tutorials" [ref=e279] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e280]:
+              - link "War Stories" [ref=e281] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e282]:
+              - link "Day in the Life" [ref=e283] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e284]:
+              - link "Architecture Walkthroughs" [ref=e285] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e286]:
+              - link "CV Templates" [ref=e287] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e288]:
+          - heading "Topics" [level=3] [ref=e289]
+          - list [ref=e290]:
+            - listitem [ref=e291]:
+              - link "AWS" [ref=e292] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e293]:
+              - link "Kubernetes" [ref=e294] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e295]:
+              - link "Docker" [ref=e296] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e297]:
+              - link "Terraform" [ref=e298] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e299]:
+              - link "CI/CD" [ref=e300] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e301]:
+              - link "Linux" [ref=e302] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e303]:
+              - link "Networking" [ref=e304] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e305]:
+              - link "Security" [ref=e306] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e307]:
+              - link "Observability" [ref=e308] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e309]:
+              - link "System Design" [ref=e310] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e311]:
+              - link "Troubleshooting" [ref=e312] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e313]:
+          - heading "Company" [level=3] [ref=e314]
+          - list [ref=e315]:
+            - listitem [ref=e316]:
+              - link "About" [ref=e317] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e318]:
+              - link "FAQ" [ref=e319] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e320]:
+              - link "Contact Us" [ref=e321] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e322]:
+              - link "Privacy Policy" [ref=e323] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e324]:
+              - link "Terms of Service" [ref=e325] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e326]:
+        - paragraph [ref=e327]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e328]: Built for engineers.
+  - alert [ref=e329]

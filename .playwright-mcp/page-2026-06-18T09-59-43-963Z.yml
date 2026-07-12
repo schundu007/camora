@@ -1,0 +1,112 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - link "iximiuz Labs" [ref=e7] [cursor=pointer]:
+        - /url: /dashboard
+        - img "iximiuz Labs" [ref=e8]
+      - generic [ref=e9]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+        - generic [ref=e14] [cursor=pointer]:
+          - text: Catalog
+          - img [ref=e15]
+        - link "Skill Paths" [ref=e18] [cursor=pointer]:
+          - /url: /skill-paths
+        - link "Docker Roadmap" [ref=e20] [cursor=pointer]:
+          - /url: /roadmaps/docker
+        - link "Playgrounds" [ref=e22] [cursor=pointer]:
+          - /url: /playgrounds
+        - link "Vendors" [ref=e24] [cursor=pointer]:
+          - /url: /vendors
+        - link "Docs" [ref=e26] [cursor=pointer]:
+          - /url: /docs
+        - generic [ref=e29] [cursor=pointer]:
+          - text: More
+          - img [ref=e30]
+      - generic [ref=e32]:
+        - generic [ref=e33] [cursor=pointer]: Tinkerer subscription until Jul 17, 2026 Tinkerer
+        - link "Join our Discord community" [ref=e34] [cursor=pointer]:
+          - /url: https://discord.gg/p6nxaHm46p
+          - img [ref=e35]
+        - button [ref=e43] [cursor=pointer]:
+          - img [ref=e44]
+  - generic [ref=e48]:
+    - generic [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e53]:
+          - img [ref=e55]
+          - generic [ref=e57]: Official Playground
+        - generic [ref=e58]:
+          - generic [ref=e59]: "on"
+          - link "Linux" [ref=e61] [cursor=pointer]:
+            - /url: /playgrounds?category=linux
+            - generic [ref=e62]: Linux
+        - 'img "Ubuntu 26.04 playground: A vanilla Ubuntu 26.04 server." [ref=e65] [cursor=pointer]'
+      - generic [ref=e68]:
+        - heading "Actions" [level=3] [ref=e69]
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - img [ref=e73]
+              - button "Start playground" [ref=e77] [cursor=pointer]:
+                - generic [ref=e78]: Start playground
+            - generic [ref=e79]:
+              - img [ref=e80]
+              - button "Clone and Share" [ref=e82] [cursor=pointer]:
+                - generic [ref=e83]: Clone and Share
+          - generic [ref=e84]:
+            - img [ref=e85]
+            - link "Configure" [ref=e88] [cursor=pointer]:
+              - /url: /playgrounds/ubuntu-26-04/settings
+      - generic [ref=e89]:
+        - paragraph [ref=e90]: Prefer servers in the selected region
+        - generic [ref=e91]:
+          - button "Europe" [ref=e92] [cursor=pointer]:
+            - generic [ref=e94]: Europe
+          - button "Asia" [ref=e95] [cursor=pointer]:
+            - generic [ref=e97]: Asia
+    - generic [ref=e99]:
+      - heading "Ubuntu 26.04 Playground" [level=1] [ref=e100]
+      - heading "A vanilla Ubuntu 26.04 server." [level=2] [ref=e101]
+      - generic [ref=e102]:
+        - generic [ref=e103] [cursor=pointer]:
+          - generic [ref=e104]: Startup configuration
+          - img [ref=e105]
+        - generic [ref=e109]:
+          - generic [ref=e111]:
+            - checkbox [checked] [ref=e112] [cursor=pointer]
+            - generic [ref=e113]: ubuntu-01
+          - generic [ref=e114]:
+            - generic [ref=e115]:
+              - generic [ref=e117]: Backend
+              - combobox [ref=e118] [cursor=pointer]:
+                - option "Firecracker" [selected]
+                - option "Cloud Hypervisor"
+            - generic [ref=e119]:
+              - generic [ref=e121]: Kernel
+              - combobox [disabled] [ref=e122]:
+                - option "Default:" [selected]
+            - generic [ref=e123]:
+              - generic [ref=e125]: IP Address
+              - textbox "172.16.0.x (auto)" [ref=e126]
+            - generic [ref=e127]:
+              - generic [ref=e129]: Login as
+              - combobox [ref=e130] [cursor=pointer]:
+                - option "root" [selected]
+                - option "laborant"
+  - contentinfo [ref=e131]:
+    - generic [ref=e132]:
+      - paragraph [ref=e133]:
+        - text: Copyright
+        - link "iximiuz" [ref=e134] [cursor=pointer]:
+          - /url: https://twitter.com/iximiuz
+        - text: © 2026 •
+        - link "Terms and Conditions" [ref=e135] [cursor=pointer]:
+          - /url: /terms-and-conditions
+        - text: •
+        - link "Blog" [ref=e136] [cursor=pointer]:
+          - /url: https://iximiuz.com/en/
+      - paragraph [ref=e137]:
+        - text: Theme by
+        - link "DaisyUI" [ref=e138] [cursor=pointer]:
+          - /url: https://daisyui.com/

@@ -1,0 +1,1622 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - link "iximiuz Labs" [ref=e7] [cursor=pointer]:
+        - /url: /dashboard
+        - img "iximiuz Labs" [ref=e8]
+      - generic [ref=e9]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+        - generic [ref=e14] [cursor=pointer]:
+          - text: Catalog
+          - img [ref=e15]
+        - link "Skill Paths" [ref=e18] [cursor=pointer]:
+          - /url: /skill-paths
+        - link "Docker Roadmap" [ref=e20] [cursor=pointer]:
+          - /url: /roadmaps/docker
+        - link "Playgrounds" [ref=e22] [cursor=pointer]:
+          - /url: /playgrounds
+        - link "Vendors" [ref=e25] [cursor=pointer]:
+          - /url: /vendors
+        - link "Docs" [ref=e27] [cursor=pointer]:
+          - /url: /docs
+        - generic [ref=e30] [cursor=pointer]:
+          - text: More
+          - img [ref=e31]
+      - generic [ref=e33]:
+        - generic [ref=e34] [cursor=pointer]: Tinkerer subscription until Jul 17, 2026 Tinkerer
+        - link "Join our Discord community" [ref=e35] [cursor=pointer]:
+          - /url: https://discord.gg/p6nxaHm46p
+          - img [ref=e36]
+        - button [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+  - generic [ref=e49]:
+    - generic [ref=e50]:
+      - heading "DevOps Playgrounds" [level=1] [ref=e51]:
+        - img [ref=e52]
+        - generic [ref=e54]: DevOps Playgrounds
+      - paragraph [ref=e57]: Remote sandbox environments for learning and experimenting without worrying about setup and cleanup. Run anything on vanilla Linux VMs, get a fresh Docker host or Kubernetes cluster in seconds, publish ports, collaborate via sharing terminal sessions, SSH from the command line, and more.
+    - generic [ref=e58]:
+      - generic [ref=e60]:
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - generic [ref=e66]: Collection
+            - generic [ref=e67]:
+              - generic [ref=e68] [cursor=pointer]:
+                - radio "iximiuz Labs Official" [ref=e69]
+                - generic [ref=e70]: iximiuz Labs Official
+              - generic [ref=e71] [cursor=pointer]:
+                - radio "Independent Authors" [ref=e72]
+                - generic [ref=e73]: Independent Authors
+              - generic [ref=e74] [cursor=pointer]:
+                - radio "Community Authors" [ref=e75]
+                - generic [ref=e76]: Community Authors
+              - generic [ref=e77] [cursor=pointer]:
+                - radio "Vendor Materials" [ref=e78]
+                - generic [ref=e79]: Vendor Materials
+          - generic [ref=e80]:
+            - generic [ref=e81]: Category
+            - generic [ref=e82] [cursor=pointer]:
+              - checkbox "Linux" [ref=e83]
+              - generic [ref=e84]: Linux
+            - generic [ref=e85] [cursor=pointer]:
+              - checkbox "Networking" [ref=e86]
+              - generic [ref=e87]: Networking
+            - generic [ref=e88] [cursor=pointer]:
+              - checkbox "Containers" [ref=e89]
+              - generic [ref=e90]: Containers
+            - generic [ref=e91] [cursor=pointer]:
+              - checkbox "Kubernetes" [ref=e92]
+              - generic [ref=e93]: Kubernetes
+            - button "Show more..." [ref=e94] [cursor=pointer]
+          - button "Reset filters" [disabled]
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - img [ref=e97]
+            - text: Playground Region
+          - paragraph [ref=e99]: Prefer servers in the selected region
+          - generic [ref=e100]:
+            - button "Europe" [ref=e101] [cursor=pointer]:
+              - generic [ref=e103]: Europe
+            - button "Asia" [ref=e104] [cursor=pointer]:
+              - generic [ref=e106]: Asia
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - generic [ref=e109]: Find playgrounds matching your interests...
+          - generic [ref=e111]:
+            - img [ref=e113]
+            - textbox "Search playgrounds..." [ref=e115]
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - heading "Official Collection" [level=2] [ref=e118]:
+              - img [ref=e119]
+              - text: Official Collection
+            - paragraph [ref=e121]: Playgrounds crafted by iximiuz Labs for efficient hands-on learning and safe experimentation.
+          - generic [ref=e123]:
+            - generic [ref=e124] [cursor=pointer]:
+              - generic [ref=e126]:
+                - generic [ref=e127]:
+                  - img [ref=e129]
+                  - text: Playground on
+                  - link "Kubernetes" [ref=e131]:
+                    - /url: /playgrounds?category=kubernetes
+                - generic [ref=e132]:
+                  - img [ref=e134]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: k8s-omni
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e136]:
+                - link "Kubernetes Cluster" [ref=e137]:
+                  - /url: /playgrounds/k8s-omni
+                  - heading "Kubernetes Cluster" [level=4] [ref=e138]
+                - paragraph [ref=e139]: A multi-node Kubernetes cluster provisioned with kubeadm, allowing you to choose your preferred container runtime and networking plugin. Perfect for CKA, CKAD, and CKS preparation.
+                - button "Start" [ref=e142]:
+                  - generic [ref=e143]: Start
+            - generic [ref=e144] [cursor=pointer]:
+              - generic [ref=e146]:
+                - generic [ref=e147]:
+                  - img [ref=e149]
+                  - text: Playground on
+                  - link "Containers" [ref=e151]:
+                    - /url: /playgrounds?category=containers
+                - generic [ref=e152]:
+                  - img [ref=e154]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: docker
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e156]:
+                - link "Docker" [ref=e157]:
+                  - /url: /playgrounds/docker
+                  - heading "Docker" [level=4] [ref=e158]
+                - paragraph [ref=e159]: A Linux server with Docker engine pre-installed.
+                - button "Start" [ref=e162]:
+                  - generic [ref=e163]: Start
+            - generic [ref=e164] [cursor=pointer]:
+              - generic [ref=e166]:
+                - generic [ref=e167]:
+                  - img [ref=e169]
+                  - text: Playground on
+                  - link "Linux" [ref=e171]:
+                    - /url: /playgrounds?category=linux
+                - generic [ref=e172]:
+                  - img [ref=e174]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: ubuntu-26-04
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e176]:
+                - link "Ubuntu 26.04" [ref=e177]:
+                  - /url: /playgrounds/ubuntu-26-04
+                  - heading "Ubuntu 26.04" [level=4] [ref=e178]
+                - paragraph [ref=e179]: A vanilla Ubuntu 26.04 server.
+                - button "Start" [ref=e182]:
+                  - generic [ref=e183]: Start
+            - generic [ref=e184] [cursor=pointer]:
+              - generic [ref=e186]:
+                - generic [ref=e187]:
+                  - img [ref=e189]
+                  - text: Playground on
+                  - link "Generative AI" [ref=e191]:
+                    - /url: /playgrounds?category=gen-ai
+                  - generic [ref=e192]: ","
+                  - link "Programming" [ref=e193]:
+                    - /url: /playgrounds?category=programming
+                - generic [ref=e194]:
+                  - img [ref=e196]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: coding-agent-base
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e198]:
+                - link "Coding Agent Base" [ref=e199]:
+                  - /url: /playgrounds/coding-agent-base
+                  - heading "Coding Agent Base" [level=4] [ref=e200]
+                - paragraph [ref=e201]: Get a disposable agentic coding environment in seconds. Claude Code, Codex, Gemini CLI, and Opencode pre-installed and ready to use.
+                - button "Start" [ref=e204]:
+                  - generic [ref=e205]: Start
+            - generic [ref=e206] [cursor=pointer]:
+              - generic [ref=e208]:
+                - generic [ref=e209]:
+                  - img [ref=e211]
+                  - text: Playground on
+                  - link "Linux" [ref=e213]:
+                    - /url: /playgrounds?category=linux
+                  - generic [ref=e214]: ","
+                  - link "Networking" [ref=e215]:
+                    - /url: /playgrounds?category=networking
+                - generic [ref=e216]:
+                  - img [ref=e218]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: flexbox
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e220]:
+                - link "FlexBox" [ref=e221]:
+                  - /url: /playgrounds/flexbox
+                  - heading "FlexBox" [level=4] [ref=e222]
+                - paragraph [ref=e223]: Your perfect base playground. Create purpose-built sandbox environments by choosing up to five VMs with custom root filesystems and organizing them into any number of local networks.
+                - button "Start" [ref=e226]:
+                  - generic [ref=e227]: Start
+            - generic [ref=e228] [cursor=pointer]:
+              - generic [ref=e230]:
+                - generic [ref=e231]:
+                  - img [ref=e233]
+                  - text: Playground on
+                  - link "Kubernetes" [ref=e235]:
+                    - /url: /playgrounds?category=kubernetes
+                - generic [ref=e236]:
+                  - img [ref=e238]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: k3s
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e240]:
+                - link "Kubernetes Cluster (K3s)" [ref=e241]:
+                  - /url: /playgrounds/k3s
+                  - heading "Kubernetes Cluster (K3s)" [level=4] [ref=e242]
+                - paragraph [ref=e243]: A multi-node K3s cluster with a load balancer, Helm, and more.
+                - button "Start" [ref=e246]:
+                  - generic [ref=e247]: Start
+            - generic [ref=e248] [cursor=pointer]:
+              - generic [ref=e250]:
+                - generic [ref=e251]:
+                  - img [ref=e253]
+                  - text: Playground on
+                  - link "Containers" [ref=e255]:
+                    - /url: /playgrounds?category=containers
+                - generic [ref=e256]:
+                  - img [ref=e258]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: podman
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e260]:
+                - link "Podman" [ref=e261]:
+                  - /url: /playgrounds/podman
+                  - heading "Podman" [level=4] [ref=e262]
+                - paragraph [ref=e263]: A Linux server with Podman, a daemonless Docker alternative, pre-installed.
+                - button "Start" [ref=e266]:
+                  - generic [ref=e267]: Start
+            - generic [ref=e268] [cursor=pointer]:
+              - generic [ref=e270]:
+                - generic [ref=e271]:
+                  - img [ref=e273]
+                  - text: Playground on
+                  - link "Networking" [ref=e275]:
+                    - /url: /playgrounds?category=networking
+                - generic [ref=e276]:
+                  - img [ref=e278]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: mini-lan-ubuntu
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e280]:
+                - link "MiniLAN (Ubuntu)" [ref=e281]:
+                  - /url: /playgrounds/mini-lan-ubuntu
+                  - heading "MiniLAN (Ubuntu)" [level=4] [ref=e282]
+                - paragraph [ref=e283]: Four refined Ubuntu VMs connected into a single network.
+                - button "Start" [ref=e286]:
+                  - generic [ref=e287]: Start
+          - link "See all official playgrounds →" [ref=e288] [cursor=pointer]:
+            - /url: /playgrounds?filter=official
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - heading "Independent Authors" [level=2] [ref=e291]:
+              - img [ref=e292]
+              - text: Independent Authors
+            - paragraph [ref=e294]: Playgrounds from outstanding independent authors proudly hosted by iximiuz Labs.
+          - generic [ref=e296]:
+            - generic [ref=e297] [cursor=pointer]:
+              - generic [ref=e299]:
+                - generic [ref=e300]:
+                  - img [ref=e302]
+                  - text: Playground on
+                  - link "Cloud" [ref=e304]:
+                    - /url: /playgrounds?category=cloud
+                  - generic [ref=e305]: ","
+                  - link "Programming" [ref=e306]:
+                    - /url: /playgrounds?category=programming
+                - generic [ref=e307]:
+                  - img [ref=e309]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: restate-cluster-ddf435a9
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e311]:
+                - link "Restate Cluster" [ref=e312]:
+                  - /url: /playgrounds/restate-cluster-ddf435a9
+                  - heading "Restate Cluster" [level=4] [ref=e313]
+                - generic [ref=e314]:
+                  - link "Márk Sági-Kazár" [ref=e316]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e317]
+                  - generic [ref=e318]:
+                    - generic [ref=e319]: by
+                    - link "Márk Sági-Kazár" [ref=e320]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e321]: A three-node Restate cluster for inspecting distributed Restate server behavior.
+                - button "Start" [ref=e324]:
+                  - generic [ref=e325]: Start
+            - generic [ref=e326] [cursor=pointer]:
+              - generic [ref=e328]:
+                - generic [ref=e329]:
+                  - img [ref=e331]
+                  - text: Playground on
+                  - link "Cloud" [ref=e333]:
+                    - /url: /playgrounds?category=cloud
+                  - generic [ref=e334]: ","
+                  - link "Programming" [ref=e335]:
+                    - /url: /playgrounds?category=programming
+                - generic [ref=e336]:
+                  - img [ref=e338]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: restate-5ddd5cd1
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e340]:
+                - link "Restate" [ref=e341]:
+                  - /url: /playgrounds/restate-5ddd5cd1
+                  - heading "Restate" [level=4] [ref=e342]
+                - generic [ref=e343]:
+                  - link "Márk Sági-Kazár" [ref=e345]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e346]
+                  - generic [ref=e347]:
+                    - generic [ref=e348]: by
+                    - link "Márk Sági-Kazár" [ref=e349]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e350]: Durable execution runtime for services, workflows, and agents.
+                - button "Start" [ref=e353]:
+                  - generic [ref=e354]: Start
+            - generic [ref=e355] [cursor=pointer]:
+              - generic [ref=e357]:
+                - generic [ref=e358]:
+                  - img [ref=e360]
+                  - text: Playground on
+                  - link "CI/CD" [ref=e362]:
+                    - /url: /playgrounds?category=ci-cd
+                - generic [ref=e363]:
+                  - img [ref=e365]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: gitea-662eac24
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e367]:
+                - link "Gitea" [ref=e368]:
+                  - /url: /playgrounds/gitea-662eac24
+                  - heading "Gitea" [level=4] [ref=e369]
+                - generic [ref=e370]:
+                  - link "Márk Sági-Kazár" [ref=e372]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e373]
+                  - generic [ref=e374]:
+                    - generic [ref=e375]: by
+                    - link "Márk Sági-Kazár" [ref=e376]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e377]: Basically GiHub, but Open Source.
+                - button "Start" [ref=e380]:
+                  - generic [ref=e381]: Start
+            - generic [ref=e382] [cursor=pointer]:
+              - generic [ref=e384]:
+                - generic [ref=e385]:
+                  - img [ref=e387]
+                  - text: Playground on
+                  - link "Kubernetes" [ref=e389]:
+                    - /url: /playgrounds?category=kubernetes
+                - generic [ref=e390]:
+                  - img [ref=e392]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: kubernetes-ha-d02b8d83
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e394]:
+                - link "HA Kubernetes Cluster" [ref=e395]:
+                  - /url: /playgrounds/kubernetes-ha-d02b8d83
+                  - heading "HA Kubernetes Cluster" [level=4] [ref=e396]
+                - generic [ref=e397]:
+                  - link "Márk Sági-Kazár" [ref=e399]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e400]
+                  - generic [ref=e401]:
+                    - generic [ref=e402]: by
+                    - link "Márk Sági-Kazár" [ref=e403]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e404]: A multi-node, highly available Kubernetes cluster provisioned with kubeadm.
+                - button "Start" [ref=e407]:
+                  - generic [ref=e408]: Start
+            - generic [ref=e409] [cursor=pointer]:
+              - generic [ref=e411]:
+                - generic [ref=e412]:
+                  - img [ref=e414]
+                  - text: Playground on
+                  - link "Linux" [ref=e416]:
+                    - /url: /playgrounds?category=linux
+                - generic [ref=e417]:
+                  - img [ref=e419]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: nix-on-ubuntu-4dfe9a2b
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e421]:
+                - link "Nix on Ubuntu" [ref=e422]:
+                  - /url: /playgrounds/nix-on-ubuntu-4dfe9a2b
+                  - heading "Nix on Ubuntu" [level=4] [ref=e423]
+                - generic [ref=e424]:
+                  - link "Márk Sági-Kazár" [ref=e426]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e427]
+                  - generic [ref=e428]:
+                    - generic [ref=e429]: by
+                    - link "Márk Sági-Kazár" [ref=e430]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e431]: Experiment with the Nix package manager, a powerful tool for reproducible and isolated software environments, on Ubuntu.
+                - button "Start" [ref=e434]:
+                  - generic [ref=e435]: Start
+            - generic [ref=e436] [cursor=pointer]:
+              - generic [ref=e438]:
+                - generic [ref=e439]:
+                  - img [ref=e441]
+                  - text: Playground on
+                  - link "Linux" [ref=e443]:
+                    - /url: /playgrounds?category=linux
+                - generic [ref=e444]:
+                  - img [ref=e446]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: opensearch-4edc6812
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e448]:
+                - link "OpenSearch" [ref=e449]:
+                  - /url: /playgrounds/opensearch-4edc6812
+                  - heading "OpenSearch" [level=4] [ref=e450]
+                - generic [ref=e451]:
+                  - link "Márk Sági-Kazár" [ref=e453]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e454]
+                  - generic [ref=e455]:
+                    - generic [ref=e456]: by
+                    - link "Márk Sági-Kazár" [ref=e457]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e458]: OpenSearch is an open-source, enterprise-grade search and observability suite that brings order to unstructured data at scale.
+                - button "Start" [ref=e461]:
+                  - generic [ref=e462]: Start
+            - generic [ref=e463] [cursor=pointer]:
+              - generic [ref=e465]:
+                - generic [ref=e466]:
+                  - img [ref=e468]
+                  - text: Playground on
+                  - link "Kubernetes" [ref=e470]:
+                    - /url: /playgrounds?category=kubernetes
+                - generic [ref=e471]:
+                  - img [ref=e473]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: kubernetes-the-hard-way-7df4f945
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e475]:
+                - link "Kubernetes the Hard Way" [ref=e476]:
+                  - /url: /playgrounds/kubernetes-the-hard-way-7df4f945
+                  - heading "Kubernetes the Hard Way" [level=4] [ref=e477]
+                - generic [ref=e478]:
+                  - link "Márk Sági-Kazár" [ref=e480]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e481]
+                  - generic [ref=e482]:
+                    - generic [ref=e483]: by
+                    - link "Márk Sági-Kazár" [ref=e484]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e485]: A manually assembled Kubernetes cluster, inspired by Kelsey Hightower's "Kubernetes the Hard Way" tutorial.
+                - button "Start" [ref=e488]:
+                  - generic [ref=e489]: Start
+            - generic [ref=e490] [cursor=pointer]:
+              - generic [ref=e492]:
+                - generic [ref=e493]:
+                  - img [ref=e495]
+                  - text: Playground on
+                  - link "Linux" [ref=e497]:
+                    - /url: /playgrounds?category=linux
+                  - generic [ref=e498]: ","
+                  - link "Cloud" [ref=e499]:
+                    - /url: /playgrounds?category=cloud
+                - generic [ref=e500]:
+                  - img [ref=e502]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: etcd-cluster-e368a3ff
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e504]:
+                - link "etcd Cluster" [ref=e505]:
+                  - /url: /playgrounds/etcd-cluster-e368a3ff
+                  - heading "etcd Cluster" [level=4] [ref=e506]
+                - generic [ref=e507]:
+                  - link "Márk Sági-Kazár" [ref=e509]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e510]
+                  - generic [ref=e511]:
+                    - generic [ref=e512]: by
+                    - link "Márk Sági-Kazár" [ref=e513]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e514]: A multi-node etcd cluster for exploring clustering and coordination features.
+                - button "Start" [ref=e517]:
+                  - generic [ref=e518]: Start
+          - link "See all playgrounds by independent authors →" [ref=e519] [cursor=pointer]:
+            - /url: /playgrounds?filter=independent
+        - generic [ref=e520]:
+          - generic [ref=e521]:
+            - heading "Community Collection" [level=2] [ref=e522]:
+              - img [ref=e523]
+              - text: Community Collection
+            - paragraph [ref=e525]: Playgrounds contributed by the community members sharing their knowledge and expertise.
+          - generic [ref=e527]:
+            - generic [ref=e528] [cursor=pointer]:
+              - generic [ref=e530]:
+                - generic [ref=e531]:
+                  - img [ref=e533]
+                  - text: Playground on
+                  - link "Linux" [ref=e535]:
+                    - /url: /playgrounds?category=linux
+                  - generic [ref=e536]: ","
+                  - link "Networking" [ref=e537]:
+                    - /url: /playgrounds?category=networking
+                  - generic [ref=e538]: ","
+                  - link "Observability" [ref=e539]:
+                    - /url: /playgrounds?category=observability
+                - generic [ref=e540]:
+                  - img [ref=e542]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: use-practice-4ce4816f
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e544]:
+                - link "USE Practice" [ref=e545]:
+                  - /url: /playgrounds/use-practice-4ce4816f
+                  - heading "USE Practice" [level=4] [ref=e546]
+                - generic [ref=e547]:
+                  - link "Adam Leskis" [ref=e549]:
+                    - /url: /a/adam-leskis
+                    - img "Adam Leskis" [ref=e550]
+                  - generic [ref=e551]:
+                    - generic [ref=e552]: by
+                    - link "Adam Leskis" [ref=e553]:
+                      - /url: /a/adam-leskis
+                - paragraph [ref=e554]: Practice Linux USE-method investigations against randomized host-level scenarios. It already has the [use-tool](https://github.com/lpmi-13/use-tool) installed, so you can begin with that, or just run a free-form investigation.
+                - button "Start" [ref=e557]:
+                  - generic [ref=e558]: Start
+            - generic [ref=e559] [cursor=pointer]:
+              - generic [ref=e561]:
+                - generic [ref=e562]:
+                  - img [ref=e564]
+                  - text: Playground on
+                  - link "Linux" [ref=e566]:
+                    - /url: /playgrounds?category=linux
+                - generic [ref=e567]:
+                  - img [ref=e569]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: SilverStack-dev-machine-e672bcf7
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e571]:
+                - link "SilverStack Dev Machine" [ref=e572]:
+                  - /url: /playgrounds/SilverStack-dev-machine-e672bcf7
+                  - heading "SilverStack Dev Machine" [level=4] [ref=e573]
+                - generic [ref=e574]:
+                  - link "Muhammad Ibtisam" [ref=e576]:
+                    - /url: /a/ibtisam-iq
+                    - img "Muhammad Ibtisam" [ref=e577]
+                  - generic [ref=e578]:
+                    - generic [ref=e579]: by
+                    - link "Muhammad Ibtisam" [ref=e580]:
+                      - /url: /a/ibtisam-iq
+                - paragraph [ref=e581]: A fully provisioned DevOps workstation on Ubuntu 24.04 - every tool pre-installed, every alias pre-wired, zero setup required.
+                - button "Start" [ref=e584]:
+                  - generic [ref=e585]: Start
+            - generic [ref=e586] [cursor=pointer]:
+              - generic [ref=e588]:
+                - generic [ref=e589]:
+                  - img [ref=e591]
+                  - text: Playground on
+                  - link "Kubernetes" [ref=e593]:
+                    - /url: /playgrounds?category=kubernetes
+                  - generic [ref=e594]: ","
+                  - link "Security" [ref=e595]:
+                    - /url: /playgrounds?category=security
+                - generic [ref=e596]:
+                  - img [ref=e598]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: kata-containers-demo-36c0c848
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e600]:
+                - link "Kata Containers Demo" [ref=e601]:
+                  - /url: /playgrounds/kata-containers-demo-36c0c848
+                  - heading "Kata Containers Demo" [level=4] [ref=e602]
+                - generic [ref=e603]:
+                  - link "Ivan Velichko" [ref=e605]:
+                    - /url: /a/ivan-velichko
+                    - img "Ivan Velichko" [ref=e606]
+                  - generic [ref=e607]:
+                    - generic [ref=e608]: by
+                    - link "Ivan Velichko" [ref=e609]:
+                      - /url: /a/ivan-velichko
+                - paragraph [ref=e610]: A Kubernetes cluster with the Kata Containers runtime preinstalled.
+                - button "Start" [ref=e613]:
+                  - generic [ref=e614]: Start
+            - generic [ref=e615] [cursor=pointer]:
+              - generic [ref=e617]:
+                - generic [ref=e618]:
+                  - img [ref=e620]
+                  - text: Playground on
+                  - link "Linux" [ref=e622]:
+                    - /url: /playgrounds?category=linux
+                - generic [ref=e623]:
+                  - img [ref=e625]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: omakub-83894d18
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e627]:
+                - link "Run Omakub and use it via XRDP" [ref=e628]:
+                  - /url: /playgrounds/omakub-83894d18
+                  - heading "Run Omakub and use it via XRDP" [level=4] [ref=e629]
+                - generic [ref=e630]:
+                  - link "Arjun Dandagi" [ref=e632]:
+                    - /url: /a/arjundandagi
+                    - img "Arjun Dandagi" [ref=e633]
+                  - generic [ref=e634]:
+                    - generic [ref=e635]: by
+                    - link "Arjun Dandagi" [ref=e636]:
+                      - /url: /a/arjundandagi
+                - paragraph [ref=e637]: A ubuntu server configured to run omakub
+                - button "Start" [ref=e640]:
+                  - generic [ref=e641]: Start
+            - generic [ref=e642] [cursor=pointer]:
+              - generic [ref=e644]:
+                - generic [ref=e645]:
+                  - img [ref=e647]
+                  - text: Playground on
+                  - link "Containers" [ref=e649]:
+                    - /url: /playgrounds?category=containers
+                  - generic [ref=e650]: ","
+                  - link "Programming" [ref=e651]:
+                    - /url: /playgrounds?category=programming
+                - generic [ref=e652]:
+                  - img [ref=e654]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: coder-playground-oci-b89da409
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e656]:
+                - link "Coder Development Environment" [ref=e657]:
+                  - /url: /playgrounds/coder-playground-oci-b89da409
+                  - heading "Coder Development Environment" [level=4] [ref=e658]
+                - paragraph [ref=e659]: A fully configured Coder instance running on Ubuntu 24.04 with Docker support. Uses a custom OCI image with pre-installed Coder and Docker.
+                - button "Start" [ref=e662]:
+                  - generic [ref=e663]: Start
+            - generic [ref=e664] [cursor=pointer]:
+              - generic [ref=e666]:
+                - generic [ref=e667]:
+                  - img [ref=e669]
+                  - text: Playground on
+                  - link "Linux" [ref=e671]:
+                    - /url: /playgrounds?category=linux
+                - generic [ref=e672]:
+                  - img [ref=e674]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: postgresql-18-86dcca68
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e676]:
+                - link "PostgreSQL 18.4 on Ubuntu 26.04 (customized)" [ref=e677]:
+                  - /url: /playgrounds/postgresql-18-86dcca68
+                  - heading "PostgreSQL 18.4 on Ubuntu 26.04 (customized)" [level=4] [ref=e678]
+                - generic [ref=e679]:
+                  - link "Karuppiah Natarajan" [ref=e681]:
+                    - /url: /a/karuppiah7890
+                    - img "Karuppiah Natarajan" [ref=e682]
+                  - generic [ref=e683]:
+                    - generic [ref=e684]: by
+                    - link "Karuppiah Natarajan" [ref=e685]:
+                      - /url: /a/karuppiah7890
+                - paragraph [ref=e686]: PostgreSQL 18.4 Playground with Ubuntu 24.04 OS (customized)
+                - button "Start" [ref=e689]:
+                  - generic [ref=e690]: Start
+            - generic [ref=e691] [cursor=pointer]:
+              - generic [ref=e693]:
+                - generic [ref=e694]:
+                  - img [ref=e696]
+                  - text: Playground on
+                  - link "Linux" [ref=e698]:
+                    - /url: /playgrounds?category=linux
+                  - generic [ref=e699]: ","
+                  - link "Networking" [ref=e700]:
+                    - /url: /playgrounds?category=networking
+                  - generic [ref=e701]: ","
+                  - link "Observability" [ref=e702]:
+                    - /url: /playgrounds?category=observability
+                - generic [ref=e703]:
+                  - img [ref=e705]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: Ubuntu-eBPF-ec79ffdc
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e707]:
+                - link "Ubuntu eBPF" [ref=e708]:
+                  - /url: /playgrounds/Ubuntu-eBPF-ec79ffdc
+                  - heading "Ubuntu eBPF" [level=4] [ref=e709]
+                - generic [ref=e710]:
+                  - link "Başar Subaşı" [ref=e712]:
+                    - /url: /a/basar-subasi
+                    - img "Başar Subaşı" [ref=e713]
+                  - generic [ref=e714]:
+                    - generic [ref=e715]: by
+                    - link "Başar Subaşı" [ref=e716]:
+                      - /url: /a/basar-subasi
+                - paragraph [ref=e717]: Experimental playground with out of the box eBPF support through BTF
+                - button "Start" [ref=e720]:
+                  - generic [ref=e721]: Start
+            - generic [ref=e722] [cursor=pointer]:
+              - generic [ref=e724]:
+                - generic [ref=e725]:
+                  - img [ref=e727]
+                  - text: Playground on
+                  - link "Kubernetes" [ref=e729]:
+                    - /url: /playgrounds?category=kubernetes
+                  - generic [ref=e730]: ","
+                  - link "CI/CD" [ref=e731]:
+                    - /url: /playgrounds?category=ci-cd
+                - generic [ref=e732]:
+                  - img [ref=e734]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: my-k8s-omni-06ebabf3
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e736]:
+                - link "ArgoCD + Gitea" [ref=e737]:
+                  - /url: /playgrounds/my-k8s-omni-06ebabf3
+                  - heading "ArgoCD + Gitea" [level=4] [ref=e738]
+                - paragraph [ref=e739]: Experiment with GitOps - deploy a demo app to a Kubernetes cluster with ArgoCD, with app manifests stored in a Git repo hosted in Gitea.
+                - button "Start" [ref=e742]:
+                  - generic [ref=e743]: Start
+          - link "See all playgrounds by community authors →" [ref=e744] [cursor=pointer]:
+            - /url: /playgrounds?filter=community
+        - generic [ref=e745]:
+          - generic [ref=e746]:
+            - heading "Vendor Materials" [level=2] [ref=e747]
+            - paragraph [ref=e748]: Playgrounds prepared by software vendors to help you learn and experiment with their products and services.
+          - generic [ref=e750]:
+            - generic [ref=e751] [cursor=pointer]:
+              - generic [ref=e753]:
+                - generic [ref=e754]:
+                  - img [ref=e756]
+                  - text: Playground on
+                  - link "Cloud" [ref=e758]:
+                    - /url: /playgrounds?category=cloud
+                  - generic [ref=e759]: ","
+                  - link "Kubernetes" [ref=e760]:
+                    - /url: /playgrounds?category=kubernetes
+                  - generic [ref=e761]: ","
+                  - link "Observability" [ref=e762]:
+                    - /url: /playgrounds?category=observability
+                - generic [ref=e763]:
+                  - img [ref=e765]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: victoriametrics-kubernetes
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e767]:
+                - link "VictoriaMetrics on Kubernetes" [ref=e768]:
+                  - /url: /playgrounds/victoriametrics-kubernetes
+                  - heading "VictoriaMetrics on Kubernetes" [level=4] [ref=e769]
+                - generic [ref=e770]:
+                  - link "Márk Sági-Kazár" [ref=e772]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e773]
+                  - generic [ref=e774]:
+                    - generic [ref=e775]: by
+                    - link "Márk Sági-Kazár" [ref=e776]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e777]: VictoriaMetrics Operator on a multi-node Kubernetes cluster.
+                - button "Start" [ref=e780]:
+                  - generic [ref=e781]: Start
+            - generic [ref=e782] [cursor=pointer]:
+              - generic [ref=e784]:
+                - generic [ref=e785]:
+                  - img [ref=e787]
+                  - text: Playground on
+                  - link "Cloud" [ref=e789]:
+                    - /url: /playgrounds?category=cloud
+                  - generic [ref=e790]: ","
+                  - link "Observability" [ref=e791]:
+                    - /url: /playgrounds?category=observability
+                - generic [ref=e792]:
+                  - img [ref=e794]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: victoriametrics-cluster
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e796]:
+                - link "VictoriaMetrics Cluster" [ref=e797]:
+                  - /url: /playgrounds/victoriametrics-cluster
+                  - heading "VictoriaMetrics Cluster" [level=4] [ref=e798]
+                - generic [ref=e799]:
+                  - link "Márk Sági-Kazár" [ref=e801]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e802]
+                  - generic [ref=e803]:
+                    - generic [ref=e804]: by
+                    - link "Márk Sági-Kazár" [ref=e805]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e806]: A multi-node VictoriaMetrics cluster with vminsert, vmselect, and vmstorage components.
+                - button "Start" [ref=e809]:
+                  - generic [ref=e810]: Start
+            - generic [ref=e811] [cursor=pointer]:
+              - generic [ref=e813]:
+                - generic [ref=e814]:
+                  - img [ref=e816]
+                  - text: Playground on
+                  - link "Cloud" [ref=e818]:
+                    - /url: /playgrounds?category=cloud
+                  - generic [ref=e819]: ","
+                  - link "Observability" [ref=e820]:
+                    - /url: /playgrounds?category=observability
+                - generic [ref=e821]:
+                  - img [ref=e823]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: victoriametrics
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e825]:
+                - link "VictoriaMetrics" [ref=e826]:
+                  - /url: /playgrounds/victoriametrics
+                  - heading "VictoriaMetrics" [level=4] [ref=e827]
+                - generic [ref=e828]:
+                  - link "Márk Sági-Kazár" [ref=e830]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e831]
+                  - generic [ref=e832]:
+                    - generic [ref=e833]: by
+                    - link "Márk Sági-Kazár" [ref=e834]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e835]: A fast, cost-effective, and scalable time-series database and monitoring solution.
+                - button "Start" [ref=e838]:
+                  - generic [ref=e839]: Start
+            - generic [ref=e840] [cursor=pointer]:
+              - generic [ref=e842]:
+                - generic [ref=e843]:
+                  - img [ref=e845]
+                  - text: Playground on
+                  - link "Linux" [ref=e847]:
+                    - /url: /playgrounds?category=linux
+                  - generic [ref=e848]: ","
+                  - link "Networking" [ref=e849]:
+                    - /url: /playgrounds?category=networking
+                  - generic [ref=e850]: ","
+                  - link "Containers" [ref=e851]:
+                    - /url: /playgrounds?category=containers
+                - generic [ref=e852]:
+                  - img [ref=e854]
+                  - dialog:
+                    - generic:
+                      - button "✕"
+                      - heading "Rename Playground" [level=3]
+                      - paragraph: Pick a new URL slug for this playground. The current URL will keep working — visitors will be redirected to the new one.
+                      - paragraph: Beware that any tutorials, challenges, or course lessons referencing this playground by name in their front matter will require manual updates!
+                      - generic:
+                        - generic:
+                          - paragraph: Current name
+                          - textbox [disabled]: uncloud-cluster-64523f7c
+                        - generic:
+                          - paragraph: New name
+                          - textbox "my-new-slug"
+                          - paragraph: Letters, numbers, and hyphens. 5–80 characters.
+                        - generic:
+                          - button "Cancel"
+                          - button "Rename" [disabled]
+                    - generic:
+                      - button "close"
+                  - dialog:
+                    - generic:
+                      - heading "Delete Playground" [level=3]
+                      - generic: Are you sure you want to delete this playground?
+                      - generic:
+                        - button "Cancel":
+                          - generic: Cancel
+                        - button "Delete":
+                          - generic: Delete
+                    - generic:
+                      - button "close"
+              - generic [ref=e856]:
+                - link "Uncloud Cluster" [ref=e857]:
+                  - /url: /playgrounds/uncloud-cluster-64523f7c
+                  - heading "Uncloud Cluster" [level=4] [ref=e858]
+                - generic [ref=e859]:
+                  - link "Anton Ovchinnikov" [ref=e861]:
+                    - /url: /a/anton-ovchinnikov
+                    - img "Anton Ovchinnikov" [ref=e862]
+                  - generic [ref=e863]:
+                    - generic [ref=e864]: by
+                    - link "Anton Ovchinnikov" [ref=e865]:
+                      - /url: /a/anton-ovchinnikov
+                - paragraph [ref=e866]: "A multi-node Uncloud cluster with a standalone control node. About Uncloud: https://github.com/psviderski/uncloud"
+                - button "Start" [ref=e869]:
+                  - generic [ref=e870]: Start
+  - contentinfo [ref=e871]:
+    - generic [ref=e872]:
+      - paragraph [ref=e873]:
+        - text: Copyright
+        - link "iximiuz" [ref=e874] [cursor=pointer]:
+          - /url: https://twitter.com/iximiuz
+        - text: © 2026 •
+        - link "Terms and Conditions" [ref=e875] [cursor=pointer]:
+          - /url: /terms-and-conditions
+        - text: •
+        - link "Blog" [ref=e876] [cursor=pointer]:
+          - /url: https://iximiuz.com/en/
+      - paragraph [ref=e877]:
+        - text: Theme by
+        - link "DaisyUI" [ref=e878] [cursor=pointer]:
+          - /url: https://daisyui.com/

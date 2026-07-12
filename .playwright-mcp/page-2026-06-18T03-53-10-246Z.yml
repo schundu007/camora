@@ -1,0 +1,567 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - link "Git" [ref=e4] [cursor=pointer]:
+      - /url: /
+      - img "Git" [ref=e5]
+    - generic [ref=e6]: "--distributed-is-the-new-centralized"
+    - textbox "Type / to search entire site…" [ref=e9]
+    - img [ref=e10]
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - complementary [ref=e13]:
+        - navigation [ref=e14]:
+          - list [ref=e15]:
+            - listitem [ref=e16]:
+              - link "About" [ref=e17] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e18]:
+              - link "Learn" [ref=e19] [cursor=pointer]:
+                - /url: /learn
+            - listitem [ref=e20]:
+              - link "Tools" [ref=e21] [cursor=pointer]:
+                - /url: /tools
+            - listitem [ref=e22]:
+              - link "Reference" [ref=e23] [cursor=pointer]:
+                - /url: /docs
+            - listitem [ref=e24]:
+              - link "Install" [ref=e25] [cursor=pointer]:
+                - /url: https://git-scm.com/install/mac
+            - listitem [ref=e26]:
+              - link "Community" [ref=e27] [cursor=pointer]:
+                - /url: /community
+          - list [ref=e28]:
+            - listitem [ref=e29]:
+              - text: Table of Contents
+              - list [ref=e30]:
+                - listitem [ref=e31]:
+                  - link "NAME" [ref=e32] [cursor=pointer]:
+                    - /url: "#_name"
+                - listitem [ref=e33]:
+                  - link "SYNOPSIS" [ref=e34] [cursor=pointer]:
+                    - /url: "#_synopsis"
+                - listitem [ref=e35]:
+                  - link "DESCRIPTION" [ref=e36] [cursor=pointer]:
+                    - /url: "#_description"
+                - listitem [ref=e37]:
+                  - link "Individual Developer (Standalone)" [ref=e38] [cursor=pointer]:
+                    - /url: "#_individual_developer_standalone"
+                - listitem [ref=e39]:
+                  - link "Individual Developer (Participant)" [ref=e40] [cursor=pointer]:
+                    - /url: "#_individual_developer_participant"
+                - listitem [ref=e41]:
+                  - link "Integrator" [ref=e42] [cursor=pointer]:
+                    - /url: "#_integrator"
+                - listitem [ref=e43]:
+                  - link "Repository Administration" [ref=e44] [cursor=pointer]:
+                    - /url: "#_repository_administration"
+                - listitem [ref=e45]:
+                  - link "GIT" [ref=e46] [cursor=pointer]:
+                    - /url: "#_git"
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - link "English ▾" [ref=e49] [cursor=pointer]:
+            - /url: "#"
+          - text: </>
+          - link "Topics ▾" [ref=e50] [cursor=pointer]:
+            - /url: "#"
+          - link "Latest version ▾" [ref=e51] [cursor=pointer]:
+            - /url: "#"
+          - generic [ref=e52]: giteveryday last updated in 2.43.0
+          - text: </> $
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - heading "NAME" [level=2] [ref=e55]
+            - paragraph [ref=e58]: giteveryday - A useful minimum set of commands for Everyday Git
+          - generic [ref=e59]:
+            - heading "SYNOPSIS" [level=2] [ref=e60]
+            - paragraph [ref=e63]: Everyday Git With 20 Commands Or So
+          - generic [ref=e64]:
+            - heading "DESCRIPTION" [level=2] [ref=e65]
+            - generic [ref=e66]:
+              - paragraph [ref=e68]: Git users can broadly be grouped into four categories for the purposes of describing here a small set of useful commands for everyday Git.
+              - list [ref=e70]:
+                - listitem [ref=e71]:
+                  - paragraph [ref=e72]:
+                    - link "Individual Developer (Standalone)" [ref=e73] [cursor=pointer]:
+                      - /url: "#STANDALONE"
+                    - text: commands are essential for anybody who makes a commit, even for somebody who works alone.
+                - listitem [ref=e74]:
+                  - paragraph [ref=e75]:
+                    - text: If you work with other people, you will need commands listed in the
+                    - link "Individual Developer (Participant)" [ref=e76] [cursor=pointer]:
+                      - /url: "#PARTICIPANT"
+                    - text: section as well.
+                - listitem [ref=e77]:
+                  - paragraph [ref=e78]:
+                    - text: People who play the
+                    - link "Integrator" [ref=e79] [cursor=pointer]:
+                      - /url: "#INTEGRATOR"
+                    - text: role need to learn some more commands in addition to the above.
+                - listitem [ref=e80]:
+                  - paragraph [ref=e81]:
+                    - link "Repository Administration" [ref=e82] [cursor=pointer]:
+                      - /url: "#ADMINISTRATION"
+                    - text: commands are for system administrators who are responsible for the care and feeding of Git repositories.
+          - generic [ref=e83]:
+            - heading "Individual Developer (Standalone)" [level=2] [ref=e84]: Individual Developer (Standalone)
+            - generic [ref=e85]:
+              - paragraph [ref=e87]: A standalone individual developer does not exchange patches with other people, and works alone in a single repository, using the following commands.
+              - list [ref=e89]:
+                - listitem [ref=e90]:
+                  - paragraph [ref=e91]:
+                    - link "git-init[1]" [ref=e92] [cursor=pointer]:
+                      - /url: /docs/git-init
+                    - text: to create a new repository.
+                - listitem [ref=e93]:
+                  - paragraph [ref=e94]:
+                    - link "git-log[1]" [ref=e95] [cursor=pointer]:
+                      - /url: /docs/git-log
+                    - text: to see what happened.
+                - listitem [ref=e96]:
+                  - paragraph [ref=e97]:
+                    - link "git-switch[1]" [ref=e98] [cursor=pointer]:
+                      - /url: /docs/git-switch
+                    - text: and
+                    - link "git-branch[1]" [ref=e99] [cursor=pointer]:
+                      - /url: /docs/git-branch
+                    - text: to switch branches.
+                - listitem [ref=e100]:
+                  - paragraph [ref=e101]:
+                    - link "git-add[1]" [ref=e102] [cursor=pointer]:
+                      - /url: /docs/git-add
+                    - text: to manage the index file.
+                - listitem [ref=e103]:
+                  - paragraph [ref=e104]:
+                    - link "git-diff[1]" [ref=e105] [cursor=pointer]:
+                      - /url: /docs/git-diff
+                    - text: and
+                    - link "git-status[1]" [ref=e106] [cursor=pointer]:
+                      - /url: /docs/git-status
+                    - text: to see what you are in the middle of doing.
+                - listitem [ref=e107]:
+                  - paragraph [ref=e108]:
+                    - link "git-commit[1]" [ref=e109] [cursor=pointer]:
+                      - /url: /docs/git-commit
+                    - text: to advance the current branch.
+                - listitem [ref=e110]:
+                  - paragraph [ref=e111]:
+                    - link "git-restore[1]" [ref=e112] [cursor=pointer]:
+                      - /url: /docs/git-restore
+                    - text: to undo changes.
+                - listitem [ref=e113]:
+                  - paragraph [ref=e114]:
+                    - link "git-merge[1]" [ref=e115] [cursor=pointer]:
+                      - /url: /docs/git-merge
+                    - text: to merge between local branches.
+                - listitem [ref=e116]:
+                  - paragraph [ref=e117]:
+                    - link "git-rebase[1]" [ref=e118] [cursor=pointer]:
+                      - /url: /docs/git-rebase
+                    - text: to maintain topic branches.
+                - listitem [ref=e119]:
+                  - paragraph [ref=e120]:
+                    - link "git-tag[1]" [ref=e121] [cursor=pointer]:
+                      - /url: /docs/git-tag
+                    - text: to mark a known point.
+              - generic [ref=e122]:
+                - heading "Examples" [level=3] [ref=e123]
+                - generic [ref=e125]:
+                  - term [ref=e126]: Use a tarball as a starting point for a new repository.
+                  - definition [ref=e127]:
+                    - generic [ref=e130]: $ tar zxf frotz.tar.gz $ cd frotz $ git init $ git add . (1) $ git commit -m "import of frotz source tree." $ git tag v2.43 (2)
+                    - list [ref=e132]:
+                      - listitem [ref=e133]:
+                        - paragraph [ref=e134]: add everything under the current directory.
+                      - listitem [ref=e135]:
+                        - paragraph [ref=e136]: make a lightweight, unannotated tag.
+                  - term [ref=e137]: Create a topic branch and develop.
+                  - definition [ref=e138]:
+                    - generic [ref=e141]: $ git switch -c alsa-audio (1) $ edit/compile/test $ git restore curses/ux_audio_oss.c (2) $ git add curses/ux_audio_alsa.c (3) $ edit/compile/test $ git diff HEAD (4) $ git commit -a -s (5) $ edit/compile/test $ git diff HEAD^ (6) $ git commit -a --amend (7) $ git switch master (8) $ git merge alsa-audio (9) $ git log --since='3 days ago' (10) $ git log v2.43.. curses/ (11)
+                    - list [ref=e143]:
+                      - listitem [ref=e144]:
+                        - paragraph [ref=e145]: create a new topic branch.
+                      - listitem [ref=e146]:
+                        - paragraph [ref=e147]:
+                          - text: revert your botched changes in
+                          - code [ref=e149]: curses/ux_audio_oss.c
+                          - text: .
+                      - listitem [ref=e150]:
+                        - paragraph [ref=e151]:
+                          - text: you need to tell Git if you added a new file; removal and modification will be caught if you do
+                          - generic [ref=e152]:
+                            - code [ref=e153]: git
+                            - code [ref=e154]: commit
+                            - code [ref=e155]: "-a"
+                          - text: later.
+                      - listitem [ref=e156]:
+                        - paragraph [ref=e157]: to see what changes you are committing.
+                      - listitem [ref=e158]:
+                        - paragraph [ref=e159]: commit everything, as you have tested, with your sign-off.
+                      - listitem [ref=e160]:
+                        - paragraph [ref=e161]: look at all your changes including the previous commit.
+                      - listitem [ref=e162]:
+                        - paragraph [ref=e163]: amend the previous commit, adding all your new changes, using your original message.
+                      - listitem [ref=e164]:
+                        - paragraph [ref=e165]: switch to the master branch.
+                      - listitem [ref=e166]:
+                        - paragraph [ref=e167]: merge a topic branch into your master branch.
+                      - listitem [ref=e168]:
+                        - paragraph [ref=e169]:
+                          - text: review commit logs; other forms to limit output can be combined and include
+                          - code [ref=e171]: "-10"
+                          - text: (to show up to 10 commits),
+                          - code [ref=e173]: "--until=2005-12-10"
+                          - text: ", etc."
+                      - listitem [ref=e174]:
+                        - paragraph [ref=e175]:
+                          - text: view only the changes that touch what’s in
+                          - code [ref=e177]: curses/
+                          - text: directory, since
+                          - code [ref=e179]: v2.43
+                          - text: tag.
+          - generic [ref=e180]:
+            - heading "Individual Developer (Participant)" [level=2] [ref=e181]: Individual Developer (Participant)
+            - generic [ref=e182]:
+              - paragraph [ref=e184]: A developer working as a participant in a group project needs to learn how to communicate with others, and uses these commands in addition to the ones needed by a standalone developer.
+              - list [ref=e186]:
+                - listitem [ref=e187]:
+                  - paragraph [ref=e188]:
+                    - link "git-clone[1]" [ref=e189] [cursor=pointer]:
+                      - /url: /docs/git-clone
+                    - text: from the upstream to prime your local repository.
+                - listitem [ref=e190]:
+                  - paragraph [ref=e191]:
+                    - link "git-pull[1]" [ref=e192] [cursor=pointer]:
+                      - /url: /docs/git-pull
+                    - text: and
+                    - link "git-fetch[1]" [ref=e193] [cursor=pointer]:
+                      - /url: /docs/git-fetch
+                    - text: from "origin" to keep up-to-date with the upstream.
+                - listitem [ref=e194]:
+                  - paragraph [ref=e195]:
+                    - link "git-push[1]" [ref=e196] [cursor=pointer]:
+                      - /url: /docs/git-push
+                    - text: to shared repository, if you adopt CVS style shared repository workflow.
+                - listitem [ref=e197]:
+                  - paragraph [ref=e198]:
+                    - link "git-format-patch[1]" [ref=e199] [cursor=pointer]:
+                      - /url: /docs/git-format-patch
+                    - text: to prepare e-mail submission, if you adopt Linux kernel-style public forum workflow.
+                - listitem [ref=e200]:
+                  - paragraph [ref=e201]:
+                    - link "git-send-email[1]" [ref=e202] [cursor=pointer]:
+                      - /url: /docs/git-send-email
+                    - text: to send your e-mail submission without corruption by your MUA.
+                - listitem [ref=e203]:
+                  - paragraph [ref=e204]:
+                    - link "git-request-pull[1]" [ref=e205] [cursor=pointer]:
+                      - /url: /docs/git-request-pull
+                    - text: to create a summary of changes for your upstream to pull.
+              - generic [ref=e206]:
+                - heading "Examples" [level=3] [ref=e207]
+                - generic [ref=e209]:
+                  - term [ref=e210]: Clone the upstream and work on it. Feed changes to upstream.
+                  - definition [ref=e211]:
+                    - generic [ref=e214]: $ git clone git://git.kernel.org/pub/scm/.../torvalds/linux-2.6 my2.6 $ cd my2.6 $ git switch -c mine master (1) $ edit/compile/test; git commit -a -s (2) $ git format-patch master (3) $ git send-email --to="person <email@example.com>" 00*.patch (4) $ git switch master (5) $ git pull (6) $ git log -p ORIG_HEAD.. arch/i386 include/asm-i386 (7) $ git ls-remote --heads http://git.kernel.org/.../jgarzik/libata-dev.git (8) $ git pull git://git.kernel.org/pub/.../jgarzik/libata-dev.git ALL (9) $ git reset --hard ORIG_HEAD (10) $ git gc (11)
+                    - list [ref=e216]:
+                      - listitem [ref=e217]:
+                        - paragraph [ref=e218]:
+                          - text: checkout a new branch
+                          - code [ref=e220]: mine
+                          - text: from master.
+                      - listitem [ref=e221]:
+                        - paragraph [ref=e222]: repeat as needed.
+                      - listitem [ref=e223]:
+                        - paragraph [ref=e224]: extract patches from your branch, relative to master,
+                      - listitem [ref=e225]:
+                        - paragraph [ref=e226]: and email them.
+                      - listitem [ref=e227]:
+                        - paragraph [ref=e228]:
+                          - text: return to
+                          - code [ref=e230]: master
+                          - text: ", ready to see what’s new"
+                      - listitem [ref=e231]:
+                        - paragraph [ref=e232]:
+                          - generic [ref=e233]:
+                            - code [ref=e234]: git
+                            - code [ref=e235]: pull
+                          - text: fetches from
+                          - code [ref=e237]: origin
+                          - text: by default and merges into the current branch.
+                      - listitem [ref=e238]:
+                        - paragraph [ref=e239]: immediately after pulling, look at the changes done upstream since last time we checked, only in the area we are interested in.
+                      - listitem [ref=e240]:
+                        - paragraph [ref=e241]: check the branch names in an external repository (if not known).
+                      - listitem [ref=e242]:
+                        - paragraph [ref=e243]:
+                          - text: fetch from a specific branch
+                          - code [ref=e245]: ALL
+                          - text: from a specific repository and merge it.
+                      - listitem [ref=e246]:
+                        - paragraph [ref=e247]: revert the pull.
+                      - listitem [ref=e248]:
+                        - paragraph [ref=e249]: garbage collect leftover objects from reverted pull.
+                  - term [ref=e250]: Push into another repository.
+                  - definition [ref=e251]:
+                    - generic [ref=e254]: satellite$ git clone mothership:frotz frotz (1) satellite$ cd frotz satellite$ git config --get-regexp '^(remote|branch)\.' (2) remote.origin.url mothership:frotz remote.origin.fetch refs/heads/*:refs/remotes/origin/* branch.master.remote origin branch.master.merge refs/heads/master satellite$ git config remote.origin.push \ +refs/heads/*:refs/remotes/satellite/* (3) satellite$ edit/compile/test/commit satellite$ git push origin (4) mothership$ cd frotz mothership$ git switch master mothership$ git merge satellite/master (5)
+                    - list [ref=e256]:
+                      - listitem [ref=e257]:
+                        - paragraph [ref=e258]: mothership machine has a frotz repository under your home directory; clone from it to start a repository on the satellite machine.
+                      - listitem [ref=e259]:
+                        - paragraph [ref=e260]:
+                          - text: clone sets these configuration variables by default. It arranges
+                          - generic [ref=e261]:
+                            - code [ref=e262]: git
+                            - code [ref=e263]: pull
+                          - text: to fetch and store the branches of mothership machine to local
+                          - code [ref=e265]: remotes/origin/*
+                          - text: remote-tracking branches.
+                      - listitem [ref=e266]:
+                        - paragraph [ref=e267]:
+                          - text: arrange
+                          - generic [ref=e268]:
+                            - code [ref=e269]: git
+                            - code [ref=e270]: push
+                          - text: to push all local branches to their corresponding branch of the mothership machine.
+                      - listitem [ref=e271]:
+                        - paragraph [ref=e272]:
+                          - text: push will stash all our work away on
+                          - code [ref=e274]: remotes/satellite/*
+                          - text: remote-tracking branches on the mothership machine. You could use this as a back-up method. Likewise, you can pretend that mothership "fetched" from you (useful when access is one sided).
+                      - listitem [ref=e275]:
+                        - paragraph [ref=e276]: on mothership machine, merge the work done on the satellite machine into the master branch.
+                  - term [ref=e277]: Branch off of a specific tag.
+                  - definition [ref=e278]:
+                    - generic [ref=e281]: $ git switch -c private2.6.14 v2.6.14 (1) $ edit/compile/test; git commit -a $ git checkout master $ git cherry-pick v2.6.14..private2.6.14 (2)
+                    - list [ref=e283]:
+                      - listitem [ref=e284]:
+                        - paragraph [ref=e285]: create a private branch based on a well known (but somewhat behind) tag.
+                      - listitem [ref=e286]:
+                        - paragraph [ref=e287]:
+                          - text: forward port all changes in
+                          - code [ref=e289]: private2.6.14
+                          - text: branch to
+                          - code [ref=e291]: master
+                          - text: branch without a formal "merging". Or longhand
+                          - generic [ref=e292]:
+                            - code [ref=e293]: git
+                            - code [ref=e294]: format-patch
+                            - code [ref=e295]: "-k"
+                            - code [ref=e296]: "-m"
+                            - code [ref=e297]: "--stdout"
+                            - code [ref=e298]: v2.6.14..private2.6.14
+                            - text: "|"
+                            - code [ref=e299]: git
+                            - code [ref=e300]: am
+                            - code [ref=e301]: "-3"
+                            - code [ref=e302]: "-k"
+                - paragraph [ref=e304]:
+                  - text: An alternate participant submission mechanism is using the
+                  - generic [ref=e305]:
+                    - code [ref=e306]: git
+                    - code [ref=e307]: request-pull
+                  - text: or pull-request mechanisms (e.g. as used on GitHub (www.github.com) to notify your upstream of your contribution.
+          - generic [ref=e308]:
+            - heading "Integrator" [level=2] [ref=e309]: Integrator
+            - generic [ref=e310]:
+              - paragraph [ref=e312]: A fairly central person acting as the integrator in a group project receives changes made by others, reviews and integrates them and publishes the result for others to use, using these commands in addition to the ones needed by participants.
+              - paragraph [ref=e314]:
+                - text: This section can also be used by those who respond to
+                - generic [ref=e315]:
+                  - code [ref=e316]: git
+                  - code [ref=e317]: request-pull
+                - text: or pull-request on GitHub (www.github.com) to integrate the work of others into their history. A sub-area lieutenant for a repository will act both as a participant and as an integrator.
+              - list [ref=e319]:
+                - listitem [ref=e320]:
+                  - paragraph [ref=e321]:
+                    - link "git-am[1]" [ref=e322] [cursor=pointer]:
+                      - /url: /docs/git-am
+                    - text: to apply patches e-mailed in from your contributors.
+                - listitem [ref=e323]:
+                  - paragraph [ref=e324]:
+                    - link "git-pull[1]" [ref=e325] [cursor=pointer]:
+                      - /url: /docs/git-pull
+                    - text: to merge from your trusted lieutenants.
+                - listitem [ref=e326]:
+                  - paragraph [ref=e327]:
+                    - link "git-format-patch[1]" [ref=e328] [cursor=pointer]:
+                      - /url: /docs/git-format-patch
+                    - text: to prepare and send suggested alternative to contributors.
+                - listitem [ref=e329]:
+                  - paragraph [ref=e330]:
+                    - link "git-revert[1]" [ref=e331] [cursor=pointer]:
+                      - /url: /docs/git-revert
+                    - text: to undo botched commits.
+                - listitem [ref=e332]:
+                  - paragraph [ref=e333]:
+                    - link "git-push[1]" [ref=e334] [cursor=pointer]:
+                      - /url: /docs/git-push
+                    - text: to publish the bleeding edge.
+              - generic [ref=e335]:
+                - heading "Examples" [level=3] [ref=e336]
+                - generic [ref=e338]:
+                  - term [ref=e339]: A typical integrator’s Git day.
+                  - definition [ref=e340]:
+                    - generic [ref=e343]: $ git status (1) $ git branch --no-merged master (2) $ mailx (3) & s 2 3 4 5 ./+to-apply & s 7 8 ./+hold-linus & q $ git switch -c topic/one master $ git am -3 -i -s ./+to-apply (4) $ compile/test $ git switch -c hold/linus && git am -3 -i -s ./+hold-linus (5) $ git switch topic/one && git rebase master (6) $ git switch -C seen next (7) $ git merge topic/one topic/two && git merge hold/linus (8) $ git switch maint $ git cherry-pick master~4 (9) $ compile/test $ git tag -s -m "GIT 0.99.9x" v0.99.9x (10) $ git fetch ko && for branch in master maint next seen (11) do git show-branch ko/$branch $branch (12) done $ git push --follow-tags ko (13)
+                    - list [ref=e345]:
+                      - listitem [ref=e346]:
+                        - paragraph [ref=e347]: see what you were in the middle of doing, if anything.
+                      - listitem [ref=e348]:
+                        - paragraph [ref=e349]:
+                          - text: see which branches haven’t been merged into
+                          - code [ref=e351]: master
+                          - text: yet. Likewise for any other integration branches e.g.
+                          - code [ref=e353]: maint
+                          - text: ","
+                          - code [ref=e355]: next
+                          - text: and
+                          - code [ref=e357]: seen
+                          - text: .
+                      - listitem [ref=e358]:
+                        - paragraph [ref=e359]: read mails, save ones that are applicable, and save others that are not quite ready (other mail readers are available).
+                      - listitem [ref=e360]:
+                        - paragraph [ref=e361]: apply them, interactively, with your sign-offs.
+                      - listitem [ref=e362]:
+                        - paragraph [ref=e363]: create topic branch as needed and apply, again with sign-offs.
+                      - listitem [ref=e364]:
+                        - paragraph [ref=e365]: rebase internal topic branch that has not been merged to the master or exposed as a part of a stable branch.
+                      - listitem [ref=e366]:
+                        - paragraph [ref=e367]:
+                          - text: restart
+                          - code [ref=e369]: seen
+                          - text: every time from the next.
+                      - listitem [ref=e370]:
+                        - paragraph [ref=e371]: and bundle topic branches still cooking.
+                      - listitem [ref=e372]:
+                        - paragraph [ref=e373]: backport a critical fix.
+                      - listitem [ref=e374]:
+                        - paragraph [ref=e375]: create a signed tag.
+                      - listitem [ref=e376]:
+                        - paragraph [ref=e377]: make sure master was not accidentally rewound beyond that already pushed out.
+                      - listitem [ref=e378]:
+                        - paragraph [ref=e379]:
+                          - text: In the output from
+                          - generic [ref=e380]:
+                            - code [ref=e381]: git
+                            - code [ref=e382]: show-branch
+                          - text: ","
+                          - code [ref=e384]: master
+                          - text: should have everything
+                          - code [ref=e386]: ko/master
+                          - text: has, and
+                          - code [ref=e388]: next
+                          - text: should have everything
+                          - code [ref=e390]: ko/next
+                          - text: has, etc.
+                      - listitem [ref=e391]:
+                        - paragraph [ref=e392]: push out the bleeding edge, together with new tags that point into the pushed history.
+                - paragraph [ref=e394]:
+                  - text: In this example, the
+                  - code [ref=e396]: ko
+                  - text: "shorthand points at the Git maintainer’s repository at kernel.org, and looks like this:"
+                - generic [ref=e399]: (in .git/config) [remote "ko"] url = kernel.org:/pub/scm/git/git.git fetch = refs/heads/*:refs/remotes/ko/* push = refs/heads/master push = refs/heads/next push = +refs/heads/seen push = refs/heads/maint
+          - generic [ref=e400]:
+            - heading "Repository Administration" [level=2] [ref=e401]: Repository Administration
+            - generic [ref=e402]:
+              - paragraph [ref=e404]: A repository administrator uses the following tools to set up and maintain access to the repository by developers.
+              - list [ref=e406]:
+                - listitem [ref=e407]:
+                  - paragraph [ref=e408]:
+                    - link "git-daemon[1]" [ref=e409] [cursor=pointer]:
+                      - /url: /docs/git-daemon
+                    - text: to allow anonymous download from repository.
+                - listitem [ref=e410]:
+                  - paragraph [ref=e411]:
+                    - link "git-shell[1]" [ref=e412] [cursor=pointer]:
+                      - /url: /docs/git-shell
+                    - text: can be used as a
+                    - emphasis [ref=e413]: restricted login shell
+                    - text: for shared central repository users.
+                - listitem [ref=e414]:
+                  - paragraph [ref=e415]:
+                    - link "git-http-backend[1]" [ref=e416] [cursor=pointer]:
+                      - /url: /docs/git-http-backend
+                    - text: provides a server side implementation of Git-over-HTTP ("Smart http") allowing both fetch and push services.
+                - listitem [ref=e417]:
+                  - paragraph [ref=e418]:
+                    - link "gitweb[1]" [ref=e419] [cursor=pointer]:
+                      - /url: /docs/gitweb
+                    - text: provides a web front-end to Git repositories, which can be set-up using the
+                    - link "git-instaweb[1]" [ref=e420] [cursor=pointer]:
+                      - /url: /docs/git-instaweb
+                    - text: script.
+              - paragraph [ref=e422]:
+                - link "update hook howto" [ref=e423] [cursor=pointer]:
+                  - /url: /docs/howto/update-hook-example
+                - text: has a good example of managing a shared central repository.
+              - paragraph [ref=e425]: "In addition there are a number of other widely deployed hosting, browsing and reviewing solutions such as:"
+              - list [ref=e427]:
+                - listitem [ref=e428]:
+                  - paragraph [ref=e429]: gitolite, gerrit code review, cgit and others.
+              - generic [ref=e430]:
+                - heading "Examples" [level=3] [ref=e431]
+                - generic [ref=e433]:
+                  - term [ref=e434]: We assume the following in /etc/services
+                  - definition [ref=e435]:
+                    - generic [ref=e438]: "$ grep 9418 /etc/services git 9418/tcp # Git Version Control System"
+                  - term [ref=e439]: Run git-daemon to serve /pub/scm from inetd.
+                  - definition [ref=e440]:
+                    - generic [ref=e443]: $ grep git /etc/inetd.conf git stream tcp nowait nobody \ /usr/bin/git-daemon git-daemon --inetd --export-all /pub/scm
+                    - paragraph [ref=e445]: The actual configuration line should be on one line.
+                  - term [ref=e446]: Run git-daemon to serve /pub/scm from xinetd.
+                  - definition [ref=e447]:
+                    - generic [ref=e450]: "$ cat /etc/xinetd.d/git-daemon # default: off # description: The Git server offers access to Git repositories service git { disable = no type = UNLISTED port = 9418 socket_type = stream wait = no user = nobody server = /usr/bin/git-daemon server_args = --inetd --export-all --base-path=/pub/scm log_on_failure += USERID }"
+                    - paragraph [ref=e452]: Check your xinetd(8) documentation and setup, this is from a Fedora system. Others might be different.
+                  - term [ref=e453]: Give push/pull only access to developers using git-over-ssh.
+                  - definition [ref=e454]:
+                    - paragraph [ref=e455]:
+                      - text: "e.g. those using:"
+                      - generic [ref=e456]:
+                        - code [ref=e457]: $
+                        - code [ref=e458]: git
+                        - code [ref=e459]: push/pull
+                        - code [ref=e460]: ssh://host.xz/pub/scm/project
+                    - generic [ref=e463]: $ grep git /etc/passwd (1) alice:x:1000:1000::/home/alice:/usr/bin/git-shell bob:x:1001:1001::/home/bob:/usr/bin/git-shell cindy:x:1002:1002::/home/cindy:/usr/bin/git-shell david:x:1003:1003::/home/david:/usr/bin/git-shell $ grep git /etc/shells (2) /usr/bin/git-shell
+                    - list [ref=e465]:
+                      - listitem [ref=e466]:
+                        - paragraph [ref=e467]:
+                          - text: log-in shell is set to /usr/bin/git-shell, which does not allow anything but
+                          - generic [ref=e468]:
+                            - code [ref=e469]: git
+                            - code [ref=e470]: push
+                          - text: and
+                          - generic [ref=e471]:
+                            - code [ref=e472]: git
+                            - code [ref=e473]: pull
+                          - text: . The users require ssh access to the machine.
+                      - listitem [ref=e474]:
+                        - paragraph [ref=e475]: in many distributions /etc/shells needs to list what is used as the login shell.
+                  - term [ref=e476]: CVS-style shared repository.
+                  - definition [ref=e477]:
+                    - generic [ref=e480]: $ grep git /etc/group (1) git:x:9418:alice,bob,cindy,david $ cd /home/devo.git $ ls -l (2) lrwxrwxrwx 1 david git 17 Dec 4 22:40 HEAD -> refs/heads/master drwxrwsr-x 2 david git 4096 Dec 4 22:40 branches -rw-rw-r-- 1 david git 84 Dec 4 22:40 config -rw-rw-r-- 1 david git 58 Dec 4 22:40 description drwxrwsr-x 2 david git 4096 Dec 4 22:40 hooks -rw-rw-r-- 1 david git 37504 Dec 4 22:40 index drwxrwsr-x 2 david git 4096 Dec 4 22:40 info drwxrwsr-x 4 david git 4096 Dec 4 22:40 objects drwxrwsr-x 4 david git 4096 Nov 7 14:58 refs drwxrwsr-x 2 david git 4096 Dec 4 22:40 remotes $ ls -l hooks/update (3) -r-xr-xr-x 1 david git 3536 Dec 4 22:40 update $ cat info/allowed-users (4) refs/heads/master alice\|cindy refs/heads/doc-update bob refs/tags/v[0-9]* david
+                    - list [ref=e482]:
+                      - listitem [ref=e483]:
+                        - paragraph [ref=e484]: place the developers into the same git group.
+                      - listitem [ref=e485]:
+                        - paragraph [ref=e486]: and make the shared repository writable by the group.
+                      - listitem [ref=e487]:
+                        - paragraph [ref=e488]: use update-hook example by Carl from Documentation/howto/ for branch policy control.
+                      - listitem [ref=e489]:
+                        - paragraph [ref=e490]: alice and cindy can push into master, only bob can push into doc-update. david is the release manager and is the only person who can create and push version tags.
+          - generic [ref=e491]:
+            - heading "GIT" [level=2] [ref=e492]
+            - paragraph [ref=e495]:
+              - text: Part of the
+              - link "git[1]" [ref=e496] [cursor=pointer]:
+                - /url: /docs/git
+              - text: suite
+    - contentinfo [ref=e497]:
+      - text: </>
+      - generic [ref=e498]:
+        - link "About this site" [ref=e499] [cursor=pointer]:
+          - /url: /site
+        - text: Patches, suggestions, and comments are welcome.
+      - generic [ref=e500]:
+        - text: Git is a member of
+        - link "Software Freedom Conservancy" [ref=e501] [cursor=pointer]:
+          - /url: /sfc
