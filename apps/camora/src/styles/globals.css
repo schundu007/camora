@@ -1817,6 +1817,33 @@ html[data-overlay='on'] .lumora-shell-root :not(h1):not(h2):not(h3):not(h4):not(
   color: #ffffff !important;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.75) !important;
 }
+/* ── LIGHT THEME + OVERLAY ──────────────────────────────────────────────────
+   The overlay is a graphite GLASS surface (dark by design, like Raycast/Cluely).
+   In light theme two things break: (1) the frost tint blends from --bg-app which
+   is light (#F4F6FA), so the glass turns pale and the forced-white body text
+   vanishes; (2) headings/titles/eyebrows are excluded from the white-text rule
+   and keep the light theme's DARK color, so they're invisible on the frost.
+   Fix: force the SAME dark graphite frost as dark theme, and force headings white
+   with the body text-shadow. Overlay now reads identically in either theme. */
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
+    color-mix(in srgb, #14161c calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
+}
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root h1,
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root h2,
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root h3,
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root h4,
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root h5,
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root h6,
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='heading'],
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='Heading'],
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='title'],
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='Title'],
+html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='eyebrow'] {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.75) !important;
+}
 /* The embedded Claude webview renders claude.ai's own opaque page on a SEPARATE
    surface, so the parent's overlay tint can't reach it — it stays a solid block
    while the rest of the overlay is see-through. Tie its element opacity to the
