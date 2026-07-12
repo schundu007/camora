@@ -69,8 +69,9 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
       );
 
     case 'list':
+      // Long lists (e.g. Concepts) flow into two columns to save vertical space.
       return (
-        <ul className="list-disc pl-5 space-y-1 mb-3">
+        <ul className={`list-disc pl-5 space-y-1 mb-3 ${block.items.length > 6 ? 'sm:columns-2 sm:gap-x-8 [&>li]:break-inside-avoid' : ''}`}>
           {block.items.map((it, i) => <li key={i}>{it}</li>)}
         </ul>
       );

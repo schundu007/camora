@@ -900,8 +900,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // pre-fix the code area fills the column (a roomy paste canvas).
   const LINE_H = 18;
   const brokenBlockH = 32 + Math.max(1, inputCode.split('\n').length) * LINE_H + 16;
+  // Size the fixed block from the editor's MEASURED content height (fixedEditorH),
+  // not a line-count estimate — the estimate undershoots (wrapping, font metrics)
+  // so the code area came up short and the fixed editor scrolled internally.
+  // Using the real measured height makes the area expand exactly with the code.
   const fixedBlockH = fixedCode
-    ? 32 + 28 + (complexity ? (complexity.timeWhy || complexity.spaceWhy ? 110 : 34) : 0) + Math.max(1, fixedCode.split('\n').length) * LINE_H + 16
+    ? fixedEditorH + 40 /*quick-refine chips*/ + 8 /*pt-2 gap*/ + (complexity ? (complexity.timeWhy || complexity.spaceWhy ? 110 : 34) : 0) + 16
     : 0;
   // No upper cap: the code area grows to fit the taller of the two blocks so the
   // fixed code is shown in FULL (auto-expand). When the code area + analysis panel
