@@ -963,13 +963,104 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         )}
 
 
-        {/* Flexible spacer — keeps action buttons right-aligned. No status/banner
-            text (removed per design: toolbar shows controls only). */}
+        {/* Divider before the Broken-code review chips */}
+        <div className="w-px h-5 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
+
+        {/* Broken-code review: readiness + primary CoFix action. Hoisted from the
+            old "Broken Code" pane header so EVERY control lives in this one row. */}
+        <ReadinessChip
+          blocking={blocking}
+          degrading={degrading}
+          onDismiss={dismiss}
+          actions={{ problem: [{ label: 'Snap', primary: true, onClick: () => handleSnap() }] }}
+        />
+        <button
+          onClick={() => handleFix()}
+          disabled={inputCode.trim().length < 5 || isLoading}
+          className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90 shrink-0"
+          style={
+            degrading.length > 0
+              ? { background: 'transparent', border: '1px solid var(--warning)', color: 'var(--warning-text)' }
+              : { background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }
+          }
+        >
+          {isLoading ? 'Analyzing…' : degrading.length > 0 ? 'CoFix ▲' : 'CoFix'}
+        </button>
+
+        {/* Flexible spacer — pushes the fixed-code actions to the right edge. */}
         <div className="flex-1 min-w-0" />
 
-        {/* Action buttons — only when fixed code is ready */}
+        {/* Fixed-code actions — only once a fix exists. Hoisted from the old
+            "Fixed Code" pane header so the top stays a single row. */}
         {fixedCode && (
           <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => { setInputCode(fixedCode); handleFix(fixedCode); }}
+              disabled={isLoading}
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
+              data-tip="Run CoFix again on this fixed code"
+              aria-label="CoFix again"
+            >
+              {isLoading
+                ? <span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />
+                : <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill="currentColor"/></svg>}
+            </button>
+            <button
+              onClick={handleRun}
+              disabled={isRunning}
+              data-tip="Run"
+              aria-label="Run"
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
+            >
+              {isRunning
+                ? <span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />
+                : <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>}
+            </button>
+            <button
+              onClick={handleCopy}
+              disabled={!fixedCode || copyFeedback !== 'idle'}
+              data-tip={copyFeedback === 'copied' ? 'Copied' : copyFeedback === 'failed' ? 'Copy failed' : 'Copy fixed code'}
+              aria-label="Copy"
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-all disabled:cursor-not-allowed"
+              style={copyFeedback === 'copied' ? {
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)',
+                border: '1px solid #10b981',
+                color: '#10b981',
+              } : copyFeedback === 'failed' ? {
+                background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)',
+                border: '1px solid var(--danger)',
+                color: 'var(--danger)',
+              } : {
+                background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
+                border: '1px solid var(--cam-gold-leaf)',
+                color: 'var(--cam-gold-leaf)',
+              }}
+            >
+              {copyFeedback === 'copied'
+                ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                : copyFeedback === 'failed'
+                ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>}
+            </button>
+            <button
+              onClick={() => setShowRefinePopup(v => !v)}
+              disabled={isLoading}
+              data-tip="Refine fixed code"
+              aria-label="Refine"
+              className="shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
+              style={showRefinePopup ? {
+                background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
+                color: '#0a0e1a',
+              } : {
+                background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
+                border: '1px solid var(--cam-gold-leaf-dk)',
+                color: 'var(--cam-gold-leaf-dk)',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.2 6.3L21 11l-5.8 1.7L13 19l-2.2-6.3L5 11l5.8-1.7L13 3z"/></svg>
+            </button>
             <button
               onClick={handleSendToCoding}
               data-tip="Send to Coding"
@@ -985,9 +1076,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             </button>
           </div>
         )}
-
-        {/* Reset moved to the "Broken Code" pane header. Snap / screenshots /
-            audio capture moved to the bottom footer bar (see below). */}
       </div>
 
       {/* ── Split pane ── */}
@@ -1015,30 +1103,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         {/* LEFT — broken code input */}
         <Allotment.Pane minSize={220}>
         <div className="flex flex-col h-full border-r border-[var(--border)]">
-          <div className="h-8 flex items-center justify-between px-4 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0">
-            <span className="text-[10px] font-semibold tracking-wider text-[var(--cam-gold-leaf-dk)] uppercase">Broken Code</span>
-            <div className="flex items-center gap-2">
-              <ReadinessChip
-                blocking={blocking}
-                degrading={degrading}
-                onDismiss={dismiss}
-                actions={{ problem: [{ label: 'Snap', primary: true, onClick: () => handleSnap() }] }}
-              />
-              <button
-                onClick={() => handleFix()}
-                disabled={inputCode.trim().length < 5 || isLoading}
-                className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
-                style={
-                  degrading.length > 0
-                    ? { background: 'transparent', border: '1px solid var(--warning)', color: 'var(--warning-text)' }
-                    : { background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }
-                }
-              >
-                {isLoading ? 'Analyzing…' : degrading.length > 0 ? 'CoFix ▲' : 'CoFix'}
-              </button>
-            </div>
-          </div>
-
           {lineCount > 500 && (
             <div className="px-4 py-1.5 border-b text-[11px]" style={{ background: 'color-mix(in oklab, var(--warning) 10%, transparent)', borderColor: 'color-mix(in oklab, var(--warning) 20%, transparent)', color: 'var(--warning-text)' }}>
               Large paste — CoFix works best on focused snippets.
@@ -1073,100 +1137,6 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         <div className="flex h-full">
           {/* Code editor column */}
           <div className="flex flex-col flex-1 min-w-0 relative">
-          <div className="h-9 flex items-center gap-2 px-3 border-b border-[var(--cam-gold-leaf-dk)] bg-[var(--bg-secondary)] shrink-0 overflow-x-auto no-scrollbar">
-            {fixedCode && (
-              <>
-                <button
-                  onClick={() => { setInputCode(fixedCode); handleFix(fixedCode); }}
-                  disabled={isLoading}
-                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
-                  data-tip="Run CoFix again on this fixed code"
-                  aria-label="CoFix"
-                >
-                  {isLoading
-                    ? <span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />
-                    : <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill="currentColor"/></svg>}
-                </button>
-                <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
-                <button
-                  onClick={handleRun}
-                  disabled={isRunning}
-                  data-tip="Run"
-                  aria-label="Run"
-                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-opacity hover:opacity-90"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
-                    color: '#0a0e1a',
-                  }}
-                >
-                  {isRunning
-                    ? <span className="w-2.5 h-2.5 border-2 border-[#0a0e1a]/40 border-t-[#0a0e1a] rounded-full animate-spin" />
-                    : <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>}
-                </button>
-                <button
-                  onClick={handleCopy}
-                  disabled={!fixedCode || copyFeedback !== 'idle'}
-                  data-tip={copyFeedback === 'copied' ? 'Copied' : copyFeedback === 'failed' ? 'Copy failed' : 'Copy fixed code'}
-                  aria-label="Copy"
-                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-all disabled:cursor-not-allowed"
-                  style={copyFeedback === 'copied' ? {
-                    background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)',
-                    border: '1px solid #10b981',
-                    color: '#10b981',
-                  } : copyFeedback === 'failed' ? {
-                    background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)',
-                    border: '1px solid var(--danger)',
-                    color: 'var(--danger)',
-                  } : {
-                    background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent) 0%, var(--bg-elevated) 100%)',
-                    border: '1px solid var(--cam-gold-leaf)',
-                    color: 'var(--cam-gold-leaf)',
-                  }}
-                >
-                  {copyFeedback === 'copied'
-                    ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    : copyFeedback === 'failed'
-                    ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>}
-                </button>
-                <button
-                  onClick={() => setShowRefinePopup(v => !v)}
-                  disabled={isLoading}
-                  data-tip="Refine fixed code"
-                  aria-label="Refine"
-                  className="shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
-                  style={showRefinePopup ? {
-                    background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
-                    color: '#0a0e1a',
-                  } : {
-                    background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 10%, transparent) 0%, var(--bg-elevated) 100%)',
-                    border: '1px solid var(--cam-gold-leaf-dk)',
-                    color: 'var(--cam-gold-leaf-dk)',
-                  }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.2 6.3L21 11l-5.8 1.7L13 19l-2.2-6.3L5 11l5.8-1.7L13 3z"/></svg>
-                </button>
-                <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-gold-leaf-dk)', opacity: 0.4 }} />
-              </>
-            )}
-            {/* Auto-Fix status */}
-            {isLoading && (
-              <span className="shrink-0 flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
-                <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
-              </span>
-            )}
-            {!isLoading && fixedCode && (
-              <span className="shrink-0 flex items-center gap-0.5 text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--accent)' }}>
-                <LogIconCheck />
-              </span>
-            )}
-            <div className="flex-1 min-w-0" />
-            <span className="shrink-0 text-[10px] font-semibold tracking-wider uppercase" style={{ color: fixedCode ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)' }}>
-              Fixed Code
-            </span>
-          </div>
-
           {/* Quick-refine chip strip — always visible when fixed code exists */}
           {fixedCode && (
             <div className="flex items-center gap-2.5 px-3 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 40, borderBottom: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--bg-elevated)' }}>
