@@ -150,7 +150,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                             {item.key}
                           </span>
                           {isActive && (
-                            <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary)', color: '#fff' }}>
+                            <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}>
                               Active
                             </span>
                           )}
@@ -174,7 +174,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                             type="button"
                             onClick={() => handleActivate(item.key)}
                             className="text-[11px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
-                            style={{ background: 'var(--cam-primary)', color: '#fff' }}
+                            style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
                           >
                             Activate
                           </button>

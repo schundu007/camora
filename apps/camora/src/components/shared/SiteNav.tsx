@@ -147,13 +147,15 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
               <>
                 <Link
                   to={`/login?redirect=${encodeURIComponent(location.pathname)}`}
-                  className="px-3 py-1.5 text-[13px] font-semibold text-white/85 hover:text-white"
+                  className="px-3 py-1.5 text-[13px] font-semibold transition-colors"
+                  style={{ color: 'var(--cam-strip-heading)' }}
                 >
                   Sign in
                 </Link>
                 <Link
                   to="/signup"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#3683DC] px-4 py-1.5 text-[13px] font-bold text-white hover:bg-[#2265BF] transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[13px] font-bold transition-colors"
+                  style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}
                 >
                   Start free
                 </Link>

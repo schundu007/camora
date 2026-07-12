@@ -194,7 +194,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
         {imageUrl && !loading && (
           <div className="flex items-center gap-1">
             <button onClick={() => setScale(s => Math.min(s + 0.25, 4))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
-            <span className="text-xs font-mono text-gray-400 min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
+            <span className="text-xs font-mono text-[var(--text-muted)] min-w-[3ch] text-center">{Math.round(scale * 100)}%</span>
             <button onClick={() => setScale(s => Math.max(s - 0.25, 0.25))} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">-</button>
             <button onClick={resetView} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
             <button onClick={() => setIsFullscreen(true)} className="px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1" data-tip="View full size">

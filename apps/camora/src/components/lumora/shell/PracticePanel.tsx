@@ -226,7 +226,7 @@ export const PracticePanel = () => {
                   onClick={gradeAnswer}
                   disabled={!answer.trim() || grading}
                   className="px-4 py-2 rounded-lg font-bold text-sm transition-transform active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: 'var(--cam-primary)', color: '#fff' }}
+                  style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
                 >
                   {grading ? 'Grading…' : 'Grade my answer'}
                 </button>

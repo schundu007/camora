@@ -138,7 +138,7 @@ export const LumoraProfilePage = () => {
           {user?.image ? (
             <img src={user.image} alt="" className="w-16 h-16 rounded-2xl object-cover" style={{ border: '1px solid var(--cam-gold-leaf)' }} referrerPolicy="no-referrer" />
           ) : (
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-xl font-bold" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}>
               {(user?.name || user?.email || '?')[0].toUpperCase()}
             </div>
           )}
@@ -328,7 +328,7 @@ export const AssistantsPage = () => {
             <h2 className="text-xl font-bold" style={{ color: 'var(--cam-strip-heading)' }}>Interview <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Assistants</span></h2>
             <p className="text-sm" style={{ color: 'var(--cam-strip-text)' }}>Role + Resume + JD profiles for personalized AI</p>
           </div>
-          <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-[transform,box-shadow] duration-150 hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-[transform,box-shadow] duration-150 hover:scale-[1.02] active:scale-[0.98]" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
             New
           </button>
@@ -457,7 +457,7 @@ export const AssistantsPage = () => {
                         <div key={s.id} className="flex items-start gap-2 text-[11px]">
                           <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
                             {s.archetypes.map(t => (
-                              <span key={t} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}>
+                              <span key={t} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
                                 {t}
                               </span>
                             ))}

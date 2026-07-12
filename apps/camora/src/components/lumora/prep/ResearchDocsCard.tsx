@@ -253,7 +253,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background: 'var(--cam-primary)', color: '#fff' }}
+              style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
             >
               {uploading ? (
                 <>

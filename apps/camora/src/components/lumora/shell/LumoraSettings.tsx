@@ -295,7 +295,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                     onClick={handleResumeSave}
                     disabled={resumeSaving}
                     className="px-4 py-2 rounded-lg text-sm font-bold disabled:opacity-50 transition-[background-color,opacity]"
-                    style={{ background: 'var(--cam-primary)', color: '#fff' }}
+                    style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
                   >
                     {resumeSaving ? 'Saving…' : resumeSaved ? '✓ Saved' : 'Save'}
                   </button>

@@ -1227,7 +1227,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 onClick={() => handleSubmit()}
                 disabled={!problemText.trim() || isLoading}
                 className="flex-1 py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }}
+                style={{ background: 'linear-gradient(135deg, var(--cam-primary-dk), var(--cam-primary-dk))', borderRadius: '10px' }}
               >
                 {isLoading ? (
                   <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
@@ -1469,7 +1469,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     onClick={handleRegenerate}
                     disabled={isLoading}
                     className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: 'var(--cam-primary)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}
+                    style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}
                     data-tip="Force a fresh design, ignoring the cache."
                   >
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

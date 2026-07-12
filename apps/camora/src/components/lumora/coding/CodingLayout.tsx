@@ -2076,7 +2076,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                   questionCounter++;
                   return (
                     <div key={li} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 14, marginBottom: 4 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20, height: 20, borderRadius: '50%', background: 'var(--cam-primary)', color: '#fff', fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{qMatch[1]}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20, height: 20, borderRadius: '50%', background: 'var(--cam-primary-dk)', color: '#fff', fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{qMatch[1]}</span>
                       <span style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', lineHeight: 1.4, flex: 1 }}>{renderInline(qMatch[2])}</span>
                     </div>
                   );
@@ -2405,7 +2405,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                   handleGenerateSolution();
                                 }}
                                 className="px-2 py-1 text-xs font-bold rounded shrink-0 transition-opacity hover:opacity-80"
-                                style={{ background: 'var(--cam-primary)', color: 'white' }}>
+                                style={{ background: 'var(--cam-primary-dk)', color: 'white' }}>
                                 Generate Now
                               </button>
                             </div>
@@ -2554,7 +2554,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                       style={
                         degrading.length > 0
                           ? { background: 'transparent', border: '1px solid var(--warning)', color: 'var(--warning-text)', borderRadius: '10px' }
-                          : { background: 'linear-gradient(135deg, var(--cam-primary), var(--cam-primary))', borderRadius: '10px' }
+                          : { background: 'linear-gradient(135deg, var(--cam-primary-dk), var(--cam-primary-dk))', borderRadius: '10px' }
                       }>
                       {isLoading ? (
                         <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
@@ -2704,7 +2704,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           onClick={() => { setStreamError(null); handleGenerateSolution(); }}
                           disabled={!problemText.trim() || isLoading}
                           className="mt-2 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors disabled:opacity-50"
-                          style={{ background: 'var(--cam-primary)', color: '#FFFFFF' }}
+                          style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}
                         >
                           Retry
                         </button>
@@ -2786,7 +2786,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                                   : { background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
                                 <span className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold mt-0.5"
                                   style={opt.correct
-                                    ? { background: 'var(--cam-primary)', color: '#fff' }
+                                    ? { background: 'var(--cam-primary-dk)', color: '#fff' }
                                     : { background: t.badgeBg, color: t.badgeText }}>
                                   {opt.correct ? '✓' : (opt.key ?? String.fromCharCode(65 + i))}
                                 </span>
