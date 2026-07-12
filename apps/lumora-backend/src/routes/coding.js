@@ -844,6 +844,18 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
 }
 
 ##############################################################################
+# CODE ENCODING — CRITICAL (one wrong backslash makes the solution un-runnable)
+##############################################################################
+Each "code" is a JSON string. Every backslash that belongs to the CODE must be a
+DOUBLE backslash so it round-trips to ONE backslash in the source: the separator
+in '\\n'.join(...), tabs, regex classes like \\d / \\w, Windows paths. A SINGLE
+\\n inside a code string literal is parsed by JSON as a real newline and splits
+the literal across two lines → SyntaxError. Never emit a raw newline inside a
+string literal, and never put a backslash escape inside an f-string expression's
+braces { } (e.g. f'{"\\u2713" if ok else "x"}') — SyntaxError before Python 3.12;
+assign it to a variable first, then use the variable in the f-string.
+
+##############################################################################
 # EXAMPLES FORMAT — CRITICAL (this is what the Run button tests against)
 ##############################################################################
 "input" is the RAW program input and "expected" is the RAW program output.
@@ -2115,6 +2127,10 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
     }
   ]
 }
+
+OUTPUT ENCODING — CRITICAL (one wrong backslash makes the pasted code raise SyntaxError):
+- "fixed_code" is a JSON string, so every backslash that belongs to the CODE must be written as a DOUBLE backslash and round-trip to ONE backslash in the source: the separator in '\\n'.join(...), tabs, regex classes like \\d / \\w, Windows paths. A SINGLE \\n inside a code string literal is parsed by JSON as a real newline and splits the literal across two lines → SyntaxError. Never emit a raw/literal newline inside a string literal.
+- Never place a backslash escape inside an f-string expression's braces { } (e.g. f'{"\\u2713" if ok else "x"}') — that is a SyntaxError before Python 3.12. Assign the character to a variable first (e.g. check = '\\u2713'), then reference the variable inside the f-string.
 
 WALK-THROUGH — this is the standout: the THOUGHT PROCESS of how we arrived at the
 working solution, not a line-by-line paraphrase. Produce 4-7 ordered steps forming
