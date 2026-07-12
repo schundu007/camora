@@ -1808,9 +1808,16 @@ html[data-overlay='on'] .lumora-shell-root::after {
 /* Strip the inner panel/editor backgrounds so ONLY that one design-matched backdrop
    shows through (no double-dark stacking, no solid black editor block). Keep the
    interactive controls (chips/buttons/tabs/badges) with their own colors. */
-html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']) {
+html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button):not([role='button']):not([role='tab']):not([role='switch']):not([class*='chip']):not([class*='badge']):not([class*='pill']):not([class*='tab']):not([class*='cursor']):not([class*='selected']) {
   background-color: transparent !important;
   background-image: none !important;
+}
+/* The overlay bg-strip above erased the Monaco caret (it's drawn via
+   background-color), so it was invisible. Restore a solid, high-contrast caret
+   (no glow) so the blinking cursor is easy to locate on the frosted glass. */
+html[data-overlay='on'] .lumora-shell-root .monaco-editor .cursor {
+  background: #FFC53D !important;
+  border-color: #FFC53D !important;
 }
 /* All BODY text WHITE so it's readable on the frosted glass — headings/subheadings,
    code (Monaco), and colored chips/buttons KEEP their own colors. A strong dark
