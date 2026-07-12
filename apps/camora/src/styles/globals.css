@@ -224,7 +224,7 @@
     --text-secondary:#464B54;
     --text-hero:     #12141A;
     --text-muted:    #5E646B;
-    --text-dimmed:   #6C737A;
+    --text-dimmed:   #61676F;  /* was #6C737A (4.44:1 on surface, sub-AA) → ~4.9:1 */
 
     /* Accent is near-black (not blue) so buttons, active tabs, links and every
        gold-leaf-mapped border read as clean black/white, not blue. */
@@ -1842,6 +1842,27 @@ html[data-overlay='on'] .lumora-shell-root :not(h1):not(h2):not(h3):not(h4):not(
    Fix: force the SAME dark graphite frost as dark theme, and force headings white
    with the body text-shadow. Overlay now reads identically in either theme. */
 html[data-overlay='on'][data-theme='light'] .lumora-shell-root {
+  /* The frost is always dark graphite, so compute the ENTIRE shell as if dark.
+     Otherwise the B&W light tokens (near-black accent/gold-leaf/chip/muted text)
+     render invisible on the dark frost. This single remap fixes chips, badges,
+     pills, tabs, buttons, labels AND the bright surface boxes in one shot.
+     Dark-on-gold buttons keep their own inline colors and are unaffected. */
+  --bg-app: #14161c;
+  --bg-base: #14161c;
+  --bg-surface: #1b1e26;
+  --bg-elevated: #232733;
+  --bg-primary: #1b1e26;
+  --bg-secondary: #232733;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --accent: #3683DC; --accent-hover: #4D94E8; --accent-text: #6FB0F0;
+  --accent-subtle: rgba(54, 131, 220, 0.16);
+  --accent-secondary-text: #D8B24A;
+  --text-primary: #F0EEE9; --text-secondary: #C3CBD6; --text-muted: #A2ADBC; --text-dimmed: #8A93A6;
+  --cam-gold-leaf: #C2963E; --cam-gold-leaf-lt: #D4A84A; --cam-gold-leaf-dk: #A8832E; --cam-gold-leaf-text: #D8B24A;
+  --cam-chip-active-bg: #C2963E; --cam-chip-active-text: #020617;
+  --cam-primary: #3C7AAB; --cam-primary-lt: #5A93C4; --cam-primary-dk: #2C6798;
+  --cam-hero-strip: #232733;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
     color-mix(in srgb, #14161c calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
@@ -1860,6 +1881,18 @@ html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='eyebrow'
   color: #ffffff !important;
   text-shadow: none !important;
 }
+/* --text-dimmed is dark even in dark theme (#434B5C) — as button/icon text it's
+   lost on the frost. Brighten it inside the overlay (both themes). */
+html[data-overlay='on'] .lumora-shell-root { --text-dimmed: #8A93A6; }
+/* Eyebrows / micro-labels are excluded from the force-white rule and keep a muted
+   token that's mid-gray on the frost (borderline in dark, invisible in light).
+   Force them light in overlay, both themes. Headings keep their brand colour. */
+html[data-overlay='on'] .lumora-shell-root [class*='eyebrow'],
+html[data-overlay='on'] .lumora-shell-root .text-eyebrow,
+html[data-overlay='on'] .lumora-shell-root .lumora-book-label {
+  color: rgba(255, 255, 255, 0.82) !important;
+}
+
 /* The embedded Claude webview renders claude.ai's own opaque page on a SEPARATE
    surface, so the parent's overlay tint can't reach it — it stays a solid block
    while the rest of the overlay is see-through. Tie its element opacity to the

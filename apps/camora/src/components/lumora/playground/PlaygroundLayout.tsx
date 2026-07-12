@@ -26,7 +26,7 @@ interface ExplainState {
 const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   if (!line) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: '#475569', ...sans }}>
+      <div className="flex flex-col items-center justify-center h-full gap-2" style={{ color: '#7C8AA0', ...sans }}>
         <span className="text-[28px]">↑</span>
         <span className="text-[13px]">Move cursor to any line</span>
       </div>
@@ -36,7 +36,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   return (
     <div className="flex flex-col h-full bg-[#0a0d12] overflow-auto">
       <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2 lumora-winctl-safe">
-        <span className="text-[9px] uppercase tracking-widest text-[#334155] font-medium" style={sans}>Line {line}</span>
+        <span className="text-[9px] uppercase tracking-widest text-[#6B7A90] font-medium" style={sans}>Line {line}</span>
         {loading && (
           <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
             style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
@@ -47,7 +47,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
         {error ? (
           <p className="text-[#f87171] text-[12px] leading-relaxed" style={sans}>{error}</p>
         ) : loading ? (
-          <p className="text-[#475569] text-[11px] italic" style={sans}>Analysing…</p>
+          <p className="text-[#7C8AA0] text-[11px] italic" style={sans}>Analysing…</p>
         ) : rich ? (
           <>
             {/* What it does */}
@@ -101,7 +101,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* Concepts */}
             {rich.concepts && rich.concepts.length > 0 && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#334155', ...sans }}>Concepts used</div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#6B7A90', ...sans }}>Concepts used</div>
                 <div className="flex flex-wrap gap-1.5">
                   {rich.concepts.map((c, i) => (
                     <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'rgba(51,65,85,0.6)', color: '#94a3b8', ...sans }}>{c}</span>
@@ -111,7 +111,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             )}
           </>
         ) : (
-          <p className="text-[#475569] text-[11px] italic" style={sans}>No explanation yet</p>
+          <p className="text-[#7C8AA0] text-[11px] italic" style={sans}>No explanation yet</p>
         )}
       </div>
     </div>
@@ -239,7 +239,7 @@ export const PlaygroundLayout = () => {
       style={{
         ...sans,
         borderColor: rightTab === tab ? 'var(--cam-gold-leaf)' : 'transparent',
-        color: rightTab === tab ? 'var(--cam-gold-leaf)' : '#475569',
+        color: rightTab === tab ? 'var(--cam-gold-leaf)' : '#7C8AA0',
       }}
     >
       {label}

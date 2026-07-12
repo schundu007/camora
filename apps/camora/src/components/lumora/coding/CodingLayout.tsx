@@ -2934,7 +2934,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                 </span>
               )}
               <button onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-1 px-2.5 py-0.5 text-white text-[11px] font-bold rounded disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--cam-primary)' }}
+                className="flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold rounded disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}
                 data-tip="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
@@ -2944,7 +2944,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               </button>
               {showFixPrompt && (
                 <button onClick={() => handleAutoFix(false)}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-md hover:bg-amber-600 transition-colors shadow-sm"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-[#1B1D22] text-xs font-bold rounded-md hover:bg-amber-600 transition-colors shadow-sm"
                   data-tip="Auto-fix failed tests">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   Auto-Fix
