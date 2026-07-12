@@ -481,7 +481,7 @@ export interface CoFixWalkStep {
 export interface CoFixAnswer {
   fixed_code: string;
   changes: CoFixChange[];
-  complexity: { time: string; space: string };
+  complexity: { time: string; space: string; timeWhy?: string; spaceWhy?: string };
   hackerrank_compatible: boolean;
   walkthrough?: CoFixWalkStep[];
 }
