@@ -16,6 +16,7 @@ import { playgroundAPI } from '@/lib/capra-api';
 import type { CoFixAnswer, CoFixChange, CoFixWalkStep } from '@/lib/sse-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
+import { useOverlayMode } from '@/hooks/useOverlayMode';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, getActiveCompanyKey } from '@/lib/companyContext';
 import { cofixChecks } from '@/components/lumora/shared/readiness';
@@ -95,7 +96,11 @@ const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-b
 export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
   const { token } = useAuth();
   const { theme } = useTheme();
-  const monacoTheme: 'vs' | 'vs-dark' = theme === 'light' ? 'vs' : 'vs-dark';
+  const overlayOn = useOverlayMode();
+  // Overlay is a dark graphite frost in BOTH themes and strips the editor
+  // background to transparent, so light-theme 'vs' (dark tokens) would be
+  // invisible on it. Force vs-dark whenever floated as an overlay.
+  const monacoTheme: 'vs' | 'vs-dark' = (theme === 'light' && !overlayOn) ? 'vs' : 'vs-dark';
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [pendingSnapIds, setPendingSnapIds] = useState<string[]>([]);
   const onSnappedRef = useRef(onSnapped);
