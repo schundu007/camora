@@ -2832,8 +2832,9 @@ Return ONLY this JSON (no markdown fences, no extra text):
 }
 
 Rules:
-- examples: 2-3 with varied inputs
+- examples: 2-3 with varied inputs. examples[].output MUST be the EXACT value the code returns/prints for that input — mentally EXECUTE the code to derive it. Never blank, never a placeholder, never approximate. examples[].explanation says WHY that output.
 - test_cases: 3-5 covering normal + edge cases (empty, zero, negative, boundary). CRITICAL: test_cases[].input MUST be a complete runnable ${language} statement — always wrap in print() e.g. print(function_name(arg)). Never put raw arguments or keyword assignments.
+- test_cases[].expected — REQUIRED and MUST be the EXACT stdout that input prints. Trace the code line-by-line to compute the real value; NEVER leave it empty, a placeholder like "result", or a guess. If you cannot determine the exact output with certainty, DROP that test case rather than emit a blank or wrong expected.
 - steps: walk through each key line/block explaining what it does like the reader is brand new to programming
 - concepts: list ${language} concepts used that a beginner should learn (e.g. "for loops", "if statements", "dictionaries", "return values")
 - Keep steps concise — no more than 8 steps total`;
