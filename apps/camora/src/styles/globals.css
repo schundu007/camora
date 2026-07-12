@@ -1819,13 +1819,19 @@ html[data-overlay='on'] .lumora-shell-root .monaco-editor .cursor {
   background: #FFC53D !important;
   border-color: #FFC53D !important;
 }
+/* Monaco's current-line highlight draws a 2px #282828 border. On a solid dark
+   editor bg it blends in, but the overlay strips the editor bg to transparent,
+   so that border shows as a black rectangle around the active line. Hide it. */
+html[data-overlay='on'] .lumora-shell-root .monaco-editor .current-line {
+  border-color: transparent !important;
+}
 /* All BODY text WHITE so it's readable on the frosted glass — headings/subheadings,
-   code (Monaco), and colored chips/buttons KEEP their own colors. A strong dark
-   text-shadow keeps white legible over a light OR dark frost, which lets us keep the
-   backdrop very see-through. */
+   code (Monaco), and colored chips/buttons KEEP their own colors. No text-shadow:
+   the graphite frost (0.9 opacity) supplies the contrast; shadows/glows on text are
+   banned per design. */
 html[data-overlay='on'] .lumora-shell-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not([class*='heading']):not([class*='Heading']):not([class*='title']):not([class*='Title']):not([class*='eyebrow']):not(button):not(button *):not([class*='chip']):not([class*='chip'] *):not([class*='badge']):not([class*='badge'] *):not([class*='pill']):not([class*='mtk']):not(.monaco-editor):not(.monaco-editor *):not([class*='view-line']):not([class*='view-line'] *) {
   color: #ffffff !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.75) !important;
+  text-shadow: none !important;
 }
 /* ── LIGHT THEME + OVERLAY ──────────────────────────────────────────────────
    The overlay is a graphite GLASS surface (dark by design, like Raycast/Cluely).
@@ -1852,7 +1858,7 @@ html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='title'],
 html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='Title'],
 html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='eyebrow'] {
   color: #ffffff !important;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 0.75) !important;
+  text-shadow: none !important;
 }
 /* The embedded Claude webview renders claude.ai's own opaque page on a SEPARATE
    surface, so the parent's overlay tint can't reach it — it stays a solid block
