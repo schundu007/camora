@@ -432,7 +432,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // approach, tradeoffs, the 3-column dry-run trace table, walkthrough —
   // isn't cramped; users can still drag it to 25–70%.
   const [leftPanelWidth, setLeftPanelWidth] = useState(40);
-  const [outputPanelHeight, setOutputPanelHeight] = useState(180);
+  // null = AUTO-FIT: the output panel grows to show its full content (no internal
+  // top-to-bottom scroll) up to a 75vh cap. A manual drag sets a fixed px height.
+  const [outputPanelHeight, setOutputPanelHeight] = useState<number | null>(null);
+  const outputPanelRef = useRef<HTMLDivElement | null>(null);
   const [isResizingH, setIsResizingH] = useState(false);
   const [isResizingV, setIsResizingV] = useState(false);
   const vResizeRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -3012,7 +3015,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
-            <div onMouseDown={(e) => { vResizeRef.current = { startY: e.clientY, startH: outputPanelHeight }; setIsResizingV(true); }}
+            <div onMouseDown={(e) => { vResizeRef.current = { startY: e.clientY, startH: outputPanelHeight ?? (outputPanelRef.current?.offsetHeight ?? 180) }; setIsResizingV(true); }}
               className="h-1.5 hover:bg-[rgba(38,97,156,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
               style={{ background: t.sectionBg }}>
               <div className="w-8 h-0.5 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.textDim }} />
@@ -3031,7 +3034,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           </div>
 
           {/* ═══ BOTTOM PANEL: Test Cases / Output ═══ */}
-          <div className="border-t flex flex-col shrink-0" style={{ borderColor: t.cardBorder, background: t.surfaceBg, height: isOutputCollapsed ? 36 : outputPanelHeight }}>
+          <div ref={outputPanelRef} className="border-t flex flex-col shrink-0" style={{ borderColor: t.cardBorder, background: t.surfaceBg, height: isOutputCollapsed ? 36 : (outputPanelHeight ?? undefined), maxHeight: isOutputCollapsed ? undefined : (outputPanelHeight != null ? undefined : '75vh') }}>
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-1 border-b shrink-0" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
               <div className="flex items-center gap-1">
@@ -3074,7 +3077,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
             {/* Content */}
             {!isOutputCollapsed && (
-              <div className="flex-1 overflow-y-auto p-2 md:p-3">
+              <div className={`${outputPanelHeight != null ? 'flex-1' : ''} overflow-y-auto p-2 md:p-3`}>
                 {outputTab === 'testcases' && (
                   <div className="space-y-2">
                     {testCases.map((tc, i) => (
