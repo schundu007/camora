@@ -10,6 +10,7 @@ import { usePageTracker } from './hooks/usePageTracker';
 import { DialogProvider } from './components/shared/Dialog';
 import { CelebrationProvider } from './components/shared/Celebration';
 import { caraRegistry } from '@/lib/cara-registry';
+import { isElectron } from '@/lib/overlayMode';
 import { useSessionStore } from '@/stores/session-store';
 import CaraBar from '@/components/shared/cara/CaraBar';
 import { DesktopWindowControls } from '@/components/lumora/shell/DesktopWindowControls';
@@ -570,7 +571,9 @@ export const App = () => {
           <Route path="/lumora/profile" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/credits" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/fix" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          <Route path="/lumora/claude" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
+          {/* Claude embeds claude.ai in an Electron <webview>; the web build can't
+              render it, so redirect this route to the dashboard outside desktop. */}
+          <Route path="/lumora/claude" element={isElectron() ? <PaidRoute><LumoraShellPage /></PaidRoute> : <Navigate to="/lumora" replace />} />
           <Route path="/lumora/playground" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/playground/s/:snippetId" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/ask" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
