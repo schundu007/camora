@@ -19,7 +19,7 @@ const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
     hljs.highlightElement(el);
   }, [code, lang]);
   return (
-    <div className="lumora-book-breakout my-4 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-elevated)]" data-overlay-keep>
+    <div className="lumora-book-breakout my-4 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-elevated)]">
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-surface)]">
         <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent-text)]">{lang}</span>
         <button
@@ -117,7 +117,6 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
             <div
               key={i}
               className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 transition-colors hover:border-[var(--cam-gold-leaf-dk)]"
-              data-overlay-keep
               style={bindable ? { cursor: 'pointer' } : undefined}
               onMouseEnter={() => bindable && onLineHover?.(r.line, r.code, i)}
               onMouseLeave={() => bindable && onLineHover?.(undefined)}
