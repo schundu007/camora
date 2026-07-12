@@ -390,7 +390,7 @@ export const AssistantsPage = () => {
             <TextFieldWithPreview value={form.jobDescription} onChange={v => setForm(f => ({ ...f, jobDescription: v }))} placeholder="Paste the JD or upload a file. AI will tailor answers to match role requirements." label="Job Description Preview" />
           </div>
           <div className="flex gap-2">
-            <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: 'var(--cam-primary)' }}>Create</button>
+            <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}>Create</button>
             <button onClick={() => setShowCreate(false)} className="px-4 py-2 text-xs font-semibold rounded-lg" style={{ color: 'var(--text-muted)', border: '1px solid var(--border)' }}>Cancel</button>
           </div>
         </div>
@@ -400,7 +400,7 @@ export const AssistantsPage = () => {
           <svg className="w-10 h-10 mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="var(--text-dimmed)" strokeWidth="1"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>
           <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>No assistants yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: 'var(--text-muted)' }}>Add your resume + job description for personalized AI answers.</p>
-          <button onClick={() => setShowCreate(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--cam-primary)' }}>Create Your First Assistant</button>
+          <button onClick={() => setShowCreate(true)} className="px-4 py-2 text-xs font-semibold text-white rounded-lg" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}>Create Your First Assistant</button>
         </div>
       ) : (
         <div className="space-y-3">{assistants.map(a => {
@@ -419,7 +419,7 @@ export const AssistantsPage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: (mi?.color || 'var(--cam-primary)') + '10', color: mi?.color || 'var(--cam-primary)' }}>{mi?.label || a.model}</span>
-                  <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: 'var(--cam-primary)' }}>Launch</Link>
+                  <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}>Launch</Link>
                   <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: 'var(--text-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
               </div>
