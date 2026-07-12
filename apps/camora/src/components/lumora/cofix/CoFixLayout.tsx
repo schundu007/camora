@@ -903,7 +903,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const fixedBlockH = fixedCode
     ? 32 + 28 + (complexity ? 34 : 0) + Math.max(1, fixedCode.split('\n').length) * LINE_H + 16
     : 0;
-  const autoCodeH = Math.min(560, Math.max(150, brokenBlockH, fixedBlockH));
+  // No upper cap: the code area grows to fit the taller of the two blocks so the
+  // fixed code is shown in FULL (auto-expand). When the code area + analysis panel
+  // exceed the column, the LEFT COLUMN scrolls (page growth) — the code block
+  // itself never gets an internal scrollbar. Manual drag (codeH) still overrides.
+  const autoCodeH = Math.max(150, brokenBlockH, fixedBlockH);
   const effectiveCodeH = codeH ?? autoCodeH;
 
   return (
@@ -1092,8 +1096,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       <Allotment defaultSizes={[66, 34]}>
 
       {/* ── LEFT COLUMN ── */}
+      {/* overflow-y-auto: when the (uncapped) code area + analysis panel are taller
+          than the column, the whole column scrolls — so the fixed code block
+          auto-expands to its full height instead of scrolling inside itself. */}
       <Allotment.Pane minSize={360}>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-y-auto">
       <div
         ref={codeAreaRef}
         className={showPanel ? 'shrink-0 overflow-x-auto md:overflow-x-visible' : 'flex-1 min-h-0 overflow-x-auto md:overflow-x-visible'}
@@ -1178,7 +1185,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             {/* Monaco editor — read-only with line decorations. The pane bg is a
                 distinct surface so the empty space below the auto-fit editor
                 reads as empty pane, never as a giant editor. */}
-            <div className="flex-1 min-w-0 relative overflow-y-auto" style={{ background: 'var(--bg-surface)' }}>
+            <div className="flex-1 min-w-0 relative overflow-y-auto pt-2" style={{ background: 'var(--bg-surface)' }}>
               {/* Streaming log popup */}
               {showLogPopup && (
                 <div className="absolute top-3 right-3 z-20 w-72 flex flex-col rounded-lg overflow-hidden shadow-2xl"
@@ -1348,8 +1355,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
       {/* ── Analysis panel — sits UNDER Broken|Fixed, spanning their combined
           width (inside the left column). ── */}
+      {/* shrink-0 + bounded height (not flex-1) so the code area above can grow to
+          its full height and the whole column scrolls, rather than the panel eating
+          the space and forcing the code block to scroll internally. The panel has
+          its own internal scroll (tabs below). */}
       {showPanel && (
-        <div className={panelCollapsed ? 'shrink-0 flex flex-col' : 'flex-1 min-h-0 flex flex-col'} style={{ height: panelCollapsed ? 34 : undefined, borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
+        <div className="shrink-0 flex flex-col" style={{ height: panelCollapsed ? 34 : '42vh', borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
 
           {panelCollapsed ? (
             /* Collapsed → thin restore bar. Clicking anywhere reopens the drawer. */
