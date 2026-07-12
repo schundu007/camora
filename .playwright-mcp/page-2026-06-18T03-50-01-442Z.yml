@@ -1,0 +1,286 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - button "Search" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - generic [ref=e23]: Cmd K
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Design a multi-region active-active deployment for a latency-sensitive API. How do you handle write conflicts?" [level=1] [ref=e49]
+          - button "0" [ref=e51]:
+            - img [ref=e52]
+            - generic [ref=e54]: "0"
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 🏛️
+            - text: System Design
+          - generic [ref=e58]: Hard
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - 'heading "Multi-Region Active-Active API: Architecture and Conflict Resolution" [level=2] [ref=e62]'
+          - paragraph [ref=e63]: Active-active deployments run live traffic across multiple regions simultaneously, with each region accepting both reads and writes. The core challenge is not routing - it is reconciling concurrent writes to shared state.
+          - heading "Traffic Routing" [level=3] [ref=e64]
+          - paragraph [ref=e65]: Use Route 53 latency-based routing to send users to their closest region. Pair this with geolocation routing rules for data residency requirements (e.g., EU users must stay in eu-west-1).
+          - code [ref=e68]: "resource \"aws_route53_record\" \"api\" { zone_id = var.zone_id name = \"api.acecloudinterviews.com\" type = \"A\" set_identifier = \"us-east-1\" latency_routing_policy { region = \"us-east-1\" } alias { name = aws_lb.api_us_east.dns_name zone_id = aws_lb.api_us_east.zone_id evaluate_target_health = true } }"
+          - paragraph [ref=e69]: For sub-10ms routing decisions, consider AWS Global Accelerator, which uses Anycast IPs and routes traffic at the AWS network edge rather than waiting for DNS TTL propagation.
+          - heading "Database Selection" [level=3] [ref=e70]
+          - paragraph [ref=e71]: The database layer determines most of your conflict resolution options.
+          - paragraph [ref=e72]:
+            - strong [ref=e73]: DynamoDB Global Tables
+            - text: is the lowest-ops choice. It replicates across up to 5 regions with sub-second latency and uses last-write-wins based on wall clock timestamps. This is acceptable for user preferences or session data, but dangerous for anything requiring precise ordering (e.g., inventory counts).
+          - paragraph [ref=e74]:
+            - strong [ref=e75]: Aurora Global Database
+            - text: supports up to 5 secondary regions with ~1 second replication lag. Aurora Global now supports write forwarding - secondary regions can accept writes that are transparently forwarded to the primary. This simplifies the client but re-introduces a single write bottleneck for forwarded requests. Use this when you want active-active reads with occasional cross-region writes.
+          - paragraph [ref=e76]:
+            - strong [ref=e77]: CockroachDB
+            - text: "runs Raft consensus across regions. Every write reaches quorum before acknowledging, which means write latency is determined by the two fastest regions in your quorum set. Set locality preferences to pin a table's Raft leader close to its heaviest writers:"
+          - code [ref=e80]: "ALTER TABLE orders CONFIGURE ZONE USING lease_preferences = '[[+region=us-east1]]', constraints = '{\"+region=us-east1\": 1, \"+region=eu-west1\": 1, \"+region=ap-southeast1\": 1}';"
+          - heading "Conflict Resolution Strategies" [level=3] [ref=e81]
+          - paragraph [ref=e82]:
+            - strong [ref=e83]: Last-Write-Wins (LWW) with vector clocks
+            - text: "- LWW alone is insufficient because NTP drift across regions can be 10-100ms. Vector clocks attach a per-node logical counter to each write, so you can detect concurrent writes rather than silently discarding one:"
+          - code [ref=e86]: "# On write record[\"version\"] = { \"region\": \"us-east-1\", \"counter\": current_counter + 1, \"parent\": incoming_version } # On conflict detection def is_concurrent(v1, v2): # Neither version dominates the other return not (dominates(v1, v2) or dominates(v2, v1))"
+          - paragraph [ref=e87]: When concurrent writes are detected, surface the conflict to application logic rather than auto-resolving.
+          - paragraph [ref=e88]:
+            - strong [ref=e89]: CRDTs for counters and sets
+            - text: "- Use Conflict-free Replicated Data Types when the operation is commutative. A G-Counter (grow-only counter) stores a per-region count and merges by taking the max per region:"
+          - code [ref=e92]: "# Each region increments its own slot counter[\"us-east-1\"] += 1 # Merge: take max per region across replicas def merge(local, remote): return {r: max(local.get(r, 0), remote.get(r, 0)) for r in set(local) | set(remote)} # Read: sum all slots total = sum(counter.values())"
+          - paragraph [ref=e93]: This is appropriate for pageview counters, like/dislike counts, and rate limit buckets.
+          - paragraph [ref=e94]:
+            - strong [ref=e95]: Regional ownership (partition by key)
+            - text: "- The most reliable conflict avoidance strategy is assigning write ownership to one region per entity. Route"
+            - code [ref=e96]: user_id % 3
+            - text: "to a specific region. Other regions can read via replication but forward writes to the owner:"
+          - code [ref=e98]: user_id hash -> owner_region lookup -> write forwarded if not owner
+          - paragraph [ref=e99]: This works well for user profiles, account balances, and anything where strong consistency per entity outweighs cross-region write latency.
+          - heading "Handling Replication Lag" [level=3] [ref=e100]
+          - paragraph [ref=e101]: Replication lag of 100-500ms means a user who just wrote data may read stale data from a secondary.
+          - paragraph [ref=e102]:
+            - strong [ref=e103]: Read-your-own-writes
+            - text: ": After a write, stick the client to the write region for 1-2 seconds using a"
+            - code [ref=e104]: X-Write-Region
+            - text: response header. The client sends this header on subsequent reads, and your load balancer routes accordingly.
+          - paragraph [ref=e105]:
+            - strong [ref=e106]: Version vectors for conditional reads
+            - text: ": Include the write's version token in the response. On the next read, pass it as"
+            - code [ref=e107]: "If-Version: <token>"
+            - text: . If the reading replica has not yet applied that version, it either waits (up to a timeout) or returns a 202 with a retry hint.
+          - paragraph [ref=e108]:
+            - strong [ref=e109]: Accept eventual consistency in the UI
+            - text: ": For non-critical data, optimistic UI updates hide replication lag entirely. Write locally, display the result immediately, and let the backend converge in the background. Only use consistency tokens for operations where stale reads cause real harm (financial transactions, inventory reservations)."
+          - heading "Practical Numbers" [level=3] [ref=e110]
+          - list [ref=e111]:
+            - listitem [ref=e112]: "DynamoDB Global Tables replication: typically 200-500ms, SLA is sub-second"
+            - listitem [ref=e113]:
+              - text: "Aurora Global replication lag: under 1 second in practice, measured via"
+              - code [ref=e114]: aurora_global_db_replication_lag
+              - text: CloudWatch metric
+            - listitem [ref=e115]: "CockroachDB cross-region quorum write (us-east + eu-west): ~120ms round trip"
+            - listitem [ref=e116]: "Route 53 latency routing decision: ~1ms, DNS TTL 60s means failover takes up to 60s without Global Accelerator"
+        - generic [ref=e117]:
+          - paragraph [ref=e118]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e119] [cursor=pointer]:
+            - img [ref=e120]
+            - text: Report incorrect answer
+      - generic [ref=e122]:
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - heading "Asked at" [level=2] [ref=e125]
+            - paragraph [ref=e126]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e127] [cursor=pointer]
+        - paragraph [ref=e128]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e129]:
+        - generic [ref=e130]:
+          - heading "Community" [level=2] [ref=e131]
+          - generic [ref=e132]:
+            - button "Answers" [ref=e133] [cursor=pointer]
+            - button "Discussion" [ref=e134] [cursor=pointer]
+        - paragraph [ref=e135]: Perspectives from other engineers. Reviewed before publishing.
+        - paragraph [ref=e136]:
+          - link "Log in" [ref=e137] [cursor=pointer]:
+            - /url: /login/
+          - text: to share your answer.
+      - generic [ref=e138]:
+        - generic [ref=e139]:
+          - heading "Related questions in 🏛️ System Design" [level=2] [ref=e140]
+          - generic [ref=e141]:
+            - link "Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements." [ref=e142] [cursor=pointer]:
+              - /url: /questions/system-design-secrets-management-org/
+              - img [ref=e143]
+              - generic [ref=e145]: Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements.
+            - link "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [ref=e146] [cursor=pointer]:
+              - /url: /questions/system-design-shared-database-decomposition/
+              - img [ref=e147]
+              - generic [ref=e149]: Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?
+            - link "How would you design an observability stack (logs, metrics, traces) for a microservices platform with 50+ services?" [ref=e150] [cursor=pointer]:
+              - /url: /questions/system-design-observability-stack/
+              - img [ref=e151]
+              - generic [ref=e153]: How would you design an observability stack (logs, metrics, traces) for a microservices platform with 50+ services?
+            - link "Design a rate limiting system that works across multiple instances of a distributed API gateway." [ref=e154] [cursor=pointer]:
+              - /url: /questions/system-design-rate-limiting-distributed/
+              - img [ref=e155]
+              - generic [ref=e157]: Design a rate limiting system that works across multiple instances of a distributed API gateway.
+          - link "See all System Design questions ->" [ref=e158] [cursor=pointer]:
+            - /url: /topics/system-design/
+        - generic [ref=e159]:
+          - heading "Resources" [level=2] [ref=e160]
+          - generic [ref=e161]:
+            - link "AWS Architecture Center" [ref=e162] [cursor=pointer]:
+              - /url: https://aws.amazon.com/architecture/
+              - img [ref=e163]
+              - text: AWS Architecture Center
+            - link "System Design Primer" [ref=e165] [cursor=pointer]:
+              - /url: https://github.com/donnemartin/system-design-primer
+              - img [ref=e166]
+              - text: System Design Primer
+  - contentinfo [ref=e168]:
+    - generic [ref=e169]:
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e172] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e173]
+            - generic [ref=e174]: Ace Cloud Interviews
+          - paragraph [ref=e175]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e176]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e177]:
+          - heading "Explore" [level=3] [ref=e178]
+          - list [ref=e179]:
+            - listitem [ref=e180]:
+              - link "Questions" [ref=e181] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e182]:
+              - link "Topics" [ref=e183] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e184]:
+              - link "Cheat Sheets" [ref=e185] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e186]:
+              - link "Comparisons" [ref=e187] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e188]:
+              - link "Learning Paths" [ref=e189] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e190]:
+              - link "Cert Study Guides" [ref=e191] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e192]:
+              - link "AWS Tutorials" [ref=e193] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e194]:
+              - link "War Stories" [ref=e195] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e196]:
+              - link "Day in the Life" [ref=e197] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e198]:
+              - link "Architecture Walkthroughs" [ref=e199] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e200]:
+              - link "CV Templates" [ref=e201] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e202]:
+          - heading "Topics" [level=3] [ref=e203]
+          - list [ref=e204]:
+            - listitem [ref=e205]:
+              - link "AWS" [ref=e206] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e207]:
+              - link "Kubernetes" [ref=e208] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e209]:
+              - link "Docker" [ref=e210] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e211]:
+              - link "Terraform" [ref=e212] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e213]:
+              - link "CI/CD" [ref=e214] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e215]:
+              - link "Linux" [ref=e216] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e217]:
+              - link "Networking" [ref=e218] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e219]:
+              - link "Security" [ref=e220] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e221]:
+              - link "Observability" [ref=e222] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e223]:
+              - link "System Design" [ref=e224] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e225]:
+              - link "Troubleshooting" [ref=e226] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e227]:
+          - heading "Company" [level=3] [ref=e228]
+          - list [ref=e229]:
+            - listitem [ref=e230]:
+              - link "About" [ref=e231] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e232]:
+              - link "FAQ" [ref=e233] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e234]:
+              - link "Contact Us" [ref=e235] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e236]:
+              - link "Privacy Policy" [ref=e237] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e238]:
+              - link "Terms of Service" [ref=e239] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e240]:
+        - paragraph [ref=e241]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e242]: Built for engineers.
+  - alert [ref=e243]

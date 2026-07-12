@@ -1,0 +1,312 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e26] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e27]
+          - generic [ref=e28]: Sudhakar Chundu
+          - img [ref=e29]
+    - generic [ref=e33]:
+      - link "Questions" [ref=e34] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e35] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e36] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e37] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e38] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e39] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e40] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e41] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e42] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e43] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e44] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e45] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e46]:
+    - generic [ref=e48]:
+      - button "Back to questions" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - text: Back to questions
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - heading "Your security scan tool is blocking every CI/CD pipeline deployment because it flags vulnerabilities in base images. How do you build a practical policy?" [level=1] [ref=e54]
+          - generic [ref=e55]:
+            - button "0" [ref=e56] [cursor=pointer]:
+              - img [ref=e57]
+              - generic [ref=e59]: "0"
+            - button "Bookmark this" [ref=e60] [cursor=pointer]:
+              - img [ref=e61]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e65]: 🔒
+            - text: Security
+          - generic [ref=e66]: Medium
+      - generic [ref=e67]:
+        - heading "Answer" [level=2] [ref=e68]
+        - generic [ref=e69]:
+          - heading "Building a Practical Vulnerability Policy for CI/CD Pipelines" [level=2] [ref=e70]
+          - paragraph [ref=e71]: A scanner that blocks everything is just as broken as one that blocks nothing. The goal is a policy that stops genuinely dangerous vulnerabilities from reaching production while keeping deployments moving.
+          - heading "Risk-Based Severity Tiers" [level=3] [ref=e72]
+          - paragraph [ref=e73]: Define explicit block/track rules by severity, and commit them to a config file in the repo so every team uses the same thresholds.
+          - code [ref=e76]: "# .trivyignore-policy.yaml (or in your scanner config) severity_policy: CRITICAL: block # always block, no exceptions without approval HIGH: conditional # block if a fix exists; allow with justification if no fix MEDIUM: track # create ticket, fix within 30 days LOW: suppress # log only, no ticket required UNKNOWN: track # treat like MEDIUM until classified"
+          - paragraph [ref=e77]: "In practice, a Trivy step in GitHub Actions looks like:"
+          - code [ref=e80]: "- name: Scan image run: | trivy image --severity CRITICAL,HIGH --exit-code 1 --ignore-unfixed --format sarif --output trivy-results.sarif $IMAGE_TAG"
+          - paragraph [ref=e81]:
+            - text: The
+            - code [ref=e82]: "--ignore-unfixed"
+            - text: "flag is the first practical concession: if there is no upstream fix yet, blocking the build punishes the team without any remediation path. For those cases, use the exception workflow below instead."
+          - heading "Reachability Analysis" [level=3] [ref=e83]
+          - paragraph [ref=e84]:
+            - text: Not every CVE in an installed package is exploitable. A crypto library vulnerability flagged in a Python base image may exist in a package installed only by
+            - code [ref=e85]: pip
+            - text: tooling at build time, never loaded at runtime.
+          - paragraph [ref=e86]:
+            - text: Tools like
+            - link "Grype" [ref=e87] [cursor=pointer]:
+              - /url: https://github.com/anchore/grype
+            - text: and Trivy's
+            - code [ref=e88]: "--vex"
+            - text: "support let you attach a VEX (Vulnerability Exploitability eXchange) document that records a reachability decision:"
+          - code [ref=e91]: "{ \"vulnerability\": \"CVE-2023-4863\", \"product\": \"libwebp\", \"status\": \"not_affected\", \"justification\": \"component_not_present\", \"impact_statement\": \"libwebp is installed by the base image but not linked or called by any application code. Confirmed via ldd and strace in staging.\" }"
+          - paragraph [ref=e92]: This decision gets peer-reviewed and merged like any other code change, not made verbally or in a Slack thread.
+          - paragraph [ref=e93]: For AWS workloads, Amazon Inspector's Lambda and ECR scanning can show you per-function reachability context. On Kubernetes, tools like Kubescape cross-reference running containers against the CVE list so you can see whether a vulnerable image is actually deployed in a reachable path.
+          - heading "Exception Workflow" [level=3] [ref=e94]
+          - paragraph [ref=e95]: When a CVE must be accepted temporarily (no fix available, reachability confirmed low, vendor acknowledgment pending), enforce a structured process rather than a scanner bypass.
+          - list [ref=e96]:
+            - listitem [ref=e97]: "Engineer opens a JIRA ticket with: CVE ID, affected image, severity, justification, reachability evidence, and an expiry date (maximum 90 days for HIGH, 30 days for CRITICAL in rare cases)."
+            - listitem [ref=e98]: A security team member or designated reviewer approves.
+            - listitem [ref=e99]:
+              - text: The CVE is added to the
+              - code [ref=e100]: .trivyignore
+              - text: "file with a comment linking the ticket and expiry:"
+          - code [ref=e102]: "# JIRA: SEC-412 | Expires: 2026-08-01 | Reason: no fix upstream, libssl not reachable in prod CVE-2024-12345"
+          - list [ref=e103]:
+            - listitem [ref=e104]: "A CI job checks expiry dates on every run and fails the build if an exception has expired without renewal:"
+          - code [ref=e107]: "#!/bin/bash TODAY=$(date +%Y-%m-%d) while IFS= read -r line; do if [[ $line =~ Expires:\\ ([0-9]{4}-[0-9]{2}-[0-9]{2}) ]]; then EXPIRY=\"${BASH_REMATCH[1]}\" if [[ \"$TODAY\" > \"$EXPIRY\" ]]; then echo \"ERROR: Expired CVE exception found - $line\" exit 1 fi fi done < .trivyignore"
+          - paragraph [ref=e108]:
+            - text: This prevents
+            - code [ref=e109]: .trivyignore
+            - text: from becoming a permanent graveyard of forgotten suppressions.
+          - 'heading "Operational Hygiene: Reducing the Baseline" [level=3] [ref=e110]'
+          - paragraph [ref=e111]: "The cheapest CVE is one that never enters your image. Three habits keep the baseline low:"
+          - paragraph [ref=e112]:
+            - strong [ref=e113]: Use minimal base images.
+            - text: Switch from
+            - code [ref=e114]: python:3.11
+            - text: (500+ packages) to
+            - code [ref=e115]: python:3.11-slim
+            - text: or
+            - code [ref=e116]: gcr.io/distroless/python3
+            - text: . Fewer packages means fewer CVEs to manage. Alpine is effective but introduces musl libc, which can cause subtle runtime differences in C extension code - test before adopting site-wide.
+          - paragraph [ref=e117]:
+            - strong [ref=e118]: Rebuild base images weekly.
+            - text: "Most CVE fixes ship in upstream OS packages. A GitHub Actions scheduled job that rebuilds and pushes internal base images every Sunday picks up those fixes automatically without any developer action:"
+          - code [ref=e121]: "on: schedule: - cron: '0 2 * * 0' # 2am UTC every Sunday"
+          - paragraph [ref=e122]:
+            - strong [ref=e123]: Automate dependency updates.
+            - text: Dependabot or Renovate PRs for both
+            - code [ref=e124]: requirements.txt
+            - text: and
+            - code [ref=e125]: Dockerfile
+            - text: base image digests keep you ahead of known vulnerabilities rather than reacting to scanner noise. Pin images by digest (
+            - code [ref=e126]: FROM python:3.11-slim@sha256:abc123
+            - text: ) so Renovate can track and propose upgrades with a concrete diff.
+          - heading "Putting It Together" [level=3] [ref=e127]
+          - paragraph [ref=e128]: "The policy works as a funnel: reachability analysis removes false positives at the top, severity tiers determine the default action, exceptions handle the remainder with time-limited approvals, and hygiene practices shrink the problem space week over week. Each layer is auditable and reviewable, which matters both for security posture and for keeping the team's trust in the pipeline."
+        - generic [ref=e129]:
+          - paragraph [ref=e130]: Did you know this?
+          - generic [ref=e131]:
+            - button "Knew it" [ref=e132] [cursor=pointer]:
+              - img [ref=e133]
+              - text: Knew it
+            - button "Need to review" [ref=e135] [cursor=pointer]:
+              - img [ref=e136]
+              - text: Need to review
+        - generic [ref=e138]:
+          - paragraph [ref=e139]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e140] [cursor=pointer]:
+            - img [ref=e141]
+            - text: Report incorrect answer
+      - generic [ref=e143]:
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - heading "Asked at" [level=2] [ref=e146]
+            - paragraph [ref=e147]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e148] [cursor=pointer]
+        - paragraph [ref=e149]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e150]:
+        - generic [ref=e151]:
+          - heading "Community" [level=2] [ref=e152]
+          - generic [ref=e153]:
+            - button "Answers" [ref=e154] [cursor=pointer]
+            - button "Discussion" [ref=e155] [cursor=pointer]
+        - paragraph [ref=e156]: Perspectives from other engineers. Reviewed before publishing.
+        - generic [ref=e157]:
+          - textbox "Share how you would answer this question in an interview..." [ref=e158]
+          - button "Submit answer" [disabled] [ref=e159]
+          - paragraph [ref=e160]: Answers are reviewed before being published.
+      - generic [ref=e161]:
+        - generic [ref=e162]:
+          - heading "Related questions in 🔒 Security" [level=2] [ref=e163]
+          - generic [ref=e164]:
+            - link "How do you audit and enforce encryption at rest and in transit across a heterogeneous AWS environment?" [ref=e165] [cursor=pointer]:
+              - /url: /questions/security-encryption-audit-enforcement/
+              - img [ref=e166]
+              - generic [ref=e168]: How do you audit and enforce encryption at rest and in transit across a heterogeneous AWS environment?
+            - link "How would you implement a zero-trust network model for a cloud environment where engineers need access to internal services?" [ref=e169] [cursor=pointer]:
+              - /url: /questions/security-zero-trust-implementation/
+              - img [ref=e170]
+              - generic [ref=e172]: How would you implement a zero-trust network model for a cloud environment where engineers need access to internal services?
+            - link "An attacker gains access to a Kubernetes cluster using a stolen service account token. What can they do, and how do you limit blast radius?" [ref=e173] [cursor=pointer]:
+              - /url: /questions/security-stolen-service-account-token/
+              - img [ref=e174]
+              - generic [ref=e176]: An attacker gains access to a Kubernetes cluster using a stolen service account token. What can they do, and how do you limit blast radius?
+            - link "Explain how you would implement secrets management for a microservices architecture running on Kubernetes." [ref=e177] [cursor=pointer]:
+              - /url: /questions/security-microservices-secrets/
+              - img [ref=e178]
+              - generic [ref=e180]: Explain how you would implement secrets management for a microservices architecture running on Kubernetes.
+          - link "See all Security questions ->" [ref=e181] [cursor=pointer]:
+            - /url: /topics/security/
+        - generic [ref=e182]:
+          - heading "Resources" [level=2] [ref=e183]
+          - generic [ref=e184]:
+            - link "AWS Security Docs" [ref=e185] [cursor=pointer]:
+              - /url: https://docs.aws.amazon.com/security/
+              - img [ref=e186]
+              - text: AWS Security Docs
+            - link "OWASP Top 10" [ref=e188] [cursor=pointer]:
+              - /url: https://owasp.org/www-project-top-ten/
+              - img [ref=e189]
+              - text: OWASP Top 10
+  - contentinfo [ref=e191]:
+    - generic [ref=e192]:
+      - generic [ref=e193]:
+        - generic [ref=e194]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e195] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e196]
+            - generic [ref=e197]: Ace Cloud Interviews
+          - paragraph [ref=e198]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e199]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e200]:
+          - heading "Explore" [level=3] [ref=e201]
+          - list [ref=e202]:
+            - listitem [ref=e203]:
+              - link "Questions" [ref=e204] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e205]:
+              - link "Topics" [ref=e206] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e207]:
+              - link "Cheat Sheets" [ref=e208] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e209]:
+              - link "Comparisons" [ref=e210] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e211]:
+              - link "Learning Paths" [ref=e212] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e213]:
+              - link "Cert Study Guides" [ref=e214] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e215]:
+              - link "AWS Tutorials" [ref=e216] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e217]:
+              - link "War Stories" [ref=e218] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e219]:
+              - link "Day in the Life" [ref=e220] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e221]:
+              - link "Architecture Walkthroughs" [ref=e222] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e223]:
+              - link "CV Templates" [ref=e224] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e225]:
+          - heading "Topics" [level=3] [ref=e226]
+          - list [ref=e227]:
+            - listitem [ref=e228]:
+              - link "AWS" [ref=e229] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e230]:
+              - link "Kubernetes" [ref=e231] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e232]:
+              - link "Docker" [ref=e233] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e234]:
+              - link "Terraform" [ref=e235] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e236]:
+              - link "CI/CD" [ref=e237] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e238]:
+              - link "Linux" [ref=e239] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e240]:
+              - link "Networking" [ref=e241] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e242]:
+              - link "Security" [ref=e243] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e244]:
+              - link "Observability" [ref=e245] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e246]:
+              - link "System Design" [ref=e247] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e248]:
+              - link "Troubleshooting" [ref=e249] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e250]:
+          - heading "Company" [level=3] [ref=e251]
+          - list [ref=e252]:
+            - listitem [ref=e253]:
+              - link "About" [ref=e254] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e255]:
+              - link "FAQ" [ref=e256] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e257]:
+              - link "Contact Us" [ref=e258] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e259]:
+              - link "Privacy Policy" [ref=e260] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e261]:
+              - link "Terms of Service" [ref=e262] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e263]:
+        - paragraph [ref=e264]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e265]: Built for engineers.
+  - alert [ref=e266]

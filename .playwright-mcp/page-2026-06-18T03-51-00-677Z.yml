@@ -1,0 +1,314 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e238] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e239]
+          - generic [ref=e240]: Sudhakar Chundu
+          - img [ref=e241]
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [level=1] [ref=e49]
+          - generic [ref=e50]:
+            - button "0" [ref=e51] [cursor=pointer]:
+              - img [ref=e52]
+              - generic [ref=e54]: "0"
+            - button "Bookmark this" [ref=e320] [cursor=pointer]:
+              - img [ref=e321]
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 🏛️
+            - text: System Design
+          - generic [ref=e58]: Hard
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - heading "Decomposing a Shared Database During a Monolith-to-Microservices Migration" [level=2] [ref=e323]
+          - paragraph [ref=e324]: Breaking apart a shared database is the hardest part of a microservices migration. The application decomposition follows the strangler fig pattern, but database decomposition moves through three distinct phases and requires careful sequencing to avoid downtime or data loss.
+          - separator [ref=e64]
+          - 'heading "Phase 1: Strangle the Application First, Keep the Shared Database" [level=2] [ref=e325]'
+          - paragraph [ref=e326]:
+            - text: Before touching the database, extract one bounded domain at a time using a routing proxy (e.g., AWS ALB weighted target groups, or an nginx upstream with
+            - code [ref=e327]: proxy_pass
+            - text: ). The extracted service initially reads and writes directly to the monolith's database - just its own tables.
+          - code [ref=e329]: "upstream orders_service { server orders-svc:8080 weight=1; server monolith:8080 weight=9; }"
+          - paragraph [ref=e330]: This gives you a runnable, deployable service without solving database decomposition yet. The goal here is behavioral isolation, not physical isolation.
+          - separator [ref=e72]
+          - 'heading "Phase 2: Database Decomposition - Three Stages" [level=2] [ref=e331]'
+          - 'heading "Stage 1: Shared Database, Explicit Ownership" [level=3] [ref=e332]'
+          - paragraph [ref=e333]:
+            - text: Mark table ownership clearly. The Orders service is the only writer to
+            - code [ref=e334]: orders
+            - text: and
+            - code [ref=e335]: order_items
+            - text: . All other services that need this data call the Orders API instead of querying the table directly. Enforce this at the application layer first - remove cross-service direct queries from the codebase.
+          - paragraph [ref=e336]: This stage is purely organizational. The schema is still one database, but you've established the contract.
+          - 'heading "Stage 2: Separate Schema (Logical Isolation)" [level=3] [ref=e337]'
+          - paragraph [ref=e338]: "Move owned tables into a dedicated PostgreSQL schema:"
+          - code [ref=e340]: CREATE SCHEMA orders_svc; ALTER TABLE orders SET SCHEMA orders_svc; ALTER TABLE order_items SET SCHEMA orders_svc; CREATE USER orders_svc_user WITH PASSWORD '...'; GRANT USAGE ON SCHEMA orders_svc TO orders_svc_user; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA orders_svc TO orders_svc_user;
+          - paragraph [ref=e341]:
+            - text: Other services lose their DB credentials for
+            - code [ref=e342]: orders_svc
+            - text: schema. They are forced to go through the API. Foreign keys across schemas get dropped here - replace them with application-level consistency checks.
+          - 'heading "Stage 3: Separate Physical Database" [level=3] [ref=e343]'
+          - paragraph [ref=e344]: Provision a new RDS instance for the Orders service, migrate the data, and cut over. This is where you need zero-downtime migration tooling.
+          - separator [ref=e88]
+          - 'heading "Zero-Downtime Data Migration: Expand-Contract with Dual-Write" [level=2] [ref=e345]'
+          - paragraph [ref=e346]: "The safest pattern for live systems is expand-contract:"
+          - paragraph [ref=e347]:
+            - strong [ref=e348]: 1. Expand
+            - text: "- add the new Orders database alongside the old one. Update the Orders service to dual-write to both:"
+          - code [ref=e350]: "def create_order(order_data): old_db.execute(\"INSERT INTO orders ...\", order_data) new_db.execute(\"INSERT INTO orders_svc.orders ...\", order_data)"
+          - paragraph [ref=e351]: Write to old first, then new. If the new write fails, log and alert but don't fail the request yet - you're in shadow mode.
+          - paragraph [ref=e352]:
+            - strong [ref=e353]: 2. Backfill
+            - text: "- run a background job to migrate historical data. Use a cursor-based approach to avoid locking:"
+          - code [ref=e355]: "last_id = 0 while True: rows = old_db.query(\"SELECT * FROM orders WHERE id > %s ORDER BY id LIMIT 1000\", last_id) if not rows: break new_db.bulk_insert(rows) last_id = rows[-1]['id']"
+          - paragraph [ref=e356]:
+            - text: Run this during low-traffic windows. Track lag with a
+            - code [ref=e357]: SELECT COUNT(*)
+            - text: comparison between databases.
+          - paragraph [ref=e358]:
+            - strong [ref=e359]: 3. Verify
+            - text: "- once the backfill is complete, run a checksum comparison:"
+          - code [ref=e361]: "-- On old DB SELECT COUNT(*), MAX(updated_at), MD5(string_agg(id::text, ',' ORDER BY id)) FROM orders; -- Same query on new DB - values must match"
+          - paragraph [ref=e362]:
+            - strong [ref=e363]: 4. Contract (Cut Over)
+            - text: "- flip the Orders service to read from the new database, keep dual-writing briefly, then drop the write to the old database. Finally, revoke the old DB credentials from the Orders service."
+          - separator [ref=e111]
+          - heading "Cross-Domain Joins and Eventual Consistency" [level=2] [ref=e364]
+          - paragraph [ref=e365]: "Cross-service joins (e.g., \"orders joined with customer name\") cannot happen at the database layer anymore. Two options:"
+          - paragraph [ref=e366]:
+            - strong [ref=e367]: API composition
+            - text: "- the API gateway or a BFF fetches from both services and joins in memory. Acceptable for low-cardinality queries (single order detail page)."
+          - paragraph [ref=e368]:
+            - strong [ref=e369]: Event-driven replication
+            - text: "- for aggregate queries (reporting, dashboards), publish change events via Kafka or AWS EventBridge and maintain a read-optimized projection in the consumer's own database:"
+          - code [ref=e371]: "# Orders service publishes event = {\"type\": \"ORDER_CREATED\", \"order_id\": 123, \"customer_id\": 456, \"total\": 99.00} kafka_producer.send(\"orders.events\", event) # Reporting service consumes and stores a denormalized copy def handle_order_created(event): reporting_db.execute( \"INSERT INTO order_summary (order_id, customer_id, total) VALUES (%s, %s, %s)\", (event['order_id'], event['customer_id'], event['total']) )"
+          - paragraph [ref=e372]: Accept that the reporting database is eventually consistent - typically seconds to minutes behind. Document this SLA explicitly. Do not try to make it synchronous; that reintroduces tight coupling.
+          - separator [ref=e122]
+          - heading "Sequencing Summary" [level=2] [ref=e373]
+          - list [ref=e374]:
+            - listitem [ref=e375]: Extract service, shared DB, API boundary enforced in code
+            - listitem [ref=e376]: Separate schema, drop cross-schema foreign keys, revoke cross-service credentials
+            - listitem [ref=e377]: Dual-write to new physical DB, backfill, verify checksums, cut over
+            - listitem [ref=e378]: Replace cross-domain joins with API calls or event-driven projections
+          - paragraph [ref=e379]: Migrate one domain at a time. Domains with the fewest cross-service foreign keys and the lowest query fan-out are the right starting point - user preferences and audit logs before orders, orders before inventory.
+        - generic [ref=e380]:
+          - paragraph [ref=e381]: Did you know this?
+          - generic [ref=e382]:
+            - button "Knew it" [ref=e383] [cursor=pointer]:
+              - img [ref=e384]
+              - text: Knew it
+            - button "Need to review" [ref=e386] [cursor=pointer]:
+              - img [ref=e387]
+              - text: Need to review
+        - generic [ref=e130]:
+          - paragraph [ref=e131]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e132] [cursor=pointer]:
+            - img [ref=e133]
+            - text: Report incorrect answer
+      - generic [ref=e135]:
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - heading "Asked at" [level=2] [ref=e138]
+            - paragraph [ref=e139]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e140] [cursor=pointer]
+        - paragraph [ref=e141]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e142]:
+        - generic [ref=e143]:
+          - heading "Community" [level=2] [ref=e144]
+          - generic [ref=e145]:
+            - button "Answers" [ref=e146] [cursor=pointer]
+            - button "Discussion" [ref=e147] [cursor=pointer]
+        - paragraph [ref=e148]: Perspectives from other engineers. Reviewed before publishing.
+        - generic [ref=e389]:
+          - textbox "Share how you would answer this question in an interview..." [ref=e390]
+          - button "Submit answer" [disabled] [ref=e391]
+          - paragraph [ref=e392]: Answers are reviewed before being published.
+      - generic [ref=e151]:
+        - generic [ref=e300]:
+          - heading "Related questions in 🏛️ System Design" [level=2] [ref=e301]
+          - generic [ref=e302]:
+            - link "Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements." [ref=e303] [cursor=pointer]:
+              - /url: /questions/system-design-secrets-management-org/
+              - img [ref=e304]
+              - generic [ref=e306]: Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements.
+            - link "How would you design an observability stack (logs, metrics, traces) for a microservices platform with 50+ services?" [ref=e307] [cursor=pointer]:
+              - /url: /questions/system-design-observability-stack/
+              - img [ref=e308]
+              - generic [ref=e310]: How would you design an observability stack (logs, metrics, traces) for a microservices platform with 50+ services?
+            - link "Design a rate limiting system that works across multiple instances of a distributed API gateway." [ref=e311] [cursor=pointer]:
+              - /url: /questions/system-design-rate-limiting-distributed/
+              - img [ref=e312]
+              - generic [ref=e314]: Design a rate limiting system that works across multiple instances of a distributed API gateway.
+            - link "Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls." [ref=e315] [cursor=pointer]:
+              - /url: /questions/system-design-batch-autoscaling/
+              - img [ref=e316]
+              - generic [ref=e318]: Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls.
+          - link "See all System Design questions ->" [ref=e319] [cursor=pointer]:
+            - /url: /topics/system-design/
+        - generic [ref=e152]:
+          - heading "Resources" [level=2] [ref=e153]
+          - generic [ref=e154]:
+            - link "AWS Architecture Center" [ref=e155] [cursor=pointer]:
+              - /url: https://aws.amazon.com/architecture/
+              - img [ref=e156]
+              - text: AWS Architecture Center
+            - link "System Design Primer" [ref=e158] [cursor=pointer]:
+              - /url: https://github.com/donnemartin/system-design-primer
+              - img [ref=e159]
+              - text: System Design Primer
+  - contentinfo [ref=e161]:
+    - generic [ref=e162]:
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e165] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e166]
+            - generic [ref=e167]: Ace Cloud Interviews
+          - paragraph [ref=e168]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e169]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e170]:
+          - heading "Explore" [level=3] [ref=e171]
+          - list [ref=e172]:
+            - listitem [ref=e173]:
+              - link "Questions" [ref=e174] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e175]:
+              - link "Topics" [ref=e176] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e177]:
+              - link "Cheat Sheets" [ref=e178] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e179]:
+              - link "Comparisons" [ref=e180] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e181]:
+              - link "Learning Paths" [ref=e182] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e183]:
+              - link "Cert Study Guides" [ref=e184] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e185]:
+              - link "AWS Tutorials" [ref=e186] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e187]:
+              - link "War Stories" [ref=e188] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e189]:
+              - link "Day in the Life" [ref=e190] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e191]:
+              - link "Architecture Walkthroughs" [ref=e192] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e193]:
+              - link "CV Templates" [ref=e194] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e195]:
+          - heading "Topics" [level=3] [ref=e196]
+          - list [ref=e197]:
+            - listitem [ref=e198]:
+              - link "AWS" [ref=e199] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e200]:
+              - link "Kubernetes" [ref=e201] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e202]:
+              - link "Docker" [ref=e203] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e204]:
+              - link "Terraform" [ref=e205] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e206]:
+              - link "CI/CD" [ref=e207] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e208]:
+              - link "Linux" [ref=e209] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e210]:
+              - link "Networking" [ref=e211] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e212]:
+              - link "Security" [ref=e213] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e214]:
+              - link "Observability" [ref=e215] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e216]:
+              - link "System Design" [ref=e217] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e218]:
+              - link "Troubleshooting" [ref=e219] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e220]:
+          - heading "Company" [level=3] [ref=e221]
+          - list [ref=e222]:
+            - listitem [ref=e223]:
+              - link "About" [ref=e224] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e225]:
+              - link "FAQ" [ref=e226] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e227]:
+              - link "Contact Us" [ref=e228] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e229]:
+              - link "Privacy Policy" [ref=e230] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e231]:
+              - link "Terms of Service" [ref=e232] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e233]:
+        - paragraph [ref=e234]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e235]: Built for engineers.
+  - alert [ref=e236]

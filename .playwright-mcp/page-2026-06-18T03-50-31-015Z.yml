@@ -1,0 +1,286 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e26] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e27]
+          - generic [ref=e28]: Sudhakar Chundu
+          - img [ref=e29]
+    - generic [ref=e33]:
+      - link "Questions" [ref=e34] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e35] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e36] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e37] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e38] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e39] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e40] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e41] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e42] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e43] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e44] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e45] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e46]:
+    - generic [ref=e48]:
+      - button "Back to questions" [ref=e49] [cursor=pointer]:
+        - img [ref=e50]
+        - text: Back to questions
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - heading "How do you handle observability for ephemeral infrastructure - containers, spot instances, and Lambda functions?" [level=1] [ref=e54]
+          - button "1" [ref=e56]:
+            - img [ref=e57]
+            - generic [ref=e59]: "1"
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - generic [ref=e62]: 📡
+            - text: Observability
+          - generic [ref=e63]: Medium
+      - generic [ref=e64]:
+        - heading "Answer" [level=2] [ref=e65]
+        - generic [ref=e66]:
+          - heading "Observability for Ephemeral Infrastructure" [level=2] [ref=e67]
+          - paragraph [ref=e68]: Ephemeral infrastructure breaks the traditional "log in and look around" debugging model. When a container lives for 30 seconds or a Lambda function executes and vanishes, you need observability baked in from the start, not bolted on afterward.
+          - heading "Push-Based Log Shipping" [level=3] [ref=e69]
+          - paragraph [ref=e70]: "The cardinal rule: logs must leave the host before the host disappears."
+          - paragraph [ref=e71]:
+            - text: For containers, run FluentBit as a sidecar (ECS) or DaemonSet (EKS) that tails log files and forwards them to CloudWatch Logs or an aggregation layer. In ECS, use the
+            - code [ref=e72]: awsfirelens
+            - text: "log driver with a FluentBit sidecar container:"
+          - code [ref=e75]: "{ \"logConfiguration\": { \"logDriver\": \"awsfirelens\", \"options\": { \"Name\": \"cloudwatch_logs\", \"region\": \"ap-south-1\", \"log_group_name\": \"/ecs/my-service\", \"log_stream_prefix\": \"from-fluent-bit/\" } } }"
+          - paragraph [ref=e76]: For Lambda, use a Lambda Extension (runs as a separate process in the same execution environment) to forward logs to your destination before the sandbox freezes. AWS's own CloudWatch Logs extension handles this, but for third-party tools like Datadog or New Relic, their extensions intercept the Lambda Logs API and flush before the invocation ends.
+          - paragraph [ref=e77]:
+            - text: For Spot instances, the termination notice gives you 2 minutes. Add a CloudWatch Events rule on
+            - code [ref=e78]: EC2 Spot Instance Interruption Warning
+            - text: to trigger a Lambda that can mark the instance in your monitoring system, drain it from the load balancer, and tag its final logs.
+          - heading "Metrics Without Host Agents" [level=3] [ref=e79]
+          - paragraph [ref=e80]: Traditional host-based agents (Prometheus node_exporter, CloudWatch agent with full config) assume long-lived hosts. For ephemeral workloads, use in-process instrumentation instead.
+          - paragraph [ref=e81]:
+            - strong [ref=e82]: "Lambda - CloudWatch Embedded Metrics Format (EMF):"
+            - text: "EMF lets you embed structured metric data inside log lines. The CloudWatch Logs agent extracts them asynchronously - no API call overhead in the hot path:"
+          - code [ref=e85]: "import json def lambda_handler(event, context): # Business logic here duration_ms = 142 # EMF payload - goes to stdout, extracted automatically print(json.dumps({ \"_aws\": { \"Timestamp\": 1717200000000, \"CloudWatchMetrics\": [{ \"Namespace\": \"MyApp\", \"Dimensions\": [[\"service\", \"environment\"]], \"Metrics\": [{\"Name\": \"ProcessingDuration\", \"Unit\": \"Milliseconds\"}] }] }, \"service\": \"order-processor\", \"environment\": \"prd\", \"ProcessingDuration\": duration_ms }))"
+          - paragraph [ref=e86]:
+            - strong [ref=e87]: "Containers:"
+            - text: "Use cAdvisor (bundled in EKS nodes via kubelet) or CloudWatch Container Insights, which automatically collects CPU, memory, network, and disk per container without any agent configuration inside the container image itself. Enable it with:"
+          - code [ref=e90]: aws eks update-addon --cluster-name my-cluster --addon-name amazon-cloudwatch-observability --region ap-south-1
+          - heading "Distributed Tracing Across Ephemeral Boundaries" [level=3] [ref=e91]
+          - paragraph [ref=e92]: Without tracing, a request that touches an API Gateway, two Lambda functions, an SQS queue, and an ECS task produces five disconnected log streams. Distributed tracing stitches them into a single timeline.
+          - paragraph [ref=e93]:
+            - text: Use AWS X-Ray or OpenTelemetry (OTel). The key is propagating trace context across every async boundary - including SQS messages, where the trace header goes into
+            - code [ref=e94]: MessageAttributes
+            - text: ":"
+          - code [ref=e97]: "from opentelemetry.propagate import inject message_attributes = {} inject(message_attributes) # Injects traceparent, tracestate sqs.send_message( QueueUrl=queue_url, MessageBody=json.dumps(payload), MessageAttributes=message_attributes )"
+          - paragraph [ref=e98]: The consumer then extracts this context and creates a child span, maintaining the trace across the async gap.
+          - paragraph [ref=e99]: For Lambda cold starts specifically, traces reveal where time is actually spent - initialization vs. handler execution - which is critical for latency debugging when you cannot attach a profiler.
+          - heading "Design for Ephemerality" [level=3] [ref=e100]
+          - paragraph [ref=e101]: "The most important shift is making host identity irrelevant. Every log line must carry enough context to be useful in isolation:"
+          - code [ref=e104]: "{ \"timestamp\": \"2026-05-31T10:22:00Z\", \"trace_id\": \"1-abc123-def456\", \"service\": \"payment-processor\", \"version\": \"1.4.2\", \"environment\": \"prd\", \"request_id\": \"req-789xyz\", \"user_id\": \"usr-001\", \"event\": \"charge_attempted\", \"amount_cents\": 4999, \"duration_ms\": 87, \"outcome\": \"success\" }"
+          - paragraph [ref=e105]:
+            - text: Notice there is no
+            - code [ref=e106]: hostname
+            - text: or
+            - code [ref=e107]: container_id
+            - text: field - those are irrelevant because the container is gone. The
+            - code [ref=e108]: trace_id
+            - text: and
+            - code [ref=e109]: request_id
+            - text: let you correlate across services. The
+            - code [ref=e110]: version
+            - text: field tells you exactly which code ran.
+          - paragraph [ref=e111]: Set this structured context once using a logging middleware layer, and every log line in the service inherits it. For Lambda, set request-scoped fields at the start of the handler and use a thread-local or context-var logger throughout.
+          - heading "Retention and Cost" [level=3] [ref=e112]
+          - paragraph [ref=e113]: Ephemeral infrastructure can generate log volume proportional to invocation count rather than host count - Lambda at scale produces enormous log data. Set CloudWatch Logs retention policies aggressively (7 days for debug, 30 days for info, 1 year for audit trails), and filter at the FluentBit/extension layer to drop health check noise before it hits your log aggregator.
+        - generic [ref=e114]:
+          - paragraph [ref=e115]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e116] [cursor=pointer]:
+            - img [ref=e117]
+            - text: Report incorrect answer
+      - generic [ref=e119]:
+        - generic [ref=e120]:
+          - generic [ref=e121]:
+            - heading "Asked at" [level=2] [ref=e122]
+            - paragraph [ref=e123]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e124] [cursor=pointer]
+        - paragraph [ref=e125]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e126]:
+        - generic [ref=e127]:
+          - heading "Community" [level=2] [ref=e128]
+          - generic [ref=e129]:
+            - button "Answers" [ref=e130] [cursor=pointer]
+            - button "Discussion" [ref=e131] [cursor=pointer]
+        - paragraph [ref=e132]: Perspectives from other engineers. Reviewed before publishing.
+        - paragraph [ref=e133]:
+          - link "Log in" [ref=e134] [cursor=pointer]:
+            - /url: /login/
+          - text: to share your answer.
+      - generic [ref=e135]:
+        - generic [ref=e136]:
+          - heading "Related questions in 📡 Observability" [level=2] [ref=e137]
+          - generic [ref=e138]:
+            - link "What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?" [ref=e139] [cursor=pointer]:
+              - /url: /questions/observability-symptom-vs-cause-alerting/
+              - img [ref=e140]
+              - generic [ref=e142]: What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?
+            - link "How would you implement structured logging across a polyglot microservices architecture?" [ref=e143] [cursor=pointer]:
+              - /url: /questions/observability-structured-logging-polyglot/
+              - img [ref=e144]
+              - generic [ref=e146]: How would you implement structured logging across a polyglot microservices architecture?
+            - link "How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?" [ref=e147] [cursor=pointer]:
+              - /url: /questions/observability-high-cardinality-management/
+              - img [ref=e148]
+              - generic [ref=e150]: How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?
+            - link "How have you defined and operated SLOs and error budgets in practice? What happened when the error budget ran out?" [ref=e151] [cursor=pointer]:
+              - /url: /questions/observability-slos-in-practice/
+              - img [ref=e152]
+              - generic [ref=e154]: How have you defined and operated SLOs and error budgets in practice? What happened when the error budget ran out?
+          - link "See all Observability questions ->" [ref=e155] [cursor=pointer]:
+            - /url: /topics/observability/
+        - generic [ref=e156]:
+          - heading "Resources" [level=2] [ref=e157]
+          - generic [ref=e158]:
+            - link "Prometheus vs Datadog" [ref=e159] [cursor=pointer]:
+              - /url: /comparisons/prometheus-vs-datadog/
+              - img [ref=e160]
+              - text: Prometheus vs Datadog
+            - link "OpenTelemetry Docs" [ref=e162] [cursor=pointer]:
+              - /url: https://opentelemetry.io/docs/
+              - img [ref=e163]
+              - text: OpenTelemetry Docs
+            - link "Prometheus Docs" [ref=e165] [cursor=pointer]:
+              - /url: https://prometheus.io/docs/
+              - img [ref=e166]
+              - text: Prometheus Docs
+  - contentinfo [ref=e168]:
+    - generic [ref=e169]:
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e172] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e173]
+            - generic [ref=e174]: Ace Cloud Interviews
+          - paragraph [ref=e175]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e176]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e177]:
+          - heading "Explore" [level=3] [ref=e178]
+          - list [ref=e179]:
+            - listitem [ref=e180]:
+              - link "Questions" [ref=e181] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e182]:
+              - link "Topics" [ref=e183] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e184]:
+              - link "Cheat Sheets" [ref=e185] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e186]:
+              - link "Comparisons" [ref=e187] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e188]:
+              - link "Learning Paths" [ref=e189] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e190]:
+              - link "Cert Study Guides" [ref=e191] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e192]:
+              - link "AWS Tutorials" [ref=e193] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e194]:
+              - link "War Stories" [ref=e195] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e196]:
+              - link "Day in the Life" [ref=e197] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e198]:
+              - link "Architecture Walkthroughs" [ref=e199] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e200]:
+              - link "CV Templates" [ref=e201] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e202]:
+          - heading "Topics" [level=3] [ref=e203]
+          - list [ref=e204]:
+            - listitem [ref=e205]:
+              - link "AWS" [ref=e206] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e207]:
+              - link "Kubernetes" [ref=e208] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e209]:
+              - link "Docker" [ref=e210] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e211]:
+              - link "Terraform" [ref=e212] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e213]:
+              - link "CI/CD" [ref=e214] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e215]:
+              - link "Linux" [ref=e216] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e217]:
+              - link "Networking" [ref=e218] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e219]:
+              - link "Security" [ref=e220] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e221]:
+              - link "Observability" [ref=e222] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e223]:
+              - link "System Design" [ref=e224] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e225]:
+              - link "Troubleshooting" [ref=e226] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e227]:
+          - heading "Company" [level=3] [ref=e228]
+          - list [ref=e229]:
+            - listitem [ref=e230]:
+              - link "About" [ref=e231] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e232]:
+              - link "FAQ" [ref=e233] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e234]:
+              - link "Contact Us" [ref=e235] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e236]:
+              - link "Privacy Policy" [ref=e237] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e238]:
+              - link "Terms of Service" [ref=e239] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e240]:
+        - paragraph [ref=e241]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e242]: Built for engineers.
+  - alert [ref=e243]

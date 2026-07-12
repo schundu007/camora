@@ -19,8 +19,8 @@ const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
     hljs.highlightElement(el);
   }, [code, lang]);
   return (
-    <div className="lumora-book-breakout my-4 rounded-lg overflow-hidden border border-[var(--border)]">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)]">
+    <div className="lumora-book-breakout my-4 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-elevated)]" data-overlay-keep>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-surface)]">
         <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent-text)]">{lang}</span>
         <button
           className="font-mono text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
@@ -46,7 +46,7 @@ const InlineText = ({ text }: { text: string }): ReactElement => {
     <>
       {text.split(/(`[^`]+`)/g).map((part, i) =>
         part.length > 2 && part.startsWith('`') && part.endsWith('`')
-          ? <code key={i} className="font-mono text-[0.92em] px-1 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent-text)]">{part.slice(1, -1)}</code>
+          ? <code key={i} className="font-mono text-[0.86em] px-1.5 py-[1.5px] mx-[1px] rounded-[4px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] whitespace-nowrap">{part.slice(1, -1)}</code>
           : <span key={i}>{part}</span>,
       )}
     </>
@@ -110,13 +110,14 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
     case 'walk': {
       const interactive = !!(onLineHover || onLineClick);
       return (
-        <div className="my-3">
+        <div className="my-3 space-y-2">
           {block.rows.map((r, i) => {
             const bindable = interactive && (r.line != null || !!r.code);
             return (
             <div
               key={i}
-              className="py-2 border-b border-[var(--border)] last:border-0"
+              className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 transition-colors hover:border-[var(--cam-gold-leaf-dk)]"
+              data-overlay-keep
               style={bindable ? { cursor: 'pointer' } : undefined}
               onMouseEnter={() => bindable && onLineHover?.(r.line, r.code, i)}
               onMouseLeave={() => bindable && onLineHover?.(undefined)}

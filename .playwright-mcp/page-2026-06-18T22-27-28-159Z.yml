@@ -1,0 +1,205 @@
+- generic:
+  - generic [ref=e1]:
+    - banner [ref=e2]:
+      - generic [ref=e3]:
+        - link "Camora — home" [ref=e4] [cursor=pointer]:
+          - /url: /
+          - img "Camora" [ref=e5]
+        - button "Back" [ref=e6]:
+          - generic [ref=e7]:
+            - img [ref=e8]
+            - generic [ref=e10]: Back
+        - navigation [ref=e649]:
+          - link "Apply" [ref=e650] [cursor=pointer]:
+            - /url: /jobs
+          - link "Prepare" [ref=e651] [cursor=pointer]:
+            - /url: /capra/prepare
+          - link "Practice" [ref=e652] [cursor=pointer]:
+            - /url: /capra/practice
+          - link "Attend" [ref=e653] [cursor=pointer]:
+            - /url: /lumora
+      - button "Search topics" [ref=e12] [cursor=pointer]:
+        - img [ref=e13]
+        - generic [ref=e16]: Search topics...
+        - generic [ref=e654]:
+          - generic [ref=e655]: ⌘
+          - text: K
+      - generic [ref=e17]:
+        - button "Switch to light mode" [ref=e18]:
+          - img [ref=e19]
+        - button "Account menu" [ref=e23]:
+          - generic [ref=e233]: Sudhakar
+          - img [ref=e24]
+    - generic [ref=e29]:
+      - complementary [ref=e234]:
+        - navigation [ref=e236]:
+          - list [ref=e238]:
+            - listitem [ref=e239]:
+              - link "Jobs" [ref=e240] [cursor=pointer]:
+                - /url: /jobs
+                - img [ref=e242]
+          - list [ref=e247]:
+            - listitem [ref=e248]:
+              - link "Overview" [ref=e249] [cursor=pointer]:
+                - /url: /capra/prepare
+                - img [ref=e251]
+            - listitem [ref=e257]:
+              - link "DSA" [ref=e258] [cursor=pointer]:
+                - /url: /capra/prepare/coding
+                - img [ref=e260]
+            - listitem [ref=e270]:
+              - link "System Design" [ref=e271] [cursor=pointer]:
+                - /url: /capra/prepare/system-design
+                - img [ref=e273]
+            - listitem [ref=e279]:
+              - link "Behavioral" [ref=e280] [cursor=pointer]:
+                - /url: /capra/prepare/behavioral
+                - img [ref=e282]
+            - listitem [ref=e287]:
+              - link "Low Level Design" [ref=e288] [cursor=pointer]:
+                - /url: /capra/prepare/low-level-design
+                - img [ref=e290]
+            - listitem [ref=e296]:
+              - link "Microservices" [ref=e297] [cursor=pointer]:
+                - /url: /capra/prepare/microservices
+                - img [ref=e299]
+            - listitem [ref=e307]:
+              - link "DevOps" [ref=e308] [cursor=pointer]:
+                - /url: /capra/prepare/devops
+                - img [ref=e310]
+            - listitem [ref=e316]:
+              - link "SRE" [ref=e317] [cursor=pointer]:
+                - /url: /capra/prepare/sre
+                - img [ref=e319]
+            - listitem [ref=e322]:
+              - link "Cloud / AWS" [ref=e323] [cursor=pointer]:
+                - /url: /capra/prepare/cloud
+                - img [ref=e325]
+            - listitem [ref=e327]:
+              - link "Linux" [ref=e328] [cursor=pointer]:
+                - /url: /capra/prepare/linux
+                - img [ref=e330]
+            - listitem [ref=e333]:
+              - link "Networking" [ref=e334] [cursor=pointer]:
+                - /url: /capra/prepare/networking
+                - img [ref=e336]
+            - listitem [ref=e341]:
+              - link "Troubleshooting" [ref=e342] [cursor=pointer]:
+                - /url: /capra/prepare/troubleshooting
+                - img [ref=e344]
+            - listitem [ref=e348]:
+              - link "War Stories" [ref=e349] [cursor=pointer]:
+                - /url: /capra/prepare/war-stories
+                - img [ref=e351]
+            - listitem [ref=e353]:
+              - link "This vs That" [ref=e354] [cursor=pointer]:
+                - /url: /capra/prepare/comparisons
+                - img [ref=e356]
+            - listitem [ref=e360]:
+              - link "Databases & SQL" [ref=e361] [cursor=pointer]:
+                - /url: /capra/prepare/databases
+                - img [ref=e363]
+            - listitem [ref=e368]:
+              - link "Projects" [ref=e369] [cursor=pointer]:
+                - /url: /capra/prepare/projects
+                - img [ref=e371]
+            - listitem [ref=e374]:
+              - link "Roadmaps" [ref=e375] [cursor=pointer]:
+                - /url: /capra/prepare/roadmaps
+                - img [ref=e377]
+            - listitem [ref=e384]:
+              - link "Eng Blogs" [ref=e385] [cursor=pointer]:
+                - /url: /capra/prepare/eng-blogs
+                - img [ref=e387]
+          - list [ref=e393]:
+            - listitem [ref=e394]:
+              - link "Practice" [ref=e395] [cursor=pointer]:
+                - /url: /capra/practice
+                - img [ref=e397]
+            - listitem [ref=e400]:
+              - link "Problem Library" [ref=e401] [cursor=pointer]:
+                - /url: /capra/library
+                - img [ref=e403]
+          - list [ref=e408]:
+            - listitem [ref=e409]:
+              - link "Python" [ref=e410] [cursor=pointer]:
+                - /url: /capra/learn/python
+                - img [ref=e412]
+            - listitem [ref=e415]:
+              - link "CodeSignal" [ref=e416] [cursor=pointer]:
+                - /url: /capra/learn/codesignal
+                - img [ref=e418]
+            - listitem [ref=e420]:
+              - link "Programiz" [ref=e421] [cursor=pointer]:
+                - /url: /capra/learn/programiz
+                - img [ref=e423]
+          - list [ref=e427]:
+            - listitem [ref=e428]:
+              - link "Live Session" [ref=e429] [cursor=pointer]:
+                - /url: /lumora
+                - img [ref=e431]
+          - list [ref=e437]:
+            - listitem [ref=e438]:
+              - link "Code Solver" [ref=e439] [cursor=pointer]:
+                - /url: /capra/coding
+                - img [ref=e441]
+            - listitem [ref=e446]:
+              - link "Design Solver" [ref=e447] [cursor=pointer]:
+                - /url: /capra/design
+                - img [ref=e449]
+          - list [ref=e457]:
+            - listitem [ref=e458]:
+              - link "Achievements" [ref=e459] [cursor=pointer]:
+                - /url: /profile?tab=achievements
+                - img [ref=e461]
+      - main [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e485]:
+            - generic [ref=e486]:
+              - generic [ref=e487]: ⌨
+              - generic [ref=e488]: Camora Playground
+              - generic [ref=e489]: ›
+              - generic [ref=e490]: AI Agent Sandbox
+            - generic [ref=e491]:
+              - generic [ref=e493]: 56:46
+              - button "A−" [ref=e495] [cursor=pointer]
+              - button "A+" [ref=e496] [cursor=pointer]
+              - button "⏻" [ref=e498] [cursor=pointer]
+          - generic [ref=e499]:
+            - button "🖥 IDE" [ref=e501] [cursor=pointer]:
+              - generic [ref=e502]: 🖥
+              - generic [ref=e503]: IDE
+            - generic [ref=e504]:
+              - button "$ agent-01" [ref=e505] [cursor=pointer]:
+                - generic [ref=e507]: $
+                - generic [ref=e508]: agent-01
+              - button "↻" [ref=e509] [cursor=pointer]
+            - generic [ref=e512]: AI Agent Sandbox
+          - generic [ref=e519]:
+            - textbox "Terminal input" [active] [ref=e520]
+            - generic [ref=e521]:
+              - generic [ref=e522]:
+                - generic [ref=e656]: camora@playground-agent-sandbox
+                - generic [ref=e657]: ":"
+                - generic [ref=e658]: ~
+                - generic [ref=e659]: $ curl -fsSL https://claude.ai | bash
+              - generic [ref=e660]: claude --version
+              - generic [ref=e661]: "curl: (22) The requested URL returned error: 403"
+              - generic [ref=e662]: "-bash: claude: command not found"
+              - generic [ref=e529]:
+                - generic [ref=e663]: camora@playground-agent-sandbox
+                - generic [ref=e664]: ":"
+                - generic [ref=e665]: ~
+                - generic [ref=e666]: $
+              - generic [ref=e530]:
+                - generic [ref=e667]: camora@playground-agent-sandbox
+                - generic [ref=e668]: ":"
+                - generic [ref=e669]: ~
+                - generic [ref=e670]: $ curl -fsSL https://claude.ai | bash
+              - generic [ref=e671]: "curl: (22) The requested URL returned error: 403"
+              - generic [ref=e535]:
+                - generic [ref=e672]: camora@playground-agent-sandbox
+                - generic [ref=e673]: ":"
+                - generic [ref=e674]: ~
+                - generic [ref=e675]: $
+  - generic [ref=e596]: mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

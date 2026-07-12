@@ -1,0 +1,572 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - navigation [ref=e5]:
+      - link "iximiuz Labs" [ref=e7] [cursor=pointer]:
+        - /url: /dashboard
+        - img "iximiuz Labs" [ref=e8]
+      - generic [ref=e9]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /dashboard
+        - generic [ref=e14] [cursor=pointer]:
+          - text: Catalog
+          - img [ref=e15]
+        - link "Skill Paths" [ref=e19] [cursor=pointer]:
+          - /url: /skill-paths
+        - link "Docker Roadmap" [ref=e21] [cursor=pointer]:
+          - /url: /roadmaps/docker
+        - link "Playgrounds" [ref=e23] [cursor=pointer]:
+          - /url: /playgrounds
+        - link "Vendors New!" [ref=e25] [cursor=pointer]:
+          - /url: /vendors
+          - text: Vendors
+          - generic [ref=e26]: New!
+        - link "Docs" [ref=e28] [cursor=pointer]:
+          - /url: /docs
+        - generic [ref=e31] [cursor=pointer]:
+          - text: More
+          - img [ref=e32]
+      - generic [ref=e34]:
+        - generic [ref=e35] [cursor=pointer]: Tinkerer subscription until Jul 17, 2026 Tinkerer
+        - link "Join our Discord community" [ref=e36] [cursor=pointer]:
+          - /url: https://discord.gg/p6nxaHm46p
+          - img [ref=e37]
+        - button [ref=e45] [cursor=pointer]:
+          - img [ref=e46]
+  - generic [ref=e50]:
+    - generic [ref=e51]:
+      - heading "Challenges" [level=1] [ref=e52]:
+        - img [ref=e53]
+        - generic [ref=e55]: Challenges
+      - paragraph [ref=e58]: Focused hands-on problems designed to help you hone your DevOps or Server Side skills. Some challenges are more educational, while others are based on real-world scenarios. The platform provides hints and feedback for each challenge, including automated solution checks.
+    - generic [ref=e59]:
+      - generic [ref=e65]:
+        - generic [ref=e66]:
+          - generic [ref=e67]: Collection
+          - generic [ref=e68]:
+            - generic [ref=e69] [cursor=pointer]:
+              - radio "iximiuz Labs Official" [ref=e70]
+              - generic [ref=e71]: iximiuz Labs Official
+            - generic [ref=e72] [cursor=pointer]:
+              - radio "Independent Authors" [ref=e73]
+              - generic [ref=e74]: Independent Authors
+            - generic [ref=e75] [cursor=pointer]:
+              - radio "Community Authors" [ref=e76]
+              - generic [ref=e77]: Community Authors
+        - generic [ref=e78]:
+          - generic [ref=e79]: Category
+          - generic [ref=e80] [cursor=pointer]:
+            - checkbox "Linux" [ref=e81]
+            - generic [ref=e82]: Linux
+          - generic [ref=e83] [cursor=pointer]:
+            - checkbox "Networking" [ref=e84]
+            - generic [ref=e85]: Networking
+          - generic [ref=e86] [cursor=pointer]:
+            - checkbox "Containers" [ref=e87]
+            - generic [ref=e88]: Containers
+          - generic [ref=e89] [cursor=pointer]:
+            - checkbox "Kubernetes" [ref=e90]
+            - generic [ref=e91]: Kubernetes
+          - button "Show more..." [ref=e92] [cursor=pointer]
+        - generic [ref=e94]:
+          - generic [ref=e95]: Difficulty
+          - generic [ref=e96] [cursor=pointer]:
+            - checkbox "Easy" [ref=e97]
+            - generic [ref=e98]: Easy
+          - generic [ref=e99] [cursor=pointer]:
+            - checkbox "Medium" [ref=e100]
+            - generic [ref=e101]: Medium
+          - generic [ref=e102] [cursor=pointer]:
+            - checkbox "Hard" [ref=e103]
+            - generic [ref=e104]: Hard
+        - generic [ref=e106]:
+          - generic [ref=e107]: Status
+          - generic [ref=e108] [cursor=pointer]:
+            - checkbox "Todo" [ref=e109]
+            - generic [ref=e110]: Todo
+          - generic [ref=e111] [cursor=pointer]:
+            - checkbox "Attempted" [ref=e112]
+            - generic [ref=e113]: Attempted
+          - generic [ref=e114] [cursor=pointer]:
+            - checkbox "Solved" [ref=e115]
+            - generic [ref=e116]: Solved
+        - button "Reset filters" [disabled]
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - generic [ref=e119]: Find challenges matching your interests...
+          - generic [ref=e120]:
+            - generic [ref=e121]:
+              - img [ref=e123]
+              - textbox "Search..." [ref=e125]
+            - textbox "Filter by tag..." [ref=e129]
+        - generic [ref=e130]:
+          - generic [ref=e131]:
+            - heading "Official Collection" [level=2] [ref=e132]:
+              - img [ref=e133]
+              - text: Official Collection
+            - paragraph [ref=e135]: Challenges crafted by iximiuz Labs to help you master DevOps and Server Side topics.
+          - generic [ref=e137]:
+            - article [ref=e138] [cursor=pointer]:
+              - generic [ref=e140]:
+                - img [ref=e142]
+                - text: Challenge,
+                - link "Medium" [ref=e144]:
+                  - /url: /challenges?difficulty=medium
+                - generic [ref=e145]: ", on"
+                - link "Linux" [ref=e146]:
+                  - /url: /challenges?category=linux
+                - generic [ref=e147]: ","
+                - link "Networking" [ref=e148]:
+                  - /url: /challenges?category=networking
+              - generic [ref=e149]:
+                - link "Resolve a Port Conflict and Keep All Dev Services Running" [ref=e150]:
+                  - /url: /challenges/linux-resolve-port-conflict
+                  - heading "Resolve a Port Conflict and Keep All Dev Services Running" [level=4] [ref=e151]
+                - generic [ref=e152]:
+                  - link "Ivan Velichko" [ref=e154]:
+                    - /url: /a/ivan-velichko
+                    - img "Ivan Velichko" [ref=e155]
+                  - generic [ref=e156]:
+                    - generic [ref=e157]: by
+                    - link "Ivan Velichko" [ref=e158]:
+                      - /url: /a/ivan-velichko
+                - paragraph [ref=e159]: A new service needs to run in your development environment, but the port it requires is already in use by another app that has to keep working. Diagnose the conflict, free the port without taking the other app down, and get both services running side by side - a realistic exercise in untangling local port conflicts.
+                - generic [ref=e160]:
+                  - generic [ref=e161]:
+                    - link "debugging" [ref=e162]:
+                      - /url: /challenges?tag=debugging
+                      - generic [ref=e163]: debugging
+                    - link "socket" [ref=e164]:
+                      - /url: /challenges?tag=socket
+                      - generic [ref=e165]: socket
+                    - link "ss" [ref=e166]:
+                      - /url: /challenges?tag=ss
+                      - generic [ref=e167]: ss
+                  - generic [ref=e169]:
+                    - button "Solve Challenge" [ref=e170]:
+                      - generic [ref=e171]: Solve Challenge
+                    - generic [ref=e173]: "18 accepted solutions out of 28 total attempts (success rate 64.0%) Submissions: 18/28"
+            - article [ref=e174] [cursor=pointer]:
+              - generic [ref=e176]:
+                - img [ref=e178]
+                - text: Challenge,
+                - link "Medium" [ref=e180]:
+                  - /url: /challenges?difficulty=medium
+                - generic [ref=e181]: ", on"
+                - link "Linux" [ref=e182]:
+                  - /url: /challenges?category=linux
+                - generic [ref=e183]: ","
+                - link "Security" [ref=e184]:
+                  - /url: /challenges?category=security
+              - generic [ref=e185]:
+                - link "Restrict Access to a Unix Domain Socket" [ref=e186]:
+                  - /url: /challenges/linux-restrict-unix-socket-access
+                  - heading "Restrict Access to a Unix Domain Socket" [level=4] [ref=e187]
+                - generic [ref=e188]:
+                  - link "Ivan Velichko" [ref=e190]:
+                    - /url: /a/ivan-velichko
+                    - img "Ivan Velichko" [ref=e191]
+                  - generic [ref=e192]:
+                    - generic [ref=e193]: by
+                    - link "Ivan Velichko" [ref=e194]:
+                      - /url: /a/ivan-velichko
+                - paragraph [ref=e195]: A daemon exposes a Unix domain socket that every local user can talk to. Protect it so that only root and members of a dedicated group may connect - the same way Docker restricts access to /var/run/docker.sock.
+                - generic [ref=e196]:
+                  - generic [ref=e197]:
+                    - link "unix-socket" [ref=e198]:
+                      - /url: /challenges?tag=unix-socket
+                      - generic [ref=e199]: unix-socket
+                    - link "systemd" [ref=e200]:
+                      - /url: /challenges?tag=systemd
+                      - generic [ref=e201]: systemd
+                  - generic [ref=e203]:
+                    - button "Solve Challenge" [ref=e204]:
+                      - generic [ref=e205]: Solve Challenge
+                    - generic [ref=e207]: "17 accepted solutions out of 25 total attempts (success rate 68.0%) Submissions: 17/25"
+            - article [ref=e208] [cursor=pointer]:
+              - generic [ref=e210]:
+                - img [ref=e212]
+                - text: Challenge,
+                - link "Medium" [ref=e214]:
+                  - /url: /challenges?difficulty=medium
+                - generic [ref=e215]: ", on"
+                - link "Linux" [ref=e216]:
+                  - /url: /challenges?category=linux
+              - generic [ref=e217]:
+                - link "Start a systemd Service on the First Connection (TCP Socket Edition)" [ref=e218]:
+                  - /url: /challenges/systemd-socket-activate-listen-stream-inet
+                  - heading "Start a systemd Service on the First Connection (TCP Socket Edition)" [level=4] [ref=e219]
+                - generic [ref=e220]:
+                  - link "Ivan Velichko" [ref=e222]:
+                    - /url: /a/ivan-velichko
+                    - img "Ivan Velichko" [ref=e223]
+                  - generic [ref=e224]:
+                    - generic [ref=e225]: by
+                    - link "Ivan Velichko" [ref=e226]:
+                      - /url: /a/ivan-velichko
+                - paragraph [ref=e227]: Configure systemd to keep a TCP port open at all times while starting the backing service process only when the first connection arrives.
+                - generic [ref=e228]:
+                  - generic [ref=e229]:
+                    - link "systemd" [ref=e230]:
+                      - /url: /challenges?tag=systemd
+                      - generic [ref=e231]: systemd
+                    - link "socket" [ref=e232]:
+                      - /url: /challenges?tag=socket
+                      - generic [ref=e233]: socket
+                    - link "tcp" [ref=e234]:
+                      - /url: /challenges?tag=tcp
+                      - generic [ref=e235]: tcp
+                  - generic [ref=e237]:
+                    - button "Solve Challenge" [ref=e238]:
+                      - generic [ref=e239]: Solve Challenge
+                    - generic [ref=e241]: "56 accepted solutions out of 107 total attempts (success rate 52.0%) Submissions: 56/107"
+            - article [ref=e242] [cursor=pointer]:
+              - generic [ref=e244]:
+                - img [ref=e246]
+                - text: Challenge,
+                - link "Medium" [ref=e248]:
+                  - /url: /challenges?difficulty=medium
+                - generic [ref=e249]: ", on"
+                - link "Linux" [ref=e250]:
+                  - /url: /challenges?category=linux
+              - generic [ref=e251]:
+                - link "Start a systemd Service on the First Connection (Unix Socket Edition)" [ref=e252]:
+                  - /url: /challenges/systemd-socket-activate-listen-stream-unix
+                  - heading "Start a systemd Service on the First Connection (Unix Socket Edition)" [level=4] [ref=e253]
+                - generic [ref=e254]:
+                  - link "Ivan Velichko" [ref=e256]:
+                    - /url: /a/ivan-velichko
+                    - img "Ivan Velichko" [ref=e257]
+                  - generic [ref=e258]:
+                    - generic [ref=e259]: by
+                    - link "Ivan Velichko" [ref=e260]:
+                      - /url: /a/ivan-velichko
+                - paragraph [ref=e261]: Configure systemd to keep a Unix domain socket open at all times while starting the backing service process only when the first connection arrives.
+                - generic [ref=e262]:
+                  - generic [ref=e263]:
+                    - link "systemd" [ref=e264]:
+                      - /url: /challenges?tag=systemd
+                      - generic [ref=e265]: systemd
+                    - link "socket" [ref=e266]:
+                      - /url: /challenges?tag=socket
+                      - generic [ref=e267]: socket
+                    - link "unix-socket" [ref=e268]:
+                      - /url: /challenges?tag=unix-socket
+                      - generic [ref=e269]: unix-socket
+                  - generic [ref=e271]:
+                    - button "Solve Challenge" [ref=e272]:
+                      - generic [ref=e273]: Solve Challenge
+                    - generic [ref=e275]: "39 accepted solutions out of 56 total attempts (success rate 70.0%) Submissions: 39/56"
+          - link "See all official challenges →" [ref=e276] [cursor=pointer]:
+            - /url: /challenges?filter=official
+        - generic [ref=e277]:
+          - generic [ref=e278]:
+            - heading "Independent Authors" [level=2] [ref=e279]:
+              - img [ref=e280]
+              - text: Independent Authors
+            - paragraph [ref=e282]: Challenges from outstanding independent authors proudly hosted by iximiuz Labs.
+          - generic [ref=e284]:
+            - article [ref=e285] [cursor=pointer]:
+              - generic [ref=e287]:
+                - img [ref=e289]
+                - text: Challenge,
+                - link "Hard" [ref=e291]:
+                  - /url: /challenges?difficulty=hard
+                - generic [ref=e292]: ", on"
+                - link "Kubernetes" [ref=e293]:
+                  - /url: /challenges?category=kubernetes
+              - generic [ref=e294]:
+                - 'link "Kube Mysteries: The Invisible Pod" [ref=e295]':
+                  - /url: /challenges/kubernetes-invisible-pod-0bf2109b
+                  - 'heading "Kube Mysteries: The Invisible Pod" [level=4] [ref=e296]'
+                - generic [ref=e297]:
+                  - link "Márk Sági-Kazár" [ref=e299]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e300]
+                  - generic [ref=e301]:
+                    - generic [ref=e302]: by
+                    - link "Márk Sági-Kazár" [ref=e303]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e304]: Did you know that pods can become invisible? Can you figure out how?
+                - generic [ref=e305]:
+                  - generic [ref=e306]:
+                    - link "kubelet" [ref=e307]:
+                      - /url: /challenges?tag=kubelet
+                      - generic [ref=e308]: kubelet
+                    - link "pod" [ref=e309]:
+                      - /url: /challenges?tag=pod
+                      - generic [ref=e310]: pod
+                  - generic [ref=e312]:
+                    - button "Solve Challenge" [ref=e313]:
+                      - generic [ref=e314]: Solve Challenge
+                    - generic [ref=e316]: "216 accepted solutions out of 501 total attempts (success rate 43.0%) Submissions: 216/501"
+            - article [ref=e317] [cursor=pointer]:
+              - generic [ref=e319]:
+                - img [ref=e321]
+                - text: Challenge,
+                - link "Easy" [ref=e323]:
+                  - /url: /challenges?difficulty=easy
+                - generic [ref=e324]: ", on"
+                - link "Linux" [ref=e325]:
+                  - /url: /challenges?category=linux
+                - generic [ref=e326]: ","
+                - link "Programming" [ref=e327]:
+                  - /url: /challenges?category=programming
+              - generic [ref=e328]:
+                - link "eBPF Challenge for Beginners" [ref=e329]:
+                  - /url: /challenges/ebpf-beginner-challenge-89ffd924
+                  - heading "eBPF Challenge for Beginners" [level=4] [ref=e330]
+                - generic [ref=e331]:
+                  - link "Teodor Janez Podobnik" [ref=e333]:
+                    - /url: /a/teodor-janez-podobnik
+                    - img "Teodor Janez Podobnik" [ref=e334]
+                  - generic [ref=e335]:
+                    - generic [ref=e336]: by
+                    - link "Teodor Janez Podobnik" [ref=e337]:
+                      - /url: /a/teodor-janez-podobnik
+                - paragraph [ref=e338]: In this challenge, you’ll debug and fix a deliberately “broken” eBPF program, then prove it’s running by identifying its program and map IDs. Along the way, you’ll explore bpftool, check which helpers are supported, and dig into details like the UID of the loader. Finally, you’ll test your knowledge of eBPF maps by recalling the flag that only inserts a key if it doesn’t already exist.
+                - generic [ref=e339]:
+                  - link "eBPF" [ref=e341]:
+                    - /url: /challenges?tag=eBPF
+                    - generic [ref=e342]: eBPF
+                  - generic [ref=e344]:
+                    - button "Solve Challenge" [ref=e345]:
+                      - generic [ref=e346]: Solve Challenge
+                    - generic [ref=e348]: "132 accepted solutions out of 409 total attempts (success rate 32.0%) Submissions: 132/409"
+            - article [ref=e349] [cursor=pointer]:
+              - generic [ref=e351]:
+                - img [ref=e353]
+                - text: Challenge,
+                - link "Easy" [ref=e355]:
+                  - /url: /challenges?difficulty=easy
+                - generic [ref=e356]: ", on"
+                - link "CI/CD" [ref=e357]:
+                  - /url: /challenges?category=ci-cd
+                - generic [ref=e358]: ","
+                - link "Security" [ref=e359]:
+                  - /url: /challenges?category=security
+              - generic [ref=e360]:
+                - 'link "Dagger: Working with Secrets" [ref=e361]':
+                  - /url: /challenges/dagger-working-with-secrets-e45f68c7
+                  - 'heading "Dagger: Working with Secrets" [level=4] [ref=e362]'
+                - generic [ref=e363]:
+                  - link "Márk Sági-Kazár" [ref=e365]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e366]
+                  - generic [ref=e367]:
+                    - generic [ref=e368]: by
+                    - link "Márk Sági-Kazár" [ref=e369]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e370]: Get hands-on with reading secrets from different providers and using them in your Dagger pipelines.
+                - generic [ref=e371]:
+                  - link "dagger" [ref=e373]:
+                    - /url: /challenges?tag=dagger
+                    - generic [ref=e374]: dagger
+                  - generic [ref=e376]:
+                    - button "Solve Challenge" [ref=e377]:
+                      - generic [ref=e378]: Solve Challenge
+                    - generic [ref=e380]: "6 accepted solutions out of 32 total attempts (success rate 19.0%) Submissions: 6/32"
+            - article [ref=e381] [cursor=pointer]:
+              - generic [ref=e383]:
+                - img [ref=e385]
+                - text: Challenge,
+                - link "Easy" [ref=e387]:
+                  - /url: /challenges?difficulty=easy
+                - generic [ref=e388]: ", on"
+                - link "CI/CD" [ref=e389]:
+                  - /url: /challenges?category=ci-cd
+              - generic [ref=e390]:
+                - 'link "Dagger: Module Dependencies" [ref=e391]':
+                  - /url: /challenges/dagger-module-dependencies-d59779c7
+                  - 'heading "Dagger: Module Dependencies" [level=4] [ref=e392]'
+                - generic [ref=e393]:
+                  - link "Márk Sági-Kazár" [ref=e395]:
+                    - /url: /a/mark-sagi-kazar
+                    - img "Márk Sági-Kazár" [ref=e396]
+                  - generic [ref=e397]:
+                    - generic [ref=e398]: by
+                    - link "Márk Sági-Kazár" [ref=e399]:
+                      - /url: /a/mark-sagi-kazar
+                - paragraph [ref=e400]: Learn how to install, update and uninstall Dagger module dependencies.
+                - generic [ref=e401]:
+                  - link "dagger" [ref=e403]:
+                    - /url: /challenges?tag=dagger
+                    - generic [ref=e404]: dagger
+                  - generic [ref=e406]:
+                    - button "Solve Challenge" [ref=e407]:
+                      - generic [ref=e408]: Solve Challenge
+                    - generic [ref=e410]: "3 accepted solutions out of 8 total attempts (success rate 38.0%) Submissions: 3/8"
+        - generic [ref=e411]:
+          - generic [ref=e412]:
+            - heading "Community Collection" [level=2] [ref=e413]:
+              - img [ref=e414]
+              - text: Community Collection
+            - paragraph [ref=e416]: Challenges contributed by the community members sharing their knowledge and expertise.
+          - generic [ref=e418]:
+            - article [ref=e419] [cursor=pointer]:
+              - generic [ref=e421]:
+                - img [ref=e423]
+                - text: Challenge,
+                - link "Medium" [ref=e425]:
+                  - /url: /challenges?difficulty=medium
+                - generic [ref=e426]: ", on"
+                - link "Kubernetes" [ref=e427]:
+                  - /url: /challenges?category=kubernetes
+              - generic [ref=e428]:
+                - link "Diagnose Why a DaemonSet Skips the Control Plane Node" [ref=e429]:
+                  - /url: /challenges/diagnose-why-daemonset-skips-the-control-plane-node-61e8e69b
+                  - heading "Diagnose Why a DaemonSet Skips the Control Plane Node" [level=4] [ref=e430]
+                - generic [ref=e431]:
+                  - link "Omkar Shelke" [ref=e433]:
+                    - /url: /a/omkar-shelke
+                    - img "Omkar Shelke" [ref=e434]
+                  - generic [ref=e435]:
+                    - generic [ref=e436]: by
+                    - link "Omkar Shelke" [ref=e437]:
+                      - /url: /a/omkar-shelke
+                - paragraph [ref=e438]: Troubleshoot and update a Kubernetes DaemonSet so that its Pods run on all nodes in the cluster, including the control plane.
+                - generic [ref=e439]:
+                  - generic [ref=e440]:
+                    - link "daemonset" [ref=e441]:
+                      - /url: /challenges?tag=daemonset
+                      - generic [ref=e442]: daemonset
+                    - link "scheduling" [ref=e443]:
+                      - /url: /challenges?tag=scheduling
+                      - generic [ref=e444]: scheduling
+                    - link "cka" [ref=e445]:
+                      - /url: /challenges?tag=cka
+                      - generic [ref=e446]: cka
+                    - link "troubleshoot" [ref=e447]:
+                      - /url: /challenges?tag=troubleshoot
+                      - generic [ref=e448]: troubleshoot
+                  - generic [ref=e450]:
+                    - button "Solve Challenge" [ref=e451]:
+                      - generic [ref=e452]: Solve Challenge
+                    - generic [ref=e454]: "35 accepted solutions out of 41 total attempts (success rate 85.0%) Submissions: 35/41"
+            - article [ref=e455] [cursor=pointer]:
+              - generic [ref=e457]:
+                - img [ref=e459]
+                - text: Challenge,
+                - link "Medium" [ref=e461]:
+                  - /url: /challenges?difficulty=medium
+                - generic [ref=e462]: ", on"
+                - link "Kubernetes" [ref=e463]:
+                  - /url: /challenges?category=kubernetes
+              - generic [ref=e464]:
+                - link "Kubernetes - PV Reclaim Policies and Recovery" [ref=e465]:
+                  - /url: /challenges/kubernetes-pv-reclaim-policies-5395f28c
+                  - heading "Kubernetes - PV Reclaim Policies and Recovery" [level=4] [ref=e466]
+                - generic [ref=e467]:
+                  - link "Kaloyan Preslavski" [ref=e469]:
+                    - /url: /a/kaloyan-preslavski
+                    - img "Kaloyan Preslavski" [ref=e470]
+                  - generic [ref=e471]:
+                    - generic [ref=e472]: by
+                    - link "Kaloyan Preslavski" [ref=e473]:
+                      - /url: /a/kaloyan-preslavski
+                - paragraph [ref=e474]: Observe the Delete and Retain reclaim policies in action, recover a Released PV by patching claimRef, and recover data by creating a new PV pointing to the same storage directory.
+                - generic [ref=e475]:
+                  - generic [ref=e476]:
+                    - link "pv" [ref=e477]:
+                      - /url: /challenges?tag=pv
+                      - generic [ref=e478]: pv
+                    - link "pvc" [ref=e479]:
+                      - /url: /challenges?tag=pvc
+                      - generic [ref=e480]: pvc
+                    - link "storage" [ref=e481]:
+                      - /url: /challenges?tag=storage
+                      - generic [ref=e482]: storage
+                    - link "ckad" [ref=e483]:
+                      - /url: /challenges?tag=ckad
+                      - generic [ref=e484]: ckad
+                  - generic [ref=e486]:
+                    - button "Solve Challenge" [ref=e487]:
+                      - generic [ref=e488]: Solve Challenge
+                    - generic [ref=e490]: "10 accepted solutions out of 15 total attempts (success rate 67.0%) Submissions: 10/15"
+            - article [ref=e491] [cursor=pointer]:
+              - generic [ref=e493]:
+                - img [ref=e495]
+                - text: Challenge,
+                - link "Medium" [ref=e497]:
+                  - /url: /challenges?difficulty=medium
+                - generic [ref=e498]: ", on"
+                - link "Kubernetes" [ref=e499]:
+                  - /url: /challenges?category=kubernetes
+              - generic [ref=e500]:
+                - 'link "Klustered: Level Four" [ref=e501]':
+                  - /url: /challenges/klustered-l4-e6611bb2
+                  - 'heading "Klustered: Level Four" [level=4] [ref=e502]'
+                - generic [ref=e503]:
+                  - link "Rawkode Academy" [ref=e505]:
+                    - /url: /a/rawkode-academy
+                    - img "Rawkode Academy" [ref=e506]
+                  - generic [ref=e507]:
+                    - generic [ref=e508]: by
+                    - link "Rawkode Academy" [ref=e509]:
+                      - /url: /a/rawkode-academy
+                - paragraph [ref=e510]: The cluster is broken again. Get the Klustered deployment healthy and serving a quote, then ship the v2 image to unlock the victory dance.
+                - generic [ref=e511]:
+                  - link "klustered" [ref=e513]:
+                    - /url: /challenges?tag=klustered
+                    - generic [ref=e514]: klustered
+                  - generic [ref=e516]:
+                    - button "Solve Challenge" [ref=e517]:
+                      - generic [ref=e518]: Solve Challenge
+                    - generic [ref=e520]: "17 accepted solutions out of 24 total attempts (success rate 71.0%) Submissions: 17/24"
+            - article [ref=e521] [cursor=pointer]:
+              - generic [ref=e523]:
+                - img [ref=e525]
+                - text: Challenge,
+                - link "Easy" [ref=e527]:
+                  - /url: /challenges?difficulty=easy
+                - generic [ref=e528]: ", on"
+                - link "Linux" [ref=e529]:
+                  - /url: /challenges?category=linux
+              - generic [ref=e530]:
+                - 'link "The SED command : Survival Guide - What You Must Know" [ref=e531]':
+                  - /url: /challenges/sed-command-basics-1-b2c4c9e9
+                  - 'heading "The SED command : Survival Guide - What You Must Know" [level=4] [ref=e532]'
+                - generic [ref=e533]:
+                  - link "Lotfi Hamadene" [ref=e535]:
+                    - /url: /a/lotfi-hamadene
+                    - img "Lotfi Hamadene" [ref=e536]
+                  - generic [ref=e537]:
+                    - generic [ref=e538]: by
+                    - link "Lotfi Hamadene" [ref=e539]:
+                      - /url: /a/lotfi-hamadene
+                - paragraph [ref=e540]: "Master **sed**, the essential stream editor for Linux SysAdmins. Progress through 10 tasks: simple & global substitution, regex patterns, line ranges, deletion, insertion, ... Work with realistic Rocky Linux system files in /home/laborant/sed_challenge/."
+                - generic [ref=e541]:
+                  - generic [ref=e542]:
+                    - link "sed" [ref=e543]:
+                      - /url: /challenges?tag=sed
+                      - generic [ref=e544]: sed
+                    - link "text-processing" [ref=e545]:
+                      - /url: /challenges?tag=text-processing
+                      - generic [ref=e546]: text-processing
+                    - link "stream-editor" [ref=e547]:
+                      - /url: /challenges?tag=stream-editor
+                      - generic [ref=e548]: stream-editor
+                    - link "rhcsa" [ref=e549]:
+                      - /url: /challenges?tag=rhcsa
+                      - generic [ref=e550]: rhcsa
+                  - generic [ref=e552]:
+                    - button "Solve Challenge" [ref=e553]:
+                      - generic [ref=e554]: Solve Challenge
+                    - generic [ref=e556]: "54 accepted solutions out of 122 total attempts (success rate 44.0%) Submissions: 54/122"
+          - link "See all challenges by community authors →" [ref=e557] [cursor=pointer]:
+            - /url: /challenges?filter=community
+  - contentinfo [ref=e558]:
+    - generic [ref=e559]:
+      - paragraph [ref=e560]:
+        - text: Copyright
+        - link "iximiuz" [ref=e561] [cursor=pointer]:
+          - /url: https://twitter.com/iximiuz
+        - text: © 2026 •
+        - link "Terms and Conditions" [ref=e562] [cursor=pointer]:
+          - /url: /terms-and-conditions
+        - text: •
+        - link "Blog" [ref=e563] [cursor=pointer]:
+          - /url: https://iximiuz.com/en/
+      - paragraph [ref=e564]:
+        - text: Theme by
+        - link "DaisyUI" [ref=e565] [cursor=pointer]:
+          - /url: https://daisyui.com/

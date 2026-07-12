@@ -1,0 +1,338 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - button "Search" [ref=e20] [cursor=pointer]:
+        - img [ref=e21]
+        - generic [ref=e23]: Cmd K
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e44] [cursor=pointer]:
+        - img [ref=e45]
+        - text: Back to questions
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "You are seeing a latency spike in production. Walk me through how you would use logs, metrics, and traces together to find the root cause in under 15 minutes." [level=1] [ref=e49]
+          - button "0" [ref=e51]:
+            - img [ref=e52]
+            - generic [ref=e54]: "0"
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - generic [ref=e57]: 📡
+            - text: Observability
+          - generic [ref=e58]: Hard
+      - generic [ref=e59]:
+        - heading "Answer" [level=2] [ref=e60]
+        - generic [ref=e61]:
+          - heading "Diagnosing a Latency Spike in Under 15 Minutes Using Metrics, Traces, and Logs" [level=2] [ref=e62]
+          - paragraph [ref=e63]: "A structured observability workflow separates engineers who find root causes quickly from those who spend hours guessing. The key is using each signal for what it does best: metrics for scope, traces for bottleneck isolation, logs for detail, infrastructure metrics for confirmation."
+          - separator [ref=e64]
+          - 'heading "Step 1 - Metrics First: Scope the Problem (0-2 min)" [level=2] [ref=e65]'
+          - paragraph [ref=e66]: "Start with your metrics dashboard (CloudWatch, Datadog, Grafana) to answer three questions: which service, which endpoint, and since when."
+          - paragraph [ref=e67]: "Check p99 and p95 latency across services. A spike in one service with stable neighbors narrows the blast radius immediately. If you use CloudWatch, query the Application Load Balancer:"
+          - code [ref=e70]: aws cloudwatch get-metric-statistics --namespace AWS/ApplicationELB --metric-name TargetResponseTime --dimensions Name=LoadBalancer,Value=app/aci-alb/abc123 --start-time 2024-01-15T10:00:00Z --end-time 2024-01-15T10:30:00Z --period 60 --statistics p99
+          - paragraph [ref=e71]: "Look for: did error rate increase alongside latency? A latency spike without errors often points to a slow dependency (DB, external API). Errors plus latency usually means saturation or a crash-looping pod."
+          - paragraph [ref=e72]: Check request volume. A traffic surge with no code change points to capacity, not a bug.
+          - paragraph [ref=e73]:
+            - strong [ref=e74]: "Goal by 2 min:"
+            - text: You know it is the
+            - code [ref=e75]: orders
+            - text: service, the
+            - code [ref=e76]: /checkout
+            - text: endpoint, p99 jumped from 200ms to 4.2s, started at 10:07 UTC.
+          - separator [ref=e77]
+          - heading "Step 2 - Traces to the Bottleneck (2-7 min)" [level=2] [ref=e78]
+          - paragraph [ref=e79]: "Pull distributed traces for slow requests in the spike window. In AWS X-Ray:"
+          - code [ref=e82]: aws xray get-service-graph --start-time 1705312020 --end-time 1705312620 aws xray batch-get-traces --trace-ids $(aws xray get-trace-summaries --start-time 1705312020 --end-time 1705312620 --filter-expression 'responsetime > 3' --query 'TraceSummaries[*].Id' --output text)
+          - paragraph [ref=e83]:
+            - text: In Jaeger or Tempo, filter by service=
+            - code [ref=e84]: orders
+            - text: ", min duration=3s, time window=10:05-10:15 UTC."
+          - paragraph [ref=e85]: "Open a representative slow trace and read the waterfall. You are looking for the span with the long gap - typically one of three culprits:"
+          - list [ref=e86]:
+            - listitem [ref=e87]:
+              - text: A database query span that ballooned (e.g.,
+              - code [ref=e88]: postgres:query
+              - text: went from 15ms to 3.8s)
+            - listitem [ref=e89]: A downstream HTTP call to another service
+            - listitem [ref=e90]: A queue publish or cache operation
+          - paragraph [ref=e91]: "If the postgres span is 3.8s and the rest of the trace is normal, you now have a precise suspect: the database query in the orders service during checkout."
+          - paragraph [ref=e92]:
+            - strong [ref=e93]: "Goal by 7 min:"
+            - text: The trace waterfall shows
+            - code [ref=e94]: orders-db:SELECT
+            - text: averaging 3.9s. The query fingerprint is visible in the span attributes.
+          - separator [ref=e95]
+          - heading "Step 3 - Logs at the Bottleneck (7-12 min)" [level=2] [ref=e96]
+          - paragraph [ref=e97]: Narrow logs to the orders service, the 10:07-10:15 UTC window, and filter by the slow query or request IDs from your traces.
+          - paragraph [ref=e98]: "In CloudWatch Logs Insights:"
+          - code [ref=e100]: fields @timestamp, @message, request_id, duration_ms, query | filter service = "orders" and duration_ms > 2000 | filter @timestamp between 1705312020000 and 1705312620000 | sort @timestamp asc | limit 50
+          - paragraph [ref=e101]:
+            - text: If your traces carry a
+            - code [ref=e102]: trace_id
+            - text: or
+            - code [ref=e103]: request_id
+            - text: ", cross-reference it in logs:"
+          - code [ref=e105]: fields @timestamp, @message | filter trace_id = "1-abc-def1234" | sort @timestamp asc
+          - paragraph [ref=e106]:
+            - text: "Look for: lock wait messages, connection pool exhaustion ("
+            - code [ref=e107]: max connections reached
+            - text: ), slow query logs, or a repeated pattern (same query, same table). In PostgreSQL slow query logs, a sudden spike in
+            - code [ref=e108]: lock_wait
+            - text: or
+            - code [ref=e109]: Rows Removed
+            - text: hints at a table-level problem.
+          - paragraph [ref=e110]:
+            - strong [ref=e111]: "Goal by 12 min:"
+            - text: Logs show
+            - code [ref=e112]: lock wait timeout exceeded
+            - text: at 10:07:34, coinciding with a long-running migration that started at 10:07:28. That migration held a lock on the
+            - code [ref=e113]: orders
+            - text: table.
+          - separator [ref=e114]
+          - heading "Step 4 - Infrastructure Metrics to Confirm (12-15 min)" [level=2] [ref=e115]
+          - paragraph [ref=e116]: Now validate whether the bottleneck is resource-constrained or purely logical.
+          - code [ref=e119]: "# RDS CPU and connections during the window aws cloudwatch get-metric-statistics --namespace AWS/RDS --metric-name DatabaseConnections --dimensions Name=DBInstanceIdentifier,Value=aci-orders-db --start-time 2024-01-15T10:05:00Z --end-time 2024-01-15T10:20:00Z --period 60 --statistics Maximum"
+          - paragraph [ref=e120]:
+            - text: "Check: CPU ("
+            - code [ref=e121]: CPUUtilization
+            - text: ), IOPS (
+            - code [ref=e122]: ReadIOPS
+            - text: ","
+            - code [ref=e123]: WriteIOPS
+            - text: ),
+            - code [ref=e124]: FreeableMemory
+            - text: ", and"
+            - code [ref=e125]: DatabaseConnections
+            - text: . In this scenario, connections would be normal, IOPS flat, CPU low - confirming the issue is a lock contention problem, not resource saturation. You would not need to scale; you need to kill the blocking session or wait for the migration to complete.
+          - paragraph [ref=e126]: For a CPU-bound result, check EC2 or container metrics. For an I/O-bound result, look at EBS throughput or RDS IOPS limits.
+          - separator [ref=e127]
+          - heading "Summary" [level=2] [ref=e128]
+          - table [ref=e130]:
+            - rowgroup [ref=e131]:
+              - row "Minute Tool Question Answered" [ref=e132]:
+                - columnheader "Minute" [ref=e133]
+                - columnheader "Tool" [ref=e134]
+                - columnheader "Question Answered" [ref=e135]
+            - rowgroup [ref=e136]:
+              - row "0-2 CloudWatch / Grafana Which service, endpoint, time window" [ref=e137]:
+                - cell "0-2" [ref=e138]
+                - cell "CloudWatch / Grafana" [ref=e139]
+                - cell "Which service, endpoint, time window" [ref=e140]
+              - row "2-7 X-Ray / Jaeger Which span is slow" [ref=e141]:
+                - cell "2-7" [ref=e142]
+                - cell "X-Ray / Jaeger" [ref=e143]
+                - cell "Which span is slow" [ref=e144]
+              - row "7-12 CloudWatch Logs Insights What is happening inside that span" [ref=e145]:
+                - cell "7-12" [ref=e146]
+                - cell "CloudWatch Logs Insights" [ref=e147]
+                - cell "What is happening inside that span" [ref=e148]
+              - row "12-15 CloudWatch RDS/EC2 metrics Is it resource saturation or logical" [ref=e149]:
+                - cell "12-15" [ref=e150]
+                - cell "CloudWatch RDS/EC2 metrics" [ref=e151]
+                - cell "Is it resource saturation or logical" [ref=e152]
+          - paragraph [ref=e153]: The discipline here is resisting the urge to jump to logs first. Logs are high-volume and expensive to scan without a target. Metrics give you the target, traces give you the span, logs give you the detail, and infrastructure metrics tell you whether to scale or fix code.
+        - generic [ref=e154]:
+          - paragraph [ref=e155]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e156] [cursor=pointer]:
+            - img [ref=e157]
+            - text: Report incorrect answer
+      - generic [ref=e159]:
+        - generic [ref=e160]:
+          - generic [ref=e161]:
+            - heading "Asked at" [level=2] [ref=e162]
+            - paragraph [ref=e163]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e164] [cursor=pointer]
+        - paragraph [ref=e165]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - heading "Community" [level=2] [ref=e168]
+          - generic [ref=e169]:
+            - button "Answers" [ref=e170] [cursor=pointer]
+            - button "Discussion" [ref=e171] [cursor=pointer]
+        - paragraph [ref=e172]: Perspectives from other engineers. Reviewed before publishing.
+        - paragraph [ref=e173]:
+          - link "Log in" [ref=e174] [cursor=pointer]:
+            - /url: /login/
+          - text: to share your answer.
+      - generic [ref=e175]:
+        - generic [ref=e176]:
+          - heading "Related questions in 📡 Observability" [level=2] [ref=e177]
+          - generic [ref=e178]:
+            - link "What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?" [ref=e179] [cursor=pointer]:
+              - /url: /questions/observability-symptom-vs-cause-alerting/
+              - img [ref=e180]
+              - generic [ref=e182]: What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?
+            - link "How do you handle observability for ephemeral infrastructure - containers, spot instances, and Lambda functions?" [ref=e183] [cursor=pointer]:
+              - /url: /questions/observability-ephemeral-infrastructure/
+              - img [ref=e184]
+              - generic [ref=e186]: How do you handle observability for ephemeral infrastructure - containers, spot instances, and Lambda functions?
+            - link "How would you implement structured logging across a polyglot microservices architecture?" [ref=e187] [cursor=pointer]:
+              - /url: /questions/observability-structured-logging-polyglot/
+              - img [ref=e188]
+              - generic [ref=e190]: How would you implement structured logging across a polyglot microservices architecture?
+            - link "How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?" [ref=e191] [cursor=pointer]:
+              - /url: /questions/observability-high-cardinality-management/
+              - img [ref=e192]
+              - generic [ref=e194]: How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?
+          - link "See all Observability questions ->" [ref=e195] [cursor=pointer]:
+            - /url: /topics/observability/
+        - generic [ref=e196]:
+          - heading "Resources" [level=2] [ref=e197]
+          - generic [ref=e198]:
+            - link "Prometheus vs Datadog" [ref=e199] [cursor=pointer]:
+              - /url: /comparisons/prometheus-vs-datadog/
+              - img [ref=e200]
+              - text: Prometheus vs Datadog
+            - link "OpenTelemetry Docs" [ref=e202] [cursor=pointer]:
+              - /url: https://opentelemetry.io/docs/
+              - img [ref=e203]
+              - text: OpenTelemetry Docs
+            - link "Prometheus Docs" [ref=e205] [cursor=pointer]:
+              - /url: https://prometheus.io/docs/
+              - img [ref=e206]
+              - text: Prometheus Docs
+  - contentinfo [ref=e208]:
+    - generic [ref=e209]:
+      - generic [ref=e210]:
+        - generic [ref=e211]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e212] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e213]
+            - generic [ref=e214]: Ace Cloud Interviews
+          - paragraph [ref=e215]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e216]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e217]:
+          - heading "Explore" [level=3] [ref=e218]
+          - list [ref=e219]:
+            - listitem [ref=e220]:
+              - link "Questions" [ref=e221] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e222]:
+              - link "Topics" [ref=e223] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e224]:
+              - link "Cheat Sheets" [ref=e225] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e226]:
+              - link "Comparisons" [ref=e227] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e228]:
+              - link "Learning Paths" [ref=e229] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e230]:
+              - link "Cert Study Guides" [ref=e231] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e232]:
+              - link "AWS Tutorials" [ref=e233] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e234]:
+              - link "War Stories" [ref=e235] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e236]:
+              - link "Day in the Life" [ref=e237] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e238]:
+              - link "Architecture Walkthroughs" [ref=e239] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e240]:
+              - link "CV Templates" [ref=e241] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e242]:
+          - heading "Topics" [level=3] [ref=e243]
+          - list [ref=e244]:
+            - listitem [ref=e245]:
+              - link "AWS" [ref=e246] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e247]:
+              - link "Kubernetes" [ref=e248] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e249]:
+              - link "Docker" [ref=e250] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e251]:
+              - link "Terraform" [ref=e252] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e253]:
+              - link "CI/CD" [ref=e254] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e255]:
+              - link "Linux" [ref=e256] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e257]:
+              - link "Networking" [ref=e258] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e259]:
+              - link "Security" [ref=e260] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e261]:
+              - link "Observability" [ref=e262] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e263]:
+              - link "System Design" [ref=e264] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e265]:
+              - link "Troubleshooting" [ref=e266] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e267]:
+          - heading "Company" [level=3] [ref=e268]
+          - list [ref=e269]:
+            - listitem [ref=e270]:
+              - link "About" [ref=e271] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e272]:
+              - link "FAQ" [ref=e273] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e274]:
+              - link "Contact Us" [ref=e275] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e276]:
+              - link "Privacy Policy" [ref=e277] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e278]:
+              - link "Terms of Service" [ref=e279] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e280]:
+        - paragraph [ref=e281]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e282]: Built for engineers.
+  - alert [ref=e283]

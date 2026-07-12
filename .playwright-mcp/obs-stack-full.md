@@ -1,0 +1,356 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e145] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e146]
+          - generic [ref=e147]: Sudhakar Chundu
+          - img [ref=e148]
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - button "Back to questions" [ref=e150] [cursor=pointer]:
+        - img [ref=e151]
+        - text: Back to questions
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - heading "How would you design an observability stack (logs, metrics, traces) for a microservices platform with 50+ services?" [level=1] [ref=e153]
+          - generic [ref=e50]:
+            - button "0" [ref=e154] [cursor=pointer]:
+              - img [ref=e155]
+              - generic [ref=e157]: "0"
+            - button "Bookmark this" [ref=e158] [cursor=pointer]:
+              - img [ref=e159]
+        - generic [ref=e53]:
+          - generic [ref=e161]:
+            - generic [ref=e162]: 🏛️
+            - text: System Design
+          - generic [ref=e163]: Medium
+      - generic [ref=e56]:
+        - heading "Answer" [level=2] [ref=e164]
+        - generic [ref=e58]:
+          - heading "Designing an Observability Stack for 50+ Microservices" [level=2] [ref=e165]
+          - paragraph [ref=e166]: At this scale, observability is not a single tool choice - it is an architecture decision with real cost and operational implications. The three pillars (logs, metrics, traces) need to be designed together, not bolted on independently.
+          - separator [ref=e167]
+          - heading "Recommended Tooling" [level=2] [ref=e168]
+          - table [ref=e170]:
+            - rowgroup [ref=e171]:
+              - row "Pillar Tool" [ref=e172]:
+                - columnheader "Pillar" [ref=e173]
+                - columnheader "Tool" [ref=e174]
+            - rowgroup [ref=e175]:
+              - row "Metrics Prometheus + Thanos (or AWS AMP)" [ref=e176]:
+                - cell "Metrics" [ref=e177]
+                - cell "Prometheus + Thanos (or AWS AMP)" [ref=e178]
+              - row "Logs Fluent Bit -> OpenSearch (or Loki for cost-sensitive setups)" [ref=e179]:
+                - cell "Logs" [ref=e180]
+                - cell "Fluent Bit -> OpenSearch (or Loki for cost-sensitive setups)" [ref=e181]
+              - row "Traces OpenTelemetry Collector -> Tempo or AWS X-Ray" [ref=e182]:
+                - cell "Traces" [ref=e183]
+                - cell "OpenTelemetry Collector -> Tempo or AWS X-Ray" [ref=e184]
+              - row "Dashboards Grafana (unified across all three pillars)" [ref=e185]:
+                - cell "Dashboards" [ref=e186]
+                - cell "Grafana (unified across all three pillars)" [ref=e187]
+              - row "Alerting Prometheus Alertmanager" [ref=e188]:
+                - cell "Alerting" [ref=e189]
+                - cell "Prometheus Alertmanager" [ref=e190]
+          - paragraph [ref=e191]: OpenTelemetry is the instrumentation standard - instrument once, route to any backend.
+          - separator [ref=e192]
+          - heading "Distributed Tracing and Sampling Strategy" [level=2] [ref=e193]
+          - paragraph [ref=e194]: "With 50+ services at high RPM (say 10,000 RPS), storing every trace is prohibitively expensive. Use a two-layer sampling strategy:"
+          - paragraph [ref=e195]:
+            - strong [ref=e196]: Head-based sampling
+            - text: "at the entry point (API gateway or ingress): sample 10% of normal traffic. This is decided before the trace completes - fast and cheap."
+          - paragraph [ref=e197]:
+            - strong [ref=e198]: Tail-based sampling
+            - text: "in the OpenTelemetry Collector: buffer spans for a short window (30-60 seconds), then apply rules. Capture 100% of traces that contain errors, high latency (>p99 threshold), or specific user-flagged requests."
+          - code [ref=e201]: "# otel-collector-config.yaml processors: tail_sampling: decision_wait: 30s policies: - name: errors-policy type: status_code status_code: {status_codes: [ERROR]} - name: latency-policy type: latency latency: {threshold_ms: 2000} - name: probabilistic-base type: probabilistic probabilistic: {sampling_percentage: 10}"
+          - paragraph [ref=e202]:
+            - text: Propagate trace context via W3C
+            - code [ref=e203]: traceparent
+            - text: headers across all service boundaries. Every service must read and forward this header - enforced at the SDK level, not left to individual teams.
+          - separator [ref=e204]
+          - 'heading "Metrics: Controlling Cardinality and Cost" [level=2] [ref=e205]'
+          - paragraph [ref=e206]:
+            - text: High-cardinality labels are the primary cause of Prometheus cost explosions. A label like
+            - code [ref=e207]: user_id
+            - text: or
+            - code [ref=e208]: request_id
+            - text: on a metric creates millions of unique time series.
+          - paragraph [ref=e209]:
+            - strong [ref=e210]: "Rules for labels:"
+            - text: only use labels with bounded cardinality -
+            - code [ref=e211]: service
+            - text: ","
+            - code [ref=e212]: env
+            - text: ","
+            - code [ref=e213]: method
+            - text: ","
+            - code [ref=e214]: status_code
+            - text: ","
+            - code [ref=e215]: region
+            - text: . Never use
+            - code [ref=e216]: user_id
+            - text: ","
+            - code [ref=e217]: order_id
+            - text: ", or any free-form string."
+          - paragraph [ref=e218]:
+            - strong [ref=e219]: Recording rules
+            - text: "for expensive queries - pre-aggregate at scrape time rather than query time:"
+          - code [ref=e222]: "# prometheus-rules.yaml groups: - name: request_rate_rules interval: 1m rules: - record: job:http_requests_total:rate5m expr: rate(http_requests_total[5m]) - record: job:http_errors_total:rate5m expr: rate(http_requests_total{status_code=~\"5..\"}[5m])"
+          - paragraph [ref=e223]:
+            - strong [ref=e224]: "Retention tiers:"
+            - text: raw metrics at 15s resolution for 7 days, downsampled 5m resolution for 30 days, 1h resolution for 1 year. Thanos or AWS AMP handle this natively.
+          - paragraph [ref=e225]: "Target metric count: under 10,000 active series per service. Alert if a service exceeds this threshold - it signals a cardinality bug."
+          - separator [ref=e226]
+          - 'heading "Log Management: Volume and Signal Quality" [level=2] [ref=e227]'
+          - paragraph [ref=e228]: At 50 services, log volume can easily reach hundreds of GB per day. Most of it is noise.
+          - paragraph [ref=e229]:
+            - strong [ref=e230]: "Log level policy in production:"
+            - text: "INFO and above only. DEBUG is off by default, toggled per-service via environment variable without a redeploy:"
+          - code [ref=e233]: "kubectl set env deployment/payment-service LOG_LEVEL=DEBUG # revert after debugging kubectl set env deployment/payment-service LOG_LEVEL=INFO"
+          - paragraph [ref=e234]:
+            - strong [ref=e235]: Structured JSON logging
+            - text: "is mandatory - no freeform strings:"
+          - code [ref=e238]: "{ \"timestamp\": \"2026-05-31T10:23:00Z\", \"level\": \"ERROR\", \"service\": \"payment-service\", \"trace_id\": \"4bf92f3577b34da6\", \"span_id\": \"00f067aa0ba902b7\", \"user_id_hash\": \"a3f4b2\", \"message\": \"Stripe charge failed\", \"error_code\": \"card_declined\" }"
+          - paragraph [ref=e239]:
+            - text: Always include
+            - code [ref=e240]: trace_id
+            - text: and
+            - code [ref=e241]: span_id
+            - text: "- this links a log line directly to its distributed trace in Grafana. Never log raw PII; hash or omit it."
+          - paragraph [ref=e242]:
+            - text: Fluent Bit runs as a DaemonSet, tails container logs, and routes to OpenSearch. Add a
+            - code [ref=e243]: "[FILTER]"
+            - text: to drop noisy health check logs at the collector level before they hit storage.
+          - separator [ref=e244]
+          - heading "Cost Attribution by Team" [level=2] [ref=e245]
+          - paragraph [ref=e246]: At 50+ services, observability infrastructure is a shared cost that quickly becomes a shared excuse. Make costs visible per team.
+          - paragraph [ref=e247]:
+            - text: Tag every observability resource (S3 buckets for Thanos, OpenSearch domains, Prometheus instances) with
+            - code [ref=e248]: team
+            - text: and
+            - code [ref=e249]: service
+            - text: "tags. Use AWS Cost Explorer or a weekly Athena query to break down spend:"
+          - code [ref=e252]: SELECT line_item_resource_tags_user_team, SUM(line_item_blended_cost) AS cost_usd FROM aws_cost_and_usage WHERE product_service_name IN ('AmazonOpenSearch', 'AmazonS3') AND line_item_usage_start_date >= DATE '2026-05-01' GROUP BY 1 ORDER BY 2 DESC;
+          - paragraph [ref=e253]: Publish a weekly Slack digest showing each team their log ingestion volume, metric series count, and trace storage. When engineers see their team is responsible for 40% of OpenSearch cost due to a verbose INFO loop, they fix it fast.
+          - separator [ref=e254]
+          - heading "Practical Starting Point" [level=2] [ref=e255]
+          - list [ref=e256]:
+            - listitem [ref=e257]: Deploy the OpenTelemetry Operator in Kubernetes - auto-instrument pods via annotations
+            - listitem [ref=e258]: Set cardinality alerts in Prometheus before services go live
+            - listitem [ref=e259]: Enforce structured logging via a shared logging library, not documentation
+            - listitem [ref=e260]: Run a monthly observability cost review with team leads
+          - paragraph [ref=e261]: The goal is high signal, low noise, and clear accountability - not complete coverage of everything.
+        - generic [ref=e262]:
+          - paragraph [ref=e263]: Did you know this?
+          - generic [ref=e264]:
+            - button "Knew it" [ref=e265] [cursor=pointer]:
+              - img [ref=e266]
+              - text: Knew it
+            - button "Need to review" [ref=e268] [cursor=pointer]:
+              - img [ref=e269]
+              - text: Need to review
+        - generic [ref=e60]:
+          - paragraph [ref=e271]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e272] [cursor=pointer]:
+            - img [ref=e273]
+            - text: Report incorrect answer
+      - generic [ref=e275]:
+        - generic [ref=e276]:
+          - generic [ref=e277]:
+            - heading "Asked at" [level=2] [ref=e278]
+            - paragraph [ref=e279]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e280] [cursor=pointer]
+        - paragraph [ref=e281]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e282]:
+        - generic [ref=e283]:
+          - heading "Community" [level=2] [ref=e284]
+          - generic [ref=e285]:
+            - button "Answers" [ref=e286] [cursor=pointer]
+            - button "Discussion" [ref=e287] [cursor=pointer]
+        - paragraph [ref=e288]: Perspectives from other engineers. Reviewed before publishing.
+        - generic [ref=e289]:
+          - textbox "Share how you would answer this question in an interview..." [ref=e290]
+          - button "Submit answer" [disabled] [ref=e291]
+          - paragraph [ref=e292]: Answers are reviewed before being published.
+      - generic [ref=e293]:
+        - generic [ref=e294]:
+          - heading "Related questions in 🏛️ System Design" [level=2] [ref=e295]
+          - generic [ref=e296]:
+            - link "Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements." [ref=e297] [cursor=pointer]:
+              - /url: /questions/system-design-secrets-management-org/
+              - img [ref=e298]
+              - generic [ref=e300]: Design an infrastructure secrets management system for a company with 20 teams, multiple environments, and compliance requirements.
+            - link "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [ref=e301] [cursor=pointer]:
+              - /url: /questions/system-design-shared-database-decomposition/
+              - img [ref=e302]
+              - generic [ref=e304]: Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?
+            - link "Design a rate limiting system that works across multiple instances of a distributed API gateway." [ref=e305] [cursor=pointer]:
+              - /url: /questions/system-design-rate-limiting-distributed/
+              - img [ref=e306]
+              - generic [ref=e308]: Design a rate limiting system that works across multiple instances of a distributed API gateway.
+            - link "Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls." [ref=e309] [cursor=pointer]:
+              - /url: /questions/system-design-batch-autoscaling/
+              - img [ref=e310]
+              - generic [ref=e312]: Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls.
+          - link "See all System Design questions ->" [ref=e313] [cursor=pointer]:
+            - /url: /topics/system-design/
+        - generic [ref=e314]:
+          - heading "Resources" [level=2] [ref=e315]
+          - generic [ref=e316]:
+            - link "AWS Architecture Center" [ref=e317] [cursor=pointer]:
+              - /url: https://aws.amazon.com/architecture/
+              - img [ref=e318]
+              - text: AWS Architecture Center
+            - link "System Design Primer" [ref=e320] [cursor=pointer]:
+              - /url: https://github.com/donnemartin/system-design-primer
+              - img [ref=e321]
+              - text: System Design Primer
+  - contentinfo [ref=e68]:
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e72] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e73]
+            - generic [ref=e74]: Ace Cloud Interviews
+          - paragraph [ref=e75]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e76]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e77]:
+          - heading "Explore" [level=3] [ref=e78]
+          - list [ref=e79]:
+            - listitem [ref=e80]:
+              - link "Questions" [ref=e81] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e82]:
+              - link "Topics" [ref=e83] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e84]:
+              - link "Cheat Sheets" [ref=e85] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e86]:
+              - link "Comparisons" [ref=e87] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e88]:
+              - link "Learning Paths" [ref=e89] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e90]:
+              - link "Cert Study Guides" [ref=e91] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e92]:
+              - link "AWS Tutorials" [ref=e93] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e94]:
+              - link "War Stories" [ref=e95] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e96]:
+              - link "Day in the Life" [ref=e97] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e98]:
+              - link "Architecture Walkthroughs" [ref=e99] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e100]:
+              - link "CV Templates" [ref=e101] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e102]:
+          - heading "Topics" [level=3] [ref=e103]
+          - list [ref=e104]:
+            - listitem [ref=e105]:
+              - link "AWS" [ref=e106] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e107]:
+              - link "Kubernetes" [ref=e108] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e109]:
+              - link "Docker" [ref=e110] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e111]:
+              - link "Terraform" [ref=e112] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e113]:
+              - link "CI/CD" [ref=e114] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e115]:
+              - link "Linux" [ref=e116] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e117]:
+              - link "Networking" [ref=e118] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e119]:
+              - link "Security" [ref=e120] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e121]:
+              - link "Observability" [ref=e122] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e123]:
+              - link "System Design" [ref=e124] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e125]:
+              - link "Troubleshooting" [ref=e126] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e127]:
+          - heading "Company" [level=3] [ref=e128]
+          - list [ref=e129]:
+            - listitem [ref=e130]:
+              - link "About" [ref=e131] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e132]:
+              - link "FAQ" [ref=e133] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e134]:
+              - link "Contact Us" [ref=e135] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e136]:
+              - link "Privacy Policy" [ref=e137] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e138]:
+              - link "Terms of Service" [ref=e139] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e140]:
+        - paragraph [ref=e141]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e142]: Built for engineers.
+  - alert [ref=e143]

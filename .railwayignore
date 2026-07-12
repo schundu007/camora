@@ -1,0 +1,15 @@
+.playwright-mcp/
+docs/superpowers/
+node_modules/
+apps/camora/dist/
+.git/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.zip
+*.tar.gz
+git-cheatsheet.png
+light-audit-landing.png
+light-design-page.png

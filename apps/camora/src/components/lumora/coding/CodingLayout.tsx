@@ -2992,8 +2992,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               editorRef.current = editor;
               editor.updateOptions({
                 fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
-                fontLigatures: true,
-                letterSpacing: -0.3,
+                // Ligatures + negative letter-spacing desync Monaco's per-char
+                // width measurement from the rendering, drifting the caret/click
+                // toward the line end. Plain metrics = accurate hit-testing.
+                fontLigatures: false,
+                letterSpacing: 0,
                 lineHeight: 19,
               });
             }}

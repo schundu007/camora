@@ -1,0 +1,407 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e331] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e332]
+          - generic [ref=e333]: Sudhakar Chundu
+          - img [ref=e334]
+    - generic [ref=e28]:
+      - link "Questions" [ref=e29] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e30] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e31] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e32] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e33] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e34] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e35] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e36] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e37] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e38] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e39] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e40] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e41]:
+    - generic [ref=e43]:
+      - generic [ref=e44]:
+        - heading "Questions & Answers" [level=1] [ref=e45]
+        - paragraph [ref=e46]: Technical questions across AWS, Kubernetes, Docker, Terraform, and more.
+        - generic [ref=e47]:
+          - img [ref=e48]
+          - text: All questions and answers are free, forever. No login required.
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - textbox "Search questions..." [ref=e52]
+          - button "Search" [ref=e54] [cursor=pointer]
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Topic
+          - generic [ref=e57]:
+            - button "☁️ AWS" [ref=e58] [cursor=pointer]
+            - button "🔄 CI/CD" [ref=e59] [cursor=pointer]
+            - button "🐳 Docker" [ref=e60] [cursor=pointer]
+            - button "⚙️ Kubernetes" [ref=e61] [cursor=pointer]
+            - button "🐧 Linux" [ref=e62] [cursor=pointer]
+            - button "🌐 Networking" [ref=e63] [cursor=pointer]
+            - button "📡 Observability" [ref=e64] [cursor=pointer]
+            - button "🔒 Security" [ref=e65] [cursor=pointer]
+            - button "🏛️ System Design" [ref=e66] [cursor=pointer]
+            - button "🏗️ Terraform" [ref=e67] [cursor=pointer]
+            - button "🔧 Troubleshooting" [ref=e68] [cursor=pointer]
+        - generic [ref=e69]:
+          - generic [ref=e70]:
+            - paragraph [ref=e71]: Difficulty
+            - generic [ref=e72]:
+              - button "Easy" [ref=e73] [cursor=pointer]
+              - button "Medium" [ref=e74] [cursor=pointer]
+              - button "Hard" [ref=e75] [cursor=pointer]
+          - generic [ref=e76]:
+            - paragraph [ref=e77]: Experience
+            - generic [ref=e78]:
+              - button "Fresher" [ref=e79] [cursor=pointer]
+              - button "2-5 yrs" [ref=e80] [cursor=pointer]
+              - button "5-8 yrs" [ref=e81] [cursor=pointer]
+              - button "8-10 yrs" [ref=e82] [cursor=pointer]
+              - button "10+ yrs" [ref=e83] [cursor=pointer]
+      - paragraph [ref=e336]: 289 questions · Page 2 of 15
+      - generic [ref=e337]:
+        - generic [ref=e338]:
+          - link "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [ref=e339] [cursor=pointer]:
+            - /url: /questions/system-design-shared-database-decomposition/
+            - heading "Your team wants to migrate a monolith to microservices. The monolith shares a single database. How do you decompose the database?" [level=3] [ref=e340]
+          - generic [ref=e341]:
+            - generic [ref=e342]:
+              - generic [ref=e343]: 🏛️
+              - text: System Design
+            - generic [ref=e344]: Hard
+            - generic [ref=e345]: 8-10 yrs - 10+ yrs
+        - generic [ref=e346]:
+          - link "Design a rate limiting system that works across multiple instances of a distributed API gateway." [ref=e347] [cursor=pointer]:
+            - /url: /questions/system-design-rate-limiting-distributed/
+            - heading "Design a rate limiting system that works across multiple instances of a distributed API gateway." [level=3] [ref=e348]
+          - generic [ref=e349]:
+            - generic [ref=e350]:
+              - generic [ref=e351]: 🏛️
+              - text: System Design
+            - generic [ref=e352]: Medium
+            - generic [ref=e353]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e354]:
+          - link "Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls." [ref=e355] [cursor=pointer]:
+            - /url: /questions/system-design-batch-autoscaling/
+            - heading "Design an auto-scaling strategy for a batch processing workload that has unpredictable bursts and strict cost controls." [level=3] [ref=e356]
+          - generic [ref=e357]:
+            - generic [ref=e358]:
+              - generic [ref=e359]: 🏛️
+              - text: System Design
+            - generic [ref=e360]: Medium
+            - generic [ref=e361]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e362]:
+          - link "Design a multi-region active-active deployment for a latency-sensitive API. How do you handle write conflicts?" [ref=e363] [cursor=pointer]:
+            - /url: /questions/system-design-active-active-multiregion-api/
+            - heading "Design a multi-region active-active deployment for a latency-sensitive API. How do you handle write conflicts?" [level=3] [ref=e364]
+          - generic [ref=e365]:
+            - generic [ref=e366]:
+              - generic [ref=e367]: 🏛️
+              - text: System Design
+            - generic [ref=e368]: Hard
+            - generic [ref=e369]: 8-10 yrs - 10+ yrs
+        - generic [ref=e370]:
+          - link "How do you handle observability for ephemeral infrastructure - containers, spot instances, and Lambda functions?" [ref=e371] [cursor=pointer]:
+            - /url: /questions/observability-ephemeral-infrastructure/
+            - heading "How do you handle observability for ephemeral infrastructure - containers, spot instances, and Lambda functions?" [level=3] [ref=e372]
+          - generic [ref=e373]:
+            - generic [ref=e374]:
+              - generic [ref=e375]: 📡
+              - text: Observability
+            - generic [ref=e376]: Medium
+            - generic [ref=e377]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e378]:
+          - link "What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?" [ref=e379] [cursor=pointer]:
+            - /url: /questions/observability-symptom-vs-cause-alerting/
+            - heading "What is the difference between alerting on symptoms versus alerting on causes, and can you give examples of each?" [level=3] [ref=e380]
+          - generic [ref=e381]:
+            - generic [ref=e382]:
+              - generic [ref=e383]: 📡
+              - text: Observability
+            - generic [ref=e384]: Medium
+            - generic [ref=e385]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e386]:
+          - link "How would you implement structured logging across a polyglot microservices architecture?" [ref=e387] [cursor=pointer]:
+            - /url: /questions/observability-structured-logging-polyglot/
+            - heading "How would you implement structured logging across a polyglot microservices architecture?" [level=3] [ref=e388]
+          - generic [ref=e389]:
+            - generic [ref=e390]:
+              - generic [ref=e391]: 📡
+              - text: Observability
+            - generic [ref=e392]: Hard
+            - generic [ref=e393]: 8-10 yrs - 10+ yrs
+        - generic [ref=e394]:
+          - link "How have you defined and operated SLOs and error budgets in practice? What happened when the error budget ran out?" [ref=e395] [cursor=pointer]:
+            - /url: /questions/observability-slos-in-practice/
+            - heading "How have you defined and operated SLOs and error budgets in practice? What happened when the error budget ran out?" [level=3] [ref=e396]
+          - generic [ref=e397]:
+            - generic [ref=e398]:
+              - generic [ref=e399]: 📡
+              - text: Observability
+            - generic [ref=e400]: Hard
+            - generic [ref=e401]: 8-10 yrs - 10+ yrs
+        - generic [ref=e402]:
+          - link "How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?" [ref=e403] [cursor=pointer]:
+            - /url: /questions/observability-high-cardinality-management/
+            - heading "How do you manage high cardinality in your metrics pipeline, and where do you draw the line between labels on metrics versus logs?" [level=3] [ref=e404]
+          - generic [ref=e405]:
+            - generic [ref=e406]:
+              - generic [ref=e407]: 📡
+              - text: Observability
+            - generic [ref=e408]: Hard
+            - generic [ref=e409]: 8-10 yrs - 10+ yrs
+        - generic [ref=e410]:
+          - link "How do you audit and enforce encryption at rest and in transit across a heterogeneous AWS environment?" [ref=e411] [cursor=pointer]:
+            - /url: /questions/security-encryption-audit-enforcement/
+            - heading "How do you audit and enforce encryption at rest and in transit across a heterogeneous AWS environment?" [level=3] [ref=e412]
+          - generic [ref=e413]:
+            - generic [ref=e414]:
+              - generic [ref=e415]: 🔒
+              - text: Security
+            - generic [ref=e416]: Medium
+            - generic [ref=e417]: 8-10 yrs - 10+ yrs
+        - generic [ref=e418]:
+          - link "You are seeing a latency spike in production. Walk me through how you would use logs, metrics, and traces together to find the root cause in under 15 minutes." [ref=e419] [cursor=pointer]:
+            - /url: /questions/observability-latency-spike-investigation/
+            - heading "You are seeing a latency spike in production. Walk me through how you would use logs, metrics, and traces together to find the root cause in under 15 minutes." [level=3] [ref=e420]
+          - generic [ref=e421]:
+            - generic [ref=e422]:
+              - generic [ref=e423]: 📡
+              - text: Observability
+            - generic [ref=e424]: Hard
+            - generic [ref=e425]: 8-10 yrs - 10+ yrs
+        - generic [ref=e426]:
+          - link "How would you implement a zero-trust network model for a cloud environment where engineers need access to internal services?" [ref=e427] [cursor=pointer]:
+            - /url: /questions/security-zero-trust-implementation/
+            - heading "How would you implement a zero-trust network model for a cloud environment where engineers need access to internal services?" [level=3] [ref=e428]
+          - generic [ref=e429]:
+            - generic [ref=e430]:
+              - generic [ref=e431]: 🔒
+              - text: Security
+            - generic [ref=e432]: Medium
+            - generic [ref=e433]: 8-10 yrs - 10+ yrs
+        - generic [ref=e434]:
+          - link "An attacker gains access to a Kubernetes cluster using a stolen service account token. What can they do, and how do you limit blast radius?" [ref=e435] [cursor=pointer]:
+            - /url: /questions/security-stolen-service-account-token/
+            - heading "An attacker gains access to a Kubernetes cluster using a stolen service account token. What can they do, and how do you limit blast radius?" [level=3] [ref=e436]
+          - generic [ref=e437]:
+            - generic [ref=e438]:
+              - generic [ref=e439]: 🔒
+              - text: Security
+            - generic [ref=e440]: Hard
+            - generic [ref=e441]: 8-10 yrs - 10+ yrs
+        - generic [ref=e442]:
+          - link "Your security scan tool is blocking every CI/CD pipeline deployment because it flags vulnerabilities in base images. How do you build a practical policy?" [ref=e443] [cursor=pointer]:
+            - /url: /questions/security-vulnerability-scanning-noise/
+            - heading "Your security scan tool is blocking every CI/CD pipeline deployment because it flags vulnerabilities in base images. How do you build a practical policy?" [level=3] [ref=e444]
+          - generic [ref=e445]:
+            - generic [ref=e446]:
+              - generic [ref=e447]: 🔒
+              - text: Security
+            - generic [ref=e448]: Medium
+            - generic [ref=e449]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e450]:
+          - link "Explain how you would implement secrets management for a microservices architecture running on Kubernetes." [ref=e451] [cursor=pointer]:
+            - /url: /questions/security-microservices-secrets/
+            - heading "Explain how you would implement secrets management for a microservices architecture running on Kubernetes." [level=3] [ref=e452]
+          - generic [ref=e453]:
+            - generic [ref=e454]:
+              - generic [ref=e455]: 🔒
+              - text: Security
+            - generic [ref=e456]: Hard
+            - generic [ref=e457]: 8-10 yrs - 10+ yrs
+        - generic [ref=e458]:
+          - link "A developer pushes a Docker image to your container registry that contains a critical CVE. How do you detect, contain, and remediate it?" [ref=e459] [cursor=pointer]:
+            - /url: /questions/security-critical-cve-container-registry/
+            - heading "A developer pushes a Docker image to your container registry that contains a critical CVE. How do you detect, contain, and remediate it?" [level=3] [ref=e460]
+          - generic [ref=e461]:
+            - generic [ref=e462]:
+              - generic [ref=e463]: 🔒
+              - text: Security
+            - generic [ref=e464]: Hard
+            - generic [ref=e465]: 8-10 yrs - 10+ yrs
+        - generic [ref=e466]:
+          - link "How do you ensure your CI pipeline provides fast feedback to developers without sacrificing coverage?" [ref=e467] [cursor=pointer]:
+            - /url: /questions/cicd-fast-feedback-without-compromise/
+            - heading "How do you ensure your CI pipeline provides fast feedback to developers without sacrificing coverage?" [level=3] [ref=e468]
+          - generic [ref=e469]:
+            - generic [ref=e470]:
+              - generic [ref=e471]: 🔄
+              - text: CI/CD
+            - generic [ref=e472]: Medium
+            - generic [ref=e473]: 5-8 yrs - 8-10 yrs
+        - generic [ref=e474]:
+          - link "A deployment succeeded in CI/CD but the application is behaving incorrectly in production. What are the most common causes?" [ref=e475] [cursor=pointer]:
+            - /url: /questions/cicd-green-pipeline-broken-production/
+            - heading "A deployment succeeded in CI/CD but the application is behaving incorrectly in production. What are the most common causes?" [level=3] [ref=e476]
+          - generic [ref=e477]:
+            - generic [ref=e478]:
+              - generic [ref=e479]: 🔄
+              - text: CI/CD
+            - generic [ref=e480]: Hard
+            - generic [ref=e481]: 8-10 yrs - 10+ yrs
+        - generic [ref=e482]:
+          - link "How do you handle CI/CD for infrastructure changes (Terraform) alongside application deployments? What are the coordination challenges?" [ref=e483] [cursor=pointer]:
+            - /url: /questions/cicd-terraform-alongside-application/
+            - heading "How do you handle CI/CD for infrastructure changes (Terraform) alongside application deployments? What are the coordination challenges?" [level=3] [ref=e484]
+          - generic [ref=e485]:
+            - generic [ref=e486]:
+              - generic [ref=e487]: 🔄
+              - text: CI/CD
+            - generic [ref=e488]: Hard
+            - generic [ref=e489]: 8-10 yrs - 10+ yrs
+        - generic [ref=e490]:
+          - link "How do you implement progressive delivery (canary or blue-green deployments) for a stateful application that requires database schema changes?" [ref=e491] [cursor=pointer]:
+            - /url: /questions/cicd-progressive-delivery-with-migrations/
+            - heading "How do you implement progressive delivery (canary or blue-green deployments) for a stateful application that requires database schema changes?" [level=3] [ref=e492]
+          - generic [ref=e493]:
+            - generic [ref=e494]:
+              - generic [ref=e495]: 🔄
+              - text: CI/CD
+            - generic [ref=e496]: Hard
+            - generic [ref=e497]: 8-10 yrs - 10+ yrs
+      - generic [ref=e498]:
+        - button "Previous" [ref=e499] [cursor=pointer]:
+          - img [ref=e500]
+          - text: Previous
+        - generic [ref=e502]: Page 2 of 15
+        - button "Next" [ref=e503] [cursor=pointer]:
+          - text: Next
+          - img [ref=e504]
+  - contentinfo [ref=e254]:
+    - generic [ref=e255]:
+      - generic [ref=e256]:
+        - generic [ref=e257]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e258] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e259]
+            - generic [ref=e260]: Ace Cloud Interviews
+          - paragraph [ref=e261]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e262]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e263]:
+          - heading "Explore" [level=3] [ref=e264]
+          - list [ref=e265]:
+            - listitem [ref=e266]:
+              - link "Questions" [ref=e267] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e268]:
+              - link "Topics" [ref=e269] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e270]:
+              - link "Cheat Sheets" [ref=e271] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e272]:
+              - link "Comparisons" [ref=e273] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e274]:
+              - link "Learning Paths" [ref=e275] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e276]:
+              - link "Cert Study Guides" [ref=e277] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e278]:
+              - link "AWS Tutorials" [ref=e279] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e280]:
+              - link "War Stories" [ref=e281] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e282]:
+              - link "Day in the Life" [ref=e283] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e284]:
+              - link "Architecture Walkthroughs" [ref=e285] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e286]:
+              - link "CV Templates" [ref=e287] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e288]:
+          - heading "Topics" [level=3] [ref=e289]
+          - list [ref=e290]:
+            - listitem [ref=e291]:
+              - link "AWS" [ref=e292] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e293]:
+              - link "Kubernetes" [ref=e294] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e295]:
+              - link "Docker" [ref=e296] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e297]:
+              - link "Terraform" [ref=e298] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e299]:
+              - link "CI/CD" [ref=e300] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e301]:
+              - link "Linux" [ref=e302] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e303]:
+              - link "Networking" [ref=e304] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e305]:
+              - link "Security" [ref=e306] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e307]:
+              - link "Observability" [ref=e308] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e309]:
+              - link "System Design" [ref=e310] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e311]:
+              - link "Troubleshooting" [ref=e312] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e313]:
+          - heading "Company" [level=3] [ref=e314]
+          - list [ref=e315]:
+            - listitem [ref=e316]:
+              - link "About" [ref=e317] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e318]:
+              - link "FAQ" [ref=e319] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e320]:
+              - link "Contact Us" [ref=e321] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e322]:
+              - link "Privacy Policy" [ref=e323] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e324]:
+              - link "Terms of Service" [ref=e325] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e326]:
+        - paragraph [ref=e327]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e328]: Built for engineers.
+  - alert [ref=e329]

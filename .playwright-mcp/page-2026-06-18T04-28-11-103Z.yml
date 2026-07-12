@@ -1,0 +1,491 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Camora — home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "Camora" [ref=e5]
+      - button "Back" [ref=e6]:
+        - generic [ref=e7]:
+          - img [ref=e8]
+          - generic [ref=e10]: Back
+      - navigation [ref=e11]:
+        - link "Apply" [ref=e12] [cursor=pointer]:
+          - /url: /jobs
+        - link "Prepare" [ref=e13] [cursor=pointer]:
+          - /url: /capra/prepare
+        - link "Practice" [ref=e14] [cursor=pointer]:
+          - /url: /capra/practice
+        - link "Attend" [ref=e15] [cursor=pointer]:
+          - /url: /lumora
+    - button "Search topics" [ref=e17] [cursor=pointer]:
+      - img [ref=e18]
+      - generic [ref=e21]: Search topics...
+      - generic [ref=e22]:
+        - generic [ref=e23]: ⌘
+        - text: K
+    - generic [ref=e24]:
+      - button "Switch to dark mode" [ref=e25]:
+        - img [ref=e26]
+      - button "Account menu" [ref=e29]:
+        - generic [ref=e30]: Sudhakar
+        - img [ref=e31]
+  - generic [ref=e33]:
+    - complementary [ref=e34]:
+      - navigation [ref=e36]:
+        - list [ref=e38]:
+          - listitem [ref=e39]:
+            - link "Jobs" [ref=e40] [cursor=pointer]:
+              - /url: /jobs
+              - img [ref=e42]
+        - list [ref=e47]:
+          - listitem [ref=e48]:
+            - link "Overview" [ref=e49] [cursor=pointer]:
+              - /url: /capra/prepare
+              - img [ref=e51]
+          - listitem [ref=e57]:
+            - link "DSA" [ref=e58] [cursor=pointer]:
+              - /url: /capra/prepare/coding
+              - img [ref=e60]
+          - listitem [ref=e70]:
+            - link "System Design" [ref=e71] [cursor=pointer]:
+              - /url: /capra/prepare/system-design
+              - img [ref=e73]
+          - listitem [ref=e79]:
+            - link "Behavioral" [ref=e80] [cursor=pointer]:
+              - /url: /capra/prepare/behavioral
+              - img [ref=e82]
+          - listitem [ref=e87]:
+            - link "Low Level Design" [ref=e88] [cursor=pointer]:
+              - /url: /capra/prepare/low-level-design
+              - img [ref=e90]
+          - listitem [ref=e96]:
+            - link "Microservices" [ref=e97] [cursor=pointer]:
+              - /url: /capra/prepare/microservices
+              - img [ref=e99]
+          - listitem [ref=e107]:
+            - link "DevOps" [ref=e108] [cursor=pointer]:
+              - /url: /capra/prepare/devops
+              - img [ref=e110]
+          - listitem [ref=e116]:
+            - link "SRE" [ref=e117] [cursor=pointer]:
+              - /url: /capra/prepare/sre
+              - img [ref=e119]
+          - listitem [ref=e122]:
+            - link "Databases & SQL" [ref=e123] [cursor=pointer]:
+              - /url: /capra/prepare/databases
+              - img [ref=e125]
+          - listitem [ref=e130]:
+            - link "Projects" [ref=e131] [cursor=pointer]:
+              - /url: /capra/prepare/projects
+              - img [ref=e133]
+          - listitem [ref=e136]:
+            - link "Roadmaps" [ref=e137] [cursor=pointer]:
+              - /url: /capra/prepare/roadmaps
+              - img [ref=e139]
+          - listitem [ref=e146]:
+            - link "Eng Blogs" [ref=e147] [cursor=pointer]:
+              - /url: /capra/prepare/eng-blogs
+              - img [ref=e149]
+        - list [ref=e155]:
+          - listitem [ref=e156]:
+            - link "Practice" [ref=e157] [cursor=pointer]:
+              - /url: /capra/practice
+              - img [ref=e159]
+          - listitem [ref=e162]:
+            - link "Problem Library" [ref=e163] [cursor=pointer]:
+              - /url: /capra/library
+              - img [ref=e165]
+        - list [ref=e170]:
+          - listitem [ref=e171]:
+            - link "Python" [ref=e172] [cursor=pointer]:
+              - /url: /capra/learn/python
+              - img [ref=e174]
+          - listitem [ref=e177]:
+            - link "CodeSignal" [ref=e178] [cursor=pointer]:
+              - /url: /capra/learn/codesignal
+              - img [ref=e180]
+          - listitem [ref=e182]:
+            - link "Programiz" [ref=e183] [cursor=pointer]:
+              - /url: /capra/learn/programiz
+              - img [ref=e185]
+        - list [ref=e189]:
+          - listitem [ref=e190]:
+            - link "Live Session" [ref=e191] [cursor=pointer]:
+              - /url: /lumora
+              - img [ref=e193]
+        - list [ref=e199]:
+          - listitem [ref=e200]:
+            - link "Code Solver" [ref=e201] [cursor=pointer]:
+              - /url: /capra/coding
+              - img [ref=e203]
+          - listitem [ref=e208]:
+            - link "Design Solver" [ref=e209] [cursor=pointer]:
+              - /url: /capra/design
+              - img [ref=e211]
+        - list [ref=e219]:
+          - listitem [ref=e220]:
+            - link "Achievements" [ref=e221] [cursor=pointer]:
+              - /url: /profile?tab=achievements
+              - img [ref=e223]
+    - main [ref=e229]:
+      - generic [ref=e232]:
+        - generic [ref=e233]:
+          - button "Back" [ref=e234]:
+            - generic [ref=e235] [cursor=pointer]:
+              - img [ref=e236]
+              - text: Back
+          - generic [ref=e238]:
+            - link "Prepare" [ref=e239] [cursor=pointer]:
+              - /url: /capra/prepare
+            - img [ref=e240]
+            - generic [ref=e242]: Overview
+          - link "Start Practicing" [ref=e244] [cursor=pointer]:
+            - /url: /capra/practice
+        - generic [ref=e245]:
+          - generic [ref=e247]:
+            - generic [ref=e248]:
+              - paragraph [ref=e249]: PREPARE
+              - heading "Welcome back, Sudhakar." [level=1] [ref=e250]
+            - generic [ref=e251]:
+              - generic [ref=e252]: "0"
+              - generic [ref=e253]: of 691 topics completed
+              - generic [ref=e254]: ·
+              - generic [ref=e255]: 17 categories
+              - generic [ref=e256]: ·
+              - generic [ref=e257]: 0% complete
+          - generic [ref=e258]:
+            - paragraph [ref=e259]: START HERE
+            - heading "Pick up where you left off" [level=2] [ref=e260]
+            - generic [ref=e261]:
+              - link "CONTINUE Git for DevOps Resume the topic you were on last." [ref=e262] [cursor=pointer]:
+                - /url: /capra/prepare/devops?topic=git-for-devops
+                - generic [ref=e263]: CONTINUE
+                - heading "Git for DevOps" [level=3] [ref=e264]
+                - paragraph [ref=e265]: Resume the topic you were on last.
+              - link "TODAY'S PICK String DP Daily rotation — fresh topic to revisit each morning." [ref=e266] [cursor=pointer]:
+                - /url: /capra/prepare/coding?topic=string-dp
+                - generic [ref=e267]: TODAY'S PICK
+                - heading "String DP" [level=3] [ref=e268]
+                - paragraph [ref=e269]: Daily rotation — fresh topic to revisit each morning.
+              - link "PRACTICE Run a timed mock AI-scored practice session with instant feedback." [ref=e270] [cursor=pointer]:
+                - /url: /capra/practice
+                - generic [ref=e271]: PRACTICE
+                - heading "Run a timed mock" [level=3] [ref=e272]
+                - paragraph [ref=e273]: AI-scored practice session with instant feedback.
+          - generic [ref=e274]:
+            - generic [ref=e275]:
+              - generic [ref=e277]: Topic Categories
+              - generic [ref=e278]: Browse
+            - generic [ref=e279]:
+              - link "DSA & Algorithms 0/57 topics 0%" [ref=e280] [cursor=pointer]:
+                - /url: /capra/prepare/coding
+                - generic [ref=e281]:
+                  - generic "DSA & Algorithms" [ref=e282]:
+                    - img [ref=e284]
+                  - heading "DSA & Algorithms" [level=3] [ref=e287]
+                - generic [ref=e289]:
+                  - generic [ref=e290]: 0/57 topics
+                  - generic [ref=e291]: 0%
+              - link "System Design 0/183 topics 0%" [ref=e294] [cursor=pointer]:
+                - /url: /capra/prepare/system-design
+                - generic [ref=e295]:
+                  - generic "System Design" [ref=e296]:
+                    - img [ref=e298]
+                  - heading "System Design" [level=3] [ref=e303]
+                - generic [ref=e305]:
+                  - generic [ref=e306]: 0/183 topics
+                  - generic [ref=e307]: 0%
+              - link "Behavioral 0/57 topics 0%" [ref=e310] [cursor=pointer]:
+                - /url: /capra/prepare/behavioral
+                - generic [ref=e311]:
+                  - generic "Behavioral" [ref=e312]:
+                    - img [ref=e314]
+                  - heading "Behavioral" [level=3] [ref=e319]
+                - generic [ref=e321]:
+                  - generic [ref=e322]: 0/57 topics
+                  - generic [ref=e323]: 0%
+              - link "Low Level Design 0/106 topics 0%" [ref=e326] [cursor=pointer]:
+                - /url: /capra/prepare/low-level-design
+                - generic [ref=e327]:
+                  - generic "Low Level Design" [ref=e328]:
+                    - img [ref=e330]
+                  - heading "Low Level Design" [level=3] [ref=e334]
+                - generic [ref=e336]:
+                  - generic [ref=e337]: 0/106 topics
+                  - generic [ref=e338]: 0%
+              - link "Site Reliability Engineering 0/61 topics 0%" [ref=e341] [cursor=pointer]:
+                - /url: /capra/prepare/sre
+                - generic [ref=e342]:
+                  - generic "Site Reliability Engineering" [ref=e343]:
+                    - img [ref=e345]
+                  - heading "Site Reliability Engineering" [level=3] [ref=e347]
+                - generic [ref=e349]:
+                  - generic [ref=e350]: 0/61 topics
+                  - generic [ref=e351]: 0%
+              - link "DevOps 0/120 topics 0%" [ref=e354] [cursor=pointer]:
+                - /url: /capra/prepare/devops
+                - generic [ref=e355]:
+                  - generic "DevOps" [ref=e356]:
+                    - img [ref=e358]
+                  - heading "DevOps" [level=3] [ref=e362]
+                - generic [ref=e364]:
+                  - generic [ref=e365]: 0/120 topics
+                  - generic [ref=e366]: 0%
+              - link "Databases & SQL 0/20 topics 0%" [ref=e369] [cursor=pointer]:
+                - /url: /capra/prepare/databases
+                - generic [ref=e370]:
+                  - generic "Databases & SQL" [ref=e371]:
+                    - img [ref=e373]
+                  - heading "Databases & SQL" [level=3] [ref=e377]
+                - generic [ref=e379]:
+                  - generic [ref=e380]: 0/20 topics
+                  - generic [ref=e381]: 0%
+              - link "Microservices 0/12 topics 0%" [ref=e384] [cursor=pointer]:
+                - /url: /capra/prepare/microservices
+                - generic [ref=e385]:
+                  - generic "Microservices" [ref=e386]:
+                    - img [ref=e388]
+                  - heading "Microservices" [level=3] [ref=e393]
+                - generic [ref=e395]:
+                  - generic [ref=e396]: 0/12 topics
+                  - generic [ref=e397]: 0%
+              - link "Projects 0/24 topics 0%" [ref=e400] [cursor=pointer]:
+                - /url: /capra/prepare/projects
+                - generic [ref=e401]:
+                  - generic "Projects" [ref=e402]:
+                    - img [ref=e404]
+                  - heading "Projects" [level=3] [ref=e407]
+                - generic [ref=e409]:
+                  - generic [ref=e410]: 0/24 topics
+                  - generic [ref=e411]: 0%
+              - link "Roadmaps 0/12 topics 0%" [ref=e414] [cursor=pointer]:
+                - /url: /capra/prepare/roadmaps
+                - generic [ref=e415]:
+                  - generic "Roadmaps" [ref=e416]:
+                    - img [ref=e418]
+                  - heading "Roadmaps" [level=3] [ref=e421]
+                - generic [ref=e423]:
+                  - generic [ref=e424]: 0/12 topics
+                  - generic [ref=e425]: 0%
+              - link "Eng Blogs 0/39 topics 0%" [ref=e428] [cursor=pointer]:
+                - /url: /capra/prepare/eng-blogs
+                - generic [ref=e429]:
+                  - generic "Eng Blogs" [ref=e430]:
+                    - img [ref=e432]
+                  - heading "Eng Blogs" [level=3] [ref=e435]
+                - generic [ref=e437]:
+                  - generic [ref=e438]: 0/39 topics
+                  - generic [ref=e439]: 0%
+              - link "Cloud / AWS 0/0 topics 0%" [ref=e442] [cursor=pointer]:
+                - /url: /capra/prepare/cloud
+                - generic [ref=e443]:
+                  - generic "Cloud / AWS" [ref=e444]:
+                    - img [ref=e446]
+                  - heading "Cloud / AWS" [level=3] [ref=e448]
+                - generic [ref=e450]:
+                  - generic [ref=e451]: 0/0 topics
+                  - generic [ref=e452]: 0%
+              - link "Linux 0/0 topics 0%" [ref=e455] [cursor=pointer]:
+                - /url: /capra/prepare/linux
+                - generic [ref=e456]:
+                  - generic "Linux" [ref=e457]:
+                    - img [ref=e459]
+                  - heading "Linux" [level=3] [ref=e461]
+                - generic [ref=e463]:
+                  - generic [ref=e464]: 0/0 topics
+                  - generic [ref=e465]: 0%
+              - link "Networking 0/0 topics 0%" [ref=e468] [cursor=pointer]:
+                - /url: /capra/prepare/networking
+                - generic [ref=e469]:
+                  - generic "Networking" [ref=e470]:
+                    - img [ref=e472]
+                  - heading "Networking" [level=3] [ref=e475]
+                - generic [ref=e477]:
+                  - generic [ref=e478]: 0/0 topics
+                  - generic [ref=e479]: 0%
+              - link "Troubleshooting 0/0 topics 0%" [ref=e482] [cursor=pointer]:
+                - /url: /capra/prepare/troubleshooting
+                - generic [ref=e483]:
+                  - generic "Troubleshooting" [ref=e484]:
+                    - img [ref=e486]
+                  - heading "Troubleshooting" [level=3] [ref=e488]
+                - generic [ref=e490]:
+                  - generic [ref=e491]: 0/0 topics
+                  - generic [ref=e492]: 0%
+              - link "War Stories 0/0 topics 0%" [ref=e495] [cursor=pointer]:
+                - /url: /capra/prepare/war-stories
+                - generic [ref=e496]:
+                  - generic "War Stories" [ref=e497]:
+                    - img [ref=e499]
+                  - heading "War Stories" [level=3] [ref=e501]
+                - generic [ref=e503]:
+                  - generic [ref=e504]: 0/0 topics
+                  - generic [ref=e505]: 0%
+              - link "This vs That 0/0 topics 0%" [ref=e508] [cursor=pointer]:
+                - /url: /capra/prepare/comparisons
+                - generic [ref=e509]:
+                  - generic "This vs That" [ref=e510]:
+                    - img [ref=e512]
+                  - heading "This vs That" [level=3] [ref=e516]
+                - generic [ref=e518]:
+                  - generic [ref=e519]: 0/0 topics
+                  - generic [ref=e520]: 0%
+          - generic [ref=e523]:
+            - generic [ref=e526]: Learning Path
+            - generic [ref=e528]:
+              - link "1 Coding Arrays, strings, trees, graphs" [ref=e529] [cursor=pointer]:
+                - /url: /capra/prepare/coding
+                - generic [ref=e531]: "1"
+                - img [ref=e533]
+                - img [ref=e536]
+                - generic [ref=e539]: Coding
+                - generic [ref=e540]: Arrays, strings, trees, graphs
+              - link "2 System Design Scalability, databases, caching" [ref=e541] [cursor=pointer]:
+                - /url: /capra/prepare/system-design
+                - generic [ref=e543]: "2"
+                - img [ref=e545]
+                - img [ref=e548]
+                - generic [ref=e553]: System Design
+                - generic [ref=e554]: Scalability, databases, caching
+              - link "3 Low-Level Design OOP, SOLID, design patterns" [ref=e555] [cursor=pointer]:
+                - /url: /capra/prepare/low-level-design
+                - generic [ref=e557]: "3"
+                - img [ref=e559]
+                - img [ref=e562]
+                - generic [ref=e566]: Low-Level Design
+                - generic [ref=e567]: OOP, SOLID, design patterns
+              - link "4 Behavioral STAR method, leadership stories" [ref=e568] [cursor=pointer]:
+                - /url: /capra/prepare/behavioral
+                - generic [ref=e570]: "4"
+                - img [ref=e572]
+                - generic [ref=e577]: Behavioral
+                - generic [ref=e578]: STAR method, leadership stories
+          - generic [ref=e579]:
+            - generic [ref=e582]: Learning Resources
+            - generic [ref=e583]:
+              - link "57 topics Study Cheatsheet 57 topics covering curated problems from top tech companies" [ref=e584] [cursor=pointer]:
+                - /url: /capra/prepare?page=coding
+                - 'generic "Photo: Giannis Skarlatos on Unsplash" [ref=e585]'
+                - generic [ref=e586]:
+                  - generic [ref=e587]:
+                    - generic "Study Cheatsheet" [ref=e588]:
+                      - img [ref=e590]
+                    - generic [ref=e591]: 57 topics
+                  - heading "Study Cheatsheet" [level=3] [ref=e592]
+                  - paragraph [ref=e593]: 57 topics covering curated problems from top tech companies
+              - link "75 problems Blind 75 The 75 essential LeetCode problems every engineer should master" [ref=e594] [cursor=pointer]:
+                - /url: /handbook
+                - 'generic "Photo: Amsterdam City Archives on Unsplash" [ref=e595]'
+                - generic [ref=e596]:
+                  - generic [ref=e597]:
+                    - generic "Blind 75" [ref=e598]:
+                      - img [ref=e600]
+                    - generic [ref=e603]: 75 problems
+                  - heading "Blind 75" [level=3] [ref=e604]
+                  - paragraph [ref=e605]: The 75 essential LeetCode problems every engineer should master
+              - link "Practice Behavioral Questions Practice STAR-method answers for behavioral and leadership challenges" [ref=e606] [cursor=pointer]:
+                - /url: /capra/practice
+                - 'generic "Photo: Olegs Jonins on Unsplash" [ref=e607]'
+                - generic [ref=e608]:
+                  - generic [ref=e609]:
+                    - generic "Behavioral Questions" [ref=e610]:
+                      - img [ref=e612]
+                    - generic [ref=e615]: Practice
+                  - heading "Behavioral Questions" [level=3] [ref=e616]
+                  - paragraph [ref=e617]: Practice STAR-method answers for behavioral and leadership challenges
+          - generic [ref=e618]:
+            - generic [ref=e621]: Checklist
+            - generic [ref=e622]:
+              - generic [ref=e624]:
+                - generic [ref=e625]:
+                  - generic "Before Your Session" [ref=e626]:
+                    - img [ref=e628]
+                  - generic [ref=e631]:
+                    - heading "Before Your Session" [level=3] [ref=e632]
+                    - generic [ref=e633]: Prep
+                - generic [ref=e634]:
+                  - generic [ref=e635] [cursor=pointer]:
+                    - checkbox "Research the company thoroughly - understand their products, tech stack, and culture" [ref=e636]
+                    - generic [ref=e637]: Research the company thoroughly - understand their products, tech stack, and culture
+                  - generic [ref=e638] [cursor=pointer]:
+                    - checkbox "Review the job description and match your experience to the requirements" [ref=e639]
+                    - generic [ref=e640]: Review the job description and match your experience to the requirements
+                  - generic [ref=e641] [cursor=pointer]:
+                    - checkbox "Practice coding on a whiteboard or in a simple text editor (not an IDE)" [ref=e642]
+                    - generic [ref=e643]: Practice coding on a whiteboard or in a simple text editor (not an IDE)
+                  - generic [ref=e644] [cursor=pointer]:
+                    - checkbox "Prepare your self-introduction (keep it under 1 minute)" [ref=e645]
+                    - generic [ref=e646]: Prepare your self-introduction (keep it under 1 minute)
+                  - generic [ref=e647] [cursor=pointer]:
+                    - checkbox "Prepare 2-3 questions to ask the interviewer" [ref=e648]
+                    - generic [ref=e649]: Prepare 2-3 questions to ask the interviewer
+                  - generic [ref=e650] [cursor=pointer]:
+                    - checkbox "Ensure your environment is ready (quiet room, stable internet for remote interviews)" [ref=e651]
+                    - generic [ref=e652]: Ensure your environment is ready (quiet room, stable internet for remote interviews)
+                  - generic [ref=e653] [cursor=pointer]:
+                    - checkbox "Review your resume and be prepared to discuss any item on it" [ref=e654]
+                    - generic [ref=e655]: Review your resume and be prepared to discuss any item on it
+                  - generic [ref=e656] [cursor=pointer]:
+                    - checkbox "Get a good night's sleep and eat well before the interview" [ref=e657]
+                    - generic [ref=e658]: Get a good night's sleep and eat well before the interview
+              - generic [ref=e660]:
+                - generic [ref=e661]:
+                  - generic "During the Interview" [ref=e662]:
+                    - img [ref=e664]
+                  - generic [ref=e666]:
+                    - heading "During the Interview" [level=3] [ref=e667]
+                    - generic [ref=e668]: Execute
+                - generic [ref=e669]:
+                  - generic [ref=e670] [cursor=pointer]:
+                    - checkbox "Clarify the question - repeat it back to the interviewer in your own words" [ref=e671]
+                    - generic [ref=e672]: Clarify the question - repeat it back to the interviewer in your own words
+                  - generic [ref=e673] [cursor=pointer]:
+                    - checkbox "Ask about input size, constraints, edge cases, and expected output format" [ref=e674]
+                    - generic [ref=e675]: Ask about input size, constraints, edge cases, and expected output format
+                  - generic [ref=e676] [cursor=pointer]:
+                    - checkbox "Think out loud - explain your thought process as you work through the problem" [ref=e677]
+                    - generic [ref=e678]: Think out loud - explain your thought process as you work through the problem
+                  - generic [ref=e679] [cursor=pointer]:
+                    - checkbox "Start with a brute force solution, then optimize" [ref=e680]
+                    - generic [ref=e681]: Start with a brute force solution, then optimize
+                  - generic [ref=e682] [cursor=pointer]:
+                    - checkbox "Write clean, readable code with good variable names" [ref=e683]
+                    - generic [ref=e684]: Write clean, readable code with good variable names
+                  - generic [ref=e685] [cursor=pointer]:
+                    - checkbox "Test your solution with examples, including edge cases" [ref=e686]
+                    - generic [ref=e687]: Test your solution with examples, including edge cases
+                  - generic [ref=e688] [cursor=pointer]:
+                    - checkbox "Analyze time and space complexity of your solution" [ref=e689]
+                    - generic [ref=e690]: Analyze time and space complexity of your solution
+                  - generic [ref=e691] [cursor=pointer]:
+                    - checkbox "If stuck, try to break the problem into smaller subproblems" [ref=e692]
+                    - generic [ref=e693]: If stuck, try to break the problem into smaller subproblems
+                  - generic [ref=e694] [cursor=pointer]:
+                    - checkbox "Don't be afraid to ask for hints - it shows you can collaborate" [ref=e695]
+                    - generic [ref=e696]: Don't be afraid to ask for hints - it shows you can collaborate
+                  - generic [ref=e697] [cursor=pointer]:
+                    - checkbox "Manage your time - don't spend too long on any single part" [ref=e698]
+                    - generic [ref=e699]: Manage your time - don't spend too long on any single part
+              - generic [ref=e701]:
+                - generic [ref=e702]:
+                  - generic "After the Interview" [ref=e703]:
+                    - img [ref=e705]
+                  - generic [ref=e707]:
+                    - heading "After the Interview" [level=3] [ref=e708]
+                    - generic [ref=e709]: Follow up
+                - generic [ref=e710]:
+                  - generic [ref=e711] [cursor=pointer]:
+                    - checkbox "Send a thank-you email within 24 hours" [ref=e712]
+                    - generic [ref=e713]: Send a thank-you email within 24 hours
+                  - generic [ref=e714] [cursor=pointer]:
+                    - checkbox "Reflect on what went well and what could be improved" [ref=e715]
+                    - generic [ref=e716]: Reflect on what went well and what could be improved
+                  - generic [ref=e717] [cursor=pointer]:
+                    - checkbox "Note down the questions asked for future reference" [ref=e718]
+                    - generic [ref=e719]: Note down the questions asked for future reference
+                  - generic [ref=e720] [cursor=pointer]:
+                    - checkbox "Follow up if you haven't heard back within the expected timeframe" [ref=e721]
+                    - generic [ref=e722]: Follow up if you haven't heard back within the expected timeframe
+                  - generic [ref=e723] [cursor=pointer]:
+                    - checkbox "Continue practicing regardless of the outcome" [ref=e724]
+                    - generic [ref=e725]: Continue practicing regardless of the outcome

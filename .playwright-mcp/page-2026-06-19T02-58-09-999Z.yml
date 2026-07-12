@@ -1,0 +1,46 @@
+- generic [ref=e3]:
+  - link "Skip to main content" [ref=e4] [cursor=pointer]:
+    - /url: "#pageContent"
+    - generic [ref=e5]: Skip to main content
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - link "Grafana" [ref=e9] [cursor=pointer]:
+        - /url: /
+        - img "Grafana" [ref=e10]
+      - generic [ref=e13]:
+        - img [ref=e15]
+        - button "Search or jump to..." [ref=e17] [cursor=pointer]
+        - generic [ref=e18]:
+          - img [ref=e19]
+          - generic [ref=e21]: cmd+k
+      - generic [ref=e22]:
+        - button "Help" [ref=e23] [cursor=pointer]:
+          - img [ref=e24]
+        - button "News" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+        - link "Sign in" [ref=e29] [cursor=pointer]:
+          - /url: /capra/playground?forceLogin=true
+    - generic [ref=e30]:
+      - button "Open menu" [ref=e32] [cursor=pointer]:
+        - img [ref=e33]
+      - navigation "Breadcrumbs" [ref=e35]:
+        - list [ref=e36]:
+          - listitem [ref=e37]:
+            - link "Home" [ref=e38] [cursor=pointer]:
+              - /url: /
+            - img [ref=e40]
+          - listitem [ref=e42]:
+            - generic "Page not found" [ref=e43]
+      - button "Toggle top search bar" [ref=e45] [cursor=pointer]:
+        - img [ref=e47]
+  - main [ref=e49]:
+    - generic [ref=e56]:
+      - heading "Page not found" [level=1] [ref=e57]
+      - generic [ref=e58]:
+        - text: We're looking but can't seem to find this page. Try returning
+        - link "home" [ref=e59] [cursor=pointer]:
+          - /url: /
+        - text: or seeking help on the
+        - link "community site." [ref=e60] [cursor=pointer]:
+          - /url: https://community.grafana.com
+      - img "grot" [ref=e62]

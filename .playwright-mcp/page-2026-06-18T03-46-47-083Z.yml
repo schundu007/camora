@@ -1,0 +1,157 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e26] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e27]
+          - generic [ref=e28]: Sudhakar Chundu
+          - img [ref=e29]
+    - generic [ref=e33]:
+      - link "Questions" [ref=e34] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e35] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e36] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e37] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e38] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e39] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e40] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e41] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e42] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e43] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e44] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e45] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e46]
+  - contentinfo [ref=e73]:
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - generic [ref=e76]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e77] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e78]
+            - generic [ref=e79]: Ace Cloud Interviews
+          - paragraph [ref=e80]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e81]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e82]:
+          - heading "Explore" [level=3] [ref=e83]
+          - list [ref=e84]:
+            - listitem [ref=e85]:
+              - link "Questions" [ref=e86] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e87]:
+              - link "Topics" [ref=e88] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e89]:
+              - link "Cheat Sheets" [ref=e90] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e91]:
+              - link "Comparisons" [ref=e92] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e93]:
+              - link "Learning Paths" [ref=e94] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e95]:
+              - link "Cert Study Guides" [ref=e96] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e97]:
+              - link "AWS Tutorials" [ref=e98] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e99]:
+              - link "War Stories" [ref=e100] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e101]:
+              - link "Day in the Life" [ref=e102] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e103]:
+              - link "Architecture Walkthroughs" [ref=e104] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e105]:
+              - link "CV Templates" [ref=e106] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e107]:
+          - heading "Topics" [level=3] [ref=e108]
+          - list [ref=e109]:
+            - listitem [ref=e110]:
+              - link "AWS" [ref=e111] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e112]:
+              - link "Kubernetes" [ref=e113] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e114]:
+              - link "Docker" [ref=e115] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e116]:
+              - link "Terraform" [ref=e117] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e118]:
+              - link "CI/CD" [ref=e119] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e120]:
+              - link "Linux" [ref=e121] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e122]:
+              - link "Networking" [ref=e123] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e124]:
+              - link "Security" [ref=e125] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e126]:
+              - link "Observability" [ref=e127] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e128]:
+              - link "System Design" [ref=e129] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e130]:
+              - link "Troubleshooting" [ref=e131] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e132]:
+          - heading "Company" [level=3] [ref=e133]
+          - list [ref=e134]:
+            - listitem [ref=e135]:
+              - link "About" [ref=e136] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e137]:
+              - link "FAQ" [ref=e138] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e139]:
+              - link "Contact Us" [ref=e140] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e141]:
+              - link "Privacy Policy" [ref=e142] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e143]:
+              - link "Terms of Service" [ref=e144] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e145]:
+        - paragraph [ref=e146]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e147]: Built for engineers.
+  - alert [ref=e148]

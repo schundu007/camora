@@ -1,0 +1,307 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e4]:
+      - link "Ace Cloud Interviews" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img "Ace Cloud Interviews" [ref=e6]
+      - navigation [ref=e7]:
+        - link "Questions" [ref=e8] [cursor=pointer]:
+          - /url: /questions/
+        - link "Topics" [ref=e9] [cursor=pointer]:
+          - /url: /topics/
+        - link "Tutorials" [ref=e10] [cursor=pointer]:
+          - /url: /tutorials/aws/
+        - button "Resources" [ref=e12] [cursor=pointer]:
+          - text: Resources
+          - img [ref=e13]
+        - button "Stories" [ref=e16] [cursor=pointer]:
+          - text: Stories
+          - img [ref=e17]
+      - generic [ref=e19]:
+        - button "Search" [ref=e20] [cursor=pointer]:
+          - img [ref=e21]
+          - generic [ref=e23]: Cmd K
+        - button "Sudhakar Chundu Sudhakar Chundu" [ref=e26] [cursor=pointer]:
+          - img "Sudhakar Chundu" [ref=e27]
+          - generic [ref=e28]: Sudhakar Chundu
+          - img [ref=e29]
+    - generic [ref=e33]:
+      - link "Questions" [ref=e34] [cursor=pointer]:
+        - /url: /questions/
+      - link "AWS" [ref=e35] [cursor=pointer]:
+        - /url: /topics/aws/
+      - link "Kubernetes" [ref=e36] [cursor=pointer]:
+        - /url: /topics/kubernetes/
+      - link "Cheat Sheets" [ref=e37] [cursor=pointer]:
+        - /url: /cheat-sheets/
+      - link "Terraform" [ref=e38] [cursor=pointer]:
+        - /url: /topics/terraform/
+      - link "Learning Paths" [ref=e39] [cursor=pointer]:
+        - /url: /learning-paths/
+      - link "Day in the Life" [ref=e40] [cursor=pointer]:
+        - /url: /day-in-life/
+      - link "CI/CD" [ref=e41] [cursor=pointer]:
+        - /url: /topics/cicd/
+      - link "Comparisons" [ref=e42] [cursor=pointer]:
+        - /url: /comparisons/
+      - link "War Stories" [ref=e43] [cursor=pointer]:
+        - /url: /incidents/
+      - link "CV Templates" [ref=e44] [cursor=pointer]:
+        - /url: /cv-templates/
+      - link "Certifications" [ref=e45] [cursor=pointer]:
+        - /url: /certifications/
+  - main [ref=e46]:
+    - generic [ref=e48]:
+      - button "Back to questions" [ref=e149] [cursor=pointer]:
+        - img [ref=e150]
+        - text: Back to questions
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - heading "A multi-region deployment is causing latency spikes for users in one region but not others. How do you isolate and resolve it?" [level=1] [ref=e152]
+          - generic [ref=e55]:
+            - button "0" [ref=e153] [cursor=pointer]:
+              - img [ref=e154]
+              - generic [ref=e156]: "0"
+            - button "Bookmark this" [ref=e157] [cursor=pointer]:
+              - img [ref=e158]
+        - generic [ref=e58]:
+          - generic [ref=e160]:
+            - generic [ref=e161]: 🔧
+            - text: Troubleshooting
+          - generic [ref=e162]: Hard
+      - generic [ref=e61]:
+        - heading "Answer" [level=2] [ref=e163]
+        - generic [ref=e63]:
+          - heading "Isolating and Resolving Multi-Region Latency Spikes" [level=2] [ref=e164]
+          - paragraph [ref=e165]: "When latency spikes are isolated to one region, the failure is almost never global infrastructure. The investigation follows a structured funnel: confirm scope, check region-specific infrastructure, inspect data replication, then verify DNS routing."
+          - separator [ref=e166]
+          - 'heading "Step 1: Confirm Which Region Is Affected and When It Started" [level=3] [ref=e167]'
+          - paragraph [ref=e168]: Start with CloudFront access logs or Route 53 query logs to confirm the blast radius.
+          - paragraph [ref=e169]: "Query CloudFront logs in S3 using Athena to find the affected edge location:"
+          - code [ref=e172]: SELECT x_edge_location, AVG(time_taken) AS avg_latency, COUNT(*) AS requests FROM cloudfront_logs WHERE date BETWEEN '2024-01-15' AND '2024-01-16' GROUP BY x_edge_location ORDER BY avg_latency DESC;
+          - paragraph [ref=e173]: "If you use an APM like Datadog or AWS X-Ray, filter traces by region tag. In X-Ray:"
+          - code [ref=e176]: aws xray get-service-graph --start-time 2024-01-15T10:00:00 --end-time 2024-01-15T11:00:00 --region ap-south-1
+          - paragraph [ref=e177]: Correlate the spike start time against recent deployments, ASG scaling events, or RDS failover events using CloudTrail.
+          - separator [ref=e178]
+          - 'heading "Step 2: Inspect Region-Specific Infrastructure Metrics" [level=3] [ref=e179]'
+          - paragraph [ref=e180]: Pull CloudWatch metrics for the affected region's ALB, compute layer, and database separately.
+          - paragraph [ref=e181]:
+            - strong [ref=e182]: "ALB - check for elevated target response times and 5xx rates:"
+          - code [ref=e185]: aws cloudwatch get-metric-statistics --region ap-south-1 --namespace AWS/ApplicationELB --metric-name TargetResponseTime --dimensions Name=LoadBalancer,Value=app/aci-alb/abc123 --start-time 2024-01-15T10:00:00Z --end-time 2024-01-15T11:00:00Z --period 60 --statistics Average P99
+          - paragraph [ref=e186]: If P99 is spiking but Average is flat, a subset of instances is degraded. Cross-reference with ASG instance health - check if a recent scale-out brought in cold instances with unwarmed connection pools, or if a node failed its health check mid-flight.
+          - paragraph [ref=e187]:
+            - strong [ref=e188]: "EC2/ASG - look for CPU saturation or memory pressure:"
+          - code [ref=e191]: aws cloudwatch get-metric-statistics --region ap-south-1 --namespace AWS/EC2 --metric-name CPUUtilization --dimensions Name=AutoScalingGroupName,Value=aci-backend-asg --start-time 2024-01-15T10:00:00Z --end-time 2024-01-15T11:00:00Z --period 60 --statistics Average Maximum
+          - paragraph [ref=e192]:
+            - strong [ref=e193]: "RDS read replica - check for query latency and replica lag:"
+          - code [ref=e196]: aws cloudwatch get-metric-statistics --region ap-south-1 --namespace AWS/RDS --metric-name ReplicaLag --dimensions Name=DBInstanceIdentifier,Value=aci-rds-replica-ap --start-time 2024-01-15T10:00:00Z --end-time 2024-01-15T11:00:00Z --period 60 --statistics Maximum
+          - paragraph [ref=e197]: Replica lag above a few seconds means reads routed to the replica are returning stale data, causing application-level retries that manifest as latency. A write-heavy workload on the primary without read replica auto-scaling will produce this consistently.
+          - separator [ref=e198]
+          - 'heading "Step 3: Check Data Replication Lag" [level=3] [ref=e199]'
+          - paragraph [ref=e200]:
+            - strong [ref=e201]: Aurora Global Database
+            - text: exposes
+            - code [ref=e202]: AuroraGlobalDBReplicationLag
+            - text: in CloudWatch under the
+            - code [ref=e203]: AWS/RDS
+            - text: namespace. Lag over 1-2 seconds for a read-heavy API means the affected region is serving stale reads and your application is likely retrying or falling back to the primary, adding a cross-region round trip.
+          - paragraph [ref=e204]:
+            - strong [ref=e205]: DynamoDB Global Tables
+            - text: exposes
+            - code [ref=e206]: ReplicationLatency
+            - text: "per replica table:"
+          - code [ref=e209]: aws cloudwatch get-metric-statistics --region ap-south-1 --namespace AWS/DynamoDB --metric-name ReplicationLatency --dimensions Name=TableName,Value=aci-sessions Name=ReceivingRegion,Value=ap-south-1 --start-time 2024-01-15T10:00:00Z --end-time 2024-01-15T11:00:00Z --period 60 --statistics Maximum
+          - paragraph [ref=e210]: Replication lag above 1000ms combined with read-your-writes consistency requirements will cause visible latency. The fix is either tolerating eventual consistency explicitly in the application, or temporarily routing writes and reads for affected sessions to the primary region until replication catches up.
+          - separator [ref=e211]
+          - 'heading "Step 4: Verify DNS and Route 53 Health Check Routing" [level=3] [ref=e212]'
+          - paragraph [ref=e213]: "Latency spikes can appear regional when Route 53 health checks are failing and traffic is being routed to a suboptimal region. Check health check status:"
+          - code [ref=e216]: "aws route53 list-health-checks | jq '.HealthChecks[] | {Id, Config: .HealthCheckConfig.FullyQualifiedDomainName, Status: .HealthCheckConfig}' aws route53 get-health-check-status --health-check-id <id>"
+          - paragraph [ref=e217]: "A common failure mode: the health check endpoint in ap-south-1 starts responding slowly (due to the same underlying issue), Route 53 marks it unhealthy, and traffic fails over to us-east-1. Users in Asia-Pacific are now hitting a region 200ms away, which looks like a regional latency spike but is actually a routing failure."
+          - paragraph [ref=e218]: "Fix the health check threshold to distinguish between \"slow\" and \"down\" to avoid premature failover:"
+          - code [ref=e221]: "{ \"FailureThreshold\": 3, \"RequestInterval\": 30, \"Type\": \"HTTPS\", \"ResourcePath\": \"/api/v1/health\", \"MeasureLatency\": true }"
+          - paragraph [ref=e222]:
+            - text: Setting
+            - code [ref=e223]: "MeasureLatency: true"
+            - text: exposes health check response time in CloudWatch, letting you distinguish routing failures from infrastructure failures.
+          - separator [ref=e224]
+          - heading "Resolution Workflow Summary" [level=3] [ref=e225]
+          - list [ref=e226]:
+            - listitem [ref=e227]: Confirm affected region and spike start time via CloudFront/X-Ray logs
+            - listitem [ref=e228]: Check ALB P99, ASG CPU, and RDS replica lag in the affected region
+            - listitem [ref=e229]: If replica lag is elevated, temporarily redirect reads to the primary or reduce retry aggression
+            - listitem [ref=e230]: Check Route 53 health check status - if failover is happening incorrectly, fix the health endpoint or threshold
+            - listitem [ref=e231]:
+              - text: After resolution, add CloudWatch alarms on
+              - code [ref=e232]: ReplicaLag > 5s
+              - text: and
+              - code [ref=e233]: TargetResponseTime P99 > threshold
+              - text: per region to catch this class of failure earlier
+        - generic [ref=e234]:
+          - paragraph [ref=e235]: Did you know this?
+          - generic [ref=e236]:
+            - button "Knew it" [ref=e237] [cursor=pointer]:
+              - img [ref=e238]
+              - text: Knew it
+            - button "Need to review" [ref=e240] [cursor=pointer]:
+              - img [ref=e241]
+              - text: Need to review
+        - generic [ref=e65]:
+          - paragraph [ref=e243]: Answers may include AI-assisted content and should be verified independently.
+          - button "Report incorrect answer" [ref=e244] [cursor=pointer]:
+            - img [ref=e245]
+            - text: Report incorrect answer
+      - generic [ref=e247]:
+        - generic [ref=e248]:
+          - generic [ref=e249]:
+            - heading "Asked at" [level=2] [ref=e250]
+            - paragraph [ref=e251]: Companies where this question has been reported
+          - button "+ Report a company" [ref=e252] [cursor=pointer]
+        - paragraph [ref=e253]: No company reports yet. Be the first to report where you saw this question.
+      - generic [ref=e254]:
+        - generic [ref=e255]:
+          - heading "Community" [level=2] [ref=e256]
+          - generic [ref=e257]:
+            - button "Answers" [ref=e258] [cursor=pointer]
+            - button "Discussion" [ref=e259] [cursor=pointer]
+        - paragraph [ref=e260]: Perspectives from other engineers. Reviewed before publishing.
+        - generic [ref=e261]:
+          - textbox "Share how you would answer this question in an interview..." [ref=e262]
+          - button "Submit answer" [disabled] [ref=e263]
+          - paragraph [ref=e264]: Answers are reviewed before being published.
+      - generic [ref=e265]:
+        - generic [ref=e266]:
+          - heading "Related questions in 🔧 Troubleshooting" [level=2] [ref=e267]
+          - generic [ref=e268]:
+            - link "Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?" [ref=e269] [cursor=pointer]:
+              - /url: /questions/troubleshooting-alerts-stopped-firing/
+              - img [ref=e270]
+              - generic [ref=e272]: Monitoring alerts stopped firing during a production incident. How do you debug a broken alerting pipeline?
+            - link "An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?" [ref=e273] [cursor=pointer]:
+              - /url: /questions/troubleshooting-ec2-unresponsive/
+              - img [ref=e274]
+              - generic [ref=e276]: An AWS EC2 instance has stopped responding to SSH and health checks. You cannot reboot it. What are your options?
+            - link "You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?" [ref=e277] [cursor=pointer]:
+              - /url: /questions/troubleshooting-zero-downtime-schema-change/
+              - img [ref=e278]
+              - generic [ref=e280]: You need to deploy a breaking schema change to a production database with zero downtime. How do you do it?
+            - link "Your RDS instance CPU spikes to 100% once a month causing an application slowdown. How do you identify the root cause?" [ref=e281] [cursor=pointer]:
+              - /url: /questions/troubleshooting-rds-cpu-monthly-spike/
+              - img [ref=e282]
+              - generic [ref=e284]: Your RDS instance CPU spikes to 100% once a month causing an application slowdown. How do you identify the root cause?
+          - link "See all Troubleshooting questions ->" [ref=e285] [cursor=pointer]:
+            - /url: /topics/troubleshooting/
+        - generic [ref=e286]:
+          - heading "Resources" [level=2] [ref=e287]
+          - generic [ref=e288]:
+            - link "AWS re:Post" [ref=e289] [cursor=pointer]:
+              - /url: https://repost.aws
+              - img [ref=e290]
+              - text: AWS re:Post
+            - link "kubectl Cheat Sheet" [ref=e292] [cursor=pointer]:
+              - /url: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+              - img [ref=e293]
+              - text: kubectl Cheat Sheet
+  - contentinfo [ref=e73]:
+    - generic [ref=e74]:
+      - generic [ref=e75]:
+        - generic [ref=e76]:
+          - link "Ace Cloud Interviews Ace Cloud Interviews" [ref=e77] [cursor=pointer]:
+            - /url: /
+            - img "Ace Cloud Interviews" [ref=e78]
+            - generic [ref=e79]: Ace Cloud Interviews
+          - paragraph [ref=e80]: Free interview prep for cloud and DevOps engineers. Real questions, real answers.
+          - paragraph [ref=e81]: All questions, resources, and stories are free forever. No paywall. No login required.
+        - generic [ref=e82]:
+          - heading "Explore" [level=3] [ref=e83]
+          - list [ref=e84]:
+            - listitem [ref=e85]:
+              - link "Questions" [ref=e86] [cursor=pointer]:
+                - /url: /questions/
+            - listitem [ref=e87]:
+              - link "Topics" [ref=e88] [cursor=pointer]:
+                - /url: /topics/
+            - listitem [ref=e89]:
+              - link "Cheat Sheets" [ref=e90] [cursor=pointer]:
+                - /url: /cheat-sheets/
+            - listitem [ref=e91]:
+              - link "Comparisons" [ref=e92] [cursor=pointer]:
+                - /url: /comparisons/
+            - listitem [ref=e93]:
+              - link "Learning Paths" [ref=e94] [cursor=pointer]:
+                - /url: /learning-paths/
+            - listitem [ref=e95]:
+              - link "Cert Study Guides" [ref=e96] [cursor=pointer]:
+                - /url: /certifications/
+            - listitem [ref=e97]:
+              - link "AWS Tutorials" [ref=e98] [cursor=pointer]:
+                - /url: /tutorials/aws/
+            - listitem [ref=e99]:
+              - link "War Stories" [ref=e100] [cursor=pointer]:
+                - /url: /incidents/
+            - listitem [ref=e101]:
+              - link "Day in the Life" [ref=e102] [cursor=pointer]:
+                - /url: /day-in-life/
+            - listitem [ref=e103]:
+              - link "Architecture Walkthroughs" [ref=e104] [cursor=pointer]:
+                - /url: /architectures/
+            - listitem [ref=e105]:
+              - link "CV Templates" [ref=e106] [cursor=pointer]:
+                - /url: /cv-templates/
+        - generic [ref=e107]:
+          - heading "Topics" [level=3] [ref=e108]
+          - list [ref=e109]:
+            - listitem [ref=e110]:
+              - link "AWS" [ref=e111] [cursor=pointer]:
+                - /url: /topics/aws/
+            - listitem [ref=e112]:
+              - link "Kubernetes" [ref=e113] [cursor=pointer]:
+                - /url: /topics/kubernetes/
+            - listitem [ref=e114]:
+              - link "Docker" [ref=e115] [cursor=pointer]:
+                - /url: /topics/docker/
+            - listitem [ref=e116]:
+              - link "Terraform" [ref=e117] [cursor=pointer]:
+                - /url: /topics/terraform/
+            - listitem [ref=e118]:
+              - link "CI/CD" [ref=e119] [cursor=pointer]:
+                - /url: /topics/cicd/
+            - listitem [ref=e120]:
+              - link "Linux" [ref=e121] [cursor=pointer]:
+                - /url: /topics/linux/
+            - listitem [ref=e122]:
+              - link "Networking" [ref=e123] [cursor=pointer]:
+                - /url: /topics/networking/
+            - listitem [ref=e124]:
+              - link "Security" [ref=e125] [cursor=pointer]:
+                - /url: /topics/security/
+            - listitem [ref=e126]:
+              - link "Observability" [ref=e127] [cursor=pointer]:
+                - /url: /topics/observability/
+            - listitem [ref=e128]:
+              - link "System Design" [ref=e129] [cursor=pointer]:
+                - /url: /topics/system-design/
+            - listitem [ref=e130]:
+              - link "Troubleshooting" [ref=e131] [cursor=pointer]:
+                - /url: /topics/troubleshooting/
+        - generic [ref=e132]:
+          - heading "Company" [level=3] [ref=e133]
+          - list [ref=e134]:
+            - listitem [ref=e135]:
+              - link "About" [ref=e136] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e137]:
+              - link "FAQ" [ref=e138] [cursor=pointer]:
+                - /url: /faq/
+            - listitem [ref=e139]:
+              - link "Contact Us" [ref=e140] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e141]:
+              - link "Privacy Policy" [ref=e142] [cursor=pointer]:
+                - /url: /privacy-policy/
+            - listitem [ref=e143]:
+              - link "Terms of Service" [ref=e144] [cursor=pointer]:
+                - /url: /terms-of-service/
+      - generic [ref=e145]:
+        - paragraph [ref=e146]: © 2026 Ace Cloud Interviews. All rights reserved.
+        - paragraph [ref=e147]: Built for engineers.
+  - alert [ref=e148]

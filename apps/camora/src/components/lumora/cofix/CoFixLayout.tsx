@@ -620,8 +620,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const handleLeftEditorMount = useCallback((editor: any) => {
     editor.updateOptions({
       fontFamily: 'var(--font-mono)',
-      fontLigatures: true,
-      letterSpacing: -0.3,
+      // Ligatures + negative letter-spacing desync Monaco's per-character width
+      // measurement from what's rendered, so clicks/caret drift toward the end of
+      // the line. Keep plain monospace metrics for accurate hit-testing.
+      fontLigatures: false,
+      letterSpacing: 0,
     });
     editor.onDidPaste(() => {
       const raw = editor.getValue();
@@ -1307,8 +1310,8 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   lineNumbers: 'on',
                   fontSize: 11,
                   fontFamily: 'var(--font-mono)',
-                  fontLigatures: true,
-                  letterSpacing: -0.3,
+                  fontLigatures: false,
+                  letterSpacing: 0,
                   lineHeight: 19,
                   scrollBeyondLastLine: false,
                   glyphMargin: false,
