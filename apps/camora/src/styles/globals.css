@@ -215,9 +215,10 @@
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
-    --border:        #C8D9ED;
-    --border-hover:  #BBCFE4;
-    --border-focus:  #3683DC;
+    /* Black-and-white light theme: neutral gray borders (no blue tint/glow). */
+    --border:        #E2E4E8;
+    --border-hover:  #CFD2D7;
+    --border-focus:  #1B1D22;
 
     --text-primary:  #12141A;
     --text-secondary:#464B54;
@@ -225,10 +226,12 @@
     --text-muted:    #5E646B;
     --text-dimmed:   #6C737A;
 
-    --accent:        #3683DC;
-    --accent-hover:  #2265BF;
-    --accent-subtle: rgba(54,131,220,0.08);
-    --accent-text:   #2265BF;
+    /* Accent is near-black (not blue) so buttons, active tabs, links and every
+       gold-leaf-mapped border read as clean black/white, not blue. */
+    --accent:        #1B1D22;
+    --accent-hover:  #000000;
+    --accent-subtle: rgba(18,20,26,0.06);
+    --accent-text:   #1B1D22;
 
     --accent-secondary:        #C2963E;
     --accent-secondary-hover:  #D4A84A;
@@ -260,8 +263,8 @@
     --shadow-lg: 0 4px 8px rgba(15,23,42,0.06), 0 12px 32px rgba(15,23,42,0.10);
     --shadow-xl: 0 8px 16px rgba(15,23,42,0.07), 0 24px 56px rgba(15,23,42,0.12);
     --card-shadow: var(--shadow-sm);
-    --shadow-accent-xs: 0 1px 3px rgba(37,99,235,0.08), 0 4px 16px rgba(37,99,235,0.04);
-    --shadow-accent-sm: 0 2px 8px rgba(37,99,235,0.12);
+    --shadow-accent-xs: 0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.04);
+    --shadow-accent-sm: 0 2px 6px rgba(15,23,42,0.08);
     --shadow-gold-xs: 0 1px 3px rgba(194,150,62,0.04), 0 4px 16px rgba(194,150,62,0.02);
     --shadow-gold-sm: 0 2px 8px rgba(194,150,62,0.06);
 
@@ -281,7 +284,7 @@
 
     --lumora-hero-gradient: linear-gradient(160deg, #0C2B8A 0%, #1545C8 55%, #0E3399 100%);
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(37,99,235,0.12);
+    --lumora-chrome-border: var(--border);
     --lumora-chrome-shadow: 0 1px 0 var(--border);
     --lumora-chrome-text:   rgba(18,20,26,0.75);
     --lumora-chrome-hover:  color-mix(in oklab, var(--accent) 6%, transparent);
@@ -302,8 +305,8 @@
     --cam-chip-active-text: var(--accent-text);
 
     --bg-near-black: rgba(18,20,26,0.92);
-    --shadow-primary-xs: 0 1px 3px rgba(37,99,235,0.04), 0 4px 16px rgba(37,99,235,0.02);
-    --shadow-primary-sm: 0 2px 8px rgba(37,99,235,0.06);
+    --shadow-primary-xs: 0 1px 2px rgba(15,23,42,0.04), 0 4px 12px rgba(15,23,42,0.03);
+    --shadow-primary-sm: 0 2px 6px rgba(15,23,42,0.06);
 
     /* Light-mode contrast guard tokens — used by the Tailwind class remaps below.
        These replace bare hex values (#111318, #495057, #6C757D) so the remap
@@ -315,11 +318,11 @@
     --light-bg-faint:      #F8F9FA;
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip:         #EEF2F7;
-    --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F4F7FC 40%, #EDF1F8 100%);
+    --cam-hero-strip:         #F1F1F3;
+    --cam-hero-bg:            linear-gradient(160deg, #FFFFFF 0%, #F7F7F8 40%, #F0F0F2 100%);
     --cam-gold-leaf:          var(--accent);
-    --cam-gold-leaf-lt:       #4D94E8;
-    --cam-gold-leaf-dk:       #2265BF;
+    --cam-gold-leaf-lt:       #4A4D54;
+    --cam-gold-leaf-dk:       #1B1D22;
     --cam-gold-leaf-text:     var(--accent-text);
     --cam-gold-leaf-50:       var(--accent-subtle);
     --bg-base:                #F4F6FA;
