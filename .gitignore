@@ -37,3 +37,6 @@ apps/camora/scripts/.diagvenv/
 scripts/codesignal-sync/.codesignal-learn-cookies.json
 # Any browser session cookie jar from sync scripts
 scripts/**/.*-cookies.json
+
+# understand-anything knowledge graph (generated)
+.ua/
