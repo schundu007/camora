@@ -103,11 +103,19 @@ function getGeminiClient() {
   return _geminiAI;
 }
 
-function geminiGetModel(systemInstruction) {
+function geminiGetModel(systemInstruction, opts = {}) {
   return getGeminiClient().getGenerativeModel({
     model: GEMINI_MODEL,
     ...(systemInstruction ? { systemInstruction } : {}),
-    generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
+    generationConfig: {
+      thinkingConfig: { thinkingBudget: 0 },
+      // Solution generation asks for a JSON object; forcing application/json makes
+      // the model emit a PARSEABLE object so the /solve parser succeeds on the
+      // first pass instead of getting malformed JSON on a big/hard problem and
+      // burning a slow retry (or failing outright with no answer). Off for
+      // utility calls that return plain text.
+      ...(opts.json ? { responseMimeType: 'application/json' } : {}),
+    },
   });
 }
 
@@ -168,7 +176,7 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
 
   try {
     if (providerName === 'gemini') {
-      const gModel = geminiGetModel(systemPrompt);
+      const gModel = geminiGetModel(systemPrompt, { json: true });
       const gHistory = toGeminiHistory(messages.slice(0, -1));
       let streamResult;
       if (gHistory.length > 0) {
@@ -255,7 +263,7 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
 async function generateWithProvider(providerName, messages, systemPrompt) {
   try {
     if (providerName === 'gemini') {
-      const gModel = geminiGetModel(systemPrompt);
+      const gModel = geminiGetModel(systemPrompt, { json: true });
       const resp = await gModel.generateContent(flattenMessages(messages));
       return { raw: resp.response.text() || '', model: GEMINI_MODEL };
     }
