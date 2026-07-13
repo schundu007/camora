@@ -1357,6 +1357,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   scrollBeyondLastLine: false,
                   glyphMargin: false,
                   folding: false,
+                  // Sticky-scroll pins class/def headers at the viewport top;
+                  // over the overlay's transparent editor bg they render ON TOP
+                  // of the scrolled code (overlapping/ghosted lines). Off.
+                  stickyScroll: { enabled: false },
                   wordWrap: 'on',
                   automaticLayout: true,
                   // Short code: hidden scrollbar, editor fits content, wheel
