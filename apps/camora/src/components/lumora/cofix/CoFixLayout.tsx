@@ -191,9 +191,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
   const decorationCollectionRef = useRef<any>(null);
-  // Auto-height for the read-only fixed-code editor: track its content height so
-  // it grows downward with the fixed code's line count (its wrapper scrolls).
-  const [fixedEditorH, setFixedEditorH] = useState(44);
+  // Auto-height for the read-only fixed-code editor, CAPPED. Short solutions fit
+  // fully (no squish, no wasted space); a long solution stops growing at the cap
+  // and the editor OWNS an internal scrollbar past it — auto-heighting to the
+  // full content made a long fix taller than the viewport, and Monaco then
+  // swallowed the wheel so the surrounding column couldn't scroll ("can't scroll
+  // up or down"). fixedContentH is the measured content height; the rendered
+  // editor height is the min of that and the cap.
+  const FIXED_EDITOR_MAX_H = 520;
+  const [fixedContentH, setFixedContentH] = useState(44);
+  const fixedCapped = fixedContentH > FIXED_EDITOR_MAX_H;
+  const fixedEditorH = Math.min(fixedContentH, FIXED_EDITOR_MAX_H);
   // MEASURED height of the complexity strip (Big-O + the wrapping "Why …" text).
   // A flat estimate undershot when the explanation wrapped to many lines, so the
   // code area was sized too short and the fixed-code editor got squeezed to a
@@ -1351,15 +1359,20 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   folding: false,
                   wordWrap: 'on',
                   automaticLayout: true,
-                  // Editor height tracks content (see fixedEditorH); hide the
-                  // vertical scrollbar and let the wrapper scroll instead.
-                  scrollbar: { vertical: 'hidden', alwaysConsumeMouseWheel: false },
+                  // Short code: hidden scrollbar, editor fits content, wheel
+                  // bubbles to the column. Long code (capped): show Monaco's own
+                  // scrollbar and let it own the wheel so the code scrolls.
+                  scrollbar: {
+                    vertical: fixedCapped ? 'auto' : 'hidden',
+                    alwaysConsumeMouseWheel: fixedCapped,
+                    verticalSliderSize: 8,
+                  },
                 }}
                 onMount={editor => {
                   rightEditorRef.current = editor;
-                  const sync = () => setFixedEditorH((prev) => {
-                    // Tight floor so short solutions stay compact (save space);
-                    // grows to fit the fixed code's content height.
+                  const sync = () => setFixedContentH((prev) => {
+                    // Track the fixed code's content height; the cap + internal
+                    // scroll are applied via fixedEditorH / fixedCapped above.
                     const h = Math.max(44, Math.ceil(editor.getContentHeight()));
                     return prev === h ? prev : h;
                   });
