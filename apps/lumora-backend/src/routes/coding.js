@@ -2293,9 +2293,15 @@ RULES:
   }
 
   try {
+    // Up to 3 attempts. Gemini's JSON mode occasionally still emits a malformed
+    // object on a big file (~1-in-3 on a 180-line stub), so a parse failure now
+    // RETRIES instead of erroring out — only the final attempt surfaces the
+    // error. Hardcoding rejection also retries, appending the anti-cheat notice.
+    const MAX_ATTEMPTS = 3;
     let parsed = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const promptText = attempt === 0 ? cofixUserContent : cofixUserContent + ANTI_CHEAT_COFIX;
+    let useAntiCheat = false;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      const promptText = useAntiCheat ? cofixUserContent + ANTI_CHEAT_COFIX : cofixUserContent;
       const fullText = await streamCofixOnce(promptText);
       if (fullText === null) { clearInterval(keepaliveTimer); return; }
 
@@ -2303,16 +2309,21 @@ RULES:
       try {
         candidate = parseCofix(fullText);
       } catch {
+        if (attempt < MAX_ATTEMPTS - 1) {
+          console.error(`[cofix] parse_failed attempt=${attempt} — retrying`);
+          continue;
+        }
         sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
         clearInterval(keepaliveTimer);
         res.end();
         return;
       }
 
-      // Anti-cheat: reject a hardcoded fix once and retry with the rejection
-      // appended. On the 2nd attempt we emit whatever comes back (best effort).
-      if (attempt === 0 && detectsHardcoding(candidate.fixed_code)) {
-        console.error('[cofix] hardcoding_detected pass=primary — rejecting and retrying');
+      // Anti-cheat: reject a hardcoded fix and retry with the rejection appended.
+      // On the final attempt we emit whatever comes back (best effort).
+      if (attempt < MAX_ATTEMPTS - 1 && detectsHardcoding(candidate.fixed_code)) {
+        console.error(`[cofix] hardcoding_detected attempt=${attempt} — rejecting and retrying`);
+        useAntiCheat = true;
         continue;
       }
       parsed = candidate;
