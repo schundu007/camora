@@ -20,6 +20,7 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { renderHtml } from './render-html.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const TOP_N = 10;
@@ -158,14 +159,17 @@ async function main() {
 
   const jsonPath = resolve(REPO_ROOT, 'data/trending.json');
   const mdPath = resolve(REPO_ROOT, 'docs/trending-infra.md');
+  const htmlPath = resolve(REPO_ROOT, 'docs/trending-infra.html');
   mkdirSync(dirname(jsonPath), { recursive: true });
   mkdirSync(dirname(mdPath), { recursive: true });
   writeFileSync(jsonPath, JSON.stringify(data, null, 2) + '\n');
   writeFileSync(mdPath, toMarkdown(data));
+  writeFileSync(htmlPath, renderHtml(data));
 
   const total = categories.reduce((a, c) => a + c.repos.length, 0);
   console.error(`Wrote ${total} repos across ${categories.length} categories:`);
   console.error(`  - ${mdPath}`);
+  console.error(`  - ${htmlPath}`);
   console.error(`  - ${jsonPath}`);
 }
 
