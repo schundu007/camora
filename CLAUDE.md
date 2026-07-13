@@ -18,6 +18,12 @@ apps/
   ascend-backend/  # Express 5 — prep/study API + lumora mirror (deployed on Railway)
   ai-services/     # FastAPI (Python) — speaker verification, diagrams (Docker on Railway)
                    #   non-/health routes require X-API-Key in AI_SERVICES_API_KEY env
+  code-runner/     # Express — sandboxed code execution microservice (port 4000).
+                   #   POST /run { code, language, test_cases } → executeCode(); backs
+                   #   the Coding tab's run/verify path.
+  playground-backend/ # Express — interactive hands-on lab sessions (k8s/etcd/linux).
+                   #   Nomad container orchestration (nomadClient), SSH (ssh2), WS proxy,
+                   #   R2/S3 session storage, Redis, Postgres, log streaming.
   desktop/         # Electron 41 shell that loads camora.cariara.com (arm64 DMG)
   mobile/          # Expo (React Native) — iOS + Android. Reviewer-facing
                    #   framing is "Study & Live Notes" (not "interview AI") to
@@ -29,6 +35,8 @@ packages/
   shared-types/    # TypeScript types (User, Conversation, Subscription, PlanType, etc.)
   shared-db/       # PostgreSQL pool (getPool, query, closePool) + migrations
   shared-auth/     # JWT auth (verifyToken, createToken, authenticate middleware, SSO cookie)
+  shared-llm/      # LLM client factories (getAnthropicClient, getOpenAIClient) — shared
+                   #   Anthropic + OpenAI SDK singletons across backends
 ```
 
 Package manager: **pnpm 9.15** with workspaces (`apps/*`, `packages/*`).
