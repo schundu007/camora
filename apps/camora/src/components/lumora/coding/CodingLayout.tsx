@@ -830,10 +830,22 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           autoGenRef.current.active = false;
         }
       } else if (data.direct_output !== undefined && data.direct_output !== null) {
-        autoGenRef.current.active = false;
         const directOut = data.direct_output || '(no output)';
         setOutput(directOut);
         setOutputLog(prev => [...prev, { ts: new Date(), text: directOut }]);
+        // A runtime error / traceback on a direct run (no test cases) must ALSO
+        // arm auto-fix — otherwise the Auto-Fix button never shows and the fix
+        // request has no error to read. Feed the traceback in as fixError.
+        const isRunErr =
+          /^error:/i.test(directOut) || directOut.startsWith('Traceback') ||
+          /\b(SyntaxError|NameError|TypeError|ValueError|IndexError|KeyError|AttributeError|RuntimeError|ZeroDivisionError|ImportError|ModuleNotFoundError|IndentationError|RecursionError|StopIteration|AssertionError)\b/.test(directOut) ||
+          /\b(Exception in thread|panic:|segmentation fault|core dumped|compilation (error|failed))\b/i.test(directOut);
+        if (isRunErr) {
+          setFixError(`The code produced this runtime error when run — read it and fix the code so it runs cleanly:\n\n${directOut}`);
+          setShowFixPrompt(true);
+        } else {
+          autoGenRef.current.active = false;
+        }
       } else {
         autoGenRef.current.active = false;
         setOutput('(no output)');
