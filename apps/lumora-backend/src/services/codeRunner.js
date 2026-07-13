@@ -457,6 +457,13 @@ def _find_target_func(user_code):
     main_funcs = [f for f in all_funcs if f not in skip and not f.startswith('__')]
     if main_funcs:
         return 'standalone', main_funcs[-1]
+    # No standalone function — look for a custom class with a public method that
+    # takes arguments (self, ...). Scan classes LAST-first so the named solution
+    # class (e.g. DevImageBuilder) wins over dataclass helpers (Layer, Job).
+    for _cn in reversed(re.findall(r'^class (\\w+)', user_code, re.MULTILINE)):
+        _mm = re.search(r'class ' + _cn + r'\\b[\\s\\S]*?\\n\\s+def (?!__)(\\w+)\\s*\\(\\s*self\\s*,', user_code)
+        if _mm:
+            return 'class_method', _cn + '.' + _mm.group(1)
     return None, None
 
 _input = base64.b64decode("${inputB64}").decode()
@@ -524,6 +531,20 @@ if _kind == 'solution_method':
     _result = _method(*_params)
     if _has_ll and hasattr(_result, 'val'):
         _result = listToArray(_result)
+    if _result is not None:
+        print(_result)
+elif _kind == 'class_method':
+    _cn, _mn = _fn_name.split('.', 1)
+    _cls = globals().get(_cn)
+    _obj = _cls()
+    _method = getattr(_obj, _mn)
+    try:
+        _sig = inspect.signature(_method)
+        _n_params = len([p for p in _sig.parameters.values() if p.name != 'self'])
+    except:
+        _n_params = 99
+    _params = [] if _n_params == 0 else _parse_params(_input, _method)
+    _result = _method(*_params)
     if _result is not None:
         print(_result)
 elif _kind == 'standalone':
