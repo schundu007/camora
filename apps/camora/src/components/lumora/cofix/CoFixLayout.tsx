@@ -191,14 +191,22 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const cofixHoverDisposable = useRef<any>(null);
   const rightEditorRef = useRef<any>(null);
   const decorationCollectionRef = useRef<any>(null);
-  // Auto-height for the read-only fixed-code editor, CAPPED. Short solutions fit
-  // fully (no squish, no wasted space); a long solution stops growing at the cap
-  // and the editor OWNS an internal scrollbar past it — auto-heighting to the
-  // full content made a long fix taller than the viewport, and Monaco then
-  // swallowed the wheel so the surrounding column couldn't scroll ("can't scroll
-  // up or down"). fixedContentH is the measured content height; the rendered
-  // editor height is the min of that and the cap.
-  const FIXED_EDITOR_MAX_H = 520;
+  // The code editors GROW to fit their code and only scroll once the code would
+  // exceed the vertical window. The cap is derived from the live viewport (not a
+  // fixed 520px, which forced constant scrolling on medium solutions): the code
+  // area may grow up to CODE_AREA_MAX (leaving room for the toolbar/footer + a
+  // usable analysis panel), and the fixed-code editor caps a little under that so
+  // its refine-chips band + complexity strip still fit. Past the cap each editor
+  // OWNS an internal scrollbar (auto-heighting past the viewport let Monaco
+  // swallow the wheel so nothing scrolled). Re-derived on window resize.
+  const [viewportH, setViewportH] = useState(() => (typeof window !== 'undefined' ? window.innerHeight : 900));
+  useEffect(() => {
+    const onResize = () => setViewportH(window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const CODE_AREA_MAX = Math.max(320, viewportH - 230);
+  const FIXED_EDITOR_MAX_H = Math.max(200, CODE_AREA_MAX - 90);
   const [fixedContentH, setFixedContentH] = useState(44);
   const fixedCapped = fixedContentH > FIXED_EDITOR_MAX_H;
   const fixedEditorH = Math.min(fixedContentH, FIXED_EDITOR_MAX_H);
@@ -931,11 +939,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const fixedBlockH = fixedCode
     ? fixedEditorH + 40 /*fixed-code action band*/ + 8 /*pt-2 gap*/ + (complexity ? (complexityH || 34) : 0) + 16
     : 0;
-  // No upper cap: the code area grows to fit the taller of the two blocks so the
-  // fixed code is shown in FULL (auto-expand). When the code area + analysis panel
-  // exceed the column, the LEFT COLUMN scrolls (page growth) — the code block
-  // itself never gets an internal scrollbar. Manual drag (codeH) still overrides.
-  const autoCodeH = Math.max(150, brokenBlockH, fixedBlockH);
+  // Grow to fit the taller block, but CAP at CODE_AREA_MAX so the code area never
+  // exceeds the vertical window. Below the cap the editors show their code in full
+  // (auto-expand, no wasted space); at the cap each editor scrolls INTERNALLY
+  // (broken editor owns its Monaco scroll; fixed editor switches to its own
+  // scrollbar via fixedCapped). Manual drag (codeH) still overrides.
+  const autoCodeH = Math.min(CODE_AREA_MAX, Math.max(150, brokenBlockH, fixedBlockH));
   const effectiveCodeH = codeH ?? autoCodeH;
 
   return (
