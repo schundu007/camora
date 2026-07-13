@@ -34,10 +34,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- docs/trending-infra.md data/trending.json; then
+          if git diff --quiet -- docs/trending-infra.md docs/trending-infra.html data/trending.json; then
             echo "No changes to trending list."
             exit 0
           fi
-          git add docs/trending-infra.md data/trending.json
+          git add docs/trending-infra.md docs/trending-infra.html data/trending.json
           git commit -m "chore(trending): weekly refresh of trending infra projects"
           git push
