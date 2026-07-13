@@ -1487,20 +1487,14 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     : 'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 1 complete solution object.';
 
   const ANTI_CHEAT_REJECTION =
-    'REJECTED — your solution cheated by returning hardcoded example data.\n\n' +
-    'You did one of these forbidden things:\n' +
-    '  • Created a _MOCK_* / MOCK_* / FAKE_* variable with hardcoded objects\n' +
-    '  • Wrote fetch_prs / get_* that returns list(...) without calling urllib/http\n' +
-    '  • Special-cased a specific input and returned canned data — e.g.\n' +
-    '      if owner == "venmo" and repo == "foundations-interview": return [PR(1, "Fix issue", ...), ...]\n' +
-    '    The example names/IDs/titles are ILLUSTRATIONS; your code is tested with DIFFERENT inputs, so this FAILS.\n\n' +
-    'The ONLY correct fetch pattern is:\n' +
-    '  import urllib.request, json\n' +
-    '  def fetch_prs(owner, repo):\n' +
-    '      req = urllib.request.Request(f\'https://api.github.com/repos/{owner}/{repo}/pulls?state=all&per_page=100\', headers={\'Accept\': \'application/vnd.github+json\', \'User-Agent\': \'app\'})\n' +
-    '      with urllib.request.urlopen(req) as r:\n' +
-    '          return json.loads(r.read())\n\n' +
-    'Write a real implementation now. Return ONLY the JSON object — no preamble.';
+    'REJECTED — your previous solution hardcoded example data instead of actually solving the problem.\n\n' +
+    'Forbidden: a MOCK_/FAKE_ variable of canned objects; special-casing a specific input to return canned data ' +
+    '(e.g. `if x == "<an example value>": return [...]`); or any function that returns a fixed literal collection ' +
+    'instead of computing its result. The example names/numbers/IDs in the problem are ILLUSTRATIONS — your code ' +
+    'runs against DIFFERENT inputs, so hardcoded data FAILS.\n\n' +
+    'Rewrite the SAME solution to the SAME problem above so every function COMPUTES its result from its parameters ' +
+    '(and performs any real I/O its name implies) for ANY input. Do NOT change the problem, invent a different task, ' +
+    'or add unrelated logic. Return ONLY the JSON object — no preamble.';
 
   let hardcodingDetected = false;
 
@@ -2264,12 +2258,13 @@ RULES:
   // the CoFix client (it only consumes the final `answer` event), so re-running
   // is safe and invisible.
   const ANTI_CHEAT_COFIX =
-    '\n\n––– REJECTED: your previous fix CHEATED by hardcoding example data ' +
-    '(e.g. `if owner == "venmo" and repo == "foundations-interview": return [PR(1, "Fix issue", ...), ...]`, ' +
-    'a MOCK_/FAKE_ variable, or a fetch_*/get_*/load_* that returns a static list without real I/O). ' +
-    'The example names/IDs/titles are ILLUSTRATIONS — the code is tested with COMPLETELY DIFFERENT inputs, ' +
-    'so hardcoded data FAILS. Redo the fix: DELETE any special-cased/canned branch and make every function ' +
-    'compute from its parameters or perform the real I/O it promises. Return the SAME JSON shape, no preamble.';
+    '\n\n––– REJECTED: your previous fix hardcoded example data instead of solving the problem ' +
+    '(a MOCK_/FAKE_ variable, a branch that special-cases a specific input to return canned data, ' +
+    'or a function that returns a fixed literal collection instead of computing it). The example ' +
+    'values are ILLUSTRATIONS — the code runs against DIFFERENT inputs, so hardcoded data FAILS. ' +
+    'Redo the fix for the SAME code and SAME problem: make every function compute from its parameters ' +
+    '(or perform the real I/O its name implies). Do NOT change the task or add unrelated logic. ' +
+    'Return the SAME JSON shape, no preamble.';
 
   async function runCofixOnce(promptText) {
     // CoFix returns the WHOLE file as one escaped JSON string. Two things made it
