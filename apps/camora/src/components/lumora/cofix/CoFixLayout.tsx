@@ -194,6 +194,22 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // Auto-height for the read-only fixed-code editor: track its content height so
   // it grows downward with the fixed code's line count (its wrapper scrolls).
   const [fixedEditorH, setFixedEditorH] = useState(44);
+  // MEASURED height of the complexity strip (Big-O + the wrapping "Why …" text).
+  // A flat estimate undershot when the explanation wrapped to many lines, so the
+  // code area was sized too short and the fixed-code editor got squeezed to a
+  // sliver between the refine chips and this strip. Measuring it makes the code
+  // area reserve exactly enough room. See fixedBlockH below.
+  const complexityRef = useRef<HTMLDivElement | null>(null);
+  const [complexityH, setComplexityH] = useState(0);
+  useEffect(() => {
+    const el = complexityRef.current;
+    if (!el) { setComplexityH(0); return; }
+    const measure = () => setComplexityH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [complexity, fixedCode, hackerrankCompatible]);
 
   // Clear every solution-derived output so a freshly injected problem never
   // shows the previous fix. Mirrors the reset block in handleFix but does NOT
@@ -905,7 +921,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // so the code area came up short and the fixed editor scrolled internally.
   // Using the real measured height makes the area expand exactly with the code.
   const fixedBlockH = fixedCode
-    ? fixedEditorH + 40 /*quick-refine chips*/ + 8 /*pt-2 gap*/ + (complexity ? (complexity.timeWhy || complexity.spaceWhy ? 110 : 34) : 0) + 16
+    ? fixedEditorH + 40 /*fixed-code action band*/ + 8 /*pt-2 gap*/ + (complexity ? (complexityH || 34) : 0) + 16
     : 0;
   // No upper cap: the code area grows to fit the taller of the two blocks so the
   // fixed code is shown in FULL (auto-expand). When the code area + analysis panel
@@ -1152,11 +1168,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           <div className="flex flex-col flex-1 min-w-0 relative">
           {/* Quick-refine chip strip — always visible when fixed code exists */}
           {fixedCode && (
-            <div className="flex items-center gap-2.5 px-3 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 40, borderBottom: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--bg-elevated)' }}>
-              {/* Section marker so the quick-refine row reads as its own toolbar
-                  band, clearly separated from the code below (not chips crowding it). */}
-              <span className="shrink-0 flex items-center pr-2.5 mr-0.5 border-r border-[var(--border)]" style={{ color: 'var(--cam-gold-leaf-dk)' }} aria-hidden="true">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4M13 3l2.2 6.3L21 11l-5.8 1.7L13 19l-2.2-6.3L5 11l5.8-1.7L13 3z"/></svg>
+            <div className="flex items-center gap-2.5 px-3 shrink-0 overflow-x-auto no-scrollbar" style={{ height: 40, borderTop: '2px solid var(--cam-gold-leaf)', borderBottom: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--cam-hero-strip)' }}>
+              {/* "FIXED CODE" identity marker — makes the corrected solution
+                  instantly pickable at a glance during a live interview, and
+                  clearly separates it from the refine chips that follow. */}
+              <span className="shrink-0 flex items-center gap-1.5 pr-2.5 mr-0.5 border-r border-[color-mix(in_oklab,var(--cam-gold-leaf)_35%,transparent)] text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)' }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Fixed Code
               </span>
               {[
                 { label: 'Add print steps',    prompt: 'Add print() statements before and after each key step to show intermediate values',
@@ -1182,10 +1200,32 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   {icon}
                 </button>
               ))}
+              {/* Spacer + prominent Copy — grabbing the solution is the #1 action,
+                  so it sits pinned at the band's right edge, always in reach. */}
+              <div className="flex-1 min-w-[8px]" />
+              <button
+                onClick={handleCopy}
+                disabled={copyFeedback !== 'idle'}
+                data-tip={copyFeedback === 'copied' ? 'Copied!' : copyFeedback === 'failed' ? 'Copy failed' : 'Copy fixed code'}
+                className="shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-md text-[10px] font-bold uppercase tracking-[0.1em] transition-all disabled:cursor-default"
+                style={copyFeedback === 'copied' ? {
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(16,185,129,0.12) 100%)', border: '1px solid #10b981', color: '#10b981',
+                } : copyFeedback === 'failed' ? {
+                  background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)', border: '1px solid var(--danger)', color: 'var(--danger)',
+                } : {
+                  background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a',
+                }}
+              >
+                {copyFeedback === 'copied'
+                  ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Copied</>
+                  : copyFeedback === 'failed'
+                  ? <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Failed</>
+                  : <><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</>}
+              </button>
             </div>
           )}
 
-          <div className="flex flex-1 min-h-0">
+          <div className="flex shrink-0">
             {/* Monaco editor — read-only with line decorations. The pane bg is a
                 distinct surface so the empty space below the auto-fit editor
                 reads as empty pane, never as a giant editor. */}
@@ -1291,7 +1331,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   </button>
                 </div>
               )}
-              <div className="shrink-0" style={{ borderBottom: '1px solid var(--cam-gold-leaf-dk)' }}>
+              <div className="shrink-0" style={{ borderLeft: '3px solid var(--cam-gold-leaf)', borderBottom: '1px solid var(--cam-gold-leaf-dk)', boxShadow: 'inset 0 1px 0 color-mix(in oklab, var(--cam-gold-leaf) 22%, transparent)' }}>
               <Editor
                 value={fixedCode}
                 language={toMonacoLang(effectiveLang)}
@@ -1334,7 +1374,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
           {/* Complexity strip — Big-O plus a WHY for each (not just the answer). */}
           {complexity && (
-            <div className="flex flex-col gap-2 px-4 py-2.5 border-t border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
+            <div ref={complexityRef} className="flex flex-col gap-2 px-4 py-2.5 border-t border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
               <div className="flex items-center gap-4 text-[11px] flex-wrap">
                 <span className="text-[var(--text-muted)]">
                   Time: <span className="text-[var(--text-primary)] font-mono">{complexity.time}</span>
@@ -1377,12 +1417,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
       {/* ── Analysis panel — sits UNDER Broken|Fixed, spanning their combined
           width (inside the left column). ── */}
-      {/* shrink-0 + bounded height (not flex-1) so the code area above can grow to
-          its full height and the whole column scrolls, rather than the panel eating
-          the space and forcing the code block to scroll internally. The panel has
-          its own internal scroll (tabs below). */}
+      {/* Expanded → flex-1 so it fills ALL remaining column height below the code
+          area (no dead space at the bottom); its tab body scrolls internally.
+          Collapsed → a thin 34px restore bar. The code area above is shrink-0 at
+          its measured height, so the panel simply takes whatever's left. */}
       {showPanel && (
-        <div className="shrink-0 flex flex-col" style={{ height: panelCollapsed ? 34 : '42vh', borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}>
+        <div
+          className={panelCollapsed ? 'shrink-0 flex flex-col' : 'flex-1 flex flex-col'}
+          style={{ height: panelCollapsed ? 34 : undefined, minHeight: panelCollapsed ? undefined : '38vh', borderTop: '1px solid var(--cam-gold-leaf)', background: 'var(--bg-surface)' }}
+        >
 
           {panelCollapsed ? (
             /* Collapsed → thin restore bar. Clicking anywhere reopens the drawer. */
