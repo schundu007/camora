@@ -1068,7 +1068,12 @@ function isValidAnswer(parsed, isMcq) {
       && Array.isArray(parsed.mcq.answer)
       && parsed.mcq.answer.length >= 1;
   }
-  return !!(parsed.code || parsed.solutions);
+  // Require ACTUAL code. A valid-SHAPED envelope with empty/missing code
+  // (solutions: [] or solutions: [{ code: "" }]) must NOT pass — otherwise a
+  // blank solution gets served with no retry. Rejecting it lets /solve fall
+  // through to the next pass/provider (and ultimately a clear error rather than
+  // an empty answer). This is the fix for "solution block is empty/unrelated".
+  return getCodeFromParsed(parsed).trim().length > 0;
 }
 
 // ---------------------------------------------------------------------------
