@@ -2146,21 +2146,21 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
       "badge": <sequential integer starting at 1>,
       "type": "fix" | "added",
       "label": "2-4 word label",
-      "note": "One sentence explaining why."
+      "note": "≤ 8 words — terse, what changed. No full sentences."
     }
   ],
   "complexity": {
     "time": "O(...)",
     "space": "O(...)",
-    "timeWhy": "2-4 sentences explaining WHY this time complexity holds for THIS specific problem — name the dominant operation, tie it to the input size (e.g. 'the single pass over n elements'), and say why a lower bound isn't achievable or isn't needed given the constraints. Reference the actual approach, not generic definitions.",
-    "spaceWhy": "2-4 sentences explaining WHY this space complexity holds — name what extra memory the approach allocates (the hash map, the recursion stack, the output array) and how it grows with the input, or why it's O(1) auxiliary. Be specific to THIS solution."
+    "timeWhy": "ONE short sentence (≤ 18 words) naming the dominant operation and why. No preamble.",
+    "spaceWhy": "ONE short sentence (≤ 18 words) naming the extra memory used, or why O(1). No preamble."
   },
   "hackerrank_compatible": true | false,
   "walkthrough": [
     {
       "lines": "1-3",
       "context": "phase: 'read' | 'insight' | 'build' | 'trace' | 'complexity' (omit if not relevant)",
-      "text": "First-person DERIVATION the candidate says aloud — obey the WALK-THROUGH rules below. Cite REAL variable names in backticks and REAL line numbers. 25-45 words."
+      "text": "First-person, ≤ 15 words — one crisp point the candidate says aloud. Cite REAL variable names in backticks."
     }
   ]
 }
@@ -2169,22 +2169,13 @@ OUTPUT ENCODING — CRITICAL (one wrong backslash makes the pasted code raise Sy
 - "fixed_code" is a JSON string, so every backslash that belongs to the CODE must be written as a DOUBLE backslash and round-trip to ONE backslash in the source: the separator in '\\n'.join(...), tabs, regex classes like \\d / \\w, Windows paths. A SINGLE \\n inside a code string literal is parsed by JSON as a real newline and splits the literal across two lines → SyntaxError. Never emit a raw/literal newline inside a string literal.
 - Never place a backslash escape inside an f-string expression's braces { } (e.g. f'{"\\u2713" if ok else "x"}') — that is a SyntaxError before Python 3.12. Assign the character to a variable first (e.g. check = '\\u2713'), then reference the variable inside the f-string.
 
-WALK-THROUGH — this is the standout: the THOUGHT PROCESS of how we arrived at the
-working solution, not a line-by-line paraphrase. Produce 4-7 ordered steps forming
-a clear derivation arc:
-  1) READ — restate what the problem actually asks and pinpoint the ONE thing that
-     makes it non-trivial (the constraint / edge case / goal).
-  2) INSIGHT — the key realisation that unlocks it ("the trick is…"). If there is an
-     obvious naive approach, name it in one breath and say why we do better. This is
-     the WOW moment — make it crisp and genuinely illuminating.
-  3..N) BUILD / TRACE — walk the ACTUAL fixed_code in order, tying each part back to
-     the insight: what each variable holds, why this loop/branch, what invariant is
-     kept. Use REAL variable names (backticks) and REAL line numbers.
-  LAST) COMPLEXITY — time and space with a one-line WHY, and why it's the right trade-off.
-Voice: confident, specific first-person interview prose ("I start by…", "the key
-realisation is…", "so I keep a running…"). ACCURACY OVER FLAIR — every claim must be
-true to the code; never describe code that isn't there. No markdown, no filler, no
-restating the obvious.
+WALK-THROUGH — CONCISE: the candidate reads this ALOUD mid-interview, so it must be
+skimmable in seconds. Produce EXACTLY 3-5 steps (never more), each ≤ 15 words:
+  1) INSIGHT — the ONE key realisation that unlocks it ("the trick is…").
+  2..N) BUILD — the 2-3 core moves of the ACTUAL fixed_code, real variable names in backticks.
+  LAST) COMPLEXITY — time/space in a half-line.
+Voice: crisp first-person ("I keep a running…"). NO preamble, NO restating the problem,
+NO line-by-line paraphrase, NO filler. Every claim true to the code. Fewer, sharper points.
 
 RULES:
 - NO HARDCODING / NO CHEATING — ABSOLUTE LAW, OVERRIDES THE "preserve" AND "fix only what's broken" RULES BELOW.
@@ -2232,7 +2223,9 @@ RULES:
 - If code has no issues, return changes: [] and fixed_code equal to the input
 - Return the COMPLETE fixed code, not a partial snippet
 - fixed_code MUST be submission-ready: the corrected program ONLY. Add ZERO comments. NEVER write your reasoning, analysis, or notes — about tracebacks, NameErrors, the test harness, "why this works", or "we include the __main__ block because…" — as comments in the code. That commentary is nonsense in a candidate's editor. ALL explanation goes ONLY in changes[] and walkthrough[]. If the input code had no comments, fixed_code has no comments.
-- walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`;
+- walkthrough: 3-5 entries MAX, ≤ 15 words each, first person, backticks for var refs. Group related lines ("35-38"). Only the KEY moves — skip the obvious.
+- changes: emit only the KEY logical changes, GROUPED, MAX 8 entries — never one-per-line. For a stub you completed, summarise the added blocks (e.g. "added the deadline-propagation loop"), don't list every line. note ≤ 8 words.
+- BE CONCISE EVERYWHERE: the candidate reads changes[], walkthrough[], and complexity aloud during a live interview. Fewer, sharper items beat completeness. No filler, no restating the problem.`;
 
   // Parse the model's JSON, tolerant of markdown fences and any leading prose
   // or trailing text around the object.
