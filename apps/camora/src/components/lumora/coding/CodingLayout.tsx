@@ -379,26 +379,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // ── Line-binding: Code Walkthrough row → Monaco editor line (row → editor only) ──
   const editorRef = useRef<any>(null);
   const decoColRef = useRef<any>(null); // Monaco decorations collection
-  // The editor auto-heights, so it has no internal scroll — its scrolling
-  // ancestor (the right column) must scroll to bring a line into view.
+  // The editor owns its internal scroll; reveal lines with Monaco's own API.
   const editorColRef = useRef<HTMLDivElement>(null);
   const highlightLine = useCallback((line: number) => {
     const ed = editorRef.current;
     if (!ed || !line || line < 1) return;
-    // The editor auto-heights to its content (no internal scroll), so reveal a
-    // line by scrolling the surrounding column. getTopForLineNumber gives the
-    // line's y within the fully-expanded editor; translate it via bounding rects.
-    const col = editorColRef.current;
-    if (col) {
-      try {
-        const node = ed.getDomNode();
-        if (node) {
-          const top = ed.getTopForLineNumber(line);
-          const delta = (node.getBoundingClientRect().top + top) - (col.getBoundingClientRect().top + col.clientHeight / 2);
-          col.scrollTo({ top: col.scrollTop + delta, behavior: 'smooth' });
-        }
-      } catch { /* ignore */ }
-    }
+    // Editor owns its internal scroll — reveal the line centered when it's
+    // outside the current viewport (0 = smooth scroll).
+    try { ed.revealLineInCenterIfOutsideViewport(line, 0); } catch { /* ignore */ }
     if (!decoColRef.current) decoColRef.current = ed.createDecorationsCollection([]);
     decoColRef.current.set([{
       range: { startLineNumber: line, startColumn: 1, endLineNumber: line, endColumn: 1 },
@@ -2924,10 +2912,12 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         </div>
 
         {/* ── RIGHT PANEL: Code Editor + Output ──
-            Scrolls as a whole: the editor auto-heights to the code (grows
-            downward with the line count, no wasted empty box) and the output
-            panel flows beneath it. */}
-        <div ref={editorColRef} className="flex-1 flex flex-col min-w-0 min-h-0 overflow-y-auto" style={{ background: t.surfaceBg, color: t.text }}>
+            The editable editor fills the space between the sticky header and the
+            output panel and OWNS its scroll (see editor note below). The output
+            panel is pinned beneath it. The column itself does not scroll — that
+            auto-height + ancestor-scroll combo swallowed the wheel in docked /
+            overlay windows, so nothing scrolled. */}
+        <div ref={editorColRef} className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden" style={{ background: t.surfaceBg, color: t.text }}>
           {/* Editor Header — sticky so Run / language / reset stay reachable while the column scrolls */}
           <div className="flex items-center justify-between px-2 py-1 lumora-winctl-safe sticky top-0 z-10" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-1.5">
@@ -2988,12 +2978,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             </div>
           </div>
 
-          {/* ── Code Editor — auto-heights to the code so it grows downward with
-              the line count (no fixed box, no wasted empty space). The column
-              scrolls as a whole when the code exceeds the viewport. ── */}
+          {/* ── Code Editor — an EDITABLE editor MUST own its scrolling so the
+              caret and click-to-place land on the correct line. Auto-height
+              handed scrolling to the ancestor column, which both desynced the
+              caret AND (in docked/overlay windows) let Monaco swallow the wheel
+              so the user could scroll neither up nor down. It now fills the
+              space between the header and the output panel and scrolls
+              internally. ── */}
+          <div className="flex-1 min-h-0">
           <SharedCodeEditor
-            autoHeight
-            minHeight={160}
+            height="100%"
             language={getLanguageById(language)?.monaco || 'python'}
             code={code}
             onChange={setCode}
@@ -3012,6 +3006,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               });
             }}
           />
+          </div>
 
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
