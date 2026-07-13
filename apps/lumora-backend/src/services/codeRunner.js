@@ -940,8 +940,120 @@ const BUILDERS = {
 // Compiled languages: build a full program, compile it, run the binary, capture
 // stdout. Keyed by runtime; each entry knows how to produce the source and how
 // to compile+run it (Java needs a fixed class name; others use COMPILED[]).
+// C++ test-case runner. No reflection, so we parse the solution method's
+// signature (class + public method, or a free function), marshal the parsed
+// example input into typed C++ locals, call it, and print the result via a
+// generic toStr() that formats vectors Python-style ("[1, 2, 3]") to match the
+// expected values. Covers int/long/double/bool/char/string, their vectors, and
+// vector<vector<...>>.
+function cppSplitTop(s) {
+  const out = []; let d = 0, q = false, qc = 0; let cur = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (q) { cur += c; if (c === qc) q = false; }
+    else if (c === '"' || c === "'") { q = true; qc = c; cur += c; }
+    else if (c === '<' || c === '(' || c === '[' || c === '{') { d++; cur += c; }
+    else if (c === '>' || c === ')' || c === ']' || c === '}') { d--; cur += c; }
+    else if (c === ',' && d === 0) { out.push(cur); cur = ''; }
+    else cur += c;
+  }
+  if (cur.trim()) out.push(cur);
+  return out.map(x => x.trim());
+}
+function cppLiteral(type, jsVal) {
+  const t = type.replace(/\bconst\b/g, '').replace(/&/g, '').trim();
+  if (/^vector\s*<([\s\S]+)>$/.test(t)) {
+    const inner = t.match(/^vector\s*<([\s\S]+)>$/)[1].trim();
+    const arr = Array.isArray(jsVal) ? jsVal : [];
+    return '{' + arr.map(v => cppLiteral(inner, v)).join(', ') + '}';
+  }
+  if (/^(string|std::string)$/.test(t)) return JSON.stringify(String(jsVal ?? ''));
+  if (/^char$/.test(t)) return "'" + String(jsVal ?? ' ').slice(0, 1).replace(/'/g, "\\'") + "'";
+  if (/^bool$/.test(t)) return jsVal ? 'true' : 'false';
+  if (/^(double|float|long double)$/.test(t)) return String(Number(jsVal));
+  return String(parseInt(jsVal, 10)); // int/long/long long/short
+}
+function buildCppRunner(code, testInput) {
+  // Detect entry: last class with a public method taking args, else a free fn.
+  const classNames = [...code.matchAll(/\bclass\s+(\w+)/g)].map(m => m[1]);
+  let cls = null, method = null, params = null;
+  const methodRe = /(?:public:\s*)?(?:static\s+)?([\w:]+(?:\s*<[^;{}]*?>)?[\s\*&]+)(\w+)\s*\(([^;{}]*?)\)\s*(?:const\s*)?\{/g;
+  const byClass = {};
+  let mm;
+  while ((mm = methodRe.exec(code)) !== null) {
+    if (mm[2] === 'main' || /\breturn\b/.test(mm[1])) continue;
+    byClass[mm[2]] = { ret: mm[1].trim(), name: mm[2], args: mm[3].trim() };
+  }
+  // Prefer a method inside the last-defined class; else any free function.
+  for (const cn of [...classNames].reverse()) {
+    const clsBody = code.slice(code.indexOf('class ' + cn));
+    for (const k of Object.keys(byClass)) {
+      if (clsBody.includes(byClass[k].name + '(') && !cls) { cls = cn; method = byClass[k]; break; }
+    }
+    if (cls) break;
+  }
+  if (!method) { const k = Object.keys(byClass)[0]; if (k) method = byClass[k]; }
+
+  let callArgs = '', decls = '';
+  if (method && method.args) {
+    const paramList = cppSplitTop(method.args);
+    // Parse input values (name = value / positional).
+    const vals = cppSplitTop(testInput).map(p => {
+      const eq = p.indexOf('=');
+      const raw = eq >= 0 ? p.slice(eq + 1).trim() : p.trim();
+      try { return JSON.parse(raw.replace(/'/g, '"')); } catch { return raw.replace(/^["']|["']$/g, ''); }
+    });
+    const names = [];
+    paramList.forEach((p, i) => {
+      const m2 = p.match(/^([\s\S]+?)(\w+)\s*$/);
+      if (!m2) return;
+      const type = m2[1].trim(); const nm = '__a' + i;
+      names.push(nm);
+      const baseType = type.replace(/\bconst\b/g, '').replace(/&/g, '').trim();
+      decls += `  ${baseType} ${nm} = ${cppLiteral(type, vals[i])};\n`;
+    });
+    callArgs = names.join(', ');
+  }
+  const callExpr = cls
+    ? `${cls} __sol; auto __r = __sol.${method ? method.name : ''}(${callArgs});`
+    : `auto __r = ${method ? method.name : ''}(${callArgs});`;
+
+  return `#include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
+#include <map>
+#include <set>
+#include <queue>
+#include <stack>
+#include <deque>
+#include <cmath>
+#include <climits>
+#include <numeric>
+#include <utility>
+#include <functional>
+using namespace std;
+template<typename T> string __toStr(const T& v){ ostringstream o; o<<v; return o.str(); }
+string __toStr(bool v){ return v?"true":"false"; }
+string __toStr(const string& v){ return v; }
+template<typename T> string __toStr(const vector<T>& v){ string s="["; for(size_t i=0;i<v.size();i++){ if(i) s+=", "; s+=__toStr(v[i]); } s+="]"; return s; }
+
+${code}
+
+int main(){
+${decls}  ${callExpr}
+  cout << __toStr(__r) << endl;
+  return 0;
+}
+`;
+}
+
 const COMPILED_TEST_BUILDERS = {
   java: buildJavaRunner,
+  cpp: buildCppRunner,
 };
 
 // ---------------------------------------------------------------------------
