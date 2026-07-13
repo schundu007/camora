@@ -26,16 +26,18 @@ vi.mock('@anthropic-ai/sdk', () => {
   return { default: FakeAnthropic };
 });
 
-// CoFix streams via Gemini (geminiGetModel('').startChat().sendMessageStream()),
-// not Anthropic. Mock the Google SDK: getGenerativeModel -> startChat ->
-// sendMessageStream returns { stream: asyncIterable<{ text(): string }> }.
-const sendMessageStreamMock = vi.fn();
+// CoFix runs via Gemini as ONE non-streaming call
+// (getGenerativeModel().generateContent(prompt) -> { response: { text() } }).
+// Mock the Google SDK accordingly.
+const generateContentMock = vi.fn();
 
 vi.mock('@google/generative-ai', () => ({
   GoogleGenerativeAI: vi.fn(function () {
     return {
       getGenerativeModel: () => ({
-        startChat: () => ({ sendMessageStream: sendMessageStreamMock }),
+        generateContent: generateContentMock,
+        // Kept for any other code paths that still start a chat.
+        startChat: () => ({ sendMessageStream: vi.fn() }),
       }),
     };
   }),
@@ -80,16 +82,9 @@ const { default: app } = await import('../src/index.js');
 // ---------------------------------------------------------------------------
 // Helper: build a minimal async-iterable SSE stream from a text payload
 // ---------------------------------------------------------------------------
-// Gemini sendMessageStream() resolves to an object with a `.stream` async
-// iterable whose chunks expose a text() method.
-function makeStream(text) {
-  return {
-    stream: {
-      [Symbol.asyncIterator]: async function* () {
-        yield { text: () => text };
-      },
-    },
-  };
+// Gemini generateContent() resolves to { response: { text(): string } }.
+function makeResult(text) {
+  return { response: { text: () => text } };
 }
 
 const VALID_ANSWER = {
@@ -128,8 +123,8 @@ describe('POST /api/v1/coding/cofix/stream', () => {
     expect(res.status).toBe(400);
   });
 
-  it('streams token + answer + done events for valid code', async () => {
-    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+  it('emits answer + done events for valid code', async () => {
+    generateContentMock.mockResolvedValue(makeResult(JSON.stringify(VALID_ANSWER)));
 
     const res = await request(app)
       .post('/api/v1/coding/cofix/stream')
@@ -144,14 +139,13 @@ describe('POST /api/v1/coding/cofix/stream', () => {
     // supertest custom parser puts the accumulated string in res.body
     const body = typeof res.body === 'string' ? res.body : JSON.stringify(res.body);
     expect(res.status).toBe(200);
-    expect(body).toContain('event: token');
     expect(body).toContain('event: answer');
     expect(body).toContain('event: done');
     expect(body).toContain('"hackerrank_compatible":true');
   });
 
   it('includes hint in prompt when provided', async () => {
-    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+    generateContentMock.mockResolvedValue(makeResult(JSON.stringify(VALID_ANSWER)));
 
     await request(app)
       .post('/api/v1/coding/cofix/stream')
@@ -168,12 +162,12 @@ describe('POST /api/v1/coding/cofix/stream', () => {
       });
 
     // Gemini's sendMessageStream() receives the full prompt as a plain string.
-    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    const sentText = generateContentMock.mock.calls[0][0];
     expect(sentText).toContain('typo in return');
   });
 
   it('threads the problem statement into the prompt when provided', async () => {
-    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+    generateContentMock.mockResolvedValue(makeResult(JSON.stringify(VALID_ANSWER)));
 
     await request(app)
       .post('/api/v1/coding/cofix/stream')
@@ -189,13 +183,13 @@ describe('POST /api/v1/coding/cofix/stream', () => {
         res.on('end', () => cb(null, d));
       });
 
-    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    const sentText = generateContentMock.mock.calls[0][0];
     expect(sentText).toContain('PROBLEM STATEMENT');
     expect(sentText).toContain('return n doubled');
   });
 
   it('activates TEMPLATE-SOLVE mode for a locked HackerRank template (empty body + __main__ harness)', async () => {
-    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+    generateContentMock.mockResolvedValue(makeResult(JSON.stringify(VALID_ANSWER)));
 
     const template = [
       'def count_substring(string, sub_string):',
@@ -222,7 +216,7 @@ describe('POST /api/v1/coding/cofix/stream', () => {
         res.on('end', () => cb(null, d));
       });
 
-    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    const sentText = generateContentMock.mock.calls[0][0];
     expect(sentText).toContain('TEMPLATE-SOLVE MODE');
     expect(sentText).toContain('CHARACTER-FOR-CHARACTER');
     // the problem must also be threaded so the empty body gets solved, not guessed
@@ -230,7 +224,7 @@ describe('POST /api/v1/coding/cofix/stream', () => {
   });
 
   it('activates TEMPLATE-SOLVE mode for a MINIMAL imports-only template (numpy) and forbids inventing a wrapper', async () => {
-    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+    generateContentMock.mockResolvedValue(makeResult(JSON.stringify(VALID_ANSWER)));
 
     await request(app)
       .post('/api/v1/coding/cofix/stream')
@@ -246,7 +240,7 @@ describe('POST /api/v1/coding/cofix/stream', () => {
         res.on('end', () => cb(null, d));
       });
 
-    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    const sentText = generateContentMock.mock.calls[0][0];
     expect(sentText).toContain('TEMPLATE-SOLVE MODE');
     // The minimal template must complete INLINE, never wrapped in a new function.
     expect(sentText).toMatch(/MINIMAL \/ INLINE skeleton/i);
@@ -254,7 +248,7 @@ describe('POST /api/v1/coding/cofix/stream', () => {
   });
 
   it('does NOT activate TEMPLATE-SOLVE mode for ordinary broken code', async () => {
-    sendMessageStreamMock.mockResolvedValue(makeStream(JSON.stringify(VALID_ANSWER)));
+    generateContentMock.mockResolvedValue(makeResult(JSON.stringify(VALID_ANSWER)));
 
     await request(app)
       .post('/api/v1/coding/cofix/stream')
@@ -266,7 +260,7 @@ describe('POST /api/v1/coding/cofix/stream', () => {
         res.on('end', () => cb(null, d));
       });
 
-    const sentText = sendMessageStreamMock.mock.calls[0][0];
+    const sentText = generateContentMock.mock.calls[0][0];
     expect(sentText).not.toContain('TEMPLATE-SOLVE MODE');
   });
 

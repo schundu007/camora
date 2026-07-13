@@ -2267,12 +2267,16 @@ RULES:
     'so hardcoded data FAILS. Redo the fix: DELETE any special-cased/canned branch and make every function ' +
     'compute from its parameters or perform the real I/O it promises. Return the SAME JSON shape, no preamble.';
 
-  async function streamCofixOnce(promptText) {
-    // CoFix returns the WHOLE file as one escaped JSON string. On a long file
-    // the default (unset) output ceiling truncated the JSON mid-string and the
-    // model's own escaping of the code broke the object — both surfaced as
-    // "Failed to parse CoFix response". Force application/json (Gemini guarantees
-    // a parseable object) and lift maxOutputTokens so a big file isn't cut off.
+  async function runCofixOnce(promptText) {
+    // CoFix returns the WHOLE file as one escaped JSON string. Two things made it
+    // "Failed to parse": (1) no output ceiling truncated the JSON mid-string, and
+    // (2) streaming re-assembly of the chunks occasionally corrupted the escaped
+    // code. The CoFix client IGNORES token events (it only consumes the final
+    // `answer`), so streaming bought nothing — we now do ONE non-streaming call
+    // and read the complete text in a single piece (no chunk re-assembly). The
+    // keepalive ping covers the wait so the client's silence timer never fires.
+    // application/json makes Gemini emit a parseable object; maxOutputTokens is
+    // lifted so a big file isn't cut off.
     const cofixModel = getGeminiClient().getGenerativeModel({
       model: GEMINI_MODEL,
       generationConfig: {
@@ -2281,15 +2285,9 @@ RULES:
         maxOutputTokens: 32768,
       },
     });
-    const chat = cofixModel.startChat({ history: [] });
-    const streamResult = await chat.sendMessageStream(promptText);
-    let text = '';
-    for await (const chunk of streamResult.stream) {
-      if (clientDisconnected) return null;
-      const token = chunk.text();
-      if (token) { text += token; sendEvent('token', { chunk: token }); }
-    }
-    return text;
+    const result = await cofixModel.generateContent(promptText);
+    if (clientDisconnected) return null;
+    return result.response.text();
   }
 
   try {
@@ -2302,7 +2300,7 @@ RULES:
     let useAntiCheat = false;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const promptText = useAntiCheat ? cofixUserContent + ANTI_CHEAT_COFIX : cofixUserContent;
-      const fullText = await streamCofixOnce(promptText);
+      const fullText = await runCofixOnce(promptText);
       if (fullText === null) { clearInterval(keepaliveTimer); return; }
 
       let candidate;
