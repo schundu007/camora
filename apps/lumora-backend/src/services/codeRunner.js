@@ -620,15 +620,41 @@ function _parseParams(s) {
     return params;
 }
 
-const _funcMatch = _userCode.match(/function\\s+(\\w+)|(?:const|let|var)\\s+(\\w+)\\s*=/);
+let _done = false;
+const _funcMatch = _userCode.match(/function\\s+(\\w+)|(?:const|let|var)\\s+(\\w+)\\s*=\\s*(?:function|\\(|async)/);
 if (_funcMatch) {
     const _fnName = _funcMatch[1] || _funcMatch[2];
-    const _fn = eval(_fnName);
-    if (typeof _fn === 'function') {
-        const _result = _fn(..._parseParams(_input));
-        console.log(JSON.stringify(_result));
+    try {
+        const _fn = eval(_fnName);
+        if (typeof _fn === 'function') {
+            const _result = _fn(..._parseParams(_input));
+            console.log(JSON.stringify(_result));
+            _done = true;
+        }
+    } catch (_e) {}
+}
+if (!_done) {
+    // Custom-class solution (e.g. class DevImageBuilder { findBuildSchedule(a,b){} }).
+    // Scan classes LAST-first so the solution class wins over helper classes;
+    // instantiate and call its last public method that takes args.
+    const _classNames = [..._userCode.matchAll(/class\\s+(\\w+)/g)].map(m => m[1]).reverse();
+    for (const _cn of _classNames) {
+        try {
+            const _Cls = eval(_cn);
+            if (typeof _Cls !== 'function') continue;
+            const _proto = _Cls.prototype;
+            const _methods = Object.getOwnPropertyNames(_proto)
+                .filter(n => n !== 'constructor' && typeof _proto[n] === 'function' && _proto[n].length >= 1);
+            if (!_methods.length) continue;
+            const _obj = new _Cls();
+            const _result = _obj[_methods[_methods.length - 1]](..._parseParams(_input));
+            console.log(JSON.stringify(_result));
+            _done = true;
+            break;
+        } catch (_e) {}
     }
-} else {
+}
+if (!_done) {
     try {
         const _lines = _input.trim().split('\\n').filter(l => l.trim());
         let _ops, _simArgs;
