@@ -1320,6 +1320,19 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
   }
 
+  // Keepalive heartbeat. The /solve prompt makes the model reason SILENTLY
+  // before it emits the first JSON token, so on a hard problem the stream can
+  // stay quiet for tens of seconds. The client aborts after 30s of silence
+  // ("Sona took too long to respond"), so we send a ':' comment every 20s to
+  // reset that timer — the SSE parser ignores comment lines. Cleared on both
+  // 'finish' (normal res.end) and 'close' (client disconnect), which covers
+  // every one of this handler's return paths without touching each one.
+  const solveKeepalive = setInterval(() => {
+    if (!res.writableEnded) res.write(': ping\n\n');
+  }, 20_000);
+  res.on('finish', () => clearInterval(solveKeepalive));
+  res.on('close', () => clearInterval(solveKeepalive));
+
   // ── Create conversation record ──────────────────────────────────────────
   let conversationId = null;
   try {
