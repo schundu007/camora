@@ -769,7 +769,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
-      "narration": "First-person spoken script the candidate can read ALOUD to the interviewer. 4-6 sentences. Natural speaking tone (contractions OK). Structure: hook → core insight → walk through the approach → complexity note. NO markdown, NO code blocks, NO bullet points — just plain conversational prose.",
+      "narration": "First-person spoken script the candidate reads ALOUD. 2-3 sentences MAX: hook → core insight → complexity. Conversational, no markdown/code/bullets.",
       "trace": [
         {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
       ],
@@ -886,8 +886,9 @@ Rules:
 - Each solution MUST have complete, runnable code — not pseudocode
 - MANDATORY — MINIMAL LINES: write the SHORTEST correct, readable solution. This is live-interview code the candidate hand-types under time pressure, so favour idiomatic constructs and standard-library conveniences (comprehensions, unpacking, built-ins, collections/itertools) over boilerplate. Do NOT add dataclasses, wrapper classes, extra helper functions, verbose try/except, logging, or scaffolding the PROBLEM does not require. If a clean solution fits in ~5-15 lines, never emit 40. Fewer lines that still read clearly and run correctly always win. (This governs the IMPLEMENTATION only — never drop a required import or the platform's locked driver/harness to save lines.)
 - MANDATORY — MINIMAL IMPORTS: import ONLY modules the code actually uses. No unused imports, no "just in case" imports, no pulling in a heavy module for something a built-in already does. Prefer built-ins/stdlib; add a third-party import only if the problem truly requires it. Every import line must map to a symbol used in the solution.
-- Each solution MUST have a narration field — first-person spoken script the candidate will READ OUT LOUD during the interview (4-6 sentences, natural speech, no markdown)
-- Each solution MUST have a trace field — 4-10 step-by-step dry-run entries showing variable state as the algorithm runs on examples[0]. Each step: { step: number, action: short verb phrase, state: key variables formatted as 'name=value' joined with commas }. No code in state, just names and values. Shows the candidate how to talk through the first test case at a whiteboard.
+- Each solution MUST have a narration field — first-person spoken script the candidate READS OUT LOUD. Keep it SHORT: 2-3 sentences MAX (hook → core insight → complexity), natural speech, no markdown. The candidate reads this live — brevity matters.
+- Each solution MUST have a trace field — 4-6 step-by-step dry-run entries (never more) showing variable state on examples[0]. Each step: { step, action: short verb phrase, state: 'name=value' joined with commas }. No code in state.
+- CONCISE OUTPUT (live-interview readability + speed): the "explanations" array must cover ONLY the KEY lines — at most 10 entries, and skip trivial/obvious lines (imports, closing brackets, plain returns). Do NOT emit one explanation per line. Fewer, sharper annotations always win; a wall of per-line text is unreadable mid-interview and slows generation.
 ${starterCode
   ? `- Preserve the template's own comments verbatim; add NO new comments of your own
 - KEEP the template's driver/main block EXACTLY — the \`if __name__ == '__main__':\` block, the stdin reads, the wrapper call, and the print/fptr output are part of the LOCKED template and MUST appear in your "code" unchanged. Do NOT strip them. (This overrides the generic "no main blocks" rule — that rule is ONLY for from-scratch problems with no starter code.)`
