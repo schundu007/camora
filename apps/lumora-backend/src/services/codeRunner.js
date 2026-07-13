@@ -807,11 +807,141 @@ function buildBashRunner(code, testInput) {
   return runner;
 }
 
+// Java test-case runner. Java is statically typed and compiled, so we can't
+// just append a call. Strip `public` from the user's types (so our own public
+// __Main can live in the same file), then a reflection driver finds the solution
+// class (custom class or Solution), picks its public arg-taking method, marshals
+// the parsed test input into the method's real parameter types, calls it, and
+// prints the return value in a stable form. Quote chars use numeric codes (34/39)
+// to avoid JS-template escaping bugs.
+function buildJavaRunner(code, testInput) {
+  const userCode = code.replace(/\bpublic\s+(?=(?:final\s+|abstract\s+)*(?:class|interface|enum|record)\b)/g, '');
+  const classNames = [...code.matchAll(/\bclass\s+([A-Za-z_]\w*)/g)].map(m => m[1]).reverse();
+  const namesArr = classNames.map(n => JSON.stringify(n)).join(', ');
+  const inputB64 = Buffer.from(testInput).toString('base64');
+  return `import java.util.*;
+import java.lang.reflect.*;
+
+${userCode}
+
+public class __Main {
+  static String[] __names = new String[]{${namesArr}};
+  public static void main(String[] __a) throws Throwable {
+    String in = new String(Base64.getDecoder().decode("${inputB64}"));
+    for (String cn : __names) {
+      Class<?> cls; try { cls = Class.forName(cn); } catch (Throwable t) { continue; }
+      Method m = pick(cls); if (m == null) continue;
+      Object obj; try { Constructor<?> c = cls.getDeclaredConstructor(); c.setAccessible(true); obj = c.newInstance(); } catch (Throwable t) { continue; }
+      Class<?>[] pt = m.getParameterTypes();
+      String[] parts = split(in);
+      Object[] call = new Object[pt.length];
+      for (int i = 0; i < pt.length; i++) call[i] = parse(i < parts.length ? parts[i] : "", pt[i]);
+      m.setAccessible(true);
+      Object r = m.invoke(obj, call);
+      System.out.println(fmt(r));
+      return;
+    }
+    System.out.println("(no callable class method found)");
+  }
+  static Method pick(Class<?> cls) {
+    Method best = null;
+    for (Method mm : cls.getDeclaredMethods()) {
+      if (mm.isSynthetic() || mm.getName().equals("main") || mm.getParameterCount() < 1) continue;
+      if (!Modifier.isPublic(mm.getModifiers())) continue;
+      if (best == null || mm.getParameterCount() > best.getParameterCount()) best = mm;
+    }
+    return best;
+  }
+  static int topEq(String t) {
+    int d = 0; boolean q = false; char qc = 0;
+    for (int i = 0; i < t.length(); i++) { char c = t.charAt(i);
+      if (q) { if (c == qc) q = false; }
+      else if (c == 34 || c == 39) { q = true; qc = c; }
+      else if (c == '[' || c == '(' || c == '{') d++;
+      else if (c == ']' || c == ')' || c == '}') d--;
+      else if (c == '=' && d == 0 && (i + 1 >= t.length() || t.charAt(i + 1) != '=') && (i == 0 || (t.charAt(i - 1) != '!' && t.charAt(i - 1) != '<' && t.charAt(i - 1) != '>'))) return i;
+    }
+    return -1;
+  }
+  static String[] split(String s) {
+    s = s.trim(); List<String> out = new ArrayList<>();
+    int d = 0; boolean q = false; char qc = 0; StringBuilder cur = new StringBuilder();
+    for (int i = 0; i < s.length(); i++) { char c = s.charAt(i);
+      if (q) { cur.append(c); if (c == qc) q = false; }
+      else if (c == 34 || c == 39) { q = true; qc = c; cur.append(c); }
+      else if (c == '[' || c == '(' || c == '{') { d++; cur.append(c); }
+      else if (c == ']' || c == ')' || c == '}') { d--; cur.append(c); }
+      else if (c == ',' && d == 0) { out.add(cur.toString()); cur = new StringBuilder(); }
+      else cur.append(c);
+    }
+    if (cur.length() > 0) out.add(cur.toString());
+    List<String> vals = new ArrayList<>();
+    for (String p : out) { String t = p.trim(); int eq = topEq(t); if (eq >= 0) t = t.substring(eq + 1).trim(); vals.add(t); }
+    return vals.toArray(new String[0]);
+  }
+  static String[] elems(String s) {
+    s = s.trim();
+    if (s.length() >= 2 && (s.charAt(0) == '[' || s.charAt(0) == '{')) s = s.substring(1, s.length() - 1);
+    s = s.trim(); if (s.isEmpty()) return new String[0];
+    List<String> out = new ArrayList<>(); int d = 0; boolean q = false; char qc = 0; StringBuilder cur = new StringBuilder();
+    for (int i = 0; i < s.length(); i++) { char c = s.charAt(i);
+      if (q) { cur.append(c); if (c == qc) q = false; }
+      else if (c == 34 || c == 39) { q = true; qc = c; cur.append(c); }
+      else if (c == '[' || c == '{') { d++; cur.append(c); }
+      else if (c == ']' || c == '}') { d--; cur.append(c); }
+      else if (c == ',' && d == 0) { out.add(cur.toString()); cur = new StringBuilder(); }
+      else cur.append(c);
+    }
+    if (cur.length() > 0) out.add(cur.toString());
+    return out.toArray(new String[0]);
+  }
+  static String unq(String s) { s = s.trim(); if (s.length() >= 2 && (s.charAt(0) == 34 || s.charAt(0) == 39) && s.charAt(s.length() - 1) == s.charAt(0)) return s.substring(1, s.length() - 1); return s; }
+  static Object parse(String s, Class<?> t) {
+    s = s.trim();
+    if (t == int.class || t == Integer.class) return Integer.parseInt(s);
+    if (t == long.class || t == Long.class) return Long.parseLong(s);
+    if (t == double.class || t == Double.class) return Double.parseDouble(s);
+    if (t == float.class || t == Float.class) return Float.parseFloat(s);
+    if (t == boolean.class || t == Boolean.class) return Boolean.parseBoolean(s.toLowerCase());
+    if (t == char.class || t == Character.class) { String u = unq(s); return u.isEmpty() ? ' ' : u.charAt(0); }
+    if (t == String.class) return unq(s);
+    if (t == int[].class) { String[] e = elems(s); int[] a = new int[e.length]; for (int i = 0; i < e.length; i++) a[i] = Integer.parseInt(e[i].trim()); return a; }
+    if (t == long[].class) { String[] e = elems(s); long[] a = new long[e.length]; for (int i = 0; i < e.length; i++) a[i] = Long.parseLong(e[i].trim()); return a; }
+    if (t == double[].class) { String[] e = elems(s); double[] a = new double[e.length]; for (int i = 0; i < e.length; i++) a[i] = Double.parseDouble(e[i].trim()); return a; }
+    if (t == boolean[].class) { String[] e = elems(s); boolean[] a = new boolean[e.length]; for (int i = 0; i < e.length; i++) a[i] = Boolean.parseBoolean(e[i].trim().toLowerCase()); return a; }
+    if (t == char[].class) { String u = unq(s); return u.toCharArray(); }
+    if (t == String[].class) { String[] e = elems(s); String[] a = new String[e.length]; for (int i = 0; i < e.length; i++) a[i] = unq(e[i]); return a; }
+    if (t == int[][].class) { String[] rows = elems(s); int[][] a = new int[rows.length][]; for (int i = 0; i < rows.length; i++) { String[] e = elems(rows[i]); a[i] = new int[e.length]; for (int j = 0; j < e.length; j++) a[i][j] = Integer.parseInt(e[j].trim()); } return a; }
+    if (List.class.isAssignableFrom(t)) { String[] e = elems(s); List<Object> l = new ArrayList<>(); for (String x : e) { x = x.trim(); try { l.add(Integer.parseInt(x)); } catch (Exception ex) { try { l.add(Double.parseDouble(x)); } catch (Exception e2) { l.add(unq(x)); } } } return l; }
+    try { return Integer.parseInt(s); } catch (Exception e) { return unq(s); }
+  }
+  static String fmt(Object r) {
+    if (r == null) return "null";
+    if (r instanceof int[]) return Arrays.toString((int[]) r);
+    if (r instanceof long[]) return Arrays.toString((long[]) r);
+    if (r instanceof double[]) return Arrays.toString((double[]) r);
+    if (r instanceof boolean[]) return Arrays.toString((boolean[]) r);
+    if (r instanceof char[]) return new String((char[]) r);
+    if (r instanceof int[][]) return Arrays.deepToString((int[][]) r);
+    if (r instanceof Object[]) return Arrays.deepToString((Object[]) r);
+    return String.valueOf(r);
+  }
+}
+`;
+}
+
 const BUILDERS = {
   python: buildPythonRunner,
   javascript: buildJavascriptRunner,
   ruby: buildRubyRunner,
   bash: buildBashRunner,
+};
+
+// Compiled languages: build a full program, compile it, run the binary, capture
+// stdout. Keyed by runtime; each entry knows how to produce the source and how
+// to compile+run it (Java needs a fixed class name; others use COMPILED[]).
+const COMPILED_TEST_BUILDERS = {
+  java: buildJavaRunner,
 };
 
 // ---------------------------------------------------------------------------
@@ -993,6 +1123,13 @@ export async function executeCode(code, language, testCases = [], opts = {}) {
     return directExecute(code, runtime);
   }
 
+  // Compiled languages (Java, …) — compile a reflection driver per test case,
+  // run the binary, compare stdout.
+  const compiledBuilder = COMPILED_TEST_BUILDERS[runtime];
+  if (compiledBuilder) {
+    return runCompiledTestCases(code, runtime, validTestCases, compiledBuilder);
+  }
+
   // With test cases → use builder if available, otherwise fall back to direct execution
   const builder = BUILDERS[runtime];
   if (!builder) {
@@ -1071,6 +1208,68 @@ export async function executeCode(code, language, testCases = [], opts = {}) {
     results,
     all_passed: results.every(r => r.passed),
   };
+}
+
+// Compile-and-run test execution for statically-typed languages (Java, …).
+// For each test case: build a full driver program, compile it, run the binary,
+// and compare stdout to the expected value — same result shape as the
+// interpreted path so the API/UI are unchanged.
+async function runCompiledTestCases(code, runtime, validTestCases, builder) {
+  const results = [];
+  for (const tc of validTestCases) {
+    const srcDir = join(tmpdir(), `lumora-${runtime}-${randomUUID()}`);
+    await mkdir(srcDir, { recursive: true });
+    try {
+      const src = builder(code, tc.input);
+      let output = '';
+      let error = null;
+
+      if (runtime === 'java') {
+        const srcPath = join(srcDir, '__Main.java');
+        await writeFile(srcPath, src, 'utf8');
+        const javac = await which('javac');
+        if (!javac) throw new Error("Runtime 'javac' not found on server");
+        const compile = await runCommand('javac', [srcPath], { timeout: COMPILE_TIMEOUT_MS });
+        if (compile.exitCode !== 0) {
+          error = `Compilation Error:\n${compile.stderr}`.slice(0, 500);
+        } else {
+          const run = await runCommand('java', ['-cp', srcDir, '__Main'], { timeout: COMPILE_TIMEOUT_MS });
+          output = (run.stdout || '').trim();
+          if (run.exitCode !== 0 && !output) error = (run.stderr || 'Execution failed').slice(0, 500);
+        }
+      } else {
+        // Compiled via COMPILED[] (e.g. cpp): source → compile → run binary.
+        const spec = COMPILED[runtime];
+        const srcPath = join(srcDir, `main${spec.ext}`);
+        const binPath = join(srcDir, 'a.out');
+        await writeFile(srcPath, src, 'utf8');
+        const bin = await which(spec.compiler);
+        if (!bin) throw new Error(`Runtime '${spec.compiler}' not found on server`);
+        const compile = await runCommand(spec.compiler, spec.args(srcPath, binPath), { timeout: COMPILE_TIMEOUT_MS });
+        if (compile.exitCode !== 0) {
+          error = `Compilation Error:\n${compile.stderr}`.slice(0, 500);
+        } else {
+          const run = await runCommand(binPath, [], { timeout: COMPILE_TIMEOUT_MS });
+          output = (run.stdout || '').trim();
+          if (run.exitCode !== 0 && !output) error = (run.stderr || 'Execution failed').slice(0, 500);
+        }
+      }
+
+      const matched = !!output && compareOutput(tc.expected, output);
+      results.push({
+        input: tc.input,
+        expected: tc.expected,
+        output: output || error || '(no output)',
+        passed: matched,
+        error: matched ? null : error,
+      });
+    } catch (e) {
+      results.push({ input: tc.input, expected: tc.expected, output: `Error: ${e.message}`, passed: false, error: e.message });
+    } finally {
+      await rm(srcDir, { recursive: true }).catch(() => {});
+    }
+  }
+  return { results, all_passed: results.length > 0 && results.every(r => r.passed) };
 }
 
 
