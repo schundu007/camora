@@ -88,6 +88,10 @@ const SharedCodeEditor = ({
             readOnly,
             lineNumbers: showLineNumbers ? 'on' : 'off',
             minimap: { enabled: false },
+            // Sticky-scroll pins class/def headers at the viewport top; over a
+            // transparent/overlay editor bg they render on top of the scrolled
+            // code as overlapping/ghosted lines. Off for a clean scroll.
+            stickyScroll: { enabled: false },
             scrollBeyondLastLine: false,
             padding: { top: 8, bottom: 8 },
             renderLineHighlight: readOnly ? 'none' : 'line',
