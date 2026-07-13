@@ -2218,6 +2218,7 @@ RULES:
   function that takes the parsed inputs as PARAMETERS and RETURNS the answer,
   then set hackerrank_compatible:true. The "never restructure" rules below apply
   ONLY to code that is already harness-compatible and merely has a small bug.
+- COMPLETE, DON'T REWRITE — if the pasted code is a STUB or PARTIAL solution (an empty / \`pass\` / \`return\`-only body, a "Your Solution" / "implement the X class" marker, a docstring describing the task, or a half-written function), your job is to ADD the missing lines that finish it. Keep EVERY existing line the candidate wrote VERBATIM — imports, class/def signatures, docstrings, and any partial logic already present — and only APPEND or INSERT the new lines needed to complete the solution. Mark every new line type "added". Do NOT re-express, restyle, or "improve" a line that is already there.
 - Fix ONLY what is factually broken (syntax error, wrong operator, off-by-one, missing return, undefined variable, etc.)
 - NEVER substitute a different algorithm, built-in, or idiom for what the user wrote — even if yours is "better". all() stays all(), any() stays any(), a loop stays a loop.
 - NEVER rewrite or restructure code that already works correctly AND is harness-compatible. Edit the minimum number of characters needed.
@@ -2233,16 +2234,18 @@ RULES:
 - fixed_code MUST be submission-ready: the corrected program ONLY. Add ZERO comments. NEVER write your reasoning, analysis, or notes — about tracebacks, NameErrors, the test harness, "why this works", or "we include the __main__ block because…" — as comments in the code. That commentary is nonsense in a candidate's editor. ALL explanation goes ONLY in changes[] and walkthrough[]. If the input code had no comments, fixed_code has no comments.
 - walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`;
 
-  // Parse the model's JSON (tolerant of a trailing-brace truncation).
+  // Parse the model's JSON, tolerant of markdown fences and any leading prose
+  // or trailing text around the object.
   function parseCofix(fullText) {
     const fenced = fullText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    let jsonStr = fenced ? fenced[1] : fullText.trim();
+    const jsonStr = (fenced ? fenced[1] : fullText).trim();
     try {
       return JSON.parse(jsonStr);
     } catch {
-      const lastBrace = jsonStr.lastIndexOf('}');
-      if (lastBrace !== -1) return JSON.parse(jsonStr.slice(0, lastBrace + 1));
-      throw new Error('no closing brace');
+      const first = jsonStr.indexOf('{');
+      const last = jsonStr.lastIndexOf('}');
+      if (first !== -1 && last > first) return JSON.parse(jsonStr.slice(first, last + 1));
+      throw new Error('no JSON object');
     }
   }
 
@@ -2272,7 +2275,20 @@ RULES:
     'compute from its parameters or perform the real I/O it promises. Return the SAME JSON shape, no preamble.';
 
   async function streamCofixOnce(promptText) {
-    const chat = geminiGetModel('').startChat({ history: [] });
+    // CoFix returns the WHOLE file as one escaped JSON string. On a long file
+    // the default (unset) output ceiling truncated the JSON mid-string and the
+    // model's own escaping of the code broke the object — both surfaced as
+    // "Failed to parse CoFix response". Force application/json (Gemini guarantees
+    // a parseable object) and lift maxOutputTokens so a big file isn't cut off.
+    const cofixModel = getGeminiClient().getGenerativeModel({
+      model: GEMINI_MODEL,
+      generationConfig: {
+        thinkingConfig: { thinkingBudget: 0 },
+        responseMimeType: 'application/json',
+        maxOutputTokens: 32768,
+      },
+    });
+    const chat = cofixModel.startChat({ history: [] });
     const streamResult = await chat.sendMessageStream(promptText);
     let text = '';
     for await (const chunk of streamResult.stream) {
