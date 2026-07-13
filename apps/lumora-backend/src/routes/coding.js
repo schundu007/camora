@@ -103,15 +103,11 @@ function getGeminiClient() {
   return _geminiAI;
 }
 
-function geminiGetModel(systemInstruction, opts = {}) {
+function geminiGetModel(systemInstruction) {
   return getGeminiClient().getGenerativeModel({
     model: GEMINI_MODEL,
     ...(systemInstruction ? { systemInstruction } : {}),
-    // Solution generation (solve/cofix) leaves thinking ON (default, dynamic) —
-    // thinkingBudget:0 was a latency hack that produced WRONG code on hard
-    // algorithmic problems. Only lightweight utility calls (extract, analyze,
-    // translate, explain) disable thinking for speed.
-    ...(opts.think ? {} : { generationConfig: { thinkingConfig: { thinkingBudget: 0 } } }),
+    generationConfig: { thinkingConfig: { thinkingBudget: 0 } },
   });
 }
 
@@ -172,7 +168,7 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
 
   try {
     if (providerName === 'gemini') {
-      const gModel = geminiGetModel(systemPrompt, { think: true });
+      const gModel = geminiGetModel(systemPrompt);
       const gHistory = toGeminiHistory(messages.slice(0, -1));
       let streamResult;
       if (gHistory.length > 0) {
@@ -259,7 +255,7 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
 async function generateWithProvider(providerName, messages, systemPrompt) {
   try {
     if (providerName === 'gemini') {
-      const gModel = geminiGetModel(systemPrompt, { think: true });
+      const gModel = geminiGetModel(systemPrompt);
       const resp = await gModel.generateContent(flattenMessages(messages));
       return { raw: resp.response.text() || '', model: GEMINI_MODEL };
     }
@@ -2279,9 +2275,7 @@ RULES:
     const cofixModel = getGeminiClient().getGenerativeModel({
       model: GEMINI_MODEL,
       generationConfig: {
-        // Thinking ON (default) — thinkingBudget:0 produced wrong fixes on hard
-        // problems. responseMimeType makes the object parseable; maxOutputTokens
-        // lifted so a big file isn't cut off.
+        thinkingConfig: { thinkingBudget: 0 },
         responseMimeType: 'application/json',
         maxOutputTokens: 32768,
       },
