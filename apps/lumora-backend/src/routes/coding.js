@@ -1152,13 +1152,29 @@ function extractJsonFromText(text) {
 function detectsHardcoding(code) {
   if (!code || typeof code !== 'string') return false;
   if (/\b(_?MOCK_|_?FAKE_|HARDCODED_)/i.test(code)) return true;
+  // A "canned collection" return: a list/tuple whose elements are CONSTRUCTED
+  // records (Name(...) or {...}) and that is NOT a comprehension (no `for`
+  // before the closing bracket). This is the shape of pasted example data —
+  // and excluding comprehensions is what keeps a real `return [PR(p) for p in
+  // data]` from being falsely flagged.
+  const CANNED = String.raw`return\s*[\[\(]\s*(?:[A-Za-z_]\w*\s*\(|\{)(?:(?!\bfor\b)[\s\S]){0,400}?[\]\)]`;
+  // (1) Input-specific special-case branch — special-cases a known literal
+  //     input and returns canned records. Fires EVEN WHEN the surrounding
+  //     function ALSO makes a real I/O call elsewhere (that whole-function IO
+  //     check below would otherwise miss it — exactly how the cheat slips by).
+  //       if owner == "venmo" and repo == "foundations-interview":
+  //           return [PR(1, "Fix issue", ...), PR(2, ...)]
+  if (new RegExp(String.raw`==\s*['"][^'"\n]+['"][\s\S]{0,160}?${CANNED}`).test(code)) return true;
+  // (2) fetch_/get_/load_/retrieve_ function that returns a canned collection
+  //     without any real I/O — directly OR delegated to a helper (_get/_fetch/
+  //     _request) so a legitimately delegated fetch is NOT flagged.
+  const cannedRe = new RegExp(CANNED);
   const fnRe = /def\s+(fetch|get|load|retrieve)\w*\s*\([^)]*\)\s*(?:->[^:]+)?:([\s\S]*?)(?=\ndef\s|\nclass\s|$)/gi;
   let m;
   while ((m = fnRe.exec(code)) !== null) {
     const body = m[2];
-    const hasIO = /urllib|http\.client|urlopen|socket\.|requests\.|httpx\.|aiohttp\.|subprocess/.test(body);
-    const hasStaticReturn = /return\s*[\[\(]/.test(body);
-    if (hasStaticReturn && !hasIO) return true;
+    const hasIO = /urllib|http\.client|urlopen|socket\.|requests\.|httpx\.|aiohttp\.|subprocess|_get\s*\(|_fetch\s*\(|_request\s*\(|\bopen\s*\(/.test(body);
+    if (cannedRe.test(body) && !hasIO) return true;
   }
   return false;
 }
@@ -1455,7 +1471,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     'REJECTED — your solution cheated by returning hardcoded example data.\n\n' +
     'You did one of these forbidden things:\n' +
     '  • Created a _MOCK_* / MOCK_* / FAKE_* variable with hardcoded objects\n' +
-    '  • Wrote fetch_prs / get_* that returns list(...) without calling urllib/http\n\n' +
+    '  • Wrote fetch_prs / get_* that returns list(...) without calling urllib/http\n' +
+    '  • Special-cased a specific input and returned canned data — e.g.\n' +
+    '      if owner == "venmo" and repo == "foundations-interview": return [PR(1, "Fix issue", ...), ...]\n' +
+    '    The example names/IDs/titles are ILLUSTRATIONS; your code is tested with DIFFERENT inputs, so this FAILS.\n\n' +
     'The ONLY correct fetch pattern is:\n' +
     '  import urllib.request, json\n' +
     '  def fetch_prs(owner, repo):\n' +
@@ -2153,6 +2172,17 @@ true to the code; never describe code that isn't there. No markdown, no filler, 
 restating the obvious.
 
 RULES:
+- NO HARDCODING / NO CHEATING — ABSOLUTE LAW, OVERRIDES THE "preserve" AND "fix only what's broken" RULES BELOW.
+  The problem's example names, IDs, and titles are ILLUSTRATIONS, not real data; the fixed code is run
+  against COMPLETELY DIFFERENT inputs, so any answer baked to the examples FAILS. You are FORBIDDEN from:
+    • special-casing a specific input and returning canned data, e.g.
+        if owner == "venmo" and repo == "foundations-interview": return [PR(1, "Fix issue", ...), PR(2, ...)]
+    • MOCK_ / FAKE_ / HARDCODED_ variables holding example objects;
+    • any fetch_* / get_* / load_* function that returns a static list instead of making its real I/O call.
+  If the code you are fixing ALREADY CONTAINS such a hardcoded / special-cased branch, THAT BRANCH IS THE BUG:
+  DELETE it and replace it with genuine logic (compute the result from the parameters, or make the real
+  API/IO call the function name promises). Removing a cheat is REQUIRED and does NOT count as a forbidden
+  "restructure". Every function must derive its output from its inputs — never from memorised example values.
 - PLATFORM TEMPLATE — HIGHEST PRIORITY, OVERRIDES THE EXECUTION CONTRACT BELOW:
   If the code contains an \`if __name__ == '__main__':\` block (or equivalent) that
   reads input and CALLS a function, it is the platform's LOCKED editor template
@@ -2188,21 +2218,20 @@ RULES:
 - fixed_code MUST be submission-ready: the corrected program ONLY. Add ZERO comments. NEVER write your reasoning, analysis, or notes — about tracebacks, NameErrors, the test harness, "why this works", or "we include the __main__ block because…" — as comments in the code. That commentary is nonsense in a candidate's editor. ALL explanation goes ONLY in changes[] and walkthrough[]. If the input code had no comments, fixed_code has no comments.
 - walkthrough: cover every non-trivial line or logical block (3-8 entries). Write in first person ("I iterate…", "I seed…"). Group consecutive related lines ("35-38"). Use backticks for variable/code refs. One sentence per entry, max 30 words.`;
 
-  // Shared JSON parse + emit helper used by both Claude and OpenAI paths
-  async function parseAndEmitCofix(fullText) {
+  // Parse the model's JSON (tolerant of a trailing-brace truncation).
+  function parseCofix(fullText) {
     const fenced = fullText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
     let jsonStr = fenced ? fenced[1] : fullText.trim();
-    let parsed;
     try {
-      parsed = JSON.parse(jsonStr);
+      return JSON.parse(jsonStr);
     } catch {
       const lastBrace = jsonStr.lastIndexOf('}');
-      if (lastBrace !== -1) {
-        parsed = JSON.parse(jsonStr.slice(0, lastBrace + 1));
-      } else {
-        throw new Error('no closing brace');
-      }
+      if (lastBrace !== -1) return JSON.parse(jsonStr.slice(0, lastBrace + 1));
+      throw new Error('no closing brace');
     }
+  }
+
+  async function emitCofix(parsed) {
     sanitizeCofixResult(parsed, lang);
     sendEvent('answer', parsed);
     sendEvent('done', {});
@@ -2211,26 +2240,62 @@ RULES:
     res.end();
   }
 
-  try {
-    const cofixChat = geminiGetModel('').startChat({ history: [] });
-    const cofixStreamResult = await cofixChat.sendMessageStream(cofixUserContent);
+  // Fallback path helper (parse + emit in one shot).
+  async function parseAndEmitCofix(fullText) { await emitCofix(parseCofix(fullText)); }
 
-    let fullText = '';
-    for await (const chunk of cofixStreamResult.stream) {
-      if (clientDisconnected) break;
+  // Anti-cheat rejection appended to the prompt when the first fix hardcodes
+  // example data (a special-cased branch, a MOCK_/FAKE_ var, or a fetch_*/get_*
+  // that skips its real I/O). The tokens of a rejected attempt are ignored by
+  // the CoFix client (it only consumes the final `answer` event), so re-running
+  // is safe and invisible.
+  const ANTI_CHEAT_COFIX =
+    '\n\n––– REJECTED: your previous fix CHEATED by hardcoding example data ' +
+    '(e.g. `if owner == "venmo" and repo == "foundations-interview": return [PR(1, "Fix issue", ...), ...]`, ' +
+    'a MOCK_/FAKE_ variable, or a fetch_*/get_*/load_* that returns a static list without real I/O). ' +
+    'The example names/IDs/titles are ILLUSTRATIONS — the code is tested with COMPLETELY DIFFERENT inputs, ' +
+    'so hardcoded data FAILS. Redo the fix: DELETE any special-cased/canned branch and make every function ' +
+    'compute from its parameters or perform the real I/O it promises. Return the SAME JSON shape, no preamble.';
+
+  async function streamCofixOnce(promptText) {
+    const chat = geminiGetModel('').startChat({ history: [] });
+    const streamResult = await chat.sendMessageStream(promptText);
+    let text = '';
+    for await (const chunk of streamResult.stream) {
+      if (clientDisconnected) return null;
       const token = chunk.text();
-      if (token) { fullText += token; sendEvent('token', { chunk: token }); }
+      if (token) { text += token; sendEvent('token', { chunk: token }); }
     }
+    return text;
+  }
 
-    if (clientDisconnected) { clearInterval(keepaliveTimer); return; }
+  try {
+    let parsed = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const promptText = attempt === 0 ? cofixUserContent : cofixUserContent + ANTI_CHEAT_COFIX;
+      const fullText = await streamCofixOnce(promptText);
+      if (fullText === null) { clearInterval(keepaliveTimer); return; }
 
-    try {
-      await parseAndEmitCofix(fullText);
-    } catch {
-      sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
-      clearInterval(keepaliveTimer);
-      res.end();
+      let candidate;
+      try {
+        candidate = parseCofix(fullText);
+      } catch {
+        sendEvent('error', { message: 'Failed to parse CoFix response — try again' });
+        clearInterval(keepaliveTimer);
+        res.end();
+        return;
+      }
+
+      // Anti-cheat: reject a hardcoded fix once and retry with the rejection
+      // appended. On the 2nd attempt we emit whatever comes back (best effort).
+      if (attempt === 0 && detectsHardcoding(candidate.fixed_code)) {
+        console.error('[cofix] hardcoding_detected pass=primary — rejecting and retrying');
+        continue;
+      }
+      parsed = candidate;
+      break;
     }
+    if (parsed) await emitCofix(parsed);
+    else { clearInterval(keepaliveTimer); res.end(); }
   } catch (err) {
     clearInterval(keepaliveTimer);
     if (clientDisconnected) return;
