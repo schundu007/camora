@@ -1152,12 +1152,14 @@ function extractJsonFromText(text) {
 function detectsHardcoding(code) {
   if (!code || typeof code !== 'string') return false;
   if (/\b(_?MOCK_|_?FAKE_|HARDCODED_)/i.test(code)) return true;
-  // A "canned collection" return: a list/tuple whose elements are CONSTRUCTED
-  // records (Name(...) or {...}) and that is NOT a comprehension (no `for`
-  // before the closing bracket). This is the shape of pasted example data —
-  // and excluding comprehensions is what keeps a real `return [PR(p) for p in
-  // data]` from being falsely flagged.
-  const CANNED = String.raw`return\s*[\[\(]\s*(?:[A-Za-z_]\w*\s*\(|\{)(?:(?!\bfor\b)[\s\S]){0,400}?[\]\)]`;
+  // A "canned collection" return: a list/tuple of at least TWO CONSTRUCTED
+  // records (Name(...) or {...}), NOT a comprehension (no `for`). Two-record
+  // minimum + no-comprehension keeps false positives near zero — a real
+  // `return [PR(p) for p in data]` or a single `return [Node(x)]` is NOT
+  // flagged — so the anti-cheat retry only fires on genuine pasted example
+  // data (which always has multiple rows) and never inflates /solve latency
+  // on a correct answer.
+  const CANNED = String.raw`return\s*[\[\(]\s*(?:[A-Za-z_]\w*\s*\(|\{)(?:(?!\bfor\b)[\s\S]){0,300}?[)\}]\s*,\s*(?:[A-Za-z_]\w*\s*\(|\{)`;
   // (1) Input-specific special-case branch — special-cases a known literal
   //     input and returns canned records. Fires EVEN WHEN the surrounding
   //     function ALSO makes a real I/O call elsewhere (that whole-function IO
