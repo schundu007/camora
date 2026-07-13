@@ -8,6 +8,7 @@
     "dev:lumora": "cd apps/lumora-backend && node src/index.js",
     "dev:ascend": "cd apps/ascend-backend && node src/index.js",
     "build:camora": "cd apps/camora && npx vite build",
+    "trending:refresh": "node scripts/trending-infra/fetch-trending.mjs",
     "prepare": "git config --local core.hooksPath .githooks 2>/dev/null || true"
   },
   "packageManager": "pnpm@9.15.0",
