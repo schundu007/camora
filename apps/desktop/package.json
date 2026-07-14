@@ -32,6 +32,7 @@
       "preload.js",
       "stealth-dom.js",
       "icon.icns",
+      "icon.png",
       "node_modules/docx/**/*"
     ],
     "mac": {
@@ -67,7 +68,7 @@
           ]
         }
       ],
-      "icon": "icon.icns",
+      "icon": "icon.png",
       "artifactName": "Camora-${version}-Setup.${ext}"
     },
     "nsis": {
