@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { query } from '../lib/shared-db.js';
 import { createToken, setSSOCookie, clearSSOCookie } from '../lib/shared-auth.js';
 import { logger } from '../middleware/requestLogger.js';
@@ -16,6 +16,11 @@ import { cacheGet, cacheSet, cacheDel } from '../services/redis.js';
 const OAUTH_STATE_COOKIE = 'cariara_oauth_state';
 const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 min — covers slow user
 const OAUTH_STATE_MAX_AGE_SEC = 600;
+
+// Desktop OAuth PKCE: one-time exchange code TTL (60 seconds — user completes
+// the system browser flow quickly, then Electron exchanges immediately)
+const DESKTOP_EXCHANGE_CODE_TTL_SEC = 60;
+const DESKTOP_EXCHANGE_CODE_PREFIX = 'desktop_xchg:';
 
 function safeEq(a, b) {
   const ab = Buffer.from(String(a || ''));
@@ -40,16 +45,24 @@ const FRONTEND_URL = process.env.FRONTEND_URL
 /**
  * GET /api/auth/google/login — Redirect to Google OAuth
  *
- * CSRF protection: generate a random nonce, set it as an httpOnly cookie,
- * include it in the state param (`<nonce>:<returnTo>`). On callback we
- * verify the cookie value matches the nonce in state — without this, an
- * attacker could craft a login URL that returns control to our callback
- * with their own Google identity (login CSRF).
+ * Query params (browser flow):
+ *   - redirect: returnTo path after login
+ *
+ * Query params (desktop flow via RFC 8252 PKCE):
+ *   - dc: PKCE code challenge (base64url(sha256(verifier)))
+ *   - ds: desktop state (opaque string Electron provides, returned in xchg code)
+ *
+ * For desktop flow, the state param embeds `ds` so the callback can route
+ * to the desktop exchange flow instead of setting SSO cookie.
  */
 router.get('/google/login', async (req, res) => {
   if (!GOOGLE_CLIENT_ID) {
     return res.status(503).json({ error: 'Google OAuth not configured' });
   }
+
+  const isDesktopFlow = !!req.query.dc; // PKCE challenge signals desktop
+  const pkceChallenge = String(req.query.dc || '').slice(0, 100);
+  const desktopState = String(req.query.ds || '').slice(0, 100);
 
   // Cap and sanitize returnTo — only relative paths starting with /
   let returnTo = String(req.query.redirect || '/').slice(0, 200);
@@ -58,7 +71,36 @@ router.get('/google/login', async (req, res) => {
   // Generate CSRF nonce — stored in Redis (primary) and cookie (fallback)
   const nonce = randomBytes(24).toString('base64url');
 
-  // Redis-primary: survives browser cookie-blocking in OAuth bounce chains
+  // For desktop flow, also store the PKCE challenge in Redis so the callback
+  // can later validate the verifier against it. Redis key:
+  // `oauth_desktop_challenge:<nonce>` → { challenge, state, issuedAt }
+  const issuedAt = Date.now();
+
+  if (isDesktopFlow && pkceChallenge) {
+    try {
+      const desktopMetadata = JSON.stringify({
+        challenge: pkceChallenge,
+        state: desktopState,
+        issuedAt,
+      });
+      await cacheSet(
+        `oauth_desktop_challenge:${nonce}`,
+        desktopMetadata,
+        OAUTH_STATE_MAX_AGE_SEC
+      );
+      logger.info(
+        { ip: req.ip, hasChallenge: !!pkceChallenge },
+        '[oauth-desktop] PKCE challenge stored'
+      );
+    } catch (err) {
+      logger.warn(
+        { error: err.message },
+        '[oauth-desktop] Failed to store PKCE challenge in Redis (continuing with cookie-only fallback)'
+      );
+    }
+  }
+
+  // Redis-primary: survives browser cookie-blocking in OAuth bounces
   try {
     await cacheSet(`oauth_nonce:${nonce}`, '1', OAUTH_STATE_MAX_AGE_SEC);
   } catch { /* Redis unavailable — cookie-only fallback */ }
@@ -74,8 +116,9 @@ router.get('/google/login', async (req, res) => {
   // Embed an issued-at timestamp in state so the callback can reject
   // stale callbacks even if the browser somehow held onto the state
   // cookie past its maxAge (defense-in-depth on top of cookie expiry).
-  const issuedAt = Date.now();
-  const state = `${nonce}:${issuedAt}:${returnTo}`;
+  // For desktop flow, append a "desktop:" prefix so callback routing works.
+  const statePrefix = isDesktopFlow ? 'desktop:' : '';
+  const state = `${statePrefix}${nonce}:${issuedAt}:${returnTo}`;
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: GOOGLE_REDIRECT_URI,
@@ -90,9 +133,17 @@ router.get('/google/login', async (req, res) => {
 
 /**
  * GET /api/auth/google/callback — Handle Google OAuth callback
+ *
+ * Routes to different flows based on state prefix:
+ *   - Browser flow (default): state starts with `<nonce>:` → sets SSO cookie, redirects to frontend
+ *   - Desktop flow: state starts with `desktop:` → returns one-time xchg code, renders interstitial HTML
  */
 router.get('/google/callback', async (req, res) => {
   const { code, state } = req.query;
+
+  // Detect desktop flow by state prefix
+  const isDesktopFlow = typeof state === 'string' && state.startsWith('desktop:');
+  const stateWithoutPrefix = isDesktopFlow ? state.slice('desktop:'.length) : state;
 
   // CSRF check — state shape is `<nonce>:<issuedAt>:<returnTo>`. Nonce must
   // match the cookie, and issuedAt must be within OAUTH_STATE_MAX_AGE_MS so
@@ -104,8 +155,8 @@ router.get('/google/callback', async (req, res) => {
   let nonce = '';
   let issuedAt = 0;
   let returnToFromState = '/';
-  if (typeof state === 'string' && state.includes(':')) {
-    const parts = state.split(':');
+  if (typeof stateWithoutPrefix === 'string' && stateWithoutPrefix.includes(':')) {
+    const parts = stateWithoutPrefix.split(':');
     if (parts.length >= 3 && /^\d+$/.test(parts[1])) {
       // New shape — nonce:timestamp:returnTo (returnTo may itself contain ':')
       nonce = parts[0];
@@ -113,18 +164,20 @@ router.get('/google/callback', async (req, res) => {
       returnToFromState = parts.slice(2).join(':');
     } else {
       // Legacy two-segment shape — accept but record for telemetry
-      const idx = state.indexOf(':');
-      nonce = state.slice(0, idx);
-      returnToFromState = state.slice(idx + 1);
+      const idx = stateWithoutPrefix.indexOf(':');
+      nonce = stateWithoutPrefix.slice(0, idx);
+      returnToFromState = stateWithoutPrefix.slice(idx + 1);
       logger.info({ ip: req.ip }, '[oauth] legacy two-segment state accepted');
     }
-  } else if (typeof state === 'string' && state.startsWith('/')) {
+  } else if (typeof stateWithoutPrefix === 'string' && stateWithoutPrefix.startsWith('/')) {
     // Legacy flow — fail closed.
     res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' });
     return res.redirect(`${FRONTEND_URL}?error=oauth_state_legacy`);
   }
   // Validate nonce: Redis primary (browser-cookie-independent), cookie fallback
   let nonceValid = false;
+  let desktopMetadata = null;
+
   if (nonce) {
     try {
       const stored = await cacheGet(`oauth_nonce:${nonce}`);
@@ -134,6 +187,23 @@ router.get('/google/callback', async (req, res) => {
       }
     } catch { /* Redis unavailable — fall through to cookie */ }
   }
+
+  // For desktop flow, also retrieve and validate PKCE challenge
+  if (isDesktopFlow && nonce) {
+    try {
+      const metadataStr = await cacheGet(`oauth_desktop_challenge:${nonce}`);
+      if (metadataStr) {
+        desktopMetadata = JSON.parse(metadataStr);
+        await cacheDel(`oauth_desktop_challenge:${nonce}`); // one-time use
+      }
+    } catch (err) {
+      logger.warn(
+        { error: err.message },
+        '[oauth-desktop] Failed to retrieve PKCE challenge from Redis'
+      );
+    }
+  }
+
   if (!nonceValid) {
     // Cookie fallback: used when Redis is down or nonce wasn't stored yet
     const cookieNonce = req.cookies?.[OAUTH_STATE_COOKIE];
@@ -288,7 +358,151 @@ router.get('/google/callback', async (req, res) => {
       '30d'
     );
 
-    // Set SSO cookie for cross-subdomain auth (Lumora reads this)
+    // ROUTE: Desktop flow vs. Browser flow
+    if (isDesktopFlow) {
+      // Desktop flow: generate one-time exchange code for Electron to use
+      const exchangeCode = randomBytes(32).toString('base64url');
+      const exchangeKey = `${DESKTOP_EXCHANGE_CODE_PREFIX}${exchangeCode}`;
+
+      // Store: { jwt, email, picture } — everything Electron needs for the exchange
+      // Bind the PKCE challenge (captured at login, retrieved above as
+      // desktopMetadata) to the exchange record so /desktop/exchange can verify
+      // sha256(verifier) against it. Empty when the login wasn't PKCE-initiated
+      // or Redis was unavailable — the exchange endpoint fails closed in that case.
+      const exchangeData = JSON.stringify({
+        access_token: accessToken,
+        email: gUser.email,
+        picture: gUser.picture || '',
+        name: gUser.name || '',
+        pkce_challenge: desktopMetadata?.challenge || '',
+      });
+
+      try {
+        await cacheSet(exchangeKey, exchangeData, DESKTOP_EXCHANGE_CODE_TTL_SEC);
+      } catch (err) {
+        logger.error({ error: err.message }, '[oauth-desktop] Failed to store exchange code');
+        return res.status(500).send('Exchange code storage failed');
+      }
+
+      logger.info(
+        { ip: req.ip, userId, email: gUser.email },
+        '[oauth-desktop] Exchange code generated'
+      );
+
+      // Return interstitial HTML with deep link + fallback button
+      // The deep link contains the exchange code and optional desktop state.
+      const deepLink = `camora://exchange?code=${encodeURIComponent(exchangeCode)}`;
+      const fallbackUrl = deepLink; // fallback to same deep link
+      // Escape any value interpolated into the interstitial HTML. gUser.email is
+      // provider-supplied but still untrusted for our sinks; escaping is cheap
+      // defense-in-depth against HTML/attribute/script-context injection.
+      const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Camora — Completing Sign In</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              margin: 0;
+              padding: 20px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+            }
+            .container {
+              background: white;
+              border-radius: 12px;
+              box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+              padding: 40px;
+              max-width: 400px;
+              text-align: center;
+            }
+            h1 {
+              margin: 0 0 10px;
+              font-size: 24px;
+              color: #333;
+            }
+            p {
+              margin: 10px 0;
+              color: #666;
+              font-size: 16px;
+            }
+            .spinner {
+              display: inline-block;
+              width: 40px;
+              height: 40px;
+              margin: 20px 0;
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #667eea;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .button {
+              display: inline-block;
+              margin-top: 20px;
+              padding: 12px 24px;
+              background: #667eea;
+              color: white;
+              text-decoration: none;
+              border-radius: 6px;
+              font-weight: 600;
+              cursor: pointer;
+              border: none;
+              font-size: 16px;
+            }
+            .button:hover {
+              background: #5568d3;
+            }
+            .info {
+              margin-top: 20px;
+              padding-top: 20px;
+              border-top: 1px solid #eee;
+              font-size: 14px;
+              color: #999;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="spinner"></div>
+            <h1>Completing Sign In</h1>
+            <p>Redirecting to Camora Desktop…</p>
+            <p><strong>${esc(gUser.email)}</strong></p>
+            <button class="button" data-url="${esc(fallbackUrl)}" onclick="window.location=this.dataset.url">
+              Open Camora or Click Here
+            </button>
+            <div class="info">
+              If the app doesn't open automatically, click the button above.
+            </div>
+          </div>
+          <script>
+            // Auto-redirect via deep link (JSON.stringify → safe JS string literal)
+            window.location = ${JSON.stringify(deepLink)};
+            // Fallback after 2 seconds if the app doesn't handle the link
+            setTimeout(() => {
+              // Check if the redirect worked (app window closed browser)
+              // If not, user can click the button
+            }, 2000);
+          </script>
+        </body>
+        </html>
+      `);
+    }
+
+    // Browser flow (default): Set SSO cookie and redirect to frontend
     setSSOCookie(res, accessToken);
 
     // Redirect to frontend with a `?login=success` flag — NO token in the URL.
@@ -307,10 +521,113 @@ router.get('/google/callback', async (req, res) => {
 });
 
 /**
- * Refresh access token
- * POST /api/auth/refresh
- * Accepts an expired access token and issues a fresh one with the same claims.
+ * POST /api/auth/desktop/exchange — Desktop PKCE code exchange
+ *
+ * Electron calls this after receiving the deep-link callback with the
+ * one-time exchange code. Validates the PKCE verifier (sha256(verifier)
+ * must match the stored challenge), retrieves the JWT, and returns it
+ * for Electron to inject into the webContents cookies.
+ *
+ * Request body:
+ *   {
+ *     code: string,      // one-time exchange code from deep link
+ *     verifier: string   // PKCE verifier (base64url(randomBytes(32)))
+ *   }
+ *
+ * Response:
+ *   Success: { access_token: string, email: string, picture: string, name: string }
+ *   Error:   { error: string, code: string }
  */
+router.post('/desktop/exchange', authLimiter, async (req, res) => {
+  const { code, verifier } = req.body;
+
+  // Validate inputs
+  if (!code || typeof code !== 'string' || code.length > 200) {
+    return res.status(400).json({ error: 'Invalid exchange code', code: 'INVALID_CODE' });
+  }
+  if (!verifier || typeof verifier !== 'string' || verifier.length < 30 || verifier.length > 200) {
+    return res.status(400).json({ error: 'Invalid PKCE verifier', code: 'INVALID_VERIFIER' });
+  }
+
+  try {
+    // Retrieve stored exchange data (access_token, email, etc.)
+    const exchangeKey = `${DESKTOP_EXCHANGE_CODE_PREFIX}${code}`;
+    const storedData = await cacheGet(exchangeKey);
+
+    if (!storedData) {
+      logger.warn(
+        { ip: req.ip, code: code.slice(0, 10) },
+        '[oauth-desktop] Exchange code not found or expired'
+      );
+      return res.status(401).json({
+        error: 'Exchange code not found or expired',
+        code: 'EXCHANGE_CODE_NOT_FOUND',
+      });
+    }
+
+    // One-time use: delete immediately after retrieval
+    try {
+      await cacheDel(exchangeKey);
+    } catch (err) {
+      logger.warn({ error: err.message }, '[oauth-desktop] Failed to delete exchange code');
+    }
+
+    const exchangeData = JSON.parse(storedData);
+    const { access_token: storedJwt, email, picture, name } = exchangeData;
+
+    if (!storedJwt) {
+      logger.error({ code: code.slice(0, 10) }, '[oauth-desktop] Exchange data missing JWT');
+      return res.status(500).json({
+        error: 'Exchange data corrupted',
+        code: 'CORRUPTED_DATA',
+      });
+    }
+
+    // ★ PKCE Verification ★
+    // Compute sha256(verifier) and require it to equal the challenge captured at
+    // login time (bound to this exchange record). Fail closed on mismatch OR a
+    // missing challenge — without this comparison ANY verifier is accepted, which
+    // defeats PKCE's protection against exchange-code interception.
+    const computedChallenge = createHash('sha256')
+      .update(verifier)
+      .digest('base64url');
+
+    if (!exchangeData.pkce_challenge || !safeEq(computedChallenge, exchangeData.pkce_challenge)) {
+      logger.warn(
+        { ip: req.ip, email, hasChallenge: !!exchangeData.pkce_challenge },
+        '[oauth-desktop] PKCE verification failed — rejecting exchange'
+      );
+      return res.status(401).json({ error: 'PKCE verification failed', code: 'PKCE_MISMATCH' });
+    }
+
+    logger.info(
+      { ip: req.ip, email },
+      '[oauth-desktop] PKCE verifier accepted'
+    );
+
+    // Return the JWT and user info to Electron
+    res.json({
+      access_token: storedJwt,
+      email,
+      picture,
+      name,
+    });
+
+    logger.info(
+      { ip: req.ip, email },
+      '[oauth-desktop] Exchange completed successfully'
+    );
+  } catch (err) {
+    logger.error(
+      { error: err.message, code: code.slice(0, 10) },
+      '[oauth-desktop] Exchange failed'
+    );
+    res.status(500).json({
+      error: 'Exchange failed',
+      code: 'EXCHANGE_FAILED',
+    });
+  }
+});
 router.post('/refresh', authLimiter, async (req, res) => {
   // Resolve token from Authorization header OR cariara_sso cookie so a SPA
   // can refresh using only the httpOnly cookie via credentials:'include'.

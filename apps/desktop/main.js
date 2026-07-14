@@ -299,19 +299,43 @@ app.whenReady().then(async () => {
   // as an embedded browser and serves the degraded `GeneralOAuthLite` flow, which
   // ends in "This browser or app may not be secure". Login is a same-window
   // navigation (window.location.href = oauthUrl), so it happens right here in
-  // mainWindow. Present a plain Chrome UA to Google's sign-in hosts only.
+  // mainWindow. Present a plain Chrome identity to Google's sign-in hosts only.
   //
-  // This rewrites the outgoing request header, NOT navigator.userAgent. Do not
+  // Chromium advertises the browser in TWO independent channels and Google reads
+  // both: the legacy `User-Agent` string AND the User-Agent Client Hints
+  // (`Sec-CH-UA*`). Electron 41 leaks "Electron";v="41" in the Client-Hints brand
+  // list even when the UA string is spoofed — so rewriting only User-Agent (the
+  // pre-2026-07 fix) still tripped the embedded-browser block. We must rewrite the
+  // Client-Hints headers to match the same Chrome/131 identity, or the disguise is
+  // internally inconsistent and Google rejects it.
+  //   - Sec-CH-UA / Sec-CH-UA-Full-Version-List → brand list with NO "Electron"
+  //   - Sec-CH-UA-Full-Version-List is only sent after Google opts in via Accept-CH,
+  //     and it's the one carrying the tell-tale Electron version — patch it too.
+  //
+  // This rewrites the outgoing request headers, NOT navigator.userAgent. Do not
   // "simplify" this to webContents.setUserAgent(): the renderer sniffs
   // /Electron/i.test(navigator.userAgent) to detect desktop (see
   // apps/camora/src/lib/audio-preferences.ts), and a global override silently
   // breaks audio-preference persistence.
   const SAFE_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+  // Brand lists consistent with Chrome 131. Keep the "Not_A Brand" GREASE entry —
+  // a genuine Chrome always sends one, and its absence is itself a fingerprint.
+  const SAFE_CH_UA = '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"';
+  const SAFE_CH_UA_FULL = '"Google Chrome";v="131.0.0.0", "Chromium";v="131.0.0.0", "Not_A Brand";v="24.0.0.0"';
   const GOOGLE_SIGNIN_HOSTS = /^(accounts\.google\.com|accounts\.youtube\.com)$/i;
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     try {
       if (GOOGLE_SIGNIN_HOSTS.test(new URL(details.url).hostname)) {
-        details.requestHeaders['User-Agent'] = SAFE_UA;
+        const h = details.requestHeaders;
+        h['User-Agent'] = SAFE_UA;
+        // Overwrite only the hint headers Chromium actually emits, matching the
+        // request's original casing so we don't create a duplicate header.
+        for (const key of Object.keys(h)) {
+          const lk = key.toLowerCase();
+          if (lk === 'sec-ch-ua') h[key] = SAFE_CH_UA;
+          else if (lk === 'sec-ch-ua-full-version-list') h[key] = SAFE_CH_UA_FULL;
+          else if (lk === 'sec-ch-ua-full-version') h[key] = '"131.0.0.0"';
+        }
       }
     } catch {
       // non-URL scheme (devtools://, blob:) — leave headers untouched
