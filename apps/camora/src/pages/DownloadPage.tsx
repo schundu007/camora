@@ -22,7 +22,7 @@ import { cn } from '../utils/cn';
 const GITHUB_REPO = 'https://github.com/schundu007/camora';
 const RELEASES_API = 'https://api.github.com/repos/schundu007/camora/releases/latest';
 
-type OSType = 'mac-arm' | 'mac-intel' | 'windows' | 'linux';
+type OSType = 'mac-arm' | 'mac-intel' | 'windows' | 'windows-arm' | 'linux';
 
 interface PlatformInfo {
   id: OSType;
@@ -41,7 +41,7 @@ function getPlatforms(version: string): PlatformInfo[] {
       id: 'mac-arm',
       label: 'macOS Apple Silicon',
       arch: 'ARM64 (M1/M2/M3/M4)',
-      size: '~102 MB',
+      size: '~109 MB',
       fileType: 'DMG',
       url: `${base}/Camora-${version}-arm64.dmg`,
       icon: 'apple',
@@ -50,7 +50,7 @@ function getPlatforms(version: string): PlatformInfo[] {
       id: 'mac-intel',
       label: 'macOS Intel',
       arch: 'x64 (Intel)',
-      size: '~107 MB',
+      size: '~117 MB',
       fileType: 'DMG',
       url: `${base}/Camora-${version}-x64.dmg`,
       icon: 'apple',
@@ -59,9 +59,18 @@ function getPlatforms(version: string): PlatformInfo[] {
       id: 'windows',
       label: 'Windows',
       arch: 'x64 (64-bit)',
-      size: '~83 MB',
+      size: '~96 MB',
       fileType: 'EXE',
       url: `${base}/Camora-${version}-Setup.exe`,
+      icon: 'windows',
+    },
+    {
+      id: 'windows-arm',
+      label: 'Windows ARM',
+      arch: 'ARM64 (Snapdragon)',
+      size: '~93 MB',
+      fileType: 'EXE',
+      url: `${base}/Camora-${version}-Setup-arm64.exe`,
       icon: 'windows',
     },
   ];
@@ -395,7 +404,7 @@ export default function DownloadPage() {
             />
           </FadeInSection>
 
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {PLATFORMS.map((p, i) => {
               const isRecommended = p.id === detectedOS;
               return (

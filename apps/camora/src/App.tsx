@@ -119,13 +119,27 @@ const LoginPage = () => {
   const redirectTo = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
   if (isAuthenticated) return <Navigate to={redirectTo} replace />;
 
+  // Desktop (Electron) must NOT run Google OAuth in-window — Google blocks
+  // embedded browsers ("This browser or app may not be secure"). The shell
+  // exposes camo.startLogin(), which opens the system browser and completes an
+  // RFC 8252 PKCE flow, then reloads authenticated via the cariara_sso cookie.
+  const camo = (window as unknown as { camo?: { isDesktop?: boolean; startLogin?: (o: { redirect: string }) => void } }).camo;
+  const isDesktop = !!camo?.isDesktop && typeof camo.startLogin === 'function';
+
   const oauthUrl = import.meta.env.VITE_OAUTH_URL;
-  if (oauthUrl) {
+  if (oauthUrl && !isDesktop) {
     window.location.href = oauthUrl;
     return <Loading />;
   }
 
   const googleAuthUrl = `${import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com'}/api/auth/google/login?redirect=${encodeURIComponent(redirectTo)}`;
+
+  const handleGoogleLogin = (e: { preventDefault: () => void }) => {
+    if (isDesktop) {
+      e.preventDefault();
+      camo!.startLogin!({ redirect: redirectTo });
+    }
+  };
 
   const STATS = [
     { value: '1,000+', label: 'Matched Roles' },
@@ -252,6 +266,7 @@ const LoginPage = () => {
           <div className="space-y-3">
             <a
               href={googleAuthUrl}
+              onClick={handleGoogleLogin}
               className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold transition-[background-color,box-shadow,transform] active:scale-[0.98] hover:brightness-110"
               style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
             >

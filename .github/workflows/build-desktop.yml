@@ -12,8 +12,35 @@ on:
         required: true
 
 jobs:
-  build-mac:
-    runs-on: macos-latest
+  # ── Multi-arch × multi-OS build matrix ─────────────────────────────────
+  # Each (os, arch) pair runs on its NATIVE runner in parallel — a Mac DMG and
+  # a Windows NSIS installer can't be produced or signed on the same box, and
+  # building arm64 + x64 serially in one job doubled wall-clock. macos-latest is
+  # Apple Silicon (arm64); macos-13 is Intel (x64). Windows arm64 uses the same
+  # runner as x64 (electron-builder cross-compiles the NSIS target).
+  build:
+    name: build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: mac-arm64
+            os: macos-latest
+            script: build:dmg
+            artifact: apps/desktop/build/Camora-*-arm64.dmg
+          - name: mac-x64
+            os: macos-13
+            script: build:dmg-x64
+            artifact: apps/desktop/build/Camora-*-x64.dmg
+          - name: win-x64
+            os: windows-latest
+            script: build:win
+            artifact: apps/desktop/build/Camora-*-Setup.exe
+          - name: win-arm64
+            os: windows-latest
+            script: build:win-arm64
+            artifact: apps/desktop/build/Camora-*-Setup-arm64.exe
     steps:
       - uses: actions/checkout@v4
 
@@ -33,47 +60,17 @@ jobs:
         working-directory: apps/desktop
         run: npm pkg set build.buildVersion="1.0.${{ github.run_number }}"
 
-      - name: Build arm64 DMG
+      - name: Build ${{ matrix.name }}
         working-directory: apps/desktop
-        run: npm run build:dmg
-
-      - name: Build x64 (Intel) DMG
-        working-directory: apps/desktop
-        run: npm run build:dmg-x64
+        run: npm run ${{ matrix.script }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mac-dmgs
-          path: apps/desktop/build/Camora-*.dmg
-
-  build-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        working-directory: apps/desktop
-        run: npm install
-
-      - name: Stamp unique build version
-        working-directory: apps/desktop
-        run: npm pkg set build.buildVersion="1.0.${{ github.run_number }}"
-
-      - name: Build Windows installer
-        working-directory: apps/desktop
-        run: npm run build:win
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: win-installer
-          path: apps/desktop/build/Camora-*-Setup.exe
+          name: desktop-${{ matrix.name }}
+          path: ${{ matrix.artifact }}
 
   publish:
-    needs: [build-mac, build-windows]
+    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
