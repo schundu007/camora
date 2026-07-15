@@ -17,6 +17,11 @@ contextBridge.exposeInMainWorld('camo', {
   // version in the UI. Synchronous so `window.camo.version` stays a plain value.
   version: ipcRenderer.sendSync('app:get-version'),
 
+  // Start the RFC 8252 external-browser Google OAuth (PKCE) flow. Opens the
+  // system browser; main.js handles the camora:// deep-link return, exchanges
+  // the code, sets the cariara_sso cookie and reloads the window authenticated.
+  startLogin: (opts) => ipcRenderer.invoke('auth:start-login', opts || {}),
+
   // Transparent-overlay mode is opt-in (main creates the window transparent +
   // frameless only when CAMORA_OVERLAY=1). The renderer gates its custom title-
   // bar controls + overlay toggle on this so they never render over a normal

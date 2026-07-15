@@ -9,6 +9,7 @@
     "build:dmg": "rm -rf build && electron-builder --mac --arm64 && bash ./post-build.sh arm64",
     "build:dmg-x64": "electron-builder --mac --x64 && bash ./post-build.sh x64",
     "build:win": "electron-builder --win --x64",
+    "build:win-arm64": "electron-builder --win --arm64 -c.win.artifactName=Camora-${version}-Setup-arm64.${ext}",
     "build:win-zip": "electron-builder --win --x64 -c.win.target.0.target=zip -c.win.artifactName=Camora-${version}-win-x64.zip"
   },
   "dependencies": {
@@ -22,6 +23,14 @@
     "appId": "com.cariara.camora",
     "productName": "Camora",
     "artifactName": "Camora-${version}-${arch}.${ext}",
+    "protocols": [
+      {
+        "name": "Camora",
+        "schemes": [
+          "camora"
+        ]
+      }
+    ],
     "afterPack": "build-hooks/after-pack.js",
     "afterAllArtifactBuild": "build-hooks/after-all-artifact-build.js",
     "directories": {
@@ -64,7 +73,8 @@
         {
           "target": "nsis",
           "arch": [
-            "x64"
+            "x64",
+            "arm64"
           ]
         }
       ],

@@ -71,6 +71,106 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 let mainWindow = null;
 let isQuitting = false;
 
+// ── Desktop OAuth: RFC 8252 PKCE via the SYSTEM browser ──────────────────
+// Google blocks Google sign-in inside embedded browsers (Electron) with "This
+// browser or app may not be secure". Header/UA spoofing does not survive their
+// detection (the renderer's navigator.userAgentData still reports Electron, and
+// on Windows a spoofed Mac UA contradicts the real platform hint). So we do NOT
+// load accounts.google.com in-window for login. Instead camo.startLogin() opens
+// the user's real browser at the ascend PKCE endpoint; the backend renders an
+// interstitial that deep-links back as `camora://exchange?code=...`, which we
+// exchange (code + PKCE verifier) for the 30-day JWT, mirror into the
+// cariara_sso cookie, and reload authenticated. Matches auth.js `/desktop/*`.
+const crypto = require('crypto');
+const AUTH_BASE = process.env.CAMORA_AUTH_URL || 'https://caprab.cariara.com';
+const pendingLogins = new Map(); // state → { verifier, at }
+
+app.setAsDefaultProtocolClient('camora');
+
+const b64url = (buf) =>
+  buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+async function startDesktopLogin({ redirect } = {}) {
+  const verifier = b64url(crypto.randomBytes(64)); // 86 chars (RFC 7636: 43–128)
+  const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
+  const state = b64url(crypto.randomBytes(16));
+  // Drop pending logins older than 10 min, then record this one.
+  for (const [k, v] of pendingLogins) if (Date.now() - v.at > 600000) pendingLogins.delete(k);
+  pendingLogins.set(state, { verifier, at: Date.now() });
+  const safe = typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
+  const url = `${AUTH_BASE}/api/auth/google/login`
+    + `?dc=${encodeURIComponent(challenge)}`
+    + `&ds=${encodeURIComponent(state)}`
+    + `&redirect=${encodeURIComponent(safe)}`;
+  await shell.openExternal(url);
+}
+
+async function completeDesktopLogin(deepLinkUrl) {
+  let code = null;
+  try {
+    const u = new URL(deepLinkUrl);
+    if (u.protocol !== 'camora:' || u.hostname !== 'exchange') return;
+    code = u.searchParams.get('code');
+  } catch { return; }
+  if (!code) return;
+
+  // The interstitial deep link carries only `code`, not state, so use the most
+  // recent pending verifier (single user, single in-flight login).
+  let verifier = null;
+  let newest = -1;
+  for (const v of pendingLogins.values()) if (v.at > newest) { newest = v.at; verifier = v.verifier; }
+  pendingLogins.clear();
+  if (!verifier) { console.error('[auth] deep link but no pending PKCE verifier'); return; }
+
+  try {
+    const resp = await fetch(`${AUTH_BASE}/api/auth/desktop/exchange`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, verifier }),
+    });
+    if (!resp.ok) {
+      console.error('[auth] exchange failed', resp.status, await resp.text().catch(() => ''));
+      return;
+    }
+    const jwt = (await resp.json()).access_token;
+    if (!jwt) { console.error('[auth] exchange returned no access_token'); return; }
+
+    // Mirror the web SSO cookie so AuthContext authenticates on reload: it calls
+    // /auth/me with credentials:'include' (the cookie rides along), and its
+    // document.cookie fallback can read this non-httpOnly copy too.
+    await session.defaultSession.cookies.set({
+      url: 'https://camora.cariara.com',
+      name: 'cariara_sso',
+      value: jwt,
+      domain: '.cariara.com',
+      path: '/',
+      secure: true,
+      httpOnly: false,
+      sameSite: 'no_restriction',
+      expirationDate: Math.floor(Date.now() / 1000) + 30 * 24 * 3600,
+    });
+
+    if (!mainWindow || mainWindow.isDestroyed()) createWindow();
+    mainWindow.loadURL(APP_URL);
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  } catch (err) {
+    console.error('[auth] exchange error', err);
+  }
+}
+
+ipcMain.handle('auth:start-login', (_e, opts) => startDesktopLogin(opts || {}));
+
+// macOS delivers the deep link via open-url.
+app.on('open-url', (event, url) => { event.preventDefault(); completeDesktopLogin(url); });
+
+// Windows/Linux cold start: the camora:// URL arrives as an argv token.
+{
+  const coldLink = process.argv.find((a) => typeof a === 'string' && a.startsWith('camora://'));
+  if (coldLink) app.whenReady().then(() => completeDesktopLogin(coldLink));
+}
+
 // ── Window state ────────────────────────────────────────────────────────
 function loadWindowState() {
   try {
@@ -454,7 +554,12 @@ app.on('will-quit', () => {
   if (_desktopWatchTimer) clearInterval(_desktopWatchTimer);
 });
 
-app.on('second-instance', () => {
+app.on('second-instance', (_event, argv) => {
+  // Windows/Linux deliver the camora:// OAuth deep link as an argv token on the
+  // second launch. Hand it to the completer (it creates/authorizes the window
+  // as needed) before the focus logic below.
+  const link = argv.find((a) => typeof a === 'string' && a.startsWith('camora://'));
+  if (link) { completeDesktopLogin(link); return; }
   // Same not-ready guard as `activate`: a second-launch attempt can race
   // ahead of whenReady on cold start. The whenReady handler will create
   // the window when it's safe.
