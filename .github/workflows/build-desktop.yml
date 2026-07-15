@@ -12,12 +12,12 @@ on:
         required: true
 
 jobs:
-  # ── Multi-arch × multi-OS build matrix ─────────────────────────────────
-  # Each (os, arch) pair runs on its NATIVE runner in parallel — a Mac DMG and
-  # a Windows NSIS installer can't be produced or signed on the same box, and
-  # building arm64 + x64 serially in one job doubled wall-clock. macos-latest is
-  # Apple Silicon (arm64); macos-13 is Intel (x64). Windows arm64 uses the same
-  # runner as x64 (electron-builder cross-compiles the NSIS target).
+  # ── Windows build matrix (x64 + arm64) ─────────────────────────────────
+  # CI builds Windows ONLY — macOS DMGs are produced locally on a Mac and
+  # uploaded separately, so we don't spend macOS runner minutes here. Both
+  # arches build in parallel on windows-latest (electron-builder cross-compiles
+  # the arm64 NSIS target). The publish job leaves existing macOS release assets
+  # untouched — it only replaces the Windows installers it uploads.
   build:
     name: build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -25,14 +25,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: mac-arm64
-            os: macos-latest
-            script: build:dmg
-            artifact: apps/desktop/build/Camora-*-arm64.dmg
-          - name: mac-x64
-            os: macos-13
-            script: build:dmg-x64
-            artifact: apps/desktop/build/Camora-*-x64.dmg
           - name: win-x64
             os: windows-latest
             script: build:win
