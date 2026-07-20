@@ -415,6 +415,15 @@ export const AskLayout = () => {
     background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)',
   };
 
+  // Grow the composer with the question instead of scrolling a one-line box —
+  // long dictated questions stay fully visible up to the max-height.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 256)}px`;
+  }, [input]);
+
   // Load a history entry into the composer (idx -1 restores the stashed draft)
   // and park the caret at the end so you can keep typing / hit ↵ straight away.
   const applyHistory = useCallback((idx: number) => {
@@ -666,6 +675,7 @@ export const AskLayout = () => {
                 ))}
               </div>
             )}
+            <div className="flex items-end gap-2 px-3 py-2">
             <textarea
               ref={inputRef}
               value={input}
@@ -677,15 +687,12 @@ export const AskLayout = () => {
               }}
               placeholder="Ask anything… (↑ past questions · paste or drop a screenshot)"
               rows={1}
-              className="w-full resize-none px-5 pt-3 pb-1 max-h-48 overflow-y-auto text-[14px] bg-transparent focus:outline-none placeholder:opacity-40"
+              className="flex-1 min-w-0 resize-none px-2 py-2 min-h-[40px] max-h-64 overflow-y-auto text-[15px] leading-relaxed bg-transparent focus:outline-none placeholder:opacity-40"
               style={{ color: 'var(--text-primary)', ...sans }}
             />
-            {/* Controls live below the textarea (not absolutely positioned over
-                it) so long, wrapped questions never run underneath the mic and
-                send buttons. */}
-            <div className="flex items-center justify-between gap-3 px-4 pt-1 pb-3">
-              <span className="text-[10px] truncate hidden sm:block" style={{ color: 'var(--text-muted)', ...sans }}>↵ send · ⇧↵ new line · ↑↓ history · Space talk · 📷 paste</span>
-              <div className="flex items-center gap-2 shrink-0 ml-auto">
+            {/* Controls sit to the RIGHT of the box and the textarea grows with
+                the question, so nothing ever overlaps the text. */}
+              <div className="flex items-center gap-2 shrink-0 pb-1">
                 {/* Live dictation — text types into the composer as you talk
                     (re-transcribes the growing clip ~1/sec via the backend, so
                     it works in both web and the Electron desktop app). The
@@ -727,6 +734,9 @@ export const AskLayout = () => {
                 </button>
               </div>
             </div>
+          </div>
+          <div className="px-2 pt-1.5 text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>
+            ↵ send · ⇧↵ new line · ↑↓ history · Space talk · 📷 paste
           </div>
         </div>
       </div>

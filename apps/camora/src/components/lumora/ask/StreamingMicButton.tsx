@@ -57,6 +57,27 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
 
   const fullText = () => (committedRef.current + ' ' + interimRef.current).trim();
 
+  // Deepgram is fed headerless WebM fragments (MediaRecorder only puts the
+  // container header in the first chunk), so it intermittently re-decodes audio
+  // it already sent us and emits the same utterance as a second `is_final`.
+  // Blindly concatenating those turned "What is the difference between pull
+  // request" into that phrase three times over. Append only the genuinely new
+  // tail: drop exact repeats, and trim any overlap between what we've committed
+  // and what just arrived.
+  const appendFinal = (prev: string, incoming: string) => {
+    const next = incoming.trim();
+    if (!next) return prev;
+    if (!prev) return next;
+    if (prev.toLowerCase().endsWith(next.toLowerCase())) return prev;
+    const max = Math.min(prev.length, next.length);
+    for (let k = max; k > 8; k--) {
+      if (prev.slice(-k).toLowerCase() === next.slice(0, k).toLowerCase()) {
+        return prev + next.slice(k);
+      }
+    }
+    return prev + ' ' + next;
+  };
+
   // ── Groq fallback: re-transcribe the growing clip ──────────────────────
   const groqTranscribe = useCallback(async (isFinal: boolean) => {
     if (!token || chunksRef.current.length === 0) return;
@@ -129,7 +150,7 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
       try {
         const msg = JSON.parse(ev.data);
         if (msg.type === 'final' && msg.text) {
-          committedRef.current = (committedRef.current + ' ' + msg.text).trim();
+          committedRef.current = appendFinal(committedRef.current, msg.text).trim();
           interimRef.current = '';
           onInterim(fullText());
         } else if (msg.type === 'interim' && msg.text) {
