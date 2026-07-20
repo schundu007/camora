@@ -111,7 +111,13 @@ export function buildAnswerCacheKey(parts) {
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
   // v10: CLOUD_FORBIDDEN enforcement added (2026-06-26) — invalidates stale v9 entries with wrong provider services.
-  return `lumora:answer:v11:${h}`;
+  // v12: elevator pitch reformatted from one prose paragraph to labelled beats
+  // (2026-07-19). NOTE: `sc` hashes the *user-assembled* systemContext (resume +
+  // JD + docs), NOT the server-side system prompt — so editing a prompt in
+  // claude.js / gemini-stream.js does NOT invalidate anything on its own. This
+  // version prefix is the only lever. Bump it whenever a system prompt changes
+  // or users keep replaying pre-change answers for up to the 30-day TTL.
+  return `lumora:answer:v12:${h}`;
 }
 
 async function cacheGetFromDb(key) {
