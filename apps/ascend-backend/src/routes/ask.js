@@ -63,7 +63,32 @@ function getGenAI() {
   return _genAI;
 }
 
-const CODE_RE = /\b(fill|missing|complete|fix|write|implement|function|class|bug|error|code|loop|array|list|dict|string|algorithm|sort|search|tree|graph|dp|dynamic)\b/i;
+/* Routing between the code template and the prose template.
+ *
+ * The old single regex matched bare topic nouns — `error`, `tree`, `search`,
+ * `list`, `string`, `class` — so "explain error handling" or "how does a B-tree
+ * work" got forced into the Missing Code / Full Code structure and answered
+ * with a program instead of a sentence. Route on *intent* instead:
+ *
+ *   1. A pasted snippet or fenced block is unambiguous → code.
+ *   2. An imperative to produce code ("write a function", "fix the bug") → code,
+ *      unless it's phrased as a conceptual question.
+ *   3. Everything else → prose.
+ */
+const CODE_SNIPPET_RE = /```|\bdef\s+\w+\s*\(|\bclass\s+\w+\s*[:({]|\bfunction\s+\w*\s*\(|=>\s*\{|\bfor\s*\(.*;.*;|\breturn\s+\w+\s*;/m;
+/* Strong imperatives — in an interview assistant these essentially always mean
+ * "produce code", whatever the object ("implement an LRU cache"). */
+const CODE_STRONG_RE = /\b(write|implement|code up|complete|fill in)\b/i;
+/* Weaker verbs are ambiguous ("solve this conflict", "fix the process"), so
+ * they also need a code-ish object nearby. */
+const CODE_WEAK_RE = /\b(fix|debug|refactor|optimi[sz]e|solve|finish)\b[^.?!]{0,40}\b(function|method|class|program|script|snippet|solution|algorithm|query|code|bug|test case|leetcode|problem)\b/i;
+/* Conceptual framings stay prose even when they name code nouns — "how would
+ * you implement a rate limiter" is a discussion question, not a coding task. */
+const CONCEPT_RE = /^\s*(what|why|when|who|which|how\s+(do|does|would|did|can|is|are)|explain|describe|compare|contrast|tell me|walk me|talk me|difference|pros and cons|trade-?offs?)\b/i;
+
+const looksLikeCodeTask = (text = '') =>
+  CODE_SNIPPET_RE.test(text) ||
+  ((CODE_STRONG_RE.test(text) || CODE_WEAK_RE.test(text)) && !CONCEPT_RE.test(text));
 
 const GEMINI_CODING_MODEL  = 'gemini-2.5-pro-preview-05-06';
 const GEMINI_GENERAL_MODEL = 'gemini-2.5-flash-preview-05-20';
@@ -97,6 +122,9 @@ Hard rules:
   like a textbook heading ("Optimize Individual Tests:", "Parallelize Execution:"),
   rewrite it as something a person would actually say.
 - Total length: speakable in about 60-90 seconds. Depth beats coverage.
+- This is a SPOKEN answer, so prose by default. Include a fenced code block only
+  when a few lines genuinely clarify the point (a config snippet, a signature) —
+  never as the answer itself, and never a full program.
 - Keep tone calm and confident — never alarming
 - ALWAYS respond in English regardless of the question language`;
 
@@ -204,7 +232,7 @@ router.post('/stream', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    const isCode = CODE_RE.test(effectiveMessage);
+    const isCode = looksLikeCodeTask(effectiveMessage);
     const system = isCode ? SYS_CODE : SYS_GENERAL;
     const userId = req.user?.id;
     const dbContent = message?.trim() || '📷 Screenshot';
