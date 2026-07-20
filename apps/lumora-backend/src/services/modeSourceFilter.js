@@ -49,6 +49,17 @@ const MODE_SOURCES = Object.freeze({
     'capra-sre',              // SLI/SLO/SLA, incident, on-call
     'capra-devops',           // CI/CD, observability, IaC
   ],
+  // Company/role-specific study material. Grounded in public repos only —
+  // see apps/camora/src/data/capra/topics/amdCiTopics.js for provenance
+  // rules (every claim traceable; unverified things stay framed as
+  // questions to ask). Study surfaces only: this source is deliberately
+  // absent from 'general', which is the unfiltered mode the live
+  // inference path falls back to.
+  'amd-ci': [
+    'capra-amd-ci',           // TheRock/ROCm CI, GPU fleet ops, OSDU multi-cloud
+    'capra-devops',           // shared CI/CD + IaC grounding
+    'capra-sre',              // fleet health, incident framing
+  ],
 });
 
 export const KNOWN_MODES = Object.freeze(Object.keys(MODE_SOURCES));

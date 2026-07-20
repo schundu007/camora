@@ -23,6 +23,7 @@
 export const TOPIC_MANIFEST = [
   { file: 'sreTopics.js',             export: 'sreTopics',             source: 'capra-sre' },
   { file: 'devopsTopics.js',          export: 'devopsTopics',          source: 'capra-devops' },
+  { file: 'amdCiTopics.js',           export: 'amdCiTopics',           source: 'capra-amd-ci' },
   { file: 'systemDesignTopics.js',    export: 'systemDesignTopics',    source: 'capra-system-design' },
   { file: 'scalableSystemsTopics.js', export: 'scalableSystemsTopics', source: 'capra-scalable' },
   { file: 'codingTopics.js',          export: 'codingTopics',          source: 'capra-coding' },
