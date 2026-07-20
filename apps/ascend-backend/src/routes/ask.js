@@ -9,6 +9,61 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const router = Router();
 
+/**
+ * Decide how much prior conversation to replay for this question.
+ *
+ * Ask Sona is not a chat: during an interview each question is usually
+ * independent, and users paste whole question blocks. Replaying a long,
+ * confident previous answer as context made the model reuse it verbatim
+ * instead of answering the new question — the same answer came back for
+ * different pastes.
+ *
+ * So: only carry history when the new message actually reads like a
+ * follow-up. A standalone question drops it entirely, which removes the
+ * text the model was latching onto.
+ *
+ * Heuristics, deliberately conservative — when in doubt we keep history,
+ * because dropping it on a genuine follow-up ("what about the second one?")
+ * is the more visible failure.
+ */
+// A real follow-up is short. Anything longer carries its own subject and
+// doesn't need the previous turn — 120 chars comfortably covers "what about
+// the second one?" while excluding a pasted interview question.
+const FOLLOWUP_MAX_CHARS = 120;
+
+// Opens by referring to something unstated: "what about X", "and the second",
+// "expand on that", "why?". Anchored at the start — that's what distinguishes
+// a follow-up from a standalone question.
+const FOLLOWUP_RE = /^(and\b|but\b|also\b|what about\b|how about\b|why\b|expand\b|elaborate\b|continue\b|go on\b|more\b|that\b|this\b|it\b|those\b|these\b|the (first|second|third|last|previous)\b)/i;
+
+// Back-references to a prior answer, wherever they appear — these are
+// unambiguous ("you said", "the above") unlike a bare pronoun.
+const EXPLICIT_REF_RE = /\b(the above|previous answer|you said|your answer|as mentioned)\b/i;
+
+// A bare pronoun only implies a follow-up near the START of the message.
+// Mid-sentence it almost always refers within the same sentence — "what have
+// you done about it?" is standalone, and treating it as a follow-up was
+// exactly the bug that leaked the previous answer.
+const LEADING_PRONOUN_RE = /^.{0,40}?\b(that|those|it|this)\b/i;
+
+export function conversationContext(history, currentMessage) {
+  if (!Array.isArray(history) || history.length === 0) return [];
+  const msg = (currentMessage || '').trim();
+
+  // Long pastes are self-contained question blocks, never follow-ups.
+  if (msg.length > FOLLOWUP_MAX_CHARS) return [];
+
+  const looksLikeFollowup =
+    FOLLOWUP_RE.test(msg) ||
+    EXPLICIT_REF_RE.test(msg) ||
+    (msg.length <= 60 && LEADING_PRONOUN_RE.test(msg));
+  if (!looksLikeFollowup) return [];
+
+  // A genuine follow-up needs the immediately preceding exchange, not ten
+  // turns of unrelated questions.
+  return history.slice(-4);
+}
+
 // Screenshot attachments on an Ask message. Accepts data URLs from the
 // client, caps count/size, uploads each to R2 (private bucket), and returns
 // both the Gemini vision `parts` (inlineData) and the DB rows to persist.
@@ -266,7 +321,7 @@ router.post('/stream', async (req, res) => {
     }
 
     const msgs = [
-      ...history.slice(-10).map(m => ({ role: m.role, content: m.content })),
+      ...conversationContext(history, effectiveMessage).map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content: effectiveMessage },
     ];
 
@@ -352,7 +407,7 @@ router.post('/stream', async (req, res) => {
 
     if (isCode && provider !== 'gemini' && geminiKey) {
       res.write(`data: ${JSON.stringify({ status: 'Drafting with Gemini…' })}\n\n`);
-      const draft = await fetchGeminiDraft(effectiveMessage, history, geminiKey);
+      const draft = await fetchGeminiDraft(effectiveMessage, conversationContext(history, effectiveMessage), geminiKey);
       if (draft) {
         finalSystem = SYS_CODE_DUAL(draft);
         res.write(`data: ${JSON.stringify({ status: 'Verifying with Gemini…' })}\n\n`);
