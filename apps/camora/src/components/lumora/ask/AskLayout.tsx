@@ -181,6 +181,9 @@ const AskResponse = ({ content }: { content: string }) => {
   );
 };
 
+const HISTORY_KEY = 'sona_ask_history';
+const HISTORY_MAX = 50;
+
 // ── Main component ────────────────────────────────────────────────────────────
 export const AskLayout = () => {
   const { user } = useAuth() as any;
@@ -198,10 +201,28 @@ export const AskLayout = () => {
   const [pending, setPending]           = useState<{ id: string; dataUrl: string }[]>([]);
   // Bumped by the Space shortcut to toggle the dictation mic.
   const [micToggle, setMicToggle]       = useState(0);
+  // Shell-style ↑/↓ recall of questions you've sent — typed or dictated alike,
+  // since dictation lands in the composer and submits through the same path.
+  // Newest first; survives conversation switches and reloads.
+  const [sentHistory, setSentHistory]   = useState<string[]>(() => {
+    try { return (JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') as string[]).slice(0, HISTORY_MAX); }
+    catch { return []; }
+  });
+  // -1 = not browsing history. draftRef stashes the half-written question so
+  // ↓ back past the newest entry restores it.
+  const [histIdx, setHistIdx]           = useState(-1);
+  const draftRef = useRef('');
 
   const inputRef  = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const dictationBaseRef = useRef(''); // input text captured when dictation starts
+  // Sending bumps submitSeq. A dictation session records the seq it started
+  // under, so the late-arriving Whisper final (it lands ~1s after you stop the
+  // mic) is discarded if you already sent — otherwise it would re-fill the
+  // composer with the question you just asked, and the next dictation would
+  // append to it, snowballing every prior question into the box.
+  const submitSeqRef = useRef(0);
+  const dictationSeqRef = useRef(0);
   // Aborts the in-flight Ask stream so a stale answer can't land in a fresh /
   // switched / deleted conversation.
   const askAbortRef = useRef<AbortController | null>(null);
@@ -287,6 +308,17 @@ export const AskLayout = () => {
     const imgs = pending;
     if ((!msg && imgs.length === 0) || streaming) return;
     setInput('');
+    submitSeqRef.current += 1;
+    dictationBaseRef.current = '';
+    setHistIdx(-1);
+    draftRef.current = '';
+    if (msg) {
+      setSentHistory(prev => {
+        const next = [msg, ...prev.filter(q => q !== msg)].slice(0, HISTORY_MAX);
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(next)); } catch {}
+        return next;
+      });
+    }
     setPending([]);
     setMessages(prev => [...prev, { role: 'user', content: msg, images: imgs.map(i => ({ dataUrl: i.dataUrl })) }]);
     setStreaming(true);
@@ -382,6 +414,35 @@ export const AskLayout = () => {
     padding: '2px 5px', borderRadius: 4, color: 'var(--text-muted)',
     background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)',
   };
+
+  // Load a history entry into the composer (idx -1 restores the stashed draft)
+  // and park the caret at the end so you can keep typing / hit ↵ straight away.
+  const applyHistory = useCallback((idx: number) => {
+    const text = idx < 0 ? draftRef.current : (sentHistory[idx] ?? '');
+    setHistIdx(idx);
+    setInput(text);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (el) { el.focus(); el.setSelectionRange(text.length, text.length); }
+    });
+  }, [sentHistory]);
+
+  // ↑/↓ walk sent questions, but only from the edges of the composer so the
+  // arrows still move the caret normally inside a multi-line draft.
+  const onComposerArrows = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.shiftKey || e.altKey || e.metaKey || e.ctrlKey || sentHistory.length === 0) return;
+    const el = e.currentTarget;
+    const collapsed = el.selectionStart === el.selectionEnd;
+    if (!collapsed) return;
+    if (e.key === 'ArrowUp' && el.selectionStart === 0) {
+      if (histIdx === -1) draftRef.current = el.value;
+      e.preventDefault();
+      applyHistory(Math.min(histIdx + 1, sentHistory.length - 1));
+    } else if (e.key === 'ArrowDown' && el.selectionStart === el.value.length && histIdx >= 0) {
+      e.preventDefault();
+      applyHistory(histIdx - 1);
+    }
+  }, [sentHistory, histIdx, applyHistory]);
 
   // Single-stroke shortcut: Space toggles dictation when you're not mid-typing
   // (composer empty or focus outside it). Esc stops an active dictation. Plain
@@ -584,7 +645,7 @@ export const AskLayout = () => {
 
           {/* Input box */}
           <div
-            className="relative rounded-2xl"
+            className="relative rounded-2xl flex flex-col"
             style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf-dk)', boxShadow: '0 0 0 1px rgba(217,181,67,0.1), 0 4px 20px rgba(0,0,0,0.3)' }}
             onDrop={onComposerDrop}
             onDragOver={e => e.preventDefault()}
@@ -608,17 +669,23 @@ export const AskLayout = () => {
             <textarea
               ref={inputRef}
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => { setInput(e.target.value); if (histIdx !== -1) setHistIdx(-1); }}
               onPaste={onComposerPaste}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
-              placeholder="Ask anything… (paste or drop a screenshot)"
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); return; }
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') onComposerArrows(e);
+              }}
+              placeholder="Ask anything… (↑ past questions · paste or drop a screenshot)"
               rows={1}
-              className="w-full resize-none px-5 pt-3 pb-10 text-[14px] bg-transparent focus:outline-none placeholder:opacity-40"
+              className="w-full resize-none px-5 pt-3 pb-1 max-h-48 overflow-y-auto text-[14px] bg-transparent focus:outline-none placeholder:opacity-40"
               style={{ color: 'var(--text-primary)', ...sans }}
             />
-            <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>↵ send · ⇧↵ new line · Space talk · 📷 paste</span>
-              <div className="flex items-center gap-2">
+            {/* Controls live below the textarea (not absolutely positioned over
+                it) so long, wrapped questions never run underneath the mic and
+                send buttons. */}
+            <div className="flex items-center justify-between gap-3 px-4 pt-1 pb-3">
+              <span className="text-[10px] truncate hidden sm:block" style={{ color: 'var(--text-muted)', ...sans }}>↵ send · ⇧↵ new line · ↑↓ history · Space talk · 📷 paste</span>
+              <div className="flex items-center gap-2 shrink-0 ml-auto">
                 {/* Live dictation — text types into the composer as you talk
                     (re-transcribes the growing clip ~1/sec via the backend, so
                     it works in both web and the Electron desktop app). The
@@ -627,12 +694,18 @@ export const AskLayout = () => {
                 <span className="hidden sm:inline" style={kbdStyle} data-tip="Toggle dictation">Space</span>
                 <StreamingMicButton
                   toggleSignal={micToggle}
-                  onStart={() => { dictationBaseRef.current = input; }}
+                  onStart={() => {
+                    dictationSeqRef.current = submitSeqRef.current;
+                    dictationBaseRef.current = input;
+                    setHistIdx(-1);
+                  }}
                   onInterim={(t) => {
+                    if (dictationSeqRef.current !== submitSeqRef.current) return;
                     const base = dictationBaseRef.current.trim();
                     setInput(base && t ? base + ' ' + t : (t || base));
                   }}
                   onFinal={(t) => {
+                    if (dictationSeqRef.current !== submitSeqRef.current) return;
                     const base = dictationBaseRef.current.trim();
                     const next = base && t ? base + ' ' + t : (t || base);
                     setInput(next);
