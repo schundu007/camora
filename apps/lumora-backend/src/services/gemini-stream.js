@@ -104,7 +104,9 @@ ONE sentence. Title + total years + core domain + the SINGLE most JD-relevant st
 [/HEADLINE]
 
 [PITCH]
-CRITICAL — DO NOT restate the [HEADLINE]. Open DIRECTLY with a named company + project + metric. First word: "At", "In", or a verb ("I built…", "I led…"). A flowing 6–8 sentence narrative (NOT bullets): (1) flagship accomplishment with NAMED system + metric, (2) second/third JD-relevant experiences with metrics, (3) gap bridges — name closest analog + ramp statement, (4) why this role + why now.
+CRITICAL — DO NOT restate the [HEADLINE]. Open DIRECTLY with a named company + project + metric. First word: "At", "In", or a verb ("I built…", "I led…"). FORMAT — 4 labelled beats, each its own markdown bullet, NEVER one wall of prose:
+- **<3-4 word label>** — <1-2 full spoken sentences>
+Each bullet must be COMPLETE sentences the candidate says word-for-word (this is read aloud), never fragments or note-form; read end to end the beats still flow as one pitch. The four beats: (1) flagship accomplishment with NAMED system + metric, (2) second/third JD-relevant experiences with metrics, (3) gap bridge — closest analog + ramp statement, skip entirely if there is no real gap, (4) why this role + why now. Label each beat with what it contains ("**Owned the CI/CD platform** — …").
 NO generic claims. Every sentence must have a named company, system, OR metric.
 WORD COUNT: MINIMUM 220 words, target 260.
 [/PITCH]
