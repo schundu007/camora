@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { isOwner } from '../../lib/owner';
 import { dialogConfirm } from '../../components/shared/Dialog';
@@ -16,7 +16,6 @@ import { challengeStatsStore } from '@/lib/userScopedStorage';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
-const AskLayout = lazy(() => import('../../components/lumora/ask/AskLayout').then(m => ({ default: m.AskLayout })));
 
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -803,18 +802,13 @@ export default function PracticePage() {
   // Stats
   const { user, subscription } = useAuth();
   const [stats, setStats] = useState(getStats);
-  const [askSonaCredits, setAskSonaCredits] = useState(null);
+  const navigate = useNavigate();
 
+  // Ask Sona moved to Lumora (/lumora/ask). Old bookmarks of
+  // /capra/practice?view=ask-sona land here — send them to the new home.
   useEffect(() => {
-    if (activeView !== 'ask-sona') return;
-    if (isOwner(user) || (subscription?.plan && subscription.plan !== 'free')) return;
-    if (!user) return;
-    setAskSonaCredits(null);
-    fetch(`${API_URL}/api/credits`, { headers: { ...getAuthHeaders() } })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => setAskSonaCredits(typeof data.balance === 'number' ? data.balance : 0))
-      .catch(() => setAskSonaCredits(0));
-  }, [activeView, user?.email, subscription?.plan]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (activeView === 'ask-sona') navigate('/lumora/ask', { replace: true });
+  }, [activeView, navigate]);
 
   // Challenge setup
   const [mode, setMode] = useState('quickfire');
@@ -1189,7 +1183,6 @@ export default function PracticePage() {
               { key: 'practice', label: 'Mock Interview', icon: <Icon name="play" size={12} /> },
               { key: 'code-solver', label: 'Code Solver', icon: <Icon name="code" size={12} /> },
               { key: 'design-solver', label: 'Design Solver', icon: <Icon name="systemDesign" size={12} /> },
-              { key: 'ask-sona', label: 'Ask Sona', icon: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -1263,44 +1256,6 @@ export default function PracticePage() {
             <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
               <DashboardPage mode="system-design" embedded />
             </Suspense>
-          </div>
-        )}
-
-        {/* ── Ask Sona View (paywalled) ── */}
-        {activeView === 'ask-sona' && (
-          <div className="flex-1 min-h-0 overflow-hidden">
-            {(isOwner(user) || (subscription?.plan && subscription.plan !== 'free') || (askSonaCredits !== null && askSonaCredits > 0)) ? (
-              <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>}>
-                <AskLayout />
-              </Suspense>
-            ) : askSonaCredits === null && !isOwner(user) && subscription?.plan === 'free' ? (
-              <div className="flex-1 flex items-center justify-center h-full">
-                <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center h-full text-center px-6 py-16" style={{ background: 'var(--bg-surface)' }}>
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(201,162,39,0.12)', border: '1px solid rgba(201,162,39,0.25)' }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf-lt)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Ask Sona</h2>
-                <p className="text-sm mb-1 max-w-sm" style={{ color: 'var(--text-muted)' }}>
-                  Get instant AI answers to any interview question. AI hours are consumed per conversation.
-                </p>
-                <p className="text-xs mb-6" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-code)' }}>
-                  You have {askSonaCredits !== null ? askSonaCredits.toFixed(1) : '0'} AI hours remaining
-                </p>
-                <a
-                  href="/pricing#ai-hours"
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold"
-                  style={{ background: 'var(--cam-gold-leaf)', color: '#020617' }}
-                >
-                  Buy AI Hours
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                </a>
-              </div>
-            )}
           </div>
         )}
 
