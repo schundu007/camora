@@ -34,6 +34,7 @@ const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLay
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
 const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
 const ClaudePanel = lazy(() => import('../../components/lumora/claude/ClaudePanel').then(m => ({ default: m.ClaudePanel })));
+const AskSonaPanel = lazy(() => import('../../components/lumora/ask/AskSonaPanel').then(m => ({ default: m.AskSonaPanel })));
 
 export const LumoraShellPage = () => {
   const navigate = useNavigate();
@@ -118,6 +119,7 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/fix') ? 'cofix' :
     location.pathname.includes('/behavioral') ? 'behavioral' :
     location.pathname.includes('/claude') ? 'claude' :
+    location.pathname.includes('/ask') ? 'ask' :
     location.pathname.includes('/practice') ? 'practice' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
     location.pathname.includes('/calendar') ? 'calendar' :
@@ -681,6 +683,17 @@ export const LumoraShellPage = () => {
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0"
               style={{ display: activeTab === 'practice' ? undefined : 'none' }}>
               <PracticePanel />
+            </div>
+          )}
+
+          {/* Ask Sona tab — keep-alive so the conversation, history and any
+              in-flight answer survive switching to another surface. */}
+          {mountedTabs.has('ask') && (
+            <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0"
+              style={{ display: activeTab === 'ask' ? undefined : 'none' }}>
+              <Suspense fallback={<TabLoading />}>
+                <AskSonaPanel />
+              </Suspense>
             </div>
           )}
 
