@@ -98,14 +98,16 @@ export async function retrieve(opts) {
       }
     }
     // ... existing live-retrieval code path follows ...
-    const { embedQuery } = await import('./embeddings.js');
+    // Degrade-aware: a transient embedding failure yields null and the hybrid
+    // searches below fall back to BM25 (loudly). A config fault still throws.
+    const { embedQueryOrDegrade } = await import('./hybridRetrieval.js');
     let queryForEmbed = question;
     if (willUseHyde) {
       const { hydeRewrite } = await import('./hyde.js');
       const rewritten = await hydeRewrite(question);
       if (rewritten) queryForEmbed = `${question}\n\n${rewritten}`;
     }
-    const vec = await embedQuery(queryForEmbed);
+    const vec = await embedQueryOrDegrade(queryForEmbed);
     const kbTop = willRerank ? KB_TOP_K_WIDE : KB_TOP_K_NARROW;
     const userTop = willRerank ? USER_TOP_K_WIDE : USER_TOP_K_NARROW;
     const promises = [hybridSearchKb(question, kbTop, { vec, sourceFilter })];

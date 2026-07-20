@@ -49,8 +49,11 @@ function chunkOne(item, entry) {
   throw new Error(`Unknown manifest kind: ${kind}`);
 }
 
-// text-embedding-3-small pricing (May 2026 — verify if model rev changes).
-const COST_PER_M_TOKENS_USD = 0.02;
+// gemini-embedding-001 pricing (July 2026 — verify if the model changes).
+// Was 0.02 under OpenAI text-embedding-3-small; leaving that constant in place
+// after the provider switch would have under-reported spend 7.5x and made the
+// --max-spend-usd cap meaningless.
+const COST_PER_M_TOKENS_USD = 0.15;
 const DEFAULT_MAX_SPEND_USD = 1.00;
 
 function parseArgs(argv) {
