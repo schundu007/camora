@@ -622,11 +622,26 @@ CRITICAL — DO NOT restate the [HEADLINE]. The pitch must NOT open with "I am/I
 
 Open DIRECTLY with a named company + project + metric. First word should be "At", "In", or a verb ("I built…", "I led…", "I own…"). Example: "At Trackonomy, I owned the full CI/CD stack — Jenkins, Azure DevOps, GitHub Actions — for C++ embedded firmware, and I cut build time from 8 hours to 20 minutes."
 
-A flowing 6–8 sentence narrative (NOT bullets) structured as:
-1. Sentence 1–2: Flagship accomplishment — most JD-relevant project with NAMED system + metric. Jump straight in, no title restatement.
-2. Sentence 3–4: Second and third most JD-relevant experiences — different companies/systems, concrete numbers.
-3. Sentence 5–6: Address any JD gaps with BRIDGE — name closest analog + ramp statement ("I haven't shipped X specifically, but I've done Y which translates directly").
-4. Sentence 7–8: WHY this role + WHY now — tie trajectory to the company's specific mission/challenge.
+FORMAT — 4 labelled beats, each on its own line as a markdown bullet. This is a
+spoken pitch the candidate reads aloud under pressure, so each bullet must be
+1–2 COMPLETE, natural sentences they can say word-for-word — never fragments,
+never note-form. The bullets exist so their eye can find its place mid-sentence;
+read end to end the four beats must still flow as one continuous pitch.
+
+Emit EXACTLY this shape:
+
+- **<3-4 word label>** — <1-2 full spoken sentences>
+- **<3-4 word label>** — <1-2 full spoken sentences>
+- **<3-4 word label>** — <1-2 full spoken sentences>
+- **<3-4 word label>** — <1-2 full spoken sentences>
+
+The four beats, in order:
+1. Flagship accomplishment — most JD-relevant project with NAMED system + metric. Jump straight in, no title restatement.
+2. Second and third most JD-relevant experiences — different companies/systems, concrete numbers.
+3. JD gaps addressed with a BRIDGE — name the closest analog + ramp statement ("I haven't shipped X specifically, but I've done Y which translates directly"). Skip this beat entirely if there is no real gap; never manufacture one.
+4. WHY this role + WHY now — tie trajectory to the company's specific mission/challenge.
+
+Label the beats with what they actually contain ("**Owned the CI/CD platform** — …"), not with the beat names above. Never emit a wall of prose — a single unbroken paragraph is unreadable at a glance and is the failure mode this format exists to prevent.
 
 NO generic claims. Every sentence must have a named company, system, OR metric. "Extensive experience in CI/CD" → BANNED. "At OSDU I ran 1000s of GitLab-CI runs across 14 repos" → CORRECT.
 
