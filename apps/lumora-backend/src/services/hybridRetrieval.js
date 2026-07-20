@@ -6,7 +6,7 @@
  * exact terms. RRF combines them without normalizing raw scores.
  */
 import { query } from '../lib/shared-db.js';
-import { embedQuery } from './embeddings.js';
+import { embedQuery, EmbeddingRequestError } from './embeddings.js';
 
 const RRF_K = 60;
 const VECTOR_TOP = 20;
@@ -98,8 +98,38 @@ async function bm25User(userId, question) {
   }));
 }
 
+/**
+ * Embed the query, degrading to BM25-only if — and ONLY if — the embedding
+ * request itself failed transiently (network, 429, 5xx).
+ *
+ * The distinction matters. An EmbeddingConfigError (no API key, wrong vector
+ * shape) is a deployment fault: it will not recover, and every request is
+ * equally broken, so it propagates and takes the request down visibly. A
+ * transient EmbeddingRequestError costs this one query its semantic arm, which
+ * is worth degrading for mid-interview rather than failing the answer.
+ *
+ * The loud console.error is load-bearing: this pipeline previously fell back to
+ * BM25-only silently for months because a missing provider returned null
+ * instead of throwing. Degraded must never again be indistinguishable from
+ * healthy — if you see this line in the logs, vector search is off.
+ */
+export async function embedQueryOrDegrade(question) {
+  try {
+    return await embedQuery(question);
+  } catch (err) {
+    if (err instanceof EmbeddingRequestError) {
+      console.error(
+        '[hybridRetrieval] DEGRADED to BM25-only — embedding request failed:',
+        err.message,
+      );
+      return null;
+    }
+    throw err;
+  }
+}
+
 export async function hybridSearchKb(question, finalK, opts = {}) {
-  const vec = opts.vec || await embedQuery(question);
+  const vec = opts.vec || await embedQueryOrDegrade(question);
   const sourceFilter = (Array.isArray(opts.sourceFilter) && opts.sourceFilter.length > 0) ? opts.sourceFilter : null;
   const results = vec
     ? await Promise.all([vecKb(vec, sourceFilter), bm25Kb(question, sourceFilter)])
@@ -108,7 +138,7 @@ export async function hybridSearchKb(question, finalK, opts = {}) {
 }
 
 export async function hybridSearchUserDocs(userId, question, finalK, opts = {}) {
-  const vec = opts.vec || await embedQuery(question);
+  const vec = opts.vec || await embedQueryOrDegrade(question);
   const results = vec
     ? await Promise.all([vecUser(userId, vec), bm25User(userId, question)])
     : [[], await bm25User(userId, question)];
@@ -150,7 +180,7 @@ async function bm25UserCode(userId, question) {
 }
 
 export async function hybridSearchUserCode(userId, question, finalK, opts = {}) {
-  const vec = opts.vec || await embedQuery(question);
+  const vec = opts.vec || await embedQueryOrDegrade(question);
   const results = vec
     ? await Promise.all([vecUserCode(userId, vec), bm25UserCode(userId, question)])
     : [[], await bm25UserCode(userId, question)];
