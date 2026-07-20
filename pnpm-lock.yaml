@@ -34,6 +34,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1070.0
         version: 3.1070.0
+      '@google/genai':
+        specifier: ^2.12.0
+        version: 2.12.0
       '@google/generative-ai':
         specifier: 0.24.1
         version: 0.24.1
