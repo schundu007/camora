@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../config/database.js';
+import { retrieveForAsk, formatContext } from '../services/askRetrieval.js';
 import { r2, R2_BUCKET } from '../lib/r2.js';
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -335,7 +336,20 @@ router.post('/stream', async (req, res) => {
     // Gemini drafts a fast solution; Gemini 2.5 Flash verifies, fixes bugs, and
     // streams the minimal correct final answer. For non-coding or when Gemini key
     // is absent the path degrades to a single-model call with no UX change.
+    // KB grounding: retrieve supporting chunks from lumora_kb_chunks (shared
+    // Postgres) and append them to the system prompt. Fails open — retrieval
+    // errors log and yield [], so Ask Sona answers ungrounded rather than 500s.
     let finalSystem = system;
+    try {
+      const chunks = await retrieveForAsk(effectiveMessage);
+      if (chunks.length > 0) {
+        finalSystem = system + formatContext(chunks);
+        res.write(`data: ${JSON.stringify({ sources: chunks.map((c) => ({ source: c.source, title: c.topic_title, section: c.section })) })}\n\n`);
+      }
+    } catch (e) {
+      console.error('[Ask] KB grounding skipped:', e?.message || e);
+    }
+
     if (isCode && provider !== 'gemini' && geminiKey) {
       res.write(`data: ${JSON.stringify({ status: 'Drafting with Gemini…' })}\n\n`);
       const draft = await fetchGeminiDraft(effectiveMessage, history, geminiKey);
