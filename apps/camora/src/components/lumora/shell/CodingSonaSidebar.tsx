@@ -312,7 +312,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
           {/* Header — navy hero strip + gold underline, matches the
               app's other tool-window chrome. */}
           <div
-            className="flex items-center gap-2 h-10 px-3 shrink-0"
+            className="flex items-center gap-2 h-10 px-3 shrink-0 lumora-winctl-safe"
             style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
           >
             <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>
