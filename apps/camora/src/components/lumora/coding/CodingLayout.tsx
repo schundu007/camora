@@ -2539,10 +2539,22 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                     <button
                       onClick={() => {
                         if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
+                        const snapUrls = pendingSnapUrlsRef.current;
+                        // Never be a silent dead button in a live interview. If there's
+                        // nothing to solve — no pending snaps, no text, no capture running —
+                        // say exactly what to do and jump to the paste box instead of
+                        // swallowing the click (the old `disabled` guard did nothing here,
+                        // and also wrongly blocked generating from pending screenshots).
+                        if (!snapUrls.length && !problemText.trim() && !multiPageCapturing) {
+                          setInputMode('paste');
+                          setProblemTab('description');
+                          setError('No problem captured yet. Paste it into the box above, or Snap with your coding tab open in Chrome, Brave, Edge, Arc, or Safari.');
+                          setTimeout(() => document.getElementById('problem-text')?.focus(), 0);
+                          return;
+                        }
                         multiPageCapturingRef.current = false;
                         setMultiPageCapturing(false);
                         setMultiPageCount(0);
-                        const snapUrls = pendingSnapUrlsRef.current;
                         pendingSnapUrlsRef.current = [];
                         setSnapImageUrls([]);
                         setImagePreview(null);
@@ -2552,7 +2564,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           handleGenerateSolution();
                         }
                       }}
-                      disabled={isLoading || (!problemText.trim() && !multiPageCapturing)}
+                      disabled={isLoading}
                       className="flex-1 py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
                       style={
                         degrading.length > 0
