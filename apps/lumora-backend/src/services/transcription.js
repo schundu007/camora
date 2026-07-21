@@ -14,17 +14,25 @@ CAP theorem, ACID, BASE, eventual consistency, sharding, replication,
 load balancer, reverse proxy, CDN, cache, queue, pub-sub, event-driven.
 `.trim();
 
-function getTranscriptionClient() {
+// Ordered list of providers to TRY. Groq first (fast + cheap), OpenAI as the
+// fallback. The fallback is the whole point: Groq's free tier caps at 2000
+// requests/DAY, and once exhausted every chunk 429s. Previously this returned
+// a SINGLE provider and never retried the other — so a Groq rate-limit (or any
+// Groq error) killed transcription mid-interview even with an OpenAI key set.
+function getTranscriptionProviders() {
+  const providers = [];
   if (process.env.GROQ_API_KEY) {
-    return {
+    providers.push({
+      name: 'groq',
       client: new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }),
       model: 'whisper-large-v3-turbo',
-    };
+    });
   }
   if (process.env.OPENAI_API_KEY) {
-    return { client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), model: 'whisper-1' };
+    providers.push({ name: 'openai', client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), model: 'whisper-1' });
   }
-  throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
+  if (!providers.length) throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
+  return providers;
 }
 
 // Whisper no-speech threshold. Segments with no_speech_prob above this are
@@ -34,17 +42,35 @@ function getTranscriptionClient() {
 const NO_SPEECH_THRESHOLD = 0.6;
 
 export async function transcribe(audioBuffer, filename = 'audio.webm') {
-  const { client, model } = getTranscriptionClient();
+  const providers = getTranscriptionProviders();
   const mime = filename.endsWith('.wav') ? 'audio/wav' : 'audio/webm';
-  const file = new File([audioBuffer], filename, { type: mime });
-  const response = await client.audio.transcriptions.create({
-    model,
-    file,
-    language: 'en',
-    prompt: TECHNICAL_PROMPT,
-    temperature: 0,
-    response_format: 'verbose_json',
-  });
+
+  let response;
+  let lastErr;
+  for (const { name, client, model } of providers) {
+    // A fresh File per attempt — a consumed stream can't be re-sent to the
+    // fallback provider.
+    const file = new File([audioBuffer], filename, { type: mime });
+    try {
+      response = await client.audio.transcriptions.create({
+        model,
+        file,
+        language: 'en',
+        prompt: TECHNICAL_PROMPT,
+        temperature: 0,
+        response_format: 'verbose_json',
+      });
+      lastErr = null;
+      break;
+    } catch (err) {
+      lastErr = err;
+      // 429 (rate/quota) and 5xx are exactly what the fallback exists for; log
+      // and try the next provider. Auth/400 errors also fall through so a
+      // misconfigured primary can't take the whole feature down.
+      console.warn(`[Whisper] provider "${name}" failed (${err?.status ?? '?'}: ${err?.message?.slice(0, 120)}) — trying next`);
+    }
+  }
+  if (!response) throw lastErr || new Error('All transcription providers failed');
 
   // verbose_json gives us per-segment no_speech_prob so we can drop silence.
   if (response?.segments?.length) {

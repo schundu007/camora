@@ -2878,7 +2878,11 @@ router.post('/construct-from-images', authenticate, checkUsage('questions'), ima
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
     const rawMediaType = f.mimetype.startsWith('image/') ? f.mimetype : 'image/png';
-    const [resizedData, resizedType] = await ensureImageWithinAnthropicLimit(
+    // ensureImageWithinAnthropicLimit returns an OBJECT { mediaType, data }
+    // (see the call at ~2794). Destructuring it as an array threw
+    // "(intermediate value) is not iterable" on EVERY multi-page capture,
+    // crashing construct-from-images → empty problem → dead Generate button.
+    const { mediaType: resizedType, data: resizedData } = await ensureImageWithinAnthropicLimit(
       f.buffer.toString('base64'), rawMediaType
     );
     if (i > 0) geminiParts.push(`--- Page ${i + 1} ---`);
