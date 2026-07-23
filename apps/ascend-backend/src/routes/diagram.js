@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import * as eraser from '../services/eraser.js';
 import * as pythonDiagrams from '../services/pythonDiagrams.js';
+import { hashProblem, cacheKeyFor } from '../services/diagramStore.js';
 import { AppError, ErrorCode } from '../middleware/errorHandler.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { query } from '../lib/shared-db.js';
@@ -31,10 +31,9 @@ function checkDailyDiagramLimit(userId) {
   return true;
 }
 
-/** Hash a problem description into a stable cache key */
-function hashProblem(text) {
-  return crypto.createHash('sha256').update(text.trim().toLowerCase()).digest('hex').slice(0, 32);
-}
+/* hashProblem / cacheKeyFor live in services/diagramStore.js so this route and
+ * the prep-kit diagram path (routes/ascendPrep.js) produce identical cache keys
+ * and share rows instead of drifting into two incompatible key formats. */
 
 /**
  * Owner/admin gate for diagram *generation* (not lookup).
@@ -235,7 +234,7 @@ router.post('/generate', adminOnlyForGeneration, hourBudgetGate, async (req, res
     // image_data). Cache key includes designKind so an LRU-cache
     // class-diagram doesn't collide with a Twitter system-architecture
     // diagram on the same hash bucket.
-    const problemHash = hashProblem(`${cacheKey || question}::${provider}::${direction}::${detailLevel}::${designKind}`);
+    const problemHash = cacheKeyFor({ question: cacheKey || question, provider, direction, detailLevel, designKind });
     try {
       const cached = await query(
         'SELECT image_url, image_data IS NOT NULL AS has_image_data FROM ascend_diagram_cache WHERE problem_hash = $1 AND (image_url IS NOT NULL OR image_data IS NOT NULL)',
@@ -513,7 +512,7 @@ router.post('/lookup', async (req, res) => {
     const tried = new Set();
 
     for (const p of providers) {
-      const hash = hashProblem(`${question}::${p}::${direction}::${detailLevel}::${designKind}`);
+      const hash = cacheKeyFor({ question, provider: p, direction, detailLevel, designKind });
       if (tried.has(hash)) continue;
       tried.add(hash);
 

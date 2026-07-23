@@ -912,6 +912,27 @@ def _build_class_to_import(provider):
     return mapping
 
 
+def _normalize_body_indent(body_lines, target=4):
+    """Shift a body block so its outermost level sits at `target` spaces,
+    preserving relative nesting.
+
+    The model returns bodies at an arbitrary base indent — usually 0, sometimes
+    4 — because the prompt only asks for "indented body". Re-indenting each
+    line independently (the old behaviour) flattened nested lines onto their
+    block header's level: a `with Cluster(...):` emitted at indent 0 was pushed
+    to 4 while its children, already at 4, stayed at 4. That is a guaranteed
+    `IndentationError: expected an indented block after 'with' statement`, and
+    no amount of LLM retrying fixes it because the corruption happens after
+    generation. Shifting the whole block by a single delta keeps every header
+    above its own body.
+    """
+    indents = [len(l) - len(l.lstrip()) for l in body_lines if l.strip()]
+    if not indents:
+        return body_lines
+    base = min(indents)
+    return ["" if not l.strip() else " " * target + l[base:] for l in body_lines]
+
+
 def assemble_code(raw_output, provider, direction):
     """Split Claude's output into imports + body, wrap in template."""
     # Normalize common class-name aliases (e.g. DynamoDB → Dynamodb,
@@ -945,11 +966,13 @@ def assemble_code(raw_output, provider, direction):
             continue  # Skip any other imports
         else:
             in_body = True
-            # Ensure 4-space indent
-            if not line.startswith("    "):
-                body_lines.append("    " + stripped)
-            else:
-                body_lines.append(line)
+            # Keep the line verbatim. Indentation is normalized as a block
+            # after the loop — see _normalize_body_indent. Normalizing
+            # per-line here used to flatten every unindented line to exactly
+            # 4 spaces while leaving already-indented lines alone, which
+            # collapsed `with Cluster(...):` headers onto the same level as
+            # their own body and raised IndentationError.
+            body_lines.append(line.expandtabs(4).rstrip())
 
     # Auto-detect missing imports: scan body for class names that aren't imported
     class_map = _build_class_to_import(provider)
@@ -970,7 +993,7 @@ def assemble_code(raw_output, provider, direction):
 
     # Deduplicate and merge imports from the same module
     import_block = "\n".join(sorted(set(imports)))
-    body_block = "\n".join(body_lines)
+    body_block = "\n".join(_normalize_body_indent(body_lines))
 
     code = TEMPLATE.replace("{{IMPORTS}}", import_block)
     code = code.replace("{{DIRECTION}}", direction)
