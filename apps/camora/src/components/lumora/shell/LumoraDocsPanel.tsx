@@ -1325,6 +1325,34 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                   );
                 })()}
 
+                {/* Architecture diagram — its own slot so it sits with the
+                    architecture discussion instead of falling through to the
+                    catch-all, which renders it dead last under a "Diagram Url"
+                    heading. The URL is DB-backed (/api/diagram/image/:hash), so
+                    it keeps resolving when a saved kit is reopened. */}
+                {typeof q.diagramUrl === 'string' && q.diagramUrl && (() => {
+                  qRendered.add('diagramUrl'); qRendered.add('diagramDescription');
+                  return (
+                    <div>
+                      <SectionHeading label="Architecture Diagram" color={LC.architecture} />
+                      <div className="rounded-lg p-3" style={paperCard(LC.architecture)}>
+                        <img
+                          src={q.diagramUrl}
+                          alt={`Architecture diagram for ${safeText(q.title || q.question || 'this design')}`}
+                          loading="lazy"
+                          className="max-w-full rounded-lg"
+                          style={{ border: '1px solid var(--border)' }}
+                        />
+                        {q.diagramDescription && (
+                          <p className="text-xs leading-relaxed mt-2 italic" style={{ color: 'var(--text-muted)' }}>
+                            {safeText(q.diagramDescription)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Architecture */}
                 {q.architecture && typeof q.architecture === 'object' && (() => {
                   qRendered.add('architecture');
