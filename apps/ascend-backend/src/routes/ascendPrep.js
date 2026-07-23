@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as ascendPrepService from '../services/ascendPrep.js';
 import { generatePDF, generateDOCX } from '../services/exportPrep.js';
-import * as pythonDiagrams from '../services/pythonDiagrams.js';
+import { generateDiagramsForQuestions } from '../services/prepDiagrams.js';
 import { verifyJWT } from '../middleware/jwtAuth.js';
 import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
@@ -173,70 +173,6 @@ async function checkFeatureAccess(req, res, featureType = 'design', companyName)
     res.end();
     return false;
   }
-}
-
-/**
- * Generate diagrams for system design questions
- */
-async function generateDiagramsForQuestions(result) {
-  console.log('[InterviewPrep] generateDiagramsForQuestions called');
-  console.log('[InterviewPrep] result?.questions:', !!result?.questions, 'count:', result?.questions?.length);
-  console.log('[InterviewPrep] pythonDiagrams.isConfigured():', pythonDiagrams.isConfigured());
-
-  if (!result?.questions || !pythonDiagrams.isConfigured()) {
-    console.log('[InterviewPrep] Skipping diagram generation - no questions or not configured');
-    return result;
-  }
-
-  // Generation sometimes returns questions as a JSON-string or wrapper object
-  // (e.g. `"[{...}]"` or `{ items: [...] }`). Normalize before mapping so we
-  // don't blow up with `.map is not a function` and bubble that error into
-  // the summary field.
-  let questions = result.questions;
-  if (typeof questions === 'string') {
-    try {
-      const parsed = JSON.parse(questions.trim());
-      questions = Array.isArray(parsed) ? parsed : (parsed?.items || parsed?.list || parsed?.questions);
-    } catch { /* leave as-is, guard below will skip */ }
-  } else if (questions && !Array.isArray(questions) && typeof questions === 'object') {
-    questions = questions.items || questions.list || questions.questions;
-  }
-  if (!Array.isArray(questions)) {
-    console.log('[InterviewPrep] Skipping diagram generation - questions is not an array (type:', typeof result.questions, ')');
-    return result;
-  }
-  result.questions = questions;
-
-  console.log('[InterviewPrep] Generating diagrams for system design questions...');
-
-  // Generate diagrams for each question in parallel
-  const diagramPromises = result.questions.map(async (question, idx) => {
-    try {
-      const diagramResult = await pythonDiagrams.generateDiagram({
-        question: question.title || question.question || `System Design ${idx + 1}`,
-        cloudProvider: 'auto',
-        difficulty: 'medium',
-        category: 'System Design',
-        format: 'png',
-        detailLevel: 'detailed'
-      });
-
-      if (diagramResult.success && diagramResult.image_url) {
-        // Use full URL for Electron (frontend runs on different port than backend)
-        const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
-        question.diagramUrl = `${backendUrl}${diagramResult.image_url}`;
-        question.diagramDescription = diagramResult.description || '';
-        console.log(`[InterviewPrep] Diagram generated for: ${question.title}`, question.diagramUrl);
-      }
-    } catch (err) {
-      console.error(`[InterviewPrep] Failed to generate diagram for question ${idx}:`, err.message);
-      // Keep ASCII as fallback if it exists
-    }
-    return question;
-  });
-
-  await Promise.all(diagramPromises);
-  return result;
 }
 
 // Stream all sections
