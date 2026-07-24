@@ -32,9 +32,12 @@ function fuse(lists, finalK) {
     .slice(0, finalK);
 }
 
-async function vecKb(vec, sourceFilter) {
-  const filterClause = sourceFilter ? ' WHERE source = ANY($3)' : '';
-  const params = sourceFilter ? [asVecLiteral(vec), VECTOR_TOP, sourceFilter] : [asVecLiteral(vec), VECTOR_TOP];
+async function vecKb(vec, sourceFilter, excludeSources) {
+  const params = [asVecLiteral(vec), VECTOR_TOP];
+  const clauses = [];
+  if (sourceFilter) { params.push(sourceFilter); clauses.push(`source = ANY($${params.length})`); }
+  if (excludeSources) { params.push(excludeSources); clauses.push(`source <> ALL($${params.length})`); }
+  const filterClause = clauses.length ? ` WHERE ${clauses.join(' AND ')}` : '';
   const r = await query(
     `SELECT id, source, topic_id, topic_title, section, content,
             metadata->>'url' AS url,
@@ -51,9 +54,11 @@ async function vecKb(vec, sourceFilter) {
     distance: Number(row.distance),
   }));
 }
-async function bm25Kb(question, sourceFilter) {
-  const filterClause = sourceFilter ? ' AND source = ANY($3)' : '';
-  const params = sourceFilter ? [question, BM25_TOP, sourceFilter] : [question, BM25_TOP];
+async function bm25Kb(question, sourceFilter, excludeSources) {
+  const params = [question, BM25_TOP];
+  let filterClause = '';
+  if (sourceFilter) { params.push(sourceFilter); filterClause += ` AND source = ANY($${params.length})`; }
+  if (excludeSources) { params.push(excludeSources); filterClause += ` AND source <> ALL($${params.length})`; }
   const r = await query(
     `SELECT id, source, topic_id, topic_title, section, content,
             metadata->>'url' AS url,
@@ -129,11 +134,27 @@ export async function embedQueryOrDegrade(question) {
 }
 
 export async function hybridSearchKb(question, finalK, opts = {}) {
+  // An EMPTY allow-list means "ground on nothing from the generic KB" — it is
+  // NOT the same as "no filter". Behavioral mode returns [] precisely so that
+  // answers ground only on the candidate's own resume/JD/stories; collapsing []
+  // to null inverted that into a full-KB search, which is how AMD ROCm/CI study
+  // content ended up inside personal behavioral answers ("I work at AMD", every
+  // question answered as CI/CD). Only null/undefined means unfiltered.
+  const hasAllowList = Array.isArray(opts.sourceFilter);
+  const sourceFilter = hasAllowList && opts.sourceFilter.length > 0 ? opts.sourceFilter : null;
+  if (hasAllowList && opts.sourceFilter.length === 0) return [];
+
+  const excludeSources = Array.isArray(opts.excludeSources) && opts.excludeSources.length > 0
+    ? opts.excludeSources
+    : null;
+
   const vec = opts.vec || await embedQueryOrDegrade(question);
-  const sourceFilter = (Array.isArray(opts.sourceFilter) && opts.sourceFilter.length > 0) ? opts.sourceFilter : null;
   const results = vec
-    ? await Promise.all([vecKb(vec, sourceFilter), bm25Kb(question, sourceFilter)])
-    : [[], await bm25Kb(question, sourceFilter)];
+    ? await Promise.all([
+        vecKb(vec, sourceFilter, excludeSources),
+        bm25Kb(question, sourceFilter, excludeSources),
+      ])
+    : [[], await bm25Kb(question, sourceFilter, excludeSources)];
   return fuse(results, finalK);
 }
 

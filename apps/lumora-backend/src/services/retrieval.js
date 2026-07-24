@@ -11,7 +11,7 @@
  * query has WHERE user_id = $1. Namespace bugs are tested.
  */
 import { hybridSearchKb, hybridSearchUserDocs, hybridSearchUserCode } from './hybridRetrieval.js';
-import { sourcesForMode } from './modeSourceFilter.js';
+import { sourcesForMode, excludedSourcesForMode } from './modeSourceFilter.js';
 import { gradeChunks } from './chunkGrader.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
@@ -58,6 +58,9 @@ export async function retrieve(opts) {
   const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank, useWarmKit, mode } = opts;
   const t0 = performance.now();
   const sourceFilter = sourcesForMode(mode);
+  // Company-specific study decks are reachable only via their own explicit mode.
+  // Empty when an allow-list already exists — it cannot reach them anyway.
+  const excludeSources = excludedSourcesForMode(mode);
 
   let timer;
   const timeout = new Promise((resolve) => {
@@ -80,6 +83,12 @@ export async function retrieve(opts) {
         if (sourceFilter) {
           const allowed = new Set(sourceFilter);
           kitChunks = kitChunks.filter((c) => c.tier === 'user' || allowed.has(c.source));
+        } else if (excludeSources.length) {
+          // No allow-list (general mode) — still subtract the study-only decks,
+          // otherwise a warm kit reintroduces exactly what the live path now
+          // excludes and the leak survives in cached form.
+          const denied = new Set(excludeSources);
+          kitChunks = kitChunks.filter((c) => c.tier === 'user' || !denied.has(c.source));
         }
         // If gating left nothing usable, fall through to live retrieval
         // rather than returning an empty kit.
@@ -110,7 +119,7 @@ export async function retrieve(opts) {
     const vec = await embedQueryOrDegrade(queryForEmbed);
     const kbTop = willRerank ? KB_TOP_K_WIDE : KB_TOP_K_NARROW;
     const userTop = willRerank ? USER_TOP_K_WIDE : USER_TOP_K_NARROW;
-    const promises = [hybridSearchKb(question, kbTop, { vec, sourceFilter })];
+    const promises = [hybridSearchKb(question, kbTop, { vec, sourceFilter, excludeSources })];
     if (userId) promises.push(hybridSearchUserDocs(userId, question, userTop, { vec }));
     // Per-user code kit: only relevant for coding/sql modes (or general,
     // since coding follow-ups can come up in any chat). Keep CODE_TOP_K
