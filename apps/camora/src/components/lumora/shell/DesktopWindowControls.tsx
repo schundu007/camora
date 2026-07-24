@@ -100,8 +100,21 @@ export function DesktopWindowControls() {
         className="desktop-winctl__toggle"
         onClick={() => toggleOverlayMode()}
         data-tip={overlay ? 'Dock the window (⌘⇧O)' : 'Float over the meeting (⌘⇧O)'}
+        aria-label={overlay ? 'Dock the window' : 'Float over the meeting'}
       >
-        {overlay ? 'Dock' : 'Overlay'}
+        {overlay ? (
+          /* Dock — collapse the floating panel back into the docked shell. */
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M3 15h18" />
+          </svg>
+        ) : (
+          /* Overlay — float a small panel over the meeting (picture-in-picture). */
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <rect x="12" y="12" width="7" height="5" rx="1" fill="currentColor" stroke="none" />
+          </svg>
+        )}
       </button>
       <button
         type="button"

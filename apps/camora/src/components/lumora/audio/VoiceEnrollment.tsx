@@ -13,9 +13,11 @@ let filterRestoredThisSession = false;
 interface VoiceEnrollmentProps {
   disabled?: boolean;
   variant?: 'dark' | 'light';
+  /** Collapse the "Enroll My Voice" chip to a single human+voice icon (toolbar use). */
+  iconOnly?: boolean;
 }
 
-export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentProps) => {
+export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }: VoiceEnrollmentProps) => {
   const isLight = variant === 'light';
   const { token } = useAuth();
   const { selectedDeviceId } = useAudioDevices();
@@ -177,12 +179,18 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
   }, [voiceFilterEnabled, setVoiceFilterEnabled, setStatus]);
 
   if (!voiceEnrolled) {
+    const enrollTip = isRecording
+      ? `Recording your voice... ${Math.round(recordingProgress)}%`
+      : isEnrolling
+        ? 'Processing your voice profile...'
+        : 'Enroll My Voice — record 5 s so the app can filter it during sessions';
     return (
       <div className="flex flex-col gap-2 shrink-0">
         <button
           onClick={handleEnroll}
           disabled={isEnrolling || disabled}
-          className="flex items-center justify-center gap-2 h-8 px-3 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
+          aria-label={isRecording ? 'Recording voice' : isEnrolling ? 'Processing voice' : 'Enroll my voice'}
+          className={`flex items-center justify-center gap-2 h-8 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0 ${iconOnly ? 'w-8 px-0' : 'px-3'}`}
           style={isLight ? {
             fontSize: '12px',
             color: '#ffffff',
@@ -194,22 +202,22 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
             background: isRecording ? 'var(--accent-subtle)' : 'transparent',
             border: '1px solid var(--border)',
           }}
-          data-tip="Record 5 s of your voice — the app will learn to filter it during sessions"
+          data-tip={enrollTip}
         >
           {isRecording ? (
             <>
               <RecordingIcon />
-              <span>Recording... {Math.round(recordingProgress)}%</span>
+              {!iconOnly && <span>Recording... {Math.round(recordingProgress)}%</span>}
             </>
           ) : isEnrolling ? (
             <>
               <Spinner />
-              <span>Processing...</span>
+              {!iconOnly && <span>Processing...</span>}
             </>
           ) : (
             <>
-              <VoiceIcon />
-              <span>Enroll My Voice</span>
+              <PersonVoiceIcon />
+              {!iconOnly && <span>Enroll My Voice</span>}
             </>
           )}
         </button>
@@ -271,6 +279,19 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark' }: VoiceEnrollmentP
         {isLight ? 'Remove Enrollment' : <XIcon />}
       </button>
     </div>
+  );
+}
+
+// Human + voice: a person's head/shoulders with sound waves radiating out —
+// signals "enroll YOUR voice" in a single glyph for the compact toolbar chip.
+const PersonVoiceIcon = () => {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <circle cx="9" cy="7" r="3.2" />
+      <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
+      <path d="M17.5 8.5a4 4 0 0 1 0 7" />
+      <path d="M20 6a7 7 0 0 1 0 12" />
+    </svg>
   );
 }
 
