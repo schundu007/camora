@@ -1573,7 +1573,17 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         return resp.json();
       }));
       const valid = results.filter(Boolean);
-      if (!valid.length) throw new Error('Could not extract problem from screenshots — try a clearer screenshot');
+      if (!valid.length) {
+        // fromImageSnap distinguishes the real Image tab (user chose a screenshot)
+        // from the URL/auto fallback (backend couldn't scrape, so we silently
+        // screenshotted the browser). "Try a clearer screenshot" is nonsense to
+        // someone who typed a URL — give them the action that actually works.
+        throw new Error(
+          fromImageSnap
+            ? 'Could not extract problem from screenshots — try a clearer screenshot'
+            : "Couldn't read the problem from that page automatically. Paste the problem text into the box above, or make sure the coding tab is open and fully visible, then Fetch again.",
+        );
+      }
       const combinedText = valid.map(r => String(r.problem || '').trim()).filter(Boolean).join('\n\n');
       const extractedStarterCode = valid.map(r => r.starter_code).find(Boolean) || null;
       const detectedLang: string | null = valid.map(r => r.detected_language).find(Boolean) || null;
@@ -2457,7 +2467,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                           </div>
                           {(window as any).camo?.fetchHackerrankNow && (
                             <p className="text-center text-xs opacity-50 py-1">
-                              HackerRank detected automatically — no action needed
+                              Desktop app detected — your open coding tab is captured automatically (HackerRank, LeetCode, CoderPad & more)
                             </p>
                           )}
                         </div>
