@@ -3,7 +3,7 @@ import { setStoredToken } from '../utils/tokenStore';
 import { setStoredUserId } from '../utils/userStore';
 import { clearAllPrepCaches, purgeLegacyGlobalPrep } from '../lib/prepStorage';
 import { clearAllUserScopedStores } from '../lib/userScopedStorage';
-import { isOwnerEmail } from '../lib/owner';
+import { isOwner } from '../lib/owner';
 
 const CAPRA_API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 // Auth + billing-subscription must call the SAME backend that mints the cookie
@@ -329,20 +329,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSubscriptionLoading(false);
   }, []);
 
-  // Fetch on token availability. Owner emails (configured in src/lib/owner.ts
-  // via VITE_OWNER_EMAILS or the founder fallback) skip the network call and
-  // get an 'admin' plan synthesized in-memory — so the project owner is never
-  // paywalled out of their own product when a comp/admin DB row is missing
-  // or the billing endpoint hiccups.
+  // Fetch on token availability. Admins — either DB-flagged (user.is_admin
+  // from the JWT) or listed in VITE_OWNER_EMAILS — skip the network call and
+  // get an 'admin' plan synthesized in-memory, so no admin is ever paywalled
+  // out of their own product (e.g. the desktop download) when a comp/admin DB
+  // row is missing or the billing endpoint hiccups. Uses isOwner() so the DB
+  // is_admin flag counts, not just the owner-email allowlist.
   useEffect(() => {
     if (!token) { setSubscriptionLoading(false); setSubscription({ plan: 'free' }); return; }
-    if (isOwnerEmail(user?.email)) {
+    if (isOwner(user)) {
       setSubscription({ plan: 'admin', status: 'active' });
       setSubscriptionLoading(false);
       return;
     }
     fetchSubscription(token);
-  }, [token, user?.email, fetchSubscription]);
+  }, [token, user?.email, user?.is_admin, fetchSubscription]);
 
   // Refresh subscription after Stripe checkout return (URL contains session_id or checkout=success)
   useEffect(() => {
