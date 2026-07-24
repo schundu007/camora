@@ -75,17 +75,41 @@ const isLikelyRealSpeech = (raw: string): boolean  => {
   if (!text) return false;
   if (text.includes('[object Object]')) return false;
   const allWords = text.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z]/g, '')).filter(w => w.length > 1);
+  // Repetition heuristics MIRROR apps/lumora-backend/src/services/hallucinationFilter.js
+  // (isDecoderLoop + the trigram coverage rule). That file is the SOURCE OF TRUTH and
+  // carries the unit tests; keep the two in step.
+  //
+  // This used to count every word of 2+ characters and reject the chunk as soon as any
+  // word hit 4 occurrences — so "the" / "to" / "and" in any utterance long enough to be
+  // a behavioral question killed it before it reached the accumulator. A stuck decoder
+  // repeats a CONTENT word CONSECUTIVELY; a speaker repeats function words constantly,
+  // and spreads the topic word out. Adjacency separates them; raw frequency does not.
   if (allWords.length > 0) {
-    const freq: Record<string, number> = {};
-    for (const w of allWords) freq[w] = (freq[w] || 0) + 1;
-    if (Math.max(...Object.values(freq)) >= 4) return false;
+    const content = allWords.filter(w => w.length > 2 && !COMMON_EN.has(w));
+    let longestRun = 1;
+    let run = 1;
+    for (let i = 1; i < content.length; i++) {
+      run = content[i] === content[i - 1] ? run + 1 : 1;
+      if (run > longestRun) longestRun = run;
+    }
+    if (longestRun >= 4) return false;
+    if (content.length) {
+      const freq: Record<string, number> = {};
+      for (const w of content) freq[w] = (freq[w] || 0) + 1;
+      const maxRepeat = Math.max(...Object.values(freq));
+      // Near-total dominance is a loop; mere recurrence is a speaker on topic.
+      if (maxRepeat >= 4 && maxRepeat / content.length >= 0.6) return false;
+    }
+    // A phrase loop IS the whole transcript. An incidental repeated trigram in a
+    // longer real question is not, so test coverage rather than occurrence count.
     if (allWords.length >= 6) {
-      const seen = new Set<string>();
+      const counts = new Map<string, number>();
       for (let i = 0; i <= allWords.length - 3; i++) {
         const tg = `${allWords[i]} ${allWords[i+1]} ${allWords[i+2]}`;
-        if (seen.has(tg)) return false;
-        seen.add(tg);
+        counts.set(tg, (counts.get(tg) || 0) + 1);
       }
+      const maxCount = Math.max(...counts.values());
+      if (maxCount >= 2 && (maxCount * 3) / allWords.length >= 0.6) return false;
     }
   }
   // Any CJK character = Whisper hallucinating slide/screen content.

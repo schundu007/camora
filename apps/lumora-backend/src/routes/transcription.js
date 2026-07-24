@@ -10,6 +10,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { authenticate } from '../middleware/authenticate.js';
 import { transcribe } from '../services/transcription.js';
+import { classifyTranscript } from '../services/hallucinationFilter.js';
 import { checkLimit, incrementUsage } from '../services/usage.js';
 import { recordUsage } from '../services/aiHoursMeter.js';
 
@@ -216,91 +217,24 @@ router.post(
       const latencyMs = Math.round(performance.now() - start);
 
       // Filter Whisper hallucinations (phantom text on silence/low audio).
-      // Whisper trained on YouTube falls back to outros/outtros on silence
-      // ("thanks for watching", "subscribe"), single short foreign tokens
-      // ("lanja", "uh", isolated kana/cyrillic chars), or generic ack words
-      // ("okay", "you"). These never reflect a real interview question,
-      // and letting them through pollutes the QUESTIONS panel + wastes an
-      // LLM call. The frontend has a parallel filter in AudioCapture.tsx
-      // (isLikelyRealSpeech) for defense in depth — if either side drops
-      // the chunk, it never reaches the accumulator.
-      const HALLUCINATION_PATTERNS = [
-        /^thank(s| you)?\s*(for)?\s*(watching|listening|viewing|tuning in)/i,
-        /^(please\s+)?(like\s+and\s+)?subscribe/i,
-        /^(bye|goodbye|see you)\s*(next time|later|soon)?\.?$/i,
-        /^(okay|ok|alright|all right)\.?\s*$/i,
-        /^(yeah|yep|yup|nah|nope|uh|um|hmm|huh)\.?\s*$/i,
-        /^you\.?$/i,
-        /^thanks\.?$/i,
-        /^thank you( so much| very much)?\.?$/i,
-        /^(see you|see ya|cya|goodnight|good night)\.?$/i,
-        /^\.+$/,
-        /^[\s.,!?-]+$/,                  // pure punctuation
-        /^(\s*thank you\.?\s*)+$/i,
-        /^\s*$/,
-      ];
-      // De-dupe Whisper's duplicate-phrase artifact ("What is Bazel? What is
-      // Bazel?") BEFORE filtering. Whisper routinely stutters a REAL question
-      // on short audio; the repetition filter below would otherwise discard the
-      // whole question. Collapse consecutive duplicate sentences + immediately
-      // repeated phrases. A pure single-word loop ("Marvin Marvin Marvin")
-      // collapses to one word and is then caught by the short-noise filter, so
-      // genuine garbage still dies — but real stuttered questions survive.
-      const dedupeRepeats = (t) => {
-        if (!t) return t;
-        const sentences = t.split(/(?<=[.?!])\s+/);
-        const kept = [];
-        for (const s of sentences) {
-          const norm = s.trim().toLowerCase().replace(/[.?!,]+$/, '');
-          if (!norm) continue;
-          if (kept.length && kept[kept.length - 1].norm === norm) continue;
-          kept.push({ raw: s.trim(), norm });
-        }
-        let out = kept.map((s) => s.raw).join(' ') || t.trim();
-        out = out.replace(/(.{3,60}?)(?:[,\s]+\1)+/gi, '$1');
-        return out.trim();
-      };
-      const trimmed = dedupeRepeats(rawText.trim());
-      const isHallucinationByPattern = HALLUCINATION_PATTERNS.some(p => p.test(trimmed));
+      // Whisper trained on YouTube falls back to outros ("thanks for watching",
+      // "subscribe"), single short foreign tokens, or generic ack words on
+      // silence. These never reflect a real interview question, and letting them
+      // through pollutes the QUESTIONS panel + wastes an LLM call.
+      //
+      // Heuristics live in services/hallucinationFilter.js so they are unit
+      // tested (tests/hallucinationFilter.test.js). They used to be inline here,
+      // which is how a stopword bug went unnoticed: counting every word over two
+      // characters meant "the" appearing 4x marked the chunk a decoder loop, so
+      // every interviewer utterance long enough to be a behavioral question was
+      // silently discarded.
+      //
+      // The frontend has a parallel filter in AudioCapture.tsx
+      // (isLikelyRealSpeech) for defense in depth.
+      const { filtered, text: trimmed, reasons } = classifyTranscript(rawText);
 
-      // Single short token without punctuation is almost always
-      // hallucination — Whisper picking a random word out of silence
-      // / room noise. A real interview question is at least a few
-      // words; a one-word follow-up like "really?" carries punctuation
-      // and gets through the regex above.
-      const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
-      const hasTerminalPunct = /[?!.]$/.test(trimmed);
-      const isShortNoise = wordCount <= 1 && trimmed.length < 14 && !hasTerminalPunct;
-
-      // Repetition hallucination: Whisper locks onto a single word/name from
-      // silence and repeats it many times ("Marvin, Marvin, are you there
-      // Marvin?"). Any word appearing 4+ times in the transcript is a loop.
-      const allWords = trimmed.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z]/g, '')).filter(w => w.length > 2);
-      const wordFreq = {};
-      for (const w of allWords) wordFreq[w] = (wordFreq[w] || 0) + 1;
-      const maxRepeat = allWords.length ? Math.max(...Object.values(wordFreq)) : 0;
-      const isWordRepetition = maxRepeat >= 4;
-      // Trigram repetition: "tell me about yourself tell me about yourself"
-      // has max word freq = 2 (passes the word check) but repeats a phrase.
-      let isTrigramRepetition = false;
-      if (allWords.length >= 6) {
-        const seen = new Set();
-        for (let i = 0; i <= allWords.length - 3; i++) {
-          const tg = `${allWords[i]} ${allWords[i+1]} ${allWords[i+2]}`;
-          if (seen.has(tg)) { isTrigramRepetition = true; break; }
-          seen.add(tg);
-        }
-      }
-      const isRepetitionHallucination = isWordRepetition || isTrigramRepetition;
-
-      // Foreign-language hallucination: despite language:'en', Whisper sometimes
-      // produces German/Japanese/etc. on background noise. Reject if non-ASCII
-      // characters make up more than 8% of the text.
-      const nonAsciiCount = (trimmed.match(/[^\x00-\x7F]/g) || []).length;
-      const isForeignHallucination = trimmed.length > 0 && (nonAsciiCount / trimmed.length) > 0.08;
-
-      if (isHallucinationByPattern || isShortNoise || isRepetitionHallucination || isForeignHallucination) {
-        console.info(`[Whisper] Filtered hallucination: "${trimmed.slice(0, 80)}" (pattern=${isHallucinationByPattern}, shortNoise=${isShortNoise}, repeat=${isRepetitionHallucination}, foreign=${isForeignHallucination})`);
+      if (filtered) {
+        console.info(`[Whisper] Filtered hallucination: "${trimmed.slice(0, 80)}" (pattern=${reasons.pattern}, shortNoise=${reasons.shortNoise}, repeat=${reasons.repeat}, foreign=${reasons.foreign})`);
         return res.json({ text: '', latency_ms: latencyMs, skipped: true, reason: 'hallucination_filtered' });
       }
 
