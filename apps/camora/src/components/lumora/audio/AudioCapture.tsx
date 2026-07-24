@@ -344,10 +344,14 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // know to resume it once the Ask finishes. LISTENING and Ask are mutually
   // exclusive: only one source feeds Sona at a time.
   const speakerPausedForAskRef = useRef(false);
-  // Always-on candidate-mic level (behavioral, when not mid-Ask). Feeds the
-  // meter so talking into your OWN mic moves the bars during LIVE — the
-  // recorder's mic analyser is stopped then, so this is the only mic reading.
-  const micLevel = useMicLevel(!!locked && active !== false && recordingModeUI !== 'manual');
+  // Candidate-mic level for the meter, ONLY while the AUTO listen loop is
+  // actually running. The gate used to be `recordingModeUI !== 'manual'`, which
+  // is also true when LIVE is OFF (mode 'idle') — so this opened getUserMedia
+  // and metered the mic with both LIVE and Ask off, lighting the signal bars
+  // (and turning on the OS mic indicator) when Sona wasn't listening at all.
+  // 'auto' means the candidate-mic loop owns the mic; during speaker-stream LIVE
+  // the meter reads speakerLevel instead, and while Asking the recorder owns it.
+  const micLevel = useMicLevel(!!locked && active !== false && recordingModeUI === 'auto');
 
   // Accumulated transcription text for Live mode (chunks build up a full question)
   const accumulatedTextRef = useRef('');
@@ -1337,10 +1341,15 @@ const UnifiedMicButton = ({
   // interviewer stream when LIVE drives it (loopback/tab/virtual mic), the
   // candidate mic while you're asking a question. Without this the bars sat
   // flat during LIVE because they only ever read the (idle) candidate mic.
-  const meterLevel = Math.max(
-    micLevel,
-    isAsking ? audioLevel : (liveControlsSpeaker && speakerActive ? speakerLevel : audioLevel),
-  );
+  // The signal bars must be FLAT whenever Sona isn't capturing — otherwise the
+  // meter reads ambient sound with LIVE and Ask both off and looks like it's
+  // secretly listening. Only show a level when actually listening or asking.
+  const meterLevel = (!listenOn && !isAsking)
+    ? 0
+    : Math.max(
+        micLevel,
+        isAsking ? audioLevel : (liveControlsSpeaker && speakerActive ? speakerLevel : audioLevel),
+      );
   const listenTip = locked
     ? (liveControlsSpeaker
         ? (listenOn
