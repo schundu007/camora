@@ -17,10 +17,14 @@ const OAUTH_STATE_COOKIE = 'cariara_oauth_state';
 const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000; // 10 min — covers slow user
 const OAUTH_STATE_MAX_AGE_SEC = 600;
 
-// Desktop OAuth PKCE: one-time exchange code TTL (60 seconds — user completes
-// the system browser flow quickly, then Electron exchanges immediately)
-const DESKTOP_EXCHANGE_CODE_TTL_SEC = 60;
+// Desktop OAuth PKCE: exchange record TTL. 180s (was 60) so the poll fallback
+// has a window to pick up the result even if the user is slow in the browser.
+const DESKTOP_EXCHANGE_CODE_TTL_SEC = 180;
 const DESKTOP_EXCHANGE_CODE_PREFIX = 'desktop_xchg:';
+// Poll fallback: the same exchange record keyed by desktop state, so the app
+// can retrieve the JWT by polling with {state, verifier} when the camora://
+// deep link never fires (unreliable protocol handoff on some Windows setups).
+const DESKTOP_EXCHANGE_STATE_PREFIX = 'desktop_xchg_state:';
 
 function safeEq(a, b) {
   const ab = Buffer.from(String(a || ''));
@@ -379,6 +383,16 @@ router.get('/google/callback', async (req, res) => {
 
       try {
         await cacheSet(exchangeKey, exchangeData, DESKTOP_EXCHANGE_CODE_TTL_SEC);
+        // Also key by desktop state so the app's poll fallback can retrieve the
+        // result without the camora:// deep link. Best-effort — the deep-link
+        // path still works if this write fails.
+        if (desktopMetadata?.state) {
+          await cacheSet(
+            `${DESKTOP_EXCHANGE_STATE_PREFIX}${desktopMetadata.state}`,
+            exchangeData,
+            DESKTOP_EXCHANGE_CODE_TTL_SEC
+          );
+        }
       } catch (err) {
         logger.error({ error: err.message }, '[oauth-desktop] Failed to store exchange code');
         return res.status(500).send('Exchange code storage failed');
@@ -485,27 +499,20 @@ router.get('/google/callback', async (req, res) => {
             <h1>Almost there</h1>
             <p>Signed in as <strong>${esc(gUser.email)}</strong></p>
             <p>Click below to return to the Camora desktop app.</p>
-            <button id="return-btn" class="button" data-url="${esc(fallbackUrl)}" autofocus onclick="window.location=this.dataset.url">
-              Open Camora Desktop
-            </button>
+            <!--
+              MUST be a plain <a href>, not a <button onclick> or inline <script>.
+              The backend sets a strict CSP (script-src 'self'; script-src-attr
+              'none'), so ANY inline JS or inline event handler is blocked — that
+              is exactly why the old button "couldn't be clicked" and the auto-
+              redirect never fired. A normal anchor navigation needs no script, so
+              CSP allows it and clicking reliably launches the camora:// handler.
+            -->
+            <a class="button" href="${esc(deepLink)}">Open Camora Desktop</a>
             <div class="info">
               When your browser asks “Open Camora?”, choose <strong>Open</strong>.
               Keep the Camora app running. You can close this tab afterward.
             </div>
           </div>
-          <script>
-            // Modern Chrome/Edge BLOCK a gesture-less navigation to a custom
-            // scheme (camora://) on page load — the old auto-redirect silently
-            // failed and left users staring at a spinner, so they re-tried and
-            // looped. A real click IS a user gesture the browser honors, so the
-            // primary path is now the button. We still fire one best-effort
-            // auto-attempt (works in browsers that allow it) but never rely on it.
-            var DEEP_LINK = ${JSON.stringify(deepLink)};
-            try { window.location = DEEP_LINK; } catch (e) {}
-            // Auto-focus the button so Enter/Space also triggers the launch.
-            var b = document.getElementById('return-btn');
-            if (b) b.focus();
-          </script>
         </body>
         </html>
       `);
@@ -635,6 +642,62 @@ router.post('/desktop/exchange', authLimiter, async (req, res) => {
       error: 'Exchange failed',
       code: 'EXCHANGE_FAILED',
     });
+  }
+});
+/**
+ * POST /api/auth/desktop/poll — protocol-free completion for desktop login.
+ *
+ * The camora:// deep link is unreliable on some Windows setups (the OS never
+ * launches the handler, so the app never exchanges the code). Instead the app
+ * polls this endpoint with the state + PKCE verifier it generated at login.
+ * While the browser flow hasn't finished, we return { pending: true }. Once the
+ * callback has stored the result under the state key, we verify the verifier
+ * against the bound challenge (same PKCE guarantee as /exchange) and return the
+ * JWT. One-time: the record is deleted on success.
+ *
+ * Request body: { state: string, verifier: string }
+ * Response: { pending: true } | { access_token, email, picture, name } | 401
+ */
+router.post('/desktop/poll', authLimiter, async (req, res) => {
+  const { state, verifier } = req.body;
+  if (!state || typeof state !== 'string' || state.length > 100) {
+    return res.status(400).json({ error: 'Invalid state', code: 'INVALID_STATE' });
+  }
+  if (!verifier || typeof verifier !== 'string' || verifier.length < 30 || verifier.length > 200) {
+    return res.status(400).json({ error: 'Invalid PKCE verifier', code: 'INVALID_VERIFIER' });
+  }
+
+  try {
+    const stateKey = `${DESKTOP_EXCHANGE_STATE_PREFIX}${state}`;
+    const storedData = await cacheGet(stateKey);
+    // Not done yet — the browser hasn't completed the callback. Keep polling.
+    if (!storedData) {
+      return res.json({ pending: true });
+    }
+
+    const exchangeData = JSON.parse(storedData);
+    const { access_token: storedJwt, email, picture, name } = exchangeData;
+    if (!storedJwt) {
+      return res.status(500).json({ error: 'Exchange data corrupted', code: 'CORRUPTED_DATA' });
+    }
+
+    // Same PKCE check as /exchange: sha256(verifier) must equal the bound
+    // challenge. Fail closed on mismatch OR a missing challenge.
+    const computedChallenge = createHash('sha256').update(verifier).digest('base64url');
+    if (!exchangeData.pkce_challenge || !safeEq(computedChallenge, exchangeData.pkce_challenge)) {
+      logger.warn({ ip: req.ip, email }, '[oauth-desktop] poll PKCE verification failed');
+      return res.status(401).json({ error: 'PKCE verification failed', code: 'PKCE_MISMATCH' });
+    }
+
+    // One-time use: delete only after PKCE passes so a wrong verifier can't
+    // consume the record. The code-keyed record expires on its own TTL.
+    try { await cacheDel(stateKey); } catch { /* best-effort */ }
+
+    logger.info({ ip: req.ip, email }, '[oauth-desktop] poll completed successfully');
+    return res.json({ access_token: storedJwt, email, picture, name });
+  } catch (err) {
+    logger.error({ error: err.message }, '[oauth-desktop] poll failed');
+    return res.status(500).json({ error: 'Poll failed', code: 'POLL_FAILED' });
   }
 });
 router.post('/refresh', authLimiter, async (req, res) => {
