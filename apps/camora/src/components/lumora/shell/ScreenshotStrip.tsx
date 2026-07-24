@@ -382,11 +382,10 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             disabled={!sonaHasMessages}
             data-tip="Reset — clear this interview's Q&A"
             aria-label="Reset interview"
-            className="flex items-center gap-1 px-2 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] disabled:opacity-35 disabled:cursor-not-allowed"
+            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] disabled:opacity-35 disabled:cursor-not-allowed"
             style={{ color: 'var(--cam-strip-text)' }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
-            <span className="text-[10px] font-bold uppercase tracking-wider">Reset</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
           </button>
           <button
             onClick={sonaClose ?? undefined}
