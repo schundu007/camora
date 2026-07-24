@@ -336,17 +336,16 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             <button
               key={mode}
               onClick={() => setAnswerMode(mode)}
-              className="h-6 px-2.5 rounded-md transition-[background-color,color]"
+              data-tip={mode === 'short' ? 'Short — concise bullet points' : 'Detailed — comprehensive explanations'}
+              aria-label={mode === 'short' ? 'Short answers' : 'Detailed answers'}
+              aria-pressed={answerMode === mode}
+              className="flex items-center justify-center w-6 h-6 rounded-md transition-[background-color,color]"
               style={{
-                fontSize: '10px',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
                 color: answerMode === mode ? 'var(--cam-chip-active-text)' : 'var(--cam-strip-text)',
                 background: answerMode === mode ? 'var(--cam-chip-active-bg)' : 'transparent',
               }}
             >
-              {mode === 'short' ? 'Short' : 'Detailed'}
+              {mode === 'short' ? <ShortIcon /> : <DetailedIcon />}
             </button>
           ))}
         </div>
@@ -403,7 +402,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         </div>
       )}
 
-      {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" />}
+      {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" iconOnly />}
       {/* Trailing spacer — pairs with the flex-1 above so the behavioral chip
           cluster sits CENTERED in the strip instead of pinned under the fixed
           top-right window controls (Dock/−/✕). lumora-winctl-safe on the root
@@ -415,3 +414,20 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
     </div>
   );
 }
+
+// Short answers — a single terse line over a blank one (a brief, clipped reply).
+const ShortIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+    <path d="M5 9h14" />
+    <path d="M5 15h6" />
+  </svg>
+);
+
+// Detailed answers — full stacked lines (a long, comprehensive reply).
+const DetailedIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+    <path d="M4 7h16" />
+    <path d="M4 12h16" />
+    <path d="M4 17h11" />
+  </svg>
+);
