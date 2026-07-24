@@ -107,9 +107,15 @@ export const AudioSetupWizard = ({
     };
   }, [prefs, token]);
   const [inputs, setInputs] = useState<DeviceInfo[]>([]);
-  const [outputs, setOutputs] = useState<DeviceInfo[]>([]);
   const [micLevel, setMicLevel] = useState(0);
   const [speakerTestPlaying, setSpeakerTestPlaying] = useState(false);
+  // Virtual-loopback and room-mic are power-user paths (need a driver install or
+  // voice enrollment), so they live behind an "Advanced" toggle to keep the
+  // everyday choice to auto / desktop / tab / mic-only. Start expanded if the
+  // saved method is one of them, so the user can still see their selection.
+  const [showAdvancedMethods, setShowAdvancedMethods] = useState(
+    () => prefs.captureMethod === 'virtual-mic' || prefs.captureMethod === 'room-mic',
+  );
   const [permissionGranted, setPermissionGranted] = useState(false);
   // sessionDismissed must be STATE — using a ref meant the dismiss
   // handler set the value but never triggered a re-render, so the
@@ -270,15 +276,6 @@ export const AudioSetupWizard = ({
         .map((d, i) => ({
           deviceId: d.deviceId,
           label: d.label || (d.deviceId === 'default' ? 'Default microphone' : `Microphone ${i + 1}`),
-          groupId: d.groupId,
-        })),
-    );
-    setOutputs(
-      devs
-        .filter((d) => d.kind === 'audiooutput')
-        .map((d, i) => ({
-          deviceId: d.deviceId,
-          label: d.label || (d.deviceId === 'default' ? 'Default speakers' : `Speakers ${i + 1}`),
           groupId: d.groupId,
         })),
     );
@@ -480,12 +477,9 @@ export const AudioSetupWizard = ({
       const wav = audioBufferToWavBlob(buf);
       audio.src = URL.createObjectURL(wav);
       audioElRef.current = audio;
-      // Apply chosen output device (Chrome/Edge)
-      if (prefs.speakerDeviceId && (audio as any).setSinkId) {
-        try { await (audio as any).setSinkId(prefs.speakerDeviceId); } catch (err) {
-          console.warn('[AudioWizard] setSinkId failed', err);
-        }
-      }
+      // Plays through the OS default output. Per-device routing (setSinkId)
+      // was removed along with the output-device picker — it only mattered
+      // for choosing a speaker, which has no effect on the interview.
       setSpeakerTestPlaying(true);
       audio.onended = () => {
         setSpeakerTestPlaying(false);
@@ -503,12 +497,11 @@ export const AudioSetupWizard = ({
       console.error('[AudioWizard] sound test failed', err);
       setSpeakerTestPlaying(false);
     }
-  }, [prefs.speakerDeviceId, speakerTestPlaying]);
+  }, [speakerTestPlaying]);
 
   /* ── method controls ───────────────────────────────────────────── */
   const setMethod = (m: CaptureMethod) => setPrefs((p) => patchAudioPrefs({ ...p, captureMethod: m }));
   const setMic = (id: string) => setPrefs((p) => patchAudioPrefs({ ...p, micDeviceId: id }));
-  const setSpeaker = (id: string) => setPrefs((p) => patchAudioPrefs({ ...p, speakerDeviceId: id }));
   const setVirtualMic = (id: string) => setPrefs((p) => patchAudioPrefs({ ...p, virtualMicDeviceId: id }));
 
   /* ── connect speaker audio (delegates to provider) ────────── */
@@ -658,37 +651,23 @@ export const AudioSetupWizard = ({
           </Section>
 
           {/* ── Speakers / headphones ───────────────────────── */}
+          {/* Output-DEVICE selection was removed: Sona has no audio output, so
+              routing to a specific speaker had zero effect on the interview.
+              The one useful thing here is confirming you can hear at all and
+              the headphones tip, so we keep a default-output "Test sound". */}
           <Section
             num={2}
             title="Your speakers"
-            subtitle="Where Sona's audio cues play (and what you hear during the call). Use headphones to keep the speaker's voice from leaking back into your mic."
+            subtitle="Use headphones to keep the speaker's voice from leaking back into your mic. Play a test tone to confirm your output works."
           >
-            <div className="flex gap-2">
-              <select
-                value={prefs.speakerDeviceId || ''}
-                onChange={(e) => setSpeaker(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg text-sm"
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              >
-                <option value="">System default</option>
-                {outputs.map((d) => (
-                  <option key={d.deviceId} value={d.deviceId}>{d.label}</option>
-                ))}
-              </select>
-              <button
-                onClick={playSoundTest}
-                disabled={speakerTestPlaying}
-                className="px-4 py-2 text-xs font-bold rounded-lg disabled:opacity-60"
-                style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
-              >
-                {speakerTestPlaying ? '♪ Playing' : 'Test sound'}
-              </button>
-            </div>
-            {outputs.length === 0 && (
-              <div className="text-[11px] mt-1" style={{ color: 'var(--text-secondary)' }}>
-                Output device selection requires Chrome or Edge (setSinkId). On Safari/Firefox, sound plays through your OS default.
-              </div>
-            )}
+            <button
+              onClick={playSoundTest}
+              disabled={speakerTestPlaying}
+              className="px-4 py-2 text-xs font-bold rounded-lg disabled:opacity-60"
+              style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
+            >
+              {speakerTestPlaying ? '♪ Playing' : 'Test sound'}
+            </button>
           </Section>
 
           {/* ── Speaker audio method ────────────────────── */}
@@ -726,28 +705,6 @@ export const AudioSetupWizard = ({
                 disabledNote={!supportsTabShare() ? 'Requires Chrome or Edge.' : undefined}
               />
               <MethodCard
-                value="virtual-mic"
-                current={prefs.captureMethod}
-                onPick={setMethod}
-                title="Virtual loopback"
-                desc="Route your call's audio to a virtual mic (BlackHole, VoiceMeeter, Loopback) and pick it below."
-                badge={detectedVirtualMic ? 'detected' : undefined}
-              />
-              <MethodCard
-                value="room-mic"
-                current={prefs.captureMethod}
-                onPick={setMethod}
-                title="Room mic (any speaker)"
-                desc="Captures the speaker's voice through your laptop mic. Works with Bluetooth speakers (JBL, Jabra), wired speakers, phone-on-speaker — anything audible."
-                badge={voiceEnrolled && voiceFilterEnabled ? 'voice filter ✓' : 'needs voice enrollment'}
-                disabled={!voiceEnrolled || !voiceFilterEnabled}
-                disabledNote={!voiceEnrolled
-                  ? 'Enroll your voice first so the backend can subtract you from the room ambient.'
-                  : !voiceFilterEnabled
-                    ? 'Turn voice filter on so Sona ignores your own voice.'
-                    : undefined}
-              />
-              <MethodCard
                 value="mic-only"
                 current={prefs.captureMethod}
                 onPick={setMethod}
@@ -756,6 +713,45 @@ export const AudioSetupWizard = ({
                 badge="lossy"
               />
             </div>
+
+            {/* Advanced methods — power-user paths that need a driver install or
+                voice enrollment. Hidden by default so the common choice stays simple. */}
+            <button
+              type="button"
+              onClick={() => setShowAdvancedMethods((v) => !v)}
+              className="mt-2 flex items-center gap-1.5 text-[11px] font-bold"
+              style={{ color: 'var(--text-secondary)' }}
+              aria-expanded={showAdvancedMethods}
+            >
+              <span style={{ display: 'inline-block', transition: 'transform 0.15s', transform: showAdvancedMethods ? 'rotate(90deg)' : 'none' }}>▸</span>
+              Advanced capture methods
+            </button>
+            {showAdvancedMethods && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                <MethodCard
+                  value="virtual-mic"
+                  current={prefs.captureMethod}
+                  onPick={setMethod}
+                  title="Virtual loopback"
+                  desc="Route your call's audio to a virtual mic (BlackHole, VoiceMeeter, Loopback) and pick it below."
+                  badge={detectedVirtualMic ? 'detected' : undefined}
+                />
+                <MethodCard
+                  value="room-mic"
+                  current={prefs.captureMethod}
+                  onPick={setMethod}
+                  title="Room mic (any speaker)"
+                  desc="Captures the speaker's voice through your laptop mic. Works with Bluetooth speakers (JBL, Jabra), wired speakers, phone-on-speaker — anything audible."
+                  badge={voiceEnrolled && voiceFilterEnabled ? 'voice filter ✓' : 'needs voice enrollment'}
+                  disabled={!voiceEnrolled || !voiceFilterEnabled}
+                  disabledNote={!voiceEnrolled
+                    ? 'Enroll your voice first so the backend can subtract you from the room ambient.'
+                    : !voiceFilterEnabled
+                      ? 'Turn voice filter on so Sona ignores your own voice.'
+                      : undefined}
+                />
+              </div>
+            )}
 
             {prefs.captureMethod === 'virtual-mic' && (
               <div className="mt-3">
