@@ -19,7 +19,7 @@ import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { refreshCompanyContext } from '../services/companyContext.js';
 import { indexUserPrepDocs } from '../services/userDocIndexer.js';
-import { buildSessionKit } from '../services/sessionKit.js';
+import { buildSessionKit, clearSessionKit } from '../services/sessionKit.js';
 import { buildWebWatchlist } from '../services/webWatchlist.js';
 import { r2, R2_BUCKET } from '../lib/r2.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
@@ -147,7 +147,16 @@ function detectCompanyFromPrepData(data) {
 
 router.delete('/state', async (req, res, next) => {
   try {
+    // Deleting the Prep Kit must delete everything DERIVED from it, not just
+    // the source row. It previously dropped lumora_prep_state alone and left
+    // behind both the indexed doc chunks and the warm session kit — so answers
+    // kept coming from a company's material after the user had deleted it, with
+    // no way to clear it from the UI. User-tier chunks bypass mode filtering by
+    // design, and the warm kit short-circuits live retrieval, so those two
+    // leftovers fully determined the grounding of every subsequent answer.
     await query('DELETE FROM lumora_prep_state WHERE user_id = $1', [req.user.id]);
+    await query('DELETE FROM lumora_user_doc_chunks WHERE user_id = $1', [req.user.id]);
+    await clearSessionKit(req.user.id);
     res.json({ success: true });
   } catch (err) {
     next(err);
