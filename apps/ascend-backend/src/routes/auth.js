@@ -482,25 +482,29 @@ router.get('/google/callback', async (req, res) => {
         </head>
         <body>
           <div class="container">
-            <div class="spinner"></div>
-            <h1>Completing Sign In</h1>
-            <p>Redirecting to Camora Desktop…</p>
-            <p><strong>${esc(gUser.email)}</strong></p>
-            <button class="button" data-url="${esc(fallbackUrl)}" onclick="window.location=this.dataset.url">
-              Open Camora or Click Here
+            <h1>Almost there</h1>
+            <p>Signed in as <strong>${esc(gUser.email)}</strong></p>
+            <p>Click below to return to the Camora desktop app.</p>
+            <button id="return-btn" class="button" data-url="${esc(fallbackUrl)}" autofocus onclick="window.location=this.dataset.url">
+              Open Camora Desktop
             </button>
             <div class="info">
-              If the app doesn't open automatically, click the button above.
+              When your browser asks “Open Camora?”, choose <strong>Open</strong>.
+              Keep the Camora app running. You can close this tab afterward.
             </div>
           </div>
           <script>
-            // Auto-redirect via deep link (JSON.stringify → safe JS string literal)
-            window.location = ${JSON.stringify(deepLink)};
-            // Fallback after 2 seconds if the app doesn't handle the link
-            setTimeout(() => {
-              // Check if the redirect worked (app window closed browser)
-              // If not, user can click the button
-            }, 2000);
+            // Modern Chrome/Edge BLOCK a gesture-less navigation to a custom
+            // scheme (camora://) on page load — the old auto-redirect silently
+            // failed and left users staring at a spinner, so they re-tried and
+            // looped. A real click IS a user gesture the browser honors, so the
+            // primary path is now the button. We still fire one best-effort
+            // auto-attempt (works in browsers that allow it) but never rely on it.
+            var DEEP_LINK = ${JSON.stringify(deepLink)};
+            try { window.location = DEEP_LINK; } catch (e) {}
+            // Auto-focus the button so Enter/Space also triggers the launch.
+            var b = document.getElementById('return-btn');
+            if (b) b.focus();
           </script>
         </body>
         </html>
