@@ -779,7 +779,30 @@ async function extractProblemTextFromBrowser(browser, url) {
   } else if (url.includes('leetcode.com')) {
     jsCode = `(function(){var ss=['[data-track-load="description_content"]','.elfjS','.description__24sA'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
   } else if (url.includes('coderpad.io')) {
-    jsCode = `(function(){var ss=['.instructions-pane','[class*="instructions"]'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
+    // CoderPad renders the prompt in an instructions pane and the code in a
+    // CodeMirror/Monaco editor beside it. The old extractor tried just two
+    // selectors with NO editor-stripping and NO fallback, so any DOM it didn't
+    // match returned null → screenshot OCR (which is what failed). Mirror the
+    // HackerRank approach: a wider known-selector net, strip the editor from
+    // whatever matches, then a CONSERVATIVE generic fallback limited to
+    // instruction-hinting containers so it can never return the code or nav.
+    jsCode = "(function(){" +
+      "function strip(node){var c=node.cloneNode(true);c.querySelectorAll('.monaco-editor,.CodeMirror,.cm-editor,[class*=\"editor\"],[class*=\"Editor\"],[class*=\"xterm\"],[class*=\"terminal\"],[class*=\"console\"],[class*=\"output\"],script,style,nav,button').forEach(function(x){if(x.parentNode)x.parentNode.removeChild(x);});return(c.innerText||c.textContent||'').trim();}" +
+      // Strategy 1: known instruction/prompt panes across CoderPad versions.
+      "var sel=['.instructions-pane','[class*=\"instructions\"]','[class*=\"Instructions\"]','[class*=\"cp-instructions\"]','[class*=\"question-content\"]','[class*=\"QuestionContent\"]','[data-testid*=\"instructions\"]','[data-testid*=\"question\"]','[class*=\"prompt\"]','[class*=\"Prompt\"]','[class*=\"markdown\"]'];" +
+      "for(var i=0;i<sel.length;i++){try{var e=document.querySelector(sel[i]);if(e){var t=strip(e);if(t.length>50)return t.slice(0,25000);}}catch(x){}}" +
+      // Strategy 2: conservative generic — scan containers whose OWN class/id
+      // hints at instructions/prompt/question, skip anything holding an editor,
+      // and keep the largest prose block. Bounded so it can't grab the whole app.
+      "var hint=/instruction|prompt|question|markdown|description|readme/i;var best='';" +
+      "var all=document.querySelectorAll('div,section,article,aside,main');" +
+      "for(var j=0;j<all.length;j++){var el=all[j];var id=(el.className&&el.className.toString?el.className.toString():'')+' '+(el.id||'');" +
+        "if(!hint.test(id))continue;" +
+        "if(el.querySelector('.monaco-editor,.CodeMirror,.cm-editor'))continue;" +
+        "var t=strip(el);if(t.length>best.length&&t.length>80&&t.length<25000)best=t;}" +
+      "if(best.length>80)return best.slice(0,25000);" +
+      "return null;" +
+    "})()";
   } else if (url.includes('codesignal.com')) {
     jsCode = `(function(){var ss=['[class*="task-description"]','[class*="taskDescription"]','[class*="problem-description"]','[class*="problemDescription"]','[data-testid*="description"]','[class*="instructions"]'];for(var i=0;i<ss.length;i++){var e=document.querySelector(ss[i]);if(e&&e.innerText&&e.innerText.trim().length>50)return e.innerText.trim();}return null;})()`;
   } else if (url.includes('glider.ai')) {
