@@ -107,18 +107,26 @@ async function startDesktopLogin({ redirect } = {}) {
 
 async function completeDesktopLogin(deepLinkUrl) {
   let code = null;
+  let state = null;
   try {
     const u = new URL(deepLinkUrl);
     if (u.protocol !== 'camora:' || u.hostname !== 'exchange') return;
     code = u.searchParams.get('code');
+    state = u.searchParams.get('state');
   } catch { return; }
   if (!code) return;
 
-  // The interstitial deep link carries only `code`, not state, so use the most
-  // recent pending verifier (single user, single in-flight login).
+  // Prefer an exact match by state: the interstitial echoes the `ds` we sent at
+  // login, so we can pick the verifier for THIS attempt even when several logins
+  // are in flight (e.g. the user clicked twice). Falls back to the most-recent
+  // verifier when state is absent (older backend build that didn't echo it).
   let verifier = null;
-  let newest = -1;
-  for (const v of pendingLogins.values()) if (v.at > newest) { newest = v.at; verifier = v.verifier; }
+  if (state && pendingLogins.has(state)) {
+    verifier = pendingLogins.get(state).verifier;
+  } else {
+    let newest = -1;
+    for (const v of pendingLogins.values()) if (v.at > newest) { newest = v.at; verifier = v.verifier; }
+  }
   pendingLogins.clear();
   if (!verifier) { console.error('[auth] deep link but no pending PKCE verifier'); return; }
 

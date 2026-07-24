@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import SiteNav from './components/shared/SiteNav';
 import RootShell from './components/layout/RootShell';
 import { PaywallGate } from './components/shared/ui/PaywallGate';
@@ -107,6 +107,12 @@ const Loading = () => {
 
 const LoginPage = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  // Desktop sign-in opens the SYSTEM browser, so the Electron window shows no
+  // change on click — which reads as a dead button and tempts users to click
+  // again. Each extra click starts another PKCE login; the deep-link return
+  // then can't tell which verifier to use and the exchange 401s. Latch after
+  // the first launch so we show "check your browser" instead of re-firing.
+  const [launched, setLaunched] = useState(false);
 
   if (isLoading) return <Loading />;
   // Accept both `redirect` and `returnTo` so the chain survives whichever
@@ -137,6 +143,7 @@ const LoginPage = () => {
   const handleGoogleLogin = (e: { preventDefault: () => void }) => {
     if (isDesktop) {
       e.preventDefault();
+      setLaunched(true);
       camo!.startLogin!({ redirect: redirectTo });
     }
   };
@@ -264,6 +271,27 @@ const LoginPage = () => {
           </div>
 
           <div className="space-y-3">
+            {isDesktop && launched ? (
+              <div
+                className="w-full px-4 py-3 rounded-xl text-sm"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 shrink-0 rounded-full border-2 animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
+                  <span className="font-semibold">Finish signing in in your browser</span>
+                </div>
+                <p className="mt-2 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                  We opened your default browser — it may be behind this window. Complete Google sign-in there and you'll return here automatically.
+                </p>
+                <button
+                  onClick={() => camo!.startLogin!({ redirect: redirectTo })}
+                  className="mt-3 text-[13px] font-semibold hover:underline"
+                  style={{ color: 'var(--cam-primary-lt)' }}
+                >
+                  Didn't see it? Reopen the browser
+                </button>
+              </div>
+            ) : (
             <a
               href={googleAuthUrl}
               onClick={handleGoogleLogin}
@@ -278,6 +306,7 @@ const LoginPage = () => {
               </svg>
               Continue with Google
             </a>
+            )}
             <button disabled className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold cursor-not-allowed opacity-40" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
               <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
