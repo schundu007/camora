@@ -52,9 +52,8 @@ const MODE_SOURCES = Object.freeze({
   // Company/role-specific study material. Grounded in public repos only —
   // see apps/camora/src/data/capra/topics/amdCiTopics.js for provenance
   // rules (every claim traceable; unverified things stay framed as
-  // questions to ask). Study surfaces only: this source is deliberately
-  // absent from 'general', which is the unfiltered mode the live
-  // inference path falls back to.
+  // questions to ask). Reachable ONLY through this explicit mode; see
+  // STUDY_ONLY_SOURCES for why it must never surface in an unfiltered search.
   'amd-ci': [
     'capra-amd-ci',           // TheRock/ROCm CI, GPU fleet ops, OSDU multi-cloud
     'capra-devops',           // shared CI/CD + IaC grounding
@@ -62,10 +61,38 @@ const MODE_SOURCES = Object.freeze({
   ],
 });
 
+/**
+ * Sources that must NEVER be reachable from an unfiltered search.
+ *
+ * These are company/role-specific study decks written for ONE interview. They
+ * describe a company's systems in the first person-adjacent voice of study
+ * notes, so when they leak into a personal answer the model reports them as the
+ * candidate's own job: grounding a behavioral answer on the AMD ROCm/CI deck
+ * produced "I work at AMD" for a candidate who had only interviewed there, and
+ * pulled every unrelated question toward CI/CD.
+ *
+ * A comment used to assert this exclusion existed. It did not — 'general'
+ * returned null, meaning no filter, meaning the whole KB. Now it is enforced.
+ */
+export const STUDY_ONLY_SOURCES = Object.freeze(['capra-amd-ci']);
+
 export const KNOWN_MODES = Object.freeze(Object.keys(MODE_SOURCES));
 
+/**
+ * @returns {string[]|null} allow-list of sources, or null for "no allow-list".
+ *   An EMPTY array is meaningful and distinct from null: it means ground on no
+ *   generic KB at all (behavioral). Callers must not collapse [] to null.
+ */
 export function sourcesForMode(mode) {
   if (!mode || mode === 'general') return null;
   const arr = MODE_SOURCES[mode];
   return arr ? [...arr] : null;
+}
+
+/**
+ * Sources to subtract from a search. Only meaningful when there is no explicit
+ * allow-list — an allow-list already can't reach anything it doesn't name.
+ */
+export function excludedSourcesForMode(mode) {
+  return sourcesForMode(mode) === null ? [...STUDY_ONLY_SOURCES] : [];
 }
