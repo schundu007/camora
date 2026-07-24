@@ -1918,8 +1918,8 @@ html[data-overlay='on'] .claude-webview {
 }
 /* Transparency slider in the window controls. */
 .desktop-winctl__slider {
-  width: 70px;
-  height: 4px;
+  width: 50px;
+  height: 3px;
   cursor: pointer;
   accent-color: var(--cam-gold-leaf, #c9a227);
 }
@@ -1931,11 +1931,11 @@ html[data-overlay='on'] .claude-webview {
    with margin. Every top-of-surface toolbar carries this class — see the sweep in
    ScreenshotStrip, DesignLayout, AskLayout, PlaygroundLayout, CodingLayout, CoFix. */
 body.electron-desktop .lumora-winctl-safe {
-  padding-right: 184px !important;
+  padding-right: 120px !important;
 }
-/* Overlay mode adds the transparency slider (~70px), so the cluster is wider. */
+/* Overlay mode adds the transparency slider (~50px), so the cluster is wider. */
 html[data-overlay='on'] .lumora-winctl-safe {
-  padding-right: 272px !important;
+  padding-right: 188px !important;
 }
 /* The grip drives a JS drag (see DesktopWindowControls) since macOS blocks
    -webkit-app-region:drag on transparent windows. Keep everything no-drag so the
@@ -1947,10 +1947,11 @@ html[data-overlay='on'] .lumora-winctl-safe {
 .desktop-winctl__grip {
   display: flex;
   align-items: center;
-  padding: 0 5px;
+  padding: 0 3px;
   color: var(--text-secondary, #9aa4b2);
   cursor: grab;
 }
+.desktop-winctl__grip svg { width: 13px; height: 10px; }
 .desktop-winctl__grip:active { cursor: grabbing; }
 .desktop-winctl__grip:hover { color: var(--cam-gold-leaf, #c9a227); }
 /* The top drag strip must not paint a bar over the meeting in overlay mode. */
@@ -1967,20 +1968,22 @@ html[data-overlay='on'] body.electron-desktop::before {
 .desktop-winctl {
   position: fixed;
   top: 3px;
-  right: 8px;
+  right: 6px;
   z-index: 100001; /* above the drag strip (100000) */
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
   -webkit-app-region: no-drag;
 }
+/* Now an icon (Dock/Overlay glyph), so it collapses to a compact square that
+   matches the min/close buttons — the whole cluster reads as one tiny strip. */
 .desktop-winctl__toggle {
-  height: 22px;
-  padding: 0 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
   color: #fff;
   background: var(--cam-primary, #0047ab);
   border: 1px solid var(--cam-gold-leaf, #c9a227);
@@ -1988,8 +1991,8 @@ html[data-overlay='on'] body.electron-desktop::before {
 }
 .desktop-winctl__toggle:hover { filter: brightness(1.08); }
 .desktop-winctl__btn {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
