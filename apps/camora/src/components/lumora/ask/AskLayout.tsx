@@ -477,7 +477,48 @@ export const AskLayout = () => {
   }, [input]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <div className="flex flex-row h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+
+      {/* History — collapsible LEFT sidebar. Hidden by default; the top-bar
+          "History (N)" chip brings it back in one click, the ‹ chevron here
+          collapses it. Replaces the old top drop-down that covered the chat. */}
+      {showHistory && (
+        <aside className="shrink-0 w-[260px] h-full flex flex-col border-r" style={{ borderColor: 'var(--cam-gold-leaf-dk)', background: 'var(--cam-hero-strip)' }}>
+          <div className="flex items-center justify-between px-3 h-12 shrink-0 border-b" style={{ borderColor: 'var(--cam-gold-leaf-dk)' }}>
+            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
+              History ({history.length})
+            </span>
+            <div className="flex items-center gap-1">
+              {history.length > 0 && (
+                <button onClick={clearAllHistory} className="text-[11px] px-2 py-1 rounded transition-colors hover:bg-red-900/30" style={{ color: '#f87171', ...sans }}>
+                  Clear
+                </button>
+              )}
+              <button onClick={() => setShowHistory(false)} data-tip="Collapse history" aria-label="Collapse history" className="p-1 rounded transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-gold-leaf)' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {history.length === 0 ? (
+              <p className="p-4 text-[12px]" style={{ color: 'var(--cam-gold-leaf-dk)', ...sans }}>No history yet</p>
+            ) : history.map(c => (
+              <div key={c.id} className="flex items-center gap-2 border-b hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)] transition-colors" style={{ borderColor: 'rgba(217,181,67,0.15)' }}>
+                <button onClick={() => loadConversation(c.id)} className="flex-1 text-left px-3 py-2.5 text-[13px] flex flex-col gap-1 min-w-0" style={{ color: 'var(--cam-strip-text)', ...sans }}>
+                  <span className="truncate w-full">{c.title}</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded self-start" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>{c.provider}</span>
+                </button>
+                <button onClick={e => deleteConversation(c.id, e)} className="shrink-0 mr-2 p-1 rounded hover:bg-red-900/40 transition-colors" data-tip="Delete conversation" style={{ color: '#f87171' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </aside>
+      )}
+
+      {/* Main column */}
+      <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
 
       {/* Top bar — navy strip with gold-leaf border */}
       <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
@@ -490,68 +531,21 @@ export const AskLayout = () => {
           )}
         </div>
         <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>Ask Sona</span>
-        <button
-          onClick={() => setShowHistory(h => !h)}
-          className="text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors"
-          style={{ color: showHistory ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-text)', border: `1px solid ${showHistory ? 'rgba(217,181,67,0.5)' : 'var(--cam-strip-icon-border)'}`, ...sans }}
-        >
-          {showHistory ? 'Close' : `History (${history.length})`}
-        </button>
+        {/* Single-click chip: opens the left History sidebar (collapse lives
+            inside the sidebar). Hidden while the sidebar is open so there's one
+            unambiguous control at a time. */}
+        {!showHistory && (
+          <button
+            onClick={() => setShowHistory(true)}
+            data-tip="Show conversation history"
+            className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors"
+            style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)', ...sans }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+            History ({history.length})
+          </button>
+        )}
       </div>
-
-      {/* History panel */}
-      {showHistory && (
-        <div className="shrink-0 border-b" style={{ borderColor: 'var(--cam-gold-leaf-dk)', background: 'var(--cam-hero-strip)' }}>
-          {/* History header */}
-          <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'var(--cam-gold-leaf-dk)' }}>
-            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
-              History ({history.length})
-            </span>
-            {history.length > 0 && (
-              <button
-                onClick={clearAllHistory}
-                className="text-[11px] px-2.5 py-1 rounded transition-colors hover:bg-red-900/30"
-                style={{ color: '#f87171', ...sans }}
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-          {/* History list */}
-          <div className="overflow-y-auto" style={{ maxHeight: 200 }}>
-            {history.length === 0 ? (
-              <p className="p-4 text-[12px]" style={{ color: 'var(--cam-gold-leaf-dk)', ...sans }}>No history yet</p>
-            ) : history.map(c => (
-              <div
-                key={c.id}
-                className="flex items-center gap-2 border-b hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)] transition-colors"
-                style={{ borderColor: 'rgba(217,181,67,0.15)' }}
-              >
-                <button
-                  onClick={() => loadConversation(c.id)}
-                  className="flex-1 text-left px-4 py-2.5 text-[13px] flex items-center gap-3 min-w-0"
-                  style={{ color: 'var(--cam-strip-text)', ...sans }}
-                >
-                  <span className="truncate">{c.title}</span>
-                  <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>
-                    {c.provider}
-                  </span>
-                </button>
-                <button
-                  onClick={e => deleteConversation(c.id, e)}
-                  className="shrink-0 mr-3 p-1 rounded hover:bg-red-900/40 transition-colors"
-                  data-tip="Delete conversation"
-                  style={{ color: '#f87171' }}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Messages / empty state */}
       {hasMessages ? (
@@ -740,6 +734,7 @@ export const AskLayout = () => {
           </div>
         </div>
       </div>
+      </div>{/* /Main column */}
     </div>
   );
 };
