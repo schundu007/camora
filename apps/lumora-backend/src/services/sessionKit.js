@@ -47,15 +47,36 @@ function dedupeById(chunks, max) {
   return out;
 }
 
+/**
+ * Drop the stored kit. Used both on explicit prep deletion and whenever a
+ * rebuild cannot produce a kit — see the skip paths in buildSessionKit.
+ */
+export async function clearSessionKit(userId) {
+  if (!userId) return;
+  await query('DELETE FROM lumora_session_kit WHERE user_id = $1', [userId]);
+}
+
 export async function buildSessionKit({ userId, prepData }) {
-  if (!userId || !prepData?.activeCompany) return { skipped: true };
-  const company = prepData.activeCompany;
-  const doc = prepData.data?.[company];
-  if (!doc) return { skipped: true };
-  const haystack = [doc.jd, doc.resume, doc.coverLetter].filter(Boolean).join('\n\n');
-  if (!haystack.trim()) return { skipped: true };
-  const seeds = extractSeeds(haystack);
-  if (seeds.length === 0) return { skipped: true };
+  // EVERY early return must clear the existing kit first.
+  //
+  // These used to return { skipped: true } and leave the previous kit in place,
+  // which let a kit outlive the prep data it was derived from. Switching the
+  // active company to one with no JD/resume yet hit exactly that path: the
+  // build skipped, the OLD company's kit stayed, and since retrieve() prefers
+  // the warm kit and short-circuits live retrieval, every answer for the new
+  // company was still grounded on the old one's material. A stale kit is worse
+  // than no kit — no kit merely costs a live query.
+  if (!userId) return { skipped: true };
+  const company = prepData?.activeCompany;
+  const doc = company ? prepData.data?.[company] : null;
+  const haystack = doc
+    ? [doc.jd, doc.resume, doc.coverLetter].filter(Boolean).join('\n\n')
+    : '';
+  const seeds = haystack.trim() ? extractSeeds(haystack) : [];
+  if (seeds.length === 0) {
+    await clearSessionKit(userId).catch(() => {});
+    return { skipped: true, cleared: true };
+  }
 
   // Run hybrid search against each seed in parallel, then merge.
   const all = [];
@@ -68,7 +89,10 @@ export async function buildSessionKit({ userId, prepData }) {
   }));
   const chunks = dedupeById(all, KIT_SIZE);
 
-  const kit = { seeds, chunks, builtAt: Date.now() };
+  // `company` is stamped so a kit is always traceable to the workspace it came
+  // from — without it, a kit grounded on the wrong company is indistinguishable
+  // from a correct one in the DB or in the retrieval logs.
+  const kit = { company, seeds, chunks, builtAt: Date.now() };
   const version = Date.now();
   await query(
     `INSERT INTO lumora_session_kit (user_id, kit, prep_state_version, updated_at)
