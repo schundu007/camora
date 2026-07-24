@@ -64,9 +64,11 @@ export function patchAudioPrefs(patch: Partial<AudioPreferences>): AudioPreferen
 
 /**
  * Open the AudioSetupWizard from anywhere — used by the icon-rail
- * "Audio check" entry. The wizard listens to this custom event and
- * force-opens, replacing the legacy AudioCheckModal that opened a
- * concurrent getUserMedia stream and could clash with active capture.
+ * "Audio Check" entry and the mobile "more" menu. The wizard listens to
+ * this custom event and force-opens. It is the single audio-setup surface:
+ * the old AudioCheckModal (removed 2026-07) opened its own concurrent
+ * getUserMedia stream that could clash with live capture, so the icon-rail
+ * button now routes here instead.
  */
 export const OPEN_AUDIO_WIZARD_EVENT = 'lumora:open-audio-wizard';
 
