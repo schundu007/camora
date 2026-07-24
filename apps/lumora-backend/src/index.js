@@ -238,7 +238,7 @@ async function runMigrations() {
         section TEXT NOT NULL,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
-        embedding vector(1024) NOT NULL,
+        embedding vector(1536) NOT NULL,   -- must match embeddings.js (gemini-embedding-001 @ 1536)
         metadata JSONB DEFAULT '{}'::jsonb,
         content_hash VARCHAR(64) NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -262,7 +262,7 @@ async function runMigrations() {
         section TEXT,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
-        embedding vector(1024) NOT NULL,
+        embedding vector(1536) NOT NULL,   -- must match embeddings.js (gemini-embedding-001 @ 1536)
         metadata JSONB DEFAULT '{}'::jsonb,
         prep_state_version BIGINT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT NOW()
@@ -311,7 +311,7 @@ async function runMigrations() {
         section TEXT NOT NULL,
         content TEXT NOT NULL,
         token_count INTEGER NOT NULL,
-        embedding vector(1024) NOT NULL,
+        embedding vector(1536) NOT NULL,   -- must match embeddings.js (gemini-embedding-001 @ 1536)
         success BOOLEAN NOT NULL DEFAULT TRUE,
         metadata JSONB DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ DEFAULT NOW()
@@ -393,30 +393,39 @@ async function runMigrations() {
       // succeed. The KB and user doc chunks will re-index on next use.
       // Using IF EXISTS guards so this is a no-op on fresh installs where
       // the column was already created as vector(1024).
-      `DO $$ BEGIN
-         IF EXISTS (
-           SELECT 1 FROM information_schema.columns
-           WHERE table_name = 'lumora_kb_chunks' AND column_name = 'embedding'
-         ) THEN
-           ALTER TABLE lumora_kb_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL;
-         END IF;
-       END $$`,
-      `DO $$ BEGIN
-         IF EXISTS (
-           SELECT 1 FROM information_schema.columns
-           WHERE table_name = 'lumora_user_doc_chunks' AND column_name = 'embedding'
-         ) THEN
-           ALTER TABLE lumora_user_doc_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL;
-         END IF;
-       END $$`,
-      `DO $$ BEGIN
-         IF EXISTS (
-           SELECT 1 FROM information_schema.columns
-           WHERE table_name = 'lumora_user_code_chunks' AND column_name = 'embedding'
-         ) THEN
-           ALTER TABLE lumora_user_code_chunks ALTER COLUMN embedding TYPE vector(1024) USING NULL;
-         END IF;
-       END $$`,
+      // Align every embedding column with the CURRENT model's dimension.
+      //
+      // These three statements used to pin all three tables to vector(1024)
+      // (Cohere embed-english-v3.0). embeddings.js moved to Gemini
+      // gemini-embedding-001 at 1536 dims, and only lumora_kb_chunks was
+      // migrated with it — so every INSERT into the two per-user tables failed
+      // with "expected 1024 dimensions, not 1536". indexUserPrepDocs DELETEs a
+      // user's chunks before re-inserting, so each prep save wiped that user's
+      // grounding and could not write it back, and because the failure rejected
+      // the promise the chained buildSessionKit never ran: warm kits froze at
+      // whatever they held on 2026-07-19 and kept steering every answer.
+      //
+      // Vectors from different models are not comparable even at equal
+      // dimension, so mismatched rows are discarded rather than converted; both
+      // per-user tables rebuild from the next prep save, the KB from
+      // scripts/index-capra-kb.js. Keyed off the ACTUAL column type so this is
+      // idempotent and a no-op once every table matches.
+      ...['lumora_kb_chunks', 'lumora_user_doc_chunks', 'lumora_user_code_chunks'].map(
+        (table) => `DO $$
+         DECLARE current_type text;
+         BEGIN
+           SELECT format_type(a.atttypid, a.atttypmod) INTO current_type
+             FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid
+            WHERE c.relname = '${table}' AND a.attname = 'embedding' AND a.attnum > 0;
+           IF current_type IS NOT NULL AND current_type <> 'vector(1536)' THEN
+             EXECUTE 'DROP INDEX IF EXISTS ${table}_hnsw';
+             EXECUTE 'DELETE FROM ${table}';
+             EXECUTE 'ALTER TABLE ${table} ALTER COLUMN embedding TYPE vector(1536)';
+             EXECUTE 'CREATE INDEX ${table}_hnsw ON ${table} USING hnsw (embedding vector_cosine_ops)';
+             RAISE NOTICE 'migrated ${table}.embedding % -> vector(1536)', current_type;
+           END IF;
+         END $$`,
+      ),
       `CREATE TABLE IF NOT EXISTS camora_admin_config (
         key VARCHAR(100) PRIMARY KEY,
         value TEXT NOT NULL,
