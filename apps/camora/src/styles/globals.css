@@ -1825,6 +1825,19 @@ html[data-overlay='on'] .lumora-shell-root .monaco-editor .cursor {
 html[data-overlay='on'] .lumora-shell-root .monaco-editor .current-line {
   border-color: transparent !important;
 }
+/* CODE LEGIBILITY FLOOR. The strip rule above erases Monaco's own background, so
+   syntax tokens land straight on whatever the meeting is showing — over a bright
+   window (a slide, a white IDE, a light wallpaper) the code is unreadable. Give
+   the editor its own graphite scrim: still glassy, but dark enough that the token
+   palette always has contrast under it. Tradeoff: the editor reads slightly more
+   solid than the surrounding frost — correct, since unreadable code in a live
+   interview is worse than a perfectly uniform surface. */
+html[data-overlay='on'] .lumora-shell-root .monaco-editor,
+html[data-overlay='on'] .lumora-shell-root .monaco-editor .overflow-guard,
+html[data-overlay='on'] .lumora-shell-root .monaco-editor .monaco-editor-background,
+html[data-overlay='on'] .lumora-shell-root .monaco-editor .margin {
+  background-color: rgba(16, 18, 24, 0.74) !important;
+}
 /* All BODY text WHITE so it's readable on the frosted glass — headings/subheadings,
    code (Monaco), and colored chips/buttons KEEP their own colors. No text-shadow:
    the graphite frost (0.9 opacity) supplies the contrast; shadows/glows on text are

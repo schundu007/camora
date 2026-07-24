@@ -13,23 +13,41 @@ import {
   initOverlayModeBridge,
 } from '../../../lib/overlayMode';
 
+// READABILITY FLOOR for the transparency slider. Stealth comes from
+// setContentProtection (the window is already excluded from screen capture), NOT
+// from being see-through — so there is no reason to allow an opacity that makes
+// the app unusable. The old floor of 0.3 painted the whole shell onto the
+// desktop wallpaper: chrome bands vanished and code became unreadable. Anything
+// below this is clamped, including a value persisted from the old range.
+const MIN_OVERLAY_OPACITY = 0.75;
+const DEFAULT_OVERLAY_OPACITY = 0.9;
+
+const clampOpacity = (v: number) =>
+  Number.isFinite(v) && v > 0 ? Math.min(1, Math.max(MIN_OVERLAY_OPACITY, v)) : DEFAULT_OVERLAY_OPACITY;
+
 export function DesktopWindowControls() {
   const mode = useOverlayMode();
   useEffect(() => {
     initOverlayModeBridge();
-    // Restore the saved overlay transparency.
+    // Restore the saved overlay transparency, clamped to the readability floor.
     try {
       const saved = localStorage.getItem('lumora.overlayOpacity');
-      if (saved) document.documentElement.style.setProperty('--overlay-opacity', saved);
+      if (saved) {
+        const v = clampOpacity(Number(saved));
+        document.documentElement.style.setProperty('--overlay-opacity', String(v));
+        // Rewrite the stored value so a pre-floor setting doesn't keep re-clamping.
+        localStorage.setItem('lumora.overlayOpacity', String(v));
+      }
     } catch { /* ignore */ }
   }, []);
 
   const setOpacity = (v: number) => {
-    document.documentElement.style.setProperty('--overlay-opacity', String(v));
-    try { localStorage.setItem('lumora.overlayOpacity', String(v)); } catch { /* ignore */ }
+    const next = clampOpacity(v);
+    document.documentElement.style.setProperty('--overlay-opacity', String(next));
+    try { localStorage.setItem('lumora.overlayOpacity', String(next)); } catch { /* ignore */ }
   };
   const savedOpacity = (() => {
-    try { return Number(localStorage.getItem('lumora.overlayOpacity')) || 0.9; } catch { return 0.9; }
+    try { return clampOpacity(Number(localStorage.getItem('lumora.overlayOpacity'))); } catch { return DEFAULT_OVERLAY_OPACITY; }
   })();
 
   const camo = (window as any).camo;
@@ -69,9 +87,9 @@ export function DesktopWindowControls() {
         <input
           type="range"
           className="desktop-winctl__slider"
-          min={0.3}
+          min={MIN_OVERLAY_OPACITY}
           max={1}
-          step={0.02}
+          step={0.01}
           defaultValue={savedOpacity}
           data-tip="Transparency (left = more see-through, right = more solid)"
           onInput={(e) => setOpacity(Number((e.target as HTMLInputElement).value))}

@@ -2278,6 +2278,11 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               top bar grammar. Navy band + gold underline + bezelled pill
               container holding the Description / Solution toggles. */}
           <div
+            // data-overlay-keep: exempt from the overlay's background-strip rule
+            // (globals.css). Without it this navy band goes transparent in overlay
+            // mode and the toolbar icons float loose on the meeting behind, leaving
+            // only the gold underline to suggest a header.
+            data-overlay-keep
             className="flex items-center gap-2 px-2 py-1 overflow-x-auto no-scrollbar"
             style={{
               background: 'var(--cam-hero-strip)',
@@ -2382,7 +2387,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                         <div className="space-y-2">
                           <textarea id="problem-text"
                             value={problemText}
-                            onChange={(e) => { setProblemText(e.target.value); setStarterCode(null); }}
+                            onChange={(e) => {
+                              setProblemText(e.target.value);
+                              setStarterCode(null);
+                              // The "No problem captured yet…" banner is answered the
+                              // moment there IS a problem. Leaving it up meant a red
+                              // error sat over a filled-in box for the rest of the
+                              // session, duplicating the readiness chip that already
+                              // reports the same thing.
+                              if (e.target.value.trim()) setError(null);
+                            }}
                             onDrop={handleDrop}
                             onDragOver={(e) => e.preventDefault()}
                             placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
@@ -2943,7 +2957,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
             overlay windows, so nothing scrolled. */}
         <div ref={editorColRef} className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden" style={{ background: t.surfaceBg, color: t.text }}>
           {/* Editor Header — sticky so Run / language / reset stay reachable while the column scrolls */}
-          <div className="flex items-center justify-between px-2 py-1 lumora-winctl-safe sticky top-0 z-10" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
+          {/* data-overlay-keep — see the left panel's band: keeps this header a real
+              surface in overlay mode instead of transparent chrome over the meeting. */}
+          <div data-overlay-keep className="flex items-center justify-between px-2 py-1 lumora-winctl-safe sticky top-0 z-10" style={{ background: t.sectionBg, borderBottom: `1px solid ${t.cardBorder}` }}>
             <div className="flex items-center gap-1.5">
               <ChipSelect
                 label="Lang"
