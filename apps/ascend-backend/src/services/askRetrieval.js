@@ -105,6 +105,41 @@ export async function retrieveForAsk(question, { limit = 6 } = {}) {
   }
 }
 
+/**
+ * The candidate's OWN prep material — resume, JD, cover letter for their active
+ * company — read straight from lumora_prep_state (shared Postgres, written by
+ * lumora-backend's Prep Kit). This is what "tell me about yourself" must ground
+ * on. Ask Sona's system prompt tells the model to answer in the first person as
+ * the candidate; with no personal material it invents a plausible-but-FAKE
+ * persona (fake employers, fake metrics). This runs deterministically — no
+ * embedding — so unlike vector retrieval it cannot silently fail to a persona.
+ *
+ * Returns '' (and the caller degrades) when there is no prep kit, rather than
+ * throwing — a chat assistant should still answer, just without a résumé.
+ */
+export async function getCandidateBackground(userId, { maxChars = 6000 } = {}) {
+  if (!userId) return '';
+  try {
+    const r = await query('SELECT data FROM lumora_prep_state WHERE user_id = $1', [userId]);
+    const data = r.rows[0]?.data;
+    if (!data || typeof data !== 'object') return '';
+    const company = data.activeCompany || (Array.isArray(data.companies) ? data.companies[0] : null);
+    const doc = company ? data.data?.[company] : null;
+    if (!doc) return '';
+    const parts = [];
+    if (doc.resume) parts.push(`RESUME:\n${doc.resume}`);
+    if (doc.jd) parts.push(`JOB DESCRIPTION${company ? ` (${company})` : ''}:\n${doc.jd}`);
+    if (doc.coverLetter) parts.push(`COVER LETTER:\n${doc.coverLetter}`);
+    if (parts.length === 0) return '';
+    let body = parts.join('\n\n');
+    if (body.length > maxChars) body = body.slice(0, maxChars);
+    return `\n\nCANDIDATE BACKGROUND — this is who "I" am. Every first-person claim ("I built…", "at my last role…", any employer, project, title, or metric) MUST come from THIS material. NEVER invent an employer, role, project, or number that is not written here. If the background does not cover what was asked, answer in the first person from general knowledge WITHOUT fabricating a specific personal history.\n\n${body}`;
+  } catch (err) {
+    console.error('[askRetrieval] candidate background load failed:', err?.message || err);
+    return '';
+  }
+}
+
 /** Render retrieved chunks as a prompt block. Returns '' when there's nothing. */
 export function formatContext(chunks) {
   if (!chunks || chunks.length === 0) return '';

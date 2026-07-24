@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../config/database.js';
-import { retrieveForAsk, formatContext } from '../services/askRetrieval.js';
+import { retrieveForAsk, formatContext, getCandidateBackground } from '../services/askRetrieval.js';
 import { r2, R2_BUCKET } from '../lib/r2.js';
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -182,6 +182,11 @@ Hard rules:
   when a few lines genuinely clarify the point (a config snippet, a signature) —
   never as the answer itself, and never a full program.
 - Keep tone calm and confident — never alarming
+- NEVER invent personal history. Any claim about your own experience — employers,
+  titles, projects, teams, dates, metrics — MUST come from the CANDIDATE BACKGROUND
+  section below. If no background is provided or it doesn't cover the question,
+  answer in the first person from general knowledge but do NOT fabricate a specific
+  company, role, project, or number you cannot source from the background.
 - ALWAYS respond in English regardless of the question language`;
 
 const SYS_CODE = `You are Sona, a live interview coding assistant. The candidate is in an active coding interview right now.
@@ -395,10 +400,21 @@ router.post('/stream', async (req, res) => {
     // Postgres) and append them to the system prompt. Fails open — retrieval
     // errors log and yield [], so Ask Sona answers ungrounded rather than 500s.
     let finalSystem = system;
+    // Ground first-person answers in the candidate's OWN prep kit (resume/JD)
+    // BEFORE the generic KB. Without this, "tell me about yourself" and any
+    // experience question fabricate a persona — the KB is impersonal study
+    // material and carries nothing about who the candidate actually is.
+    // Deterministic and injected whether or not KB vector retrieval hits.
+    try {
+      const background = await getCandidateBackground(userId);
+      if (background) finalSystem += background;
+    } catch (e) {
+      console.error('[Ask] candidate background skipped:', e?.message || e);
+    }
     try {
       const chunks = await retrieveForAsk(effectiveMessage);
       if (chunks.length > 0) {
-        finalSystem = system + formatContext(chunks);
+        finalSystem += formatContext(chunks);
         res.write(`data: ${JSON.stringify({ sources: chunks.map((c) => ({ source: c.source, title: c.topic_title, section: c.section })) })}\n\n`);
       }
     } catch (e) {
@@ -424,7 +440,10 @@ router.post('/stream', async (req, res) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              system_instruction: { parts: [{ text: system }] },
+              // finalSystem, NOT system — this path skipped the candidate
+              // background AND the KB grounding, so the Gemini provider answered
+              // ungrounded (and fabricated a persona) while Claude did not.
+              system_instruction: { parts: [{ text: finalSystem }] },
               contents: geminiContents,
               generationConfig: { maxOutputTokens: 8000, temperature: 0.2 },
             }),
