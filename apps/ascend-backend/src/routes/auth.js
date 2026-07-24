@@ -389,9 +389,14 @@ router.get('/google/callback', async (req, res) => {
         '[oauth-desktop] Exchange code generated'
       );
 
-      // Return interstitial HTML with deep link + fallback button
-      // The deep link contains the exchange code and optional desktop state.
-      const deepLink = `camora://exchange?code=${encodeURIComponent(exchangeCode)}`;
+      // Return interstitial HTML with deep link + fallback button.
+      // Echo the desktop state (ds) captured at login so Electron can select
+      // the EXACT PKCE verifier for this attempt. Without it, a user with more
+      // than one login in flight (e.g. they clicked twice) forces the shell to
+      // guess "newest verifier", which mismatches the completed attempt and the
+      // exchange 401s (PKCE_MISMATCH). State makes the code→verifier map exact.
+      const deepLink = `camora://exchange?code=${encodeURIComponent(exchangeCode)}`
+        + (desktopMetadata?.state ? `&state=${encodeURIComponent(desktopMetadata.state)}` : '');
       const fallbackUrl = deepLink; // fallback to same deep link
       // Escape any value interpolated into the interstitial HTML. gUser.email is
       // provider-supplied but still untrusted for our sinks; escaping is cheap
