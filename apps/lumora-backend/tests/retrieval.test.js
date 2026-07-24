@@ -3,10 +3,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const hybridKbMock = vi.fn();
 const hybridUserMock = vi.fn();
 const hybridUserCodeMock = vi.fn();
+// embedQueryOrDegrade is imported by retrieve() and MUST be mocked here.
+// It was added to hybridRetrieval.js when embeddings moved to Gemini, but this
+// mock was not updated — so every test in this file died with "No
+// 'embedQueryOrDegrade' export is defined on the mock" rather than on an
+// assertion. Any export retrieve() reaches for has to appear in this factory.
+const embedQueryOrDegradeMock = vi.fn();
 vi.mock('../src/services/hybridRetrieval.js', () => ({
   hybridSearchKb: hybridKbMock,
   hybridSearchUserDocs: hybridUserMock,
   hybridSearchUserCode: hybridUserCodeMock,
+  embedQueryOrDegrade: embedQueryOrDegradeMock,
 }));
 
 const embedQueryMock = vi.fn();
@@ -19,6 +26,8 @@ beforeEach(() => {
   hybridUserCodeMock.mockResolvedValue([]);
   embedQueryMock.mockReset();
   embedQueryMock.mockResolvedValue(new Array(1536).fill(0.01));
+  embedQueryOrDegradeMock.mockReset();
+  embedQueryOrDegradeMock.mockResolvedValue(new Array(1536).fill(0.01));
   process.env.RAG_USE_WARM_KIT = 'false'; // disable warm kit for default tests
 });
 
@@ -100,18 +109,25 @@ describe('retrieve with HyDE', () => {
     process.env.RAG_USE_HYDE = '';
     const hydeMock = vi.fn().mockResolvedValue('SLOs are reliability targets; error budgets cap outages.');
     vi.doMock('../src/services/hyde.js', () => ({ hydeRewrite: hydeMock }));
-    const embedMock = vi.fn().mockResolvedValue(new Array(1536).fill(0.01));
-    vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: embedMock }));
+    vi.doMock('../src/services/embeddings.js', () => ({
+      embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
+    }));
     const hybridKbMock = vi.fn().mockResolvedValue([]);
+    // retrieve() embeds via hybridRetrieval's embedQueryOrDegrade, NOT
+    // embeddings.embedQuery — that indirection is what lets a transient
+    // embedding failure degrade to BM25. This assertion used to watch
+    // embedQuery and so could never have passed once the call moved.
+    const embedOrDegradeMock = vi.fn().mockResolvedValue(new Array(1536).fill(0.01));
     vi.doMock('../src/services/hybridRetrieval.js', () => ({
       hybridSearchKb: hybridKbMock,
       hybridSearchUserDocs: vi.fn(),
       hybridSearchUserCode: vi.fn(),
+      embedQueryOrDegrade: embedOrDegradeMock,
     }));
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'what is an SLO?', userId: null, useHyde: true });
     expect(hydeMock).toHaveBeenCalledWith('what is an SLO?');
-    expect(embedMock).toHaveBeenCalledWith(expect.stringContaining('reliability targets'));
+    expect(embedOrDegradeMock).toHaveBeenCalledWith(expect.stringContaining('reliability targets'));
   });
 
   it('does not call hyde when useHyde is undefined and env flag is off', async () => {
@@ -124,6 +140,9 @@ describe('retrieve with HyDE', () => {
       hybridSearchKb: vi.fn().mockResolvedValue([]),
       hybridSearchUserDocs: vi.fn(),
       hybridSearchUserCode: vi.fn(),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'q', userId: null });
@@ -143,6 +162,9 @@ describe('retrieve with reranker', () => {
       ]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
       hybridSearchUserCode: vi.fn().mockResolvedValue([]),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     const rerankMock = vi.fn().mockImplementation((q, chunks) => Promise.resolve(chunks.slice().reverse()));
     vi.doMock('../src/services/reranker.js', () => ({ rerank: rerankMock }));
@@ -164,6 +186,9 @@ describe('retrieve with reranker', () => {
       hybridSearchKb: vi.fn().mockResolvedValue([{ tier: 'kb', id: 'k1', content: 'A' }]),
       hybridSearchUserDocs: vi.fn(),
       hybridSearchUserCode: vi.fn(),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -185,6 +210,9 @@ describe('retrieve with warm kit', () => {
       hybridSearchKb: hybridKbMock,
       hybridSearchUserDocs: vi.fn(),
       hybridSearchUserCode: vi.fn(),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
@@ -204,6 +232,9 @@ describe('retrieve with warm kit', () => {
       hybridSearchKb: hybridKbMock,
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
       hybridSearchUserCode: vi.fn().mockResolvedValue([]),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     vi.doMock('../src/services/retrievalLogger.js', () => ({ logRetrieval: vi.fn().mockResolvedValue(undefined) }));
@@ -224,6 +255,9 @@ describe('retrieve writes to retrievalLogger', () => {
       hybridSearchKb: vi.fn().mockResolvedValue([{ tier: 'kb', id: 'k1', content: 'a' }]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
       hybridSearchUserCode: vi.fn().mockResolvedValue([]),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -251,6 +285,9 @@ describe('retrieve writes to retrievalLogger', () => {
       hybridSearchKb: vi.fn(),
       hybridSearchUserDocs: vi.fn(),
       hybridSearchUserCode: vi.fn(),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     const { retrieve } = await import('../src/services/retrieval.js');
     await retrieve({ question: 'q', userId: 7 });
@@ -268,6 +305,9 @@ describe('retrieve writes to retrievalLogger', () => {
       hybridSearchKb: vi.fn().mockImplementation(() => new Promise((res) => setTimeout(() => res([]), 500))),
       hybridSearchUserDocs: vi.fn(),
       hybridSearchUserCode: vi.fn(),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -288,6 +328,9 @@ describe('retrieve.lowConfidence', () => {
       hybridSearchKb: vi.fn().mockResolvedValue([]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
       hybridSearchUserCode: vi.fn().mockResolvedValue([]),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -305,6 +348,9 @@ describe('retrieve.lowConfidence', () => {
       ]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
       hybridSearchUserCode: vi.fn().mockResolvedValue([]),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -322,6 +368,9 @@ describe('retrieve.lowConfidence', () => {
       ]),
       hybridSearchUserDocs: vi.fn().mockResolvedValue([]),
       hybridSearchUserCode: vi.fn().mockResolvedValue([]),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');
@@ -337,6 +386,9 @@ describe('retrieve.lowConfidence', () => {
       hybridSearchKb: vi.fn().mockImplementation(() => new Promise((res) => setTimeout(() => res([]), 500))),
       hybridSearchUserDocs: vi.fn(),
       hybridSearchUserCode: vi.fn(),
+      // retrieve() imports this from hybridRetrieval; omitting it makes every
+      // test in the block die on the mock instead of on an assertion.
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
     }));
     vi.doMock('../src/services/embeddings.js', () => ({ embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0)) }));
     const { retrieve } = await import('../src/services/retrieval.js');

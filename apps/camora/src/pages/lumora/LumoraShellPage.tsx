@@ -230,7 +230,7 @@ export const LumoraShellPage = () => {
     document.title = titles[activeTab] || 'Camora';
   }, [activeTab]);
 
-  // Capture-key global shortcut (Electron: num0, or F9 fallback): silently
+  // Capture-key global shortcut (Electron: F9): silently
   // capture the HackerRank browser window → navigate to Coding tab → auto-solve.
   // Zero cursor movement; single keystroke so it's easy to hit mid-interview.
   useEffect(() => {
@@ -691,7 +691,7 @@ export const LumoraShellPage = () => {
           {mountedTabs.has('ask') && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0"
               style={{ display: activeTab === 'ask' ? undefined : 'none' }}>
-              <Suspense fallback={<TabLoading />}>
+              <Suspense fallback={<TabLoading label="Ask Sona" />}>
                 <AskSonaPanel />
               </Suspense>
             </div>

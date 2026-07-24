@@ -470,7 +470,7 @@ app.whenReady().then(async () => {
   // Toggle transparent overlay ↔ docked. Only meaningful when the window was
   // created transparent (CAMORA_OVERLAY=1); a no-op chord otherwise so it can't
   // half-apply overlay flags to a framed window. Chosen to avoid the capture
-  // keys (num0 / F9) and the reload chords above.
+  // keys (F9) and the reload chords above.
   if (OVERLAY_ENABLED) {
     globalShortcut.register('CommandOrControl+Shift+O', () => {
       if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -482,12 +482,16 @@ app.whenReady().then(async () => {
 
   // Capture the HackerRank browser window and push it to the renderer for
   // auto-solving. Bound to a SINGLE keystroke so it's easy to hit mid-interview
-  // without a modifier chord:
-  //   • num0 (numeric keypad 0) — primary. A true single stroke that never
-  //     needs Fn and never types into the code editor.
-  //   • F9 — kept as a fallback alias. (On Mac laptops F9 may require Fn unless
-  //     "Use F1, F2 as standard function keys" is enabled — that's why num0 is
-  //     the recommended default.)
+  // without a modifier chord.
+  //
+  // num0 (numeric keypad 0) was the primary binding and is REMOVED: it names a
+  // key that does not physically exist on a MacBook keyboard, so it could never
+  // fire there — the row-0 above the letters reports as Digit0, not num0. It
+  // registered successfully and then silently did nothing, which is worse than
+  // an unbound key because the log line claimed the shortcut was live.
+  //
+  // F9 is now the only capture key. On Mac laptops it may need Fn unless
+  // "Use F1, F2, etc. as standard function keys" is on in System Settings.
   // Cmd+Shift+H was an earlier choice but it navigates Chrome to the home page.
   const captureHackerrank = async () => {
     if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -513,7 +517,7 @@ app.whenReady().then(async () => {
   };
   // Register each accelerator independently so one failing (claimed by the OS)
   // doesn't prevent the other from working.
-  const captureKeys = ['num0', 'F9'];
+  const captureKeys = ['F9'];
   const registeredKeys = captureKeys.filter((key) => globalShortcut.register(key, captureHackerrank));
   if (!registeredKeys.length) {
     console.warn(`[shortcut] no capture key registered — all of [${captureKeys.join(', ')}] were claimed by the OS or another app`);
