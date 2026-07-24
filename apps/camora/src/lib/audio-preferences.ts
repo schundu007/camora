@@ -18,8 +18,6 @@ export interface AudioPreferences {
   captureMethod: CaptureMethod;
   /** Selected candidate-mic device (audioinput). null = system default. */
   micDeviceId: string | null;
-  /** Selected output device for sound test / future Sona TTS. null = default. */
-  speakerDeviceId: string | null;
   /** When captureMethod is virtual-mic, which audioinput is the loopback. */
   virtualMicDeviceId: string | null;
   /** True once the user finished the wizard. Suppresses auto-prompt. */
@@ -32,7 +30,6 @@ export interface AudioPreferences {
 const DEFAULTS: AudioPreferences = {
   captureMethod: 'auto',
   micDeviceId: null,
-  speakerDeviceId: null,
   virtualMicDeviceId: null,
   setupCompleted: false,
   lastKnownGood: false,

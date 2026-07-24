@@ -4,7 +4,6 @@ import { getActiveCompanyKey, ASSISTANT_UPDATED_EVENT } from '../../../lib/compa
 import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
-import { dialogAlert } from '../../shared/Dialog';
 import { requestAudioSetup } from '@/lib/audio-preferences';
 import { useStealth, useSyncStealthOnLaunch } from '../../../lib/stealth';
 import { isElectron } from '../../../lib/overlayMode';
