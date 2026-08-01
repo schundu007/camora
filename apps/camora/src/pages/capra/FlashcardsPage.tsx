@@ -22,10 +22,10 @@ import {
 } from '@/lib/flashcards';
 
 const RATINGS: { key: CardRating; label: string; hint: string; hue: string }[] = [
-  { key: 'again', label: 'Again', hint: 'Blanked', hue: '#ef4444' },
-  { key: 'hard', label: 'Hard', hint: 'Struggled', hue: '#f59e0b' },
+  { key: 'again', label: 'Again', hint: 'Blanked', hue: 'var(--danger)' },
+  { key: 'hard', label: 'Hard', hint: 'Struggled', hue: 'var(--warning)' },
   { key: 'good', label: 'Good', hint: 'Recalled', hue: '#22c55e' },
-  { key: 'easy', label: 'Easy', hint: 'Instant', hue: '#3683DC' },
+  { key: 'easy', label: 'Easy', hint: 'Instant', hue: 'var(--accent)' },
 ];
 
 function nextDueLabel(cards: Flashcard[]): string {
@@ -188,7 +188,7 @@ export default function FlashcardsPage() {
                     onClick={() => rate(r.key)}
                     className="py-3 flex flex-col items-center gap-0.5 transition-colors"
                     style={{ background: 'var(--bg-elevated)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = `${r.hue}14`)}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = `color-mix(in oklab, ${r.hue} 8%, transparent)`)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--bg-elevated)')}
                     data-tip={`${r.label} — press ${i + 1}`}
                   >

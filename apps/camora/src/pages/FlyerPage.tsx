@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import SiteNav from '../components/shared/SiteNav';
 
 type Format = 'square' | 'landscape' | 'portrait';
 
@@ -33,6 +34,7 @@ export default function FlyerPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center" style={{ background: '#0F172A' }}>
+      <SiteNav />
       {/* Format picker — outside the flyer so it's not screenshotted */}
       <div className="w-full p-4 flex items-center justify-center gap-3 flex-wrap" style={{ background: '#020617', borderBottom: '1px solid #1f2937' }}>
         <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}>Format</span>

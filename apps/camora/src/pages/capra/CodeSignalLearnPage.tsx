@@ -28,8 +28,8 @@ const TOPIC_LABELS: Record<string, string> = {
 
 const DIFF_CHIP: Record<Difficulty, { bg: string; text: string }> = {
   easy:   { bg: 'color-mix(in oklab, #10b981 15%, var(--bg-elevated))', text: '#10b981' },
-  medium: { bg: 'color-mix(in oklab, #f59e0b 15%, var(--bg-elevated))', text: '#f59e0b' },
-  hard:   { bg: 'color-mix(in oklab, #ef4444 15%, var(--bg-elevated))', text: '#ef4444' },
+  medium: { bg: 'color-mix(in oklab, var(--warning) 15%, var(--bg-elevated))', text: 'var(--warning)' },
+  hard:   { bg: 'color-mix(in oklab, var(--danger) 15%, var(--bg-elevated))', text: 'var(--danger)' },
 };
 
 const TOPIC_ACCENT: Record<string, string> = {

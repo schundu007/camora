@@ -1,4 +1,4 @@
-import { verifyToken } from '../lib/shared-auth.js';
+import { verifyToken, extractBearerToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
 import { logger } from './requestLogger.js';
 import { initUser } from '../config/database.js';
@@ -79,9 +79,9 @@ export async function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
 
   // Try JWT authentication (webapp users)
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    const jwtUser = await tryJwtAuth(token);
+  const bearerToken = extractBearerToken(authHeader);
+  if (bearerToken) {
+    const jwtUser = await tryJwtAuth(bearerToken);
 
     if (jwtUser && !jwtUser.error) {
       req.user = jwtUser;
@@ -145,9 +145,12 @@ export function requireAdmin(req, res, next) {
     });
   }
 
-  if (req.user.role !== 'admin') {
+  // Gate on is_admin (resolved from DB / OWNER_EMAILS in tryJwtAuth). The JWT
+  // never carries a 'role' claim, so role is always 'user' — checking
+  // role === 'admin' rejected everyone, silently breaking this gate.
+  if (req.user.is_admin !== true) {
     return res.status(403).json({
-      error: 'Access denied. Admin role required.',
+      error: 'Access denied. Admin privileges required.',
       code: 'FORBIDDEN',
     });
   }
@@ -159,15 +162,11 @@ export function requireAdmin(req, res, next) {
  * Optional authentication - attaches user if token present, but doesn't require it
  */
 export async function optionalAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
-
-  if (authHeader) {
-    const parts = authHeader.split(' ');
-    if (parts.length === 2 && parts[0] === 'Bearer') {
-      const jwtUser = await tryJwtAuth(parts[1]);
-      if (jwtUser && !jwtUser.error) {
-        req.user = jwtUser;
-      }
+  const bearerToken = extractBearerToken(req.headers.authorization);
+  if (bearerToken) {
+    const jwtUser = await tryJwtAuth(bearerToken);
+    if (jwtUser && !jwtUser.error) {
+      req.user = jwtUser;
     }
   }
 

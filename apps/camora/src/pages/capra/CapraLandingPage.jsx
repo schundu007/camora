@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import SiteNav from '../../components/shared/SiteNav';
 
 export default function CapraLandingPage() {
   const { loading } = useAuth();
@@ -24,8 +25,10 @@ export default function CapraLandingPage() {
 
   // Capra landing — redirect to dashboard or show sign-in prompt
   return (
-    <div className="min-h-screen flex items-center justify-center relative" style={{ background: 'var(--cam-hero-bg)' }}>
+    <div className="min-h-screen flex flex-col relative" style={{ background: 'var(--cam-hero-bg)' }}>
+      <SiteNav />
       <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
+      <div className="relative flex-1 flex items-center justify-center">
       <div className="relative text-center max-w-md px-6">
         <div className="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ background: 'var(--cam-gold-leaf)', boxShadow: '0 6px 18px rgba(0,0,0,0.25)' }}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--cam-primary-dk)' }}>
@@ -41,6 +44,7 @@ export default function CapraLandingPage() {
         >
           Get Started
         </Link>
+      </div>
       </div>
     </div>
   );
