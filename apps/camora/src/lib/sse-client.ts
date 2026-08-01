@@ -494,6 +494,10 @@ export interface CoFixStreamOptions {
    *  an empty platform-template stub instead of only repairing broken code. */
   problem?: string;
   language: string;
+  /** What the capture is asking for, from the snap classifier or the mode chips.
+   *  'review' audit for faults · 'complete' fill the skeleton · 'solve' write it
+   *  from the statement · 'explain' describe it and change nothing. */
+  mode?: 'review' | 'complete' | 'solve' | 'explain';
   token: string;
   signal?: AbortSignal;
   onToken?: (chunk: string) => void;
@@ -503,7 +507,7 @@ export interface CoFixStreamOptions {
 }
 
 export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<AbortController> {
-  const { code, hint, company, problem, language, token, signal: externalSignal, onToken, onAnswer, onError, onComplete } = options;
+  const { code, hint, company, problem, language, mode, token, signal: externalSignal, onToken, onAnswer, onError, onComplete } = options;
 
   const abortController = new AbortController();
   if (externalSignal) {
@@ -530,6 +534,7 @@ export async function streamCoFixResponse(options: CoFixStreamOptions): Promise<
         ...(hint ? { hint } : {}),
         ...(company ? { company } : {}),
         ...(problem && problem.trim() ? { problem: problem.trim() } : {}),
+        ...(mode ? { mode } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

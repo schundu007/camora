@@ -2044,7 +2044,7 @@ function detectPlatformTemplate(code) {
 // ---------------------------------------------------------------------------
 
 router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  const { code, hint, language, company, problem } = req.body;
+  const { code, hint, language, company, problem, mode } = req.body;
 
   if (!code || code.trim().length < 5) {
     return res.status(400).json({ error: 'Missing or too-short code' });
@@ -2138,7 +2138,77 @@ Each changes[] entry references a line you ADDED or MODIFIED to satisfy the hint
 `
     : '';
 
-  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}${templateModeSection}${refineDirective}
+  // ── Task mode ────────────────────────────────────────────────────────────
+  // The snap classifier (and the mode chips) tell us what the candidate is
+  // actually being asked to do. Without this, every capture was treated as
+  // "repair some broken code", which is only one of four real cases.
+  // Additive only: each directive layers ON TOP of the contract below and
+  // never replaces it.
+  const VALID_MODES = ['review', 'complete', 'solve', 'explain'];
+  const taskMode = VALID_MODES.includes(mode) ? mode : null;
+  const modeDirective = taskMode === 'review'
+    ? `\n══════════════════════════════════════════════════════════════════════════
+REVIEW MODE — this code is believed to CONTAIN FAULTS. Find them all.
+══════════════════════════════════════════════════════════════════════════
+Audit every line before answering and correct each defect you find, including:
+  • wrong operators — = for ==, / for //, < for <=, and/or mixed up, += for =;
+  • stray or extra characters — unbalanced brackets/quotes, a duplicated token, a
+    semicolon or comma that should not be there, a smart quote pasted from a PDF;
+  • indentation faults — a line inside the wrong block, tabs mixed with spaces,
+    a body that is not indented under its def/if/for;
+  • calls to things that DO NOT EXIST — a function, method, attribute, module or
+    variable that is never defined or imported anywhere in this file. Either
+    define it or replace the call with the real one.
+  • off-by-one bounds, missing return, shadowed names, unreachable code.
+Emit ONE changes[] entry per distinct defect, each naming the defect in its label
+(e.g. "wrong operator", "stray bracket", "undefined helper"). If after a careful
+audit the code is genuinely correct, return changes: [] — do not invent faults.
+══════════════════════════════════════════════════════════════════════════
+`
+    : taskMode === 'explain'
+    ? `\n══════════════════════════════════════════════════════════════════════════
+EXPLAIN MODE — HIGHEST PRIORITY. OVERRIDES EVERY "fix"/"complete" RULE BELOW.
+══════════════════════════════════════════════════════════════════════════
+The candidate wants to UNDERSTAND this code, not change it. You MUST:
+  • set "fixed_code" to the input code EXACTLY as given, byte for byte;
+  • set "changes" to [] — you are changing nothing;
+  • put the whole explanation in "walkthrough", and for this mode ONLY use
+    5-8 steps (not 3-5): what the code does, the key idea, how the main data
+    structure and loop work, what it returns, and the complexity.
+Still first-person, still ≤ 15 words per step, still real variable names in
+backticks. If you notice a genuine bug, say so in a walkthrough step — but do
+NOT fix it here.
+══════════════════════════════════════════════════════════════════════════
+`
+    : '';
+  const solveDirective = taskMode === 'solve'
+    ? `\n══════════════════════════════════════════════════════════════════════════
+SOLVE MODE — write the program that solves the PROBLEM STATEMENT above.
+══════════════════════════════════════════════════════════════════════════
+The CODE block below may be empty, a placeholder comment, or a bare skeleton —
+there is nothing there to "preserve". Write the COMPLETE, correct ${lang}
+solution to the problem statement, in the shortest idiomatic form a candidate
+could hand-type in an interview. Import only what the solution actually uses.
+Every changes[] entry references a line you wrote (type "added").
+══════════════════════════════════════════════════════════════════════════
+`
+    : '';
+  // 'complete' forces the template-solve contract even when detectPlatformTemplate()
+  // does not recognise the skeleton (a bare signature, a "your code here" marker).
+  const forcedCompleteSection = (taskMode === 'complete' && !isTemplate)
+    ? `\n══════════════════════════════════════════════════════════════════════════
+COMPLETE MODE — the code below is an UNFINISHED skeleton, not a finished program.
+══════════════════════════════════════════════════════════════════════════
+An empty body, a \`pass\`, a bare \`return\`, or a "TODO / your code here" marker is
+NOT "already correct" — it is exactly what you must write. Keep every existing
+line VERBATIM (imports, signatures, docstrings, any partial logic) and ADD only
+the missing implementation so it solves the PROBLEM STATEMENT above. Mark every
+line you add type "added". Never rewrite a line that is already there.
+══════════════════════════════════════════════════════════════════════════
+`
+    : '';
+
+  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}${templateModeSection}${forcedCompleteSection}${solveDirective}${modeDirective}${refineDirective}
 
 CODE:
 \`\`\`${lang}
@@ -2796,18 +2866,25 @@ router.post('/extract-from-image', authenticate, checkUsage('questions'), imageU
     const isDesign = kind === 'design';
     const subject = isDesign ? 'SYSTEM DESIGN interview question' : 'CODING interview problem';
 
-    const prompt = `You are an OCR engine analyzing a ${subject} screenshot from a coding interview platform (HackerRank, LeetCode, CoderPad, etc.). Return ONLY valid JSON with exactly these three fields and nothing else:
+    const prompt = `You are an OCR engine analyzing a ${subject} screenshot from a coding interview platform (HackerRank, LeetCode, CoderPad, etc.). Return ONLY valid JSON with exactly these four fields and nothing else:
 
 {
   "problem": "<verbatim problem statement — title, description, constraints, input/output format, examples. Preserve all formatting and line breaks. Return the string NO_PROBLEM_FOUND if no problem text is visible>",
   "starter_code": "<verbatim starter/template code from the code editor panel, preserving exact indentation, function names, shebang lines, input-reading boilerplate, and wrapper calls — EVERYTHING visible in the editor. This is the exact code skeleton the candidate must fill in. Return null if no code editor is visible>",
-  "detected_language": "<programming language detected from the code editor — e.g. 'python', 'java', 'cpp', 'javascript', 'bash', 'go', 'ruby', 'rust', 'typescript', 'kotlin', 'scala', 'swift'. Identify from syntax, keywords, shebang, import style. Return null if no code visible>"
+  "detected_language": "<programming language detected from the code editor — e.g. 'python', 'java', 'cpp', 'javascript', 'bash', 'go', 'ruby', 'rust', 'typescript', 'kotlin', 'scala', 'swift'. Identify from syntax, keywords, shebang, import style. Return null if no code visible>",
+  "task": "<what this screen is ASKING the candidate to do — one of 'review', 'complete', 'solve', 'explain'>"
 }
 
 Critical rules:
 - "problem": left panel or top section. Transcribe verbatim — title, description, constraints, examples. Never solve or paraphrase.
 - "starter_code": right panel or bottom editor. Copy EVERY line in the editor verbatim — shebang, imports, class declarations, function stubs with their EXACT names, input-reading (scanf/readline/input/sys.stdin), print statements, wrapper calls at the bottom. null only if no editor is visible at all.
 - "detected_language": look at the code syntax, not just shebangs — Python is recognizable from def/import/if __name__, Java from public class/System.out, etc.
+- "task" — pick exactly one, in this priority order:
+    'review'   → the editor holds FULLY-WRITTEN code that looks WRONG or the screen is asking the candidate to find faults: a visible error/traceback/failing-test panel, red squiggles or error gutter marks, an instruction like "find the bug" / "what is wrong" / "debug", or code you can see contains mistakes (wrong operator such as = for ==, stray or unbalanced characters, broken indentation, a call to a function/method/import that is not defined anywhere on screen).
+    'complete' → the editor holds a TEMPLATE or PARTIAL solution to be filled in: an empty or pass/return-only body, a TODO / "your code here" / "implement this" marker, or a signature with no body.
+    'explain'  → code is present, has no visible faults, and no problem statement is asking for new work; the candidate wants to understand it.
+    'solve'    → a problem statement is present and there is no meaningful code in the editor yet.
+  If genuinely torn between 'review' and 'complete', choose 'complete' when any body is empty/stubbed, otherwise 'review'.
 - Return ONLY valid JSON. No preamble, no explanation, no markdown fences.
 - NEVER describe the image — output JSON only.`;
 
@@ -2851,8 +2928,16 @@ Critical rules:
     const visionLang = normalizedVisionLang && SUPPORTED_LANGUAGES.includes(normalizedVisionLang) ? normalizedVisionLang : null;
     const regexLang = detectLangFromCode(starterCode);
     const detectedLanguage = visionLang || regexLang;
-    console.log(`[extract-from-image] lang_vision_raw=${rawVisionLang} lang_vision_valid=${visionLang} lang_regex=${regexLang} final=${detectedLanguage}`);
-    res.json({ problem, starter_code: starterCode, kind, detected_language: detectedLanguage });
+    // What the screen is asking for, so the client can act on the snap
+    // immediately instead of dropping a thumbnail and waiting for a click.
+    // Fall back on the shape of what we extracted when the model omits it.
+    const VALID_TASKS = ['review', 'complete', 'solve', 'explain'];
+    const rawTask = parsed?.task?.toLowerCase?.()?.trim() || null;
+    const task = VALID_TASKS.includes(rawTask)
+      ? rawTask
+      : (starterCode && starterCode.trim() ? 'review' : 'solve');
+    console.log(`[extract-from-image] lang_vision_raw=${rawVisionLang} lang_vision_valid=${visionLang} lang_regex=${regexLang} final=${detectedLanguage} task_raw=${rawTask} task=${task}`);
+    res.json({ problem, starter_code: starterCode, kind, detected_language: detectedLanguage, task });
   } catch (err) {
     console.error('extract-from-image error:', err?.message || err);
     const exhausted = isApiExhaustedError(err);
