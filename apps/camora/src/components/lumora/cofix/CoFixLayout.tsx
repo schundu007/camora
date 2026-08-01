@@ -26,6 +26,7 @@ import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
+import { snapRegion } from '@/lib/lumora/snapCapture';
 import { useSessionStore } from '@/stores/session-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -383,62 +384,24 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
   const handleSnap = useCallback(async () => {
     if (!onSnappedRef.current) return;
-    const camo = (window as any).camo;
     const id = `snap-${Date.now()}`;
     setSnapState('capturing');
     setSnapError(null);
     try {
-      let dataUrl: string;
-      // Desktop: drag-to-select. The camera button's contract is "snap the area
-      // I select" — crosshair, drag, done. Works for any source (shared screen,
-      // CoderPad pane, a PDF), not just a browser window.
-      if (camo?.captureRegion) {
-        const region = await camo.captureRegion();
-        // Escape → no shot, no error. Silently return to idle.
-        if (region?.cancelled) { setSnapState('idle'); return; }
-        if (!region?.ok || !region.dataUrl) throw new Error(region?.error || 'Region capture failed.');
-        dataUrl = region.dataUrl;
-      } else if (camo?.snapActiveBrowser) {
-        const result = await camo.snapActiveBrowser();
-        if (result?.error) throw new Error(result.error);
-        // Prefer the desktop's EXACT DOM extraction (verbatim editor template +
-        // problem text) over screenshot OCR. When a coding-platform tab is open,
-        // snapActiveBrowser returns the real editor content — load it straight
-        // into the editor as the code to complete and skip OCR entirely.
-        const domStarter = typeof result?.starterCode === 'string' && result.starterCode.trim()
-          ? result.starterCode
-          : null;
-        const domText = typeof result?.text === 'string' && result.text.trim()
-          ? result.text
-          : null;
-        if (domStarter || domText) {
-          let thumb = '';
-          if (result?.dataUrl) {
-            try {
-              const b = await fetch(result.dataUrl).then(r => r.blob());
-              thumb = await new Promise<string>(res => { const reader = new FileReader(); reader.onloadend = () => res(reader.result as string); reader.readAsDataURL(b); });
-            } catch { /* thumbnail is optional */ }
-          }
-          if (domStarter) setInputCode(domStarter);
-          onSnappedRef.current?.({ id, dataUrl: thumb, text: domText || '' });
-          setSnapState('idle');
-          return;
-        }
-        const blob = await fetch(result.dataUrl || result).then(r => r.blob());
-        dataUrl = await new Promise<string>(res => { const reader = new FileReader(); reader.onloadend = () => res(reader.result as string); reader.readAsDataURL(blob); });
-      } else {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const track = stream.getVideoTracks()[0];
-        try {
-          const imageCapture = new (window as any).ImageCapture(track);
-          const bitmap = await imageCapture.grabFrame();
-          const canvas = document.createElement('canvas');
-          canvas.width = bitmap.width; canvas.height = bitmap.height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) throw new Error('no 2d context');
-          ctx.drawImage(bitmap, 0, 0);
-          dataUrl = canvas.toDataURL('image/png');
-        } finally { track.stop(); }
+      // Drag-to-select on desktop, share picker on web. withDom also pulls the
+      // platform's verbatim editor template, which a region snap of the problem
+      // statement would otherwise leave out of the image.
+      const snap = await snapRegion({ withDom: true });
+      // Escape → no shot, no error. Silently return to idle.
+      if (snap.cancelled) { setSnapState('idle'); return; }
+      if (snap.error || !snap.dataUrl) throw new Error(snap.error || 'Snap produced no image.');
+      const { dataUrl } = snap;
+      // Verbatim DOM text beats OCR — skip the round-trip entirely when it's there.
+      if (snap.domText || snap.domStarter) {
+        if (snap.domStarter) setInputCode(snap.domStarter);
+        onSnappedRef.current?.({ id, dataUrl, text: snap.domText || '' });
+        setSnapState('idle');
+        return;
       }
       const tempEntry: ScreenshotEntry = { id, dataUrl, text: '' };
       setPendingSnapIds(prev => [...prev, id]);
@@ -836,25 +799,15 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     if (!token || refineSnapping) return;
     setRefineSnapping(true);
     try {
-      const camo = (window as any).camo;
-      let domText: string | null = null;
+      // Same drag-to-select crosshair as the footer camera button — snap the
+      // exact failing test / error message, not the whole window. No withDom:
+      // a refine snap is about what's on screen right now, not the template.
+      const snap = await snapRegion();
+      if (snap.cancelled) return;
+      if (snap.error || !snap.dataUrl) throw new Error(snap.error || 'Snap produced no image.');
       let imageBlob: Blob | null = null;
-      if (camo?.snapActiveBrowser) {
-        const result = await camo.snapActiveBrowser();
-        if (typeof result?.text === 'string' && result.text.trim()) domText = result.text.trim();
-        if (result?.dataUrl) { try { imageBlob = await (await fetch(result.dataUrl)).blob(); } catch { /* image optional */ } }
-      } else {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const track = stream.getVideoTracks()[0];
-        try {
-          const bmp = await new (window as any).ImageCapture(track).grabFrame();
-          const canvas = document.createElement('canvas');
-          canvas.width = bmp.width; canvas.height = bmp.height;
-          canvas.getContext('2d')?.drawImage(bmp, 0, 0);
-          imageBlob = await new Promise<Blob | null>(res => canvas.toBlob(b => res(b), 'image/png'));
-        } finally { track.stop(); }
-      }
-      let extracted = domText;
+      try { imageBlob = await (await fetch(snap.dataUrl)).blob(); } catch { /* image optional */ }
+      let extracted: string | null = null;
       if (!extracted && imageBlob) {
         const fd = new FormData();
         fd.append('image', new File([imageBlob], 'refine.png', { type: 'image/png' }));
@@ -1809,7 +1762,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           {/* Completed thumbnails */}
           {screenshots.map((s, i) => (
             <div key={s.id} className="relative group shrink-0" data-tip={s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
-              <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
+              {/* Text-only captures carry no image — label the chip instead of
+                  rendering an empty <img src="">. */}
+              {s.dataUrl ? (
+                <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
+              ) : (
+                <div className="h-7 w-10 rounded flex items-center justify-center text-[8px] font-bold uppercase tracking-[0.08em] font-mono" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-hover)', color: 'var(--text-secondary)' }}>TEXT</div>
+              )}
               <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{i + 1}</span>
               {onRemove && (
                 <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} data-tip="Remove">
