@@ -73,9 +73,9 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
   const handleSnapRef = useRef<() => Promise<void>>(async () => {});
 
   const handleSnap = useCallback(async () => {
-    const camo = (window as any).camo;
     const id = `snap-${Date.now()}`;
     setSnapState('capturing');
+    setSnapError(null);
     try {
       // Drag-to-select on desktop, share picker on web. withDom also returns the
       // platform's verbatim problem text + editor template when a coding tab is
@@ -216,7 +216,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           disabled={snapState === 'capturing'}
           data-tip={
             snapState === 'error' ? (snapError || 'Snap failed')
-            : regionSnap ? 'Snap an area — drag to select'
+            : regionSnap ? 'Snap an area — drag to select, Space to click a window, Esc to cancel'
             : snapArmed ? 'Armed — click another window to capture (click here to cancel)'
             : 'Click to arm, then click the window you want to capture'
           }

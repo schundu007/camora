@@ -1736,7 +1736,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             <button
               onClick={handleSnap}
               disabled={snapState === 'capturing'}
-              data-tip={snapState === 'error' ? (snapError || 'Snap failed') : 'Snap an area — drag to select'}
+              data-tip={snapState === 'error' ? (snapError || 'Snap failed') : 'Snap an area — drag to select, Space to click a window, Esc to cancel'}
               className={pillBase}
               style={snapState === 'error'
                 ? { background: 'var(--danger)', color: '#ffffff' }
