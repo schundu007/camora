@@ -14,7 +14,7 @@ import { PAID_PLAN_TYPES } from '../lib/plans.js';
 // 5=$49, 10=$99, 25=$249, 50=$349 (matches frontend teamMonthlyPrice).
 const TEAM_SEATS_MIN = 5;
 const TEAM_SEATS_MAX = 50;
-function computeTeamPriceCents(seats) {
+export function computeTeamPriceCents(seats) {
   const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
   const dollars = n <= 25 ? 49 + (n - 5) * 10 : 249 + (n - 25) * 4;
   return dollars * 100;
@@ -105,10 +105,23 @@ router.get('/prices', (req, res) => {
       interval: 'month',
       seats_min: TEAM_SEATS_MIN,
       seats_max: TEAM_SEATS_MAX,
-      price_per_seat_cents: 2000,
-      flat_discount_cents: 100,
-      // Helper formula: amount_cents = seats * 2000 - 100
-      // Helper formula: included_hours = ceil(seats * 0.7)
+      // Tiered pricing — NOT per-seat linear. Derived from computeTeamPriceCents,
+      // the SAME function checkout charges, so the advertised price always
+      // equals what Stripe bills. Breakpoints: $49 @ 5 seats, +$10/seat to 25
+      // ($249), then +$4/seat to 50 ($349). The old price_per_seat_cents/
+      // flat_discount_cents fields encoded a stale linear model (seats*$20-$1,
+      // e.g. $499 @ 25 seats) that misrepresented the real charge — removed.
+      pricing_model: 'tiered',
+      price_tiers: [
+        { min_seats: TEAM_SEATS_MIN, max_seats: 25, base_seats: 5, base_cents: 4900, per_additional_seat_cents: 1000 },
+        { min_seats: 26, max_seats: TEAM_SEATS_MAX, base_seats: 25, base_cents: 24900, per_additional_seat_cents: 400 },
+      ],
+      amount_cents_by_seats: Object.fromEntries(
+        Array.from(
+          { length: TEAM_SEATS_MAX - TEAM_SEATS_MIN + 1 },
+          (_, i) => [TEAM_SEATS_MIN + i, computeTeamPriceCents(TEAM_SEATS_MIN + i)],
+        ),
+      ),
       productId: process.env.STRIPE_PRODUCT_TEAM || null,
       team: true,
     },

@@ -28,9 +28,10 @@ export default function AccountDocsPage() {
           <li><strong>Free trial</strong> — 1 hour of AI hours, expires 7 days after sign-up. No card required.</li>
           <li><strong>Monthly</strong> — $19/month, includes 2 hours/month of AI hours.</li>
           <li><strong>Yearly</strong> — $99/year, includes 5 hours/month of AI hours (best value).</li>
-          <li><strong>Team</strong> — dynamic pricing: 5&ndash;50 seats, <code>seats × $20 − $1</code>/month,
-            includes <code>⌈seats × 0.7⌉</code> hours/month pooled across the team. Example: 10 seats =
-            $199/month, 7 hours pooled.</li>
+          <li><strong>Team</strong> — dynamic, tiered pricing, 5&ndash;50 seats: <code>$49</code> for 5
+            seats, <code>+$10/seat</code> up to 25 seats (<code>$249</code>), then <code>+$4/seat</code> up
+            to 50 seats (<code>$349</code>). Includes <code>⌈seats × 0.7⌉</code> hours/month pooled across
+            the team. Example: 10 seats = $99/month, 7 hours pooled.</li>
           <li><strong>Top-ups</strong> — $15 per AI hour, buy 1&ndash;50 in one transaction. Top-up
             hours <strong>never expire</strong>.</li>
         </ul>
