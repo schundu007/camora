@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getAdminConfigSnapshot, setAdminConfigValue, deleteAdminConfigValue } from '../services/adminConfig.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 const PROVIDER_ENV_VAR = {
   gemini: 'GOOGLE_AI_API_KEY',
@@ -33,13 +34,8 @@ const router = Router();
 
 const PROVIDERS = ['gemini', 'anthropic', 'deepseek', 'openrouter'];
 
-const OWNER_EMAILS = (() => {
-  const raw = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '');
-  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-})();
-
 function requireOwner(req, res, next) {
-  if (!req.user?.email || !OWNER_EMAILS.includes(req.user.email.toLowerCase())) {
+  if (!isAdminEmail(req.user?.email)) {
     return res.status(403).json({ error: 'Admin access required' });
   }
   next();

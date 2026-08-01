@@ -6,13 +6,13 @@ import { verifyJWT } from '../middleware/jwtAuth.js';
 import { query } from '../lib/shared-db.js';
 import * as freeUsageService from '../services/freeUsageService.js';
 import { cacheGet, cacheSet, cacheKeys } from '../services/redis.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 const router = Router();
 
-// Admin emails bypass all limits. Read from env only — fail closed
-// when ADMIN_EMAILS is unset rather than baking an owner identity
-// into source. Operators set OWNER_EMAILS / ADMIN_EMAILS on Railway.
-const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+// Admin emails bypass all limits (canonical allowlist helper). Read from env
+// only — fail closed when unset rather than baking an owner identity into
+// source. Operators set OWNER_EMAILS / ADMIN_EMAILS on Railway.
 
 // Daily prep cap, counted per DISTINCT company-prep (not per section — one
 // "Generate all" fans out to ~7 section calls for a single company). Free
@@ -29,7 +29,7 @@ const PREP_DAILY_LIMIT_PAID = 3;
 // Claude path in the codebase, so unrestricted access here was the
 // single biggest LLM-cost leak.
 async function checkPrepDailyLimit(userId, isPaid, email, companyName) {
-  if (email && ADMIN_EMAILS.includes(email.toLowerCase())) return true;
+  if (isAdminEmail(email)) return true;
   const today = new Date().toISOString().slice(0, 10);
   const limit = isPaid ? PREP_DAILY_LIMIT_PAID : PREP_DAILY_LIMIT_FREE;
 
@@ -103,7 +103,7 @@ async function checkFeatureAccess(req, res, featureType = 'design', companyName)
 
     // Admin bypass — unlimited access
     const userEmail = decoded.email?.toLowerCase();
-    if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
+    if (isAdminEmail(userEmail)) {
       req.userId = decoded.id;
       req.userEmail = userEmail;
       req.featureAccess = { allowed: true, hasSubscription: true, isAdmin: true };

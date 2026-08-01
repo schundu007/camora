@@ -21,6 +21,7 @@ import {
 import { sendTeamInviteEmail } from '../services/emailService.js';
 import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { getSurfaceEstimate, SUPPORTED_SURFACES } from '../services/estimateService.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 const router = Router();
 
@@ -445,12 +446,8 @@ router.delete('/:teamId/members/:userId', jwtAuth, async (req, res) => {
 // Admin endpoints — owner-emails-only. Used by /admin/teams ops dashboard.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || process.env.OWNER_EMAILS || '')
-  .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
-
 async function adminGate(req, res, next) {
-  const email = (req.user?.email || '').toLowerCase();
-  if (!email || !ADMIN_EMAILS.includes(email)) {
+  if (!isAdminEmail(req.user?.email)) {
     return res.status(403).json({ error: 'Admin only' });
   }
   return next();

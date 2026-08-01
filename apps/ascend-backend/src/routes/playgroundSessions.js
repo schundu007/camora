@@ -11,10 +11,10 @@ import { execScriptInContainerStream, execInContainer } from '../services/playgr
 import { parseClusterList, getExecContainer } from '../services/playground/clusterState.js';
 import { validateExercise } from '../services/k8s/validator.js';
 import { query } from '../config/database.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 function isOwner(email) {
-  const owners = (process.env.OWNER_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-  return owners.includes((email || '').toLowerCase());
+  return isAdminEmail(email);
 }
 
 export const playgroundSessionsRouter = Router();

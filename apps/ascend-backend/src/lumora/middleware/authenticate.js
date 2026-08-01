@@ -8,6 +8,7 @@ import { verifyToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
 import { initUser } from '../../config/database.js';
 import { PAID_PLAN_TYPES } from '../../lib/plans.js';
+import { isAdminEmail } from '../../lib/adminEmails.js';
 
 /**
  * Authenticate request via Bearer token (or cariara_sso cookie).
@@ -103,8 +104,7 @@ export async function authenticate(req, res, next) {
     //
     // This means granting "trial + admin" via the admin panel gives full
     // access for exactly the trial window with zero manual cleanup.
-    const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-    const isEnvAdmin = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes(user.email?.toLowerCase());
+    const isEnvAdmin = isAdminEmail(user.email);
 
     try {
       const subRes = await query(

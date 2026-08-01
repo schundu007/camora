@@ -9,6 +9,7 @@ import * as freeUsageService from '../services/freeUsageService.js';
 import { query } from '../lib/shared-db.js';
 import { recordUsage } from '../services/aiHoursMeter.js';
 import { hourBudgetGate } from '../middleware/hourBudgetGate.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 const router = Router();
 
@@ -50,14 +51,10 @@ function checkDailyDiagramLimit(userId) {
  * the email check is the load-bearing path. If a future migration sets
  * req.user.is_admin from users.is_admin, this still works.
  */
-const OWNER_EMAILS = new Set(
-  ((process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)),
-);
 function isAdminUser(user) {
   if (!user) return false;
   if (user.is_admin === true) return true;
-  return !!user.email && OWNER_EMAILS.has(String(user.email).toLowerCase());
+  return isAdminEmail(user.email);
 }
 function adminOnlyForGeneration(req, res, next) {
   if (!isAdminUser(req.user)) {
