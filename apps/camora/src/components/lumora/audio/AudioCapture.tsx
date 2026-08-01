@@ -1374,7 +1374,7 @@ const UnifiedMicButton = ({
         aria-checked={listenOn}
         onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
         data-tip={listenTip}
-        className="inline-flex items-center px-1.5 py-1 rounded-full transition-colors shrink-0"
+        className="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full transition-colors shrink-0"
         style={{
           background: listenOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
           border: `1px solid ${listenOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
@@ -1396,6 +1396,18 @@ const UnifiedMicButton = ({
               animation: listenOn ? 'mic-pulse 1.4s ease-out infinite' : undefined,
             }}
           />
+        </span>
+        {/* State word. A bare track+knob is an unreadable blank pill — the chip
+            must say which control it is and what state it's in. LIVE is the
+            behavioral interviewer stream; AUTO is coding/design continuous mode. */}
+        <span
+          className="text-[10px] font-bold uppercase tracking-[0.14em] leading-none"
+          style={{
+            color: listenOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
+            fontFamily: 'var(--font-mono)',
+          }}
+        >
+          {locked ? (listenOn ? 'Live' : 'Live off') : (listenOn ? 'Auto' : 'Auto off')}
         </span>
       </button>
 
@@ -1435,12 +1447,22 @@ const UnifiedMicButton = ({
         </button>
       )}
 
-      {/* Audio-level meter */}
+      {/* Audio-level meter — labelled, because five unlit bars on their own
+          read as a second blank chip whenever Sona isn't capturing. */}
       <div
-        className="flex items-end gap-[3px] shrink-0 px-1 py-0.5 rounded"
+        className="flex items-center gap-1.5 shrink-0 px-1.5 py-0.5 rounded"
         style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
-        aria-hidden="true"
+        data-tip={(listenOn || isAsking)
+          ? 'Input level — the bars move when Sona hears audio. Flat bars mean no sound is reaching it.'
+          : 'Input level — flat because Sona is not capturing right now.'}
       >
+        <span
+          className="text-[10px] font-bold uppercase tracking-[0.14em] leading-none"
+          style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}
+        >
+          Level
+        </span>
+        <div className="flex items-end gap-[3px]" aria-hidden="true">
         {[0, 1, 2, 3, 4].map((i) => {
           const lit = meterLevel > i * 0.02;
           return (
@@ -1455,6 +1477,7 @@ const UnifiedMicButton = ({
             />
           );
         })}
+        </div>
       </div>
 
     </>
