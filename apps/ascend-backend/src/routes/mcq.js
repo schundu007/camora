@@ -63,7 +63,7 @@ Respond with ONLY valid JSON (no markdown, no code blocks):
 }
 
 // ── Gemini call with one retry on JSON parse failure ──────────────────────────
-async function generateWithClaude(promptData) {
+async function generateWithGemini(promptData) {
   const prompt = buildPrompt(promptData);
 
   for (let attempt = 1; attempt <= 2; attempt++) {
@@ -121,7 +121,7 @@ router.post('/generate', mcqLimiter, async (req, res, next) => {
     }
 
     // 2. Generate via Gemini
-    const generated = await generateWithClaude({ title, domain, difficulty, tags });
+    const generated = await generateWithGemini({ title, domain, difficulty, tags });
 
     // 3. Store in DB
     await query(
@@ -165,7 +165,9 @@ router.post('/batch', mcqLimiter, async (req, res, next) => {
         candidates = candidates.filter(p => p.difficulty === difficulty);
       }
 
-      // Fisher-Yates shuffle then slice
+      // Fisher-Yates shuffle then slice. Math.random() is fine here
+      // (ROBUST-003): this is a cosmetic UI shuffle of quiz candidates, not a
+      // security-sensitive draw — no unpredictability guarantee is needed.
       for (let i = candidates.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
@@ -202,7 +204,7 @@ router.post('/batch', mcqLimiter, async (req, res, next) => {
           };
         }
 
-        const generated = await generateWithClaude({ title, domain: d, difficulty: diff, tags: t });
+        const generated = await generateWithGemini({ title, domain: d, difficulty: diff, tags: t });
 
         await query(
           `INSERT INTO ascend_mcq_generated (problem_id, question, options, correct_letter, explanation)

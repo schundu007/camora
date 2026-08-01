@@ -850,8 +850,18 @@ const corsOptions = {
     if (ALLOWED_ORIGINS.includes(origin)) {
       return callback(null, true);
     }
-    // Allow Railway and Vercel preview deployments (scoped to our projects)
-    if ((origin.includes('capra-backend') && origin.endsWith('.railway.app')) || (origin.includes('vercel.app') && (origin.includes('ascend') || origin.includes('capra') || origin.includes('camora') || origin.includes('chundu')))) {
+    // Railway backend previews (project name + railway.app apex).
+    if (origin.includes('capra-backend') && origin.endsWith('.railway.app')) {
+      return callback(null, true);
+    }
+    // Vercel previews: require BOTH a known project prefix AND our team suffix
+    // (e.g. https://camora-<hash>-schundu007.vercel.app). The old substring
+    // match on 'ascend'/'camora'/etc let an attacker register
+    // evil-camora.vercel.app and send credentialed requests — this pins to our
+    // Vercel team scope. Override the slug with VERCEL_TEAM_SLUG.
+    const vercelTeamSuffix = `-${process.env.VERCEL_TEAM_SLUG || 'schundu007'}.vercel.app`;
+    const vercelProjectPrefixes = ['https://camora-', 'https://ascend-', 'https://capra-', 'https://chundu-'];
+    if (origin.endsWith(vercelTeamSuffix) && vercelProjectPrefixes.some((p) => origin.startsWith(p))) {
       return callback(null, true);
     }
     // Allow subdomains of cariara.com
@@ -1538,8 +1548,10 @@ app.use('/api/v1/teams', apiLimiter, teamsRouter);
 app.use('/api/voice', authenticate, voiceRouter);
 app.use('/api/v1/resume', aiLimiter, resumeRouter);
 
-// MCQ question generation — AI-generated questions from CoderPad metadata, DB-cached
-app.use('/api/v1/mcq', authenticate, aiLimiter, mcqRouter);
+// MCQ question generation — AI-generated questions from CoderPad metadata, DB-cached.
+// hourBudgetGate (like every other AI route) so a past_due/canceled user with a
+// still-valid JWT can't burn Gemini calls on cache misses.
+app.use('/api/v1/mcq', authenticate, hourBudgetGate, aiLimiter, mcqRouter);
 
 // Practice page solution cache — generated once, served forever from DB+Redis
 app.use('/api/v1/practice', apiLimiter, practiceSolutionsRouter);

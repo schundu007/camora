@@ -318,6 +318,14 @@ router.get('/google/callback', async (req, res) => {
           return;
         }
 
+        // Privacy (AUTH-NEW-004): third-party IP geolocation sends the user's
+        // real IP to ipapi.co on every login. Make it opt-in — default OFF so
+        // we don't transmit PII to an external service without explicit
+        // operator consent. Set ENABLE_LOGIN_GEOIP=true to re-enable.
+        if (process.env.ENABLE_LOGIN_GEOIP !== 'true') {
+          return;
+        }
+
         // ipapi.co (HTTPS) — formerly ip-api.com first, but plaintext
         // HTTP transmits the user's real IP in cleartext on every login,
         // which is a privacy regression and a security audit flag.
@@ -730,6 +738,16 @@ router.post('/refresh', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
+    // Absolute refresh ceiling: we ignore expiration to allow refresh, but a
+    // token whose issuance (iat) is older than 90 days can no longer be
+    // refreshed — so a stolen-but-unrevoked token can't be renewed forever.
+    // (Follow-up: propagate an auth_time claim to also bound tokens that ARE
+    // being actively refreshed; iat resets on each mint.)
+    const MAX_REFRESH_AGE_SEC = 90 * 24 * 60 * 60;
+    if (!payload.iat || (Date.now() / 1000) - payload.iat > MAX_REFRESH_AGE_SEC) {
+      return res.status(401).json({ error: 'Session too old; please sign in again.', code: 'REFRESH_EXPIRED' });
+    }
+
     // Re-query identity on every refresh so the new token carries CURRENT
     // email/name/picture from the DB, not the values frozen in the expired
     // token. Critical for accounts that updated their Google profile or had
@@ -896,7 +914,9 @@ router.post('/admin/grant-subscription', authLimiter, async (req, res) => {
 
   // Require admin secret from environment (no default — must be explicitly configured)
   const expectedSecret = process.env.ADMIN_SECRET;
-  if (!expectedSecret || adminSecret !== expectedSecret) {
+  // Constant-time compare (safeEq) so an attacker can't recover ADMIN_SECRET
+  // byte-by-byte from response-timing differences of `!==`.
+  if (!expectedSecret || !safeEq(adminSecret, expectedSecret)) {
     return res.status(403).json({ error: 'Invalid admin secret' });
   }
 

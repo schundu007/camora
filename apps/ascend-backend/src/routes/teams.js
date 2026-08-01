@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
+import { paymentLimiter } from '../middleware/rateLimiter.js';
 import { logger } from '../middleware/requestLogger.js';
 import {
   createTeamForUser,
@@ -525,7 +526,7 @@ router.get('/admin/refund-requests', jwtAuth, adminGate, async (req, res) => {
 
 // POST /api/v1/teams/admin/refund-requests/:id/approve
 //   Issues the actual Stripe refund + marks the topup refunded.
-router.post('/admin/refund-requests/:id/approve', jwtAuth, adminGate, async (req, res) => {
+router.post('/admin/refund-requests/:id/approve', paymentLimiter, jwtAuth, adminGate, async (req, res) => {
   try {
     const requestId = Number(req.params.id);
     const note = (req.body?.note || '').slice(0, 500);
