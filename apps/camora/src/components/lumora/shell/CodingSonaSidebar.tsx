@@ -312,27 +312,41 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
           {/* Header — navy hero strip + gold underline, matches the
               app's other tool-window chrome. */}
           <div
-            className="flex items-center gap-2 h-10 px-3 shrink-0 lumora-winctl-safe"
+            className="flex items-center gap-2 h-10 px-3 shrink-0 min-w-0 overflow-hidden lumora-winctl-safe"
             style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
           >
-            <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>
-              Sona · Follow-ups
+            {/* Title must never wrap — the header is a fixed h-10, so a wrapped
+                label spills over the overlay window controls sitting on top of
+                it. Nowrap + truncate clips instead of overflowing. */}
+            <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase whitespace-nowrap truncate shrink" style={{ color: 'var(--cam-strip-heading)' }}>
+              Sona
             </span>
-            <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
-              · {surface === 'coding' ? 'about your code' : 'about your design'}
+            {/* Scope, as an icon chip rather than a text chip — the words
+                "· about your code" were the other thing wrapping. */}
+            <span
+              className="inline-flex items-center justify-center w-6 h-6 rounded shrink-0"
+              style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-strip-text)' }}
+              data-tip={surface === 'coding' ? 'Follow-ups about your code' : 'Follow-ups about your design'}
+              aria-label={surface === 'coding' ? 'Follow-ups about your code' : 'Follow-ups about your design'}
+            >
+              {surface === 'coding' ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
+              )}
             </span>
             <div className="ml-auto flex items-center gap-1.5">
               {messages.length > 0 && (
                 <button
                   onClick={clearHistory}
-                  className="inline-flex items-center justify-center text-[9px] font-bold uppercase tracking-[0.12em] px-3 h-7 min-h-[1.75rem] rounded transition-colors"
-                  style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-md transition-colors shrink-0"
+                  style={{ color: 'var(--cam-strip-text)' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                   data-tip="Clear chat history"
                   aria-label="Clear chat history"
                 >
-                  Clear
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" /></svg>
                 </button>
               )}
               <button
