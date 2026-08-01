@@ -117,6 +117,24 @@ export async function tryAutoTopup({ userId, teamId = null }) {
 }
 
 /**
+ * Disable auto-topup for the correct billing subject.
+ *
+ * Team auto-topup config lives in the `teams` table (auto_topup_pack), while
+ * solo config lives in `ascend_subscriptions`. A decline handler that always
+ * cleared ascend_subscriptions was a no-op for teams — the team's flag stayed
+ * set, so every subsequent budget exhaustion re-attempted the same declined
+ * card, hammering Stripe in a retry loop. Route to the table that actually
+ * holds the flag.
+ */
+export async function disableAutoTopup({ teamId, billingUserId }) {
+  if (teamId) {
+    await query('UPDATE teams SET auto_topup_pack = NULL WHERE id = $1', [teamId]);
+  } else {
+    await query('UPDATE ascend_subscriptions SET auto_topup_pack = NULL WHERE user_id = $1', [billingUserId]);
+  }
+}
+
+/**
  * Charge + credit pipeline extracted so the advisory-lock wrapper above
  * can wrap it in a single try / finally block. This is the same logic
  * that previously lived inline; no behavioural change beyond the lock.
@@ -171,13 +189,10 @@ async function chargeAndCredit({ billingUserId, teamId, pack, hours, amount_cent
     // handle the sync path here.
     if (err.code === 'authentication_required' || err.code === 'card_declined') {
       try {
-        await query(
-          `UPDATE ascend_subscriptions SET auto_topup_pack = NULL WHERE user_id = $1`,
-          [billingUserId],
-        );
-        logger.info({ billingUserId, code: err.code }, '[autoTopup] disabled after sync 3DS / decline failure');
+        await disableAutoTopup({ teamId, billingUserId });
+        logger.info({ billingUserId, teamId, code: err.code }, '[autoTopup] disabled after sync 3DS / decline failure');
       } catch (uErr) {
-        logger.warn({ err: uErr.message, billingUserId }, '[autoTopup] disable-after-fail UPDATE errored');
+        logger.warn({ err: uErr.message, billingUserId, teamId }, '[autoTopup] disable-after-fail UPDATE errored');
       }
     }
     return { ok: false, reason: 'CHARGE_FAILED', stripe_error: err.message };
@@ -189,13 +204,10 @@ async function chargeAndCredit({ billingUserId, teamId, pack, hours, amount_cent
   // user notices via the next paywall prompt instead of silently retrying.
   if (pi.status === 'requires_action' || pi.status === 'requires_payment_method') {
     try {
-      await query(
-        `UPDATE ascend_subscriptions SET auto_topup_pack = NULL WHERE user_id = $1`,
-        [billingUserId],
-      );
-      logger.info({ billingUserId, status: pi.status, pi: pi.id }, '[autoTopup] disabled after off-session requires_action');
+      await disableAutoTopup({ teamId, billingUserId });
+      logger.info({ billingUserId, teamId, status: pi.status, pi: pi.id }, '[autoTopup] disabled after off-session requires_action');
     } catch (uErr) {
-      logger.warn({ err: uErr.message, billingUserId }, '[autoTopup] disable-after-stuck UPDATE errored');
+      logger.warn({ err: uErr.message, billingUserId, teamId }, '[autoTopup] disable-after-stuck UPDATE errored');
     }
     return { ok: false, reason: 'CHARGE_FAILED', payment_status: pi.status };
   }
