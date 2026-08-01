@@ -5,7 +5,6 @@ import { query } from '../lib/shared-db.js';
 import { jwtAuth } from '../middleware/jwtAuth.js';
 import { addCredits } from '../services/creditService.js';
 import { validateAutoTopupConfig } from '../services/autoTopupService.js';
-import { SOLO_INCLUDED_HOURS } from '../services/teamService.js';
 import { logger } from '../middleware/requestLogger.js';
 
 import { PAID_PLAN_TYPES } from '../lib/plans.js';
@@ -1093,31 +1092,17 @@ async function handleInvoicePaid(invoice) {
     );
   }
 
-  // Grant included AI hours for renewals (skip initial — already granted at checkout).
-  // Solo plans: insert into ai_hour_topups with source='subscription' and the
-  // invoice id as idempotency key. Team plans: refilled via rollOverTeamPoolForUser
-  // below (it recomputes hours_pool_total from current seat_limit).
-  if (!isInitialInvoice) {
-    const includedHours = SOLO_INCLUDED_HOURS[planType];
-    if (includedHours && planType !== 'team') {
-      try {
-        await query(
-          `INSERT INTO ai_hour_topups
-            (user_id, team_id, hours, amount_cents, stripe_invoice_id, expires_at, source)
-           VALUES ($1, NULL, $2, 0, $3, $4, 'subscription')
-           ON CONFLICT (stripe_invoice_id) WHERE stripe_invoice_id IS NOT NULL DO NOTHING`,
-          [subscription.user_id, includedHours, invoice.id, periodEnd],
-        );
-        logger.info(
-          { userId: subscription.user_id, planType, includedHours, invoiceId: invoice.id },
-          'Renewal hours granted',
-        );
-      } catch (err) {
-        logger.error({ err: err.message, userId: subscription.user_id, invoiceId: invoice.id },
-          'Renewal hours grant failed');
-      }
-    }
-  }
+  // Solo renewals: DO NOT insert an ai_hour_topups grant row here. Solo
+  // included hours are the per-period baseline in checkPersonalHourBudget
+  // (PERSONAL_HOUR_BUDGETS[plan].hours), which resets automatically each
+  // cycle because usage is windowed on current_period_start (updated just
+  // above). Inserting a subscription-grant topup on top of that baseline
+  // double-counted the included hours from period 2 onward — the grant and
+  // the baseline stacked instead of being the same allocation. The baseline
+  // is the single source of truth for solo plans.
+  //
+  // Team renewals are refilled below via rollOverTeamPoolForUser (which
+  // recomputes hours_pool_total from the current seat_limit).
 
   // Phase 7: clear personal pool-low reminder flags so the user gets fresh
   // warnings in the new period. Cheap update; runs for every paid plan.
