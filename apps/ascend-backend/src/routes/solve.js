@@ -12,22 +12,17 @@ import { logger } from '../middleware/requestLogger.js';
 import { awardXP } from '../services/gamificationService.js';
 import { cacheGet, cacheSet } from '../services/redis.js';
 import { recordTokens } from '../services/aiHoursMeter.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 const router = Router();
 
 // Daily solve cap for paid users to prevent abuse
 const PAID_DAILY_LIMIT = 15;
 
-// Owner accounts bypass the daily solve cap. Comma-separated env override.
-const OWNER_EMAILS = new Set(
-  (process.env.OWNER_EMAILS || '')
-    .split(',')
-    .map(e => e.trim().toLowerCase())
-    .filter(Boolean)
-);
-
+// Owner accounts bypass the daily solve cap. Owner identity comes from the
+// canonical allowlist helper (OWNER_EMAILS, then legacy ADMIN_EMAILS).
 function isOwnerEmail(email) {
-  return !!email && OWNER_EMAILS.has(String(email).toLowerCase());
+  return isAdminEmail(email);
 }
 
 // ──────────────────────────────────────────────────────────────────

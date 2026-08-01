@@ -3,13 +3,9 @@ import { Router } from 'express';
 import { query } from '../lib/shared-db.js';
 import { optionalJwtAuth, jwtAuth } from '../middleware/jwtAuth.js';
 import { PAID_PLAN_TYPES } from '../lib/plans.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 const router = Router();
-
-const OWNER_EMAILS = new Set(
-  (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-    .split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
-);
 
 // GET /api/v1/problems/tags — no auth needed
 router.get('/tags', async (req, res) => {
@@ -93,7 +89,7 @@ router.get('/', optionalJwtAuth, async (req, res) => {
     );
 
     // Check paid status via DB (req.user.planType is not populated by optionalJwtAuth)
-    let paid = OWNER_EMAILS.has((req.user?.email ?? '').toLowerCase());
+    let paid = isAdminEmail(req.user?.email);
     if (!paid && req.user?.id) {
       const { rows: subRows } = await query(
         "SELECT plan_type FROM ascend_subscriptions WHERE user_id = $1 AND status = 'active'",
@@ -135,7 +131,7 @@ router.get('/:slug', jwtAuth, async (req, res) => {
       const sub = subRows[0];
       const planType = sub?.plan_type ?? 'free';
       const hasActiveTrial = planType === 'free' && sub?.trial_ends_at && new Date(sub.trial_ends_at) > new Date();
-      const isOwner = OWNER_EMAILS.has((req.user.email ?? '').toLowerCase());
+      const isOwner = isAdminEmail(req.user.email);
       if (!isOwner && !PAID_PLAN_TYPES.has(planType) && !hasActiveTrial) {
         return res.status(403).json({ error: 'Premium problem — upgrade to access', code: 'SUBSCRIPTION_REQUIRED' });
       }

@@ -18,21 +18,14 @@
  */
 import { query } from '../lib/shared-db.js';
 import { PAID_PLAN_TYPES } from '../lib/plans.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
-// Owner allowlist read from env. NO hardcoded fallback — see CLAUDE.md
-// ("OWNER_EMAILS / ADMIN_EMAILS (csv) — bypass quotas + admin gates.
-// No hardcoded fallback in source; if unset, no one is admin"). The
-// previous fallback baked `chundubabu@gmail.com,babuchundu@gmail.com`
-// into the binary so anyone who learned those addresses + minted a
-// token (e.g. via the now-removed `/auth/sync` bypass) could skip
-// billing forever. Matches the pattern in middleware/authenticate.js.
-const OWNER_EMAILS = new Set(
-  (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-    .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean),
-);
-
+// Owner allowlist read from env via the canonical helper. NO hardcoded
+// fallback — see CLAUDE.md ("OWNER_EMAILS / ADMIN_EMAILS (csv) — bypass
+// quotas + admin gates. No hardcoded fallback in source; if unset, no one
+// is admin"). Matches the pattern in middleware/authenticate.js.
 function isOwnerEmail(email) {
-  return !!email && OWNER_EMAILS.has(String(email).toLowerCase());
+  return isAdminEmail(email);
 }
 
 export async function requirePaidSubscription(req, res, next) {

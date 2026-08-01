@@ -1,6 +1,7 @@
 import { checkTeamHourBudget, checkPersonalHourBudget } from '../services/teamService.js';
 import { tryAutoTopup } from '../services/autoTopupService.js';
 import { query } from '../lib/shared-db.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 const GATE_DEADLINE_MS = 3000;
 const AUTO_TOPUP_DEADLINE_MS = 4000;
@@ -9,12 +10,8 @@ const AUTO_TOPUP_DEADLINE_MS = 4000;
 // paywalled by their own hour budgets while testing or operating the
 // product. Source of truth: OWNER_EMAILS env (preferred) or ADMIN_EMAILS
 // (existing var) so a single change in Railway keeps both gates aligned.
-const OWNER_EMAILS = new Set(
-  ((process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean)),
-);
 function isOwnerEmail(email) {
-  return !!email && OWNER_EMAILS.has(String(email).toLowerCase());
+  return isAdminEmail(email);
 }
 
 /** Promise.race against a deadline. Resolves with `defaultValue` on timeout. */

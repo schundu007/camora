@@ -8,6 +8,7 @@ import { validateAutoTopupConfig } from '../services/autoTopupService.js';
 import { logger } from '../middleware/requestLogger.js';
 
 import { PAID_PLAN_TYPES } from '../lib/plans.js';
+import { getAdminEmails, isAdminEmail } from '../lib/adminEmails.js';
 
 // Dynamic team pricing — single Stripe Product, ad-hoc Price per checkout.
 // Tiered: 5-25 seats at $10/seat above base $49; 26-50 seats at $4/seat above $249.
@@ -28,9 +29,7 @@ function computeTeamIncludedHours(seats) {
 // Read from env only — no in-source fallback. If ADMIN_EMAILS is unset,
 // the list is empty and nobody gets the bypass (fail closed). Operator
 // must explicitly opt in by setting OWNER_EMAILS / ADMIN_EMAILS on Railway.
-const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-  .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-if (ADMIN_EMAILS.length === 0) {
+if (getAdminEmails().size === 0) {
   logger.warn('[billing] OWNER_EMAILS/ADMIN_EMAILS unset — no admin bypass active');
 }
 
@@ -158,9 +157,9 @@ router.get('/prices', (req, res) => {
 router.get('/_health', jwtAuth, async (req, res) => {
   // Owner-only — exposes which Stripe IDs are missing/wrong, useful for
   // an attacker enumerating mode (test/live) so we lock it down. Reuse
-  // the module-level ADMIN_EMAILS (env-only, no hardcoded fallback) so
-  // owner identity is consistent across the whole billing surface.
-  if (ADMIN_EMAILS.length === 0 || !ADMIN_EMAILS.includes(String(req.user?.email || '').toLowerCase())) {
+  // the canonical admin allowlist helper (env-only, no hardcoded fallback)
+  // so owner identity is consistent across the whole billing surface.
+  if (getAdminEmails().size === 0 || !isAdminEmail(req.user?.email)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -714,7 +713,7 @@ router.get('/subscription', jwtAuth, async (req, res) => {
   try {
     const userId = req.user.id;
     const email = (req.user.email || '').toLowerCase();
-    const isAdmin = email && ADMIN_EMAILS.includes(email);
+    const isAdmin = isAdminEmail(email);
 
     const result = await query(
       'SELECT * FROM ascend_subscriptions WHERE user_id = $1',

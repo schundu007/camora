@@ -13,14 +13,14 @@ import {
 // Single source of truth for paid plans (includes 'lifetime'). Redeclaring the
 // set locally risked silent drift when a new plan_type is added upstream.
 import { isPaidPlan } from '../../lib/plans.js';
+import { isAdminEmail } from '../../lib/adminEmails.js';
 
 const FREE_ENVIRONMENTS = new Set(['ubuntu', 'docker']);
 const FREE_DAILY_LIMIT = 1;
 const CLUSTER_ENVIRONMENTS = new Set(['etcd-cluster', 'k8s-multi']);
 
 function isOwner(email) {
-  const owners = (process.env.OWNER_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
-  return owners.includes((email || '').toLowerCase());
+  return isAdminEmail(email);
 }
 
 export async function createSession({ userId, userEmail, environment, scenarioId, plan, setupScript }) {

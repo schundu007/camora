@@ -6,6 +6,7 @@
  */
 import { verifyToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 /**
  * Authenticate request via Bearer token (or cariara_sso cookie).
@@ -82,9 +83,7 @@ export async function authenticate(req, res, next) {
 
     // is_admin: DB column takes precedence (set via admin UI toggleAdmin).
     // Env-var list is an additional bypass so Railway-configured emails always work.
-    const ADMIN_EMAILS = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-      .split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-    user.is_admin = !!user.is_admin || (!!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
+    user.is_admin = !!user.is_admin || isAdminEmail(user.email);
 
     req.user = user;
     next();

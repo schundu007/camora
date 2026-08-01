@@ -2,11 +2,7 @@ import { verifyToken, extractBearerToken } from '../lib/shared-auth.js';
 import { query } from '../lib/shared-db.js';
 import { logger } from './requestLogger.js';
 import { initUser } from '../config/database.js';
-
-const ADMIN_EMAILS = new Set(
-  (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
-);
+import { isAdminEmail } from '../lib/adminEmails.js';
 
 /**
  * Try to verify JWT token and look up Ascend user
@@ -40,7 +36,7 @@ async function tryJwtAuth(token) {
         // without the field). Also check OWNER_EMAILS env as fallback so
         // Railway-configured emails work even before DB flag is set.
         const dbAdmin = userRow.is_admin === true;
-        const emailAdmin = !!payload.email && ADMIN_EMAILS.has(payload.email.toLowerCase());
+        const emailAdmin = isAdminEmail(payload.email);
 
         // Forward name + picture from the JWT payload — Google OAuth mints
         // tokens with these fields, and the frontend's UserDropdown / Welcome
