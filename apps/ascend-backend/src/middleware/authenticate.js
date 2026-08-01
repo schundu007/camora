@@ -18,13 +18,28 @@ async function tryJwtAuth(token) {
     if (payload.type === 'access' && payload.sub) {
       const userId = parseInt(payload.sub, 10);
       if (userId) {
+        // Verify the account still exists (and is active) BEFORE anything
+        // else. A JWT is valid for 30 days; without this check a user who
+        // deleted or deactivated their account keeps full API access until
+        // the token naturally expires. Note we deliberately do NOT call
+        // initUser() first — that auto-provisions rows and would silently
+        // resurrect a deleted account.
+        const dbRow = await query(
+          'SELECT is_admin, is_active FROM users WHERE id = $1',
+          [userId],
+        );
+        const userRow = dbRow.rows[0];
+        if (!userRow || userRow.is_active === false) {
+          // Account gone or deactivated — reject the session.
+          return { error: 'ACCOUNT_INACTIVE' };
+        }
+
         await initUser(userId);
 
         // Read is_admin from DB — JWT never carries it (minted at OAuth time
         // without the field). Also check OWNER_EMAILS env as fallback so
         // Railway-configured emails work even before DB flag is set.
-        const dbRow = await query('SELECT is_admin FROM users WHERE id = $1', [userId]);
-        const dbAdmin = dbRow.rows[0]?.is_admin === true;
+        const dbAdmin = userRow.is_admin === true;
         const emailAdmin = !!payload.email && ADMIN_EMAILS.has(payload.email.toLowerCase());
 
         // Forward name + picture from the JWT payload — Google OAuth mints
@@ -79,6 +94,13 @@ export async function authenticate(req, res, next) {
         code: 'TOKEN_EXPIRED',
       });
     }
+
+    if (jwtUser?.error === 'ACCOUNT_INACTIVE') {
+      return res.status(401).json({
+        error: 'Account no longer active. Please sign in again.',
+        code: 'ACCOUNT_INACTIVE',
+      });
+    }
   }
 
   // Also check cariara_sso cookie as fallback
@@ -90,8 +112,14 @@ export async function authenticate(req, res, next) {
     }
   }
 
-  // Check ?token= query param (EventSource/SSE cannot send Authorization headers)
-  if (!req.user && req.query?.token) {
+  // Check ?token= query param — ONLY for SSE handshakes. EventSource can't
+  // send an Authorization header, so streaming endpoints fall back to the
+  // token in the query string. But a URL-embedded JWT leaks into access
+  // logs, Referer headers, and browser history, so we must NOT honor it on
+  // ordinary routes. EventSource always sends `Accept: text/event-stream`;
+  // gate the fallback on that so only genuine SSE requests can use it.
+  const wantsEventStream = (req.headers.accept || '').includes('text/event-stream');
+  if (!req.user && wantsEventStream && req.query?.token) {
     const jwtUser = await tryJwtAuth(req.query.token);
     if (jwtUser && !jwtUser.error) {
       req.user = jwtUser;
