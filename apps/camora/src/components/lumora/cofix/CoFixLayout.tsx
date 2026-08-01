@@ -25,6 +25,7 @@ import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
 import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 import type { ScreenshotEntry } from '@/components/lumora/shell/ScreenshotStrip';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { dialogAlert } from '@/components/shared/Dialog';
 import { useSessionStore } from '@/stores/session-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -102,6 +103,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // invisible on it. Force vs-dark whenever floated as an overlay.
   const monacoTheme: 'vs' | 'vs-dark' = (theme === 'light' && !overlayOn) ? 'vs' : 'vs-dark';
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
+  const [snapError, setSnapError] = useState<string | null>(null);
   const [pendingSnapIds, setPendingSnapIds] = useState<string[]>([]);
   const onSnappedRef = useRef(onSnapped);
   useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
@@ -384,9 +386,19 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     const camo = (window as any).camo;
     const id = `snap-${Date.now()}`;
     setSnapState('capturing');
+    setSnapError(null);
     try {
       let dataUrl: string;
-      if (camo?.snapActiveBrowser) {
+      // Desktop: drag-to-select. The camera button's contract is "snap the area
+      // I select" — crosshair, drag, done. Works for any source (shared screen,
+      // CoderPad pane, a PDF), not just a browser window.
+      if (camo?.captureRegion) {
+        const region = await camo.captureRegion();
+        // Escape → no shot, no error. Silently return to idle.
+        if (region?.cancelled) { setSnapState('idle'); return; }
+        if (!region?.ok || !region.dataUrl) throw new Error(region?.error || 'Region capture failed.');
+        dataUrl = region.dataUrl;
+      } else if (camo?.snapActiveBrowser) {
         const result = await camo.snapActiveBrowser();
         if (result?.error) throw new Error(result.error);
         // Prefer the desktop's EXACT DOM extraction (verbatim editor template +
@@ -452,19 +464,34 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         // HackerRank function stub + locked __main__ harness). Load it into the editor
         // as the code to complete so the fix preserves that EXACT structure — fills the
         // function body, keeps the harness — instead of writing a from-scratch solution.
-        const starter = typeof data.starter_code === 'string' && data.starter_code.trim()
+        let starter = typeof data.starter_code === 'string' && data.starter_code.trim()
           ? data.starter_code
           : null;
         if (starter) {
           setInputCode(starter);
           if (data.detected_language) setLanguage(data.detected_language);
+        } else if ((window as any).camo?.extractBrowserProblem) {
+          // A region snap of the problem statement usually excludes the editor,
+          // so OCR has no template. Pull the verbatim one straight from the
+          // platform's DOM instead of leaving the editor empty.
+          try {
+            const dom = await (window as any).camo.extractBrowserProblem();
+            if (dom?.ok && typeof dom.starterCode === 'string' && dom.starterCode.trim()) {
+              starter = dom.starterCode;
+              setInputCode(dom.starterCode);
+            }
+          } catch { /* DOM extraction is best-effort */ }
         }
       } catch { onSnappedRef.current?.({ ...tempEntry, text: '' }); }
       finally { setPendingSnapIds(prev => prev.filter(p => p !== id)); }
-    } catch {
+    } catch (err: any) {
+      // Silent failure was the whole problem here — say what broke.
+      const msg = err?.message || 'Snap failed.';
+      setSnapError(msg);
       setSnapState('error');
-      setTimeout(() => setSnapState('idle'), 3000);
+      setTimeout(() => { setSnapState('idle'); setSnapError(null); }, 6000);
       setPendingSnapIds(prev => prev.filter(p => p !== id));
+      await dialogAlert({ title: 'Snap failed', message: msg });
     }
   }, [token]);
 
@@ -1756,7 +1783,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             <button
               onClick={handleSnap}
               disabled={snapState === 'capturing'}
-              data-tip={snapState === 'error' ? 'Snap failed' : 'Snap screen'}
+              data-tip={snapState === 'error' ? (snapError || 'Snap failed') : 'Snap an area — drag to select'}
               className={pillBase}
               style={snapState === 'error'
                 ? { background: 'var(--danger)', color: '#ffffff' }
