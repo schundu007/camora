@@ -24,7 +24,7 @@ import {
 const RATINGS: { key: CardRating; label: string; hint: string; hue: string }[] = [
   { key: 'again', label: 'Again', hint: 'Blanked', hue: 'var(--danger)' },
   { key: 'hard', label: 'Hard', hint: 'Struggled', hue: 'var(--warning)' },
-  { key: 'good', label: 'Good', hint: 'Recalled', hue: '#22c55e' },
+  { key: 'good', label: 'Good', hint: 'Recalled', hue: 'var(--cam-success)' },
   { key: 'easy', label: 'Easy', hint: 'Instant', hue: 'var(--accent)' },
 ];
 

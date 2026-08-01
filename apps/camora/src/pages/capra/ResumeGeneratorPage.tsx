@@ -130,7 +130,7 @@ export default function ResumeGeneratorPage() {
         </div>
 
         {error && (
-          <p style={{ color: 'var(--color-error, #ef4444)', marginBottom: 12, fontSize: 14 }}>{error}</p>
+          <p style={{ color: 'var(--color-error)', marginBottom: 12, fontSize: 14 }}>{error}</p>
         )}
 
         <button
@@ -150,7 +150,7 @@ export default function ResumeGeneratorPage() {
               <div style={{ textAlign: 'center', minWidth: 80 }}>
                 <div style={{
                   fontSize: 40, fontWeight: 700, lineHeight: 1,
-                  color: score !== null && score >= 70 ? 'var(--cam-success, #22c55e)' : score !== null && score >= 50 ? 'var(--cam-warning, #f59e0b)' : 'var(--color-error, #ef4444)',
+                  color: score !== null && score >= 70 ? 'var(--cam-success)' : score !== null && score >= 50 ? 'var(--cam-warning)' : 'var(--color-error)',
                 }}>{score ?? '—'}</div>
                 <div className="text-caption" style={{ marginTop: 4 }}>Match Score</div>
               </div>
