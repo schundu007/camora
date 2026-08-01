@@ -31,6 +31,37 @@ import { useSessionStore } from '@/stores/session-store';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
+/** What a capture is asking for. Decided by the snap classifier, overridable
+ *  from the mode chips.
+ *    review   — the code has faults: wrong operators, stray characters, broken
+ *               indentation, calls to things that don't exist.
+ *    complete — a skeleton/template whose body must be written.
+ *    solve    — a problem statement with no code yet.
+ *    explain  — working code the candidate wants described, not changed. */
+type TaskMode = 'review' | 'complete' | 'solve' | 'explain';
+
+const TASK_MODES: { id: TaskMode; label: string; tip: string }[] = [
+  { id: 'review',   label: 'Review',   tip: 'Audit the code for faults — wrong operators, stray characters, indentation, calls to things that do not exist.' },
+  { id: 'complete', label: 'Complete', tip: 'Fill in the missing body of this skeleton, keeping every existing line verbatim.' },
+  { id: 'solve',    label: 'Solve',    tip: 'Write the solution from the problem statement.' },
+  { id: 'explain',  label: 'Explain',  tip: 'Explain what this code does. Changes nothing.' },
+];
+
+/** CoFix needs something in the code field even when solving from a bare
+ *  statement; the backend rejects anything under 5 characters. */
+const SOLVE_PLACEHOLDER: Record<string, string> = {
+  python: '# solve the problem statement above',
+  javascript: '// solve the problem statement above',
+  typescript: '// solve the problem statement above',
+  java: '// solve the problem statement above',
+  cpp: '// solve the problem statement above',
+  c: '// solve the problem statement above',
+  go: '// solve the problem statement above',
+  rust: '// solve the problem statement above',
+  bash: '# solve the problem statement above',
+};
+const solvePlaceholder = (lang: string) => SOLVE_PLACEHOLDER[lang] || '# solve the problem statement above';
+
 // ── CoFix Log custom icons ────────────────────────────────────────────────────
 const G = 'var(--cam-gold-leaf)';
 const LogIconBolt    = ({ color = G }: { color?: string }) => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill={color}/></svg>;
@@ -105,6 +136,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   const monacoTheme: 'vs' | 'vs-dark' = (theme === 'light' && !overlayOn) ? 'vs' : 'vs-dark';
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [snapError, setSnapError] = useState<string | null>(null);
+  // What the last capture is asking for. Set by the snap classifier, and
+  // overridable from the mode chips when it guesses wrong.
+  const [taskMode, setTaskMode] = useState<TaskMode | null>(null);
   const [pendingSnapIds, setPendingSnapIds] = useState<string[]>([]);
   const onSnappedRef = useRef(onSnapped);
   useEffect(() => { onSnappedRef.current = onSnapped; }, [onSnapped]);
@@ -382,6 +416,22 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   }, [changes, monaco, fixedCode]);
 
 
+  // Fires the classified action for a fresh capture. Goes through a ref because
+  // handleFix is defined below and must not be a dependency of handleSnap.
+  const handleFixRunRef = useRef<(code?: string, opts?: { mode?: TaskMode; problem?: string }) => void>(() => {});
+  const autoRunSnap = useCallback((args: { code?: string; problem?: string; mode: TaskMode; language?: string }) => {
+    setTaskMode(args.mode);
+    if (args.language) setLanguage(args.language);
+    // Nothing to send: solve from the statement alone with a placeholder body.
+    const code = args.code?.trim()
+      ? args.code
+      : (args.problem?.trim() ? solvePlaceholder(args.language || effectiveLang) : '');
+    if (!code) return;
+    if (args.code?.trim()) setInputCode(args.code);
+    // One tick so the editor/state settles before the stream starts.
+    setTimeout(() => handleFixRunRef.current(code, { mode: args.mode, problem: args.problem }), 60);
+  }, [effectiveLang]);
+
   const handleSnap = useCallback(async () => {
     if (!onSnappedRef.current) return;
     const id = `snap-${Date.now()}`;
@@ -401,6 +451,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         if (snap.domStarter) setInputCode(snap.domStarter);
         onSnappedRef.current?.({ id, dataUrl, text: snap.domText || '' });
         setSnapState('idle');
+        // A platform template with a statement is always "fill this in".
+        autoRunSnap({
+          code: snap.domStarter || undefined,
+          problem: snap.domText || undefined,
+          mode: snap.domStarter ? 'complete' : 'solve',
+        });
         return;
       }
       const tempEntry: ScreenshotEntry = { id, dataUrl, text: '' };
@@ -445,7 +501,26 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             }
           } catch { /* DOM extraction is best-effort */ }
         }
-      } catch { onSnappedRef.current?.({ ...tempEntry, text: '' }); }
+        // Act on the capture straight away — a thumbnail with nothing happening
+        // is the same as a dead button. The classifier says what to run; with no
+        // code on screen there is nothing to review, so it is a solve.
+        const classified: TaskMode = TASK_MODES.some(m => m.id === data.task)
+          ? data.task as TaskMode
+          : (starter ? 'review' : 'solve');
+        const mode: TaskMode = starter ? classified : 'solve';
+        autoRunSnap({
+          code: starter || undefined,
+          problem: snappedProblem || undefined,
+          mode,
+          language: data.detected_language || undefined,
+        });
+      } catch (ocrErr: any) {
+        onSnappedRef.current?.({ ...tempEntry, text: '' });
+        // OCR failing used to leave a blank thumbnail and no explanation.
+        setSnapError(ocrErr?.message || 'Could not read the snap.');
+        setSnapState('error');
+        setTimeout(() => { setSnapState('idle'); setSnapError(null); }, 6000);
+      }
       finally { setPendingSnapIds(prev => prev.filter(p => p !== id)); }
     } catch (err: any) {
       // Silent failure was the whole problem here — say what broke.
@@ -458,9 +533,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     }
   }, [token]);
 
-  const handleFix = useCallback(async (codeOverride?: string) => {
+  const handleFix = useCallback(async (codeOverride?: string, opts?: { mode?: TaskMode; problem?: string }) => {
     const code = codeOverride ?? inputCode;
     if (code.trim().length < 5 || isLoading) return;
+    // An auto-run fires in the same tick as the snap, before the parent has
+    // pushed the new screenshot back down into problemContextRef — so the
+    // caller passes the freshly-extracted statement explicitly.
+    const runMode = opts?.mode ?? taskMode ?? undefined;
+    const runProblem = opts?.problem ?? (problemContextRef.current || undefined);
     autoFixAttemptsRef.current = 0;
 
     abortRef.current?.abort();
@@ -496,8 +576,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       code,
       hint: undefined,
       company: activeCompany || undefined,
-      problem: problemContextRef.current || undefined,
+      problem: runProblem,
       language: effectiveLang,
+      mode: runMode,
       token: token!,
       onAnswer: (data: CoFixAnswer) => {
         clearTimeout(t3);
@@ -524,7 +605,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
       },
     });
     abortRef.current = controller;
-  }, [inputCode, effectiveLang, token, isLoading, activeAssistant]);
+  }, [inputCode, effectiveLang, token, isLoading, activeAssistant, taskMode]);
 
   const runCustomTest = useCallback(async (id: string) => {
     const tc = customTests.find(t => t.id === id);
@@ -586,6 +667,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
   // Keep handleFixRef current so paste handler always calls the latest closure
   useEffect(() => { handleFixRef.current = handleFix; }, [handleFix]);
+  useEffect(() => { handleFixRunRef.current = handleFix; }, [handleFix]);
 
   const handleRun = useCallback(async () => {
     if (!fixedCode || isRunning) return;
@@ -1750,6 +1832,28 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 : <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
               }
             </button>
+          )}
+
+          {/* Task-mode chips — what the snap was read as, and a one-click
+              correction when the classifier gets it wrong. Re-runs on click. */}
+          {taskMode && (
+            <div className="flex items-center gap-0.5 px-0.5 py-0.5 shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 999 }}>
+              {TASK_MODES.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => { setTaskMode(m.id); handleFix(undefined, { mode: m.id }); }}
+                  disabled={isLoading}
+                  data-tip={m.tip}
+                  className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] font-mono transition-colors"
+                  style={taskMode === m.id
+                    ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)', borderRadius: 999 }
+                    : { color: 'var(--text-muted)', borderRadius: 999 }
+                  }
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
           )}
 
           {/* Pending snap thumbnails */}

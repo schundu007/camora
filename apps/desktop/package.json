@@ -103,6 +103,7 @@
         }
       ]
     },
-    "publish": null
+    "publish": null,
+    "buildVersion": "1.0.1047"
   }
 }
