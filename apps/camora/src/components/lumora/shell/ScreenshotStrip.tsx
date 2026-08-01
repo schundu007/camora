@@ -3,6 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSessionStore } from '@/stores/session-store';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
+import { dialogAlert } from '@/components/shared/Dialog';
+import { snapRegion, canRegionSnap } from '@/lib/lumora/snapCapture';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -59,6 +61,10 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
   const sonaClose = useSessionStore(s => s.sonaClose);
   const sonaHasMessages = useSessionStore(s => s.sonaHasMessages);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
+  const [snapError, setSnapError] = useState<string | null>(null);
+  // Arm-then-click-another-window only exists for surfaces without native region
+  // capture. With the crosshair, arming is a pointless extra step.
+  const regionSnap = canRegionSnap();
   const [snapArmed, setSnapArmed] = useState(false);
   const [pendingIds, setPendingIds] = useState<string[]>([]);
 
@@ -71,46 +77,15 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
     const id = `snap-${Date.now()}`;
     setSnapState('capturing');
     try {
-      let dataUrl: string;
-      let filePath: string | undefined;
-      // When the desktop returns EXACT DOM-extracted problem text (a coding-platform
-      // tab was open), use it verbatim and skip fragile screenshot OCR.
-      let domText: string | null = null;
-      // The locked editor template (answer block) that MUST be filled, not rewritten.
-      let domStarter: string | null = null;
-      if (camo?.snapActiveBrowser) {
-        const result = await camo.snapActiveBrowser();
-        if (!result?.ok || (!result.dataUrl && !result.text && !result.starterCode)) throw new Error(result?.error || 'Snap failed');
-        filePath = result.filePath ?? undefined;
-        domText = typeof result?.text === 'string' && result.text.trim() ? result.text : null;
-        domStarter = typeof result?.starterCode === 'string' && result.starterCode.trim() ? result.starterCode : null;
-        if (result.dataUrl) {
-          const blob = await fetch(result.dataUrl).then(r => r.blob());
-          dataUrl = await new Promise<string>(res => {
-            const reader = new FileReader();
-            reader.onloadend = () => res(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
-        } else {
-          dataUrl = '';
-        }
-      } else {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const track = stream.getVideoTracks()[0];
-        try {
-          const imageCapture = new (window as any).ImageCapture(track);
-          const bitmap = await imageCapture.grabFrame();
-          const canvas = document.createElement('canvas');
-          canvas.width = bitmap.width;
-          canvas.height = bitmap.height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) throw new Error('canvas 2d context unavailable');
-          ctx.drawImage(bitmap, 0, 0);
-          dataUrl = canvas.toDataURL('image/png');
-        } finally {
-          track.stop();
-        }
-      }
+      // Drag-to-select on desktop, share picker on web. withDom also returns the
+      // platform's verbatim problem text + editor template when a coding tab is
+      // open, which beats OCR.
+      const snap = await snapRegion({ withDom: true });
+      // Escape / dismissed picker → no shot, no error.
+      if (snap.cancelled) { setSnapState('idle'); return; }
+      if (snap.error || !snap.dataUrl) throw new Error(snap.error || 'Snap produced no image.');
+      const { dataUrl, domText, domStarter } = snap;
+      const filePath = snap.filePath;
       // Show loading spinner for this snap
       const tempEntry: ScreenshotEntry = { id, dataUrl, text: '', filePath };
       // Exact DOM extraction present (problem text and/or the editor's starter
@@ -147,10 +122,15 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       } finally {
         setPendingIds(prev => prev.filter(pid => pid !== id));
       }
-    } catch {
+    } catch (err: any) {
+      // A capture that fails silently is indistinguishable from a dead button —
+      // always say what went wrong.
+      const msg = err?.message || 'Snap failed.';
+      setSnapError(msg);
       setSnapState('error');
-      setTimeout(() => setSnapState('idle'), 3000);
+      setTimeout(() => { setSnapState('idle'); setSnapError(null); }, 6000);
       setPendingIds(prev => prev.filter(pid => pid !== id));
+      await dialogAlert({ title: 'Snap failed', message: msg });
     }
   }, [token, onSnapped]);
 
@@ -232,11 +212,12 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       {/* Snap button — click to arm, then click any other window to capture */}
       {showSnap && (
         <button
-          onClick={snapState === 'capturing' ? undefined : snapArmed ? () => setSnapArmed(false) : () => setSnapArmed(true)}
+          onClick={snapState === 'capturing' ? undefined : regionSnap ? handleSnap : snapArmed ? () => setSnapArmed(false) : () => setSnapArmed(true)}
           disabled={snapState === 'capturing'}
           data-tip={
-            snapArmed ? 'Armed — click another window to capture (click here to cancel)'
-            : snapState === 'error' ? 'Snap failed — check Screen Recording permission'
+            snapState === 'error' ? (snapError || 'Snap failed')
+            : regionSnap ? 'Snap an area — drag to select'
+            : snapArmed ? 'Armed — click another window to capture (click here to cancel)'
             : 'Click to arm, then click the window you want to capture'
           }
           className={pillBase}
@@ -273,13 +254,24 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       {/* Completed screenshot thumbnails */}
       {showSnap && screenshots.map((s, i) => (
         <div key={s.id} className="relative group shrink-0" data-tip={s.filePath ? `Click to open • Page ${i + 1}${s.text ? ': ' + s.text.slice(0, 60) + '…' : ''}` : s.text ? `Page ${i + 1}: ${s.text.slice(0, 80)}…` : `Page ${i + 1}`}>
-          <img
-            src={s.dataUrl}
-            alt={`Screenshot ${i + 1}`}
-            className={`h-7 w-10 object-cover rounded${s.filePath ? ' cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
-            style={{ border: '1px solid var(--cam-strip-icon-border)' }}
-            onClick={s.filePath ? () => (window as any).camo?.openFile?.(s.filePath) : undefined}
-          />
+          {/* No image (text-only capture) → a labelled chip. An <img src=""> here
+              renders as an unreadable empty box — never ship a blank chip. */}
+          {s.dataUrl ? (
+            <img
+              src={s.dataUrl}
+              alt={`Screenshot ${i + 1}`}
+              className={`h-7 w-10 object-cover rounded${s.filePath ? ' cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+              style={{ border: '1px solid var(--cam-strip-icon-border)' }}
+              onClick={s.filePath ? () => (window as any).camo?.openFile?.(s.filePath) : undefined}
+            />
+          ) : (
+            <div
+              className="h-7 w-10 rounded flex items-center justify-center text-[8px] font-bold uppercase tracking-[0.08em] font-mono"
+              style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-strip-text)' }}
+            >
+              {s.starterCode ? 'CODE' : 'TEXT'}
+            </div>
+          )}
           <span
             className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
             style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}

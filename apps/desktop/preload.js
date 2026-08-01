@@ -85,10 +85,6 @@ contextBridge.exposeInMainWorld('camo', {
   // Returns { ok, url, browser } so the renderer can pre-fill the URL input and auto-fetch.
   getActiveBrowserUrl: () => ipcRenderer.invoke('get-active-browser-url'),
 
-  // Snap active browser window — captures the front Chrome/Brave/Edge window
-  // and returns { ok, dataUrl } for OCR. Targets only the interview platform,
-  // not the full screen.
-  snapActiveBrowser: () => ipcRenderer.invoke('snap-active-browser'),
   // App-level stealth — setContentProtection(on) makes the Camora window
   // invisible to screen recording and screen share. The cursor is composited by
   // the OS on top of that, so mask its shape in lockstep with the window flag.

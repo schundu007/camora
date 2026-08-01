@@ -1621,12 +1621,9 @@ ipcMain.handle('relaunch-app', () => {
   app.exit(0);
 });
 
-// ── IPC: snap active browser window ────────────────────────────────────────
-// Captures the front Chrome/Brave/Edge/Arc window and returns a dataUrl.
-// Used by behavioral Snap so it targets the interview platform window
-// (HackerRank, Zoom, Teams, etc.) instead of the full screen.
-// Return the URL of the active Chrome/Brave/Edge tab — no screenshot, no scraping.
-// Renderer uses this to pre-fill the URL input and auto-fetch the problem.
+// ── IPC: active browser tab URL ────────────────────────────────────────────
+// Returns the URL of the front Chrome/Brave/Edge tab — no screenshot, no
+// scraping. The renderer uses it to pre-fill the URL input and auto-fetch.
 ipcMain.handle('get-active-browser-url', async () => {
   if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
   try {
@@ -1635,57 +1632,6 @@ ipcMain.handle('get-active-browser-url', async () => {
     return { ok: true, url: info.url, browser: info.browser };
   } catch (err) {
     return { ok: false, error: err?.message || 'Failed to get browser URL' };
-  }
-});
-
-ipcMain.handle('snap-active-browser', async () => {
-  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
-  const screenStatus = systemPreferences.getMediaAccessStatus('screen');
-  if (screenStatus !== 'granted') {
-    return { ok: false, needsScreenPermission: true, error: 'Screen Recording permission required.' };
-  }
-  try {
-    const info = await getActiveBrowserInfo();
-    if (!info) return { ok: false, error: 'No browser window found. Make sure Chrome/Brave/Edge is open.' };
-
-    // Prefer EXACT DOM extraction over screenshot OCR whenever a supported coding
-    // platform tab is open (found by all-tabs search above, even if it's a
-    // background tab). This gives CoFix the verbatim editor template + problem
-    // text instead of fragile OCR. OCR remains the fallback in the renderer when
-    // DOM extraction is unavailable (dev-menu "Allow JavaScript from Apple Events"
-    // off) and only the screenshot comes back.
-    let text = null;
-    let starterCode = null;
-    const isPlatform = Object.values(PLATFORM_URL_MATCH).some((fn) => fn(info.url));
-    if (isPlatform) {
-      try { text = await extractProblemTextFromBrowser(info.browser, info.url); } catch {}
-      try { starterCode = await extractStarterCodeFromBrowser(info.browser, info.url); } catch {}
-    }
-
-    const dataUrl = await captureExactBrowserWindow(info.windowTitle);
-    // Only hard-fail if we got NOTHING usable — no screenshot AND no DOM template.
-    if (!dataUrl && !starterCode && !text) {
-      return { ok: false, error: 'Could not capture the browser window. Make sure it is visible and not minimised.' };
-    }
-    // Save the screenshot (when present) to the session folder so the user can
-    // click the thumbnail to open it in Preview/Finder.
-    let filePath = null;
-    if (dataUrl) {
-      try {
-        const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Camora', 'screenshots');
-        fs.mkdirSync(folder, { recursive: true });
-        const ext = dataUrl.startsWith('data:image/jpeg') ? 'jpg' : 'png';
-        const filename = `snap-${Date.now()}.${ext}`;
-        filePath = path.join(folder, filename);
-        const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-        fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
-      } catch (saveErr) {
-        console.log('[snap] save to disk failed:', saveErr.message);
-      }
-    }
-    return { ok: true, dataUrl, filePath, text, starterCode, url: info.url };
-  } catch (err) {
-    return { ok: false, error: err?.message || 'Capture failed' };
   }
 });
 

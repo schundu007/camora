@@ -6,6 +6,7 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import SharedCodeEditor from '@/components/shared/code/SharedCodeEditor';
 import { LANGUAGES, getLanguageById } from '@/data/languages';
 import { dialogAlert } from '@/components/shared/Dialog';
+import { snapRegion, canRegionSnap } from '@/lib/lumora/snapCapture';
 import { getActiveAssistant } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, getActiveCompanyKey } from '@/lib/companyContext';
 import { ProblemCaptureStrip } from '@/components/lumora/shared/ProblemCaptureStrip';
@@ -1916,17 +1917,19 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   // + Screenshot button in IMAGE chip — captures active browser window.
   const handleAddScreenshot = useCallback(async () => {
-    const camo = (window as any).camo;
-    if (!camo?.snapActiveBrowser) {
+    if (!canRegionSnap()) {
       fileInputRef.current?.click(); // web fallback: open file picker
       return;
     }
     setIsProcessing(true);
     setError(null);
     try {
-      const result = await camo.snapActiveBrowser();
-      if (!result?.ok || !result.dataUrl) throw new Error(result?.error || 'Could not capture screenshot. Make sure Chrome/Brave is open on the problem page.');
-      addToSnapCollection(result.dataUrl);
+      // Drag-to-select the problem area — works on a shared screen or a PDF,
+      // not just a front browser window.
+      const snap = await snapRegion();
+      if (snap.cancelled) return;
+      if (snap.error || !snap.dataUrl) throw new Error(snap.error || 'Screenshot failed.');
+      addToSnapCollection(snap.dataUrl);
     } catch (err: any) {
       setError(err.message || 'Screenshot failed');
     } finally {
