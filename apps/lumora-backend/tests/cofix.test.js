@@ -217,7 +217,7 @@ describe('POST /api/v1/coding/cofix/stream', () => {
       });
 
     const sentText = generateContentMock.mock.calls[0][0];
-    expect(sentText).toContain('TEMPLATE-SOLVE MODE');
+    expect(sentText).toContain('SITUATION: PLATFORM TEMPLATE');
     expect(sentText).toContain('CHARACTER-FOR-CHARACTER');
     // the problem must also be threaded so the empty body gets solved, not guessed
     expect(sentText).toContain('Count occurrences of sub_string');
@@ -241,7 +241,7 @@ describe('POST /api/v1/coding/cofix/stream', () => {
       });
 
     const sentText = generateContentMock.mock.calls[0][0];
-    expect(sentText).toContain('TEMPLATE-SOLVE MODE');
+    expect(sentText).toContain('SITUATION: PLATFORM TEMPLATE');
     // The minimal template must complete INLINE, never wrapped in a new function.
     expect(sentText).toMatch(/MINIMAL \/ INLINE skeleton/i);
     expect(sentText).toMatch(/DO NOT invent a wrapper function/i);
