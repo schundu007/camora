@@ -62,6 +62,21 @@ const SOLVE_PLACEHOLDER: Record<string, string> = {
 };
 const solvePlaceholder = (lang: string) => SOLVE_PLACEHOLDER[lang] || '# solve the problem statement above';
 
+/** Classify a capture that arrives WITHOUT the extractor's verdict — e.g. pushed
+ *  in from the shell strip or the desktop screenshot watcher. Same four modes,
+ *  decided from the shape of the code alone. */
+const classifyLocally = (code?: string | null, problem?: string | null): TaskMode => {
+  const c = (code || '').trim();
+  if (!c) return 'solve';
+  // A stub: an empty/pass/return-only body, or an explicit fill-me marker.
+  if (/\b(TODO|FIXME)\b|your code here|implement (this|the)|write your/i.test(c)) return 'complete';
+  if (/(^|\n)\s*(pass|return\s*(None|null|0|\[\]|\{\})?)\s*$/m.test(c)) return 'complete';
+  if (/\{\s*\}\s*$/m.test(c)) return 'complete';
+  // A signature with nothing under it.
+  if (/(def|function|func|fn)\s+\w+[^\n]*:?\s*$/m.test(c) && c.split('\n').filter(l => l.trim()).length <= 3) return 'complete';
+  return problem && problem.trim() ? 'complete' : 'review';
+};
+
 // ── CoFix Log custom icons ────────────────────────────────────────────────────
 const G = 'var(--cam-gold-leaf)';
 const LogIconBolt    = ({ color = G }: { color?: string }) => <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M7 1L2.5 6.5H5.5L5 11L9.5 5.5H6.5L7 1Z" fill={color}/></svg>;
@@ -387,11 +402,22 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   useEffect(() => {
     if (!onScreenshotAppendRef) return;
     onScreenshotAppendRef.current = (text: string, starter?: string) => {
+      // Our own snap already set the editor and is driving the run.
+      if (suppressAppendRef.current) return;
       // Prefer the captured editor template as the code to fix — that's the locked
       // answer block CoFix must complete in place. Fall back to OCR/problem text.
       const clean = typeof starter === 'string' && starter.trim() ? starter : null;
-      if (clean) { setInputCode(clean); return; }
-      setInputCode(prev => prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text);
+      if (clean) setInputCode(clean);
+      else if (text) setInputCode(prev => prev ? `${prev}\n\n--- Page Break ---\n\n${text}` : text);
+      // Screenshots pushed in from OUTSIDE CoFix (the shell strip, the desktop
+      // screenshot watcher, F9) used to stop here — editor filled, nothing run.
+      // They get the same treatment as CoFix's own snap. No verdict travels with
+      // this call, so classify from the shape of what arrived.
+      autoRunSnapRef.current?.({
+        code: clean || undefined,
+        problem: text || undefined,
+        mode: classifyLocally(clean, text),
+      });
     };
     return () => { onScreenshotAppendRef.current = null; };
   }, [onScreenshotAppendRef]);
@@ -419,6 +445,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // Fires the classified action for a fresh capture. Goes through a ref because
   // handleFix is defined below and must not be a dependency of handleSnap.
   const handleFixRunRef = useRef<(code?: string, opts?: { mode?: TaskMode; problem?: string }) => void>(() => {});
+  // CoFix's own snap calls onSnapped → the shell routes it straight back in
+  // through onScreenshotAppendRef. Without this latch that round trip fires a
+  // SECOND run and overwrites the starter code with the problem statement.
+  // handleSnapped invokes the append ref synchronously, so a plain flag holds.
+  const suppressAppendRef = useRef(false);
+  const autoRunSnapRef = useRef<((args: { code?: string; problem?: string; mode: TaskMode; language?: string }) => void) | null>(null);
   const autoRunSnap = useCallback((args: { code?: string; problem?: string; mode: TaskMode; language?: string }) => {
     setTaskMode(args.mode);
     if (args.language) setLanguage(args.language);
@@ -426,30 +458,45 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     const code = args.code?.trim()
       ? args.code
       : (args.problem?.trim() ? solvePlaceholder(args.language || effectiveLang) : '');
-    if (!code) return;
+    if (!code) {
+      // The capture yielded neither code nor a problem statement. Say so —
+      // this is exactly the "nothing happens" case.
+      addLog(<LogIconError />, 'Nothing readable in that capture — no code and no problem text. Snap the problem or the editor and try again.', 'error');
+      return;
+    }
+    addLog(<LogIconSpark />, `Read as ${args.mode.toUpperCase()} — running…`, 'success');
     if (args.code?.trim()) setInputCode(args.code);
     // One tick so the editor/state settles before the stream starts.
     setTimeout(() => handleFixRunRef.current(code, { mode: args.mode, problem: args.problem }), 60);
   }, [effectiveLang]);
+  useEffect(() => { autoRunSnapRef.current = autoRunSnap; }, [autoRunSnap]);
 
   const handleSnap = useCallback(async () => {
     if (!onSnappedRef.current) return;
     const id = `snap-${Date.now()}`;
     setSnapState('capturing');
     setSnapError(null);
+    // Open the log from the click. A capture that quietly goes nowhere is the
+    // single worst failure mode here — every step has to be visible.
+    setLogLines([]);
+    setShowLogPopup(true);
+    addLog(<LogIconBolt />, 'Select the area to snap…');
     try {
       // Drag-to-select on desktop, share picker on web. withDom also pulls the
       // platform's verbatim editor template, which a region snap of the problem
       // statement would otherwise leave out of the image.
       const snap = await snapRegion({ withDom: true });
       // Escape → no shot, no error. Silently return to idle.
-      if (snap.cancelled) { setSnapState('idle'); return; }
+      if (snap.cancelled) { setSnapState('idle'); setShowLogPopup(false); return; }
       if (snap.error || !snap.dataUrl) throw new Error(snap.error || 'Snap produced no image.');
       const { dataUrl } = snap;
+      addLog(<LogIconScan />, 'Reading the capture…');
       // Verbatim DOM text beats OCR — skip the round-trip entirely when it's there.
       if (snap.domText || snap.domStarter) {
         if (snap.domStarter) setInputCode(snap.domStarter);
-        onSnappedRef.current?.({ id, dataUrl, text: snap.domText || '' });
+        suppressAppendRef.current = true;
+        try { onSnappedRef.current?.({ id, dataUrl, text: snap.domText || '' }); }
+        finally { suppressAppendRef.current = false; }
         setSnapState('idle');
         // A platform template with a statement is always "fill this in".
         autoRunSnap({
@@ -478,7 +525,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         const snappedProblem = data.problem && data.problem !== 'NO_PROBLEM_FOUND'
           ? data.problem
           : (data.text || data.problem_text || '');
-        onSnappedRef.current?.({ ...tempEntry, text: snappedProblem });
+        suppressAppendRef.current = true;
+        try { onSnappedRef.current?.({ ...tempEntry, text: snappedProblem }); }
+        finally { suppressAppendRef.current = false; }
         // The snapped screenshot usually shows the platform's editor template (e.g. a
         // HackerRank function stub + locked __main__ harness). Load it into the editor
         // as the code to complete so the fix preserves that EXACT structure — fills the
@@ -516,6 +565,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         });
       } catch (ocrErr: any) {
         onSnappedRef.current?.({ ...tempEntry, text: '' });
+        addLog(<LogIconError />, `Could not read the capture: ${ocrErr?.message || 'extraction failed'}`, 'error');
         // OCR failing used to leave a blank thumbnail and no explanation.
         setSnapError(ocrErr?.message || 'Could not read the snap.');
         setSnapState('error');
@@ -559,7 +609,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
     decorationCollectionRef.current?.clear();
     decorationCollectionRef.current = null;
 
-    addLog(<LogIconBolt />, 'Starting CoFix…');
+    addLog(<LogIconBolt />, runMode ? `Starting CoFix — ${runMode}…` : 'Starting CoFix…');
     const t1 = setTimeout(() => addLog(<LogIconSearch />, `Parsing ${effectiveLang} code…`), 300);
     const t2 = setTimeout(() => addLog(<LogIconScan />, 'Scanning for issues…'), 800);
     const t3 = setTimeout(() => addLog(<LogIconSpark />, 'Querying…'), 1400);
