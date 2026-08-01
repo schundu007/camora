@@ -9,6 +9,7 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
+import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC } from '../services/taskModes.js';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -2074,29 +2075,6 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
   const problemSection = problemText
     ? `\nPROBLEM STATEMENT — implement the code so it correctly solves THIS (read constraints + examples carefully; trace your body on the first example before answering):\n"""\n${problemText}\n"""\n`
     : '';
-  const templateModeSection = isTemplate
-    ? `\n══════════════════════════════════════════════════════════════════════════
-TEMPLATE-SOLVE MODE — HIGHEST PRIORITY. OVERRIDES EVERY "only fix what is broken" AND "EXECUTION CONTRACT" RULE BELOW.
-══════════════════════════════════════════════════════════════════════════
-The CODE below is a LOCKED editor template from a coding platform (HackerRank / Codility / CoderPad). EVERYTHING already present is uneditable and MUST be reproduced BYTE-FOR-BYTE; you only ADD the missing implementation.
-
-${buildTemplateShapeDirective(cleanedCode)}
-
-SOLVE, don't just fix: an empty body — or a bare imports-only skeleton — is NOT "already correct" — it is precisely the thing you must complete so the program solves the PROBLEM STATEMENT above (or, if none is given, what the template + harness clearly imply). Produce the value/output the harness (or the problem) expects.
-
-MINIMAL LINES + MINIMAL IMPORTS — MANDATORY when you SOLVE from scratch (empty/skeleton input): write the SHORTEST correct, idiomatic solution the candidate could hand-type in an interview. Favour comprehensions, unpacking, built-ins, and collections/itertools over boilerplate; do NOT add dataclasses, wrapper classes, extra helpers, or verbose try/except the problem doesn't require — a clean 5-15 line solution beats a 40-line one. Import ONLY modules the code actually uses — no unused or "just in case" imports, prefer built-ins/stdlib. (When the input is REAL candidate code you are FIXING, preserve their approach and only correct what is broken — do not rewrite it shorter.)
-
-fixed_code MUST satisfy ALL of these:
-1. Reproduce every import / package / using / shebang line, every comment, every class and function SIGNATURE, and the ENTIRE input-output harness (\`if __name__ == '__main__':\`, input()/sys.stdin/print(), Scanner/BufferedReader/System.out, cin/cout/scanf/printf, readline, bufio, bash readarray + wrapper call + exit 0) CHARACTER-FOR-CHARACTER, in the same order, as given.
-2. Do NOT rename functions, change parameter lists, reorder lines, restructure into a stdin-reading script, or replace the platform's stdin-reading / printing with your own. The candidate pastes fixed_code straight back into the locked editor and it must run unmodified.
-3. Add ONLY the missing implementation, per TEMPLATE SHAPE above: fill the stub body(ies) if the template defines a function (fill EVERY one), or append the inline script under the imports if it defines none. Add nothing else except an import your implementation strictly needs — placed exactly where the template's existing imports are. Never introduce a wrapper function the template does not already declare.
-4. Return the COMPLETE file: the untouched template PLUS your added implementation — never a bare function with the harness stripped off.
-5. Set "hackerrank_compatible": true — this IS the platform's own template, so it is submission-ready as-is; do NOT tell the candidate to strip I/O.
-Every changes[] entry MUST reference a line you ADDED — a filled function body, or an inline line you appended under the imports — never a harness/import/signature line (those are unchanged).
-══════════════════════════════════════════════════════════════════════════
-`
-    : '';
-
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -2138,91 +2116,20 @@ Each changes[] entry references a line you ADDED or MODIFIED to satisfy the hint
 `
     : '';
 
-  // ── Task mode ────────────────────────────────────────────────────────────
-  // The snap classifier (and the mode chips) tell us what the candidate is
-  // actually being asked to do. Without this, every capture was treated as
-  // "repair some broken code", which is only one of four real cases.
-  // Additive only: each directive layers ON TOP of the contract below and
-  // never replaces it.
-  const VALID_MODES = ['review', 'complete', 'solve', 'explain'];
-  const taskMode = VALID_MODES.includes(mode) ? mode : null;
-  const modeDirective = taskMode === 'review'
-    ? `\n══════════════════════════════════════════════════════════════════════════
-REVIEW MODE — this code is believed to CONTAIN FAULTS. Find them all.
-══════════════════════════════════════════════════════════════════════════
-Audit every line before answering and correct each defect you find, including:
-  • wrong operators — = for ==, / for //, < for <=, and/or mixed up, += for =;
-  • stray or extra characters — unbalanced brackets/quotes, a duplicated token, a
-    semicolon or comma that should not be there, a smart quote pasted from a PDF;
-  • indentation faults — a line inside the wrong block, tabs mixed with spaces,
-    a body that is not indented under its def/if/for;
-  • calls to things that DO NOT EXIST — a function, method, attribute, module or
-    variable that is never defined or imported anywhere in this file. Either
-    define it or replace the call with the real one.
-  • off-by-one bounds, missing return, shadowed names, unreachable code.
-Emit ONE changes[] entry per distinct defect, each naming the defect in its label
-(e.g. "wrong operator", "stray bracket", "undefined helper"). If after a careful
-audit the code is genuinely correct, return changes: [] — do not invent faults.
+  // ── Situation: selected once, never layered ──────────────────────────────
+  // Exactly ONE block describes what the candidate is being asked to do, so two
+  // situations can no longer contradict each other inside the same prompt.
+  const task = resolveTask({ requested: mode, isTemplate });
+  const situationBlock = buildSituationBlock({
+    task,
+    templateShape: isTemplate ? buildTemplateShapeDirective(cleanedCode) : '',
+  });
+  const walk = WALKTHROUGH_BUDGET[task] || WALKTHROUGH_BUDGET.diagnose;
+  console.log(`[cofix] task=${task} requested=${mode || 'none'} isTemplate=${isTemplate} lang=${lang}`);
 
-REVIEW MODE SUSPENDS THE "EXECUTION CONTRACT" RULE BELOW. You are reviewing the
-candidate's program, not making it harness-compatible. You are FORBIDDEN to:
-  • wrap loose top-level statements in a function, or add/rename parameters;
-  • convert print() output into a return value, or a return into a print;
-  • introduce ANY new variable, list, accumulator, helper, guard condition or
-    early exit that was not already there — no output=[], no "!= sentinel";
-  • reorder, merge or split statements, or change the algorithm or data
-    structures for a "better" one.
-fixed_code is the SAME PROGRAM with each defect corrected IN PLACE: same
-statements, same order, same names, same I/O style. It must have the SAME
-number of lines as the input unless the defect itself is a missing or a
-duplicated line. Correcting \`<=\` to \`<\` or re-indenting a line is a fix;
-rewriting the program is not.
-══════════════════════════════════════════════════════════════════════════
-`
-    : taskMode === 'explain'
-    ? `\n══════════════════════════════════════════════════════════════════════════
-EXPLAIN MODE — HIGHEST PRIORITY. OVERRIDES EVERY "fix"/"complete" RULE BELOW.
-══════════════════════════════════════════════════════════════════════════
-The candidate wants to UNDERSTAND this code, not change it. You MUST:
-  • set "fixed_code" to the input code EXACTLY as given, byte for byte;
-  • set "changes" to [] — you are changing nothing;
-  • put the whole explanation in "walkthrough", and for this mode ONLY use
-    5-8 steps (not 3-5): what the code does, the key idea, how the main data
-    structure and loop work, what it returns, and the complexity.
-Still first-person, still ≤ 15 words per step, still real variable names in
-backticks. If you notice a genuine bug, say so in a walkthrough step — but do
-NOT fix it here.
-══════════════════════════════════════════════════════════════════════════
-`
-    : '';
-  const solveDirective = taskMode === 'solve'
-    ? `\n══════════════════════════════════════════════════════════════════════════
-SOLVE MODE — write the program that solves the PROBLEM STATEMENT above.
-══════════════════════════════════════════════════════════════════════════
-The CODE block below may be empty, a placeholder comment, or a bare skeleton —
-there is nothing there to "preserve". Write the COMPLETE, correct ${lang}
-solution to the problem statement, in the shortest idiomatic form a candidate
-could hand-type in an interview. Import only what the solution actually uses.
-Every changes[] entry references a line you wrote (type "added").
-══════════════════════════════════════════════════════════════════════════
-`
-    : '';
-  // 'complete' forces the template-solve contract even when detectPlatformTemplate()
-  // does not recognise the skeleton (a bare signature, a "your code here" marker).
-  const forcedCompleteSection = (taskMode === 'complete' && !isTemplate)
-    ? `\n══════════════════════════════════════════════════════════════════════════
-COMPLETE MODE — the code below is an UNFINISHED skeleton, not a finished program.
-══════════════════════════════════════════════════════════════════════════
-An empty body, a \`pass\`, a bare \`return\`, or a "TODO / your code here" marker is
-NOT "already correct" — it is exactly what you must write. Keep every existing
-line VERBATIM (imports, signatures, docstrings, any partial logic) and ADD only
-the missing implementation so it solves the PROBLEM STATEMENT above. Mark every
-line you add type "added". Never rewrite a line that is already there.
-══════════════════════════════════════════════════════════════════════════
-`
-    : '';
-
-  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}${templateModeSection}${forcedCompleteSection}${solveDirective}${modeDirective}${refineDirective}
+  const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}
+${situationBlock}
+${refineDirective}
 
 CODE:
 \`\`\`${lang}
@@ -2262,7 +2169,7 @@ OUTPUT ENCODING — CRITICAL (one wrong backslash makes the pasted code raise Sy
 - Never place a backslash escape inside an f-string expression's braces { } (e.g. f'{"\\u2713" if ok else "x"}') — that is a SyntaxError before Python 3.12. Assign the character to a variable first (e.g. check = '\\u2713'), then reference the variable inside the f-string.
 
 WALK-THROUGH — CONCISE: the candidate reads this ALOUD mid-interview, so it must be
-skimmable in seconds. Produce EXACTLY 3-5 steps (never more), each ≤ 15 words:
+skimmable in seconds. Produce EXACTLY ${walk.min}-${walk.max} steps (never more), each ≤ 15 words:
   1) INSIGHT — the ONE key realisation that unlocks it ("the trick is…").
   2..N) BUILD — the 2-3 core moves of the ACTUAL fixed_code, real variable names in backticks.
   LAST) COMPLEXITY — time/space in a half-line.
@@ -2270,7 +2177,7 @@ Voice: crisp first-person ("I keep a running…"). NO preamble, NO restating the
 NO line-by-line paraphrase, NO filler. Every claim true to the code. Fewer, sharper points.
 
 RULES:
-- NO HARDCODING / NO CHEATING — ABSOLUTE LAW, OVERRIDES THE "preserve" AND "fix only what's broken" RULES BELOW.
+- NO HARDCODING / NO CHEATING — ABSOLUTE LAW. It outranks every preservation rule in the SITUATION block above.
   The problem's example names, IDs, and titles are ILLUSTRATIONS, not real data; the fixed code is run
   against COMPLETELY DIFFERENT inputs, so any answer baked to the examples FAILS. You are FORBIDDEN from:
     • special-casing a specific input and returning canned data, e.g.
@@ -2281,41 +2188,13 @@ RULES:
   DELETE it and replace it with genuine logic (compute the result from the parameters, or make the real
   API/IO call the function name promises). Removing a cheat is REQUIRED and does NOT count as a forbidden
   "restructure". Every function must derive its output from its inputs — never from memorised example values.
-- PLATFORM TEMPLATE — HIGHEST PRIORITY, OVERRIDES THE EXECUTION CONTRACT BELOW:
-  If the code contains an \`if __name__ == '__main__':\` block (or equivalent) that
-  reads input and CALLS a function, it is the platform's LOCKED editor template
-  (HackerRank / Codility). The candidate CANNOT edit those blocks. You MUST:
-    • keep that ENTIRE harness (the input-reading, the function call, the print)
-      EXACTLY as given — do not touch it;
-    • keep every function SIGNATURE exactly as given (e.g. def count_substring(string, sub_string));
-    • ONLY fill in the empty / stub / \`return\`-only function body so it solves the
-      problem and RETURNS the value the harness prints.
-  Do NOT restructure into a stdin-reading script, do NOT strip the harness, do NOT
-  rename functions or change parameters. Return the COMPLETE file (harness verbatim
-  + your filled-in body). This is what makes the answer paste-able into HackerRank.
-- EXECUTION CONTRACT: this code is run by a test harness that parses each test
-  Input into arguments, CALLS the top-level function, and compares its RETURN
-  VALUE to the expected output. If the code reads stdin (input()/sys.stdin),
-  prints its answer instead of returning it, or returns None, it is NOT
-  harness-compatible — in that case you SHOULD restructure it into a clean
-  function that takes the parsed inputs as PARAMETERS and RETURNS the answer,
-  then set hackerrank_compatible:true. The "never restructure" rules below apply
-  ONLY to code that is already harness-compatible and merely has a small bug.
-- COMPLETE, DON'T REWRITE — if the pasted code is a STUB or PARTIAL solution (an empty / \`pass\` / \`return\`-only body, a "Your Solution" / "implement the X class" marker, a docstring describing the task, or a half-written function), your job is to ADD the missing lines that finish it. Keep EVERY existing line the candidate wrote VERBATIM — imports, class/def signatures, docstrings, and any partial logic already present — and only APPEND or INSERT the new lines needed to complete the solution. Mark every new line type "added". Do NOT re-express, restyle, or "improve" a line that is already there.
-- Fix ONLY what is factually broken (syntax error, wrong operator, off-by-one, missing return, undefined variable, etc.)
-- NEVER substitute a different algorithm, built-in, or idiom for what the user wrote — even if yours is "better". all() stays all(), any() stays any(), a loop stays a loop.
-- NEVER rewrite or restructure code that already works correctly AND is harness-compatible. Edit the minimum number of characters needed.
-- Preserve variable names, indentation style, string quotes, f-string prefixes, and every other stylistic choice exactly.
-- Respect existing code style and naming conventions
-- The \`if __name__ == '__main__':\` block is READ-ONLY platform boilerplate (HackerRank/CoderPad/etc). NEVER modify anything inside it — not os.environ[...] refs, not file handles, not input() calls. Copy it character-for-character into fixed_code. (Exception: when converting an incompatible stdin/print scaffold to a return-based function per the EXECUTION CONTRACT rule above, you may remove the stdin/__main__ boilerplate.)
-- NEVER replace os.environ[...] with a hardcoded string. Environment variables are correct by design on the platform.
 - line numbers refer to the FIXED code, not the original
 - type "fix" = correcting an existing line; type "added" = newly inserted line
 - hackerrank_compatible: true only if the function has a clean return-based signature with no stdin/input() boilerplate
 - If code has no issues, return changes: [] and fixed_code equal to the input
 - Return the COMPLETE fixed code, not a partial snippet
 - fixed_code MUST be submission-ready: the corrected program ONLY. Add ZERO comments. NEVER write your reasoning, analysis, or notes — about tracebacks, NameErrors, the test harness, "why this works", or "we include the __main__ block because…" — as comments in the code. That commentary is nonsense in a candidate's editor. ALL explanation goes ONLY in changes[] and walkthrough[]. If the input code had no comments, fixed_code has no comments.
-- walkthrough: 3-5 entries MAX, ≤ 15 words each, first person, backticks for var refs. Group related lines ("35-38"). Only the KEY moves — skip the obvious.
+- walkthrough: ${walk.min}-${walk.max} entries MAX, ≤ 15 words each, first person, backticks for var refs. Group related lines ("35-38"). Only the KEY moves — skip the obvious.
 - changes: emit only the KEY logical changes, GROUPED, MAX 8 entries — never one-per-line. For a stub you completed, summarise the added blocks (e.g. "added the deadline-propagation loop"), don't list every line. note ≤ 8 words.
 - BE CONCISE EVERYWHERE: the candidate reads changes[], walkthrough[], and complexity aloud during a live interview. Fewer, sharper items beat completeness. No filler, no restating the problem.`;
 
@@ -2894,11 +2773,7 @@ Critical rules:
 - "starter_code": right panel or bottom editor. Copy EVERY line in the editor verbatim — shebang, imports, class declarations, function stubs with their EXACT names, input-reading (scanf/readline/input/sys.stdin), print statements, wrapper calls at the bottom. null only if no editor is visible at all.
 - "detected_language": look at the code syntax, not just shebangs — Python is recognizable from def/import/if __name__, Java from public class/System.out, etc.
 - "task" — pick exactly one, in this priority order:
-    'review'   → the editor holds FULLY-WRITTEN code that looks WRONG or the screen is asking the candidate to find faults: a visible error/traceback/failing-test panel, red squiggles or error gutter marks, an instruction like "find the bug" / "what is wrong" / "debug", or code you can see contains mistakes (wrong operator such as = for ==, stray or unbalanced characters, broken indentation, a call to a function/method/import that is not defined anywhere on screen).
-    'complete' → the editor holds a TEMPLATE or PARTIAL solution to be filled in: an empty or pass/return-only body, a TODO / "your code here" / "implement this" marker, or a signature with no body.
-    'explain'  → code is present, has no visible faults, and no problem statement is asking for new work; the candidate wants to understand it.
-    'solve'    → a problem statement is present and there is no meaningful code in the editor yet.
-  If genuinely torn between 'review' and 'complete', choose 'complete' when any body is empty/stubbed, otherwise 'review'.
+${CLASSIFIER_SPEC}
 - Return ONLY valid JSON. No preamble, no explanation, no markdown fences.
 - NEVER describe the image — output JSON only.`;
 
