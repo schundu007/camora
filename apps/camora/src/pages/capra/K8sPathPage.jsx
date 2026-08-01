@@ -48,7 +48,7 @@ export default function K8sPathPage() {
         <button
           type="button"
           onClick={() => navigate('/playground?env=k8s-single')}
-          style={{ marginTop: 12, padding: '7px 16px', borderRadius: 7, fontSize: 12, fontWeight: 700, background: '#0047AB', color: '#fff', border: 'none', cursor: 'pointer' }}
+          style={{ marginTop: 12, padding: '7px 16px', borderRadius: 7, fontSize: 12, fontWeight: 700, background: 'var(--cam-primary)', color: '#fff', border: 'none', cursor: 'pointer' }}
         >
           Open Playground →
         </button>
@@ -59,7 +59,7 @@ export default function K8sPathPage() {
 
       {Object.entries(byModule).map(([mod, list]) => (
         <div key={mod} style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(0,71,171,0.7)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: 'color-mix(in oklab, var(--cam-primary) 70%, transparent)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
             Module {mod}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -75,7 +75,7 @@ export default function K8sPathPage() {
                     style={{
                       width: '100%', textAlign: 'left', padding: '14px 16px', borderRadius: open ? '8px 8px 0 0' : 8,
                       background: open ? 'var(--bg-elevated)' : 'var(--bg-base)',
-                      border: `1px solid ${open ? '#0047AB' : 'var(--border)'}`,
+                      border: `1px solid ${open ? 'var(--cam-primary)' : 'var(--border)'}`,
                       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12,
                     }}
                   >
@@ -89,14 +89,14 @@ export default function K8sPathPage() {
                         {topic.completed_count}/{topic.exercise_count}
                       </div>
                       <div style={{ width: 60, height: 4, borderRadius: 2, background: 'var(--border)', marginTop: 4 }}>
-                        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: done ? '#10b981' : '#0047AB', transition: 'width 0.3s' }} />
+                        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: done ? '#10b981' : 'var(--cam-primary)', transition: 'width 0.3s' }} />
                       </div>
                     </div>
                     <span style={{ fontSize: 11, color: 'var(--text-secondary)', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
                   </button>
 
                   {open && (
-                    <div style={{ border: '1px solid #0047AB', borderTop: 'none', borderRadius: '0 0 8px 8px', background: 'var(--bg-elevated)', padding: '12px 16px' }}>
+                    <div style={{ border: '1px solid var(--cam-primary)', borderTop: 'none', borderRadius: '0 0 8px 8px', background: 'var(--bg-elevated)', padding: '12px 16px' }}>
                       {detailLoading && <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>Loading exercises…</p>}
                       {!detailLoading && topicDetail?.exercises?.map((ex, i) => (
                         <div key={ex.id} style={{
@@ -110,7 +110,7 @@ export default function K8sPathPage() {
                             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{ex.title}</div>
                             <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>{ex.prompt}</div>
                             {ex.hint && (
-                              <div style={{ fontSize: 11, color: 'rgba(0,71,171,0.8)', marginTop: 4, fontFamily: '"IBM Plex Mono",monospace' }}>
+                              <div style={{ fontSize: 11, color: 'color-mix(in oklab, var(--cam-primary) 80%, transparent)', marginTop: 4, fontFamily: '"IBM Plex Mono",monospace' }}>
                                 Hint: {ex.hint}
                               </div>
                             )}

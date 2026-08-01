@@ -61,6 +61,7 @@ createRoot(document.getElementById('root')!).render(
         // top-level boundary, any render exception below produced React's
         // default white-screen-with-stack-in-DevTools, indistinguishable
         // from a network outage to most users.
+        // TODO(observability): wire Sentry/remote sink
         console.error('[root] uncaught render error:', err, info);
       }}
     >

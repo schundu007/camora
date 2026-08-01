@@ -13,9 +13,30 @@ if (!process.env.JWT_SECRET && process.env.JWT_SECRET_KEY) {
 
 const ALLOWED_TOKEN_TYPES = new Set(['access']);
 
+// Cookie domain for the SSO cookie. Defaults to the production apex so all
+// *.cariara.com subdomains share the session; override with COOKIE_DOMAIN for
+// staging / preview environments on a different domain.
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || '.cariara.com';
+
+// Tokens are always signed HS256 (createToken uses jwt.sign defaults). Pinning
+// the accepted algorithm blocks an algorithm-confusion attack (alg:none, or an
+// RS/HS key swap against a public key).
+const JWT_VERIFY_OPTS = { algorithms: ['HS256'] };
+
+/**
+ * Canonical `Authorization: Bearer <token>` parser so every middleware behaves
+ * identically (some used slice(7), others split(' ')[1], which diverge on
+ * malformed headers). Returns null when there's no well-formed bearer token.
+ */
+export function extractBearerToken(authHeader) {
+  if (typeof authHeader !== 'string' || !authHeader.startsWith('Bearer ')) return null;
+  const token = authHeader.slice(7).trim();
+  return token || null;
+}
+
 export function verifyToken(token, { requireType = 'access' } = {}) {
   if (!JWT_SECRET) throw new Error('JWT_SECRET not configured');
-  const payload = jwt.verify(token, JWT_SECRET);
+  const payload = jwt.verify(token, JWT_SECRET, JWT_VERIFY_OPTS);
   // Enforce the token-type claim so a non-access token (e.g. a future refresh
   // token) can never satisfy an access gate. Default-on; pass requireType:null
   // to deliberately verify a token of a different/absent type.
@@ -45,13 +66,7 @@ export function createToken(payload = {}, expiresIn = '30d') {
  */
 export function authenticate(req, res, next) {
   try {
-    let token = null;
-
-    // Check Authorization header
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith('Bearer ')) {
-      token = authHeader.slice(7);
-    }
+    let token = extractBearerToken(req.headers.authorization);
 
     // Fallback: check cariara_sso cookie
     if (!token && req.cookies?.cariara_sso) {
@@ -81,7 +96,7 @@ export function authenticate(req, res, next) {
  */
 export function setSSOCookie(res, token) {
   res.cookie('cariara_sso', token, {
-    domain: '.cariara.com',
+    domain: COOKIE_DOMAIN,
     path: '/',
     // httpOnly so JS-land XSS can't read the session token. Frontend receives
     // a short-lived access_token in the /auth/me response body for Bearer use.
@@ -97,7 +112,7 @@ export function setSSOCookie(res, token) {
  */
 export function clearSSOCookie(res) {
   res.clearCookie('cariara_sso', {
-    domain: '.cariara.com',
+    domain: COOKIE_DOMAIN,
     path: '/',
     secure: true,
     sameSite: 'lax',

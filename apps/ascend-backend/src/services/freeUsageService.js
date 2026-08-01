@@ -1,4 +1,5 @@
 import { query } from '../lib/shared-db.js';
+import { PAID_PLAN_TYPES } from '../lib/plans.js';
 
 /**
  * Check if user can use a feature (has subscription OR free allowance)
@@ -115,9 +116,10 @@ export async function getSubscriptionStatus(userId) {
     );
 
     const subscription = result.rows[0];
-    const isPaidPlan = subscription?.plan_type === 'pro_monthly' ||
-                       subscription?.plan_type === 'pro_yearly' ||
-                       subscription?.plan_type === 'team';
+    // Use the shared PAID_PLAN_TYPES set (includes 'lifetime') so a lifetime
+    // subscriber isn't misclassified as free. Hardcoding the list here dropped
+    // 'lifetime' and locked those users out of paid features.
+    const isPaidPlan = PAID_PLAN_TYPES.has(subscription?.plan_type);
     const isActive = subscription?.status === 'active';
     // Trial residue guard: only count active trial when plan_type is
     // 'free'. Stops trial_ends_at from re-granting access to a paid

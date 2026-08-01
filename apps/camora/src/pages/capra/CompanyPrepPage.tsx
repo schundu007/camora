@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
+import { COMPANY_COLORS } from '@/lib/companyColors';
 
 /* ──────────────────────────────── Types ──────────────────────────────── */
 
@@ -37,7 +38,7 @@ const COMPANIES: Record<string, CompanyData> = {
   google: {
     name: 'Google',
     logo: 'G',
-    color: '#4285F4',
+    color: COMPANY_COLORS.google,
     description:
       'Google interviews focus on algorithmic problem-solving, system design at scale, and behavioral leadership principles (Googleyness).',
     stats: { avgSalary: '$189K - $350K', rounds: '5-7', difficulty: 'Hard', duration: '6-8 weeks' },
@@ -79,7 +80,7 @@ const COMPANIES: Record<string, CompanyData> = {
   amazon: {
     name: 'Amazon',
     logo: 'A',
-    color: '#FF9900',
+    color: COMPANY_COLORS.amazon,
     description:
       'Amazon interviews are structured around 16 Leadership Principles. Every answer should reference a specific LP. System design focuses on AWS services.',
     stats: { avgSalary: '$165K - $320K', rounds: '4-6', difficulty: 'Hard', duration: '4-6 weeks' },
@@ -119,7 +120,7 @@ const COMPANIES: Record<string, CompanyData> = {
   meta: {
     name: 'Meta',
     logo: 'M',
-    color: '#0668E1',
+    color: COMPANY_COLORS.meta,
     description:
       'Meta interviews emphasize coding speed, system design for billion-user scale, and behavioral questions about impact and collaboration.',
     stats: { avgSalary: '$185K - $380K', rounds: '4-5', difficulty: 'Hard', duration: '4-6 weeks' },
@@ -158,7 +159,7 @@ const COMPANIES: Record<string, CompanyData> = {
   apple: {
     name: 'Apple',
     logo: 'A',
-    color: '#555555',
+    color: COMPANY_COLORS.apple,
     description:
       'Apple interviews focus on deep technical knowledge, attention to detail, and passion for the product. Questions often involve real-world Apple product scenarios.',
     stats: { avgSalary: '$175K - $340K', rounds: '4-6', difficulty: 'Hard', duration: '4-8 weeks' },
@@ -195,7 +196,7 @@ const COMPANIES: Record<string, CompanyData> = {
   microsoft: {
     name: 'Microsoft',
     logo: 'M',
-    color: '#00A4EF',
+    color: COMPANY_COLORS.microsoft,
     description:
       'Microsoft interviews assess problem-solving, system design with Azure services, and growth mindset culture fit.',
     stats: { avgSalary: '$160K - $310K', rounds: '4-5', difficulty: 'Medium-Hard', duration: '3-5 weeks' },
@@ -232,7 +233,7 @@ const COMPANIES: Record<string, CompanyData> = {
   netflix: {
     name: 'Netflix',
     logo: 'N',
-    color: '#E50914',
+    color: COMPANY_COLORS.netflix,
     description:
       'Netflix values freedom and responsibility. Interviews focus on senior-level system design, cultural fit, and independent decision-making.',
     stats: { avgSalary: '$200K - $450K', rounds: '4-6', difficulty: 'Hard', duration: '4-6 weeks' },

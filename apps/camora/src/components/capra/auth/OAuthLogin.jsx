@@ -56,7 +56,7 @@ export default function OAuthLogin() {
 
         <h1 className={`landing-display font-extrabold leading-tight tracking-tight max-w-4xl transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
           <span className="text-3xl md:text-4xl lg:text-5xl text-[var(--text-primary)]">Your Winning Edge in </span>
-          <span className="text-3xl md:text-4xl lg:text-5xl bg-gradient-to-r from-[var(--accent)] to-cyan-500 bg-clip-text text-transparent">Every Challenge</span>
+          <span className="text-3xl md:text-4xl lg:text-5xl bg-gradient-to-r from-[var(--accent)] to-emerald-500 bg-clip-text text-transparent">Every Challenge</span>
         </h1>
 
         <p className={`mt-4 text-base md:text-lg text-[var(--text-muted)] max-w-2xl leading-relaxed landing-body transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
@@ -176,7 +176,7 @@ export default function OAuthLogin() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {[
               { step: '01', title: 'Drop Your Problem In', desc: 'Text, screenshot, or LeetCode URL. Paste, snap, or speak it.', color: 'text-blue-200' },
-              { step: '02', title: 'AI Generates', desc: 'Code, explanations, diagrams, and edge cases in seconds.', color: 'text-cyan-200' },
+              { step: '02', title: 'AI Generates', desc: 'Code, explanations, diagrams, and edge cases in seconds.', color: 'text-emerald-200' },
               { step: '03', title: 'Practice & Refine', desc: 'Step-by-step walkthrough with follow-up Q&A. Build confidence.', color: 'text-blue-200' },
             ].map((item, i) => (
               <div key={i} className="group p-4 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)] text-center">
@@ -195,7 +195,7 @@ export default function OAuthLogin() {
       <section className="px-6 md:px-12 py-10 md:py-14 text-center">
         <h2 className="landing-display font-bold text-2xl md:text-3xl tracking-tight max-w-2xl mx-auto text-[var(--text-primary)]">
           Your Next Session{' '}
-          <span className="bg-gradient-to-r from-[var(--accent)] to-cyan-500 bg-clip-text text-transparent">Starts Here</span>
+          <span className="bg-gradient-to-r from-[var(--accent)] to-emerald-500 bg-clip-text text-transparent">Starts Here</span>
         </h2>
         <p className="mt-2 text-sm text-[var(--text-muted)] max-w-lg mx-auto landing-body">
           Stop memorizing. Start understanding. Practice with AI that thinks like a senior engineer.

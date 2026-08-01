@@ -13,6 +13,7 @@ import { SessionTimer } from '../../components/shared/timer/SessionTimer';
 import { useWhiteboardState } from '../../hooks/useWhiteboardState';
 import Chip from '@/components/shared/ui/Chip';
 import { challengeStatsStore } from '@/lib/userScopedStorage';
+import { COMPANY_COLORS } from '@/lib/companyColors';
 
 const ExcalidrawWhiteboard = lazy(() => import('../../components/shared/diagrams/ExcalidrawWhiteboard'));
 const DashboardPage = lazy(() => import('./DashboardPage'));
@@ -449,12 +450,12 @@ const CODING_LANGUAGES = [
 ];
 const COMPANIES = [
   { id: 'all', label: 'All', color: 'var(--text-muted)' },
-  { id: 'google', label: 'Google', color: '#4285f4', logo: '/logos/google.png' },
-  { id: 'meta', label: 'Meta', color: '#0668E1', logo: '/logos/meta.png' },
-  { id: 'amazon', label: 'Amazon', color: '#FF9900', logo: '/logos/amazon.png' },
-  { id: 'apple', label: 'Apple', color: '#555', logo: '/logos/apple.png' },
-  { id: 'microsoft', label: 'Microsoft', color: '#00A4EF', logo: '/logos/microsoft.png' },
-  { id: 'netflix', label: 'Netflix', color: '#E50914', logo: '/logos/netflix.png' },
+  { id: 'google', label: 'Google', color: COMPANY_COLORS.google, logo: '/logos/google.png' },
+  { id: 'meta', label: 'Meta', color: COMPANY_COLORS.meta, logo: '/logos/meta.png' },
+  { id: 'amazon', label: 'Amazon', color: COMPANY_COLORS.amazon, logo: '/logos/amazon.png' },
+  { id: 'apple', label: 'Apple', color: COMPANY_COLORS.apple, logo: '/logos/apple.png' },
+  { id: 'microsoft', label: 'Microsoft', color: COMPANY_COLORS.microsoft, logo: '/logos/microsoft.png' },
+  { id: 'netflix', label: 'Netflix', color: COMPANY_COLORS.netflix, logo: '/logos/netflix.png' },
 ];
 
 const DIMENSION_LABELS = ['Solving', 'Design', 'DSA', 'Comms', 'Time'];
@@ -952,7 +953,8 @@ export default function PracticePage() {
         feedback = 'Could not evaluate automatically. Partial credit given.';
         dimensions = { approach: 30, complexity: 20, completeness: 30, communication: 30 };
       }
-    } catch {
+    } catch (err) {
+      console.error('[submitAnswer] AI evaluation failed', err);
       score = answer.trim().length > 20 ? 30 : 0;
       feedback = 'Evaluation unavailable. Partial credit given for attempt.';
       dimensions = { approach: 20, complexity: 15, completeness: 20, communication: 20 };
