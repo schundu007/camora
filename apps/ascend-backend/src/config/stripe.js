@@ -22,8 +22,11 @@ export const stripe = stripeSecretKey
 //   STRIPE_PRICE_TOPUP_1H     → $15 one-time, 1 AI hour. Quantity:N at
 //                                checkout for multi-hour buys.
 //   STRIPE_PRODUCT_TEAM       → Single Stripe Product for the dynamic
-//                                team plan. Price computed per checkout
-//                                via price_data: $(seats × 20 − 1)/mo.
+//                                team plan. Price computed per checkout via
+//                                price_data using the TIERED schedule in
+//                                billing.js computeTeamPriceCents ($49 @ 5
+//                                seats, +$10/seat to $249 @ 25, +$4/seat to
+//                                $349 @ 50) — NOT a linear per-seat formula.
 export const STRIPE_PRICES = {
   PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,
   PRO_YEARLY: process.env.STRIPE_PRICE_PRO_YEARLY,

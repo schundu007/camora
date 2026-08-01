@@ -59,7 +59,9 @@ const AI_SERVICES_URL = process.env.AI_SERVICES_URL || 'http://localhost:8001';
  */
 async function verifySpeaker(userId, audioBuffer, filename) {
   try {
-    // Build raw multipart — most reliable for Node.js → Python FastAPI
+    // Build raw multipart — most reliable for Node.js → Python FastAPI.
+    // Math.random() is fine here (ROBUST-002): the boundary is a uniqueness
+    // token internal to this process, never sent to a client and not a secret.
     const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
     const mime = filename.endsWith('.wav') ? 'audio/wav' : 'audio/webm';
     const parts = [];

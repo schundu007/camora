@@ -1011,9 +1011,15 @@ async function handleCheckoutComplete(session) {
   const PRICE_TO_PLAN = {
     [STRIPE_PRICES.PRO_MONTHLY]: 'pro_monthly',
     [STRIPE_PRICES.PRO_YEARLY]: 'pro_yearly',
-    [STRIPE_PRICES.TEAM]: 'team',
   };
   let planType = PRICE_TO_PLAN[priceId];
+  // Team checkouts use dynamic price_data (no fixed price ID), so they never
+  // appear in PRICE_TO_PLAN. Identify them explicitly by metadata.type — the
+  // old `[STRIPE_PRICES.TEAM]: 'team'` entry only "worked" because
+  // STRIPE_PRICES.TEAM is undefined and coerced to the literal 'undefined' key.
+  if (!planType && type === 'team') {
+    planType = 'team';
+  }
   if (!planType) {
     // Fall back to metadata only when the price ID is unrecognised
     // (e.g. a manually-promoted account). Logged so it's auditable.
@@ -1052,17 +1058,16 @@ async function handleCheckoutComplete(session) {
 /**
  * Handle paid invoice — both initial activation and recurring renewals.
  *
- * Critical: every renewal must re-grant the plan's included AI hours
- * (2 for Monthly, 5 for Yearly, ⌈seats × 0.7⌉ for Team). Without this,
- * paying users hit 429 the moment the new period starts.
+ * Solo plans: included AI hours are NOT granted here. They come from the
+ * per-period baseline in checkPersonalHourBudget (PERSONAL_HOUR_BUDGETS[plan]
+ * .hours), which resets each cycle because usage is windowed on
+ * current_period_start (advanced below). Period 1 works the same way — there
+ * is no separate "handleCheckoutComplete grants period-1 hours" step for solo;
+ * the baseline covers it. (A prior version inserted a renewal ai_hour_topups
+ * row that stacked on top of the baseline and double-counted — removed.)
  *
- * Idempotency: ai_hour_topups.stripe_invoice_id has a UNIQUE partial
- * index, so re-deliveries of the same invoice never double-credit.
- *
- * Initial-invoice skip: handleCheckoutComplete already grants the first
- * period's hours. Stripe sets `billing_reason='subscription_create'` for
- * the activation invoice — we skip granting on that one to avoid
- * double-counting period 1.
+ * Team plans: the hours pool is refilled by rollOverTeamPoolForUser (called
+ * below), recomputed from the current seat_limit.
  */
 async function handleInvoicePaid(invoice) {
   const customerId = invoice.customer;
