@@ -11,14 +11,33 @@ if (!process.env.JWT_SECRET && process.env.JWT_SECRET_KEY) {
   console.warn('[shared-auth] Using deprecated JWT_SECRET_KEY — rename to JWT_SECRET.');
 }
 
-export function verifyToken(token) {
+const ALLOWED_TOKEN_TYPES = new Set(['access']);
+
+export function verifyToken(token, { requireType = 'access' } = {}) {
   if (!JWT_SECRET) throw new Error('JWT_SECRET not configured');
-  return jwt.verify(token, JWT_SECRET);
+  const payload = jwt.verify(token, JWT_SECRET);
+  // Enforce the token-type claim so a non-access token (e.g. a future refresh
+  // token) can never satisfy an access gate. Default-on; pass requireType:null
+  // to deliberately verify a token of a different/absent type.
+  if (requireType && payload?.type !== requireType) {
+    const err = new Error(`Invalid token type: expected "${requireType}"`);
+    err.name = 'InvalidTokenTypeError';
+    err.code = 'INVALID_TOKEN_TYPE';
+    throw err;
+  }
+  return payload;
 }
 
-export function createToken(payload, expiresIn = '30d') {
+export function createToken(payload = {}, expiresIn = '30d') {
   if (!JWT_SECRET) throw new Error('JWT_SECRET not configured');
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+  // Every minted token must carry a known type claim. Default to 'access'
+  // (the only type currently issued); reject anything off the allowlist so a
+  // typo'd type can't mint a token no gate will ever accept.
+  const type = payload.type ?? 'access';
+  if (!ALLOWED_TOKEN_TYPES.has(type)) {
+    throw new Error(`createToken: disallowed token type "${type}"`);
+  }
+  return jwt.sign({ ...payload, type }, JWT_SECRET, { expiresIn });
 }
 
 /**
