@@ -517,7 +517,10 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           method: 'POST', credentials: 'include',
           headers: { Authorization: `Bearer ${token}` }, body: formData,
         });
-        if (!resp.ok) throw new Error(`OCR ${resp.status}`);
+        if (!resp.ok) {
+          const detail = await resp.json().then(d => d?.detail).catch(() => null);
+          throw new Error(detail || `Extraction failed (${resp.status})`);
+        }
         const data = await resp.json();
         // /extract-from-image returns the OCR'd statement under `problem`. Store it as
         // the screenshot's text so problemContextRef can thread it into the CoFix SOLVE
@@ -1373,6 +1376,12 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   </div>
                   {/* Log body */}
                   <div ref={logScrollRef} className="flex flex-col gap-0.5 px-3 py-2 max-h-48 overflow-y-auto">
+                    {/* An empty log box looks identical to a hang — never render one. */}
+                    {logLines.length === 0 && (
+                      <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                        Waiting for the capture…
+                      </span>
+                    )}
                     {logLines.map((line, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <span className="text-[9px] shrink-0 tabular-nums" style={{ color: 'color-mix(in oklab, var(--accent) 45%, transparent)', fontFamily: 'var(--font-mono)' }}>{line.elapsed}</span>
