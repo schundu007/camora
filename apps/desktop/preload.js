@@ -44,6 +44,18 @@ contextBridge.exposeInMainWorld('camo', {
   // is written. Single call. Returns JPEG/PNG dataURL or null.
   captureInteractive: () => ipcRenderer.invoke('capture-interactive'),
 
+  // Region capture — macOS crosshair, user DRAGS the exact area to snap
+  // (Space toggles to window mode, Escape cancels). Camora hides during
+  // selection. Returns { ok, dataUrl, filePath } | { ok:false, cancelled }
+  // | { ok:false, error, needsScreenPermission? }.
+  captureRegion: () => ipcRenderer.invoke('capture-region'),
+
+  // Verbatim problem text + starter code from the front coding-platform tab,
+  // with no screenshot taken. Pairs with captureRegion so a region snap of the
+  // problem statement still gets the exact editor template.
+  // Returns { ok, text, starterCode, url } | { ok:false, error }.
+  extractBrowserProblem: () => ipcRenderer.invoke('extract-browser-problem'),
+
   // Document export
   // savePdf({ html: string, filename?: string }) → { ok, path? } or { canceled: true }
   savePdf: (opts) => ipcRenderer.invoke('save-pdf', opts),

@@ -1508,6 +1508,97 @@ ipcMain.handle('capture-interactive', async () => {
   }
 });
 
+// ── IPC: macOS-native REGION capture (drag to select the area) ─────────
+// This is what the camera button in CoFix / Coding calls. `screencapture -i`
+// draws the crosshair so the user drags the EXACT area to snap; Space toggles
+// to whole-window mode; Escape cancels (exit 1, no file written). Camora hides
+// first so it is never inside the shot.
+// Returns { ok, dataUrl, filePath } | { ok:false, cancelled:true } | { ok:false, error }.
+ipcMain.handle('capture-region', async () => {
+  if (process.platform !== 'darwin') return { ok: false, error: 'Region capture is macOS only.' };
+  if (systemPreferences.getMediaAccessStatus('screen') !== 'granted') {
+    return {
+      ok: false,
+      needsScreenPermission: true,
+      error: 'Screen Recording permission is off. System Settings → Privacy & Security → Screen Recording → enable Camora, then relaunch.',
+    };
+  }
+  const tmp = path.join(os.tmpdir(), `camora-region-${Date.now()}-${process.pid}.png`);
+  const wasVisible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible();
+  if (wasVisible) {
+    mainWindow.hide();
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  try {
+    await new Promise((res) => {
+      execFile('/usr/sbin/screencapture', ['-i', '-o', '-t', 'png', tmp], () => res());
+    });
+    // Escape (or a zero-size drag) leaves no file behind — that is a cancel,
+    // not a failure, so the renderer must not flash an error for it.
+    if (!fs.existsSync(tmp)) return { ok: false, cancelled: true };
+    let buf = fs.readFileSync(tmp);
+    fs.unlink(tmp, () => {});
+    if (!buf.length) return { ok: false, cancelled: true };
+
+    // Same 5 MB vision-API ceiling as capture-interactive: downscale, then
+    // fall back to JPEG if a PNG of the region is still too large.
+    const MAX_BASE64 = 4_800_000;
+    const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
+    let mime = 'image/png';
+    if (base64Size(buf) > MAX_BASE64) {
+      let img = nativeImage.createFromBuffer(buf);
+      img = img.resize({ width: Math.min(img.getSize().width, 1920), quality: 'best' });
+      buf = img.toPNG();
+      if (base64Size(buf) > MAX_BASE64) {
+        buf = img.toJPEG(85);
+        mime = 'image/jpeg';
+      }
+    }
+    const dataUrl = `data:${mime};base64,${buf.toString('base64')}`;
+
+    // Keep a copy in the session folder so the thumbnail can be opened later.
+    let filePath = null;
+    try {
+      const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Camora', 'screenshots');
+      fs.mkdirSync(folder, { recursive: true });
+      filePath = path.join(folder, `region-${Date.now()}.${mime === 'image/jpeg' ? 'jpg' : 'png'}`);
+      fs.writeFileSync(filePath, buf);
+    } catch (saveErr) {
+      console.log('[capture] region save to disk failed:', saveErr.message);
+      filePath = null;
+    }
+    return { ok: true, dataUrl, filePath };
+  } catch (err) {
+    console.error('[capture] region screencapture failed:', err);
+    fs.unlink(tmp, () => {});
+    return { ok: false, error: err?.message || 'Region capture failed' };
+  } finally {
+    if (wasVisible && mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
+  }
+});
+
+// ── IPC: DOM problem/starter extraction WITHOUT a screenshot ───────────
+// Region capture replaced the whole-window screenshot the old Snap took, so
+// the verbatim editor template is no longer inside the image. This gives the
+// renderer the exact starter code (HackerRank / CoderPad / LeetCode) to pair
+// with the region OCR, instead of regressing to an OCR'd template.
+ipcMain.handle('extract-browser-problem', async () => {
+  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
+  try {
+    const info = await getActiveBrowserInfo();
+    if (!info) return { ok: false, error: 'No browser window found.' };
+    const isPlatform = Object.values(PLATFORM_URL_MATCH).some((fn) => fn(info.url));
+    if (!isPlatform) return { ok: false, error: 'Front tab is not a supported coding platform.' };
+    let text = null;
+    let starterCode = null;
+    try { text = await extractProblemTextFromBrowser(info.browser, info.url); } catch {}
+    try { starterCode = await extractStarterCodeFromBrowser(info.browser, info.url); } catch {}
+    return { ok: true, text, starterCode, url: info.url };
+  } catch (err) {
+    return { ok: false, error: err?.message || 'Extraction failed' };
+  }
+});
+
 // ── IPC: media access (used by the renderer for actionable error UX) ───
 ipcMain.handle('get-media-access-status', (_e, kind) => {
   if (process.platform !== 'darwin') return 'granted';
