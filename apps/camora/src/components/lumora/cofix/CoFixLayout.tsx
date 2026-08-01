@@ -131,7 +131,7 @@ const LANGUAGES = [
 interface CoFixLayoutProps {
   onScreenshotAppendRef?: { current: ((text: string, starterCode?: string) => void) | null };
   /** Parent sets this ref; calling it injects code into the left editor and optionally sets the language. */
-  onInjectCodeRef?: { current: ((code: string, lang?: string) => void) | null };
+  onInjectCodeRef?: { current: ((code: string, lang?: string, opts?: { mode?: TaskMode; hint?: string }) => void) | null };
   screenshots?: ScreenshotEntry[];
   onSnapped?: (entry: ScreenshotEntry) => void;
   onRemove?: (id: string) => void;
@@ -319,11 +319,19 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // Pick up a problem injected from the Coding tab via navigate state, and
   // clear the previous solution first so the old fix never lingers.
   useEffect(() => {
-    const state = location.state as { injectCode?: string; injectLang?: string } | null;
+    const state = location.state as { injectCode?: string; injectLang?: string; injectMode?: TaskMode; injectHint?: string } | null;
     if (state?.injectCode) {
       resetSolution();
       setInputCode(state.injectCode);
       if (state.injectLang) setLanguage(state.injectLang);
+      if (state.injectHint) setRefinePrompt(state.injectHint);
+      // Handed over from Coding with a verdict — run it, don't make the user
+      // press Fix again. Deferred because autoRunSnapRef is assigned by an
+      // effect declared BELOW this one, so it is still null on mount.
+      if (state.injectMode) {
+        const m = state.injectMode, c = state.injectCode, l = state.injectLang;
+        setTimeout(() => autoRunSnapRef.current?.({ code: c, mode: m, language: l }), 90);
+      }
       // Clear so it doesn't re-apply on future re-renders
       window.history.replaceState(null, '');
     }
@@ -332,10 +340,17 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
   // Direct injection via the shared ref (Coding "Send to CoFix").
   useEffect(() => {
     if (!onInjectCodeRef) return;
-    onInjectCodeRef.current = (code: string, lang?: string) => {
+    onInjectCodeRef.current = (code: string, lang?: string, opts?: { mode?: TaskMode; hint?: string }) => {
       resetSolution();
       setInputCode(code);
       if (lang) setLanguage(lang);
+      // Handed over from Coding with a verdict (e.g. "review this, don't change
+      // it") — run it here instead of leaving the user to press Fix again.
+      if (opts?.mode) {
+        if (opts.hint) setRefinePrompt(opts.hint);
+        const m = opts.mode;
+        setTimeout(() => autoRunSnapRef.current?.({ code, mode: m, language: lang }), 90);
+      }
     };
     return () => { onInjectCodeRef.current = null; };
   }, [onInjectCodeRef, resetSolution]);
