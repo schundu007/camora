@@ -2917,9 +2917,17 @@ Critical rules:
     if (/^(i (can|see|notice|cannot|don[''']?t)\b|the (screenshot|image|window) (shows|appears|seems|is)|it (looks|seems|appears)|sorry|unfortunately|i'?m unable)/i.test(problem)) {
       problem = 'NO_PROBLEM_FOUND';
     }
-    if (!problem || problem === 'NO_PROBLEM_FOUND') {
-      return res.status(422).json({ detail: 'Could not extract a problem from this image. Try a clearer screenshot showing the problem statement.' });
+    // A capture of JUST CODE — "review this for bugs", "explain this", "finish
+    // this stub" — has no problem statement by definition. Failing the whole
+    // request here threw away the starter_code we had already read correctly,
+    // so every code-only snap died with a 422 and nothing could act on it.
+    // Only fail when the image yielded NOTHING usable.
+    const hasProblem = problem && problem !== 'NO_PROBLEM_FOUND';
+    const hasCode = !!(starterCode && String(starterCode).trim());
+    if (!hasProblem && !hasCode) {
+      return res.status(422).json({ detail: 'Could not read anything from this image — no problem statement and no code. Snap the problem panel or the editor and try again.' });
     }
+    if (!hasProblem) problem = '';
     // Prefer Claude's vision-based language detection, but validate it against
     // the supported list. Normalize known aliases: 'dockerfile' → 'docker',
     // 'makefile'/'plaintext'/etc. get filtered out as hallucinations.
