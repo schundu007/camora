@@ -20,10 +20,12 @@ const INVITE_TTL_DAYS = 14;
 // Dynamic team pricing: $(seats × 20 − 1)/mo. Bounded 5..50 seats.
 export const TEAM_SEATS_MIN = 5;
 export const TEAM_SEATS_MAX = 50;
-export function teamPriceCents(seats) {
-  const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
-  return (n * 20 - 1) * 100;
-}
+// NOTE: team price is computed by computeTeamPriceCents() in routes/billing.js
+// (tiered) — the single source of truth used at checkout AND advertised by the
+// /prices API. A dead teamPriceCents() export used to live here encoding a
+// stale LINEAR formula (seats*$20-$1) that never matched the real charge; it
+// was removed so nothing can resurrect the wrong number. Do not re-add a local
+// price formula here — import/derive from computeTeamPriceCents instead.
 export function teamIncludedHours(seats) {
   const n = Math.max(TEAM_SEATS_MIN, Math.min(TEAM_SEATS_MAX, Math.floor(Number(seats) || 0)));
   return Math.ceil(n * 0.7);
