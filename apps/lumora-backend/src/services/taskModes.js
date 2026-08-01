@@ -126,9 +126,13 @@ class or function, or the signature with nothing under it. An empty body is NOT
 
 Then:
 - Keep EVERY existing line VERBATIM — imports, class/def signatures, docstrings,
-  comments, and any partial logic already present. Reproduce them character for
-  character, in the same order. Do NOT re-express, restyle or "improve" a line
-  that is already there, and do NOT touch code outside the gap.
+  real comments, and any partial logic already present. Reproduce them character
+  for character, in the same order. Do NOT re-express, restyle or "improve" a
+  line that is already there, and do NOT touch code outside the gap.
+- The PLACEHOLDER ITSELF IS NOT CONTENT TO KEEP. The "TODO" / "your code here"
+  marker, the \`pass\`, the \`...\`, the \`raise NotImplementedError\` — those lines
+  ARE the hole. Your implementation REPLACES them; they must not appear anywhere
+  in fixed_code.
 - ADD ONLY the missing implementation, and only where the gap is. Mark every
   line you write type "added".
 - Return the COMPLETE file: everything you were given plus what you wrote.

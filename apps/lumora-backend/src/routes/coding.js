@@ -10,6 +10,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC } from '../services/taskModes.js';
+import { detectGap, spliceFill, gapDirective } from '../services/fillGap.js';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -2125,10 +2126,14 @@ Each changes[] entry references a line you ADDED or MODIFIED to satisfy the hint
     templateShape: isTemplate ? buildTemplateShapeDirective(cleanedCode) : '',
   });
   const walk = WALKTHROUGH_BUDGET[task] || WALKTHROUGH_BUDGET.diagnose;
+  // FILL: find the hole here, in code, so the model is told where it is instead
+  // of hunting for it — and so we can splice its answer back into the original.
+  const fillGap = task === 'fill' ? detectGap(cleanedCode) : null;
+  const gapSection = fillGap ? gapDirective(fillGap, cleanedCode) : '';
   console.log(`[cofix] task=${task} requested=${mode || 'none'} isTemplate=${isTemplate} lang=${lang}`);
 
   const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}
-${situationBlock}
+${situationBlock}${gapSection}
 ${refineDirective}
 
 CODE:
@@ -2214,6 +2219,20 @@ RULES:
   }
 
   async function emitCofix(parsed) {
+    // Preservation by construction: rebuild the file as original-before-gap +
+    // the model's new block + original-after-gap, so nothing outside the hole
+    // can drift no matter what the model returned.
+    if (fillGap && parsed && typeof parsed.fixed_code === 'string') {
+      const spliced = spliceFill({ original: cleanedCode, fixedCode: parsed.fixed_code, gap: fillGap, filled: parsed.filled });
+      if (spliced.preserved) {
+        const drifted = spliced.code !== parsed.fixed_code;
+        parsed.fixed_code = spliced.code;
+        parsed.filled = spliced.filled;
+        if (drifted) console.log(`[cofix] fill: restored lines outside the gap (${spliced.filled.what})`);
+      } else {
+        console.log(`[cofix] fill: splice skipped — ${spliced.reason}`);
+      }
+    }
     sanitizeCofixResult(parsed, lang);
     sendEvent('answer', parsed);
     sendEvent('done', {});
