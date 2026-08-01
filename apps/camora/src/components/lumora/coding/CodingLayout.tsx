@@ -226,7 +226,7 @@ interface CodingLayoutProps {
   /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
   embedded?: boolean;
   /** Called when user clicks "→ CoFix" chip; receives current editor code + language */
-  onSendToCofix?: (code: string, lang: string) => void;
+  onSendToCofix?: (code: string, lang: string, opts?: { mode?: 'review' | 'complete' | 'solve' | 'explain'; hint?: string }) => void;
   /** Capture controls (Snap + input-mode icons) rendered inline in the
       Description/Solution toolbar row, so coding shows one toolbar instead of
       a separate strip above. Supplied by LumoraShell as an <ScreenshotStrip inline/>. */
@@ -1456,8 +1456,39 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     testCasesUserEdited.current = false;
   }, [language, clearStreamChunks, setParsedBlocks]);
 
+  /** Is the box holding CODE the user wants AUDITED, rather than a problem to
+   *  solve? Solving rewrites the program — wraps loose statements in a function,
+   *  turns print() into a return — which is precisely what a "list the issues,
+   *  don't change my code" request must never get. Reviewing is CoFix's job.
+   *  Deliberately conservative: an explicit review instruction, or code with no
+   *  problem-statement markers at all. */
+  const reviewRequest = (text: string): { isReview: boolean; code: string; instruction: string } => {
+    const lines = text.split('\n');
+    const INSTRUCTION = /\b(list|show|find|identify)\b.{0,30}\b(issue|issues|bug|bugs|problem with|error|errors|wrong)\b|\bwhat(?:'s| is) wrong\b|\bdo ?n[o']?t (add|change|modify|rewrite|alter)\b|\bwithout (adding|changing|modifying)\b|\bdebug this\b|\bfix (the |this )?code\b/i;
+    const instructionLines = lines.filter(l => INSTRUCTION.test(l));
+    const hasInstruction = instructionLines.length > 0;
+    // Problem statements announce themselves. If any of these are present it is
+    // a problem to solve, never a review — bail out even with an instruction.
+    const STATEMENT = /^\s*(input|output|constraints?|examples?|sample input|sample output|note)\s*:/im;
+    const PROMPT = /\b(given an?|return the|write a (function|program)|you are given|implement a)\b/i;
+    if (STATEMENT.test(text) || PROMPT.test(text)) return { isReview: false, code: '', instruction: '' };
+    const codeLines = lines.filter(l => /^\s*(def |class |for |while |if |elif |else|import |from |return |print\(|\w+\s*=[^=]|\w+\s*\+=|\w+\.\w+\()/.test(l));
+    const nonEmpty = lines.filter(l => l.trim()).length;
+    // Either they asked for a review, or the box is essentially all code.
+    const isReview = nonEmpty > 0 && codeLines.length >= 2 && (hasInstruction || codeLines.length / nonEmpty >= 0.7);
+    if (!isReview) return { isReview: false, code: '', instruction: '' };
+    const code = lines.filter(l => !INSTRUCTION.test(l)).join('\n').trim();
+    return { isReview: true, code, instruction: instructionLines.join(' ').trim() };
+  };
+
   const handleGenerateSolution = () => {
     if (!problemText.trim()) { setError('Please enter a problem first'); return; }
+    // Code to audit goes to CoFix in review mode — solving it would rewrite it.
+    const review = reviewRequest(problemText);
+    if (review.isReview && review.code.trim().length >= 5 && onSendToCofix) {
+      onSendToCofix(review.code, language, { mode: 'review', hint: review.instruction || undefined });
+      return;
+    }
     // Clear any pending multi-page auto-generate timer.
     if (captureAutoGenTimerRef.current) clearTimeout(captureAutoGenTimerRef.current);
     multiPageCapturingRef.current = false;

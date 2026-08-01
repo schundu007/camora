@@ -2163,6 +2163,20 @@ Audit every line before answering and correct each defect you find, including:
 Emit ONE changes[] entry per distinct defect, each naming the defect in its label
 (e.g. "wrong operator", "stray bracket", "undefined helper"). If after a careful
 audit the code is genuinely correct, return changes: [] — do not invent faults.
+
+REVIEW MODE SUSPENDS THE "EXECUTION CONTRACT" RULE BELOW. You are reviewing the
+candidate's program, not making it harness-compatible. You are FORBIDDEN to:
+  • wrap loose top-level statements in a function, or add/rename parameters;
+  • convert print() output into a return value, or a return into a print;
+  • introduce ANY new variable, list, accumulator, helper, guard condition or
+    early exit that was not already there — no output=[], no "!= sentinel";
+  • reorder, merge or split statements, or change the algorithm or data
+    structures for a "better" one.
+fixed_code is the SAME PROGRAM with each defect corrected IN PLACE: same
+statements, same order, same names, same I/O style. It must have the SAME
+number of lines as the input unless the defect itself is a missing or a
+duplicated line. Correcting \`<=\` to \`<\` or re-indenting a line is a fix;
+rewriting the program is not.
 ══════════════════════════════════════════════════════════════════════════
 `
     : taskMode === 'explain'

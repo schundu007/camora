@@ -59,7 +59,7 @@ export const LumoraShellPage = () => {
   const codingScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
   const designScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
   const cofixScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
-  const cofixInjectRef = useRef<((code: string, lang?: string) => void) | null>(null);
+  const cofixInjectRef = useRef<((code: string, lang?: string, opts?: { mode?: 'review' | 'complete' | 'solve' | 'explain'; hint?: string }) => void) | null>(null);
 
   // Input mode state lifted to shell so the global strip can own the pills
   const [codingInputMode, setCodingInputMode] = useState<'paste' | 'url' | 'image'>('paste');
@@ -583,7 +583,7 @@ export const LumoraShellPage = () => {
                         onNewProblemCallback={() => setScreenshots([])}
                         externalInputMode={codingInputMode}
                         onExternalInputModeChange={(m) => setCodingInputMode(m as 'paste' | 'url' | 'image')}
-                        onSendToCofix={(code, lang) => { cofixInjectRef.current?.(code, lang); navigate('/lumora/fix', { state: { injectCode: code, injectLang: lang } }); }}
+                        onSendToCofix={(code, lang, opts) => navigate('/lumora/fix', { state: { injectCode: code, injectLang: lang, injectMode: opts?.mode, injectHint: opts?.hint } })}
                         captureControls={
                           <ScreenshotStrip
                             inline
