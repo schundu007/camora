@@ -56,6 +56,14 @@
     --danger:  #EF4444;
     --info:    #2563EB;
 
+    /* Brand-green success + semantic aliases (DESIGN-006/009/010/013).
+       --cam-success is the approved brand green #10b981. Distinct from
+       --success (deliberately blue). --cam-warning / --color-error are
+       aliases so token-only var() references resolve without hex fallbacks. */
+    --cam-success: #10b981;
+    --cam-warning: var(--warning);
+    --color-error: var(--danger);
+
     /* Difficulty — weight-driven, not hue-driven */
     --easy:        #6B7280;
     --easy-bg:     rgba(107,114,128,0.10);
@@ -243,6 +251,12 @@
     --warning-text: #7A5C0A;
     --danger:  #DC2626;
     --info:    #1B1D22;  /* B&W: was blue #1D4ED8 */
+
+    /* Brand-green success + semantic aliases (DESIGN-006/009/010/013).
+       Deeper green (#059669) on light for AA contrast vs the #10b981 dark value. */
+    --cam-success: #059669;
+    --cam-warning: var(--warning);
+    --color-error: var(--danger);
 
     --easy:        #6B7280;
     --easy-bg:     rgba(107,114,128,0.06);

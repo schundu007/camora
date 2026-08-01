@@ -27,7 +27,7 @@ const TOPIC_LABELS: Record<string, string> = {
 };
 
 const DIFF_CHIP: Record<Difficulty, { bg: string; text: string }> = {
-  easy:   { bg: 'color-mix(in oklab, #10b981 15%, var(--bg-elevated))', text: '#10b981' },
+  easy:   { bg: 'color-mix(in oklab, var(--cam-success) 15%, var(--bg-elevated))', text: 'var(--cam-success)' },
   medium: { bg: 'color-mix(in oklab, var(--warning) 15%, var(--bg-elevated))', text: 'var(--warning)' },
   hard:   { bg: 'color-mix(in oklab, var(--danger) 15%, var(--bg-elevated))', text: 'var(--danger)' },
 };
