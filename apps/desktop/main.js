@@ -355,9 +355,48 @@ function createWindow() {
   // Audio loopback for interviewer audio (Zoom/Meet capture without virtual cables).
   // Auto-pick the primary screen so users don't have to click through a picker.
   session.defaultSession.setDisplayMediaRequestHandler((_req, callback) => {
+    // No picker by design: we auto-grant system loopback so the interviewer's
+    // audio is captured without the candidate sharing anything on screen.
+    //
+    // The failure mode this guards is invisible: without Screen Recording
+    // permission macOS returns ZERO sources, we used to callback({}) with no
+    // diagnostics, getDisplayMedia rejected, and the LIVE switch simply never
+    // turned on. No prompt, no error, no log — indistinguishable from a dead
+    // button. macOS never re-prompts for Screen Recording here, so the user
+    // has to be TOLD.
+    const status = process.platform === 'darwin'
+      ? systemPreferences.getMediaAccessStatus('screen')
+      : 'granted';
+    if (status !== 'granted') {
+      console.error(`[loopback] Screen Recording is "${status}" — interviewer audio cannot start. System Settings → Privacy & Security → Screen Recording → enable Camora, then relaunch.`);
+      try {
+        mainWindow?.webContents.send('speaker-capture-blocked', {
+          reason: 'screen-permission',
+          status,
+          message: 'Screen Recording is off, so Camora cannot hear the interviewer. Enable it in System Settings → Privacy & Security → Screen Recording, then quit and reopen Camora.',
+        });
+      } catch { /* window may be gone */ }
+      return callback({});
+    }
     desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: 0, height: 0 } })
-      .then((sources) => callback(sources.length ? { video: sources[0], audio: 'loopback' } : {}))
-      .catch(() => callback({}));
+      .then((sources) => {
+        if (!sources.length) {
+          console.error('[loopback] no screen sources returned despite permission granted — interviewer audio cannot start');
+          try {
+            mainWindow?.webContents.send('speaker-capture-blocked', {
+              reason: 'no-sources',
+              message: 'Camora could not open a system audio source. Quit and reopen the app; if it persists, re-enable Screen Recording.',
+            });
+          } catch { /* window may be gone */ }
+          return callback({});
+        }
+        console.log('[loopback] granted system loopback audio to the renderer');
+        callback({ video: sources[0], audio: 'loopback' });
+      })
+      .catch((err) => {
+        console.error('[loopback] getSources failed:', err?.message || err);
+        callback({});
+      });
   }, { useSystemPicker: false });
 }
 

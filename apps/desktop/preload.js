@@ -50,6 +50,19 @@ contextBridge.exposeInMainWorld('camo', {
   // | { ok:false, error, needsScreenPermission? }.
   captureRegion: () => ipcRenderer.invoke('capture-region'),
 
+  // Fires when interviewer-audio capture cannot start — almost always Screen
+  // Recording being off, which macOS will never prompt for here. Without this
+  // the LIVE switch just silently never turns on.
+  onSpeakerCaptureBlocked: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('speaker-capture-blocked', handler);
+    return handler;
+  },
+  offSpeakerCaptureBlocked: (handler) => {
+    if (handler) ipcRenderer.removeListener('speaker-capture-blocked', handler);
+    else ipcRenderer.removeAllListeners('speaker-capture-blocked');
+  },
+
   // Verbatim problem text + starter code from the front coding-platform tab,
   // with no screenshot taken. Pairs with captureRegion so a region snap of the
   // problem statement still gets the exact editor template.
