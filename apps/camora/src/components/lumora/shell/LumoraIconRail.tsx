@@ -56,10 +56,12 @@ const MORE_ITEMS = [
 /* Interview tool switchers — compact icon-only quick-switch between the live
    surfaces (replaces the old header tab pills). Home is the Dashboard item. */
 const TOOL_ITEMS = [
+  // Ask Sona and Behavioral sit ADJACENT on purpose: both are live Q&A with
+  // Sona, and the eye should not travel between them mid-interview.
   { id: 'ask', label: 'Ask Sona', path: '/lumora/ask', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z" /></svg> },
+  { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg> },
   { id: 'coding', label: 'Coding', path: '/lumora/coding', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg> },
   { id: 'design', label: 'Design', path: '/lumora/design', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
-  { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg> },
   { id: 'cofix', label: 'CoFix', path: '/lumora/fix', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z" /></svg> },
   { id: 'claude', label: 'Claude', path: '/lumora/claude', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.6 1.9 5 5.5 5.5C13.9 8 12.5 9.4 12 13c-.5-3.6-1.9-5-5.5-5.5C10.1 7 11.5 5.6 12 2zM18.5 12c.3 2.2 1.1 3 3.3 3.3-2.2.3-3 1.1-3.3 3.3-.3-2.2-1.1-3-3.3-3.3 2.2-.3 3-1.1 3.3-3.3zM6 14c.2 1.5.8 2.1 2.3 2.3C6.8 16.5 6.2 17.1 6 18.6c-.2-1.5-.8-2.1-2.3-2.3C5.2 16.1 5.8 15.5 6 14z" /></svg> },
 ];
