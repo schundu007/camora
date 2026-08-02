@@ -69,20 +69,28 @@ function getTranscriptionProviders() {
   }
   if (process.env.OPENAI_API_KEY) {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    // FAST_TRANSCRIBE=1 puts gpt-4o-mini-transcribe ahead of whisper-1. It is
-    // materially faster, which matters when Groq's quota is gone and every
-    // second is live interview time.
+    // Default to a CURRENT-generation model. whisper-1 is large-V2 (2022) —
+    // OpenAI never exposed v3 — so leaving it primary meant every fallback
+    // transcription ran on the oldest model available to us. gpt-4o-mini-
+    // transcribe is both faster and more accurate, on the same account.
     //
-    // The trade is real and deliberate, which is why this is opt-in: that model
-    // only supports response_format 'json', so it returns NO segments and we
-    // lose the per-segment no_speech_prob silence filter. The text-level
-    // hallucination filter still runs, and the client VADs before sending, but
-    // this IS one net fewer against Whisper inventing speech during silence.
-    // If phantom questions appear mid-interview, unset the flag.
-    if (process.env.FAST_TRANSCRIBE === '1') {
-      providers.push({ name: 'openai-fast', client: openai, model: 'gpt-4o-mini-transcribe', responseFormat: 'json' });
+    // The one thing it costs: it only supports response_format 'json', so it
+    // returns no segments and the per-segment no_speech_prob silence filter
+    // does not run for it. Two nets remain — the client VADs before sending,
+    // and the text-level hallucination filter still classifies every result —
+    // and whisper-1 stays in the chain below, so a failure here falls back to
+    // full filtering rather than to nothing.
+    // Set OPENAI_TRANSCRIBE_MODEL=whisper-1 to pin the old behaviour, or
+    // =gpt-4o-transcribe for the larger, more accurate sibling.
+    const primary = process.env.OPENAI_TRANSCRIBE_MODEL || 'gpt-4o-mini-transcribe';
+    if (primary !== 'whisper-1') {
+      providers.push({
+        name: `openai:${primary}`,
+        client: openai,
+        model: primary,
+        responseFormat: 'json',
+      });
     }
-    // whisper-1 stays last: verbose_json, full silence filtering, always correct.
     providers.push({ name: 'openai', client: openai, model: 'whisper-1', responseFormat: 'verbose_json' });
   }
   if (!providers.length) throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
