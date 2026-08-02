@@ -513,6 +513,7 @@ import { loadAdminConfig } from './services/adminConfig.js';
 import { authLimiter, apiLimiter, aiLimiter, codingLimiter, transcriptionLimiter } from './middleware/rateLimiter.js';
 import { authenticate } from './middleware/authenticate.js';
 import { requirePaidSubscription } from './middleware/requirePaidSubscription.js';
+import { logModelPolicy } from './services/modelPolicy.js';
 
 // Billing routes retired (PR-2). Frontend now hits ascend-backend's
 // /api/v1/billing/* directly. This stub returns 410 Gone for any stale
@@ -617,6 +618,8 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 const server = app.listen(PORT, '0.0.0.0', () => {
+  // Which models served this process — a fact in the logs, not archaeology.
+  logModelPolicy();
   logger.info({ port: PORT }, 'Lumora backend listening (migrations running in background)');
 });
 

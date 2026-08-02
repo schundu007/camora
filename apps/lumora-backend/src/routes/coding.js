@@ -89,6 +89,7 @@ import { checkUsage } from '../middleware/usageLimits.js';
 import { executeCode } from '../services/codeRunner.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
 import { retrieveExemplars, formatExemplars } from '../services/codingKnowledge.js';
+import { LIVE_ANSWER_MODEL } from '../services/modelPolicy.js';
 
 const router = Router();
 
@@ -130,7 +131,7 @@ function toGeminiHistory(msgs) {
 
 // ── Anthropic lazy client — resolved at call time so admin-panel key
 //    changes take effect without restarting the service.
-const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
+const ANTHROPIC_MODEL = LIVE_ANSWER_MODEL;
 let _anthropicClient = null;
 let _anthropicKey = null;
 function getAnthropicClient() {

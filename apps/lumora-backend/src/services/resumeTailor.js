@@ -5,8 +5,9 @@
  * the DOCX from it (the frontend already depends on `docx`).
  */
 import { getAnthropicClient } from './claude.js';
+import { LIVE_ANSWER_MODEL } from './modelPolicy.js';
 
-const TAILOR_MODEL = process.env.CLAUDE_MODEL_PAID || 'claude-sonnet-4-6';
+const TAILOR_MODEL = process.env.CLAUDE_MODEL_PAID || LIVE_ANSWER_MODEL;
 
 const SYSTEM = `You are an elite resume writer and career coach. You tailor a candidate's real resume to a specific job description: you reframe and prioritise their genuine experience to match the role, mirror the JD's language and keywords, lead bullets with impact and metrics, and cut irrelevant material. You NEVER invent employers, titles, dates, degrees, or skills the candidate doesn't have — tailoring means emphasis and phrasing, not fabrication. Return ONLY valid JSON (no prose, no markdown code fences).`;
 
