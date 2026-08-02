@@ -280,4 +280,75 @@ router.use((err, _req, res, _next) => {
   return res.status(500).json({ error: 'Internal server error' });
 });
 
+// ── POST /stream-token (mounted at /api/v1/transcribe/stream-token) ─────────
+// Mints a SHORT-LIVED Deepgram token so the browser can open a live WebSocket
+// straight to Deepgram.
+//
+// Why a token and not a proxy: streaming exists to remove latency, and relaying
+// every audio frame through Railway adds a hop in both directions on the exact
+// path we are trying to make instant. The trade is that the client talks to
+// Deepgram directly, so the long-lived DEEPGRAM_API_KEY must NEVER reach it —
+// hence a scoped grant with a lifetime measured in seconds. If the grant call
+// fails we fail CLOSED and the client stays on the existing chunk-upload path,
+// which still works.
+//
+// Usage is metered HERE, at session start, because the per-utterance hook we
+// meter on today does not exist once audio streams continuously.
+router.post('/stream-token', authenticate, async (req, res) => {
+  if (process.env.STREAMING_STT !== '1' || !process.env.DEEPGRAM_API_KEY) {
+    return res.status(404).json({ error: 'Streaming transcription is not enabled.' });
+  }
+  try {
+    if (req.user?.id && !req.user.is_admin) {
+      const limitCheck = await checkLimit(req.user.id, 'questions');
+      if (!limitCheck.allowed) {
+        return res.status(429).json({ error: 'Usage limit reached. Please upgrade your plan.', subscriptionRequired: true });
+      }
+    }
+    const ttl = Number(process.env.DEEPGRAM_TOKEN_TTL || 60);
+    const grant = await fetch('https://api.deepgram.com/v1/auth/grant', {
+      method: 'POST',
+      headers: {
+        Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ttl_seconds: ttl }),
+    });
+    if (!grant.ok) {
+      const detail = await grant.text().catch(() => '');
+      console.error(`[stream-token] deepgram grant failed ${grant.status}: ${detail.slice(0, 200)}`);
+      return res.status(502).json({ error: 'Could not start a streaming session. Falling back to standard transcription.' });
+    }
+    const json = await grant.json();
+    const token = json?.access_token || json?.key;
+    if (!token) {
+      console.error('[stream-token] deepgram grant returned no token:', Object.keys(json || {}));
+      return res.status(502).json({ error: 'Could not start a streaming session. Falling back to standard transcription.' });
+    }
+    console.log(`[stream-token] issued ${ttl}s streaming token for user ${req.user.id}`);
+    res.json({
+      token,
+      expiresIn: json?.expires_in ?? ttl,
+      // The client builds the socket URL from these so tuning endpointing does
+      // not require shipping a new desktop build.
+      url: 'wss://api.deepgram.com/v1/listen',
+      params: {
+        model: process.env.DEEPGRAM_MODEL || 'nova-3',
+        language: 'en',
+        smart_format: 'true',
+        punctuate: 'true',
+        interim_results: 'true',
+        // Deepgram tells us when an utterance ENDS, which replaces the 1.2s
+        // client-side coalescing timer with a real signal.
+        utterance_end_ms: process.env.DEEPGRAM_UTTERANCE_END_MS || '1000',
+        vad_events: 'true',
+        endpointing: process.env.DEEPGRAM_ENDPOINTING || '300',
+      },
+    });
+  } catch (err) {
+    console.error('[stream-token] failed:', err?.message || err);
+    res.status(502).json({ error: 'Could not start a streaming session.' });
+  }
+});
+
 export default router;
