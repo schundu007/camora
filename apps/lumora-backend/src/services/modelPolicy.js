@@ -46,13 +46,15 @@ export const LIVE_VISION_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 /**
  * Speech to text, best-first. A provider is used if its key is present.
- * Ordered by RELIABILITY, not headline speed: the fastest option is useless if
- * it 429s on every request mid-interview.
+ * Groq sits ahead of OpenAI on speed: when its quota has room it is the fastest
+ * Whisper available, and when it is exhausted the circuit breaker removes it
+ * from the chain for 15 minutes, so a spent quota costs ONE failed call rather
+ * than one per utterance. That is what makes speed-first safe here.
  */
 export const LIVE_TRANSCRIBE_CHAIN = [
   { provider: 'deepgram', model: 'nova-3', why: 'purpose-built for speech, keyterm boosting' },
-  { provider: 'openai', model: 'gpt-4o-mini-transcribe', why: 'current generation, answers every time' },
-  { provider: 'groq', model: 'whisper-large-v3-turbo', why: 'fastest, but the free tier daily cap makes it a last resort' },
+  { provider: 'groq', model: 'whisper-large-v3-turbo', why: 'fastest Whisper when its quota has room' },
+  { provider: 'openai', model: 'gpt-4o-mini-transcribe', why: 'current generation, always answers' },
 ];
 
 /** Log the live policy once at boot so which models served an interview is a
