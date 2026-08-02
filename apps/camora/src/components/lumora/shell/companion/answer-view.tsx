@@ -143,7 +143,16 @@ const parseStar = (text: string): { sections: { label: StarLabel; body: string }
   const sections: { label: StarLabel; body: string }[] = [];
   for (let k = 0; k < found.length; k++) {
     const { label, startLine } = found[k];
-    const endLine = k + 1 < found.length ? found[k + 1].startLine : lines.length;
+    let endLine = k + 1 < found.length ? found[k + 1].startLine : lines.length;
+    // The final section used to run to end-of-text, so anything the model
+    // appended after Result — LEARNING, REBUTTALS, Q1/A1 — was rendered inside
+    // the Result card. Stop at the first trailing-block marker regardless of
+    // whether an extractor recognised it.
+    if (k + 1 >= found.length) {
+      for (let t = startLine + 1; t < lines.length; t++) {
+        if (/^\s*\**\s*(LEARNING|REBUTTALS|FOLLOW[- ]?UPS?|Q\s*\d+)\s*\**\s*[:.\-—)]/i.test(lines[t])) { endLine = t; break; }
+      }
+    }
     const firstLine = lines[startLine].replace(/^\s*\*?\*?\s*(SITUATION|TASK|ACTION|RESULT)\s*[:\-—]\s*/i, '');
     const body = [firstLine, ...lines.slice(startLine + 1, endLine)]
       .join('\n')
@@ -300,18 +309,96 @@ interface Rebuttal { probe: string; handling: string; }
 
 const extractRebuttals = (text: string): { rebuttals: Rebuttal[]; stripped: string } => {
   if (!text) return { rebuttals: [], stripped: text };
-  const m = text.match(/\n\s*REBUTTALS\s*:\s*\n([\s\S]*?)$/i);
-  if (!m) return { rebuttals: [], stripped: text };
-  const body = m[1];
-  const rebuttals: Rebuttal[] = [];
-  body.split('\n').forEach(line => {
-    const t = line.trim();
-    if (!t) return;
-    const lm = t.match(/^\d+[.)]\s*(.+?)\s*(?:—|-|–|:)\s*(.+)$/);
-    if (lm) rebuttals.push({ probe: lm[1].trim(), handling: lm[2].trim() });
-  });
-  return { rebuttals, stripped: text.slice(0, m.index).trimEnd() };
+
+  const parseBody = (body: string): Rebuttal[] => {
+    const out: Rebuttal[] = [];
+    const lines = body.split('\n').map(l => l.trim()).filter(Boolean);
+    // Form A — "1) probe — handling" on one line, which is what the prompt asks for.
+    for (const t of lines) {
+      const clean = t.replace(/\*\*/g, '');
+      const lm = clean.match(/^\d+[.)]\s*(.+?)\s*(?:—|–|-|:)\s*(.+)$/);
+      if (lm) out.push({ probe: lm[1].trim(), handling: lm[2].trim() });
+    }
+    if (out.length) return out;
+    // Form B — "Q1: probe" / "A1: handling" on separate lines. The model emits
+    // this often enough that treating it as malformed just loses the content.
+    const qs = new Map<string, string>();
+    const as = new Map<string, string>();
+    for (const t of lines) {
+      const clean = t.replace(/\*\*/g, '');
+      const q = clean.match(/^Q\s*(\d+)\s*[:.)-]\s*(.+)$/i);
+      if (q) { qs.set(q[1], q[2].trim()); continue; }
+      const a = clean.match(/^A\s*(\d+)\s*[:.)-]\s*(.+)$/i);
+      if (a) as.set(a[1], a[2].trim());
+    }
+    for (const [n, probe] of [...qs.entries()].sort((x, y) => Number(x[0]) - Number(y[0]))) {
+      const handling = as.get(n);
+      if (handling) out.push({ probe, handling });
+    }
+    return out;
+  };
+
+  // Tolerate a bolded, un-colonned, or mid-line header — the old regex required
+  // a literal "\nREBUTTALS:\n" and silently failed on every other shape, which
+  // is how the whole block ended up rendered inside the RESULT card.
+  const header = text.match(/^[ \t]*\**\s*REBUTTALS\s*\**\s*:?[ \t]*$/im);
+  if (header && header.index !== undefined) {
+    const bodyStart = text.indexOf('\n', header.index);
+    const body = bodyStart === -1 ? '' : text.slice(bodyStart + 1);
+    const rebuttals = parseBody(body);
+    if (rebuttals.length) return { rebuttals, stripped: text.slice(0, header.index).trimEnd() };
+  }
+
+  // No header at all: fall back to a trailing run of Q/A pairs. Anchor on the
+  // FIRST Q-line that has a matching A-line after it.
+  const lines = text.split('\n');
+  const firstQ = lines.findIndex(l => /^\s*\**\s*Q\s*\d+\s*[:.)-]/i.test(l));
+  if (firstQ !== -1) {
+    const body = lines.slice(firstQ).join('\n');
+    const rebuttals = parseBody(body);
+    if (rebuttals.length) {
+      return { rebuttals, stripped: lines.slice(0, firstQ).join('\n').trimEnd() };
+    }
+  }
+  return { rebuttals: [], stripped: text };
 }
+
+/* ── LEARNING — its own line, not the tail of RESULT ── */
+const extractLearning = (text: string): { learning: string | null; stripped: string } => {
+  if (!text) return { learning: null, stripped: text };
+  const lines = text.split('\n');
+  const i = lines.findIndex(l => /^\s*\**\s*LEARNING\s*\**\s*[:.\-—]/i.test(l));
+  if (i === -1) return { learning: null, stripped: text };
+  // Runs to the next labelled block or the end.
+  let end = lines.length;
+  for (let k = i + 1; k < lines.length; k++) {
+    if (/^\s*\**\s*(SITUATION|TASK|ACTION|RESULT|REBUTTALS|Q\s*\d+)\s*\**\s*[:.\-—)]/i.test(lines[k])) { end = k; break; }
+  }
+  const learning = lines.slice(i, end).join(' ')
+    .replace(/^\s*\**\s*LEARNING\s*\**\s*[:.\-—]\s*/i, '')
+    .replace(/\*\*/g, '')
+    .trim();
+  const stripped = [...lines.slice(0, i), ...lines.slice(end)].join('\n').trimEnd();
+  return { learning: learning || null, stripped };
+}
+
+const LearningNote = ({ text }: { text: string | null }) => {
+  if (!text) return null;
+  return (
+    <div
+      className="mt-3 rounded-lg px-3 py-2 flex items-start gap-2"
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+    >
+      <span
+        className="text-[9px] font-bold uppercase tracking-[0.14em] shrink-0 mt-[2px]"
+        style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}
+      >
+        Takeaway
+      </span>
+      <span className="text-[13px] leading-snug" style={{ color: 'var(--text-primary)' }}>{text}</span>
+    </div>
+  );
+};
 
 const RebuttalsPanel = ({ items }: { items: Rebuttal[] }) => {
   if (items.length === 0) return null;
@@ -591,14 +678,17 @@ export const RichText = ({ text }: { text: string }) => {
 /* ── AnswerView — picks STAR cards for behavioral, RichText otherwise ── */
 export const AnswerView = ({ text, streaming }: { text: string; streaming?: boolean }) => {
   const { archetype, stripped: afterArch } = useMemo(() => extractArchetype(text), [text]);
-  const { rebuttals, stripped } = useMemo(() => extractRebuttals(afterArch), [afterArch]);
+  const { rebuttals, stripped: afterRebuttals } = useMemo(() => extractRebuttals(afterArch), [afterArch]);
+  const { learning, stripped } = useMemo(() => extractLearning(afterRebuttals), [afterRebuttals]);
   const star = useMemo(() => parseStar(stripped), [stripped]);
   if (star) {
     return (
       <div>
         {archetype && <ArchetypeBadge archetype={archetype} />}
         <StarAnswer sections={star.sections} streaming={streaming} />
-        <RebuttalsPanel items={rebuttals} />
+        <LearningNote text={learning} />
+        <LearningNote text={learning} />
+      <RebuttalsPanel items={rebuttals} />
       </div>
     );
   }
@@ -607,13 +697,16 @@ export const AnswerView = ({ text, streaming }: { text: string; streaming?: bool
       <div>
         <ArchetypeBadge archetype={archetype} />
         <RichText text={stripped} />
-        <RebuttalsPanel items={rebuttals} />
+        <LearningNote text={learning} />
+        <LearningNote text={learning} />
+      <RebuttalsPanel items={rebuttals} />
       </div>
     );
   }
   return (
     <div>
       <RichText text={stripped} />
+      <LearningNote text={learning} />
       <RebuttalsPanel items={rebuttals} />
     </div>
   );
