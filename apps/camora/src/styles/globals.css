@@ -142,6 +142,9 @@
     --cam-gold-leaf-dk: #B88930;
     --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 8%, transparent);
     --cam-gold-leaf-text: #C99A2E;
+    /* Muted white for inactive tab labels on the navy/gold tab strip. Same in
+       both themes — the strip background is navy regardless of theme. */
+    --cam-tab-inactive-on-navy: rgba(255, 255, 255, 0.75);
     --cam-void:         #0A0A0C;
     --cam-surface-lt:   #1C1C22;
 

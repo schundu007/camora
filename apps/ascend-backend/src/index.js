@@ -91,6 +91,7 @@ import lumoraStoriesRouter from './lumora/routes/stories.js';
 
 import { authenticate } from './middleware/authenticate.js';
 import { hourBudgetGate } from './middleware/hourBudgetGate.js';
+import { getAdminEmails } from './lib/adminEmails.js';
 
 // Initialize Redis for problem caching
 initRedis();
@@ -562,17 +563,32 @@ async function runMigrations() {
       count INTEGER DEFAULT 0
     )`);
 
-    // Admin column — must exist before the OWNER_EMAILS UPDATE below
+    // Admin columns — must exist before the owner reconciliation below.
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false');
+    // is_env_admin marks grants that came from the OWNER_EMAILS allowlist (vs.
+    // a manual DB grant via the admin panel). Tracking the source lets us
+    // REVOKE an env grant when the email leaves the list without clobbering
+    // manually-granted admins (AUTH-006). Existing manual grants have
+    // is_env_admin = false (column default), so they're never touched here.
+    await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_env_admin BOOLEAN DEFAULT false');
 
-    // Ensure owner accounts are admins. Pulled from OWNER_EMAILS /
-    // ADMIN_EMAILS env (csv) — hardcoding the list in source meant that
-    // changing the owner's email would require a code edit + redeploy
-    // to re-grant admin, while the *old* email kept its grant forever.
-    const _ownerEmails = (process.env.OWNER_EMAILS || process.env.ADMIN_EMAILS || '')
-      .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+    // Reconcile env-derived admin grants against the CURRENT allowlist.
+    const _ownerEmails = [...getAdminEmails()];
     if (_ownerEmails.length > 0) {
-      await query('UPDATE users SET is_admin = true WHERE LOWER(email) = ANY($1::text[])', [_ownerEmails]);
+      // Grant current owners (idempotent) and flag the grant as env-sourced.
+      await query(
+        'UPDATE users SET is_admin = true, is_env_admin = true WHERE LOWER(email) = ANY($1::text[])',
+        [_ownerEmails],
+      );
+      // Revoke env grants for anyone no longer on the list. Manual grants
+      // (is_env_admin = false) are untouched.
+      await query(
+        'UPDATE users SET is_admin = false, is_env_admin = false WHERE is_env_admin = true AND NOT (LOWER(email) = ANY($1::text[]))',
+        [_ownerEmails],
+      );
+    } else {
+      // Allowlist emptied → revoke ALL env grants (manual grants untouched).
+      await query('UPDATE users SET is_admin = false, is_env_admin = false WHERE is_env_admin = true');
     }
 
     // One-time seed: migrate old site_visitors total into page_views
