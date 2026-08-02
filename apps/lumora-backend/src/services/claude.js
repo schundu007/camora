@@ -599,12 +599,20 @@ read end to end the four beats must still flow as one continuous pitch.
 
 Emit EXACTLY this shape:
 
-- **<3-4 word label>** — <1-2 full spoken sentences>
+- **<3-4 word label>** — <ONE short spoken sentence. COUNT THE WORDS AFTER THE
+  EM DASH: 18 MAXIMUM. If it needs more, it is TWO beats — split it.>
+  <the supporting detail: named systems, numbers, scale. MAX 25 words. Its own line.>
+
+Two lines per beat, never one long run-on. The candidate glances down for half a
+second: the label tells them which beat they are on, the first line is what they
+SAY, the second line is what they reach for if the interviewer wants more. A
+40-word unbroken sentence is unreadable at a glance and defeats the whole point.
 - **<3-4 word label>** — <1-2 full spoken sentences>
 - **<3-4 word label>** — <1-2 full spoken sentences>
 - **<3-4 word label>** — <1-2 full spoken sentences>
 
-The four beats, in order:
+The beats, in order (5-7 of them — the word target below is met by MORE beats,
+never by longer ones):
 1. Flagship accomplishment — most JD-relevant project with NAMED system + metric. Jump straight in, no title restatement.
 2. Second and third most JD-relevant experiences — different companies/systems, concrete numbers.
 3. JD gaps addressed with a BRIDGE — name the closest analog + ramp statement ("I haven't shipped X specifically, but I've done Y which translates directly"). Skip this beat entirely if there is no real gap; never manufacture one.
@@ -614,11 +622,16 @@ Label the beats with what they actually contain ("**Owned the CI/CD platform** �
 
 NO generic claims. Every sentence must have a named company, system, OR metric. "Extensive experience in CI/CD" → BANNED. "At OSDU I ran 1000s of GitLab-CI runs across 14 repos" → CORRECT.
 
-WORD COUNT: MINIMUM 220 words, target 260. Count before submitting. Under 200 words = under 85 seconds of speech = the interviewer runs out of content and awkward silence fills the room. This pitch must fill 90–120 seconds of confident, unhurried speech at 140 wpm.
+WORD COUNT: MINIMUM 220 words, target 260, filling 90-120 seconds at 140 wpm.
+Under 200 words = awkward silence. BUT: reach that total with 5-7 two-line beats,
+NEVER by letting a line run long. Six beats at ~40 words each is 240 and reads at
+a glance; four beats at ~70 each is the same total and is unreadable. If you are
+short of the target, ADD A BEAT — do not lengthen the ones you have.
 [/PITCH]
 
 [JD_COVERAGE]
-A short audit grid the candidate can glance at while speaking — for each top JD requirement, one line: "<requirement> → <my proof point in 6–10 words>". 4–6 lines max. Pure mapping, no prose. This is the cheat-sheet for handling probes after the pitch.
+A short audit grid the candidate can glance at while speaking — for each top JD requirement, one line: "<requirement, trimmed to 5 words max> → <my proof point in 6-10 words>". 4-6 lines max. Pure mapping, no prose.
+COUNT THE WORDS after each arrow. More than 10 and it stops being glanceable and becomes another paragraph to read — cut it to the named system plus the number. "→ Built and scaled Azure Data Factory pipelines from design through completion" is TOO LONG; "→ ADF pipelines, design to prod" is right. This is a cheat-sheet for handling probes, not a second pitch.
 [/JD_COVERAGE]
 
 ═══ CONSISTENCY RULES ═══
@@ -630,6 +643,12 @@ A short audit grid the candidate can glance at while speaking — for each top J
 ${resume ? `=== CANDIDATE BACKGROUND ===\n${resume}` : ''}
 ${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}
 ${cultureFrame}${companyBriefing}
+
+TAGS ARE MANDATORY: wrap the pitch in [PITCH]...[/PITCH] and the grid in
+[JD_COVERAGE]...[/JD_COVERAGE], exactly those spellings. The client turns them
+into the section headings the candidate navigates by — without them everything
+renders as one undifferentiated wall of text and the grid is indistinguishable
+from the pitch.
 
 Write the pitch now. Treat it as the most important 90 seconds of the candidate's day.`;
     // 260-word pitch + headline + JD grid ≈ 500-600 tokens; 2000 gives

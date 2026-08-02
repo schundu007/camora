@@ -4,6 +4,9 @@
  * AICompanionPanel so all three Lumora windows pass identical personalization
  * to the backend.
  */
+import { readPrepRaw } from './prepStorage';
+import { makeUserScopedStore } from './userScopedStorage';
+
 export type StoryArchetype =
   | 'Conflict' | 'Leadership' | 'Failure' | 'Ambiguity'
   | 'Influence' | 'Innovation' | 'Collaboration' | 'Growth'
@@ -37,6 +40,16 @@ export interface LumoraAssistant {
   createdAt?: string;
 }
 
+/** Per-user assistants (resume + JD + stories). No legacy migration on purpose:
+ *  inheriting the old global blob is precisely the cross-account leak. */
+export const assistantsStore = makeUserScopedStore<LumoraAssistant[]>('lumora_assistants_v2');
+
+/** One-time removal of the pre-scoping global key so no reader can fall back
+ *  to another account's resume. */
+export function purgeLegacyGlobalAssistants(): void {
+  try { localStorage.removeItem('lumora_assistants'); } catch { /* private mode */ }
+}
+
 /**
  * Call the backend to parse a resume into archetype-tagged stories.
  * Returns empty array on failure so callers can store a value and retry later.
@@ -63,9 +76,10 @@ export function getActiveAssistant(): LumoraAssistant | null {
     const fromPrepKit = getAssistantFromPrepKit();
     if (fromPrepKit) return fromPrepKit;
 
-    // 2. Legacy lumora_assistants fallback.
-    const stored = localStorage.getItem('lumora_assistants');
-    const list = stored ? (JSON.parse(stored) as LumoraAssistant[]) : [];
+    // 2. Assistants fallback — per-user scoped. This used to be a GLOBAL
+    //    localStorage key, so on a shared machine the next account inherited
+    //    the previous candidate's resume and Sona pitched the wrong person.
+    const list = assistantsStore.read() || [];
     return list[0] || null;
   } catch {
     return null;
@@ -84,9 +98,11 @@ export function getActiveAssistant(): LumoraAssistant | null {
  */
 export function getAssistantFromPrepKit(): LumoraAssistant | null {
   try {
-    const raw = localStorage.getItem('lumora_prep_v8');
-    if (!raw) return null;
-    const prep = JSON.parse(raw) as {
+    // MUST go through prepStorage: the Prep Kit writes the per-user scoped key
+    // (lumora_prep_v9::<userId>), but this read was still pulling the legacy
+    // GLOBAL lumora_prep_v8 blob — i.e. whoever used this machine last. That is
+    // how a session for one candidate assembled another candidate's resume.
+    const prep = readPrepRaw() as {
       activeCompany: string | null;
       companies: string[];
       data: Record<string, {
@@ -100,7 +116,8 @@ export function getAssistantFromPrepKit(): LumoraAssistant | null {
         studyMaterials?: string;
         studyMaterialsFile?: string;
       }>;
-    };
+    } | null;
+    if (!prep) return null;
     const key = prep.activeCompany;
     if (!key) return null;
     const doc = prep.data?.[key];

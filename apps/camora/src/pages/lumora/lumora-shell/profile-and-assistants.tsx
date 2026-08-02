@@ -4,6 +4,7 @@
    tab pages here share TextFieldWithPreview / FormatTextPreview /
    extractTextFromFile so we keep them colocated. */
 import { useState } from 'react';
+import { assistantsStore } from '@/lib/lumora-assistant';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { dialogConfirm, dialogAlert } from '../../../components/shared/Dialog';
@@ -257,18 +258,19 @@ export const AssistantsPage = () => {
   const { token } = useAuth();
   const LUMORA_API = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
   const [assistants, setAssistants] = useState<Assistant[]>(() => {
-    try { return JSON.parse(localStorage.getItem('lumora_assistants') || '[]'); } catch { return []; }
+    // Per-user scoped — a global key here leaked the previous account's resume.
+    try { return (assistantsStore.read() as Assistant[] | null) || []; } catch { return []; }
   });
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '' });
-  const save = (list: Assistant[]) => { setAssistants(list); localStorage.setItem('lumora_assistants', JSON.stringify(list)); };
+  const save = (list: Assistant[]) => { setAssistants(list); assistantsStore.write(list as any); };
 
   /** Kick off resume → Story Bank extraction in the background. */
   const parseStories = async (assistantId: string, resume: string) => {
     if (!resume.trim() || !token) return;
     setAssistants(prev => {
       const next = prev.map(a => a.id === assistantId ? { ...a, storyParseStatus: 'parsing' as const } : a);
-      localStorage.setItem('lumora_assistants', JSON.stringify(next));
+      assistantsStore.write(next as any);
       return next;
     });
     try {
@@ -283,13 +285,13 @@ export const AssistantsPage = () => {
         const next = prev.map(a => a.id === assistantId
           ? { ...a, stories: Array.isArray(data?.stories) ? data.stories : [], storyParseStatus: (r.ok ? 'done' : 'failed') as 'done' | 'failed' }
           : a);
-        localStorage.setItem('lumora_assistants', JSON.stringify(next));
+        assistantsStore.write(next as any);
         return next;
       });
     } catch {
       setAssistants(prev => {
         const next = prev.map(a => a.id === assistantId ? { ...a, storyParseStatus: 'failed' as const } : a);
-        localStorage.setItem('lumora_assistants', JSON.stringify(next));
+        assistantsStore.write(next as any);
         return next;
       });
     }
