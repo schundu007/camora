@@ -17,6 +17,7 @@ import {
   getAnthropicClient,
 } from './claude.js';
 import { getApiKey } from './adminConfig.js';
+import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE } from './answerFormat.js';
 
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const MAX_TOKENS_QUICK = 2000;
@@ -134,10 +135,10 @@ ${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}`;
   } else {
     const basePrompt = buildGeneralPrompt(resume, technical);
     if (responseFormat === 'detailed') {
-      systemInstruction = basePrompt + `\n\nRESPONSE FORMAT OVERRIDE — DETAILED MODE:\nThe user has requested a comprehensive, detailed answer. Override the brevity rules:\n- No bullet-point cap. Use as many bullets as needed for completeness.\n- Expand each point with examples, edge cases, and depth.\n- Aim for thorough understanding, not speed.`;
+      systemInstruction = basePrompt + DETAILED_MODE_OVERRIDE;
       maxOutputTokens = MAX_TOKENS_DESIGN;
     } else if (responseFormat === 'star') {
-      systemInstruction = basePrompt + `\n\nRESPONSE FORMAT OVERRIDE — STAR MODE:\nRegardless of question type, structure the answer using the STAR framework:\n- SITUATION: 1-2 sentences — context, company, team, problem\n- TASK: 1 sentence — your specific responsibility\n- ACTION: 3-5 bullets — concrete steps\n- RESULT: 1-2 sentences — quantifiable outcome`;
+      systemInstruction = basePrompt + STAR_MODE_OVERRIDE;
       maxOutputTokens = MAX_TOKENS_QUICK;
     } else {
       systemInstruction = basePrompt;
