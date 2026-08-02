@@ -58,7 +58,12 @@ function getTranscriptionProviders() {
         baseURL: 'https://api.groq.com/openai/v1',
         maxRetries: 0,
       }),
-      model: 'whisper-large-v3-turbo',
+      // turbo by default: ~4-8x faster decoding than whisper-large-v3 with a
+      // small English accuracy loss, which is the right trade live. Set
+      // GROQ_WHISPER_MODEL=whisper-large-v3 when the interviewer is being
+      // mistranscribed — the full model holds up better on accented, noisy,
+      // low-bitrate meeting audio, at the cost of latency.
+      model: process.env.GROQ_WHISPER_MODEL || 'whisper-large-v3-turbo',
       responseFormat: 'verbose_json',
     });
   }
