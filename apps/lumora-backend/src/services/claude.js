@@ -608,6 +608,11 @@ Two lines per beat, never one long run-on. The candidate glances down for half a
 second: the label tells them which beat they are on, the first line is what they
 SAY, the second line is what they reach for if the interviewer wants more. A
 40-word unbroken sentence is unreadable at a glance and defeats the whole point.
+
+Inside every beat, wrap the named platforms, languages, frameworks, architectures
+and governance tools in **double asterisks**. Only the proper nouns and the
+numbers — 2-4 per beat, never a whole clause. The client renders them in accent
+colour, which is the only reason the candidate can find their place mid-sentence.
 - **<3-4 word label>** — <1-2 full spoken sentences>
 - **<3-4 word label>** — <1-2 full spoken sentences>
 - **<3-4 word label>** — <1-2 full spoken sentences>
@@ -641,6 +646,7 @@ Rules for the prose:
 [JD_COVERAGE]
 A short audit grid the candidate can glance at while speaking — for each top JD requirement, one line: "<requirement, trimmed to 5 words max> → <my proof point in 6-10 words>". 4-6 lines max. Pure mapping, no prose.
 COUNT THE WORDS after each arrow. More than 10 and it stops being glanceable and becomes another paragraph to read — cut it to the named system plus the number. A line like "→ Built and scaled the ingestion platform from design through completion" is TOO LONG; "→ ingestion platform, design to prod" is right. This is a cheat-sheet for handling probes, not a second pitch.
+Wrap the named tool or system on the right of each arrow in **double asterisks** — one or two per line, so the eye lands on the proof, not the connective words.
 [/JD_COVERAGE]
 
 ═══ CONSISTENCY RULES ═══

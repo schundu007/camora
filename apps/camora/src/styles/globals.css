@@ -2686,8 +2686,12 @@ img { max-width: 100%; height: auto; }
      answer impossible to track left-to-right. The parent card width is
      capped at ~880px so a single column gives ~80-char line length —
      the typographic sweet spot. Wide screens center the card. */
-  font-size: var(--fs-answer-body, 16px);
-  line-height: 1.65;
+  /* 16px was oversized for this surface: a full pitch ran 2-3 viewports and
+     the candidate had to scroll mid-answer. 13.5px/1.6 keeps ~100 chars per
+     line on the ~880px card and fits a whole answer on one screen. The leaf
+     renderers (AnswerView) set their own inline sizes off the same scale. */
+  font-size: 13.5px;
+  line-height: 1.6;
   color: var(--text-primary);
   column-count: 1 !important;
   column-width: auto;
@@ -2706,19 +2710,21 @@ img { max-width: 100%; height: auto; }
   margin-top: 12px;
   margin-bottom: 6px;
 }
-.answer-flow h1 { font-size: 16px; }
+.answer-flow h1 { font-size: 14px; }
 .answer-flow h2 {
-  font-size: 14px;
+  font-size: 12.5px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   border-bottom: 1px solid var(--accent);
   padding-bottom: 4px;
 }
-.answer-flow h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; }
-.answer-flow h4 { font-size: 12px; }
-/* Bold inline emphasis stays in body color but heavier weight, so a
-   bolded keyword inside a sentence doesn't read as a section header. */
-.answer-flow strong { font-weight: 700; color: var(--text-primary); }
+.answer-flow h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+.answer-flow h4 { font-size: 11.5px; }
+/* Bold inline emphasis carries the accent hue (gold in dark, blue in light)
+   so a bolded keyword is findable at a glance. Body-coloured bold was
+   invisible in a paragraph that is already all one weight-ish colour — the
+   candidate skimming mid-sentence had nothing to land on. */
+.answer-flow strong { font-weight: 700; color: var(--cam-gold-leaf-text); }
 .answer-flow code {
   font-family: 'IBM Plex Mono', ui-monospace, monospace;
   font-size: 0.92em;
@@ -2755,13 +2761,13 @@ img { max-width: 100%; height: auto; }
   .answer-flow p,
   .answer-flow li,
   .answer-flow span,
-  .answer-flow div { font-size: 15px !important; line-height: 1.6 !important; }
-  .answer-flow h1 { font-size: 19px !important; }
-  .answer-flow h2 { font-size: 17px !important; }
-  .answer-flow h3 { font-size: 15px !important; }
-  .answer-flow h4 { font-size: 14px !important; }
+  .answer-flow div { font-size: 13.5px !important; line-height: 1.55 !important; }
+  .answer-flow h1 { font-size: 15px !important; }
+  .answer-flow h2 { font-size: 13.5px !important; }
+  .answer-flow h3 { font-size: 12.5px !important; }
+  .answer-flow h4 { font-size: 12px !important; }
   /* Inline code stays slightly smaller than body so it reads as a token. */
-  .answer-flow code { font-size: 13.5px !important; }
+  .answer-flow code { font-size: 12px !important; }
 }
 
 /* ───────────────────────────────────────────────────────────────────
