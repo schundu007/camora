@@ -3,6 +3,7 @@
  */
 
 import type { Citation, StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, ErrorEvent } from '@/types';
+import { getPinnedIntro } from '@/lib/lumora-assistant';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -161,6 +162,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         question,
         use_search: useSearch,
         ...(systemContext ? { system_context: systemContext } : {}),
+        ...(getPinnedIntro() ? { pinned_intro: getPinnedIntro() } : {}),
         ...(detailLevel ? { detail_level: detailLevel } : {}),
         ...(responseFormat && responseFormat !== 'auto' ? { response_format: responseFormat } : {}),
         ...(cloudProvider ? { cloud_provider: cloudProvider } : {}),
@@ -371,6 +373,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
         problem,
         language,
         ...(systemContext ? { system_context: systemContext } : {}),
+        ...(getPinnedIntro() ? { pinned_intro: getPinnedIntro() } : {}),
         ...(model ? { model } : {}),
         ...(bypassCache ? { bypass_cache: true } : {}),
         ...(starterCode ? { starter_code: starterCode } : {}),

@@ -32,6 +32,10 @@ export interface LumoraAssistant {
   role?: string;
   resume?: string;
   jobDescription?: string;
+  /** Exact self-introduction, returned VERBATIM for "tell me about yourself".
+   *  The one answer nobody wants improvised — no model, no paraphrase, no drift
+   *  between renders. Empty/absent means Sona generates it from the resume. */
+  pinnedIntro?: string;
   // Multi-document study material loaded via Prep Kit. Sona injects these
   // into the system context so live answers can cite uploaded references
   // (architecture docs, internal wikis, problem sheets, etc).
@@ -311,4 +315,18 @@ export function getSystemContext(): string | undefined {
   const platformCtx = buildPlatformContext();
   if (!assistantCtx && !platformCtx) return undefined;
   return [assistantCtx, platformCtx].filter(Boolean).join('\n\n');
+}
+
+
+/** The pinned intro for the active assistant, if the candidate set one.
+ *  Sent alongside system_context; the backend returns it verbatim for
+ *  "tell me about yourself" instead of calling a model. */
+export function getPinnedIntro(): string | undefined {
+  try {
+    const a = getActiveAssistant();
+    const t = a?.pinnedIntro?.trim();
+    return t || undefined;
+  } catch {
+    return undefined;
+  }
 }
