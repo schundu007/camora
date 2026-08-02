@@ -2,7 +2,7 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { randomBytes, timingSafeEqual, createHash } from 'node:crypto';
 import { query } from '../lib/shared-db.js';
-import { createToken, setSSOCookie, clearSSOCookie } from '../lib/shared-auth.js';
+import { createToken, setSSOCookie, clearSSOCookie, extractBearerToken } from '../lib/shared-auth.js';
 import { logger } from '../middleware/requestLogger.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 import { authenticate, requireAdmin } from '../middleware/authenticate.js';
@@ -829,20 +829,29 @@ router.get('/me', authenticate, async (req, res) => {
       });
     }
 
-    // Mint a fresh short-lived bearer so the SPA can keep calling APIs after
-    // a hard refresh without a second /refresh roundtrip. The cookie is
-    // httpOnly so JS can't read it; we hand the token back in the body.
-    const accessToken = createToken(
-      {
-        sub: String(req.user.id),
-        email: req.user.email,
-        name: req.user.name || '',
-        picture: req.user.picture || '',
-        type: 'access',
-        gen: dbGen,
-      },
-      '30d',
-    );
+    // Re-issuance cap (AUTH-NEW-005): don't reset the 30-day clock on EVERY
+    // /me call. Only mint a fresh token when the presented one is within 7 days
+    // of expiry; otherwise echo the still-valid token the client sent, so a
+    // stolen session can't be kept alive indefinitely by polling /me. The gen
+    // counter remains the hard revocation switch.
+    const currentToken = extractBearerToken(req.headers.authorization) || req.cookies?.cariara_sso || null;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const REISSUE_WHEN_UNDER_SEC = 7 * 24 * 60 * 60;
+    const nearExpiry = !req.user.exp || (req.user.exp - nowSec) < REISSUE_WHEN_UNDER_SEC;
+
+    const accessToken = (currentToken && !nearExpiry)
+      ? currentToken
+      : createToken(
+        {
+          sub: String(req.user.id),
+          email: req.user.email,
+          name: req.user.name || '',
+          picture: req.user.picture || '',
+          type: 'access',
+          gen: dbGen,
+        },
+        '30d',
+      );
 
     res.json({
       authenticated: true,

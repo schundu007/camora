@@ -53,6 +53,7 @@ async function tryJwtAuth(token) {
           // DB column to detect revoked sessions. Undefined for legacy
           // tokens minted before generation tracking shipped.
           gen: payload.gen,
+          exp: payload.exp,
           source: 'jwt',
         };
       }
