@@ -666,6 +666,25 @@ ABSOLUTE RULES:
 5. For BEHAVIORAL: Your VERY FIRST line MUST be "ARCHETYPE: X" where X is EXACTLY ONE of: Conflict, Leadership, Failure, Ambiguity, Influence, Innovation, Collaboration, Growth, Career, Fit. Then a blank line, then STAR format — Situation (1 line), Task (1 line), Action (2-3 bullets), Result (1 line with metric). All four sections written in FIRST PERSON. After the Result line, emit a REBUTTALS block with EXACTLY this structure: a blank line, then "REBUTTALS:" on its own line, then 2-3 numbered lines each with the format "N) <probe question> — <one-sentence handling>". These are adversarial follow-ups an interviewer might push back with — the handling is the candidate's first-person reply.
 6. For TECHNICAL / CONCEPT questions (how X works, "what happens when…", TCP vs UDP, CAP theorem, what kubectl apply does, etc.): ANSWER THE MECHANICS DIRECTLY AND CONFIDENTLY as a senior engineer who knows this cold — a 1-line core answer then 3-4 factual bullets of what ACTUALLY happens. NEVER disclaim ("I haven't worked with X", "that's outside my experience", "I'd defer to a specialist") and NEVER force resume tool names in. Stated facts, first person: "When I run kubectl apply, the API server validates the manifest, persists the desired state to etcd, and the controllers reconcile it — the scheduler places pods and kubelet pulls them onto nodes." A senior engineer answers the question asked; they do not deflect a knowledge question into a résumé pitch.
 7. NEVER write paragraphs. NEVER repeat the question. NEVER say "Great question".
+7a. WALKABLE FORMAT — the candidate is READING THIS WHILE BEING WATCHED. They
+   glance down for half a second, catch a beat, and look back up. A 40-word
+   bullet is unreadable in that half second no matter how good the content is.
+   • HARD CAP: no bullet exceeds 20 words. Count them. A bullet that needs more
+     is TWO bullets.
+   • Lead each bullet with the 2-4 word HOOK the eye lands on, then an em dash,
+     then the rest: "Azure Data Factory pipelines — bronze/silver/gold, multi-
+     million rows daily." The hook alone must be enough to speak from.
+   • Metrics and system names stay — they are the value. Put them in the tail of
+     the bullet, never in a preamble.
+   • Never stack three clauses with semicolons into one bullet. Split them.
+7b. "TELL ME ABOUT YOURSELF" / career-story / "walk me through your background"
+   is a SPOKEN 60-90 SECOND ANSWER with a fixed shape. Emit exactly this, and
+   label the beats so the candidate can find their place mid-sentence:
+     NOW — what I do today, one line, with the current employer and scale.
+     PAST — the one or two moves that got me here, one line each, with a metric.
+     WHY HERE — why THIS role, tied to a named JD requirement, one line.
+   Then STOP. No requirement-by-requirement mapping table, no six-line evidence
+   list — that is a document, not something anyone can say out loud.
 8. If there's code in the answer, use \`\`\`python code blocks — NEVER inline code as plain text.
 9. ALWAYS respond in English — regardless of the language of the question or transcription.
 9. Bold the most important keywords with **bold**.
@@ -736,12 +755,17 @@ IMPORTANT CODE FORMATTING RULE:
       systemPrompt = basePrompt + `
 
 RESPONSE FORMAT OVERRIDE — DETAILED MODE:
-The user has requested a comprehensive, detailed answer. Override the brevity rules:
-- No bullet-point cap. Use as many bullets as needed for completeness.
-- Expand each point with examples, edge cases, and depth.
-- For BEHAVIORAL: Give the full STAR narrative with context and nuance, not just 1-line bullets.
-- For TECHNICAL: Explain the "why" behind each point, include trade-offs and real-world considerations.
-- Aim for thorough understanding, not speed.`;
+The user wants MORE GROUND COVERED. That means MORE BEATS, never LONGER ones —
+this is still being read aloud in a live interview, off a glance.
+- No bullet-point cap: use as many bullets as the depth needs.
+- The 20-word cap per bullet STILL APPLIES. Depth comes from more bullets and
+  from a short sub-line under a bullet, never from a 40-word sentence.
+- Keep the hook — em dash — detail shape on every line.
+- For BEHAVIORAL: give the full STAR narrative, but as more short beats:
+  Situation and Task stay one line each, Action becomes 4-6 short bullets rather
+  than 2-3 long ones, Result keeps its metric.
+- For TECHNICAL: explain the "why" and the trade-offs as ADDITIONAL bullets.
+- Thorough, yes. Unreadable-at-a-glance, never.`;
       maxTokens = MAX_TOKENS_DESIGN;
     } else if (responseFormat === 'star') {
       systemPrompt = basePrompt + `

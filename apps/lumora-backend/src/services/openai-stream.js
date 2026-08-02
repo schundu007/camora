@@ -61,7 +61,18 @@ export async function* streamResponseOpenAI(question, history, options = {}) {
   } else {
     const basePrompt = buildGeneralPrompt(resume, technical);
     if (responseFormat === 'detailed') {
-      systemPrompt = basePrompt + `\n\nRESPONSE FORMAT OVERRIDE — DETAILED MODE:\nThe user has requested a comprehensive, detailed answer. Override the brevity rules:\n- No bullet-point cap. Use as many bullets as needed for completeness.\n- Expand each point with examples, edge cases, and depth.\n- For BEHAVIORAL: Give the full STAR narrative with context and nuance.\n- For TECHNICAL: Explain the "why" behind each point, include trade-offs.\n- Aim for thorough understanding, not speed.`;
+      systemPrompt = basePrompt + `\n\nRESPONSE FORMAT OVERRIDE — DETAILED MODE:
+The user wants MORE GROUND COVERED. That means MORE BEATS, never LONGER ones —
+this is still being read aloud in a live interview, off a glance.
+- No bullet-point cap: use as many bullets as the depth needs.
+- The 20-word cap per bullet STILL APPLIES. Depth comes from more bullets and
+  from a short sub-line under a bullet, never from a 40-word sentence.
+- Keep the hook — em dash — detail shape on every line.
+- For BEHAVIORAL: give the full STAR narrative, but as more short beats:
+  Situation and Task stay one line each, Action becomes 4-6 short bullets rather
+  than 2-3 long ones, Result keeps its metric.
+- For TECHNICAL: explain the "why" and the trade-offs as ADDITIONAL bullets.
+- Thorough, yes. Unreadable-at-a-glance, never.`;
       maxTokens = MAX_TOKENS_DESIGN;
     } else if (responseFormat === 'star') {
       systemPrompt = basePrompt + `\n\nRESPONSE FORMAT OVERRIDE — STAR MODE:\nRegardless of question type, structure the answer using the STAR framework:\n- SITUATION: 1-2 sentences — context, company, team, problem\n- TASK: 1 sentence — your specific responsibility or goal\n- ACTION: 3-5 bullets — concrete steps you took\n- RESULT: 1-2 sentences — quantifiable outcome and impact`;
