@@ -9,6 +9,7 @@ import { getApiKey } from './adminConfig.js';
 import { parseAnswer } from './answerParser.js';
 import { buildCloudHint } from './cloudHint.js';
 import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE, buildPitchPrompt } from './answerFormat.js';
+import { LIVE_ANSWER_MODEL } from './modelPolicy.js';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -19,7 +20,7 @@ const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 // return 400 invalid_request_error now that they've been retired —
 // that's what surfaced as the "Error: 400 invalid_request" bubbles
 // in Sona behavioral. Override with CLAUDE_MODEL_PAID env if needed.
-const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || 'claude-sonnet-4-6';
+const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || LIVE_ANSWER_MODEL;
 
 /** Select model by plan. Paid users get Sonnet for all question types. */
 function selectModel(plan, questionType) {
