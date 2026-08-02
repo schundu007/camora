@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { makeDeepgramClient, deepgramEnabled } from './deepgramProvider.js';
+import { makeDeepgramClient } from './deepgramProvider.js';
 
 const TECHNICAL_PROMPT = `
 Transcribe accurately with technical terms: Kubernetes, Docker, Terraform, Ansible,
@@ -31,71 +31,69 @@ load balancer, reverse proxy, CDN, cache, queue, pub-sub, event-driven.
 //     instead of each paying a doomed round-trip.
 const GROQ_COOLDOWN_MS = 15 * 60 * 1000;
 let groqCooldownUntil = 0;
+let lastChainSignature = '';
 
 function isQuotaError(err) {
   return err?.status === 429 || /rate limit|quota/i.test(err?.message || '');
 }
 
 function getTranscriptionProviders() {
+  // ONE RULE: a provider is used if its key is present. Order is best-first.
+  // Removing a provider means removing its key — no flags, no modes.
+  //
+  //   1. Deepgram nova-3      — purpose-built for speech, keyterm boosting
+  //   2. Groq  large-v3-turbo — fastest Whisper, skipped while quota is spent
+  //   3. OpenAI 4o-mini       — current generation, always available
+  //
+  // whisper-1 is deliberately NOT here: it is large-V2 from 2022 and every
+  // provider above beats it.
   const providers = [];
-  // Deepgram first when explicitly chosen — purpose-built for speech, with
-  // keyterm boosting for the vocabulary Whisper mangles. Opt-in via
-  // TRANSCRIBE_PRIMARY=deepgram so nothing changes under a live interview by
-  // accident; the OpenAI chain below stays as the fallback either way.
-  if (deepgramEnabled()) {
+
+  if (process.env.DEEPGRAM_API_KEY) {
     providers.push({
       name: 'deepgram',
       client: makeDeepgramClient(process.env.DEEPGRAM_API_KEY),
-      model: process.env.DEEPGRAM_MODEL || 'nova-3',
+      model: 'nova-3',
       responseFormat: 'json',
     });
   }
+
   if (process.env.GROQ_API_KEY && Date.now() >= groqCooldownUntil) {
     providers.push({
       name: 'groq',
       client: new OpenAI({
         apiKey: process.env.GROQ_API_KEY,
         baseURL: 'https://api.groq.com/openai/v1',
+        // A 429 here is an exhausted daily quota, not a blip. Retrying it with
+        // backoff just delays the fallback that was always going to serve it.
         maxRetries: 0,
       }),
-      // turbo by default: ~4-8x faster decoding than whisper-large-v3 with a
-      // small English accuracy loss, which is the right trade live. Set
-      // GROQ_WHISPER_MODEL=whisper-large-v3 when the interviewer is being
-      // mistranscribed — the full model holds up better on accented, noisy,
-      // low-bitrate meeting audio, at the cost of latency.
-      model: process.env.GROQ_WHISPER_MODEL || 'whisper-large-v3-turbo',
+      model: 'whisper-large-v3-turbo',
       responseFormat: 'verbose_json',
     });
   }
+
   if (process.env.OPENAI_API_KEY) {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    // Default to a CURRENT-generation model. whisper-1 is large-V2 (2022) —
-    // OpenAI never exposed v3 — so leaving it primary meant every fallback
-    // transcription ran on the oldest model available to us. gpt-4o-mini-
-    // transcribe is both faster and more accurate, on the same account.
-    //
-    // The one thing it costs: it only supports response_format 'json', so it
-    // returns no segments and the per-segment no_speech_prob silence filter
-    // does not run for it. Two nets remain — the client VADs before sending,
-    // and the text-level hallucination filter still classifies every result —
-    // and whisper-1 stays in the chain below, so a failure here falls back to
-    // full filtering rather than to nothing.
-    // Set OPENAI_TRANSCRIBE_MODEL=whisper-1 to pin the old behaviour, or
-    // =gpt-4o-transcribe for the larger, more accurate sibling.
-    const primary = process.env.OPENAI_TRANSCRIBE_MODEL || 'gpt-4o-mini-transcribe';
-    if (primary !== 'whisper-1') {
-      providers.push({
-        name: `openai:${primary}`,
-        client: openai,
-        model: primary,
-        responseFormat: 'json',
-      });
-    }
-    providers.push({ name: 'openai', client: openai, model: 'whisper-1', responseFormat: 'verbose_json' });
+    providers.push({
+      name: 'openai',
+      client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
+      model: 'gpt-4o-mini-transcribe',
+      responseFormat: 'json',
+    });
   }
-  if (!providers.length) throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
+
+  if (!providers.length) {
+    throw new Error('No transcription provider. Set DEEPGRAM_API_KEY, GROQ_API_KEY or OPENAI_API_KEY.');
+  }
+
+  const signature = providers.map(p => `${p.name}(${p.model})`).join(' → ');
+  if (signature !== lastChainSignature) {
+    console.log(`[Whisper] provider chain: ${signature}`);
+    lastChainSignature = signature;
+  }
   return providers;
 }
+
 
 // Whisper no-speech threshold. Segments with no_speech_prob above this are
 // silence/noise (room echo, Meet compression artifacts, loud speaker bleed).
