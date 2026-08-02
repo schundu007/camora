@@ -243,6 +243,7 @@ interface Assistant {
   model: string;
   resume: string;
   jobDescription: string;
+  pinnedIntro?: string;
   stories?: LumoraStory[];
   storyParseStatus?: 'idle' | 'parsing' | 'done' | 'failed';
   createdAt: string;
@@ -262,7 +263,7 @@ export const AssistantsPage = () => {
     try { return (assistantsStore.read() as Assistant[] | null) || []; } catch { return []; }
   });
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '' });
+  const [form, setForm] = useState({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '', pinnedIntro: '' });
   const save = (list: Assistant[]) => { setAssistants(list); assistantsStore.write(list as any); };
 
   /** Kick off resume → Story Bank extraction in the background. */
@@ -308,11 +309,12 @@ export const AssistantsPage = () => {
       model: form.model,
       resume: form.resume.trim(),
       jobDescription: form.jobDescription.trim(),
+      pinnedIntro: form.pinnedIntro.trim(),
       createdAt: new Date().toISOString(),
       storyParseStatus: form.resume.trim() ? 'parsing' : 'idle',
     };
     save([newAssistant, ...assistants]);
-    setForm({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '' });
+    setForm({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '', pinnedIntro: '' });
     setShowCreate(false);
     if (newAssistant.resume) parseStories(id, newAssistant.resume);
   };
@@ -390,6 +392,16 @@ export const AssistantsPage = () => {
               </label>
             </div>
             <TextFieldWithPreview value={form.jobDescription} onChange={v => setForm(f => ({ ...f, jobDescription: v }))} placeholder="Paste the JD or upload a file. AI will tailor answers to match role requirements." label="Job Description Preview" />
+
+            {/* Pinned intro — returned VERBATIM, no model involved. "Tell me
+                about yourself" is the one answer nobody wants improvised. */}
+            <div className="mt-4">
+              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Pinned intro — spoken word-for-word</label>
+              <p className="text-[11px] mt-1 mb-2" style={{ color: 'var(--text-muted)' }}>
+                Sona returns this exactly as written for “tell me about yourself”, “introduce yourself”, “walk me through your background”. No rewriting, and it appears instantly. Leave empty to have it generated from the resume each time.
+              </p>
+              <TextFieldWithPreview value={form.pinnedIntro} onChange={v => setForm(f => ({ ...f, pinnedIntro: v }))} placeholder="Paste the exact intro you want to say, in your own words." label="Pinned Intro Preview" />
+            </div>
           </div>
           <div className="flex gap-2">
             <button onClick={create} disabled={!form.company.trim() && !form.role.trim()} className="px-5 py-2 text-xs font-semibold text-white rounded-lg disabled:opacity-50" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}>Create</button>

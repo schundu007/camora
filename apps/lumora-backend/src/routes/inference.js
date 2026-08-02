@@ -13,7 +13,7 @@ import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';
 import { checkUsage, recordUsageCount } from '../middleware/usageLimits.js';
 import { checkAndReserveInferenceSlot } from '../services/quota.js';
-import { streamResponse, MODEL } from '../services/claude.js';
+import { streamResponse, MODEL, isElevatorPitch } from '../services/claude.js';
 import { streamResponseGemini } from '../services/gemini-stream.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
@@ -163,6 +163,27 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
       sendSSE(res, 'citations', citations);
     }
 
+    // ── Pinned intro ────────────────────────────────────────────────────
+    // "Tell me about yourself" is the one answer nobody wants improvised. When
+    // the candidate has pinned an intro, return THAT TEXT, verbatim, without
+    // calling a model at all — no paraphrase, no drift between renders, and it
+    // lands instantly instead of after time-to-first-token.
+    const pinned = typeof pinnedIntro === 'string' ? pinnedIntro.trim() : '';
+    if (pinned && isElevatorPitch(question)) {
+      console.log(`[inference] pinned intro served verbatim for user ${user.id} (${pinned.length} chars)`);
+      sendSSE(res, 'stream_start', { model: 'pinned' });
+      sendSSE(res, 'token', { chunk: pinned });
+      sendSSE(res, 'done', {});
+      try {
+        await recordUsage({
+          userId: user.id, endpoint: '/stream', questionType: mode,
+          tokensUsed: 0, latencyMs: 0, success: true,
+          reservationId: req.usageReservationId || null,
+        });
+      } catch { /* metering must never eat the answer */ }
+      return res.end();
+    }
+
     let finalAnswer = null;
     let clientDisconnected = false;
     const abortController = new AbortController();
@@ -300,7 +321,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null, pinned_intro: pinnedIntro = null } = req.body;
   const VALID_MODES = ['general', 'coding', 'design', 'behavioral'];
   if (!VALID_MODES.includes(mode)) mode = 'general';
   const user = req.user;
