@@ -1374,7 +1374,7 @@ const UnifiedMicButton = ({
         aria-checked={listenOn}
         onClick={(e) => { handleModeToggle(); e.currentTarget.blur(); }}
         data-tip={listenTip}
-        className="inline-flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-full transition-colors shrink-0"
+        className="inline-flex items-center gap-1 pl-1.5 pr-2 py-1 rounded-full transition-colors shrink-0"
         style={{
           background: listenOn ? 'var(--cam-accent-fill)' : 'var(--cam-strip-icon-bg)',
           border: `1px solid ${listenOn ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
@@ -1407,7 +1407,7 @@ const UnifiedMicButton = ({
             fontFamily: 'var(--font-mono)',
           }}
         >
-          {locked ? (listenOn ? 'Live' : 'Live off') : (listenOn ? 'Auto' : 'Auto off')}
+          {locked ? 'Live' : 'Auto'}
         </span>
       </button>
 
@@ -1450,18 +1450,16 @@ const UnifiedMicButton = ({
       {/* Audio-level meter — labelled, because five unlit bars on their own
           read as a second blank chip whenever Sona isn't capturing. */}
       <div
-        className="flex items-center gap-1.5 shrink-0 px-1.5 py-0.5 rounded"
+        className="flex items-center gap-1 shrink-0 px-1.5 py-0.5 rounded"
         style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
         data-tip={(listenOn || isAsking)
           ? 'Input level — the bars move when Sona hears audio. Flat bars mean no sound is reaching it.'
           : 'Input level — flat because Sona is not capturing right now.'}
       >
-        <span
-          className="text-[10px] font-bold uppercase tracking-[0.14em] leading-none"
-          style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}
-        >
-          Level
-        </span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ color: 'var(--cam-strip-text-muted)' }} aria-hidden="true">
+          <path d="M12 2a3 3 0 013 3v6a3 3 0 01-6 0V5a3 3 0 013-3z" />
+          <path d="M19 11a7 7 0 01-14 0M12 18v3" />
+        </svg>
         <div className="flex items-end gap-[3px]" aria-hidden="true">
         {[0, 1, 2, 3, 4].map((i) => {
           const lit = meterLevel > i * 0.02;
