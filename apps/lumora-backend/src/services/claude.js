@@ -8,6 +8,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from './adminConfig.js';
 import { parseAnswer } from './answerParser.js';
 import { buildCloudHint } from './cloudHint.js';
+import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE } from './answerFormat.js';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -803,20 +804,7 @@ IMPORTANT CODE FORMATTING RULE:
 - NEVER mix code with regular text. Always use separate code blocks.`;
 
     if (responseFormat === 'detailed') {
-      systemPrompt = basePrompt + `
-
-RESPONSE FORMAT OVERRIDE — DETAILED MODE:
-The user wants MORE GROUND COVERED. That means MORE BEATS, never LONGER ones —
-this is still being read aloud in a live interview, off a glance.
-- No bullet-point cap: use as many bullets as the depth needs.
-- The 20-word cap per bullet STILL APPLIES. Depth comes from more bullets and
-  from a short sub-line under a bullet, never from a 40-word sentence.
-- Keep the hook — em dash — detail shape on every line.
-- For BEHAVIORAL: give the full STAR narrative, but as more short beats:
-  Situation and Task stay one line each, Action becomes 4-6 short bullets rather
-  than 2-3 long ones, Result keeps its metric.
-- For TECHNICAL: explain the "why" and the trade-offs as ADDITIONAL bullets.
-- Thorough, yes. Unreadable-at-a-glance, never.`;
+      systemPrompt = basePrompt + DETAILED_MODE_OVERRIDE;
       maxTokens = MAX_TOKENS_DESIGN;
     } else if (responseFormat === 'star') {
       systemPrompt = basePrompt + `
