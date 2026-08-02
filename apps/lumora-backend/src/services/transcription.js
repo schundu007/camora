@@ -42,8 +42,10 @@ function getTranscriptionProviders() {
   // Removing a provider means removing its key — no flags, no modes.
   //
   //   1. Deepgram nova-3      — purpose-built for speech, keyterm boosting
-  //   2. Groq  large-v3-turbo — fastest Whisper, skipped while quota is spent
-  //   3. OpenAI 4o-mini       — current generation, always available
+  //   2. OpenAI 4o-mini       — current generation, answers every time
+  //   3. Groq  large-v3-turbo — fastest, but the free tier's daily cap makes it
+  //                             unreliable, so it is the last resort, not the
+  //                             first attempt that fails on every request
   //
   // whisper-1 is deliberately NOT here: it is large-V2 from 2022 and every
   // provider above beats it.
@@ -54,6 +56,15 @@ function getTranscriptionProviders() {
       name: 'deepgram',
       client: makeDeepgramClient(process.env.DEEPGRAM_API_KEY),
       model: 'nova-3',
+      responseFormat: 'json',
+    });
+  }
+
+  if (process.env.OPENAI_API_KEY) {
+    providers.push({
+      name: 'openai',
+      client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
+      model: 'gpt-4o-mini-transcribe',
       responseFormat: 'json',
     });
   }
@@ -70,15 +81,6 @@ function getTranscriptionProviders() {
       }),
       model: 'whisper-large-v3-turbo',
       responseFormat: 'verbose_json',
-    });
-  }
-
-  if (process.env.OPENAI_API_KEY) {
-    providers.push({
-      name: 'openai',
-      client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
-      model: 'gpt-4o-mini-transcribe',
-      responseFormat: 'json',
     });
   }
 

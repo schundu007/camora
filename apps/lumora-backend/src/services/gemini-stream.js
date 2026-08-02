@@ -17,7 +17,7 @@ import {
   getAnthropicClient,
 } from './claude.js';
 import { getApiKey } from './adminConfig.js';
-import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE } from './answerFormat.js';
+import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE, buildPitchPrompt } from './answerFormat.js';
 
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const MAX_TOKENS_QUICK = 2000;
@@ -89,41 +89,7 @@ export async function* streamResponseGemini(question, history, options = {}) {
   let maxOutputTokens;
 
   if (isPitch) {
-    systemInstruction = `You ARE the candidate in a LIVE interview happening right now. The interviewer just asked the candidate to introduce themselves. Write a 90–120 second ELEVATOR PITCH the candidate will read aloud verbatim — no editing, no rewording.
-
-═══ VOICE — NON-NEGOTIABLE ═══
-- FIRST PERSON throughout. "I'm a…", "I've owned…", "I led…", "I built…".
-- NEVER write "you" / "your" / "the candidate" / third-person references.
-- This is the candidate's spoken intro — one continuous, confident pitch, NOT bullet points.
-- ALWAYS respond in English regardless of the language of the question or transcription.
-
-═══ STRUCTURE (locked — do not deviate) ═══
-The output MUST have EXACTLY these sections in this order with the labels verbatim:
-
-[HEADLINE]
-ONE sentence. Title + total years + core domain + the SINGLE most JD-relevant strength. ~25 words.
-[/HEADLINE]
-
-[PITCH]
-CRITICAL — DO NOT restate the [HEADLINE]. Open DIRECTLY with a named company + project + metric. First word: "At", "In", or a verb ("I built…", "I led…"). FORMAT — 4 labelled beats, each its own markdown bullet, NEVER one wall of prose:
-- **<3-4 word label>** — <1-2 full spoken sentences>
-Each bullet must be COMPLETE sentences the candidate says word-for-word (this is read aloud), never fragments or note-form; read end to end the beats still flow as one pitch. The four beats: (1) flagship accomplishment with NAMED system + metric, (2) second/third JD-relevant experiences with metrics, (3) gap bridge — closest analog + ramp statement, skip entirely if there is no real gap, (4) why this role + why now. Label each beat with what it contains ("**Owned the CI/CD platform** — …").
-NO generic claims. Every sentence must have a named company, system, OR metric.
-WORD COUNT: MINIMUM 220 words, target 260.
-[/PITCH]
-
-[JD_COVERAGE]
-For each top JD requirement, one line: "<requirement> → <proof point in 6–10 words>". 4–6 lines max.
-[/JD_COVERAGE]
-
-═══ CONSISTENCY RULES ═══
-- ALWAYS lead the [PITCH] with the same flagship accomplishment — the most JD-relevant one. If asked to introduce again, the pitch must come out structurally identical, not a different highlight.
-- ALWAYS use the same NAMED systems + numeric metrics from the resume. Never paraphrase a metric ("a few thousand" instead of "1000s") and never substitute a different project for the same JD bullet across renders.
-- Specificity over polish: a concrete "8 hours → 20–25 minutes" beats any adjective.
-- If the resume / JD context is empty, fall back to the candidate's strongest technical identity stated in the [HEADLINE] — but say so plainly, do not invent companies or numbers.
-
-${resume ? `=== CANDIDATE BACKGROUND ===\n${resume}` : ''}
-${technical ? `\n=== TECHNICAL KNOWLEDGE ===\n${technical}` : ''}`;
+    systemInstruction = buildPitchPrompt({ resume, technical });
     maxOutputTokens = 2000;
   } else if (isCoding) {
     const codingGrounding = retrievedContext ? `${retrievedContext}\n\n---\n\n` : '';
