@@ -16,7 +16,17 @@ export interface InlineStyles {
   code?: React.CSSProperties;
   link?: React.CSSProperties;
   allowLinks?: boolean;
+  /** When set, acronyms (ETL, SQL, CI/CD) and metrics (3, 40%, 2TB) inside
+   *  plain text get this style so the candidate's eye lands on the proof
+   *  points while skimming mid-sentence. Purely structural — no keyword list,
+   *  so it works for any resume/domain. */
+  term?: React.CSSProperties;
 }
+
+/* Acronym (2-7 caps, optional /SLASH half) or number with an optional unit.
+   Leading \b stops it firing inside PostgreSQL / MySQL — there is no word
+   boundary between "g" and "S", so only standalone tokens match. */
+const TERM_RE = /\b([A-Z][A-Z0-9]{1,6}(?:\/[A-Z][A-Z0-9]{0,5})?|\d+(?:[.,]\d+)*(?:\s?(?:%|x|×|K|M|B|GB|TB|MB|ms))?\+?)/g;
 
 export const renderInlineSafe = (s: string, opts: InlineStyles = {}): React.ReactNode[]  => {
   if (!s) return [];
@@ -25,7 +35,22 @@ export const renderInlineSafe = (s: string, opts: InlineStyles = {}): React.Reac
   let k = 0;
   const len = s.length;
   let buf = '';
-  const flush = () => { if (buf) { nodes.push(buf); buf = ''; } };
+  /* Split the plain-text buffer on terms. Every character of `buf` is
+     re-emitted — the matched slice styled, the gaps verbatim — so this can
+     never drop content the way a .replace() sweep would. */
+  const pushPlain = (text: string) => {
+    if (!opts.term) { nodes.push(text); return; }
+    TERM_RE.lastIndex = 0;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while ((m = TERM_RE.exec(text)) !== null) {
+      if (m.index > last) nodes.push(text.slice(last, m.index));
+      nodes.push(<span key={`t-${k++}`} style={opts.term}>{m[0]}</span>);
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) nodes.push(text.slice(last));
+  };
+  const flush = () => { if (buf) { pushPlain(buf); buf = ''; } };
   while (i < len) {
     if (s[i] === '*' && s[i + 1] === '*') {
       const end = s.indexOf('**', i + 2);

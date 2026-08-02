@@ -22,6 +22,39 @@ const TEXT_SECONDARY = 'var(--text-secondary)';
 const BORDER = 'var(--border)';
 const FONT_ANSWER = "var(--font-answer)";
 
+/* ── Type scale ─────────────────────────────────────────────────────────────
+   Interview answers are skimmed at a glance, not read line by line. The old
+   14 px body forced long answers into 2-3 viewports of scroll and looked
+   oversized inside the fullscreen card. 12.75 px at 1.6 keeps ~100 chars per
+   line on the ~880 px card, so a full pitch fits on one screen.
+   FS_LEAD is the opening headline sentence — one step up so the hierarchy
+   still reads. FS_SMALL is for dense secondary blocks (labels, rebuttals). */
+const FS_LEAD = '13.5px';
+const FS_BODY = '12.75px';
+const FS_SMALL = '12px';
+const LH_BODY = '1.6';
+
+/* ── Emphasis ───────────────────────────────────────────────────────────────
+   Three tiers, so the eye lands in the right place while speaking:
+     ACCENT  — line starts (bullet lead-in / left half of a "X → Y" line) and
+               model-emitted **bold** keywords. Gold in dark, blue in light.
+     TERM    — acronyms + metrics found inside prose. Same hue, lighter weight,
+               so proof points pop without competing with the lead-in.
+   Previously **bold** rendered in the body colour at the body size, which is
+   invisible when every other word is already dark-on-light. */
+const ACCENT_TEXT = 'var(--cam-gold-leaf-text)';
+const EMPH_BOLD: React.CSSProperties = { color: ACCENT_TEXT, fontWeight: 700 };
+const EMPH_TERM: React.CSSProperties = { color: ACCENT_TEXT, fontWeight: 600 };
+const INLINE_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--accent-text)', padding: '1px 5px', borderRadius: 4, fontSize: '0.9em', fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
+
+/* Lead-in splitter — "<short label> — <sentence>" and "<requirement> → <proof>"
+   are the two shapes the answer contract emits. Bolding the left half gives
+   the candidate a scannable line start without the model having to mark it up.
+   Skipped when the line already opens with **bold** (the model marked it), and
+   the dash must be followed by whitespace so mid-sentence em dashes
+   ("designs—cloud pipelines—and I'm ready") never split. */
+const LEAD_RE = /^(?!\*\*)([^—–→:]{3,64}?)\s*(—|–|→)\s+([\s\S]+)$/;
+
 /* ── LcStripHeader — the LeetCode-style block header used across every
        sub-card in the answer (code blocks, rebuttals, archetype badge,
        STAR sections). Navy hero-strip + 2px gold-leaf underline + white
@@ -134,9 +167,20 @@ const parseStar = (text: string): { sections: { label: StarLabel; body: string }
    like a textbook section. */
 const StarBody = ({ text }: { text: string }) => {
   if (!text) return null;
-  const STAR_BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
-  const STAR_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--accent-text)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
-  const inline = (s: string) => renderInlineSafe(s, { bold: STAR_BOLD, code: STAR_CODE });
+  const inline = (s: string) => renderInlineSafe(s, { bold: EMPH_BOLD, code: INLINE_CODE, term: EMPH_TERM });
+  /* Bold the lead-in half of "<label> — <sentence>" lines so each bullet has
+     a visible entry point. Falls through to plain inline when there is none. */
+  const withLead = (s: string) => {
+    const m = s.match(LEAD_RE);
+    if (!m) return inline(s);
+    return (
+      <>
+        <span style={EMPH_BOLD}>{m[1]}</span>
+        <span style={{ color: ACCENT_TEXT, fontWeight: 700 }}>{` ${m[2]} `}</span>
+        {inline(m[3])}
+      </>
+    );
+  };
   const lines = text.split('\n');
   const out: React.ReactNode[] = [];
   let bulletGroup: string[] = [];
@@ -146,8 +190,8 @@ const StarBody = ({ text }: { text: string }) => {
       <ul key={key} className="my-1 flex flex-col gap-1.5">
         {bulletGroup.map((b, bi) => (
           <li key={bi} className="flex gap-2.5 items-start">
-            <span className="shrink-0 mt-[9px] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
-            <span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(b)}</span>
+            <span className="shrink-0 mt-[8px] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} />
+            <span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(b)}</span>
           </li>
         ))}
       </ul>
@@ -163,7 +207,7 @@ const StarBody = ({ text }: { text: string }) => {
     }
     flushBullets(`bl-${i}`);
     out.push(
-      <p key={`p-${i}`} style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(t)}</p>
+      <p key={`p-${i}`} style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(t)}</p>
     );
   });
   flushBullets('bl-end');
@@ -306,10 +350,10 @@ const RebuttalsPanel = ({ items }: { items: Rebuttal[] }) => {
               Q{i + 1}
             </span>
             <div className="min-w-0 flex-1">
-              <p style={{ fontSize: '13.5px', lineHeight: '1.55', fontWeight: 700, color: TEXT_PRIMARY }}>
+              <p style={{ fontSize: FS_BODY, lineHeight: '1.5', fontWeight: 700, color: TEXT_PRIMARY }}>
                 {r.probe}
               </p>
-              <p className="mt-1 flex gap-1.5" style={{ fontSize: '13px', lineHeight: '1.6', color: TEXT_SECONDARY }}>
+              <p className="mt-1 flex gap-1.5" style={{ fontSize: FS_SMALL, lineHeight: LH_BODY, color: TEXT_SECONDARY }}>
                 <span style={{ color: 'var(--cam-gold-leaf-text)', fontWeight: 700 }}>→</span>
                 <span>{r.handling}</span>
               </p>
@@ -384,9 +428,21 @@ export const StoryBankPanel = ({ stories, activeArchetype }: { stories?: LumoraS
 export const RichText = ({ text }: { text: string }) => {
   if (!text) return null;
 
-  const BOLD: React.CSSProperties = { color: TEXT_PRIMARY, fontWeight: 700 };
-  const ICODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--accent-text)', padding: '1px 6px', borderRadius: 4, fontSize: 12.5, fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
-  const inline = (s: string) => renderInlineSafe(s, { bold: BOLD, code: ICODE, link: { color: 'var(--accent-text)', textDecoration: 'underline' }, allowLinks: true });
+  const inline = (s: string) => renderInlineSafe(s, { bold: EMPH_BOLD, code: INLINE_CODE, term: EMPH_TERM, link: { color: 'var(--accent-text)', textDecoration: 'underline' }, allowLinks: true });
+  /* Bold the lead-in half of "<label> — <sentence>" / "<requirement> → <proof>"
+     lines. This is what turns the JD-coverage grid and the pitch beats into
+     something the candidate can find their place in mid-sentence. */
+  const withLead = (s: string) => {
+    const m = s.match(LEAD_RE);
+    if (!m) return inline(s);
+    return (
+      <>
+        <span style={EMPH_BOLD}>{m[1]}</span>
+        <span style={{ color: ACCENT_TEXT, fontWeight: 700 }}>{` ${m[2]} `}</span>
+        {inline(m[3])}
+      </>
+    );
+  };
 
   const renderCodeBlock = (content: string, lang?: string, key?: number | string) => (
     <div key={key} className="rounded-lg overflow-hidden my-3" style={{ border: '1px solid var(--border)', boxShadow: '0 1px 2px rgba(15,23,42,0.04)' }}>
@@ -449,20 +505,25 @@ export const RichText = ({ text }: { text: string }) => {
       if (lm) { out.push({ s: 'label', label: lm[1].toUpperCase(), body: lm[2] }); continue; }
       const sm = t.match(STRE);
       if (sm) { out.push({ s: 'step', step: sm[1], body: sm[2] }); continue; }
+      // A line that is nothing but **bold** is a section heading the model
+      // (or cleanTags, for [JD_COVERAGE]) emitted — render it as one instead
+      // of a bold paragraph that reads as part of the prose above it.
+      const bm = t.match(/^\*\*(.+?)\*\*\s*:?$/);
+      if (bm) { out.push({ s: 'h2', text: bm[1].trim().replace(/:$/, '') }); continue; }
       out.push({ s: 'para', text: t });
     }
     flushT();
     return out;
   };
 
-  const renderSeg = (seg: Seg, key: string): React.ReactNode => {
+  const renderSeg = (seg: Seg, key: string, isLead = false): React.ReactNode => {
     switch (seg.s) {
       case 'h1': return <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)' }}><span className="font-mono text-[11px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
       case 'h2': return <div key={key} className="flex items-center gap-3 px-3 py-2 mt-3 mb-1.5 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)', opacity: 0.85 }}><span className="font-mono text-[10px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
       case 'h3': return (
         <div key={key} className="flex items-center gap-2 mt-2.5 mb-1" style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
           {seg.num && <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.num}</span>}
-          <span className="text-[13px] font-semibold" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ANSWER }}>{seg.text}</span>
+          <span className="text-[12.5px] font-semibold" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ANSWER }}>{seg.text}</span>
         </div>
       );
       case 'divider': return <div key={key} className="my-3 h-px" style={{ background: 'var(--cam-gold-leaf)', opacity: 0.4 }} />;
@@ -473,18 +534,31 @@ export const RichText = ({ text }: { text: string }) => {
           <div key={key} className="overflow-x-auto rounded-md border my-2" style={{ borderColor: 'var(--border)' }}>
             <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
               <thead><tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>{hdr.map((c, ci) => <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-[var(--cam-strip-heading)] whitespace-nowrap">{c}</th>)}</tr></thead>
-              <tbody>{body.map((row, ri) => <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>{row.map((c, ci) => <td key={ci} className="px-3 py-1.5" style={{ fontSize: '12.5px', lineHeight: '1.5', color: ci === 0 ? TEXT_PRIMARY : TEXT_SECONDARY, fontWeight: ci === 0 ? 600 : 400, fontFamily: ci === 0 ? 'var(--font-mono)' : FONT_ANSWER }}>{inline(c)}</td>)}</tr>)}</tbody>
+              <tbody>{body.map((row, ri) => <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>{row.map((c, ci) => <td key={ci} className="px-3 py-1.5" style={{ fontSize: FS_SMALL, lineHeight: '1.5', color: ci === 0 ? TEXT_PRIMARY : TEXT_SECONDARY, fontWeight: ci === 0 ? 600 : 400, fontFamily: ci === 0 ? 'var(--font-mono)' : FONT_ANSWER }}>{inline(c)}</td>)}</tr>)}</tbody>
             </table>
           </div>
         );
       }
-      case 'bullet': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 mt-[10px] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} /><span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.text)}</span></div>;
-      case 'num': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold tabular-nums mt-[1px]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)', fontFamily: FONT_ANSWER }}>{seg.n}</span><span style={{ fontSize: '14px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.text)}</span></div>;
-      case 'label': return <div key={key} className="mt-2 flex gap-2.5 items-baseline"><span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{seg.label}</span><span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
-      case 'step': return <div key={key} className="mt-1.5 flex gap-2 items-baseline"><span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.12em]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.step}</span><span style={{ fontSize: '13.5px', lineHeight: '1.65', color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
-      case 'para': return /^(Input|Output)[:\s]/i.test(seg.text)
-        ? <div key={key} className="mt-1.5 px-3 py-1.5 rounded-md" style={{ background: '#0F1B2D', color: '#E6F4FF', fontFamily: 'var(--font-mono)', fontSize: '12.5px', lineHeight: '1.6' }}>{seg.text}</div>
-        : <p key={key} style={{ fontSize: '14px', lineHeight: '1.7', color: TEXT_PRIMARY }}>{inline(seg.text)}</p>;
+      case 'bullet': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 mt-[8px] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} /><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(seg.text)}</span></div>;
+      case 'num': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-[10px] font-bold tabular-nums mt-[1px]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)', fontFamily: FONT_ANSWER }}>{seg.n}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(seg.text)}</span></div>;
+      case 'label': return <div key={key} className="mt-2 flex gap-2.5 items-baseline"><span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{seg.label}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
+      case 'step': return <div key={key} className="mt-1.5 flex gap-2 items-baseline"><span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.12em]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.step}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
+      case 'para': {
+        if (/^(Input|Output)[:\s]/i.test(seg.text)) {
+          return <div key={key} className="mt-1.5 px-3 py-1.5 rounded-md" style={{ background: '#0F1B2D', color: '#E6F4FF', fontFamily: 'var(--font-mono)', fontSize: FS_SMALL, lineHeight: LH_BODY }}>{seg.text}</div>;
+        }
+        // The opening paragraph is the headline the candidate says first —
+        // one step up in size/weight with a gold rule so it reads as the
+        // answer's lede rather than the first of N equal paragraphs.
+        if (isLead) {
+          return (
+            <p key={key} className="mb-1.5 pl-3" style={{ fontSize: FS_LEAD, lineHeight: '1.55', fontWeight: 600, color: TEXT_PRIMARY, borderLeft: '2px solid var(--cam-gold-leaf)' }}>
+              {inline(seg.text)}
+            </p>
+          );
+        }
+        return <p key={key} style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(seg.text)}</p>;
+      }
     }
   };
 
@@ -506,7 +580,8 @@ export const RichText = ({ text }: { text: string }) => {
     <div className="flex flex-col gap-1" style={{ fontFamily: FONT_ANSWER }}>
       {chunks.map((chunk, ci) => chunk.k === 'code'
         ? renderCodeBlock(chunk.content, chunk.lang, ci)
-        : parseSegs(chunk.content).map((seg, si) => renderSeg(seg, `${ci}-${si}`))
+        // Only the very first segment of the answer can be the lede.
+        : parseSegs(chunk.content).map((seg, si) => renderSeg(seg, `${ci}-${si}`, ci === 0 && si === 0))
       )}
     </div>
   );

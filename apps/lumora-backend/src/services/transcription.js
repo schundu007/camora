@@ -46,10 +46,26 @@ function getTranscriptionProviders() {
         maxRetries: 0,
       }),
       model: 'whisper-large-v3-turbo',
+      responseFormat: 'verbose_json',
     });
   }
   if (process.env.OPENAI_API_KEY) {
-    providers.push({ name: 'openai', client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), model: 'whisper-1' });
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // FAST_TRANSCRIBE=1 puts gpt-4o-mini-transcribe ahead of whisper-1. It is
+    // materially faster, which matters when Groq's quota is gone and every
+    // second is live interview time.
+    //
+    // The trade is real and deliberate, which is why this is opt-in: that model
+    // only supports response_format 'json', so it returns NO segments and we
+    // lose the per-segment no_speech_prob silence filter. The text-level
+    // hallucination filter still runs, and the client VADs before sending, but
+    // this IS one net fewer against Whisper inventing speech during silence.
+    // If phantom questions appear mid-interview, unset the flag.
+    if (process.env.FAST_TRANSCRIBE === '1') {
+      providers.push({ name: 'openai-fast', client: openai, model: 'gpt-4o-mini-transcribe', responseFormat: 'json' });
+    }
+    // whisper-1 stays last: verbose_json, full silence filtering, always correct.
+    providers.push({ name: 'openai', client: openai, model: 'whisper-1', responseFormat: 'verbose_json' });
   }
   if (!providers.length) throw new Error('No transcription API key configured. Set GROQ_API_KEY or OPENAI_API_KEY.');
   return providers;
@@ -67,7 +83,7 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
 
   let response;
   let lastErr;
-  for (const { name, client, model } of providers) {
+  for (const { name, client, model, responseFormat } of providers) {
     // A fresh File per attempt — a consumed stream can't be re-sent to the
     // fallback provider.
     const file = new File([audioBuffer], filename, { type: mime });
@@ -79,7 +95,7 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
         language: 'en',
         prompt: TECHNICAL_PROMPT,
         temperature: 0,
-        response_format: 'verbose_json',
+        response_format: responseFormat || 'verbose_json',
       });
       lastErr = null;
       console.log(`[Whisper] ${name} ok in ${Date.now() - startedAt}ms`);
