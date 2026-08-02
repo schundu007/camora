@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { makeDeepgramClient, deepgramEnabled } from './deepgramProvider.js';
 
 const TECHNICAL_PROMPT = `
 Transcribe accurately with technical terms: Kubernetes, Docker, Terraform, Ansible,
@@ -37,6 +38,18 @@ function isQuotaError(err) {
 
 function getTranscriptionProviders() {
   const providers = [];
+  // Deepgram first when explicitly chosen — purpose-built for speech, with
+  // keyterm boosting for the vocabulary Whisper mangles. Opt-in via
+  // TRANSCRIBE_PRIMARY=deepgram so nothing changes under a live interview by
+  // accident; the OpenAI chain below stays as the fallback either way.
+  if (deepgramEnabled()) {
+    providers.push({
+      name: 'deepgram',
+      client: makeDeepgramClient(process.env.DEEPGRAM_API_KEY),
+      model: process.env.DEEPGRAM_MODEL || 'nova-3',
+      responseFormat: 'json',
+    });
+  }
   if (process.env.GROQ_API_KEY && Date.now() >= groqCooldownUntil) {
     providers.push({
       name: 'groq',
