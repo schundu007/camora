@@ -70,33 +70,47 @@ CRITICAL — DO NOT restate the [HEADLINE]. The pitch must NOT open with "I am/I
 
 Open DIRECTLY with a named company + project + metric. First word should be "At", "In", or a verb ("I built…", "I led…", "I own…"). Shape: "At <employer from the resume>, I owned <the system> — <the named tools> — and I <the measured outcome>." Fill it from THIS resume; never from an example.
 
-The intro is SPOKEN, not presented. Write 3-5 short paragraphs of natural
-first-person speech — the way a real person answers "tell me about yourself" out
-loud. NOT bullets, NOT labels, NOT a slide. Someone reads this aloud verbatim and
-it has to sound like them talking, not like them reading a deck.
+CUE-CARD FORMAT — this is read aloud while someone watches. The candidate
+glances down for half a second and must land on their next point WITHOUT
+scanning. Long paragraphs fail at this: a 100-character line forces the eye to
+sweep back across the full width every line, which is exactly how you lose your
+place and start panic-searching.
 
-Shape, in order:
-1. Who I am now, in one or two sentences — title, years, the split of my
-   background if it is unusual (research vs production, IC vs lead).
-2. What I do today: employer, what I own end to end, the named systems, the
-   scale. Concrete, in the terms the resume supports.
-3. The part of the job I am accountable for beyond building — quality,
-   compliance, security, mentoring — with the named tools.
-4. Where I came from, briefly, and why that foundation is real.
-5. One closing sentence tying the mix to what THIS role needs.
+Emit SHORT LINES, one idea per line, each opening with a bolded 1-3 word anchor:
 
-Rules for the prose:
-- Simple English, short sentences, contractions. Speakable at 140 wpm.
-- Every claim carries a named system or a real number from the resume. No
-  adjectives standing in for evidence.
-- No invented employers, tools, metrics or tenure. If the resume does not
-  support a number, speak to scale in the terms it does support.
-- Bold the key technical keywords with **double asterisks** so the eye catches
-  them on a glance — platforms, languages, frameworks, architectures, governance
-  tools. Only proper nouns and numbers, 2-4 per paragraph, never a whole clause.
-  The client renders them in accent colour, which is how the candidate finds
-  their place mid-sentence.
-- 220-320 words. That is 90-120 seconds of unhurried speech.
+**<anchor>** — <one spoken idea, 12-16 words MAX, ends where a breath ends>
+
+Rules that make it readable at a glance:
+- ONE idea per line. If a line needs "and" twice, it is two lines.
+- 14 words is the HARD CEILING, counting the anchor. Count before you emit.
+  A line over 14 words wraps onto a second row, and a wrapped line is the exact
+  failure this format exists to prevent.
+  TOO LONG (21 words): "**Delivery** — I run CI/CD through Azure DevOps and
+    GitHub Actions, with peer code review on every release."
+  RIGHT (10 words): "**Delivery** — CI/CD in Azure DevOps and GitHub Actions."
+  TOO LONG (26 words): "**Why here** — this role's focus on leading complex
+    pipelines end to end and partnering with data scientists is exactly what I
+    already own at TCS."
+  RIGHT (12 words): "**Why here** — leading pipelines end to end is what I
+    already own."
+  Drop connective words, not content. "I use", "I run", "with", "that" are
+  almost always removable; the named tool and the number are never removable.
+- Every line starts with a **bolded anchor** at the same left edge — that column
+  of bold is what the eye tracks down. Never bury the anchor mid-sentence.
+- The lines must READ ALOUD as continuous speech, in order, with no stitching
+  words needed. Short lines, not fragments: each is a sayable sentence.
+- 7-10 lines total. That is 90-120 seconds spoken.
+- Bold the named platforms and numbers INSIDE the line too, 1-2 per line.
+
+Cover, in this order, one or two lines each:
+  now — title, employer, the headline systems
+  scale — the numbers the resume supports
+  ownership — what I run end to end
+  quality/security — the named frameworks and controls
+  background — where the foundation came from
+  why here — tied to a named requirement of THIS role
+
+Never a paragraph. Never a line that wraps. If it wraps, it was too long.
 [/PITCH]
 
 [JD_COVERAGE]
