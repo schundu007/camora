@@ -11,7 +11,7 @@
  * an architecture change (client WS, partial transcripts, different coalescing)
  * and deliberately not bundled here.
  *
- * Enable with DEEPGRAM_API_KEY plus TRANSCRIBE_PRIMARY=deepgram.
+ * Enable by setting DEEPGRAM_API_KEY. That is the whole configuration.
  */
 
 /** Terms Whisper reliably mangles in these interviews. Deepgram's keyterm
@@ -90,11 +90,4 @@ export function makeDeepgramClient(apiKey) {
       },
     },
   };
-}
-
-/** True when the operator has explicitly chosen Deepgram as primary. Presence
- *  of a key alone is not enough — switching what transcribes a live interview
- *  must be a deliberate act. */
-export function deepgramEnabled() {
-  return !!process.env.DEEPGRAM_API_KEY && process.env.TRANSCRIBE_PRIMARY === 'deepgram';
 }
