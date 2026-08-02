@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { setStoredToken } from '../utils/tokenStore';
 import { setStoredUserId } from '../utils/userStore';
 import { clearAllPrepCaches, purgeLegacyGlobalPrep } from '../lib/prepStorage';
+import { purgeLegacyGlobalAssistants } from '../lib/lumora-assistant';
 import { clearAllUserScopedStores } from '../lib/userScopedStorage';
 import { isOwner } from '../lib/owner';
 
@@ -144,6 +145,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // global key that any account on this browser could inherit. Discard it
     // — the server holds each user's real prep and hydrates it on mount.
     purgeLegacyGlobalPrep();
+    // Same class of leak: the pre-scoping global assistants blob held a resume.
+    purgeLegacyGlobalAssistants();
     async function init() {
       // Dev mode: auto-authenticate as dev user
       if (DEV_MODE) {
