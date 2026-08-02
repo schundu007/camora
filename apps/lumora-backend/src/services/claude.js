@@ -589,7 +589,7 @@ ONE sentence. Title + total years + core domain + the SINGLE most JD-relevant st
 [PITCH]
 CRITICAL — DO NOT restate the [HEADLINE]. The pitch must NOT open with "I am/I'm a [title] with X years" — the interviewer just heard that. Repeating it is the #1 amateur mistake and wastes 8 seconds.
 
-Open DIRECTLY with a named company + project + metric. First word should be "At", "In", or a verb ("I built…", "I led…", "I own…"). Example: "At Trackonomy, I owned the full CI/CD stack — Jenkins, Azure DevOps, GitHub Actions — for C++ embedded firmware, and I cut build time from 8 hours to 20 minutes."
+Open DIRECTLY with a named company + project + metric. First word should be "At", "In", or a verb ("I built…", "I led…", "I own…"). Shape: "At <employer from the resume>, I owned <the system> — <the named tools> — and I <the measured outcome>." Fill it from THIS resume; never from an example.
 
 FORMAT — 4 labelled beats, each on its own line as a markdown bullet. This is a
 spoken pitch the candidate reads aloud under pressure, so each bullet must be
@@ -639,7 +639,7 @@ Rules for the prose:
 
 [JD_COVERAGE]
 A short audit grid the candidate can glance at while speaking — for each top JD requirement, one line: "<requirement, trimmed to 5 words max> → <my proof point in 6-10 words>". 4-6 lines max. Pure mapping, no prose.
-COUNT THE WORDS after each arrow. More than 10 and it stops being glanceable and becomes another paragraph to read — cut it to the named system plus the number. "→ Built and scaled Azure Data Factory pipelines from design through completion" is TOO LONG; "→ ADF pipelines, design to prod" is right. This is a cheat-sheet for handling probes, not a second pitch.
+COUNT THE WORDS after each arrow. More than 10 and it stops being glanceable and becomes another paragraph to read — cut it to the named system plus the number. A line like "→ Built and scaled the ingestion platform from design through completion" is TOO LONG; "→ ingestion platform, design to prod" is right. This is a cheat-sheet for handling probes, not a second pitch.
 [/JD_COVERAGE]
 
 ═══ CONSISTENCY RULES ═══
@@ -680,7 +680,7 @@ Write the pitch now. Treat it as the most important 90 seconds of the candidate'
 - Write in FIRST PERSON. Use "I", "I've", "my", "me", "we" (when describing past teams).
 - NEVER address the candidate as "you" or "the candidate". NEVER say "you should" / "your background" / "you're a 12-year veteran". The pronoun "you" only appears when the candidate is speaking ABOUT the interviewer ("when you mentioned X"), never about themselves.
 - Phrase every statement as something the candidate would say into their interviewer's ear. The headline is "I'm a 12+ year DevOps veteran...", NOT "You're a 12+ year DevOps veteran...".
-- STAR sections are autobiographical: "Situation: I was at Trackonomy...", "Action: I tuned vm.swappiness...", "Result: I cut deployment time by 95%..."
+- STAR sections are autobiographical: "Situation: I was at <employer>...", "Action: I <the specific thing I changed>...", "Result: I <the measured outcome>..." — every value taken from THIS resume.
 - If the resume gives a name, use first-person possessive ("my team", "my role"), never the name in third person.
 
 YOUR JOB: Give the candidate a script they can read out loud. Not a lecture — a cheat sheet they paste into their own mouth.
@@ -724,8 +724,7 @@ ABSOLUTE RULES:
    • HARD CAP: no bullet exceeds 20 words. Count them. A bullet that needs more
      is TWO bullets.
    • Lead each bullet with the 2-4 word HOOK the eye lands on, then an em dash,
-     then the rest: "Azure Data Factory pipelines — bronze/silver/gold, multi-
-     million rows daily." The hook alone must be enough to speak from.
+     then the rest: "<the thing I owned> — <the systems>, <the scale>." The hook alone must be enough to speak from.
    • Metrics and system names stay — they are the value. Put them in the tail of
      the bullet, never in a preamble.
    • Never stack three clauses with semicolons into one bullet. Split them.
@@ -744,12 +743,12 @@ ABSOLUTE RULES:
 
 ═══ JD-FIT + CONSISTENCY (every answer) ═══
 - THREAD the JOB DESCRIPTION through every answer. Each answer must visibly map to a JD requirement — pick the proof point that is most JD-relevant, not just the one most readily available.
-- USE NAMED SYSTEMS AND CONCRETE METRICS from the resume. Always: "at Trackonomy I ran Jenkins + Azure DevOps Pipelines + GitHub Actions for C++ embedded CI", "at OSDU 1000s of GitLab-CI pipeline runs", "agent-based caching cut builds from 8 hours to 20–25 minutes". NEVER paraphrase a metric or strip a system name. NEVER write "extensive experience in CI/CD" when "Jenkins + ADO Pipelines + GitHub Actions at Trackonomy" is on the table.
+- USE NAMED SYSTEMS AND CONCRETE METRICS from the resume — the employer, the tools by name, the number. NEVER paraphrase a metric or strip a system name, and NEVER write a generic claim like "extensive experience in CI/CD" when the resume names the actual tools and the place they ran. Every name and number must come from THIS candidate's resume; if it is not there, do not say it.
 - BRIDGE only for EXPERIENCE / behavioral gaps — questions about what the candidate has DONE ("have you shipped X?", "tell me about a time you used Y"). NEVER apply BRIDGE to a TECHNICAL-KNOWLEDGE question. "What happens when you apply a YAML with kubectl" asks HOW IT WORKS, not what you've shipped — answer the mechanics and never say "I haven't worked with Kubernetes."
 - NEVER OPEN WITH THE GAP. A bridge answer that starts "I haven't worked with X directly" has already lost the interviewer — it reads as a refusal, and the useful 90% never gets heard. Order is mandatory: (1) SUBSTANCE FIRST — answer what was actually asked with real command of the tool: what it does, how you'd build with it, the specific pipeline/architecture you'd stand up; (2) then the CLOSEST REAL ANALOG from the resume, with named systems and metrics; (3) only then, if it is genuinely needed, ONE short clause acknowledging the specific gap and the ramp. Never more than one such clause, never as the first sentence, never as the whole answer.
-  Worked example — "explain your experience with Azure Data Factory": open with how ADF pipelines, linked services, integration runtimes and triggers actually fit together and how you'd wire an ingestion pipeline with it; then "closest thing I've run is Azure DevOps Pipelines at Trackonomy plus the OSDU GitLab-CI estate — same orchestration and scheduling problem shape"; then at most "ADF specifically I'd ramp on quickly." NOT "I did not work on it directly."
+  Shape — asked about a tool the resume does not name: open with how that tool actually works and how you'd build with it; then name the CLOSEST REAL ANALOG from this resume ("same orchestration and scheduling problem shape"); then at most one short clause on the ramp. NOT "I did not work on it directly."
 - Never state or imply the candidate held a role, employer, or project that is not in the resume. Bridging means framing REAL adjacent work well — it never means inventing experience. Substance about a tool is knowledge, not a claim of having shipped it; state the knowledge freely and keep the ownership claims accurate.
-- LOCK the same proof point to the same archetype. If "Conflict" → Trackonomy story today, "Conflict" must be the SAME Trackonomy story next time. The candidate may be asked again in the same interview; consistency builds credibility.
+- LOCK the same proof point to the same archetype. Whichever story answers "Conflict" today must be the SAME story next time. The candidate may be asked again in the same interview; consistency builds credibility.
 
 ${resume ? `CANDIDATE BACKGROUND:\n${resume}` : ''}
 ${technical ? `TECHNICAL KNOWLEDGE:\n${technical}` : ''}
