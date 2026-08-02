@@ -19,12 +19,32 @@ load balancer, reverse proxy, CDN, cache, queue, pub-sub, event-driven.
 // requests/DAY, and once exhausted every chunk 429s. Previously this returned
 // a SINGLE provider and never retried the other — so a Groq rate-limit (or any
 // Groq error) killed transcription mid-interview even with an OpenAI key set.
+// Groq's free tier caps at 2000 requests/DAY. Once exhausted EVERY chunk 429s,
+// and because the SDK retries with exponential backoff by default, each one
+// burned seconds before falling back — measured at 88s for a single 23-char
+// transcription during a live interview. Two guards:
+//   • maxRetries: 0 — a 429 here is a quota fact, not a blip. Retrying it just
+//     delays the fallback that was always going to serve the request.
+//   • a circuit breaker — after the first 429 we stop calling Groq entirely for
+//     a cooldown, so the remaining chunks go straight to OpenAI at full speed
+//     instead of each paying a doomed round-trip.
+const GROQ_COOLDOWN_MS = 15 * 60 * 1000;
+let groqCooldownUntil = 0;
+
+function isQuotaError(err) {
+  return err?.status === 429 || /rate limit|quota/i.test(err?.message || '');
+}
+
 function getTranscriptionProviders() {
   const providers = [];
-  if (process.env.GROQ_API_KEY) {
+  if (process.env.GROQ_API_KEY && Date.now() >= groqCooldownUntil) {
     providers.push({
       name: 'groq',
-      client: new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: 'https://api.groq.com/openai/v1' }),
+      client: new OpenAI({
+        apiKey: process.env.GROQ_API_KEY,
+        baseURL: 'https://api.groq.com/openai/v1',
+        maxRetries: 0,
+      }),
       model: 'whisper-large-v3-turbo',
     });
   }
@@ -51,6 +71,7 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
     // A fresh File per attempt — a consumed stream can't be re-sent to the
     // fallback provider.
     const file = new File([audioBuffer], filename, { type: mime });
+    const startedAt = Date.now();
     try {
       response = await client.audio.transcriptions.create({
         model,
@@ -61,13 +82,23 @@ export async function transcribe(audioBuffer, filename = 'audio.webm') {
         response_format: 'verbose_json',
       });
       lastErr = null;
+      console.log(`[Whisper] ${name} ok in ${Date.now() - startedAt}ms`);
       break;
     } catch (err) {
       lastErr = err;
       // 429 (rate/quota) and 5xx are exactly what the fallback exists for; log
       // and try the next provider. Auth/400 errors also fall through so a
       // misconfigured primary can't take the whole feature down.
-      console.warn(`[Whisper] provider "${name}" failed (${err?.status ?? '?'}: ${err?.message?.slice(0, 120)}) — trying next`);
+      if (name === 'groq' && isQuotaError(err)) {
+        // Only log the trip, not every subsequent chunk — this fires once per
+        // cooldown instead of on every utterance of the interview.
+        if (Date.now() >= groqCooldownUntil) {
+          console.warn(`[Whisper] groq quota exhausted — skipping it for ${GROQ_COOLDOWN_MS / 60000} min, serving from openai`);
+        }
+        groqCooldownUntil = Date.now() + GROQ_COOLDOWN_MS;
+      } else {
+        console.warn(`[Whisper] provider "${name}" failed (${err?.status ?? '?'}: ${err?.message?.slice(0, 120)}) — trying next`);
+      }
     }
   }
   if (!response) throw lastErr || new Error('All transcription providers failed');
