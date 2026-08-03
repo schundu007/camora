@@ -687,8 +687,7 @@ export const AnswerView = ({ text, streaming }: { text: string; streaming?: bool
         {archetype && <ArchetypeBadge archetype={archetype} />}
         <StarAnswer sections={star.sections} streaming={streaming} />
         <LearningNote text={learning} />
-        <LearningNote text={learning} />
-      <RebuttalsPanel items={rebuttals} />
+        <RebuttalsPanel items={rebuttals} />
       </div>
     );
   }
@@ -698,8 +697,7 @@ export const AnswerView = ({ text, streaming }: { text: string; streaming?: bool
         <ArchetypeBadge archetype={archetype} />
         <RichText text={stripped} />
         <LearningNote text={learning} />
-        <LearningNote text={learning} />
-      <RebuttalsPanel items={rebuttals} />
+        <RebuttalsPanel items={rebuttals} />
       </div>
     );
   }

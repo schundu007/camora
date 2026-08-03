@@ -8,7 +8,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from './adminConfig.js';
 import { parseAnswer } from './answerParser.js';
 import { buildCloudHint } from './cloudHint.js';
-import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE, buildPitchPrompt } from './answerFormat.js';
+import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE, HUMAN_VOICE, buildPitchPrompt } from './answerFormat.js';
 import { LIVE_ANSWER_MODEL } from './modelPolicy.js';
 
 // ---------------------------------------------------------------------------
@@ -129,6 +129,7 @@ function buildGeneralPrompt(resume, technical) {
 - NEVER address the candidate as "you" or refer to "the candidate". NEVER write "your background" / "you're a senior engineer" / "you should mention X".
 - The candidate's name (if any) appears as "I" / "my", never in third person.
 - Past experience is autobiographical: "I led a 6-person platform team", not "You led a 6-person platform team".
+${HUMAN_VOICE}
 
 === MY BACKGROUND ===
 ${resume}
@@ -595,6 +596,7 @@ export async function* streamResponse(question, history, options = {}) {
 - Phrase every statement as something the candidate would say into their interviewer's ear. The headline is "I'm a 12+ year DevOps veteran...", NOT "You're a 12+ year DevOps veteran...".
 - STAR sections are autobiographical: "Situation: I was at <employer>...", "Action: I <the specific thing I changed>...", "Result: I <the measured outcome>..." — every value taken from THIS resume.
 - If the resume gives a name, use first-person possessive ("my team", "my role"), never the name in third person.
+${HUMAN_VOICE}
 
 YOUR JOB: Give the candidate a script they can read out loud. Not a lecture — a cheat sheet they paste into their own mouth.
 

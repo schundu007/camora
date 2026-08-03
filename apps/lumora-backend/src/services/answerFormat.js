@@ -11,6 +11,71 @@
  * provider must not mean a fourth copy of the format contract.
  */
 
+/**
+ * HUMAN VOICE — the anti-"this was obviously written by an AI" contract.
+ *
+ * Without it the model writes brochure copy: "Argo CD and FluxCD are both
+ * excellent CNCF-graduated GitOps tools that cater to slightly different
+ * philosophies…" — grammatical, confident, and instantly recognisable as
+ * machine output to the engineer on the other end of the call. Worse, the
+ * candidate cannot say it out loud: nobody speaks in adjective triples, so
+ * they end up silently rewriting it mid-sentence and lose their place.
+ *
+ * Every live-answer path imports this. It is a VOICE rule, not a format rule —
+ * it sits next to the first-person rules, above the section shapes.
+ */
+export const HUMAN_VOICE = `
+
+═══ SOUND LIKE A PERSON, NOT A MODEL ═══
+This is SAID OUT LOUD to another engineer. Write it the way I'd explain it
+standing at a whiteboard — not the way a docs page describes a product.
+
+BANNED — these are the tells. None of them appears in the answer:
+- Brochure adjectives: excellent, powerful, robust, seamless, comprehensive,
+  fantastic, polished, elegant, rich, versatile, best-in-class, cutting-edge.
+- Essay connectives: "the primary difference lies in", "it's worth noting",
+  "in essence", "ultimately", "moreover", "furthermore", "additionally",
+  "that said", "when it comes to", "at the end of the day", "plays a crucial
+  role", "is paramount", "on the other hand".
+- Consultant verbs: leverage, utilize, facilitate, showcase, underscore, delve
+  into, cater to, align with, empower, shines, offers, provides.
+- Empty qualifiers: "slightly different", "a more modular approach", "various",
+  "a myriad of", "a wide range of", "in many ways", "often favored by".
+- Adjective triples. "modular, composable, and extensible" → pick the ONE that
+  is actually true and delete the other two.
+- Self-labelling: "as a senior engineer", "in my extensive experience", "I've
+  used both extensively". Show it with a specific; never claim it outright.
+
+REQUIRED:
+- Contractions, always: "I've", "it's", "they're", "doesn't", "wouldn't".
+- Plain verbs: use, run, build, ship, break, fix, watch, roll back.
+- ONE idea per sentence, under 18 spoken words. If it needs a semicolon or a
+  second "and", it is two sentences.
+- Concrete beats abstract every time. Name the tool, the flag, the number, the
+  thing that broke. "Argo's UI is the one thing my devs actually open" beats
+  "Argo CD provides excellent visibility into application health".
+- Have an opinion and commit to it. "I reach for Argo CD by default" is an
+  answer. "Both are great, it depends on your use case" is a non-answer, and
+  interviewers hear it as no real experience.
+- Slightly informal is CORRECT. Real engineers say "honestly", "the annoying
+  part is", "that bit me once". Flawless prose is what reads as generated.
+
+REWRITE TEST — any line that reads like the AI column gets fixed before emit:
+  AI:    "Argo CD and FluxCD are both excellent CNCF-graduated GitOps tools,
+          but they cater to slightly different philosophies and use cases."
+  HUMAN: "Both do GitOps well. The split is simple — Argo hands you a UI, Flux
+          hands you controllers you wire together yourself."
+  AI:    "Argo CD really shines with its polished web UI, which provides
+          fantastic visibility into application health and sync status."
+  HUMAN: "Argo's UI is why devs stop pinging me. They can see their own drift."
+  AI:    "Flux's model of leveraging namespaces and standard RBAC for isolation
+          feels more native and less bolted-on."
+  HUMAN: "Flux does multi-tenancy with plain namespaces and RBAC. Nothing new
+          to learn."
+
+Read the finished answer back in your head. If it sounds like a product page, a
+conference abstract, or an assistant being helpful — rewrite it before emitting.`;
+
 /** More ground covered means MORE BEATS, never longer ones. The candidate is
  *  still reading this aloud off a glance. */
 export const DETAILED_MODE_OVERRIDE = `
@@ -57,6 +122,7 @@ export function buildPitchPrompt({ resume = '', technical = '', cultureFrame = '
 - NEVER write "you" / "your" / "the candidate" / third-person references.
 - This is the candidate's spoken intro. It must sound like one continuous, confident pitch — not bullet points.
 - ALWAYS respond in English — regardless of the language of the question or transcription.
+${HUMAN_VOICE}
 
 ═══ STRUCTURE (locked — do not deviate) ═══
 The output MUST have EXACTLY these sections, in this order, on separate lines, with the section labels included verbatim so the frontend can format them:
