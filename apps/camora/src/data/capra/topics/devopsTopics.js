@@ -14,6 +14,7 @@ export const devopsCategories = [
   { id: 'cicdtools',        name: 'CI/CD Tools — Practical',           icon: 'tool',          color: '#16a34a' },
   { id: 'delivery',         name: 'Continuous Delivery Practices',    icon: 'send',          color: '#06b6d4' },
   { id: 'gitops',           name: 'GitOps',                            icon: 'gitPullRequest', color: '#0891b2' },
+  { id: 'flux',             name: 'Flux CD — GitOps for Kubernetes',   icon: 'refreshCw',     color: '#4f46e5' },
   { id: 'iac',              name: 'Infrastructure as Code',            icon: 'codepen',       color: '#f59e0b' },
   { id: 'config',           name: 'Configuration Management',          icon: 'settings',      color: '#8b5cf6' },
   { id: 'containers',       name: 'Containers & Images',               icon: 'package',       color: '#ec4899' },
@@ -70,7 +71,8 @@ export const devopsTopicCategoryMap = {
   // GitOps — principles → tools → patterns → multi-cluster → drift
   'gitops-principles':              'gitops',
   'argocd-architecture':            'gitops',
-  'fluxcd-architecture':            'gitops',
+  // Anchors the dedicated Flux CD track below (fluxTopics.js).
+  'fluxcd-architecture':            'flux',
   'app-of-apps-pattern':            'gitops',
   'multi-cluster-gitops':           'gitops',
   'gitops-drift-recon':             'gitops',
@@ -208,6 +210,19 @@ export const devopsTopicCategoryMap = {
   'helm-security-supply-chain':     'helm',
   'helm-4-migration':               'helm',
   'helm-production-patterns':       'helm',
+  // Flux CD — GitOps for Kubernetes (fluxTopics.js), grounded in fluxcd.io/flux
+  'flux-why':                       'flux',
+  'flux-bootstrap':                 'flux',
+  'flux-cli':                       'flux',
+  'flux-sources':                   'flux',
+  'flux-kustomization':             'flux',
+  'flux-helmrelease':               'flux',
+  'flux-image-automation':          'flux',
+  'flux-notifications':             'flux',
+  'flux-repo-structure':            'flux',
+  'flux-security':                  'flux',
+  'flux-monitoring':                'flux',
+  'flux-migration':                 'flux',
   // New topics from authoritative sources (DORA 2024, CNCF, Gateway API v1)
   'dora-2024-capabilities':             'foundations',
   'opentelemetry-collector-pipelines':  'cloudnative',
