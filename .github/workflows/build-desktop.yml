@@ -48,9 +48,17 @@ jobs:
       # (CFBundleShortVersionString); this becomes CFBundleVersion, which macOS
       # uses to tell builds apart. Without it, every build was byte-identical
       # "1.0.0" and LaunchServices kept launching the stale cached app.
+      #
+      # The +2000 offset exists because hand-built local DMGs have stamped
+      # numbers as high as 1.0.1404, while the CI run counter was still at 995.
+      # A CI build numbered BELOW an installed local build reintroduces the same
+      # stale-app bug from the other direction, so CI is offset to always win.
+      # Never lower this offset — CFBundleVersion must only ever increase.
+      # The arithmetic is done in the Actions expression, not the shell: this
+      # job runs on windows-latest (pwsh), so bash $(( )) would not be portable.
       - name: Stamp unique build version
         working-directory: apps/desktop
-        run: npm pkg set build.buildVersion="1.0.${{ github.run_number }}"
+        run: npm pkg set build.buildVersion="1.0.${{ 2000 + github.run_number }}"
 
       - name: Build ${{ matrix.name }}
         working-directory: apps/desktop
