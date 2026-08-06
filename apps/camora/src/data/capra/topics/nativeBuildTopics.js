@@ -5958,4 +5958,1757 @@ The framing I would close on: these tools sit on a curve of depth against speed.
     ],
   },
 
+  // ─────────────────────────────────────────────────────────────────────
+  // 19. Python for Build Automation
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'nb-python-build-automation',
+    title: 'Python for Build Automation',
+    icon: 'code',
+    color: '#ea580c',
+    questions: 5,
+    description: 'Python as the language you write build tooling in, not web apps. Replacing untestable YAML and shell with a packaged, unit-tested CLI that every build agent runs at a pinned version.',
+    visualizations: [
+      {
+        title: 'From YAML sprawl to a packaged, tested build CLI',
+        image: '/diagrams/devops/nb-19-python-build-automation.png',
+        description: `Most build systems decay the same way. A pipeline starts as thirty lines of YAML. Someone needs a conditional, so a shell one-liner appears. Someone needs to parse a version out of a file, so an awk pipeline appears. Two years later the pipeline is 1,400 lines of YAML containing 300 lines of embedded bash, none of which can be run locally, none of which has a test, and all of which fails only in CI, ten minutes into a build.
+
+The core argument for Python is short: YAML has no unit tests. Shell has no unit tests that anyone actually writes. Python does. When release logic lives in a Python package you can run it on a laptop, run it under pytest, type-check it with mypy, and pin the exact version every agent uses. The YAML shrinks back to what it is good at — declaring triggers, agents, and one command per step.
+
+What the diagram shows is that migration. On the left the pipeline owns the logic: interpolated variables, inline bash, copy-pasted blocks across three pipeline files. On the right the pipeline owns only orchestration, and a package named something like buildtool owns the logic. Each CI step becomes a single invocation: buildtool release --channel beta. The pipeline is now readable by someone who has never seen the repository.
+
+The subprocess layer is where most homegrown Python build tooling is wrong. The correct default is a list of arguments, no shell, an explicit check, captured output, and a timeout:
+
+\`\`\`python
+import subprocess
+
+def run(cmd: list[str], cwd=None, timeout: float = 600) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd, cwd=cwd, check=True, capture_output=True,
+        text=True, timeout=timeout,
+    )
+\`\`\`
+
+subprocess.run with shell=False, which is the default, hands the argument vector straight to the operating system, so shell metacharacters in a branch name or a tag cannot inject a command. The Python documentation is explicit that when the shell is invoked via shell=True it becomes the application's responsibility to quote all whitespace and metacharacters to avoid shell injection. check=True raises CalledProcessError, whose returncode, cmd, stdout, and stderr attributes give you a usable error message. timeout kills the child, waits for it, and re-raises TimeoutExpired — which is what saves a build agent from a hung linker holding a runner for six hours.
+
+The one thing capture_output costs you is live output. For a long compile you want the log streaming, so use Popen with stdout=PIPE and stderr=STDOUT and iterate the lines, logging each. Whichever form you use, propagate the exit code. Build tooling that swallows a non-zero exit and returns 0 is how a broken artifact reaches a release channel.
+
+Path handling is the second common defect. os.path.join plus string concatenation produces code that is wrong on Windows agents and unreadable everywhere. pathlib gives you the / operator, .mkdir(parents=True, exist_ok=True), .resolve(), .rglob('*.o'), .read_text(), .write_text(), and .relative_to() for building archive-relative paths. A build tool that must work on Linux, macOS, and Windows agents should contain essentially no string path arithmetic.
+
+Output is the third. print writes to stdout with buffering that CI log collectors interleave badly against subprocess output, and it carries no level, no timestamp, and no logger name. logging.getLogger(__name__) plus a single logging.basicConfig at the entry point gives you levels, a consistent format, and the ability to send diagnostics to stderr while keeping stdout clean for machine-readable output. logging.exception inside an except block records the traceback, which is what you actually want in a failed build log.
+
+Packaging is what makes the tooling reproducible. A pyproject.toml with a [project] table and a [project.scripts] entry point turns the package into a real command on PATH. A lockfile — uv.lock, or a fully hashed requirements file installed with --require-hashes — means agent A and agent B run byte-identical tooling. Without that pin the build tool is itself an unversioned dependency of your build, and "it worked yesterday" becomes an unanswerable question.
+
+Testing closes the loop. pytest with tmp_path gives each test a clean directory; monkeypatch.setenv and monkeypatch.chdir isolate environment assumptions and undo them at teardown; unittest.mock.patch on your run() wrapper lets you assert the exact argument vector a command would have received without executing anything. That is the test that catches a quoting regression before it ships.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Python build tooling',
+        description: `Q: Why move build logic out of YAML into Python?
+A: Because YAML has no unit tests, no local execution path, and no type checking, so every change is validated only by running the pipeline. Python build tooling runs on a laptop, is tested with pytest, checked with mypy, and pinned by version so every agent runs the same code. The YAML shrinks to triggers and one command per step, which is what declarative config is actually good at.
+
+Q: What is wrong with subprocess.run("make -j8 && ./deploy.sh", shell=True)?
+A: Three things. It invokes a shell, so any interpolated value — a branch name, a tag, a user-supplied argument — can inject commands. It has no check=True, so a failing make is silently ignored. It has no timeout, so a hung child holds the agent indefinitely. The correct form is a list of arguments, shell=False, check=True, captured or streamed output, and an explicit timeout.
+
+Q: How do you propagate a subprocess failure out of a build script correctly?
+A: Either let check=True raise CalledProcessError and handle it at the top level, or capture the CompletedProcess and call sys.exit on its returncode. What you must not do is log the error and return normally — CI reads the process exit code, not your log, so a swallowed failure produces a green build on a broken artifact.
+
+Q: How do you make sure every build agent runs the same version of your build tooling?
+A: Package it with pyproject.toml and a [project.scripts] entry point, publish it to an internal index, and install from a lockfile — uv.lock via uv sync --frozen, or a hash-pinned requirements file installed with pip install --require-hashes. Installing from a branch, or pip install -e on the agent, lets the tooling version drift per agent and failures stop being reproducible.
+
+Q: How do you unit test a function that shells out?
+A: Wrap every subprocess call in one thin run() helper, then patch that helper in tests and assert on the exact argument list it received. For filesystem work use the pytest tmp_path fixture so each test gets an isolated directory, and monkeypatch.setenv for environment assumptions. You are testing your own decision logic — which flags get built, in what order — not whether the compiler works.
+
+Q: How do you generate a CI matrix programmatically?
+A: Have a Python command emit JSON on stdout, publish it as a job output, and have the downstream job consume it. In GitHub Actions that means appending to the file named by the GITHUB_OUTPUT environment variable, declaring it under the job outputs, and expanding it with fromJSON in the matrix. The matrix is then derived from what actually changed rather than hand-maintained in YAML.`,
+      },
+    ],
+    introduction: `The job description leads with advanced Python used to automate workflows and enhance build processes. That is a specific dialect of Python, and it is not the one most candidates prepare. Nobody is asking about web frameworks or dataframes. They are asking whether you can write the tool that builds, tests, signs, and publishes the product — and whether that tool is something a team can maintain for five years.
+
+The problem it solves is the decay of declarative pipelines. Every CI system starts you in YAML, and YAML is genuinely good at declaring triggers, agents, and dependencies between jobs. It is terrible at logic. The moment you need a conditional, a loop, a version parse, or a retry, the YAML grows an embedded shell script, and that script has no tests, cannot be run locally, and fails only in CI. Multiply by three pipeline files and two years, and the build system becomes a thing nobody will touch.
+
+Moving that logic into a Python package inverts the situation. The pipeline calls one command per step. The command is a real CLI with argparse or click, so it is discoverable and has a help output. It is packaged with pyproject.toml and a console entry point, so it installs and runs identically on a laptop and on every agent. It is pinned by a lockfile, so "the build tool changed under us" stops being a class of incident. And it is tested with pytest, so changing release logic becomes a normal code change with a normal review.
+
+The mechanics interviewers actually probe are narrow and specific. subprocess done correctly — list arguments rather than shell=True, check=True, captured or streamed output, a timeout, and an exit code that propagates. pathlib rather than os.path string arithmetic, because build tooling runs on Windows agents too. logging rather than print, because CI log collectors need levels and stderr separation and because print buffering reorders your output against child process output. Typing plus mypy, because tooling code is the code most likely to be edited by someone who did not write it.
+
+Where it fits is alongside, not instead of, the build system. Python does not replace Make, CMake, MSBuild, or Bazel — those own dependency graphs and incremental rebuild, and reimplementing a dependency graph in Python is how you lose incremental builds and double your build times. Python owns the orchestration layer above them: deciding what to build, assembling the flags, fanning out a matrix, collecting artifacts, running the signing and publishing steps, and turning a failure into a message a human can act on.
+
+The failure mode to name out loud is the one every mature organisation has lived through: the build tooling becomes an untested monolith that only one person understands, and that person leaves. Untested Python is not better than untested bash — it is bash with more line noise and a dependency resolver. The value comes entirely from the discipline around it: packaged, pinned, typed, and tested.`,
+    whenToUse: [
+      'Any CI step whose YAML has grown embedded shell with conditionals, loops, or string parsing',
+      'Cross-platform build orchestration where the same logic must run on Linux, macOS, and Windows agents',
+      'Generating CI matrices or job graphs from repository state rather than hand-maintaining them in YAML',
+      'Release automation — version bumping, changelog assembly, artifact collection, signing, and publishing',
+      'Wrapping a legacy build system so callers get one stable CLI while the internals are migrated underneath',
+    ],
+    keyConcepts: [
+      {
+        term: 'subprocess.run with a list',
+        definition: 'subprocess.run(args, check=..., capture_output=..., text=..., timeout=...). Passing a list with the default shell=False sends the argument vector straight to the operating system, so shell metacharacters in interpolated values cannot inject commands. check=True raises CalledProcessError carrying returncode, cmd, stdout, and stderr.',
+      },
+      {
+        term: 'shell=True',
+        definition: 'Runs the command through the system shell. The Python docs state that when the shell is invoked explicitly it is the application responsibility to quote all whitespace and metacharacters to avoid shell injection. In build tooling it is almost never needed — pipelines and redirection can be expressed with Popen objects instead.',
+      },
+      {
+        term: 'timeout and TimeoutExpired',
+        definition: 'subprocess.run(timeout=N) kills the child, waits for it, and re-raises TimeoutExpired. Without it a hung compiler, a stalled fetch, or a tool waiting on stdin holds a build agent until the CI-level job timeout, which is usually far longer than you want.',
+      },
+      {
+        term: 'pathlib.Path',
+        definition: 'Object-oriented paths: the / join operator, .mkdir(parents=True, exist_ok=True), .resolve(), .glob and .rglob, .read_text and .write_text, .relative_to. Replaces os.path string arithmetic, which is the usual reason a build script works on Linux and breaks on a Windows agent.',
+      },
+      {
+        term: 'Console entry point',
+        definition: 'A [project.scripts] table in pyproject.toml mapping a command name to a module and function. Installing the package puts a real executable on PATH, so CI runs buildtool release rather than python tools/scripts/release_v2_final.py — which also stops the repository layout being encoded into every pipeline.',
+      },
+      {
+        term: 'Lockfile pinning',
+        definition: 'uv.lock consumed with uv sync --frozen, or a fully hashed requirements file installed with pip install --require-hashes. Guarantees every agent resolves an identical dependency set. Declared version ranges are not pinning — they resolve to whatever was published this morning.',
+      },
+      {
+        term: 'tmp_path and monkeypatch',
+        definition: 'pytest fixtures. tmp_path gives each test its own directory so filesystem tests do not collide; monkeypatch.setenv, .setattr, and .chdir isolate environment and working-directory assumptions and undo both automatically at teardown.',
+      },
+    ],
+    approach: [
+      'Inventory the embedded logic: grep the pipeline files for script blocks longer than three lines — those are the candidates to extract first',
+      'Create one package with pyproject.toml, a [project.scripts] entry point, and a single run() subprocess wrapper that every command uses',
+      'Port one pipeline step at a time, leaving the old YAML step in place until the new command is proven, so each move is independently revertable',
+      'Add pytest coverage for the decision logic — which flags, which order, which artifacts — by patching the run() wrapper and asserting on the argument vector',
+      'Turn on mypy for the package with disallow_untyped_defs at minimum, and run it in the same CI job as the tests',
+      'Pin the tooling with a lockfile and install it in CI from that lockfile, publishing to an internal index rather than installing from a branch',
+    ],
+    pitfalls: [
+      'shell=True with an interpolated branch name, tag, or pull request title — a branch named with a semicolon becomes command execution on the agent',
+      'Calling subprocess without check=True and without inspecting returncode, so a failed compile produces a green build and an empty artifact',
+      'No timeout anywhere, so one hung child process holds a build agent until the CI job limit and starves the queue',
+      'Using print for CI output — buffering reorders it against subprocess output, and there is no level to filter on when the log is 40,000 lines',
+      'Build tooling with zero tests: it becomes an untested monolith that only its author understands, which is bash with extra syntax',
+      'Installing tooling unpinned, so a transitive dependency release silently changes build behaviour overnight with no commit to point at',
+    ],
+    keyQuestions: [
+      {
+        question: 'Make the case for replacing pipeline YAML and shell with Python. What is the actual argument, and where does it stop?',
+        answer: `The argument in one line: YAML has no unit tests, and neither does the shell embedded in it.
+
+Concretely, here is what you lose when release logic lives in a pipeline file. You cannot run it locally, so the edit-test loop is a git push and a ten-minute wait. You cannot test it, so every change is validated only by production. You cannot type-check it. You cannot reuse it across three pipeline definitions without copy-paste, and copy-paste means the three copies drift. Errors surface as a shell exit code with no context, because the failure happened four pipes deep in a one-liner. And the whole thing is invisible to code review — a diff of 40 lines of YAML with embedded bash gets approved by reflex.
+
+Moving that into a Python package changes each of those. It runs locally. It has pytest coverage on the decision logic. mypy checks it. It is one implementation called from three pipelines. Failures raise typed exceptions with messages. And a pull request against it looks like normal code, so it gets a normal review.
+
+The structure that works:
+
+\`\`\`
+buildtool/
+  pyproject.toml         # [project.scripts] buildtool = "buildtool.cli:main"
+  src/buildtool/
+    cli.py               # argparse or click, subcommands only
+    proc.py              # the single run() wrapper
+    compile.py
+    package.py
+    release.py
+  tests/
+    test_release.py      # patches proc.run, asserts on the argument vector
+\`\`\`
+
+And the pipeline step collapses to:
+
+\`\`\`yaml
+- script:
+    - uv sync --frozen
+    - uv run buildtool release --channel beta
+\`\`\`
+
+Where it stops matters as much as where it starts, and saying so is what separates a senior answer from a zealous one.
+
+It does not replace the build system. Make, CMake, MSBuild, Ninja, and Bazel own the dependency graph and incremental rebuild. Python calls them; it does not reimplement them. Rewriting a dependency graph in Python is how you lose incremental builds and double your build times.
+
+It does not replace the declarative parts of CI. Triggers, agent selection, job dependencies, concurrency groups, environment protection rules — those belong in YAML, because the CI system needs to read them before any code runs. A pipeline that is one giant step calling one Python command gives up parallelism, per-step caching, and the CI system's own retry semantics.
+
+It is not free. You now have a package to version, pin, test, and publish. For a repository with a twelve-line pipeline that is pure overhead. The threshold is roughly: once the same logic appears in more than one pipeline, or once a single script block exceeds a screen, extraction pays for itself.
+
+The wrong answer sounds like "we scripted everything in Python" with no mention of tests or pinning. Untested Python invoked from CI is exactly as fragile as the bash it replaced.`,
+      },
+      {
+        question: 'Write the subprocess call you would actually ship in build tooling, and explain every argument.',
+        answer: `One wrapper, used everywhere, so the policy is enforced in one place:
+
+\`\`\`python
+from __future__ import annotations
+import logging, subprocess
+from pathlib import Path
+
+log = logging.getLogger(__name__)
+
+class CommandError(RuntimeError):
+    def __init__(self, cmd: list[str], returncode: int, stderr: str):
+        self.cmd, self.returncode, self.stderr = cmd, returncode, stderr
+        super().__init__(f"{cmd[0]} failed with exit {returncode}")
+
+def run(cmd: list[str], *, cwd: Path | None = None,
+        timeout: float = 900, env: dict[str, str] | None = None) -> str:
+    log.info("run: %s", " ".join(cmd))
+    try:
+        proc = subprocess.run(
+            cmd, cwd=cwd, env=env,
+            check=True, capture_output=True, text=True, timeout=timeout,
+        )
+    except subprocess.CalledProcessError as exc:
+        log.error("exit %s from %s\\n%s", exc.returncode, cmd[0], exc.stderr)
+        raise CommandError(cmd, exc.returncode, exc.stderr) from exc
+    except subprocess.TimeoutExpired as exc:
+        log.error("timeout after %ss: %s", exc.timeout, " ".join(cmd))
+        raise
+    return proc.stdout
+\`\`\`
+
+Argument by argument.
+
+cmd as a list, not a string. With the default shell=False the list is passed to the operating system as an argument vector, so a tag named "v1.0; rm -rf /" is one literal argument. This is the single most important line. The subprocess docs are explicit that with shell=True it becomes your responsibility to quote every metacharacter, and nobody does that correctly under deadline.
+
+check=True. Raises CalledProcessError on any non-zero exit. The exception carries returncode, cmd, output or stdout, and stderr, which is what makes the log message useful. Without check you must remember to inspect returncode at every call site, and one forgotten check is a silent green build on a broken artifact.
+
+capture_output=True with text=True. capture_output sets both stdout and stderr to PIPE; text decodes them as strings rather than bytes. Note the tradeoff: capturing means nothing streams to the log until the process exits. For a twenty-minute compile you want the opposite.
+
+timeout. On expiry the child is killed, waited for, and TimeoutExpired is re-raised. This is the difference between one bad build and an agent pool starved for six hours. Set it per command class — a compile gets 30 minutes, an artifact upload gets 5.
+
+cwd rather than os.chdir. Changing the process working directory is global mutable state; two parallel operations in the same process corrupt each other. Pass cwd per call.
+
+env explicitly when it matters, and carefully. Passing env replaces the entire environment, so build from a copy of os.environ and overlay your keys. A bare env with only PATH strips everything the toolchain needs and produces a baffling failure.
+
+For a long-running command you want streaming instead:
+
+\`\`\`python
+def run_streaming(cmd: list[str], *, cwd: Path | None = None) -> int:
+    with subprocess.Popen(
+        cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, bufsize=1,
+    ) as proc:
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            log.info("%s", line.rstrip())
+    return proc.returncode
+\`\`\`
+
+Merging stderr into stdout with stderr=STDOUT keeps compiler warnings interleaved in emission order, which is what you want when reading a build log. bufsize=1 with text=True gives line buffering so output appears as it happens rather than in one block at the end.
+
+Finally, propagate. The top-level entry point should exit non-zero on failure, either by calling sys.exit with the child's return code or by letting the exception escape. CI reads the exit code; it does not read your log.`,
+      },
+      {
+        question: 'How do you unit test build tooling? Give the fixtures and a concrete test.',
+        answer: `The insight that makes this tractable: you are not testing the compiler, the signer, or the registry. You are testing your own decision logic — which command gets built, with which flags, in which order, under which conditions. That is pure logic, and it is testable if every external call goes through one seam.
+
+The seam is the run() wrapper. Patch it and you control everything.
+
+\`\`\`python
+# tests/test_release.py
+import pytest
+from buildtool import release
+
+def test_release_pins_the_tag_and_skips_upload_on_dry_run(monkeypatch, tmp_path):
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append(cmd)
+        return ""
+
+    monkeypatch.setattr(release, "run", fake_run)
+    monkeypatch.setenv("CI", "true")
+
+    (tmp_path / "VERSION").write_text("2.4.1\\n")
+    monkeypatch.chdir(tmp_path)
+
+    release.publish(channel="beta", dry_run=True)
+
+    assert ["git", "tag", "-a", "v2.4.1-beta", "-m", "release 2.4.1-beta"] in calls
+    assert not any(c[:2] == ["aws", "s3"] for c in calls), "dry run must not upload"
+\`\`\`
+
+The fixtures doing the work.
+
+tmp_path gives this test its own directory, so writing VERSION cannot affect any other test, and pytest cleans it up afterwards. Use tmp_path_factory when several tests share one expensive fixture directory.
+
+monkeypatch.setattr swaps the run wrapper for a recorder. Because the wrapper is a module-level name in release.py, patching release.run is what the code under test resolves. Patching subprocess.run instead would work but tests a lower layer than you care about.
+
+monkeypatch.setenv and monkeypatch.chdir set environment and working directory and — importantly — undo both at teardown. A hand-rolled os.chdir in a test leaks into every subsequent test in the session and produces failures that depend on test ordering.
+
+capsys captures stdout and stderr when you need to assert on human-facing output, though for logging you generally want caplog instead.
+
+Parametrise the matrix cases rather than writing five near-identical tests:
+
+\`\`\`python
+@pytest.mark.parametrize(
+    "channel,expected_flag",
+    [("beta", "--pre"), ("stable", "--release"), ("nightly", "--pre")],
+)
+def test_channel_maps_to_flag(monkeypatch, channel, expected_flag):
+    ...
+\`\`\`
+
+Assert on failures, not just successes. The test that a non-zero exit actually raises is the one that catches a regression where somebody removed check=True:
+
+\`\`\`python
+def test_compile_failure_propagates(monkeypatch):
+    def boom(cmd, **kw):
+        raise CommandError(cmd, 2, "ld: symbol not found")
+    monkeypatch.setattr(build, "run", boom)
+    with pytest.raises(CommandError) as exc:
+        build.compile_all()
+    assert exc.value.returncode == 2
+\`\`\`
+
+Put shared fixtures in conftest.py and keep the tests fast enough to run on every commit. Then add exactly one slow integration test that shells out to a trivial real command, so the wrapper itself is covered end to end. The unit tests catch logic regressions; the single integration test catches the day someone breaks the wrapper's own argument handling.`,
+      },
+      {
+        question: 'How do you package and pin build tooling so every agent runs the identical version?',
+        answer: `The failure this prevents is specific: two agents produce different artifacts from the same commit because they resolved different tooling dependencies. It is one of the harder build incidents to diagnose, because the repository is identical and only the machine differs.
+
+Step one, make it a package. pyproject.toml with a build backend, a project table, and a console entry point:
+
+\`\`\`toml
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "buildtool"
+version = "3.2.0"
+requires-python = ">=3.11"
+dependencies = ["click>=8.1,<9", "packaging>=24"]
+
+[project.scripts]
+buildtool = "buildtool.cli:main"
+
+[tool.mypy]
+python_version = "3.11"
+disallow_untyped_defs = true
+warn_return_any = true
+\`\`\`
+
+The [project.scripts] table is what turns this into a command. After install, buildtool is on PATH. The CI step becomes buildtool release --channel beta instead of python tools/ci/release_final_v2.py, which matters more than it sounds: the script-path form encodes a repository layout into every pipeline, so moving the file breaks CI in three places.
+
+Step two, lock it. Declared ranges are not pinning — a dependency declared as click>=8.1,<9 resolves to whatever click published this morning. You need a resolved, hashed set:
+
+\`\`\`bash
+uv lock                 # writes uv.lock with exact versions and hashes
+uv sync --frozen        # CI: install exactly the lock, fail if it drifted
+uv run buildtool ...    # run inside that environment
+\`\`\`
+
+--frozen is the important flag. It refuses to update the lockfile, so a CI run either matches the committed lock or fails loudly. Without it a drifted lock is silently rewritten and the agent runs something the repository never recorded.
+
+The pip equivalent is a compiled, hashed requirements file:
+
+\`\`\`bash
+pip install --require-hashes -r requirements.lock
+\`\`\`
+
+--require-hashes makes pip refuse any dependency without a matching hash, which also closes the door on an index serving different bytes under the same version number.
+
+Step three, publish and consume by version. Push the wheel to an internal index and have the pipeline install a pinned version rather than installing from the repository checkout. This decouples "the tooling changed" from "the product changed" — you can roll the tooling back independently, and the tooling version appears in the build log. Installing with pip install -e from the working tree on every agent is convenient in development and wrong in CI, because the installed version is then whatever the branch happened to contain.
+
+Step four, pin the interpreter too. requires-python is a constraint, not a pin. If some agents run 3.11 and others 3.13, you have two behaviours and eventually two bugs. Either pin the container image, or provision a known interpreter explicitly.
+
+The check that proves it works: run the same commit on two agents and diff the tooling's own version output and the resolved dependency list. If those match and the artifacts still differ, the non-determinism is in the build itself rather than the tooling — which is a much more useful place to be standing.`,
+      },
+      {
+        question: 'You need a CI matrix that depends on what changed. How do you generate it programmatically, and what breaks?',
+        answer: `Hand-maintained matrices rot. Twenty entries, three of them for platforms nobody ships anymore, and one missing because whoever added the new target forgot the second pipeline file. Deriving the matrix from repository state fixes the rot and cuts build minutes, because you stop building targets nothing touched.
+
+The pattern is two jobs. The first emits JSON; the second consumes it as its matrix.
+
+\`\`\`python
+# buildtool/matrix.py
+import json, os, sys
+from pathlib import Path
+
+PLATFORMS = ("linux-x64", "linux-arm64", "windows-x64")
+MAX_JOBS = 40
+
+def emit() -> None:
+    changed = {Path(p).parts[0] for p in sys.stdin.read().splitlines() if p}
+    targets = [
+        {"component": comp.name, "platform": plat}
+        for comp in sorted(Path("components").iterdir())
+        if comp.name in changed
+        for plat in PLATFORMS
+    ]
+    if len(targets) > MAX_JOBS:
+        raise SystemExit(f"matrix would be {len(targets)} jobs, cap is {MAX_JOBS}")
+    payload = json.dumps({"include": targets})
+    json.loads(payload)          # validate our own output before publishing it
+    with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+        fh.write(f"matrix={payload}\\n")
+        fh.write(f"has_work={'true' if targets else 'false'}\\n")
+\`\`\`
+
+Appending to the file named by the GITHUB_OUTPUT environment variable is the current mechanism; the older workflow-command form of setting outputs is deprecated. The consuming side declares the output and expands it:
+
+\`\`\`yaml
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: \${{ steps.gen.outputs.matrix }}
+      has_work: \${{ steps.gen.outputs.has_work }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: gen
+        run: git diff --name-only origin/main... | uv run buildtool matrix
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.has_work == 'true'
+    strategy:
+      matrix: \${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: uv run buildtool compile --component \${{ matrix.component }}
+\`\`\`
+
+Now the things that break, which is what the interviewer is actually after.
+
+The empty matrix. If nothing changed, the include list is empty and most CI systems either error or silently skip the job — and a skipped required check can block a merge forever. Emit a separate has_work output and gate the downstream job on it, rather than relying on the matrix being non-empty.
+
+Silent JSON malformation. The generator writes a string and the CI system parses it. A stray newline or an unescaped quote produces a parse error twelve lines into a YAML expression with a useless message. Validate with json.loads on your own output before writing it, and unit test the generator's output shape.
+
+Fan-out explosion. A generated matrix has no natural ceiling. Three components times four platforms times three toolchain versions is 36 jobs from a one-line change to a shared header. Cap it explicitly and fail the plan job with a clear message rather than launching four hundred runners.
+
+Wrong diff base. The diff depends on the merge base existing locally. With a shallow clone — which is the default in several CI systems — the merge base is absent and the diff returns everything or nothing. Set the fetch depth explicitly, and make a missing base a loud failure rather than defaulting to building nothing.
+
+Dependency blindness. Path-based change detection misses that component A depends on component B. Either read the real dependency graph from your build system and expand the closure, or restrict change-detection to leaf components and accept the risk explicitly. This is the failure that ships a broken artifact, and it is the one worth naming unprompted.
+
+Cache and skip interaction. Skipping unchanged targets means their artifacts must come from somewhere. If a release step assembles all components, it needs a defined source for the ones that were not rebuilt — a promoted artifact from a previous run — or the release quietly ships with files missing.`,
+      },
+    ],
+    references: [
+      'https://docs.python.org/3/library/subprocess.html',
+      'https://docs.python.org/3/library/pathlib.html',
+      'https://docs.python.org/3/library/argparse.html',
+      'https://docs.python.org/3/library/logging.html',
+      'https://packaging.python.org/en/latest/guides/writing-pyproject-toml/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // 20. Perl and PowerShell
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'nb-perl-powershell',
+    title: 'Perl and PowerShell for Build Automation',
+    icon: 'terminal',
+    color: '#ea580c',
+    questions: 6,
+    description: 'The two languages mature build systems actually run on. Reading and maintaining legacy Perl without rewriting it, and writing PowerShell that fails loudly instead of silently on Windows agents.',
+    visualizations: [
+      {
+        title: 'Legacy Perl on Unix agents, PowerShell on Windows agents',
+        image: '/diagrams/devops/nb-20-perl-powershell.png',
+        description: `These two languages sit at opposite ends of a build organisation. Perl is what the build system was written in fifteen years ago and still runs on. PowerShell is what drives every Windows agent in it. Neither is fashionable, both are load-bearing, and a job description that names both is describing a real build system rather than a greenfield one.
+
+Perl earned its place for three reasons that have not gone away. Its regular expression engine is still the reference implementation everyone else copied. Text munging — parsing compiler output, rewriting manifests, extracting versions — is the language's native register. And it is present on every Unix system by default, which mattered enormously when installing a language runtime on a build machine required a ticket.
+
+The constructs you will actually meet when you open a 4,000-line legacy build script are a small set. Lexical variables with my, package globals with our, dynamic scoping with local. References, and the two ways to dereference them: the arrow form and the older circumfix form, which you will find mixed in the same file. Hashes of arrays, which is how Perl code represents targets and their flags. Regular expressions with captures feeding directly into a list assignment. Here-documents, where the quoting of the terminator decides interpolation — a double-quoted terminator interpolates, a single-quoted one does not, which is why a here-document emitting a Makefile is almost always the single-quoted form. Then @ARGV for arguments, Getopt::Long for real option parsing, and File::Find for directory walks.
+
+The command execution surface is where legacy Perl bites. system with a list forks and waits, and returns the wait status rather than the exit code. The documented rule is that you shift right by eight to get the actual exit value, and a return of -1 means the program failed to start or the wait call itself errored, with the reason available in the error variable. Backticks and qx capture standard output instead. open with a trailing or leading pipe gives you a filehandle onto a child process. And critically, the single-argument form of system is checked for shell metacharacters and handed to the shell if any are present, whereas the list form is not — the same shell-injection distinction Python has, expressed differently.
+
+PowerShell's mental shift is the object pipeline. bash pipes bytes and every stage re-parses text; PowerShell pipes .NET objects and every stage receives typed properties. Get-ChildItem emits FileInfo objects, so Where-Object can filter on a numeric Length without cutting columns out of a directory listing. Get-Member tells you what an object actually has. Cmdlets are Verb-Noun with an approved verb list, which is why discovery works and why you can often guess a cmdlet name correctly on the first attempt.
+
+The trap that produces most broken Windows CI is error handling. The ErrorActionPreference variable defaults to Continue, and Continue means a non-terminating error prints in red and the script keeps going — then exits with zero. try and catch do not catch a non-terminating error at all; they catch terminating ones. So the script that "worked" printed three errors and reported success. The fix is to set the preference to Stop at the top of every CI script, which escalates non-terminating errors to script-terminating ones that try and catch will see.
+
+Native executables are a second, separate trap. msbuild, git, and signtool are not cmdlets — they do not raise PowerShell errors at all. They set the last-exit-code variable. PowerShell 7.4 added a preference variable that makes a non-zero native exit code issue an error according to ErrorActionPreference, but its documented default is false. Until you opt in, every native tool invocation needs an explicit exit code check.
+
+The diagram maps this onto an agent fleet: Perl scripts still driving the Unix side of the build, PowerShell driving MSBuild, the Visual Studio developer shell, and signtool on the Windows side, with one orchestration layer calling into both.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Perl and PowerShell',
+        description: `Q: Why is Perl still in mature build systems?
+A: Three reasons that predate every alternative. Its regular expression engine is the reference everyone else copied, so text munging — parsing compiler output, rewriting manifests, extracting versions — is native. It ships on essentially every Unix system, which mattered when installing a runtime on a build machine required a ticket. And the code works, so nobody has funded a rewrite. You inherit it, you do not choose it.
+
+Q: What does Perl system() return, and how do you check whether the command succeeded?
+A: It returns the wait status, not the exit code. Shift right by eight to get the actual exit value. A return of -1 means the program could not be started or the wait call failed, with the reason in the error variable. Masking the low seven bits tells you the signal number if the child was killed. Comparing the raw return to zero works for detecting success but gives you a meaningless number on failure.
+
+Q: What is the single most important line in a PowerShell CI script?
+A: Setting ErrorActionPreference to Stop at the top. The documented default is Continue, which prints a non-terminating error in red and keeps going, and try and catch do not catch non-terminating errors. Without Stop a script can print three errors and exit zero, which CI reads as success.
+
+Q: You call msbuild.exe from PowerShell and it fails. Does the script stop?
+A: No, by default. Native executables do not raise PowerShell errors — they set the last-exit-code variable. You must check it explicitly, or opt into the PowerShell 7.4 preference variable that makes non-zero native exits issue errors according to ErrorActionPreference. Its documented default is false.
+
+Q: Is PowerShell execution policy a security control?
+A: No, and Microsoft says so in the documentation — it is not a security system that restricts user actions, because a user who cannot run a script can simply type its contents at the command line. It prevents unintentional execution. In CI, running pwsh with -NoProfile and -ExecutionPolicy Bypass is normal practice, not a workaround.
+
+Q: PowerShell 7 versus Windows PowerShell 5.1 — which do you target?
+A: PowerShell 7.x for anything new: cross-platform, actively developed, and installed side by side with 5.1 rather than replacing it. Windows PowerShell 5.1 is in-box on every Windows machine and is what an unattended bootstrap can rely on before anything is installed. Some older Windows-only modules still require 5.1, which is what the compatibility layer exists for.`,
+      },
+    ],
+    introduction: `A job description that names both Perl and PowerShell is telling you something concrete: this is an established build system with a Unix heritage and a Windows product surface. Nobody starts a new project in Perl. Nobody automates a Linux-only shop with PowerShell. Both appearing together means legacy build tooling on one side and Windows agents on the other, and the role involves keeping both alive.
+
+Perl is the maintenance problem. It is present because it was the right choice in 2008 — the best regular expression engine available, installed by default on every Unix system, and unbeatable at the text manipulation that build scripts are mostly made of. The code that resulted is still running, still correct, and generally still faster than whatever would replace it. The skill being tested is not writing new Perl. It is opening a script you have never seen, understanding it quickly, changing it safely, and making a defensible call about whether to migrate it.
+
+That reading skill is a specific, learnable set. Sigils and context. my versus our versus local. References and the two dereference syntaxes you will see mixed within one file. Hashes of arrays as the standard shape for targets and their options. Regular expressions with captures. Here-documents and their quoting rule. And the process-execution family — system, backticks and qx, and piped open — where exit status handling is subtle enough that most legacy scripts get it partly wrong.
+
+PowerShell is the opposite problem: it is where you write new code, and the language actively misleads people arriving from bash. The object pipeline is the good surprise — pipes carry typed .NET objects rather than bytes, so filtering and selecting are property operations rather than column-cutting. The bad surprise is error handling. The default ErrorActionPreference is Continue, non-terminating errors neither stop the script nor get caught by try and catch, and native executables like msbuild do not raise PowerShell errors at all. A script can print several errors and still exit zero.
+
+That is the interview question hiding in the job description: why did the Windows build report green when the build was broken? The answer involves ErrorActionPreference and the last-exit-code variable, and knowing it separates people who have run Windows CI from people who have read about it.
+
+The rest of what an interviewer probes on the PowerShell side is operational. Execution policy — what it is, what its scopes are, and the fact that Microsoft explicitly documents it as not a security system that restricts user actions. PowerShell 7 versus Windows PowerShell 5.1 and when each is the right target. Pester for testing scripts, because untested PowerShell is exactly as dangerous as untested bash. And driving the Windows toolchain: locating Visual Studio, entering the developer shell so the compiler environment actually exists, and invoking MSBuild and signtool with exit codes that propagate.`,
+    whenToUse: [
+      'Inheriting a Unix build system with Perl scripts you must change without a rewrite budget',
+      'Any Windows build agent — MSBuild, the Visual Studio developer shell, signtool, and installer packaging are all driven from PowerShell',
+      'Text-heavy transformation of build output where a regex-first language genuinely is the shortest correct solution',
+      'Cross-platform automation targeting Windows, Linux, and macOS agents from one script using PowerShell 7',
+      'Deciding, with evidence rather than taste, which legacy scripts to migrate and which to leave alone',
+    ],
+    keyConcepts: [
+      {
+        term: 'use strict; use warnings;',
+        definition: 'The two pragmas that make Perl maintainable. strict forces variable declaration and forbids symbolic references; warnings surfaces undefined-value use, numeric conversion of non-numbers, and duplicate subroutine definitions. A legacy script missing both is the first thing to fix, and the fix is usually noisy enough to deserve its own commit.',
+      },
+      {
+        term: 'Perl system() exit status',
+        definition: 'system returns the wait status, not the exit code. Shift right by eight for the actual exit value. A return of -1 means the program failed to start or the wait call errored, with the reason in the error variable. Masking the low seven bits of the status gives the signal number if the child was killed.',
+      },
+      {
+        term: 'Getopt::Long',
+        definition: 'The standard Perl option parser. GetOptions maps specifications to variable references and removes recognised options from the argument array. Specifications include =s for string, =i for integer, =f for float, ! for negatable, + for incrementing, =s@ to collect into an array, and =s% into a hash. It returns false when it detected parse errors, which callers routinely ignore.',
+      },
+      {
+        term: 'File::Find',
+        definition: 'The core directory walker. find takes a callback and a list of directories; inside the callback the module sets the current directory, the bare filename, and the full path in three package variables. The no_chdir option stops it changing directory, in which case the filename variable holds the full path instead.',
+      },
+      {
+        term: 'Object pipeline',
+        definition: 'PowerShell pipes .NET objects, not text. Get-ChildItem emits FileInfo objects so Where-Object filters on a numeric Length with no column parsing. Get-Member enumerates an object properties and methods. This is the biggest mental shift for someone arriving from bash.',
+      },
+      {
+        term: 'ErrorActionPreference',
+        definition: 'Controls how PowerShell responds to non-terminating errors. Documented values are Continue, SilentlyContinue, Stop, Inquire, Ignore, and Break, with Continue as the default. Setting it to Stop escalates non-terminating errors to script-terminating errors, which is what makes try and catch and CI exit codes behave the way people expect.',
+      },
+      {
+        term: 'Native command exit codes',
+        definition: 'The last-exit-code variable holds the exit code of the last native executable, as distinct from the boolean success variable. Native tools like msbuild.exe and signtool.exe raise no PowerShell error. PowerShell 7.4 added a preference variable that makes non-zero native exits issue errors according to ErrorActionPreference, with a documented default of false.',
+      },
+      {
+        term: 'Execution policy',
+        definition: 'A safety feature controlling whether PowerShell loads configuration files and runs scripts. Values include Restricted, AllSigned, RemoteSigned, Unrestricted, Bypass, Undefined, and Default, and enforcement occurs only on Windows. Microsoft documents it as not a security system that restricts user actions, since script contents can simply be typed at the command line.',
+      },
+    ],
+    approach: [
+      'For inherited Perl, run a syntax check on every script first to establish a clean baseline before changing anything',
+      'Add use strict and use warnings to one script at a time, fix the resulting noise, and commit that separately from any behaviour change',
+      'Characterise before you touch: capture current output for known inputs so you have a golden reference to diff against after edits',
+      'Migrate only at seams with real pain — a script that is stable, fast, and unchanged for three years is not a migration candidate regardless of language',
+      'For new PowerShell, begin every CI script with Set-StrictMode at the latest version and ErrorActionPreference set to Stop',
+      'Wrap native tool invocations in one helper that checks the exit code and throws, the same single-seam pattern used for Python subprocess wrappers',
+      'Add Pester coverage for the branching logic and run it in CI with a machine-readable output format and a configuration that exits non-zero on failure',
+    ],
+    pitfalls: [
+      'Testing Perl system() by comparing its return value to an expected exit code — you are comparing a wait status, so the number is eight bits off',
+      'Using the single-argument form of Perl system with an interpolated variable — if the string contains shell metacharacters it is handed to the shell, which is command injection',
+      'Leaving ErrorActionPreference at its Continue default in a CI script, so errors print in red and the script exits zero',
+      'Expecting try and catch to catch a non-terminating error — they do not, unless the command is given -ErrorAction Stop or the preference variable is set to Stop',
+      'Calling msbuild.exe or signtool.exe and never checking the last exit code, so a failed build or a failed signature produces a green pipeline',
+      'Running vcvarsall.bat from PowerShell and expecting the compiler environment to persist — it sets variables in a cmd.exe child that then exits, taking them with it',
+    ],
+    keyQuestions: [
+      {
+        question: 'You inherit a 4,000-line Perl build script. Walk through how you read it and how you decide whether to maintain it or migrate it.',
+        answer: `First, resist the urge to rewrite. That script encodes years of accumulated correctness — edge cases, platform quirks, and workarounds for tools that are still in the build. A rewrite reintroduces all of them as new bugs, and it will take three times the estimate.
+
+Reading it. Establish a baseline with a syntax check, which validates without running. Then find the entry point: usually the last statement at file scope, or a main subroutine called at the bottom. Then map the option surface, which is normally a single GetOptions block near the top — that gives you the script's entire external contract in one screen. Then list the subroutines with a grep for the sub keyword at line start.
+
+The constructs you need to recognise on sight.
+
+Sigils and context. An array in scalar context evaluates to its length. Unpacking the argument array into a list of lexicals is the standard first line of a subroutine. A subroutine calling wantarray behaves differently depending on how it was called, which is usually a sign of an old API.
+
+References and their two dereference forms, which you will find mixed in the same file. The arrow form on an array reference and the circumfix form with a dollar-brace prefix mean the same thing; likewise for hash references. The arrow between consecutive subscripts is optional, so two chained subscripts with and without an intervening arrow are identical.
+
+Hashes of arrays, which is how build scripts hold targets — a hash key per platform whose value is an array reference of flags, appended to by dereferencing the reference in a push.
+
+Regular expressions with captures assigned in list context, which is how versions get split into major and minor in one line.
+
+Here-documents, where the terminator quoting is the whole story. A double-quoted terminator interpolates variables; a single-quoted one does not. A here-document emitting a Makefile or a shell script is almost always the single-quoted form, for exactly that reason.
+
+Process execution: system, backticks or qx for capture, and open with a pipe. In legacy code this is where the bugs are, because exit status handling is subtle.
+
+Then the safety work, in this order and in separate commits. Add use strict and use warnings, fix the fallout, commit. Add a characterisation harness — run the script against known inputs and capture stdout, stderr, the exit code, and any files it writes, storing those as golden files. Now you have a regression net. Optionally run a static analyser to find genuinely risky constructs, but ignore its stylistic complaints on a legacy file or you will drown in noise and learn nothing.
+
+The migrate-or-maintain decision. Migrate when you are changing it constantly and every change is frightening; when it is a real hiring constraint because nobody left can read it; when it depends on modules that no longer install cleanly on your current Perl; or when it sits on a seam you are already replacing for other reasons.
+
+Maintain when it is stable and has not needed a change in years; when it is heavily text-processing, which is where Perl is genuinely strongest and a port will be both slower and longer; when the behaviour is under-specified, meaning a port is a guess dressed as an estimate; or when nothing downstream is changing.
+
+The strategy that actually works is strangler-style rather than big-bang. Keep the Perl script as the entry point and move one subroutine at a time behind a call to the new tool. Each move is small, independently revertable, and validated by the characterisation harness. The script shrinks over quarters, and at no point is there a flag day.
+
+The wrong answer is "I would rewrite it in Python." That answers a question about engineering judgement with an expression of taste, and it signals you have not been on the wrong side of a build-system rewrite.`,
+      },
+      {
+        question: 'In Perl, how do you run an external command and correctly determine whether it failed? Cover system, backticks, and pipes.',
+        answer: `This is where legacy Perl build scripts are most often subtly wrong, which makes it a good interview question.
+
+system forks, executes, and waits. It returns the wait status — not the exit code. The documented rule is that you shift right by eight to get the actual exit value, and a return of -1 means the program could not be started or the wait call itself errored, with the reason in the error variable. The complete check:
+
+\`\`\`perl
+my @cmd = ('make', '-j8', 'all');
+my $rc = system(@cmd);
+
+if ($rc == -1) {
+    die "failed to execute $cmd[0]: $!";
+}
+elsif ($rc & 127) {
+    die sprintf("%s died with signal %d", $cmd[0], $rc & 127);
+}
+elsif ($rc >> 8) {
+    die sprintf("%s exited with %d", $cmd[0], $rc >> 8);
+}
+\`\`\`
+
+Three distinct failure modes, three distinct messages. A script that writes system(@cmd) == 0 or die is correct about success but throws away which of the three happened — and a build that died from a kill signal because the agent ran out of memory then looks identical to a compile error, which costs you an afternoon.
+
+The list form versus the string form is the security point, and it mirrors Python exactly. With more than one argument the first element is the program and the rest are its arguments, with no shell involved. With a single scalar argument, Perl checks it for shell metacharacters and, if any are present, hands the whole string to the system shell. So interpolating a tag name into a single string is command injection, and passing the same tag as its own list element is safe. Always the list form when any part is interpolated.
+
+Backticks and qx capture standard output instead of inheriting it. The command's output becomes the return value — one string in scalar context, a list of lines in list context. Standard error is not captured and goes to the parent's stderr. Exit status still lands in the status variable and needs the same shift-right-by-eight treatment:
+
+\`\`\`perl
+my $sha = qx(git rev-parse HEAD);
+die "git rev-parse failed: " . ($? >> 8) if $?;
+chomp $sha;
+\`\`\`
+
+The chomp matters. The trailing newline is included, and a version string with an embedded newline produces spectacularly confusing downstream failures — usually a filename with a line break in it. And note that backticks always involve the shell, so interpolating untrusted values into them has the same injection problem as the single-argument system form.
+
+Piped open gives you a filehandle onto the child, which is what you want for streaming rather than buffering an entire build log into memory:
+
+\`\`\`perl
+open(my $fh, '-|', 'make', '-j8', 'all')
+    or die "cannot run make: $!";
+while (my $line = <$fh>) {
+    print "[build] $line";
+}
+close($fh);
+my $exit = $? >> 8;
+die "make failed with $exit" if $exit;
+\`\`\`
+
+The list form of open with the read-pipe mode avoids the shell, the same way the list form of system does. The status is only valid after close, which is the part people forget — reading it while the handle is still open gives a stale value from whatever ran previously. The write-pipe direction gives you a handle you write to, feeding the child's standard input.
+
+For capturing standard output and standard error separately, the core option is IPC::Open3, and IPC::Run3 from CPAN is considerably more pleasant. Anything hand-built out of temporary files and shell redirection in a legacy script is a good candidate for replacement with one of those.
+
+The summary an interviewer wants: system for run-and-check, backticks for capturing small output, piped open for streaming, always the list form when values are interpolated, and always decode the status variable rather than treating it as an exit code.`,
+      },
+      {
+        question: 'A PowerShell CI script reports success but the build is broken. Walk through why, and how you fix it.',
+        answer: `There are three independent mechanisms that produce this, and a complete answer names all three, because a script can be hit by any of them separately.
+
+Mechanism one: ErrorActionPreference defaults to Continue.
+
+PowerShell distinguishes terminating from non-terminating errors. A non-terminating error — which is what most cmdlets emit on failure — prints in red, is recorded in the error collection, and execution continues to the next statement. At the end of the script nothing has thrown, so the exit code is zero. The log is full of red text and CI reports green.
+
+Worse, try and catch do not catch non-terminating errors. This is the most surprising thing about the language for someone coming from bash or Python:
+
+\`\`\`powershell
+try {
+    Copy-Item -Path 'C:\\does\\not\\exist' -Destination 'C:\\out'
+    Write-Host "copy succeeded"     # this line still runs
+}
+catch {
+    Write-Host "never reached"
+}
+\`\`\`
+
+Two fixes, and you want both. Per command, add -ErrorAction Stop to promote that one call. Script-wide, set the preference at the top:
+
+\`\`\`powershell
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+\`\`\`
+
+With Stop, non-terminating errors escalate to script-terminating ones, try and catch behave as expected, and an uncaught error produces a non-zero exit.
+
+Mechanism two: native executables do not raise PowerShell errors at all.
+
+msbuild.exe, git.exe, signtool.exe, cl.exe — these are not cmdlets. They have no concept of the PowerShell error stream. They set an exit code, and ErrorActionPreference has no bearing on them by default. A failed msbuild leaves the last exit code at 1 and the script sails on:
+
+\`\`\`powershell
+& msbuild.exe Solution.sln -p:Configuration=Release
+if ($LASTEXITCODE -ne 0) { throw "msbuild failed with $LASTEXITCODE" }
+\`\`\`
+
+PowerShell 7.4 added a preference variable that makes native commands with non-zero exit codes issue errors according to ErrorActionPreference. Its documented default is false, so you must opt in. And be aware that some tools use non-zero exits for non-error information — robocopy is the canonical example, which is exactly the case Microsoft documents — so you disable the behaviour locally around those and check the code by hand.
+
+The durable pattern is a single wrapper, the same seam idea as a Python run helper:
+
+\`\`\`powershell
+function Invoke-Native {
+    param([Parameter(Mandatory)][string] $Exe,
+          [string[]] $Arguments = @())
+    & $Exe @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Exe exited with $LASTEXITCODE"
+    }
+}
+\`\`\`
+
+Mechanism three: the script's own exit code.
+
+Even with everything above correct, a script that catches an exception, logs it, and falls off the end exits zero. In a catch block, log and then exit non-zero explicitly:
+
+\`\`\`powershell
+try {
+    Invoke-Native msbuild.exe @('Solution.sln', '-p:Configuration=Release', '-m')
+}
+catch {
+    Write-Error $_
+    exit 1
+}
+\`\`\`
+
+Also check how CI invokes the script. Some runners call the shell with a -Command string, which can mask the script's exit code depending on the wrapper. Invoking with -File propagates it cleanly, and adding -NoProfile stops a developer profile left on the agent from changing behaviour.
+
+The header every CI script should have:
+
+\`\`\`powershell
+#Requires -Version 7.0
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+\`\`\`
+
+Set-StrictMode at the latest version is the fourth quiet win: it turns references to uninitialised variables into errors. A typo in a variable name otherwise silently evaluates to null, and a null path argument produces a build that succeeds while writing nothing anywhere.`,
+      },
+      {
+        question: 'Explain the PowerShell object pipeline to someone who only knows bash. What actually changes in how you write scripts?',
+        answer: `In bash a pipeline moves bytes. Every stage serialises to text and the next stage re-parses it. That is why shell scripting is a career of awk, cut, sed, and column counting, and why it breaks the moment a filename contains a space.
+
+In PowerShell a pipeline moves .NET objects. Get-ChildItem does not emit lines; it emits FileInfo objects with typed properties — a numeric length, a DateTime for last write, a string full name. Nothing is parsed because nothing was ever serialised.
+
+The same task in both:
+
+\`\`\`bash
+ls -l build/ | awk '$5 > 10485760 {print $9}' | sort
+\`\`\`
+
+\`\`\`powershell
+Get-ChildItem build\\ |
+    Where-Object Length -gt 10MB |
+    Sort-Object Length -Descending |
+    Select-Object Name, Length
+\`\`\`
+
+The bash version depends on the column layout of a long directory listing, which varies by platform and locale, and it breaks on filenames with spaces. The PowerShell version compares a number to a number, with 10MB as a native literal. Nothing can be misparsed because nothing is parsed.
+
+What actually changes in how you write scripts.
+
+You stop parsing and start selecting. Where-Object filters on properties, Select-Object projects them, and Sort-Object and Group-Object work on typed values. Sorting by size is numeric rather than lexicographic, so the classic bug where 9 sorts after 10 simply cannot occur.
+
+Discovery replaces documentation. Get-Member on any object lists its properties and methods. When you do not know what a cmdlet returns, you pipe it to Get-Member. There is no equivalent for "what are the columns of this tool's output on this platform".
+
+Verb-Noun naming makes the command surface guessable. Get-Verb lists the approved verbs, and cmdlets follow them — Get, Set, New, Remove, Start, Stop, Test, Invoke, Export. Get-Command filtered by noun finds everything operating on a given kind of thing. This is why you can often guess a cmdlet name correctly on the first try, which is not true of any Unix toolset.
+
+Structured data stays structured. ConvertFrom-Json produces objects you access by property. Invoke-RestMethod parses the response for you. Import-Csv gives objects with named columns. The round trip through a JSON command-line processor and string manipulation mostly disappears.
+
+Output formatting is a separate, final concern. Format-Table and Format-List produce display objects, not data, which is why a Format cmdlet must be the last thing in a pipeline. Piping formatted output into another cmdlet is a classic beginner bug: the next stage receives formatting instructions rather than your data, and the error message does not explain that.
+
+Two honest caveats, because an interviewer will want the balance.
+
+Native tools are still text. git, msbuild, and signtool emit strings. You get objects only within the cmdlet world, and for those tools you are back to regular expressions — or you use their JSON output modes and convert at the boundary.
+
+Objects are heavier. Passing half a million objects through a five-stage pipeline is measurably slower than the equivalent byte stream, and the pipeline preserves order at some cost. On a build agent processing large logs this matters, and the fix is to filter as early in the pipeline as possible — put the Where-Object before the Sort-Object, never after.`,
+      },
+      {
+        question: 'How do you drive MSBuild and the Visual Studio toolchain from PowerShell on a build agent? Include the environment problem.',
+        answer: `The environment problem first, because it is what surprises people.
+
+The Visual Studio C and C++ toolchain does not work from a bare shell. The compiler, the linker, and the SDK headers require a set of environment variables — include paths, library paths, and several Visual Studio specific ones — that are established by vcvarsall.bat. That is a batch file. Running it from PowerShell starts a cmd.exe child, the child sets its own environment, and the child exits, taking the environment with it. The parent PowerShell session is unchanged, and the next command fails with a missing header.
+
+There are two correct answers.
+
+The Microsoft-supported one is the developer shell module. Visual Studio ships a DevShell library with an Enter-VsDevShell command that configures the current PowerShell session properly. Locate the installation first with vswhere.exe, which lives at a fixed path under the 32-bit Program Files directory precisely so that it is findable without knowing where Visual Studio is:
+
+\`\`\`powershell
+$pf86    = [Environment]::GetFolderPath('ProgramFilesX86')
+$vswhere = Join-Path $pf86 'Microsoft Visual Studio\\Installer\\vswhere.exe'
+
+$vsPath = & $vswhere -latest -products * \`
+    -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 \`
+    -property installationPath
+if (-not $vsPath) { throw "no Visual Studio installation with the C++ toolset found" }
+
+Import-Module (Join-Path $vsPath 'Common7\\Tools\\Microsoft.VisualStudio.DevShell.dll')
+Enter-VsDevShell -VsInstallPath $vsPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64'
+\`\`\`
+
+vswhere is the part worth knowing. Hardcoding a path that names a specific year and edition is the single most common cause of "works on my agent" — agents have Community, Professional, Enterprise, and Build Tools editions in different combinations, and the path differs for each. Requiring a specific component identifier also lets you fail fast with a clear message when an agent is missing the C++ workload, rather than failing later with a confusing missing-compiler error.
+
+The alternative, when the module is unavailable, is to run the batch file in cmd, dump the resulting environment, and import it into the current session. It works, and a lot of older automation does exactly that, but it is fragile against quoting and multi-line values. Prefer the developer shell.
+
+Once the shell is configured, MSBuild is a normal native tool with normal exit-code discipline:
+
+\`\`\`powershell
+$msbuildArgs = @(
+    'Product.sln'
+    '-restore'
+    '-p:Configuration=Release'
+    '-p:Platform=x64'
+    '-m'                        # parallel across projects
+    '-v:minimal'                # keep the CI log readable
+    '-nologo'
+    "-p:Version=$Version"
+)
+& msbuild.exe @msbuildArgs
+if ($LASTEXITCODE -ne 0) { throw "msbuild failed with exit code $LASTEXITCODE" }
+\`\`\`
+
+Notes on those flags. The restore switch performs package restore in the same invocation, which avoids a separate step that can drift out of sync with the build. The parallel switch enables concurrent project builds and is usually the largest single win on a multi-project solution. Minimal verbosity keeps the log to something a human will actually read; diagnostic verbosity is what you switch to when investigating, and it is enormous. Passing the version as a property rather than editing files means nothing in the working tree is mutated by the build, which keeps the tree clean for the signing step that follows.
+
+The splatting form — an array expanded into the call — is worth using deliberately. Building one long string and invoking it is where quoting bugs live, especially with paths containing spaces, which on Windows is most of them.
+
+The same discipline covers the rest of the Windows toolchain. signtool.exe, the installer packaging tools, and the test runner are all native executables with meaningful exit codes and no PowerShell error integration. Route every one of them through the same Invoke-Native wrapper so that no failure can pass silently.
+
+One last agent-level detail: invoke the script with -NoProfile, -ExecutionPolicy Bypass, and -File. -NoProfile stops a profile left on the agent from altering behaviour, and Bypass avoids a machine-wide policy blocking an unsigned CI script. Neither is a security compromise, since Microsoft documents execution policy as not being a security system that restricts user actions.`,
+      },
+      {
+        question: 'How do you test PowerShell build scripts, and what does execution policy mean in CI?',
+        answer: `Testing first. Untested PowerShell is exactly as dangerous as untested bash, and the standard answer is Pester.
+
+Pester 5 structures tests as Describe, Context, and It blocks with Should assertions, and BeforeAll for setup:
+
+\`\`\`powershell
+BeforeAll {
+    . $PSScriptRoot/../src/Build.ps1
+}
+
+Describe 'Get-BuildConfiguration' {
+    Context 'when the branch is main' {
+        It 'selects the Release configuration' {
+            (Get-BuildConfiguration -Branch 'main').Configuration | Should -Be 'Release'
+        }
+    }
+
+    Context 'when the branch is a feature branch' {
+        It 'selects Debug and disables signing' {
+            $cfg = Get-BuildConfiguration -Branch 'feature/x'
+            $cfg.Configuration | Should -Be 'Debug'
+            $cfg.Sign          | Should -BeFalse
+        }
+    }
+}
+\`\`\`
+
+The mechanism that makes build scripts testable is Mock, which replaces a command within the scope of a test. That is how you assert on what would have been invoked without invoking it:
+
+\`\`\`powershell
+Describe 'Invoke-Build' {
+    It 'passes the version through to msbuild' {
+        Mock Invoke-Native { }
+        Invoke-Build -Version '4.2.0'
+        Should -Invoke Invoke-Native -Times 1 -ParameterFilter {
+            $Arguments -contains '-p:Version=4.2.0'
+        }
+    }
+}
+\`\`\`
+
+Note the structural requirement: this works only because every native call goes through one Invoke-Native function. Scattered inline calls to msbuild.exe are not mockable in any clean way. The testability argument is itself a reason for the single-wrapper pattern, and it is worth saying so.
+
+Driving it from CI uses a configuration object rather than a pile of switches:
+
+\`\`\`powershell
+$config = New-PesterConfiguration
+$config.Run.Path                = './tests'
+$config.Run.Exit                = $true          # non-zero exit on failure
+$config.TestResult.Enabled      = $true
+$config.TestResult.OutputFormat = 'NUnitXml'     # for CI test reporting
+$config.CodeCoverage.Enabled    = $true
+Invoke-Pester -Configuration $config
+\`\`\`
+
+The exit setting is the one that matters for CI. Without it, Invoke-Pester reports failures and still exits zero, which is the same green-on-broken problem as everything else in this topic.
+
+Now execution policy, which is where candidates most often overstate things.
+
+Execution policy controls the conditions under which PowerShell loads configuration files and runs scripts. The documented values are Restricted (no scripts at all), AllSigned (every script must be signed by a trusted publisher, including ones you wrote locally), RemoteSigned (scripts downloaded from the internet must be signed, local ones need not be, and this is the default for Windows clients and servers), Unrestricted (the default on non-Windows, where it cannot be changed), Bypass (nothing blocked, no warnings or prompts), plus Undefined and Default. Enforcement of these policies occurs only on Windows platforms.
+
+Scopes, in documented precedence order: MachinePolicy, UserPolicy, Process, CurrentUser, LocalMachine. Group Policy at the top wins over anything set locally, which is why Set-ExecutionPolicy can report success and change nothing effective — a fact worth knowing when debugging an agent. Get-ExecutionPolicy with the list switch shows all scopes at once and is the diagnostic to reach for first.
+
+The critical point, and Microsoft states it plainly: the execution policy is not a security system that restricts user actions, because a user who cannot run a script can simply type its contents at the command line. It exists to help users set basic rules and prevent them from violating those rules unintentionally.
+
+So in CI this is entirely normal and not a workaround:
+
+\`\`\`
+pwsh -NoProfile -ExecutionPolicy Bypass -File ./build.ps1
+\`\`\`
+
+Bypass here is scoped to that process only — the documented behaviour is that a policy set this way is stored in an environment variable and deleted when the session closes. It does not weaken the machine and it does not persist. What you should not do is set the policy permanently at machine scope on the agent as a fix, because that is a persistent global change solving a per-invocation problem.
+
+The genuine signing conversation is a different one: AllSigned combined with signed scripts is a real control in a locked-down enterprise, but it is enforced by code signing, not by the policy value alone. If an interviewer pushes on securing script execution, the answer is signing and constrained language mode, not execution policy.`,
+      },
+    ],
+    references: [
+      'https://perldoc.perl.org/functions/system',
+      'https://perldoc.perl.org/Getopt::Long',
+      'https://perldoc.perl.org/File::Find',
+      'https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables',
+      'https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // 21. Bitbucket Pipelines
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'nb-bitbucket-pipelines',
+    title: 'Bitbucket Pipelines',
+    icon: 'gitMerge',
+    color: '#ea580c',
+    questions: 5,
+    description: 'Atlassian container-per-step CI: bitbucket-pipelines.yml structure, caches versus artifacts, the shared per-step memory ceiling people hit, self-hosted runners, deployments, OIDC, and an honest comparison to GitHub Actions and GitLab CI.',
+    visualizations: [
+      {
+        title: 'The container-per-step execution model and where its limits bite',
+        image: '/diagrams/devops/nb-21-bitbucket-pipelines.png',
+        description: `Bitbucket Pipelines has one structural idea: every step runs in its own fresh Docker container, and nothing survives between steps except what you explicitly declare. Understand that and most of the surprising behaviour becomes predictable.
+
+The file lives at the repository root as bitbucket-pipelines.yml. At the top level you have image (the default container for every step), clone (depth and LFS behaviour), options (global settings such as max-time), definitions (reusable caches, services, and step anchors), and pipelines, which holds the actual triggers:
+
+\`\`\`yaml
+image: python:3.12-slim
+
+definitions:
+  caches:
+    uvcache: ~/.cache/uv
+  services:
+    postgres:
+      image: postgres:16
+      memory: 512
+      variables:
+        POSTGRES_PASSWORD: dev
+
+pipelines:
+  default:
+    - step:
+        name: Unit tests
+        caches: [uvcache]
+        script:
+          - uv sync --frozen
+          - uv run pytest -q
+  branches:
+    main:
+      - step: &build
+          name: Build
+          script:
+            - uv run buildtool compile
+          artifacts:
+            - dist/**
+      - step:
+          name: Deploy staging
+          deployment: staging
+          script:
+            - uv run buildtool deploy
+  pull-requests:
+    '**':
+      - step: *build
+  tags:
+    'v*':
+      - step:
+          name: Release
+          deployment: production
+          trigger: manual
+          script:
+            - uv run buildtool release
+  custom:
+    nightly-full:
+      - step:
+          name: Full matrix
+          size: 2x
+          max-time: 240
+          script:
+            - uv run buildtool compile --all
+\`\`\`
+
+The pipeline types are default (runs when nothing more specific matches), branches, tags, bookmarks, pull-requests, and custom. Only one section matches a given push — branches beats default — and pull-requests builds a merge of the source into the destination rather than the source alone, which is why a pull request build can fail on a branch whose own build passed.
+
+The documented step properties are worth knowing precisely, because they define the whole surface: a step requires script, and optionally accepts after-script, artifacts, caches, clone, condition, deployment, fail-fast, image, name, oidc, runs-on, runtime, services, size, and trigger. A single pipeline can have up to 100 steps.
+
+Caches and artifacts are the distinction people get wrong, and the mental model follows directly from container-per-step. Artifacts move files forward between steps of the same pipeline run — compile in step one, declare an artifacts glob, and step two receives them. Caches move files across pipeline runs, so yesterday's dependency directory reappears today. Artifacts are correctness; caches are speed. Bitbucket documents nine predefined caches — docker, composer, dotnetcore, gradle, ivy2, maven, node, pip, and sbt — and custom caches are declared under definitions with a path and optionally a key based on a set of files, so that changing a lockfile produces a new cache rather than restoring a stale one. Two documented limits matter operationally: only caches under 1 GB once compressed are saved, and any cache older than one week is cleared automatically and repopulated on the next build. A cache silently crossing the 1 GB threshold is the usual explanation for "our cache stopped working and nobody changed anything".
+
+Memory is the hardest limit to design around, because it is shared. By default a step running on Bitbucket Cloud infrastructure or a Linux Docker self-hosted runner has 4 GB of memory, 4 CPUs which may be shared with other tasks, and 64 GB of disk for mounting volumes. Specifying a size of 2x doubles the memory, and the documentation is explicit that the memory allocated is shared by both the script in the step and any services on the step. Service containers default to 1024 MB each, with a documented maximum of five per step, and the build container needs at least 1024 MB for the build process and Pipelines overhead. The arithmetic is unforgiving: start a Postgres, a Redis, and the Docker service on a 1x step at defaults and you have given away 3 GB of your 4 GB before the compiler starts. The symptom is a container killed with no useful message.
+
+Sizes above 2x exist — the allowed values are 1x, 2x, 4x, 8x, 16x, 24x, and 32x — and 4x and above additionally grant dedicated CPUs and more disk. They are only available on paid plans, and the cost is linear and explicit: a 4x step uses four times the build minutes of a 1x step, a 2x step twice as many, and so on. Size has no effect on shell-based runners, which use all available resources on the host.
+
+Time limits round it out. The default maximum time for a pipeline step is 120 minutes, and max-time accepts any positive integer between 1 and 720, settable globally under options or per step.
+
+Runners are the escape hatch. When your toolchain cannot live in a cloud image — a licensed compiler, a macOS notarisation step, a Windows SDK — you register a self-hosted runner and target it with runs-on labels. A step runs on the next available runner that has all the listed labels; if none online matches every label, the step fails. Notably, you are not charged build minutes for work run on your own self-hosted runners.
+
+Deployments add the environment layer: a deployment property on a step marks it as targeting that environment, unlocks deployment-scoped variables, and populates the Deployments view with what is currently where. Combined with a manual trigger, that is the approval gate for production.`,
+      },
+      {
+        title: 'Quick-fire interview answers — Bitbucket Pipelines',
+        description: `Q: What is the difference between a cache and an artifact?
+A: Artifacts pass files between steps within one pipeline run — build in step one, consume in step two — and they are a correctness mechanism. Caches persist across pipeline runs to avoid re-downloading dependencies, and they are a speed optimisation that is explicitly best-effort. If your pipeline breaks when a cache is cold, you have used a cache where you needed an artifact.
+
+Q: Why did my step get killed with no error message?
+A: Almost always memory. A default step has 4 GB shared between the build container, every service container, and Pipelines overhead, and each service defaults to 1024 MB with a maximum of five per step. Two or three services at defaults leave the build container with very little. Size the services explicitly, drop unused ones, or move the step to 2x for double the memory.
+
+Q: How do you run a step on your own hardware?
+A: Register a self-hosted runner and select it with runs-on labels on the step. The step runs on the next available runner carrying all the listed labels, and if no online runner matches every label the step fails. That is how you handle a licensed toolchain, macOS signing and notarisation, or a Windows SDK. You are also not charged build minutes for self-hosted runner time.
+
+Q: How do you deploy to AWS without storing long-lived keys?
+A: Set oidc to true on the step. Bitbucket issues a signed token in the step OIDC token variable, and you register the Bitbucket identity provider URL and audience as a trusted provider on the AWS side, then exchange the token for temporary credentials with assume-role-with-web-identity. No static access key ever exists in the repository.
+
+Q: How do you avoid copy-pasting the same step three times?
+A: YAML anchors and aliases. Define the step once with an anchor, then reference it by alias in default, branches, and pull-requests. For logic shared across repositories, use a Pipe — a versioned Docker container invoked with a pipe property and a variables block.
+
+Q: Honestly, where does Bitbucket Pipelines fall short of GitHub Actions?
+A: Reusable components. The Pipes catalogue is a fraction of the GitHub Actions marketplace, there is no equivalent of reusable workflows or composite actions, and there is no native matrix strategy — you write the steps out or generate them. It is a clean, opinionated, container-per-step system with a much smaller ecosystem around it.`,
+      },
+    ],
+    introduction: `Bitbucket Pipelines is Atlassian's CI service, configured by a single bitbucket-pipelines.yml at the repository root and executed as a series of Docker containers. It is worth knowing specifically because a large population of enterprises standardised on Atlassian — Jira, Confluence, Bitbucket — and their build systems live here rather than on GitHub or GitLab. A job description that names Bitbucket is telling you which world you are entering.
+
+The one architectural fact to internalise is container per step. Every step gets a fresh container from a declared image, runs its script, and is destroyed. Nothing persists to the next step unless you declared it — as an artifact for within-run handoff, or as a cache for across-run reuse. Almost every confusing behaviour in the system follows from that: why the file you built vanished, why installing a tool in step one does not help step two, why a cache miss is slow but never wrong.
+
+The second fact is the shared memory budget. A step has a total memory allocation — 4 GB by default, doubled at 2x — and the documentation is explicit that it is shared by both the script in the step and any services attached to it. Services default to 1024 MB each and a step may have at most five. Teams routinely attach a database, a cache, and the Docker service, leave everything at defaults, and then spend a day debugging a build container being killed for lack of memory. That arithmetic is the most commonly hit real limit in the product.
+
+Beyond that the feature set is what you would expect, configured the way you would expect. Pipelines are keyed by trigger type — default, branches, tags, bookmarks, pull-requests, and custom. Steps can run in parallel, stages group them, and a pipeline is capped at 100 steps. Deployments attach an environment to a step, unlock environment-scoped variables, and populate a deployment tracking view. Variables come in workspace, repository, and deployment scopes, with the documented override order being pipeline over deployment over repository over workspace over default, and secured variables are masked in logs. OIDC gives keyless authentication to cloud providers. Self-hosted runners let you execute on your own Linux, Windows, or macOS hardware, and their build minutes are not charged.
+
+Where an interviewer will push is on honesty about capability. Pipelines is clean and opinionated, but its reusability story is thin next to GitHub Actions: Pipes are the reusable-step mechanism and the catalogue is small, there is no equivalent to reusable workflows or composite actions, and there is no native matrix strategy — you either write the steps out or generate the YAML. Build minutes are a visible cost constraint that genuinely changes pipeline design, particularly since larger sizes consume minutes at a proportionally higher rate. That is a legitimate engineering input rather than a complaint.`,
+    whenToUse: [
+      'The organisation is standardised on Atlassian and the code already lives in Bitbucket Cloud, where the Jira and deployment integration is the main draw',
+      'Straightforward container-based build, test, and deploy flows where the opinionated model is a feature rather than a limit',
+      'Toolchains that cannot run in a cloud image — licensed compilers, macOS signing, Windows SDKs — combined with self-hosted runners for those steps',
+      'Deployments that need an environment model with manual approval gates and a tracked history of what is where',
+      'Cloud deploys where you want OIDC federation instead of long-lived static credentials stored as repository variables',
+    ],
+    keyConcepts: [
+      {
+        term: 'Container per step',
+        definition: 'Every step starts a separate Docker container built from the declared image and is destroyed afterwards. Nothing carries forward implicitly. This single rule explains artifacts, caches, and why installing a tool in one step does not make it available in the next.',
+      },
+      {
+        term: 'Pipeline types',
+        definition: 'Under pipelines you declare default, branches, tags, bookmarks, pull-requests, and custom. Only the most specific match runs. A pull-requests pipeline builds a merge of source into destination, which is why it can fail on a branch whose own build passed. Custom pipelines run only when triggered manually or on a schedule.',
+      },
+      {
+        term: 'Artifacts',
+        definition: 'Files declared with an artifacts glob in one step and made available to subsequent steps of the same pipeline run. The mechanism for passing build output forward, and correctness-critical in a way caches are not.',
+      },
+      {
+        term: 'Caches',
+        definition: 'Directories preserved across pipeline runs to avoid re-downloading dependencies. Nine predefined names exist including node, pip, maven, gradle, and docker; custom caches are declared under definitions with a path and an optional key based on files. Only caches under 1 GB compressed are saved, and caches older than one week are cleared automatically.',
+      },
+      {
+        term: 'Step size and shared memory',
+        definition: 'A default step has 4 GB of memory, 4 CPUs, and 64 GB of volume disk; size 2x doubles the memory, and the allocation is shared by the script and every service on the step. Allowed sizes are 1x, 2x, 4x, 8x, 16x, 24x, and 32x, with 4x and above requiring a paid plan and consuming build minutes at the same multiple.',
+      },
+      {
+        term: 'Runners and runs-on',
+        definition: 'Self-hosted execution agents registered to a repository or workspace and targeted with runs-on labels. A step runs on the next available runner carrying all listed labels, and fails if no online runner matches. Self-hosted runner time is not charged against build minutes.',
+      },
+      {
+        term: 'Deployment variables',
+        definition: 'Variables scoped to a named environment and exposed only to steps carrying that deployment. Combined with the documented override order — pipeline over deployment over repository over workspace over default — this is how one pipeline definition targets staging and production with different values and no conditional logic.',
+      },
+      {
+        term: 'Pipes',
+        definition: 'The reusable-step mechanism: a versioned Docker container invoked with a pipe property and a variables block. Functionally analogous to a GitHub Action, with a far smaller catalogue. Writing a private pipe is how you share a step across repositories in one workspace.',
+      },
+    ],
+    approach: [
+      'Start with one default pipeline containing a single step, get it green, and only then split into multiple steps — each split forces an explicit artifact decision',
+      'Declare artifacts for anything a later step consumes, and caches only for pure speed; verify by running with a cold cache and confirming the pipeline still passes',
+      'Do the memory arithmetic before adding a service: subtract every service allocation from the step total and confirm the build container keeps a workable remainder',
+      'Factor repeated steps into YAML anchors, and promote genuinely cross-repository logic into a private Pipe',
+      'Add a deployment property to steps that target an environment, put environment-scoped variables behind it, and gate production with a manual trigger',
+      'Replace static cloud credentials with OIDC plus a trust relationship pinned to the specific repository, then delete the stored keys',
+      'Track build minutes per pipeline and attack the biggest consumer first — usually an uncached dependency install, an oversized step, or a serial step that could be parallel',
+    ],
+    pitfalls: [
+      'Relying on a cache for correctness — caches are best-effort, expire after a week, and are skipped above 1 GB compressed, so a cold cache must still produce a correct build',
+      'Adding services at default memory until the build container is starved, then debugging a kill with no error message for a day',
+      'Assuming a pull-requests pipeline builds the source branch — it builds a merge into the destination, so it can fail on a branch whose own pipeline is green',
+      'Storing long-lived cloud access keys as secured repository variables when OIDC federation is available, leaving credentials that survive every employee departure',
+      'Echoing a secured variable after transforming it — masking replaces matching values, so a base64-encoded or split secret is printed in the clear',
+      'Reaching for a larger step size to fix a memory problem caused by unused services, which doubles or quadruples build minute consumption for no benefit',
+    ],
+    keyQuestions: [
+      {
+        question: 'Explain caches versus artifacts in Bitbucket Pipelines, including the limits, and describe a bug caused by confusing them.',
+        answer: `Both exist because of container per step. Every step gets a fresh container and loses everything when it finishes, so any file crossing a boundary must be declared.
+
+Artifacts cross steps within one pipeline run. A step declares an artifacts glob, and subsequent steps in that same run receive those paths.
+
+\`\`\`yaml
+- step:
+    name: Build
+    script:
+      - uv run buildtool compile
+    artifacts:
+      - dist/**
+      - build/reports/**
+- step:
+    name: Sign and publish
+    script:
+      - ls dist/            # present because the previous step declared it
+      - uv run buildtool publish
+\`\`\`
+
+Caches cross pipeline runs. A directory saved at the end of a step is restored at the start of a matching cache in a later run.
+
+\`\`\`yaml
+definitions:
+  caches:
+    uvcache: ~/.cache/uv
+    nodecustom:
+      key:
+        files:
+          - package-lock.json
+      path: node_modules
+
+pipelines:
+  default:
+    - step:
+        caches: [uvcache, nodecustom]
+        script:
+          - uv sync --frozen
+\`\`\`
+
+Nine caches are predefined — docker, composer, dotnetcore, gradle, ivy2, maven, node, pip, and sbt — and custom ones are declared as above. The file-based key is the important refinement: the cache is keyed on the contents of the listed files, so changing the lockfile produces a new cache rather than restoring a stale one. Without a key the cache is restored regardless of whether the dependency set changed, which is how you end up with an installed dependency tree that does not match the lockfile and a build failure nobody can reproduce locally.
+
+Two documented limits govern behaviour. Only caches under 1 GB once compressed are saved — above that the save is skipped, silently from the pipeline's point of view. And any cache older than one week is cleared automatically and repopulated during the next build. Together these produce the classic report: caching stopped working and nobody changed anything. Usually the dependency tree crossed the size threshold, or the repository went quiet for eight days.
+
+The distinction that matters conceptually: artifacts are correctness, caches are performance. A cache miss must only ever cost time. If a missing cache changes the outcome, the design is wrong.
+
+The bug, which is common enough to be worth telling as a story. A team compiled in step one and deployed in step two, and instead of declaring artifacts they added the output directory as a cache. It worked in testing, because their test runs always had a warm cache from the previous run.
+
+\`\`\`yaml
+# Broken
+- step:
+    name: Build
+    caches: [buildoutput]      # dist/ treated as a "cache"
+    script: [ "make dist" ]
+- step:
+    name: Deploy
+    caches: [buildoutput]
+    script: [ "aws s3 sync dist/ s3://releases/" ]
+\`\`\`
+
+Three failure modes followed. On the first run after the weekly expiry the deploy step found an empty directory and published nothing — an empty release, reported green. On other runs it found last week's binaries and published those, which is worse: a successful deployment of the wrong build, with no signal anywhere. And once the output grew past 1 GB compressed, saving stopped entirely and the behaviour became intermittent in a way that looked like flakiness and got blamed on the CI provider.
+
+The fix is one word — artifacts instead of caches — and the general rule that catches it in review: if removing the cache breaks the pipeline rather than merely slowing it, it was never a cache.`,
+      },
+      {
+        question: 'A step is being killed with no useful error. Walk through diagnosing it, and explain the memory model.',
+        answer: `Silent kills in Bitbucket Pipelines are memory, in the overwhelming majority of cases. The container hits its ceiling, the kernel out-of-memory killer terminates the process, and what you see in the log is output that simply stops mid-line.
+
+The model. By default a step running on Bitbucket Cloud infrastructure or a Linux Docker self-hosted runner has 4 GB of memory, 4 CPUs which may be shared with other tasks, and 64 GB of disk for mounting volumes. Specifying a size of 2x doubles the memory. The documentation is explicit on the crucial point: the memory allocated is shared by both the script in the step and any services on the step. It is not a per-container allowance.
+
+Within that budget, the build container needs a documented minimum of 1024 MB to cover the build process and Pipelines overhead. Service containers default to 1024 MB each, are configurable, and are capped at five per step. The remaining memory after service allocation goes to the build container.
+
+Now the arithmetic that causes the incident:
+
+\`\`\`yaml
+definitions:
+  services:
+    postgres:
+      image: postgres:16      # 1024 MB by default
+    redis:
+      image: redis:7          # 1024 MB by default
+
+pipelines:
+  default:
+    - step:
+        services: [postgres, redis, docker]   # docker also defaults to 1024 MB
+        script:
+          - ./gradlew test
+\`\`\`
+
+Three services at 1024 MB each is 3 GB of a 4 GB step. The build container is left with roughly 1 GB, and a JVM with default heap sizing will exceed that on a real project. The result is a kill partway through the test task, with nothing in the log mentioning memory.
+
+Diagnosis, in order.
+
+Read the tail of the log for an abrupt stop rather than an error. A stack trace means an application failure; truncation mid-output means the process was terminated externally.
+
+Add memory reporting to the step so you have evidence rather than a theory. Print the cgroup memory limit and peak usage at the end of the script. This turns "we think it is memory" into a number you can act on.
+
+Count the services and multiply. Every entry in the services list, including docker, takes its allocation whether or not the build uses it. A docker service left in place after the step stopped building images is pure loss.
+
+Check for a JVM or toolchain with no explicit heap limit. A JVM sizes its default heap from what it perceives as available memory, and in a constrained container that perception can be wrong in the unhelpful direction.
+
+Fixes, in the order you should try them.
+
+Remove services the step does not use. This is free and it is the most common win.
+
+Size the ones you keep. A Postgres serving a handful of integration tests does not need 1024 MB:
+
+\`\`\`yaml
+definitions:
+  services:
+    postgres:
+      image: postgres:16
+      memory: 512
+      variables:
+        POSTGRES_PASSWORD: dev
+\`\`\`
+
+Split the step. Unit tests need no database; integration tests need the database but not the Docker service. Two 1x steps are often cheaper and faster than one 2x step, because they can run in parallel and 2x consumes twice the build minutes.
+
+Then, and only then, increase the size. 2x doubles the memory, and sizes above that go up to 32x with 4x and above additionally granting dedicated CPUs and more disk. Note the cost is explicit and linear: a 4x step uses four times the build minutes of a 1x step. Increasing size to mask three unused services is the expensive wrong answer.
+
+Constrain the toolchain explicitly. Set the JVM heap, cap compiler parallelism to a fixed number rather than the reported processor count — because that count does not reflect your memory — and set the test runner's worker count deliberately.
+
+One detail worth knowing for self-hosted runners: size has no effect on shell-based runners such as Windows PowerShell, macOS shell, and Linux shell runners, which use all available resources on the host machine. The size property only means something on Bitbucket Cloud infrastructure and Linux Docker runners.
+
+The general lesson to state in an interview: this is a shared budget, not a per-container one, and every service you attach is subtracted from the compiler's share before the build starts.`,
+      },
+      {
+        question: 'Design a Bitbucket pipeline for a native application that must build on Linux and Windows, sign on macOS, deploy to staging automatically, and require approval for production.',
+        answer: `This exercises most of the product at once: runners for the platform-specific work, artifacts for handoff, deployments for environments, OIDC for credentials, and anchors for reuse.
+
+\`\`\`yaml
+image: python:3.12-slim
+
+definitions:
+  caches:
+    uvcache: ~/.cache/uv
+  steps:
+    - step: &unit-tests
+        name: Unit tests
+        caches: [uvcache]
+        script:
+          - uv sync --frozen
+          - uv run pytest -q --junitxml=test-reports/results.xml
+        artifacts:
+          - test-reports/**
+
+pipelines:
+  pull-requests:
+    '**':
+      - step: *unit-tests
+      - step:
+          name: Build (Linux)
+          size: 2x
+          script:
+            - uv sync --frozen
+            - uv run buildtool compile --platform linux-x64
+
+  branches:
+    main:
+      - step: *unit-tests
+      - parallel:
+          - step:
+              name: Build Linux
+              size: 2x
+              script:
+                - uv run buildtool compile --platform linux-x64
+              artifacts:
+                - dist/linux/**
+          - step:
+              name: Build Windows
+              runs-on:
+                - self.hosted
+                - windows
+              script:
+                - pwsh -NoProfile -File ./ci/build.ps1
+              artifacts:
+                - dist/windows/**
+      - step:
+          name: Sign and notarize (macOS)
+          runs-on:
+            - self.hosted
+            - macos
+          script:
+            - ./ci/sign-and-notarize.sh
+          artifacts:
+            - dist/signed/**
+      - step:
+          name: Deploy staging
+          deployment: staging
+          oidc: true
+          script:
+            - ./ci/assume-role.sh
+            - uv run buildtool publish --channel staging
+
+  tags:
+    'v*':
+      - step:
+          name: Promote to production
+          deployment: production
+          trigger: manual
+          oidc: true
+          script:
+            - ./ci/assume-role.sh
+            - uv run buildtool publish --channel production
+\`\`\`
+
+The decisions worth defending.
+
+Runners for the platform-specific steps. Bitbucket's cloud images are Linux containers. macOS code signing and notarisation require real macOS with a keychain and Apple credentials, and cannot run in a Linux container at all. Windows SDK builds are the same story. Self-hosted runners with runs-on labels are the only route, and the pipeline stays one definition rather than fragmenting across systems. A useful secondary benefit: self-hosted runner time is not charged against build minutes.
+
+The labels matter operationally. A step runs on the next available runner carrying all the listed labels, and if no online runner matches every label the step fails rather than falling back. So the label set is a hard contract — keep it minimal and meaningful, and monitor runner availability, because an offline macOS runner is a failed release rather than a slow one.
+
+Parallel for the two independent builds. Linux and Windows have no dependency on each other, so they run concurrently and the wall clock is the slower of the two rather than the sum. Both consume build minutes independently, which is the tradeoff to state explicitly: parallelism buys latency with money.
+
+Artifacts, not caches, for the binaries. The signing step must receive exactly the binaries this run produced. A cache would eventually hand it a stale build and sign it — producing a correctly signed wrong artifact, which is close to the worst possible outcome in a release pipeline.
+
+A deployment property on the environment-targeting steps. This unlocks deployment-scoped variables, so staging and production credentials and endpoints differ with no branching in the script, and it populates the Deployments view so there is a queryable record of what is where.
+
+A manual trigger on production, keyed to a tag. Production requires a human action and only runs for a tag matching the version pattern. Combined with environment-level restrictions on who may deploy, that is the approval gate. Auto-deploying staging on every merge to main keeps the feedback loop fast where it is safe.
+
+OIDC instead of stored keys. The step receives a signed token, and the cloud provider is configured to trust the Bitbucket identity provider URL and audience, so a web-identity role assumption yields short-lived credentials. Nothing long-lived is stored and there is nothing to rotate when someone leaves.
+
+The YAML anchor for unit tests. The same step definition serves both the pull request pipeline and the main pipeline. Without the anchor these drift, and a check that runs on pull requests but not on main is exactly how a broken main happens.
+
+What to flag as a limitation, unprompted. There is no native matrix strategy here. Two platforms is fine written out; twelve is not, and at that point you generate the YAML from a script and commit it, or collapse the fan-out into a single step that loops internally. Also keep an eye on the 100-step cap per pipeline, which a generated fan-out can approach faster than you expect. Saying this before being asked signals that you know the product's actual shape rather than just its marketing.`,
+      },
+      {
+        question: 'How do variables, secured variables, and OIDC work in Bitbucket Pipelines, and how do you get cloud credentials out of the repository?',
+        answer: `Three scopes, one documented precedence order, and one modern replacement for the whole problem.
+
+Scopes. Workspace variables apply to every repository in the workspace, which suits a registry hostname or an organisation-wide setting. Repository variables apply to one repository. Deployment variables apply only to steps carrying that deployment name, which is what lets one pipeline definition target staging and production with different values and no conditional logic.
+
+The documented order of overrides is pipeline over deployment over repository over workspace over default variables. So a value set at deployment scope wins over the same name at repository scope, and a value supplied when triggering a custom pipeline wins over everything.
+
+Default variables are the ones Bitbucket provides. The ones you use constantly: the commit hash that kicked off the build, the source branch (available only on branch builds), the build number which increments with each build, the absolute path of the directory the repository is cloned into, the pull request identifier, the workspace name, the repository slug, and the step UUID.
+
+Secured variables are marked secured in the interface, which makes them unreadable afterwards and masks them in logs. The documented behaviour is that Pipelines masks secured variables so they are not disclosed to team members viewing build logs, replacing a matching value with the variable name. Two documented constraints are worth knowing: secured variables cannot be templated in YAML files, and they are not supported for passing to child pipelines.
+
+The important caveat on masking, and the one an interviewer is listening for: masking matches values, not intent. Bitbucket documents that masking applies to all occurrences including URL-encoded forms, but if your script base64-encodes a secret, splits it, or otherwise transforms it, the transformed form does not match and is printed in the clear. Masking is a safety net against accidental echo, not a control to rely on. The real control is never putting the value on a log path at all.
+
+Now the better answer to the whole category: stop storing cloud credentials.
+
+OIDC lets a pipeline step prove its identity to a cloud provider and exchange that proof for short-lived credentials. You set oidc to true on the step, and Bitbucket makes a signed token available in the step OIDC token variable, described in the documentation as the ID token generated by the Bitbucket OIDC provider.
+
+\`\`\`yaml
+- step:
+    name: Deploy
+    deployment: production
+    oidc: true
+    script:
+      - export AWS_ROLE_ARN="arn:aws:iam::123456789012:role/bitbucket-deploy"
+      - echo $BITBUCKET_STEP_OIDC_TOKEN > /tmp/web-identity-token
+      - >
+        aws sts assume-role-with-web-identity
+        --role-arn "$AWS_ROLE_ARN"
+        --role-session-name "bb-$BITBUCKET_BUILD_NUMBER"
+        --web-identity-token file:///tmp/web-identity-token
+        --duration-seconds 3600 > /tmp/creds.json
+      - ./ci/export-creds.sh /tmp/creds.json
+      - uv run buildtool publish
+\`\`\`
+
+The provider-side setup is where the security actually lives. In the repository's Pipelines settings you find the identity provider URL and the audience; you register that URL as an OIDC identity provider on the cloud side and create a role whose trust policy accepts it. Bitbucket supports declaring custom audiences, documented with a maximum of 10 audiences and a maximum audience name length of 150 characters.
+
+The condition on that trust policy is the part people get wrong. If you trust the identity provider without constraining the subject claim, any repository in your workspace can assume the role. The trust policy must pin the specific repository — and ideally the specific deployment environment — so that a new repository created by anyone in the workspace does not silently inherit production access. Bitbucket surfaces an example token payload in the settings interface precisely so you can copy the correct identifiers into the provider configuration; use it rather than guessing the claim format.
+
+What this buys you: no long-lived key exists anywhere, so there is nothing to rotate, nothing to leak in a log, and nothing that survives an employee leaving. Credentials expire within the hour. And the cloud audit log records which repository and which pipeline assumed the role, which is a materially better forensic story than a shared access key used by everything in the organisation.
+
+The migration path is boring and safe: add OIDC alongside the existing key, confirm the OIDC path works in staging, cut production over, then delete the stored key. Deleting first is how you discover which forgotten job was quietly using it.`,
+      },
+      {
+        question: 'Compare Bitbucket Pipelines honestly with GitHub Actions and GitLab CI. Where is it genuinely weaker?',
+        answer: `The honest comparison is the point of this question — an answer that only praises the tool named in the job description is a bad signal.
+
+Where Bitbucket Pipelines is genuinely good.
+
+Simplicity. One file, one model, container per step. There is very little to learn and very little that behaves surprisingly once you have the container model. GitHub Actions by comparison has a large surface — workflow syntax, actions, composite actions, reusable workflows, and a permissions model — and much of that is real complexity you have to hold in your head.
+
+Atlassian integration. If the organisation runs Jira, the link between commits, branches, pipelines, and issues is native and genuinely useful. Deployments show up against Jira issues without additional wiring.
+
+The deployment environment model. A deployment property on a step, environment-scoped variables, manual triggers, and a tracked view of what is deployed where is a clean, coherent story that works out of the box rather than requiring assembly.
+
+Where it is genuinely weaker, which is the substance of the answer.
+
+Reusable components. This is the big one. GitHub Actions has an enormous marketplace plus composite actions and reusable workflows, so common logic — set up a language, cache a toolchain, publish a release — is a one-line reference to something maintained by someone else. Bitbucket's equivalent is Pipes: Docker containers invoked with a pipe property and a variables block. The mechanism is fine; the catalogue is a small fraction of the size, and there is nothing equivalent to a reusable workflow. In practice you write more yourself and share it with YAML anchors within a repository or private Pipes across a workspace.
+
+No native matrix strategy. GitHub Actions has a matrix strategy and GitLab has a parallel matrix; both expand a job across a product of dimensions and both support dynamic generation. Bitbucket has parallel steps that you write out individually, within a 100-step-per-pipeline cap. Two platforms is fine. Three platforms times four toolchain versions is twelve hand-written steps, and the practical answer becomes generating the YAML from a script and committing it — which works, but it is machinery you had to build and now maintain.
+
+Weaker pipeline-as-code composition. GitLab lets you include other YAML files, including from other repositories, and build a layered pipeline library. GitHub has reusable workflows. Bitbucket keeps everything in one file per repository, so cross-repository standardisation is a template-and-copy problem rather than an include problem, and drift is the default outcome.
+
+Less control over caching. GitLab exposes cache keys, policies for pull versus push, and fallback keys. Bitbucket gives you a path and an optional file-based key, with a 1 GB compressed ceiling and a one-week expiry you do not control. It is adequate; it is not tunable.
+
+Ecosystem around runners. GitHub's story — larger hosted runners, ARM images, GPU options, autoscaling controllers — is broader. Bitbucket runners work well and their minutes are not charged, which is a genuine advantage, but the surrounding tooling ecosystem is smaller.
+
+Build minutes as a design constraint. All three meter compute, but in Bitbucket it is visible enough that teams design around it, and the size multipliers make it explicit — a 4x step consumes four times the minutes of a 1x step. It becomes a genuine engineering input: whether to parallelise, how aggressively to cache, whether to run the full matrix on every pull request or only nightly, and whether to move heavy work onto self-hosted runners where minutes are free. That is not a flaw so much as a constraint you should acknowledge you plan around.
+
+The concluding judgement. If you are choosing greenfield with no Atlassian commitment, GitHub Actions has the strongest ecosystem and GitLab CI the most composable pipeline model. If the organisation is on Bitbucket, Pipelines is entirely capable of running a serious release pipeline — the gap is reusability, not capability, and you close it with private Pipes, YAML anchors, and pushing logic down into a tested build CLI rather than up into the YAML. That last point is the connection an interviewer will appreciate: the thinner your CI system's reuse story, the more valuable it is that your build logic lives in a packaged, tested tool any CI system can invoke in one line.`,
+      },
+    ],
+    references: [
+      'https://support.atlassian.com/bitbucket-cloud/docs/step-options/',
+      'https://support.atlassian.com/bitbucket-cloud/docs/cache-dependencies/',
+      'https://support.atlassian.com/bitbucket-cloud/docs/databases-and-service-containers/',
+      'https://support.atlassian.com/bitbucket-cloud/docs/variables-and-secrets/',
+      'https://support.atlassian.com/bitbucket-cloud/docs/integrate-pipelines-with-resource-servers-using-oidc/',
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // 22. Native Artifact Signing and Release
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: 'nb-native-signing',
+    title: 'Native Artifact Signing and Release',
+    icon: 'lock',
+    color: '#ea580c',
+    questions: 5,
+    description: 'Signing application binaries for Windows, macOS, and Linux: Authenticode and timestamping, hardware-backed keys after the 2023 CA/Browser Forum rules, codesign and notarization, and doing all of it in CI without a private key ever touching a build agent.',
+    visualizations: [
+      {
+        title: 'Three operating systems, three trust models, one signing service',
+        image: '/diagrams/devops/nb-22-native-signing.png',
+        description: `Signing a container image and signing a native binary are different problems. A container signature is a detached attestation in a registry, verified by something you deployed and configured — an admission controller, a policy engine. Nothing in the operating system cares. A native binary signature is embedded in the file, and it is checked by the operating system itself, before your code runs, on a machine you do not administer. You cannot deploy a policy to your users' laptops. If the signature is wrong the user sees a frightening dialog or nothing happens at all, and you find out from support tickets.
+
+Windows. Authenticode embeds a PKCS#7 signature in the certificate table of a PE file — executables, DLLs, drivers, MSIs, catalogs, and PowerShell scripts. signtool.exe from the Windows SDK does the work:
+
+\`\`\`console
+signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a MyApp.exe
+signtool verify /pa /v MyApp.exe
+\`\`\`
+
+/fd is the file digest algorithm and /td the timestamp digest algorithm. Both are effectively mandatory now — Microsoft documents that Windows SDK, HLK, WDK, and ADK builds 20236 and later require the file digest option when signing and the timestamp digest option when timestamping, initially as a warning and as an error in later versions, with SHA256 recommended over SHA1. /tr specifies an RFC 3161 timestamp server and cannot be combined with the older /t. /a automatically selects the best signing certificate, choosing the one valid for the longest time when several match. On verify, /pa selects the Default Authentication Verification Policy — without it signtool uses the Windows Driver Verification Policy and will report a perfectly good application signature as invalid, which is a confusing first experience. signtool returns 0 on success, 1 on failure, and 2 on completion with warnings, so an exit-code check must treat 2 deliberately rather than ignoring it.
+
+Timestamping is the detail that decides whether your release survives. A code-signing certificate is valid for a bounded period, and Microsoft documents that if the timestamp option is omitted the signed file simply is not time stamped. Without a countersigned timestamp every copy of your binary stops verifying the moment the certificate expires — including builds shipped years ago onto machines that will never be updated. With a timestamp the signature asserts it was made while the certificate was valid, and it keeps verifying afterwards. Untimestamped releases are a dormant outage with a known trigger date.
+
+The key storage rules changed materially. Effective June 1, 2023, the CA/Browser Forum Code Signing Baseline Requirements require that the subscriber's private key be generated, stored, and used in a suitable hardware crypto module meeting or exceeding the specified requirements — FIPS 140-2 Level 2 or equivalent as the baseline. That applies to OV certificates as well as EV, and it ended the era of a .pfx file in a secrets store. Certificate lifetimes tightened too: effective March 1, 2026, code signing certificates cannot exceed 460 days of validity, so renewal is now an annual operational event.
+
+Microsoft's managed answer is the Azure signing service — originally Trusted Signing, now documented as Artifact Signing — which provides zero-touch certificate lifecycle management inside FIPS 140-3 Level 3 certified HSMs and content-confidential signing where the file never leaves your endpoint and only the digest is signed. It plugs into signtool through /dlib, which specifies a DLL implementing the Authenticode digest signing function and which Microsoft documents as equivalent to the separate digest-generate, sign, and ingest options invoked as one atomic operation.
+
+macOS. The chain is codesign, then notarize, then staple. You sign with a Developer ID Application certificate, with the hardened runtime option enabled and a secure timestamp requested — both are prerequisites for notarization. Nested code is signed inside-out: frameworks and helper tools first, the outer bundle last, because signing the outer bundle seals a hash of everything within it. Apple's guidance is against relying on the deep option for signing, since it does not apply entitlements correctly to nested code.
+
+Notarization is a separate step and a different kind of check: you upload the artifact, an automated Apple service scans it for malicious content and validates the signature, and it returns a ticket. The notarytool submit command with a wait option performs the upload and blocks for the result, and its log subcommand retrieves the per-file reasons when it fails. altool, the previous tool, has been retired.
+
+Stapling attaches the ticket to the artifact so Gatekeeper can verify offline. Without it a user launching your app on an aeroplane or behind a restrictive proxy gets a failure, because Gatekeeper had to look the ticket up online and could not.
+
+Linux has no comparable OS-enforced model. Nothing checks the signature on an arbitrary ELF binary before executing it. Trust lives at the package layer: GPG-signed RPMs and DEBs, signed repository metadata, and clients configured to check signatures. IMA and EVM exist for kernel-enforced file integrity but are rare outside high-assurance deployments. The practical consequence is that on Linux your distribution channel is your trust boundary.
+
+The CI problem is common to all three. A signing key a build agent can read is a signing key any code running on that agent can use, including a compromised dependency. The pattern that holds up is a dedicated signing service: build agents produce unsigned artifacts and request a signature; the service holds keys in an HSM or KMS, authenticates the caller with short-lived federated credentials rather than a stored secret, applies policy about what may be signed, and writes an audit entry for every operation.`,
+      },
+      {
+        title: 'Quick-fire interview answers — native signing',
+        description: `Q: Why does signing a native binary differ from signing a container image?
+A: A container signature is detached, stored in a registry, and verified by infrastructure you control — an admission controller you configured. A native signature is embedded in the file and verified by the operating system on a machine you do not administer, before your code runs. You cannot push policy to your users, so getting it wrong is a support incident rather than a deployment failure.
+
+Q: What happens if you sign without a timestamp?
+A: The signature stops verifying the day the certificate expires, including on copies shipped years earlier to machines that will never be updated. A countersigned timestamp asserts the signature was made while the certificate was valid, so it keeps verifying afterwards. Microsoft documents plainly that without the timestamp option the file simply is not time stamped.
+
+Q: What changed for code-signing keys in 2023?
+A: Effective June 1, 2023, the CA/Browser Forum Code Signing Baseline Requirements require the subscriber private key to be generated, stored, and used in a suitable hardware crypto module meeting at least FIPS 140-2 Level 2 or equivalent. This applies to OV as well as EV certificates and ended the practice of storing a .pfx in a secrets manager. Certificate validity is also capped at 460 days for certificates issued on or after March 1, 2026.
+
+Q: Is a notarized macOS app the same as a signed one?
+A: No, they are two separate checks. Signing proves who built it, using a Developer ID certificate. Notarization means Apple scanned the artifact and issued a ticket. Gatekeeper wants both. Notarization additionally requires the hardened runtime and a secure timestamp, so a plain codesign without them is rejected at submission.
+
+Q: Why staple the notarization ticket?
+A: So Gatekeeper can verify without network access. Without stapling, first launch requires an online ticket lookup, which fails offline or behind a restrictive proxy — the archetypal works-everywhere-except-at-the-customer bug. Stapling attaches the ticket to the app, disk image, or installer package.
+
+Q: How do you sign in CI without exposing the private key?
+A: Never put the key on the agent. Use a signing service or cloud KMS where the agent sends a digest and receives a signature, authenticated with short-lived federated credentials rather than a stored secret. Keys stay in an HSM, the service enforces policy about what may be signed, and every operation is logged. On Windows this is exactly what signtool with the /dlib option and a cloud signing provider does natively.`,
+      },
+    ],
+    introduction: `Every desktop and embedded product eventually runs into this. The build works, the tests pass, and then Windows SmartScreen warns users away from the installer, or macOS refuses to open the application at all, or an enterprise customer asks for the signing chain before they will deploy it. Signing is not a security nicety on native software; it is the difference between a product that installs and a product that does not.
+
+It is also a genuinely different problem from container signing, and conflating the two is the most common way to answer this badly. Sigstore, cosign, and SLSA provenance solve supply-chain attestation for artifacts consumed by infrastructure you control: an admission controller checks a signature against a policy you wrote and deployed. That model does not transfer. A native binary is checked by the operating system on a stranger's machine, before your code runs, with no configuration you can influence. There is no policy to deploy and no fallback path.
+
+Each platform enforces this differently, and the differences are substantive. Windows uses Authenticode, embedding a PKCS#7 signature in the PE structure, verified at load and install time and surfaced to users through SmartScreen reputation — where an unrecognised signer produces a warning even when the signature is perfectly valid. macOS uses codesign plus notarization plus stapling, with Gatekeeper enforcing on first launch and the hardened runtime constraining what the process may do at runtime. Linux has essentially no OS-enforced model for arbitrary binaries; trust is delegated entirely to the package manager and its signed repository metadata.
+
+The operational rules changed recently enough that stale knowledge is a real risk in an interview. Effective June 1, 2023, the CA/Browser Forum Code Signing Baseline Requirements require subscriber private keys to be generated, stored, and used in a hardware crypto module meeting or exceeding FIPS 140-2 Level 2 or equivalent — for OV certificates as well as EV. The file-based certificate workflow is simply no longer available, and anyone describing it as current practice is describing something that stopped being issued years ago. Lifetimes have tightened too, capped at 460 days for certificates issued on or after March 1, 2026.
+
+That constraint pushed everyone toward the architecture that was already correct: a dedicated signing service. Build agents produce unsigned artifacts and request signatures. Keys live in an HSM or cloud KMS and never leave it. Authentication uses short-lived federated credentials rather than a stored secret. Policy decides what may be signed and by whom, and an audit log records every operation. This is what makes a signature meaningful rather than ceremonial — it is a statement that a specific pipeline built a specific artifact, and that is only worth anything if the key could not have been used by anything else.
+
+Two adjacent practices complete the picture and interviewers do ask about both. Reproducible builds — deterministic output from identical inputs — make a signature independently verifiable, because a third party can rebuild and compare rather than simply trusting you. And an SBOM in SPDX or CycloneDX format answers the question your signature cannot: what is actually inside this binary, and which of it is now known to be vulnerable. Related topics cover UEFI Secure Boot and kernel module signing, and the SLSA, Sigstore, and cosign container story; this one stays on application binaries you ship to end users.`,
+    whenToUse: [
+      'Shipping any desktop or command-line application to end users on Windows or macOS, where unsigned software is warned against or blocked by default',
+      'Distributing installers, updaters, or drivers where the operating system enforces signature checks before execution',
+      'Enterprise customers requiring a verifiable signing chain, an audit trail, and an SBOM before they will approve a deployment',
+      'Migrating from file-based certificates to HSM or cloud signing after the 2023 hardware key storage requirement',
+      'Building a release pipeline where the signing key must never be readable by a build agent or a compromised dependency',
+    ],
+    keyConcepts: [
+      {
+        term: 'Authenticode',
+        definition: 'The Windows code signing format. A PKCS#7 signature is embedded in the certificate table of a PE file — executables, DLLs, drivers, MSIs, catalogs, and PowerShell scripts. signtool.exe signs, timestamps, and verifies it, returning 0 on success, 1 on failure, and 2 on completion with warnings.',
+      },
+      {
+        term: 'RFC 3161 timestamping',
+        definition: 'A countersignature asserting the signing time from a trusted authority, applied with signtool using the RFC 3161 timestamp URL option together with a timestamp digest algorithm. Without it the signature becomes invalid when the certificate expires, retroactively breaking every copy already shipped. The legacy timestamp option cannot be combined with it.',
+      },
+      {
+        term: 'Hardware key storage requirement',
+        definition: 'Effective June 1, 2023, the CA/Browser Forum Code Signing Baseline Requirements require the subscriber private key to be generated, stored, and used in a suitable hardware crypto module meeting or exceeding FIPS 140-2 Level 2 or equivalent. Applies to OV and EV alike, and is satisfied by an HSM, a hardware token, or a qualified cloud signing service.',
+      },
+      {
+        term: 'EV versus OV',
+        definition: 'Both now require hardware key protection. EV involves stricter organisation vetting and historically grants immediate SmartScreen reputation, whereas an OV signer must accumulate reputation through download volume. Kernel-mode driver signing is a separate regime requiring attestation signing through Microsoft Partner Center.',
+      },
+      {
+        term: 'Hardened Runtime',
+        definition: 'A macOS opt-in enabled through a codesign option that restricts the process — no unsigned executable memory, no arbitrary dynamic-linker environment variables, library validation enforced. It is required for notarization, and narrow entitlements in the com.apple.security.cs namespace grant specific exceptions such as allowing a just-in-time compiler.',
+      },
+      {
+        term: 'Notarization and stapling',
+        definition: 'The notarytool submit command uploads the artifact to Apple, which scans it and issues a ticket; a wait option blocks for the result and the log subcommand explains failures. The stapler tool then attaches the ticket to the app, disk image, or installer package so Gatekeeper can verify offline.',
+      },
+      {
+        term: 'Digest signing',
+        definition: 'The client hashes the artifact and sends only the digest to the signing service, which returns a signature. The artifact never leaves the build machine and the key never leaves the HSM. On Windows this is what the signtool /dlib option performs, combining digest generation, signing, and ingestion into one atomic operation.',
+      },
+      {
+        term: 'Reproducible build',
+        definition: 'A build producing bit-identical output from identical inputs, typically requiring a fixed source date for embedded timestamps, sorted inputs, stripped build paths, and a pinned toolchain. It lets an independent party rebuild and compare, turning a signature from a claim about identity into a verifiable claim about content.',
+      },
+    ],
+    approach: [
+      'Enumerate every artifact that reaches a user — executables, libraries, installers, updaters, scripts, helper tools — because one unsigned nested binary fails the whole bundle on macOS and undermines the signature on Windows',
+      'Obtain certificates with hardware-backed keys via an HSM, a token, or a cloud signing service, since file-based certificates are no longer issuable under the current baseline requirements',
+      'Build or adopt a signing service so agents send digests and receive signatures, and no agent ever holds key material',
+      'Authenticate the signing path with short-lived federated credentials from CI rather than a stored secret, scoping the trust policy to the specific repository and environment',
+      'Make timestamping non-optional on Windows and the hardened runtime plus secure timestamp non-optional on macOS, enforced in the signing wrapper rather than left as a flag someone can forget',
+      'Sign macOS bundles inside-out — nested frameworks and helpers first, outer bundle last — then notarize with a blocking submit and staple the returned ticket',
+      'Verify in CI as a gate: signtool verify with the default authentication policy on Windows, a deep strict codesign verify plus a Gatekeeper assessment on macOS, and fail the pipeline on any unexpected exit code',
+      'Generate an SBOM alongside each signed artifact and store both with the release, so a future vulnerability disclosure is answered from records rather than archaeology',
+    ],
+    pitfalls: [
+      'Signing without a timestamp, which schedules an outage for the day the certificate expires and retroactively invalidates every copy already in the field',
+      'Storing a .pfx or .p12 in a CI secret store — no longer permitted under the current baseline requirements, and readable by anything that runs on the agent',
+      'Signing only the top-level executable and leaving nested libraries, helper tools, or frameworks unsigned, which fails macOS verification outright',
+      'Relying on the codesign deep option to sign nested code, which Apple advises against because it does not apply entitlements correctly to the nested items',
+      'Notarizing but not stapling, so first launch requires an online ticket lookup and fails for offline or proxied users while working perfectly in every test you ran',
+      'Treating the signature as a content guarantee when builds are not reproducible — it proves who signed, not that the binary corresponds to the source anyone reviewed',
+    ],
+    keyQuestions: [
+      {
+        question: 'Walk through signing a Windows application end to end in CI, without the private key ever reaching a build agent.',
+        answer: `Start with what the certificate looks like now, because this is where stale answers get caught.
+
+Effective June 1, 2023, the CA/Browser Forum Code Signing Baseline Requirements mandate that the subscriber's private key be generated, stored, and used in a suitable hardware crypto module — FIPS 140-2 Level 2 or equivalent as the floor. That applies to OV certificates as well as EV. You cannot obtain a certificate whose key you can copy into a CI secret. Lifetimes tightened as well: certificates issued on or after March 1, 2026 cannot exceed 460 days of validity, so renewal is an annual operational event rather than something you do every three years and forget.
+
+That leaves three viable shapes. A managed cloud signing service such as the Azure offering — originally Trusted Signing, now documented as Artifact Signing — which provides zero-touch certificate lifecycle management inside FIPS 140-3 Level 3 certified HSMs. A cloud KMS or dedicated HSM you operate, fronted by your own signing service. Or a physical token, which does not automate and therefore does not belong in CI.
+
+The key insight for the CI design is that signing requires neither the artifact nor the key to travel. Only a digest moves. signtool supports this directly through the /dlib option, which specifies a DLL implementing the Authenticode digest signing function; Microsoft documents it as equivalent to using the digest-generate, digest-sign, and digest-ingest options together, invoked as one atomic operation. The file stays on the agent, the digest goes to the service, the signature comes back and is ingested. Azure's service describes this as content-confidential signing — your file never leaves your endpoint.
+
+The pipeline:
+
+\`\`\`yaml
+- step:
+    name: Sign Windows artifacts
+    runs-on: [self.hosted, windows]
+    oidc: true
+    script:
+      - pwsh -NoProfile -File ./ci/sign-windows.ps1
+\`\`\`
+
+\`\`\`powershell
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+# Federated login: the OIDC token is exchanged for a short-lived credential.
+# No client secret, no certificate file, nothing persistent on the agent.
+az login --service-principal \`
+    --username $env:AZURE_CLIENT_ID \`
+    --tenant   $env:AZURE_TENANT_ID \`
+    --federated-token $env:BITBUCKET_STEP_OIDC_TOKEN | Out-Null
+
+$signtool = "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.22621.0\\x64\\signtool.exe"
+$dlib     = "C:\\signing\\client\\bin\\x64\\Azure.CodeSigning.Dlib.dll"
+
+$targets = Get-ChildItem -Path dist -Include *.exe,*.dll -Recurse
+
+foreach ($t in $targets) {
+    & $signtool sign /v /fd SHA256 \`
+        /tr http://timestamp.acs.microsoft.com /td SHA256 \`
+        /dlib $dlib /dmdf .\\signing-metadata.json \`
+        $t.FullName
+    if ($LASTEXITCODE -ne 0) { throw "signing failed for $($t.Name) with $LASTEXITCODE" }
+}
+
+foreach ($t in $targets) {
+    & $signtool verify /pa /v $t.FullName
+    if ($LASTEXITCODE -ne 0) { throw "verification failed for $($t.Name)" }
+}
+\`\`\`
+
+The details that matter, and that an interviewer will probe.
+
+The file digest and timestamp digest algorithms are both required, not optional. Microsoft documents that Windows SDK, HLK, WDK, and ADK builds 20236 and later require the file digest option when signing and the timestamp digest option when timestamping — initially a warning with error code 0, an error in later versions — and recommends SHA256 as more secure than SHA1.
+
+Use the RFC 3161 timestamp option rather than the legacy one. The two cannot be combined, and Microsoft documents that if neither is specified the signed file is not time stamped at all. Timestamping is what keeps every already-shipped copy verifying after the certificate expires, and with 460-day certificates that expiry is never far away.
+
+Sign every PE, not just the entry point. Libraries, helper executables, and bundled tools. An installer whose payload is unsigned still triggers warnings, and enterprise inventory tooling flags the unsigned components during procurement review.
+
+Verify with the default authentication policy option. Without it signtool applies the Windows Driver Verification Policy and will report a good application signature as invalid. This trips up almost everyone the first time and sends them looking for a signing bug that does not exist.
+
+Check the exit code after every call, and know that signtool returns 0 for success, 1 for failure, and 2 for completion with warnings. Treating any non-zero as fatal is the safe default; treating only 1 as fatal silently accepts warning states you probably want to see.
+
+Federated credentials rather than a stored secret. The OIDC token is minted per step and expires in minutes. There is no client secret in the repository to leak, rotate, or inherit when someone leaves.
+
+The remaining piece is SmartScreen. A valid signature is necessary but not sufficient — reputation accrues per signing identity, so a newly issued OV certificate produces warnings until enough clean downloads accumulate, while EV historically grants that reputation immediately. Practically this means treating a certificate identity change as a release-risk event and not rotating right before a major launch.`,
+      },
+      {
+        question: 'Explain the full macOS chain: signing, Hardened Runtime, notarization, and stapling. What breaks at each stage?',
+        answer: `Four distinct mechanisms, commonly collapsed into the word signing, and each fails in its own way.
+
+Stage one, code signing. You sign with a Developer ID Application certificate — the one for distribution outside the App Store. Apple Development certificates work only on registered devices; using one for a public build produces an app that runs on your machine and nowhere else, which is a very confusing bug to hit late.
+
+Signing is inside-out. Nested code must be signed before the thing containing it, because signing the outer bundle seals a hash of everything inside:
+
+\`\`\`bash
+IDENTITY="Developer ID Application: Example Corp (ABCDE12345)"
+
+# Frameworks, dynamic libraries, and helper tools first
+find MyApp.app/Contents/Frameworks -name '*.framework' -o -name '*.dylib' | while read -r item; do
+  codesign --force --sign "$IDENTITY" --options runtime --timestamp "$item"
+done
+
+# Then the outer bundle, with entitlements
+codesign --force --sign "$IDENTITY" \\
+  --options runtime \\
+  --timestamp \\
+  --entitlements ./Entitlements.plist \\
+  MyApp.app
+\`\`\`
+
+Apple's guidance is against using the deep option as a signing shortcut. It exists and it appears to work, but it does not apply entitlements correctly to nested code, so helpers end up signed without the entitlements they need — and that failure surfaces at runtime, not at signing time, which is the worst place to discover it.
+
+What breaks here: signing with the wrong certificate type; omitting the timestamp, which is required for notarization; and re-signing an outer bundle after modifying anything inside it, which invalidates the seal.
+
+Stage two, the hardened runtime. The runtime option opts the process into a restricted execution environment: no unsigned executable memory, no arbitrary dynamic-linker environment variable injection, and library validation enforced so only libraries signed by you or Apple will load. It is required for notarization.
+
+That last restriction is where real applications break. A just-in-time compiling runtime needs the allow-jit entitlement. An application loading a plugin signed by a third party needs library validation disabled. Each of these is a genuine reduction in security, so the correct posture is to add the narrowest entitlement that makes the app work and be able to justify it, rather than adding the broad ones pre-emptively because a forum post said to.
+
+What breaks here: an app that launched fine in development crashes on first run after the runtime is enabled, because an embedded interpreter or a plugin is now blocked. This is discovered late and feels sudden.
+
+Stage three, notarization. This is not signing. You upload the artifact, an automated Apple service scans it for malicious content and checks that it is properly signed with a Developer ID certificate, the hardened runtime, and a secure timestamp, and it returns a ticket.
+
+\`\`\`bash
+# One-time credential storage, preferably an App Store Connect API key
+xcrun notarytool store-credentials "notary-profile" \\
+  --key ./AuthKey_XXXXXXXX.p8 --key-id XXXXXXXX --issuer "$ISSUER_UUID"
+
+ditto -c -k --keepParent MyApp.app MyApp.zip
+
+xcrun notarytool submit MyApp.zip --keychain-profile "notary-profile" --wait
+
+# On failure, this is where the actual reason lives
+xcrun notarytool log <submission-id> --keychain-profile "notary-profile"
+\`\`\`
+
+The wait option blocks until Apple returns a result, which is what makes it usable in a pipeline; without it you get a submission identifier and must poll. altool, the predecessor, has been retired, so any script or blog post still referencing it is out of date.
+
+What breaks here: submission is rejected because something nested is unsigned, missing the hardened runtime, or missing a secure timestamp. The top-level status message is nearly useless; the log subcommand gives per-file reasons. Budget for this being iterative on the first attempt for any non-trivial bundle.
+
+Stage four, stapling. Notarization produces a ticket held on Apple's servers. Stapling attaches a copy to the artifact:
+
+\`\`\`bash
+xcrun stapler staple MyApp.app
+xcrun stapler validate MyApp.app
+\`\`\`
+
+Without stapling the app is still notarized, and Gatekeeper looks the ticket up online on first launch — so it works on your machine, on the reviewer's machine, and in every test you run with network access, and fails for a user who is offline or behind a restrictive corporate proxy. That is the archetypal works-everywhere-except-at-the-customer bug. Staple the app bundle, and separately staple the disk image or installer package you actually distribute, since those are distinct artifacts.
+
+Stage five, verification as a CI gate. Do not ship on the assumption it worked:
+
+\`\`\`bash
+codesign --verify --deep --strict --verbose=2 MyApp.app
+spctl --assess --type execute --verbose=4 MyApp.app
+xcrun stapler validate MyApp.dmg
+\`\`\`
+
+Note that the deep option is discouraged for signing but is exactly right for verification, because you want to check everything nested. The Gatekeeper assessment is the closest approximation to what a user's machine will do, and it is the check that catches a missing ticket before your customers do.
+
+The summary an interviewer is listening for: signing says who built it, the hardened runtime constrains what it may do, notarization is Apple's scan and ticket, and stapling makes the ticket work offline. All four are required, and each fails differently.`,
+      },
+      {
+        question: 'Design a signing architecture for CI where no build agent can be trusted with a key. What does it enforce, and what does it log?',
+        answer: `The threat model first, because it justifies everything else. A build agent runs code from your repository, your dependencies, and your dependencies' dependencies. A malicious package with an install hook, a compromised CI action, or an attacker with commit access all execute with the agent's privileges. Any key the agent can read is a key the attacker can use — and a stolen code-signing key is worse than most breaches, because the attacker can sign malware that your customers' operating systems will trust and install without a warning. Rotating it means revocation, which invalidates good signatures too unless everything was timestamped.
+
+So the requirement is absolute: no build agent ever holds key material. Not in an environment variable, not in a file, not in a keychain it can unlock, not for the duration of a single step.
+
+The architecture that satisfies it.
+
+Agents build unsigned artifacts and never touch keys.
+
+A signing service is the only thing that can reach the keys. It exposes a narrow interface — submit a digest or an artifact reference, receive a signature — and it is the sole policy enforcement point.
+
+Keys live in an HSM or cloud KMS and are non-exportable by construction. This is now mandatory rather than best practice: the CA/Browser Forum requirements since June 1, 2023 mandate hardware crypto module storage at FIPS 140-2 Level 2 or above for code-signing subscriber keys, and the managed cloud services meet it with FIPS 140-3 Level 3 HSMs.
+
+Authentication is federated and short-lived. The agent presents an OIDC token minted for that pipeline step; the service validates the issuer, the audience, and — critically — the subject claim identifying the specific repository and environment. There is no stored secret anywhere in the chain, which means nothing to leak and nothing to rotate.
+
+Only a digest crosses the wire where the format allows it. On Windows this is native: the signtool /dlib option performs digest generation, signing, and ingestion as one atomic operation, so the binary never leaves the agent and the key never leaves the HSM.
+
+The policy the service enforces, which is the part that distinguishes a real design from a key vault with an API.
+
+Who may sign. The OIDC subject must match an allowlist. A pull request pipeline from a fork gets nothing. Production signing identities are reachable only from the tag pipeline in one specific repository.
+
+What may be signed. Reject artifact types the identity is not authorised for. A team authorised to sign application binaries should not be able to sign a kernel driver or an installer for a different product line.
+
+Provenance requirements. Require the request to carry a build attestation — commit hash, pipeline identifier, builder identity — and record it alongside the signature. This is where the container-world concepts genuinely transfer: SLSA-style provenance is as meaningful for a binary as for an image, even though the verification path at the endpoint is entirely different.
+
+Rate and volume limits. A sudden burst of signing requests is a strong compromise signal, and a cap turns a full key compromise into a bounded one.
+
+Human approval for the highest tier. Release signing with a production certificate can require a second party, in the same way production deployment does.
+
+What it logs, for every operation without exception: timestamp; artifact digest before and after; the requesting identity, repository, commit, and pipeline run; the certificate or key identifier used; the policy decision and its reason; and the outcome. Ship those to an append-only store with retention exceeding your certificate lifetime.
+
+The reason the log is not paperwork: when an incident happens, the question is what this key signed and whether any of it was not yours. Without a per-operation log the answer is unbounded and you must revoke everything. With one, you enumerate the signatures, verify each against known builds, and revoke narrowly. That is the difference between a bad week and a product recall.
+
+Two refinements worth mentioning. Separate keys per environment and per product line, so a compromise is contained and revocation is surgical. And ensure everything is timestamped, because timestamped signatures made before a revocation date can remain valid — which is precisely what lets you revoke a compromised key without breaking every legitimate release you have ever shipped.
+
+The honest tradeoff: this is real infrastructure, and for a two-person team shipping one tool it is over-engineered. The minimum viable version is a managed service, which gives you HSM-held keys and cloud identity controls without building anything. The design above is what you grow into when you have multiple products, multiple teams, and a compliance requirement to answer for.`,
+      },
+      {
+        question: 'Why do reproducible builds make signatures meaningful, and how do SBOMs and embedded version metadata fit in?',
+        answer: `A signature answers exactly one question: who applied it. That is genuinely useful — it establishes accountability and it is what the operating system checks. But notice what it does not answer. It says nothing about what is inside the artifact, and nothing about whether the artifact corresponds to the source anyone reviewed.
+
+Reproducible builds close the second gap. If the same source, at the same commit, with the same declared toolchain, produces a bit-identical binary, then anyone can rebuild independently and compare hashes. The signature stops being a claim you have to take on faith and becomes a verifiable claim about content. Without reproducibility, a compromised build agent can inject a backdoor and the signing service will sign it, correctly, and every check downstream will pass.
+
+The practical obstacles are mundane and each has a standard fix. Embedded timestamps are the biggest — set a fixed source date derived from the commit and honour it in the build, since most modern toolchains respect that convention. Absolute build paths leak into debug information; strip them with the compiler's path-remapping flags. Filesystem iteration order differs between machines; sort inputs explicitly rather than relying on directory order. Archive metadata carries modification times and ownership; normalise them when creating tarballs. Parallel builds can order object files non-deterministically; pin the link order. And the toolchain itself must be pinned by digest, because a different compiler patch version produces different code.
+
+Signing interacts with this in a way worth stating precisely: the signature is applied after the build and embeds its own timestamp, so two signed copies are not byte-identical even when the unsigned inputs were. That is expected and fine. You verify reproducibility on the unsigned artifact and sign afterwards.
+
+SBOMs answer the first gap — what is inside. For native code this is harder than for a dependency-manager ecosystem, because statically linked third-party code leaves no manifest in the artifact. You generate it from the build rather than from the binary: capture what the build system actually linked, emit it in SPDX or CycloneDX, and attach it to the release alongside the signature.
+
+The value is realised entirely at disclosure time. A vulnerability lands in a compression library. Without an SBOM you are grepping build logs and asking people what they remember, for every version still under support. With one it is a query: which released artifacts contain this component below the fixed version. That is the difference between a same-day customer advisory and a two-week investigation. It is also increasingly a procurement requirement rather than an engineering preference, with US Executive Order 14028 having pushed SBOM expectations into federal software supply requirements.
+
+Version metadata embedded in the binary is the smallest of the three and the most immediately practical. When a customer sends you a crash from a binary they downloaded eighteen months ago, you need to know exactly which build it is.
+
+On Windows a version resource compiled from a resource script carries the file version, product version, company name, and custom string fields — put the commit hash in one of them. On macOS the bundle property list carries a short version string for the user-facing version and a separate build version for the build identifier. On Linux and ELF generally there is no standard equivalent, so the conventions are a build identifier recorded by the linker — which is also what links a stripped binary to its separated debug symbols — plus an embedded version string the binary can print on demand.
+
+The rule that makes all of this coherent: whatever version you embed must be the same identifier that appears in your signing log, your SBOM, and your build provenance record. When those four agree, an incident is a lookup. When they disagree, every question takes a day and the answers are guesses.
+
+The synthesis for an interview: signing establishes who, reproducibility establishes what, the SBOM establishes what is inside, and embedded metadata establishes which build. Any one of them alone leaves an obvious gap, and the gaps are exactly where post-incident investigations stall.`,
+      },
+      {
+        question: 'How does Linux package signing differ, and why is there no Gatekeeper equivalent?',
+        answer: `The structural difference is that Linux never had a single vendor to enforce a policy. Windows has Microsoft, macOS has Apple, and both can require signatures for software to run because they control the operating system and its defaults. Linux is dozens of distributions with different package managers, different trust roots, and a strong cultural expectation that the user decides what runs on their machine.
+
+So there is no operating-system-enforced check on an arbitrary ELF binary. Download a binary, make it executable, run it — the kernel does not consult a signature. Nothing warns and nothing blocks. Trust moved to a different layer entirely: the package manager.
+
+RPM signing. Packages are signed with GPG, typically through the rpmsign tool with the signing key name configured as a build macro. Clients verify against imported public keys, and the repository configuration enables signature checking so unsigned or badly signed packages are refused. Repository metadata is signed separately with a detached signature over the metadata index, so an attacker who controls the mirror cannot serve altered metadata pointing at older, vulnerable but validly signed packages — which is otherwise a real downgrade attack.
+
+DEB signing. Debian's model puts the emphasis on the repository rather than the individual package. The release file is signed, either detached or inline, and it contains hashes of the package indices, which in turn contain hashes of the package files. Verifying the release signature therefore covers everything transitively. Individual package signing exists but is rarely relied upon; the trust decision the package manager makes is about the repository.
+
+Both models share a property worth naming: they protect the distribution channel, not the file. A signed package copied out of a repository and handed to someone by other means carries a signature that nothing will check by default. This is the exact inverse of the Windows and macOS model, where the file carries its own trust and the channel is irrelevant.
+
+What that means for you as a vendor shipping Linux software.
+
+Publishing to a repository you sign is the only path that gets automatic verification. Users add your repository and import your key once, and from then on the package manager checks every update. This is what every serious vendor does, and it is worth the operational cost of running a repository.
+
+A bare tarball or a standalone binary from your website gets no verification at all beyond what the user chooses to do manually. You should still publish a detached signature and a checksum file and document how to verify them, while being realistic that most users will not.
+
+Flatpak and Snap have their own signing and sandboxing models, closer to the app-store shape, and they do verify. If your distribution goes through them you are in a genuinely stronger position.
+
+The closest thing to an operating-system-enforced model is IMA and EVM — kernel subsystems that measure and appraise file integrity against signatures stored in extended attributes, refusing to execute files that fail. They exist, they work, and they are essentially absent from general-purpose desktop and server distributions because they require enrolling keys, signing the entire filesystem, and accepting a real operational burden on every update. You see them in high-assurance and regulated deployments, not on a developer laptop. Related topics cover UEFI Secure Boot and kernel module signing, which enforce at boot and module-load time and are a genuinely different problem from application distribution.
+
+The practical consequence for a release engineer supporting all three platforms: your signing pipeline has three shapes, not one. Windows and macOS sign the artifact itself and the operating system enforces. Linux signs the repository and the packages within it, and the package manager enforces — but only for users who installed from your repository. Budget for the fact that your Linux distribution channel is your trust boundary, and that anything shipped outside it is effectively unverified no matter how carefully you signed it.`,
+      },
+    ],
+    references: [
+      'https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool',
+      'https://cabforum.org/working-groups/code-signing/requirements/',
+      'https://learn.microsoft.com/en-us/azure/trusted-signing/overview',
+      'https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution',
+      'https://reproducible-builds.org/docs/source-date-epoch/',
+    ],
+  },
+
 ];
