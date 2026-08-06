@@ -441,6 +441,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Accumulated screenshot dataUrls — filled synchronously on each snap,
   // processed all-at-once when the idle timer fires or Coding is clicked.
   const pendingSnapUrlsRef = useRef<string[]>([]);
+  // True once the "looks cut off" nudge has fired for the current capture.
+  // The next Coding click solves with whatever was captured — the heuristic is
+  // a hint, never a wall the user can get stuck behind mid-interview.
+  const cutoffPromptedRef = useRef(false);
 
   // Signature of the problem the solver last AUTO-generated for. Every
   // automatic path (URL scrape, DOM text, image OCR, voice, idle timer)
@@ -1357,6 +1361,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     // Collect dataUrls synchronously — no per-screenshot OCR.
     // Processing happens all-at-once when the idle timer fires or Coding is clicked.
     const handler = ({ dataUrl }: { dataUrl: string }) => {
+      if (pendingSnapUrlsRef.current.length === 0) cutoffPromptedRef.current = false;
       pendingSnapUrlsRef.current = [...pendingSnapUrlsRef.current, dataUrl];
       const count = pendingSnapUrlsRef.current.length;
       setInputMode('image');
@@ -1623,17 +1628,30 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
       // Image flow completeness check: if the extracted text looks cut off,
       // re-enter the multi-page session and ask the user for more screenshots.
-      if (fromImageSnap && !looksComplete(combinedText)) {
+      // Two things this MUST get right, or the user is trapped mid-interview:
+      //   1. Put the already-captured pages BACK into the pending collection.
+      //      The Coding click drained pendingSnapUrlsRef before calling us, so
+      //      without this a follow-up snap starts a fresh 1-page collection and
+      //      silently discards page 1 — "snap more" could never accumulate.
+      //   2. Nudge at most once per capture. looksComplete() is a heuristic and
+      //      false-positives on short, self-contained problems; a second Coding
+      //      click must always solve rather than re-block.
+      if (fromImageSnap && !cutoffPromptedRef.current && !looksComplete(combinedText)) {
+        cutoffPromptedRef.current = true;
+        pendingSnapUrlsRef.current = urls;
+        setSnapImageUrls(urls);
+        setImagePreview(urls[urls.length - 1] ?? null);
         setProblemText(combinedText);
         setInputMode('image');
         multiPageCapturingRef.current = true;
         setMultiPageCapturing(true);
         setMultiPageCount(urls.length);
-        setError('Problem appears cut off — snap more screenshots to capture the rest, then click Coding.');
+        setError('Problem may be cut off — snap the rest and click Coding, or click Coding again to solve with what\'s captured.');
         setIsProcessing(false);
         return;
       }
 
+      cutoffPromptedRef.current = false;
       setProblemText(combinedText);
       setSnapChipCode(combinedText);
       setStarterCode(extractedStarterCode);
@@ -1922,6 +1940,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   // Add a dataUrl to the IMAGE chip collection and update display state.
   const addToSnapCollection = useCallback((dataUrl: string) => {
+    // Empty → first page means a brand-new capture, so the cut-off nudge is
+    // owed again. Appending to an existing collection is the same capture and
+    // must NOT re-arm it, or the user bounces off the warning a second time.
+    if (pendingSnapUrlsRef.current.length === 0) cutoffPromptedRef.current = false;
     const newUrls = [...pendingSnapUrlsRef.current, dataUrl];
     pendingSnapUrlsRef.current = newUrls;
     setSnapImageUrls(newUrls);

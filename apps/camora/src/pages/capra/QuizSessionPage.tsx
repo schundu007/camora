@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/static-components */
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import mcqData from '../../data/capra/mcq-problems.json';
 
 const CAPRA_API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
@@ -104,6 +105,7 @@ const DOMAIN_CATS: { label: string; value: string; domains: string[] }[] = [
 export default function QuizSessionPage() {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
+  const { token, isLoading: authLoading } = useAuth();
 
   const domainParam   = searchParams.get('domain') || '';
   // Support comma-separated domains: ?domain=Docker,Kubernetes,Ansible
@@ -154,12 +156,21 @@ export default function QuizSessionPage() {
     const ids      = selected.map(p => p.id);
 
     try {
+      // /api/v1/mcq is mounted behind `authenticate` on ascend-backend, so the
+      // request MUST carry credentials or every batch 401s. Bearer is the
+      // primary path; credentials:'include' lets the cariara_sso cookie serve
+      // as the fallback the middleware also accepts.
       const res = await fetch(`${CAPRA_API}/api/v1/mcq/batch`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ ids }),
+        method:      'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ ids }),
       });
 
+      if (res.status === 401) throw new Error('Your session expired. Please sign in again to load questions.');
       if (!res.ok) throw new Error(`Server error (${res.status})`);
 
       const data = await res.json();
@@ -175,15 +186,19 @@ export default function QuizSessionPage() {
     } finally {
       setLoading(false);
     }
-  }, [countParam, domainParam, diffFilter]);
+  }, [countParam, domainParam, diffFilter, token]);
 
   // ── Mount / filter change ───────────────────────────────────────────────────
+  // Wait for AuthContext to finish hydrating. Firing on mount raced the /me
+  // round-trip that mints the bearer token, so the batch went out unauthenticated
+  // and came back 401 before the token ever landed.
   useEffect(() => {
+    if (authLoading) return;
     const pool = buildPool();
     setMetaPool(pool);
     fetchQuestions(pool);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [domainParam, diffFilter, countParam]);
+  }, [domainParam, diffFilter, countParam, authLoading, token]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   function selectOption(qId: string, letter: string) {
