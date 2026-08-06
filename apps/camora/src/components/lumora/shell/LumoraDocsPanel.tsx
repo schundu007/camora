@@ -3264,7 +3264,14 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               {showDropdown && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
+                  {/* data-overlay-keep is REQUIRED here. In overlay mode
+                      globals.css strips background-color from every element
+                      inside .lumora-shell-root that is not a button/chip/badge,
+                      so without it this menu renders fully transparent and the
+                      Prep section list behind it reads straight through the
+                      company names. The z-50 was never the problem. */}
                   <div
+                    data-overlay-keep
                     className="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl overflow-hidden"
                     style={{
                       background: 'color-mix(in srgb, var(--bg-surface) 96%, var(--cam-primary) 4%)',
