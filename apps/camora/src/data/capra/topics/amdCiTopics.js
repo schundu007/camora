@@ -11,26 +11,20 @@
 // text — those are framed as questions to ask, never as asserted fact.
 // Do not "improve" this file by filling those gaps from memory.
 
-export const amdCiCategories = [
-  { id: 'ci-arch',    name: 'CI Architecture & Cross-Repo',  icon: 'gitBranch',     color: '#3b82f6' },
-  { id: 'test-infra', name: 'Test Infrastructure & Cost',    icon: 'activity',      color: '#22c55e' },
-  { id: 'gpu-fleet',  name: 'GPU Runners & Fleet Ops',       icon: 'zap',           color: '#f59e0b' },
-  { id: 'multicloud', name: 'Multi-Cloud CI/CD Patterns',    icon: 'shield',        color: '#8b5cf6' },
-];
-
-export const amdCiTopicCategoryMap = {
-  'therock-ci-architecture':   'ci-arch',
-  'therock-cross-repo-dedup':  'ci-arch',
-  'therock-test-topology':     'test-infra',
-  'therock-selective-builds':  'test-infra',
-  'therock-gpu-runners':       'gpu-fleet',
-  'osdu-multicloud-cicd':      'multicloud',
-};
+// These topics render on the DevOps page (/capra/prepare?page=devops), mapped
+// by subject in devopsTopicCategoryMap: the four build-centric ones under
+// 'nativebuild', the runner-fleet and multi-cloud ones under 'cicdtools'.
+// This file previously exported its own amdCiCategories + amdCiTopicCategoryMap,
+// but nothing ever imported them and the file was absent from HEAVY_TOPIC_LOADERS,
+// so all six topics rendered nowhere. Removed rather than left as dead exports.
 
 export const amdCiTopics = [
   {
     id: 'therock-ci-architecture',
     title: 'TheRock CI Architecture — Python over YAML',
+    icon: 'code',
+    color: '#ea580c',
+    questions: 3,
     description:
       'How AMD structures CI for a CMake super-project that builds ROCm from source across submodules, and why almost none of the logic lives in workflow YAML.',
     introduction:
@@ -63,7 +57,7 @@ export const amdCiTopics = [
           'The concurrency group uses github.head_ref || github.run_id with cancel-in-progress. head_ref exists only for pull requests, so PR runs cancel their own predecessors while push and scheduled runs never cancel each other. This is the primary mechanism that returns scarce GPU capacity when a PR is force-pushed.',
       },
     ],
-    questions: [
+    keyQuestions: [
       {
         question: 'Why does TheRock keep CI logic in Python instead of GitHub Actions expressions?',
         answer:
@@ -90,6 +84,9 @@ export const amdCiTopics = [
   {
     id: 'therock-cross-repo-dedup',
     title: 'Cross-Repo CI Deduplication & the Submodule-Inversion Problem',
+    icon: 'gitBranch',
+    color: '#ea580c',
+    questions: 3,
     description:
       'How a super-project and its component repos share one CI definition when each needs to be the "outer" repo, and what the revert history teaches about rolling out CI-of-CI changes.',
     introduction:
@@ -122,7 +119,7 @@ export const amdCiTopics = [
           'Consuming repos call ROCm/TheRock/.github/workflows/...@main rather than a pinned SHA. An in-repo comment acknowledges this: "using main until full migration, then switch to pinned SHA (#3343)." A TheRock CI change therefore reaches both consuming repos immediately.',
       },
     ],
-    questions: [
+    keyQuestions: [
       {
         question: 'Three repositories carry near-identical CI logic. How would you consolidate them?',
         answer:
@@ -150,6 +147,9 @@ export const amdCiTopics = [
   {
     id: 'therock-test-topology',
     title: 'Test Pipeline Topology & Enforced Cost Budgets',
+    icon: 'checkCircle',
+    color: '#ea580c',
+    questions: 3,
     description:
       'How TheRock separates build from test, tiers test suites by cost, and enforces those budgets as hard CI timeouts rather than guidelines.',
     introduction:
@@ -182,7 +182,7 @@ export const amdCiTopics = [
           'test_sanity_check runs first with a 5-minute timeout and --base-only artifacts; the full component matrix depends on it. A cheap gate avoids committing scarce GPU time to a fundamentally broken build. The component matrix itself uses fail-fast: false so one architecture failing does not kill the fleet-wide run.',
       },
     ],
-    questions: [
+    keyQuestions: [
       {
         question: 'How would you make full test suites affordable when GPU runners are scarce?',
         answer:
@@ -209,6 +209,9 @@ export const amdCiTopics = [
   {
     id: 'therock-selective-builds',
     title: 'Selective Builds & Affected-Component Detection',
+    icon: 'codepen',
+    color: '#ea580c',
+    questions: 3,
     description:
       'The three-layer cascade that decides whether CI runs at all, which build stages rebuild, and which tests execute — and where its dependency graph is only an approximation.',
     introduction:
@@ -241,7 +244,7 @@ export const amdCiTopics = [
           'A false positive costs GPU minutes; a false negative ships an untested regression. That asymmetry is why every layer fails toward running more work, and why the wildcard fallback on empty input is the right default.',
       },
     ],
-    questions: [
+    keyQuestions: [
       {
         question: 'The test dependency graph is a regex over a thousand CMake files. What breaks, and how would you fix it?',
         answer:
@@ -268,6 +271,9 @@ export const amdCiTopics = [
   {
     id: 'therock-gpu-runners',
     title: 'Ephemeral Kubernetes Runners & GPU Fleet Operations',
+    icon: 'zap',
+    color: '#16a34a',
+    questions: 3,
     description:
       'Running GitHub Actions on AKS with ephemeral pods, why fixed GPU inventory makes autoscaling the wrong frame, and how weighted random selection differs from a scheduler.',
     introduction:
@@ -300,7 +306,7 @@ export const amdCiTopics = [
           'Ephemeral pods cannot carry a local build cache, so ccache lives in shared object storage. But multi-gigabyte ROCm images mean pull time can exceed job time, which argues for keeping nodes warm and cycling only pods — the expensive, slow-to-provision thing is the GPU node, not the pod.',
       },
     ],
-    questions: [
+    keyQuestions: [
       {
         question: 'GPU pools are fixed inventory allocated by weighted random selection. Design something better.',
         answer:
@@ -328,6 +334,9 @@ export const amdCiTopics = [
   {
     id: 'osdu-multicloud-cicd',
     title: 'Multi-Cloud CI/CD at Platform Scale — the OSDU Pattern',
+    icon: 'cloud',
+    color: '#16a34a',
+    questions: 3,
     description:
       'How OSDU structures cloud-agnostic services with per-CSP implementations, what shared pipeline templates cost, and why hand-applied infrastructure drifts.',
     introduction:
@@ -360,7 +369,7 @@ export const amdCiTopics = [
           'standard-setup.yml runs trusted-merge-branch-verification in the review stage, with trusted- prefixed branches running as child pipelines, specifically so fork merge requests never receive cloud credentials. A different solution to the same problem as gating fork pull requests in GitHub Actions.',
       },
     ],
-    questions: [
+    keyQuestions: [
       {
         question: 'Why does Terraform drift happen, and what actually prevents it?',
         answer:
