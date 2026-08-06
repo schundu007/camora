@@ -14,7 +14,9 @@ import React from 'react';
 
 // Base Icon component that renders SVG icons by name
 export const Icon = ({ name, className = '', size = 24, ...props }) => {
-    const icon = icons[name];
+    // Fall back through the alias table before giving up — topic data uses
+    // kebab-case and Lucide/Feather spellings that don't match our camelCase keys.
+    const icon = icons[name] || icons[iconAliases[name]];
     if (!icon) {
         console.warn(`Icon "${name}" not found`);
         return null;
@@ -480,7 +482,74 @@ const icons = {
     gauge: `<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>`,
     codepen: `<polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/><polyline points="2 15.5 12 8.5 22 15.5"/><line x1="12" y1="2" x2="12" y2="8.5"/>`,
     gitlab: `<path d="m22 13.29-3.33-10a.42.42 0 0 0-.14-.18.38.38 0 0 0-.22-.11.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18l-2.26 6.67H8.32L6.1 3.26a.42.42 0 0 0-.1-.18.38.38 0 0 0-.26-.08.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18L2 13.29a.74.74 0 0 0 .27.83L12 21l9.69-6.88a.71.71 0 0 0 .31-.83z"/>`,
+
+    // ── Added 2026-08-06: names referenced by topic data that had no glyph, so
+    // <Icon> logged "not found" and rendered nothing. Same 24x24 / 2px stroke.
+    alertOctagon: `<polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>`,
+    checkSquare: `<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>`,
+    arrowUp: `<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>`,
+    arrowDown: `<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>`,
+    anchor: `<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0020 0h-3"/>`,
+    key: `<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>`,
+    layout: `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>`,
+    architecture: `<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="8.5" y="14" width="7" height="7" rx="1"/><path d="M6.5 10v2a2 2 0 002 2h.5"/><path d="M17.5 10v2a2 2 0 01-2 2H15"/>`,
+    circle: `<circle cx="12" cy="12" r="10"/>`,
+    monitor: `<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>`,
+    tv: `<rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>`,
+    windows: `<path d="M3 5.5l7.5-1v7H3v-6z"/><path d="M12.5 4.2L21 3v8.5h-8.5v-7.3z"/><path d="M3 12.5h7.5v7L3 18.5v-6z"/><path d="M12.5 12.5H21V21l-8.5-1.2v-7.3z"/>`,
+    shoppingBag: `<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>`,
+    hammer: `<path d="M14 6l-4.5 4.5a1.5 1.5 0 01-2.12 0L6 9.1a1.5 1.5 0 010-2.12L10.5 2.5"/><path d="M10 8l8 8"/><path d="M17 7l4 4-3 3-4-4z"/><path d="M9 12l-6.3 6.3a2 2 0 002.83 2.83L12 15"/>`,
+    move: `<polyline points="5 9 2 12 5 15"/><polyline points="9 5 12 2 15 5"/><polyline points="15 19 12 22 9 19"/><polyline points="19 9 22 12 19 15"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/>`,
+    lifeBuoy: `<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/>`,
+    megaphone: `<path d="M3 11l18-6v14l-18-6v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/>`,
+    maximize: `<path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/>`,
+    palette: `<circle cx="13.5" cy="6.5" r="1.5"/><circle cx="17.5" cy="10.5" r="1.5"/><circle cx="8.5" cy="7.5" r="1.5"/><circle cx="6.5" cy="12.5" r="1.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>`,
+    penTool: `<path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>`,
+    toggleLeft: `<rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="8" cy="12" r="3"/>`,
+    toggleRight: `<rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="16" cy="12" r="3"/>`,
+    clipboardList: `<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>`,
+    cube: `<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>`,
+    stack: `<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>`,
+    academic: `<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/>`,
+    merge: `<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 009 9"/>`,
+    trello: `<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/>`,
 };
+
+// Alias table — alternate spellings that appear in topic data (kebab-case,
+// Lucide/Feather names, plain synonyms). Without these <Icon> logged
+// "not found" and rendered nothing at all, leaving a hole in the layout.
+const iconAliases = {
+    'git-branch': 'gitBranch',
+    'git-commit': 'gitCommit',
+    'git-merge': 'gitMerge',
+    'git-pull-request': 'gitPullRequest',
+    'refresh-cw': 'refreshCw',
+    'file-text': 'fileText',
+    'check-circle': 'checkCircle',
+    'message-square': 'messageSquare',
+    'bar-chart-2': 'barChart',
+    'code-2': 'code',
+    'volume-2': 'headphones',
+    'trending-down': 'trendDown',
+    'trending-up': 'trendingUp',
+    'arrow-right-left': 'arrowUpDown',
+    'alert-circle': 'alertCircle',
+    'alert-triangle': 'alertTriangle',
+    lineChart: 'chartLine',
+    barChart2: 'barChart',
+    mail: 'email',
+    chat: 'messageCircle',
+    letter: 'email',
+    // Semantic keys used as icon names in job/interview metadata.
+    salary: 'dollarSign',
+    rounds: 'repeat',
+    difficulty: 'gauge',
+    duration: 'clock',
+    MD: 'fileText',
+};
+
+/** Resolve a requested icon name through the alias table. */
+export const resolveIconName = (name) => (icons[name] ? name : iconAliases[name] || name);
 
 // Named icon component exports for common icons
 export const DevOpsIcon = (props) => <Icon name="devops" {...props} />;
