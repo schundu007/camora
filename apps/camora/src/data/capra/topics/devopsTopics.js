@@ -23,6 +23,8 @@ export const devopsCategories = [
   { id: 'cloudnative',      name: 'Cloud Native Patterns',             icon: 'cloud',         color: '#0ea5e9' },
   { id: 'datadevops',       name: 'Database & Data DevOps',            icon: 'database',      color: '#a855f7' },
   { id: 'helm',           name: 'Helm — Kubernetes Package Management', icon: 'package',       color: '#7c3aed' },
+  { id: 'controlplane',     name: 'Platform Control Plane & Automation', icon: 'server',        color: '#475569' },
+  { id: 'nativebuild',      name: 'Native Build Engineering — C/C++',   icon: 'cpu',           color: '#ea580c' },
 ];
 
 export const devopsTopicCategoryMap = {
@@ -223,6 +225,29 @@ export const devopsTopicCategoryMap = {
   'flux-security':                  'flux',
   'flux-monitoring':                'flux',
   'flux-migration':                 'flux',
+  // Platform Control Plane & Automation (controlPlaneTopics.js)
+  'cp-go-control-plane':            'controlplane',
+  'cp-writing-operators':           'controlplane',
+  'cp-vault':                       'controlplane',
+  // Native Build Engineering — C/C++ (nativeBuildTopics.js)
+  'nb-compilation-model':           'nativebuild',
+  'nb-linking':                     'nativebuild',
+  'nb-gcc-toolchain':               'nativebuild',
+  'nb-gcc-upgrades':                'nativebuild',
+  'nb-stdlib-abi':                  'nativebuild',
+  'nb-msvc':                        'nativebuild',
+  'nb-win-vs-posix':                'nativebuild',
+  'nb-make':                        'nativebuild',
+  'nb-cmake':                       'nativebuild',
+  'nb-cross-compilation':           'nativebuild',
+  'nb-qt-development':              'nativebuild',
+  'nb-qt-deployment':               'nativebuild',
+  'nb-conan-vcpkg':                 'nativebuild',
+  'nb-build-performance':           'nativebuild',
+  'nb-gdb-coredumps':               'nativebuild',
+  'nb-sanitizers':                  'nativebuild',
+  'nb-cpp-testing':                 'nativebuild',
+  'nb-static-analysis':             'nativebuild',
   // New topics from authoritative sources (DORA 2024, CNCF, Gateway API v1)
   'dora-2024-capabilities':             'foundations',
   'opentelemetry-collector-pipelines':  'cloudnative',
