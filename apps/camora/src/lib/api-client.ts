@@ -49,9 +49,13 @@ export async function fetchAPI<T>(
     } catch {
       errorData = { detail: response.statusText };
     }
+    // Backends use two error shapes (see CLAUDE.md): `{ detail }` and
+    // `{ error }`. Reading only `detail` threw away every lumora-backend
+    // message and rendered the useless "HTTP error 413" instead of the
+    // reason the route actually sent.
     throw new APIError(
       response.status,
-      errorData.detail || `HTTP error ${response.status}`,
+      errorData.detail || errorData.error || `HTTP error ${response.status}`,
       errorData
     );
   }

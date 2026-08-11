@@ -578,6 +578,21 @@ app.use((err, req, res, next) => {
     method: req.method,
     url: req.url,
   }, 'Unhandled error');
+
+  // body-parser rejections are the client's fault, not ours, and they carry
+  // their own status (413 entity.too.large, 400 entity.parse.failed). Masking
+  // them as 500 "Internal server error" sent users hunting for a backend
+  // outage when they had simply sent an oversized Prep Kit. Narrow to
+  // body-parser's own error types so every other error keeps the generic 500.
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      error: 'Request body is too large for this endpoint.',
+    });
+  }
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'Malformed JSON request body.' });
+  }
+
   res.status(500).json({ error: 'Internal server error' });
 });
 
