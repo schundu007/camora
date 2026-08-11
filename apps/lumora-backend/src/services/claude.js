@@ -576,7 +576,15 @@ export async function* streamResponse(question, history, options = {}) {
   if (isPitch) {
     systemPrompt = buildPitchPrompt({ resume, technical, cultureFrame, companyBriefing });
     maxTokens = 2000;
-  } else if (isShortMode) {
+  } else if (isShortMode || isBehavioral) {
+    // isBehavioral joins isShortMode here so the behavioral ANSWER CONTRACT
+    // holds on the Behavioral tab in BOTH answer modes. Previously this branch
+    // was keyed on the [SHORT] prefix alone, so Detailed mode fell past every
+    // branch to the generic prompt at the bottom — which emits no ARCHETYPE
+    // line, so answer-view.tsx found nothing to parse and rendered plain prose:
+    // no archetype badge, no STAR cards, no rebuttals panel. answerMode now
+    // modulates DEPTH within the contract (see the override after this
+    // template) instead of deciding whether the contract applies at all.
     // Load behavioral story anchor — inject the best pre-parsed STAR story for
     // the detected archetype so Claude uses the exact right experience/metric
     // rather than re-discovering it from raw resume text. Fails silently.
@@ -676,6 +684,35 @@ Think: What would fit on a sticky note that helps someone ace this question?`;
     // Raised from 600 → 1200: 600 truncated full STAR answers (Action = 3 bullets +
     // Result with metric + Follow-up) mid-sentence during live interviews.
     maxTokens = 1200;
+
+    // Behavioral tab, Detailed mode. The STRUCTURE above is what the renderer
+    // parses (answer-view.tsx keys off the ARCHETYPE line, the SITUATION/TASK/
+    // ACTION/RESULT labels and the REBUTTALS block), so it must survive
+    // verbatim — depth is a budget change, not a shape change. Loosen only the
+    // walkable-format caps, which exist for a candidate glancing down mid-
+    // sentence and are the one thing a user asking for detail is opting out of.
+    if (isBehavioral && !isShortMode) {
+      systemPrompt += `
+
+═══ DETAILED MODE — MORE ROOM, IDENTICAL SHAPE ═══
+The candidate asked for depth, so you may say more inside each section. EVERY
+structural rule above still binds without exception: the ARCHETYPE line, the
+Situation / Task / Action / Result labels and the REBUTTALS block are still
+REQUIRED, spelled exactly as specified. The UI parses those labels to render the
+answer — drop one and the whole answer collapses into an unreadable wall of
+prose. What changes, and all that changes:
+- Bullets may run to 30 words instead of 20. Still ONE idea per bullet.
+- ACTION may use up to 5 bullets instead of 3.
+- RESULT keeps its hard metric, and may add ONE sentence of downstream impact.
+- Emit 3-4 REBUTTALS instead of 2-3.
+- A direct (non-STAR) answer may use 5-7 cue-card lines instead of 3-5.
+Do NOT switch to paragraphs. Do NOT drop or rename the labels. Do NOT bolt on a
+summary section. Depth means fuller lines inside the same skeleton.`;
+      // 1200 is sized for the tight cue card; a 5-bullet ACTION plus 4 rebuttals
+      // truncates against it. Below MAX_TOKENS_DESIGN (12k) on purpose — this is
+      // still an answer someone reads aloud, not a document.
+      maxTokens = 3000;
+    }
   } else if (isCoding) {
     // CODING_SYSTEM_PROMPT is opinionated and doesn't read `resume`, so the
     // groundedContext woven into `resume` for general/design paths never
