@@ -30,10 +30,18 @@ const router = Router();
 
 router.use(authenticate);
 
-// Cap at 2 MB serialized — a healthy JD + resume + cover letter +
-// generated prep sections should fit comfortably; anything larger
-// suggests pasted nonsense or abuse.
-const MAX_BYTES = 2 * 1024 * 1024;
+// Cap at 8 MB serialized. The panel PUTs the WHOLE PrepData blob —
+// every company's JD + resume + cover letter + prep materials + the full
+// text of every study doc + every generated section. One GitHub repo
+// fetch alone adds up to 600 KB (routes/github.js MAX_TOTAL_BYTES) and
+// the UI invites "as many as you want", so the old 2 MB cap sat below
+// what a normal multi-company kit reaches: users crossed it and then
+// EVERY save 413'd forever, which also froze the RAG index (the
+// index/kit/watchlist pipeline below only runs after a save succeeds).
+// 8 MB leaves headroom under the express.json 10 MB parser limit in
+// index.js, so oversize payloads still get this clean 413 rather than
+// the parser's entity.too.large.
+const MAX_BYTES = 8 * 1024 * 1024;
 
 router.get('/state', async (req, res, next) => {
   try {
@@ -60,9 +68,15 @@ router.put('/state', async (req, res, next) => {
       return res.status(400).json({ error: 'data must be a JSON object' });
     }
     const serialized = JSON.stringify(data);
-    if (Buffer.byteLength(serialized, 'utf8') > MAX_BYTES) {
+    const bytes = Buffer.byteLength(serialized, 'utf8');
+    if (bytes > MAX_BYTES) {
+      // Name the limit, the actual size, and the way out. The panel renders
+      // this string verbatim in its sync banner; without it the user only
+      // saw "HTTP 413" and had no idea which document to drop.
+      const mb = n => (n / (1024 * 1024)).toFixed(1).replace(/\.0$/, '');
       return res.status(413).json({
-        error: `prep state exceeds ${MAX_BYTES / (1024 * 1024)} MB`,
+        error: `Prep Kit is ${mb(bytes)} MB — over the ${mb(MAX_BYTES)} MB limit. `
+          + 'Remove a large study doc or archive a company you are done with, then save again.',
       });
     }
     const r = await query(
