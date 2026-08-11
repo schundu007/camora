@@ -4,7 +4,8 @@ import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
 import { dialogConfirm } from '@/components/shared/Dialog';
-import { isQuestion, isWhisperHallucination, isBehavioralPrompt } from '@/lib/questionDetector';
+import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
+import { passesNoiseFilter, shouldAutoAnswer } from './companion/question-routing';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
@@ -27,24 +28,6 @@ const isDuplicateQuestion = (a: string, b: string): boolean => {
   const nb = normalizeQ(b);
   if (!na || !nb) return false;
   return na === nb || na.includes(nb) || nb.includes(na);
-};
-
-// Whisper hallucinations in a noisy room are low-content loops — a single word
-// repeated, or a 2-word phrase repeated ("the next thing… the next step…").
-// Catches the garbage isBehavioralPrompt lets through so the tap-to-answer list
-// stays clean.
-const looksLowContent = (s: string): boolean => {
-  const words = s.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
-  if (words.length < 4) return true;
-  const counts: Record<string, number> = {};
-  for (const w of words) counts[w] = (counts[w] || 0) + 1;
-  if (words.length <= 14 && Math.max(...Object.values(counts)) >= 3) return true;
-  const bigrams: Record<string, number> = {};
-  for (let i = 0; i < words.length - 1; i++) {
-    const b = words[i] + ' ' + words[i + 1];
-    bigrams[b] = (bigrams[b] || 0) + 1;
-  }
-  return Object.values(bigrams).some((c) => c >= 2);
 };
 
 /* Theme-aware copilot palette — flips with [data-theme="dark"] via CSS vars */
@@ -605,20 +588,40 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const coalesceBufferRef = useRef<string>('');
   const coalesceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Behavioral tap-to-answer: transcribed interviewer lines land here as
-  // PENDING questions and Sona answers NONE of them automatically. The user
-  // taps the one they actually want answered. Kills the auto-answer garbage
-  // flood from meeting chatter / Whisper hallucinations in noisy rooms.
+  // Behavioral tap-to-answer: the SOFT tier. Transcribed interviewer lines that
+  // cleared the noise floor but not shouldAutoAnswer() land here as PENDING
+  // questions for the user to tap. Lines that DO clear it are answered
+  // hands-free — see the routing in submitCoalesced. Splitting the two is what
+  // gives back auto-answers without the meeting-chatter / Whisper-hallucination
+  // flood that made blanket auto-answering unusable in noisy rooms.
   const [detectedQuestions, setDetectedQuestions] = useState<{ id: number; text: string; time: Date }[]>([]);
   const detectedIdRef = useRef(0);
+
+  // Hands-free auto-answer. ON by default — in a live interview the user's eyes
+  // are on the interviewer, and tapping every question is the one thing they
+  // can least afford to do. Only lines clearing shouldAutoAnswer() fire
+  // automatically; softer prompts still land in the tap list, so the noisy-room
+  // flood 45d885ae fixed stays fixed. Persisted so the choice survives a reload
+  // mid-interview.
+  const AUTO_ANSWER_KEY = 'lumora_behavioral_autoanswer_v1';
+  const [autoAnswer, setAutoAnswer] = useState<boolean>(() => {
+    try { return localStorage.getItem(AUTO_ANSWER_KEY) !== '0'; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(AUTO_ANSWER_KEY, autoAnswer ? '1' : '0'); } catch { /* ignore */ }
+  }, [autoAnswer]);
+  // submitCoalesced's flush runs from a timer that captured its closure when the
+  // window opened; a ref keeps the decision honest if the user toggles during it.
+  const autoAnswerRef = useRef(autoAnswer);
+  useEffect(() => { autoAnswerRef.current = autoAnswer; }, [autoAnswer]);
+  // Last auto-asked utterance. ask() only dedupes while a stream is in flight,
+  // so without this a question repeated across two quiet windows (interviewer
+  // rephrasing, same line via mic + loopback) burns a second LLM call.
+  const lastAutoAskedRef = useRef('');
   const addDetectedQuestion = useCallback((text: string) => {
     const t = (text || '').trim();
-    // Keep the tap-to-answer list clean in a noisy room. Layered filter:
-    if (!t || t.length < 15) return;                                   // fragments: "of the", "with the"
-    if (/https?:\/\/|www\.|\.(?:com|net|org|io|ai|co)\b/i.test(t)) return; // hallucinated URLs ("www.Versa.gbias.com")
-    if (isWhisperHallucination(t)) return;                             // known Whisper phantoms
-    if (!isBehavioralPrompt(t)) return;                               // pleasantries, wrap-ups, non-prompts
-    if (looksLowContent(t)) return;                                   // repetitive "next thing… next step" loops
+    // Keep the tap-to-answer list clean in a noisy room — shared noise floor.
+    if (!passesNoiseFilter(t)) return;
     setDetectedQuestions(prev => {
       // Drop near-duplicates of the last few entries (continuation fragments,
       // same utterance from two paths).
@@ -802,10 +805,22 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       // is where narration is filtered now that the per-fragment isQuestion()
       // gate in LumoraShellPage was removed (it ate ~90% of real questions).
       // Manual mic presses never reach here — they ask() directly upstream.
-      // Tap-to-answer: LIST the transcribed line as a pending question instead
-      // of auto-answering it. The user taps the ones they actually want. This
-      // is the single control point that stops the auto-answer garbage flood.
-      if (full) addDetectedQuestion(full);
+      //
+      // Two-tier routing, the single control point for flood vs. miss:
+      //   clears shouldAutoAnswer()  → answer hands-free, right now
+      //   softer / ambiguous         → tap-to-answer list, user picks
+      // Both tiers sit behind the same passesNoiseFilter() floor, so auto-answer
+      // can never become the hole that lets the 2026-06-29 garbage flood back in.
+      if (!full || !passesNoiseFilter(full)) return;
+      if (autoAnswerRef.current && shouldAutoAnswer(full)) {
+        // ask() dedupes against the active + last-queued question only while a
+        // stream is in flight; guard the idle case too.
+        if (isDuplicateQuestion(full, lastAutoAskedRef.current)) return;
+        lastAutoAskedRef.current = full;
+        askRef.current?.(full);
+        return;
+      }
+      addDetectedQuestion(full);
     }, COALESCE_MS);
   }, [addDetectedQuestion]);
 
@@ -1229,9 +1244,48 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                 </div>
               )}
-              {/* Pending detected questions (behavioral tap-to-answer). Nothing
-                  is auto-answered — these are transcribed interviewer lines and
-                  the user taps the one they want Sona to answer. */}
+              {/* Auto-answer switch. Always mounted in embedded mode (not gated
+                  on detectedQuestions.length) so the user can find and flip it
+                  BEFORE the interview starts, and so the current mode is legible
+                  at a glance instead of being inferred from Sona's behavior. */}
+              {embedded && (
+                <button
+                  onClick={() => setAutoAnswer(v => !v)}
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg w-full text-left transition-colors"
+                  style={{
+                    background: autoAnswer ? 'var(--accent-subtle)' : 'var(--bg-surface)',
+                    border: `1px solid ${autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
+                  }}
+                  role="switch"
+                  aria-checked={autoAnswer}
+                  data-tip={autoAnswer
+                    ? 'Sona answers clear questions automatically. Softer prompts still wait for a tap.'
+                    : 'Nothing is answered automatically — tap each question you want answered.'}
+                >
+                  <span
+                    className="shrink-0 inline-flex items-center rounded-full transition-colors"
+                    style={{
+                      width: 26, height: 15, padding: 2,
+                      background: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)',
+                      justifyContent: autoAnswer ? 'flex-end' : 'flex-start',
+                    }}
+                  >
+                    <span className="block rounded-full" style={{ width: 11, height: 11, background: '#fff' }} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      Auto-answer {autoAnswer ? 'on' : 'off'}
+                    </span>
+                    <span className="block text-[9px] leading-snug mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                      {autoAnswer ? 'Clear questions answered hands-free' : 'Every question waits for a tap'}
+                    </span>
+                  </span>
+                </button>
+              )}
+              {/* Pending detected questions (behavioral tap-to-answer). These are
+                  the transcribed lines that did NOT clear shouldAutoAnswer() —
+                  softer or ambiguous prompts the user taps to answer. With
+                  auto-answer off, every detected line lands here. */}
               {embedded && detectedQuestions.length > 0 && (
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between px-1">
