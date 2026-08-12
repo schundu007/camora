@@ -73,9 +73,25 @@ jobs:
         shell: bash
         run: npm pkg set build.buildVersion="1.0.$(( 2000 + ${{ github.run_number }} ))"
 
+      # Retried because electron-builder downloads its toolchain (winCodeSign,
+      # nsis) from GitHub releases DURING the build, and a 503 there fails the
+      # whole run and publishes nothing — which is what happened on 22e5a5f7,
+      # twenty minutes after the identical desktop code built clean.
+      #
+      # Nothing here is idempotency-sensitive: electron-builder rebuilds into
+      # build/ from scratch and caches whatever it did manage to fetch, so a
+      # second attempt resumes rather than repeating the whole download.
       - name: Build Windows installer
         working-directory: apps/desktop
-        run: npm run build:win
+        shell: bash
+        run: |
+          for attempt in 1 2 3; do
+            if npm run build:win; then exit 0; fi
+            echo "::warning::build:win failed (attempt ${attempt}/3) — retrying in 30s"
+            sleep 30
+          done
+          echo "::error::build:win failed 3 times — not a transient download failure"
+          exit 1
 
       - uses: actions/upload-artifact@v4
         with:
