@@ -323,7 +323,6 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // calls + shows a misleading live preview of the candidate's own voice).
   // In the mic-only fallback (this never turns true) the mic IS the interviewer
   // source, so AUTO stays on as before.
-  const speakerEverConnected = useSessionStore((s) => s.speakerAudio.everConnected);
   // Whether the dedicated interviewer stream (desktop loopback / shared tab /
   // virtual mic) is live RIGHT NOW. When it is, the behavioral LIVE toggle
   // reflects and controls THIS stream (start/stop) instead of the candidate
@@ -1130,17 +1129,13 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
   // touch a manual recording; MIC owns its own state. If the user
   // toggles AUTO off while a manual capture is in flight, the manual
   // capture continues; we just won't restart auto when it finishes.
+  // Behavioral has NO listen switch (see UnifiedMicButton) and never calls this
+  // — Sona listens there for the whole session. The branch that used to divert
+  // this to starting/stopping the interviewer stream is gone with the switch:
+  // it made one control mean two different things depending on invisible state,
+  // and its picker fought with Ask for the same audio.
   const handleModeToggle = useCallback(() => {
-    // When a dedicated interviewer stream owns "live" (desktop loopback /
-    // shared tab / virtual mic), the LIVE control pauses/resumes THAT stream
-    // instead of the candidate mic. The mic stays manual-only so the
-    // candidate's own voice never floods the Q&A. This is the single choke
-    // point for the LIVE button AND the ` / Cmd+Shift+A shortcuts, so none of
-    // them can accidentally revive the muted mic loop.
-    if (locked && speakerEverConnected) {
-      if (speaker.active) speaker.stop(); else void speaker.start();
-      return;
-    }
+    const turnOn = !continuousModeRef.current;
     // Functional setState reads the LATEST continuousMode at execution
     // time. The previous closure-based read snapshotted the value at
     // the time handleModeToggle was created — when the keyboard
@@ -1151,7 +1146,10 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     // up gold). Using `prev` keeps state in sync regardless of timing.
     let shouldStartRecording = false;
     setContinuousMode(prev => {
-      const newMode = !prev;
+      // Already in the target state (the two ears were out of sync, or a
+      // double-fire) — do nothing rather than run the side effects twice.
+      if (prev === turnOn) return prev;
+      const newMode = turnOn;
       if (newMode) {
         userPausedRef.current = false;
         if (recordingModeRef.current === 'idle') {
@@ -1191,7 +1189,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         }
       });
     }
-  }, [startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode, locked, speakerEverConnected, speaker]);
+  }, [startRecording, stopRecording, setIsRecording, startListenTimer, stopListenTimer, setStatus, setRecordingMode]);
 
   // Keyboard shortcuts — Backquote toggles AUTO, Escape stops AUTO.
   // The manual one-shot mic was removed per user request, so Cmd+M
@@ -1210,6 +1208,10 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         return;
       }
 
+      // Behavioral has no listen switch, so a hotkey here would pause Sona with
+      // nothing on screen saying so — the invisible-state failure the switch
+      // removal exists to end.
+      if (locked) return;
       if (SHORTCUTS.STOP_MIC.includes(e.key) && storeIsRecording && recordingModeRef.current === 'auto') {
         e.preventDefault();
         handleModeToggle();
@@ -1218,21 +1220,26 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [continuousMode, handleModeToggle, storeIsRecording]);
+  }, [continuousMode, handleModeToggle, storeIsRecording, locked]);
 
-  // Global AUTO shortcuts — capture phase so they fire from anywhere:
+  // Global audio shortcuts — capture phase so they fire from anywhere:
   // textareas, Monaco, contenteditable, the behavioral companion input.
   // Two bindings: Cmd/Ctrl+Shift+A (silent/hidden) and Backquote (~/`)
   // which the user uses mid-interview. Neither conflicts with normal
   // typing since Cmd+Shift+A is OS-reserved and ` is not a useful
   // character to type in any interview panel.
   //
-  // When `active === false` (coding/design tab hidden), suppress the
-  // shortcut entirely so it doesn't toggle a background AudioCapture.
-  // We use activeRef (a ref) so this effect never re-binds just because
-  // the active prop changed — the ref is always up to date.
+  // What they DO depends on which control that surface actually has:
+  //   • behavioral (locked) → Ask. There is no listen switch to toggle (Sona
+  //     listens for the whole session), and Ask is the one thing you press
+  //     mid-answer — worth a key you can hit without looking down.
+  //   • coding/design        → the AUTO listen switch.
+  //
+  // When `active === false` (owning tab hidden), suppress the shortcut entirely
+  // so it doesn't drive a background AudioCapture. activeRef is a ref so this
+  // effect never re-binds just because the active prop changed.
   useEffect(() => {
-    const handleAutoShortcut = (e: KeyboardEvent) => {
+    const handleAudioShortcut = (e: KeyboardEvent) => {
       if (!activeRef.current) return; // ignore when owning tab is inactive
       // Cmd/Ctrl+Shift+A
       const isCmdShiftA = (e.metaKey || e.ctrlKey) && e.shiftKey &&
@@ -1242,29 +1249,25 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
       if (!isCmdShiftA && !isBackquote) return;
       e.preventDefault();
       e.stopPropagation();
-      handleModeToggle();
+      if (locked) handleToggle(); else handleModeToggle();
     };
-    document.addEventListener('keydown', handleAutoShortcut, true);
-    return () => document.removeEventListener('keydown', handleAutoShortcut, true);
-  }, [handleModeToggle]);
+    document.addEventListener('keydown', handleAudioShortcut, true);
+    return () => document.removeEventListener('keydown', handleAudioShortcut, true);
+  }, [handleModeToggle, handleToggle, locked]);
 
-  // Behavioral: hand question capture to the interviewer stream once it's live.
-  // See speakerEverConnected above. Stops the candidate mic's continuous loop
-  // and drops continuousMode so only the manual "Ask Sona" button remains. We
-  // set userPausedRef so the heartbeat / visibility safety nets don't revive
-  // the loop. mic-only fallback never reaches here (everConnected stays false),
-  // so there the AUTO loop keeps running as the interviewer source.
-  useEffect(() => {
-    if (!locked || !speakerEverConnected) return;
-    if (recordingModeRef.current === 'auto') {
-      userPausedRef.current = true;
-      stopRecording();
-      setRecordingMode('idle');
-      setIsRecording(false);
-      stopListenTimer();
-    }
-    if (continuousModeRef.current) setContinuousMode(false);
-  }, [locked, speakerEverConnected, stopRecording, setRecordingMode, setIsRecording, stopListenTimer]);
+  // REMOVED: the effect that handed question capture entirely to the interviewer
+  // stream once it had EVER connected — it stopped the candidate mic's loop, set
+  // continuousMode false and pinned userPausedRef so no safety net could revive
+  // it. Keyed on `everConnected`, which never goes back to false, the mic was
+  // then dead for the rest of the session.
+  //
+  // That is fine exactly as long as the interviewer stream can hear. When it
+  // comes up silent — wrong output device shared, meeting audio on another sink,
+  // share started before the call — Sona had no ear left and no way to get one
+  // back: no questions, no answers, no error. The mic now keeps running as the
+  // always-available ear, and LumoraShellPage decides attribution on evidence,
+  // ignoring mic transcripts only once the interviewer stream has proven it can
+  // hear on the current connection.
 
   // Hydration: set mounted after all hooks
   useEffect(() => {
@@ -1290,7 +1293,6 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     handleModeToggle={handleModeToggle}
     handleToggle={handleToggle}
     recordingModeUI={recordingModeUI}
-    speakerEverConnected={speakerEverConnected}
     speakerActive={speakerActive}
     speakerLevel={speakerLevel}
     micLevel={micLevel}
@@ -1312,14 +1314,13 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
  */
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
-  handleModeToggle, handleToggle, recordingModeUI, speakerEverConnected, speakerActive, speakerLevel, micLevel, compact, locked,
+  handleModeToggle, handleToggle, recordingModeUI, speakerActive, speakerLevel, micLevel, compact, locked,
 }: {
   continuousMode: boolean;
   audioLevel: number;
   handleModeToggle: () => void;
   handleToggle: () => void;
   recordingModeUI: 'idle' | 'auto' | 'manual';
-  speakerEverConnected: boolean;
   speakerActive: boolean;
   speakerLevel: number;
   micLevel: number;
@@ -1328,46 +1329,39 @@ const UnifiedMicButton = ({
 }) => {
   const isAutoOn = continuousMode;
   const isAsking = recordingModeUI === 'manual';
-  // "Is Sona listening?" state for the switch.
-  //   • mic-only fallback  → reflects/controls the candidate mic loop.
-  //   • interviewer stream → reflects/controls THAT stream (desktop loopback /
-  //     shared tab / virtual mic) via the shared SpeakerAudio context.
-  const liveControlsSpeaker = locked && speakerEverConnected;
-  const liveOn = liveControlsSpeaker ? speakerActive : isAutoOn;
-  // Unified listen state — behavioral LIVE and coding/design AUTO are now the
-  // same self-describing switch (on = "Listening", off = "Paused").
-  const listenOn = locked ? liveOn : isAutoOn;
+  // Behavioral (locked) has no switch — Sona listens for the whole session
+  // there, so "is Sona listening?" is simply yes. Coding/design follows AUTO.
+  const listenOn = locked ? true : isAutoOn;
   // The level meter must track whatever is ACTUALLY being captured: the
-  // interviewer stream when LIVE drives it (loopback/tab/virtual mic), the
-  // candidate mic while you're asking a question. Without this the bars sat
-  // flat during LIVE because they only ever read the (idle) candidate mic.
-  // The signal bars must be FLAT whenever Sona isn't capturing — otherwise the
-  // meter reads ambient sound with LIVE and Ask both off and looks like it's
-  // secretly listening. Only show a level when actually listening or asking.
+  // interviewer stream while it is live (loopback / shared tab / virtual mic),
+  // the candidate mic while you are asking, the continuous mic loop otherwise.
+  // Flat whenever nothing is capturing — a meter that reads ambient sound with
+  // everything off looks like Sona is secretly listening.
   const meterLevel = (!listenOn && !isAsking)
     ? 0
     : Math.max(
         micLevel,
-        isAsking ? audioLevel : (liveControlsSpeaker && speakerActive ? speakerLevel : audioLevel),
+        isAsking ? audioLevel : (speakerActive ? speakerLevel : audioLevel),
       );
-  const listenTip = locked
-    ? (liveControlsSpeaker
-        ? (listenOn
-            ? 'On — Sona is listening to the interviewer and answers each question. Click to pause.'
-            : 'Paused — interviewer audio is stopped. Click to resume listening.')
-        : (listenOn
-            ? 'On — Sona is listening and answers each question. Click or press ` to pause.'
-            : 'Paused — Sona is not listening. Click or press ` to resume.'))
-    : (listenOn
-        ? 'On — Sona listens continuously and answers each question. Click or press ` to pause.'
-        : 'Off — click to have Sona listen continuously and answer each question. Or press `.');
+  // Only the coding/design switch renders, so only its copy is needed.
+  const listenTip = listenOn
+    ? 'On — Sona listens continuously and answers each question. Click or press ` to pause.'
+    : 'Off — click to have Sona listen continuously and answer each question. Or press `.';
 
   const inner = (
     <>
-      {/* Listen switch — a REAL on/off switch (track + sliding knob) with an
-          explicit state word, so "is Sona listening?" is unmistakable at a
-          glance instead of a color-only cue. Unified across behavioral (LIVE)
-          and coding/design (AUTO). */}
+      {/* Listen switch — coding/design only (AUTO).
+
+          Behavioral deliberately has NO switch. It carried the label LIVE but
+          reflected and controlled the interviewer STREAM, not whether Sona was
+          listening: the mic loop autostarts on that tab and a separate effect
+          killed it the moment the stream had ever connected. So the switch read
+          "off" while Sona was listening, read "on" while a silent loopback made
+          it deaf, and clicking it re-opened a share picker that fought with Ask
+          for the audio. A control whose state word is unrelated to what it does
+          is worse than no control. On behavioral Sona simply listens for the
+          whole session, and Ask / Auto-answer are the two things you can press. */}
+      {!locked && (
       <button
         type="button"
         role="switch"
@@ -1407,9 +1401,10 @@ const UnifiedMicButton = ({
             fontFamily: 'var(--font-mono)',
           }}
         >
-          {locked ? 'Live' : 'Auto'}
+          Auto
         </span>
       </button>
+      )}
 
       {/* Ask — momentary, in your OWN voice. ONE click: it records and
           auto-sends to Sona when you pause (VAD). Styled as a BUTTON (not a
@@ -1421,8 +1416,8 @@ const UnifiedMicButton = ({
           onClick={(e) => { handleToggle(); e.currentTarget.blur(); }}
           aria-pressed={isAsking}
           data-tip={isAsking
-            ? 'Recording your question — it sends to Sona automatically when you pause (or click to send now).'
-            : 'Ask in your own voice — click once, speak, and it sends to Sona when you pause.'}
+            ? 'Recording your question — it sends to Sona automatically when you pause (or press ` / click to send now).'
+            : 'Ask in your own voice — press ` (or click), speak, and it sends to Sona when you pause.'}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-[0.14em] transition-colors shrink-0"
           style={{
             color: isAsking ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
@@ -1442,6 +1437,10 @@ const UnifiedMicButton = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 7v4m0-4a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z" />
               </svg>
               Ask
+              {/* Key hint on the control itself — a shortcut nobody can see is a
+                  shortcut nobody uses, and this one exists precisely so you
+                  don't have to look down mid-answer to find the button. */}
+              <span aria-hidden="true" className="opacity-60" style={{ fontSize: 11, lineHeight: 1 }}>`</span>
             </>
           )}
         </button>

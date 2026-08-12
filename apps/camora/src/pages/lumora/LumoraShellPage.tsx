@@ -279,6 +279,27 @@ export const LumoraShellPage = () => {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
+  // True once the interviewer stream has delivered a real transcript on the
+  // CURRENT connection — the gate for suppressing the candidate mic in
+  // behavioral mode (see handleTranscription). Cleared whenever that stream
+  // goes down so a reconnected stream must prove itself again, and the mic
+  // stays the question source in the meantime.
+  const interviewerHeardRef = useRef(false);
+  const speakerActive = useSessionStore(s => s.speakerAudio.active);
+  useEffect(() => {
+    if (speakerActive) return;
+    // Clear the proof only after a grace period, not the instant the stream goes
+    // inactive. Two things stop it briefly and legitimately: pressing Ask (which
+    // pauses the interviewer stream so the two don't both feed Sona, then
+    // resumes it) and the gesture-free reconnect paths (~1-2s). Clearing
+    // immediately would un-suppress the mic for those few seconds — exactly
+    // while the candidate is talking — and their own answer would come back as
+    // the next question. A stream that is genuinely dead stays down past the
+    // grace period and correctly hands the ear back to the mic.
+    const id = setTimeout(() => { interviewerHeardRef.current = false; }, 8000);
+    return () => clearTimeout(id);
+  }, [speakerActive]);
+
   const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean; starterCode?: string }) => {
     return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit]);
@@ -335,7 +356,28 @@ export const LumoraShellPage = () => {
       // interviewer source, so nothing is suppressed.
       const isManual = opts?.manual === true;
       const fromInterviewer = opts?.source === 'interviewer';
-      if (!isManual && !fromInterviewer && useSessionStore.getState().speakerAudio.active) {
+      if (fromInterviewer) interviewerHeardRef.current = true;
+      // Suppress the candidate mic ONLY once the interviewer stream has PROVEN
+      // it can hear — i.e. it has delivered at least one transcript on the
+      // current connection.
+      //
+      // `active` alone was not enough. A loopback / tab-share can sit `active`
+      // forever while carrying pure silence (wrong output device shared, meeting
+      // audio on another sink, share started before the call). Every chunk comes
+      // back no_speech_prob=1.00, so the interviewer stream produces NOTHING —
+      // and because it is nominally `active`, the mic (which CAN hear the room,
+      // including the interviewer through the speakers) was dropped on every
+      // utterance. Result: Sona goes silently, totally deaf. No questions, no
+      // answers, no error — the failure this whole path exists to prevent.
+      //
+      // Proving-it keeps the original fix intact: once the interviewer stream
+      // has been heard once, the mic stays suppressed for the rest of that
+      // connection, so the candidate's own answers never come back as questions.
+      // The flag resets on disconnect (see the effect below), so a stream that
+      // dies and reconnects has to prove itself again.
+      if (!isManual && !fromInterviewer
+          && useSessionStore.getState().speakerAudio.active
+          && interviewerHeardRef.current) {
         return;
       }
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: isManual } }));

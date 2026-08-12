@@ -12,7 +12,7 @@
  *   shouldAutoAnswer()  true  → answered hands-free, immediately
  *   shouldAutoAnswer()  false → parked in the tap-to-answer list
  */
-import { isQuestion, isWhisperHallucination, isBehavioralPrompt } from '@/lib/questionDetector';
+import { isWhisperHallucination, isBehavioralPrompt } from '@/lib/questionDetector';
 
 // Whisper hallucinations in a noisy room are low-content loops — a single word
 // repeated, or a 2-word phrase repeated ("the next thing… the next step…").
@@ -53,19 +53,29 @@ export const passesNoiseFilter = (t: string): boolean => {
  * AUTO-ANSWER POLICY — the one knob that decides flood vs. miss.
  *
  * Runs only on lines that already cleared passesNoiseFilter(), so the input
- * here is "plausibly an interview prompt". The job is to split that into:
- *   true  → answer it hands-free, right now
- *   false → park it in the tap-to-answer list for the user to choose
+ * here is "plausibly an interview prompt". With the Auto-answer switch ON,
+ * that is the whole test: if it cleared the noise floor, Sona answers it.
  *
- * Defers to isQuestion(), the precision-first gate: a question-word opener
- * ("what/how/why/tell me about"), a terminal "?", or an interview verb phrase.
- * Everything softer — "I'd love to hear about a time you led", bare statements,
- * ambiguous narration — falls to the tap list, which is where the 2026-06-29
- * garbage flood came from.
+ * This used to defer to isQuestion(), the PRECISION-first gate — and that was
+ * the bug. isQuestion() wants a question-word opener, a terminal "?", or an
+ * interview verb phrase, and real behavioral prompts are phrased as invitations
+ * instead: "I'd love to hear about a time you led", "Let's talk about a
+ * failure", "Maybe start with a quick overview of your current role", "Share an
+ * experience where you pushed back". Measured against 20 verbatim-style
+ * behavioral prompts it passed 12 — so 40% of real questions were answered by
+ * nothing at all, just silently parked in a list the candidate cannot read
+ * while someone is looking at them. That is the exact ~90%-drop failure mode
+ * project_behavioral_question_gate records, reintroduced through the back door
+ * of the auto-answer tier.
  *
- * Tuning direction, so the tradeoff stays explicit:
- *   • loosen (`return true`) → answers everything; the flood returns
- *   • tighten (require a terminal "?") → misses most real questions, since
- *     Whisper routinely drops the question mark
+ * The noise floor is the filter, and it is a real one: hallucinations, URLs,
+ * fragments, wrap-ups, repetition loops, and pure acknowledgment all die there.
+ * What survives is a question, and in a live interview an unanswered question
+ * costs incomparably more than a spare card the candidate ignores.
+ *
+ * The user-facing knob is the Auto-answer switch, not a second hidden
+ * heuristic: ON answers everything that clears the floor, OFF sends everything
+ * that clears the floor to the tap list. Keep it that legible — one visible
+ * switch, one filter.
  */
-export const shouldAutoAnswer = (t: string): boolean => isQuestion(t);
+export const shouldAutoAnswer = (t: string): boolean => passesNoiseFilter(t);

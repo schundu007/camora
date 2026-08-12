@@ -1259,8 +1259,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                   role="switch"
                   aria-checked={autoAnswer}
                   data-tip={autoAnswer
-                    ? 'Sona answers clear questions automatically. Softer prompts still wait for a tap.'
-                    : 'Nothing is answered automatically — tap each question you want answered.'}
+                    ? 'Every question Sona hears is answered automatically. Turn off to tap each one instead.'
+                    : 'Nothing is answered automatically — every question Sona hears waits for a tap.'}
                 >
                   <span
                     className="shrink-0 inline-flex items-center rounded-full transition-colors"
@@ -1277,7 +1277,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       Auto-answer {autoAnswer ? 'on' : 'off'}
                     </span>
                     <span className="block text-[9px] leading-snug mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {autoAnswer ? 'Clear questions answered hands-free' : 'Every question waits for a tap'}
+                      {autoAnswer ? 'Every question answered hands-free' : 'Every question waits for a tap'}
                     </span>
                   </span>
                 </button>
