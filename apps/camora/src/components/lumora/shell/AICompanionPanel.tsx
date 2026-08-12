@@ -606,6 +606,16 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const MAX_IMAGES = 3;
   const [snapping, setSnapping] = useState(false);
 
+  // Voice enrollment gates whether Sona can tell the candidate's voice from the
+  // interviewer's. Unenrolled, the mic feeds BOTH into the question stream and
+  // the candidate's own answers come back as the next question. Nothing said so
+  // — the filter simply sat inert — so the panel says it, once, where the
+  // questions appear. Dismissable for the session only; the toolbar chip stays
+  // the permanent way in, so nothing is lost by hiding this.
+  const voiceEnrolled = useSessionStore(s => s.voiceEnrolled);
+  const isEnrolling = useSessionStore(s => s.isEnrolling);
+  const [enrollNudgeHidden, setEnrollNudgeHidden] = useState(false);
+
   const addImage = useCallback((dataUrl: string) => {
     if (!dataUrl.startsWith('data:image/')) return;
     setPendingImages(prev => (prev.length >= MAX_IMAGES ? prev : [...prev, dataUrl]));
@@ -1299,6 +1309,58 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     <p className="break-words">{liveTranscript}</p>
                     <span className="text-[8px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
                   </div>
+                </div>
+              )}
+              {/* Voice-enrollment prompt. Shown only when it changes what Sona
+                  does: unenrolled, it cannot separate the candidate from the
+                  interviewer, so their own answers return as questions. */}
+              {embedded && !voiceEnrolled && !enrollNudgeHidden && (
+                <div
+                  className="px-2.5 py-2 rounded-lg"
+                  style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-gold-leaf)' }}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>
+                    {isEnrolling ? 'Listening — speak for 5s' : 'Sona hears you too'}
+                  </p>
+                  <p className="text-[9px] leading-snug mt-1" style={{ color: 'var(--text-muted)' }}>
+                    {isEnrolling
+                      ? 'Say anything for five seconds so Sona learns your voice.'
+                      : 'Without a sample of your voice, your own answers can come back as questions. Takes five seconds.'}
+                  </p>
+                  {!isEnrolling && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('lumora:start-voice-enrollment'));
+                          // The listener lives in VoiceEnrollment, mounted by the
+                          // behavioral toolbar. If that toolbar isn't there, the
+                          // event lands nowhere and the button would look dead —
+                          // so say what happened instead of failing silently.
+                          setTimeout(() => {
+                            if (!useSessionStore.getState().isEnrolling) {
+                              dialogAlert({
+                                title: 'Enrollment unavailable here',
+                                message: 'Use the voice chip in the toolbar above, or Settings → Voice, to record your 5-second sample.',
+                              });
+                            }
+                          }, 2000);
+                        }}
+                        className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide"
+                        style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-accent-fill-text, #0a0e1a)' }}
+                        data-tip="Record a 5-second sample so Sona can tell your voice from the interviewer's"
+                      >
+                        Enroll my voice
+                      </button>
+                      <button
+                        onClick={() => setEnrollNudgeHidden(true)}
+                        className="text-[9px] font-bold uppercase tracking-wide"
+                        style={{ color: 'var(--text-muted)' }}
+                        data-tip="Hide for now — the voice chip in the toolbar always does this"
+                      >
+                        Not now
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               {/* Auto-answer switch. Always mounted in embedded mode (not gated
