@@ -10,6 +10,12 @@ const LS_KEY = 'camora-voice-enrolled';
 // after the user has deliberately toggled it off.
 let filterRestoredThisSession = false;
 
+// Module-level, deliberately: VoiceEnrollment can be mounted more than once at
+// the same time (behavioral toolbar + settings panel), so an external start
+// event reaches every instance. The store's isEnrolling flag cannot gate that —
+// it is async state, and all listeners pass its guard within the same tick.
+let lastExternalEnrollAt = 0;
+
 interface VoiceEnrollmentProps {
   disabled?: boolean;
   variant?: 'dark' | 'light';
@@ -164,6 +170,21 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
       setStatus('error', 'Microphone access failed');
     }
   }, [isEnrolling, disabled, selectedDeviceId, setIsEnrolling, setVoiceEnrolled, setVoiceFilterEnabled, setStatus]);
+
+  // Lets a prompt elsewhere in the shell start enrollment without duplicating
+  // any of the mic / upload / store logic above — it calls the exact function
+  // the chip calls, with the same guards. Purely additive: when nothing
+  // dispatches the event, this component behaves as it always has.
+  useEffect(() => {
+    const onExternalStart = () => {
+      const now = Date.now();
+      if (now - lastExternalEnrollAt < 2000) return; // see lastExternalEnrollAt
+      lastExternalEnrollAt = now;
+      void handleEnroll();
+    };
+    window.addEventListener('lumora:start-voice-enrollment', onExternalStart);
+    return () => window.removeEventListener('lumora:start-voice-enrollment', onExternalStart);
+  }, [handleEnroll]);
 
   const handleUnenroll = useCallback(() => {
     if (isEnrolling) return;
