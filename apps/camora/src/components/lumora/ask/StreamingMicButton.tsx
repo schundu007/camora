@@ -22,13 +22,33 @@ interface Props {
   disabled?: boolean;
   /** Increment to toggle recording from a parent keyboard shortcut. */
   toggleSignal?: number;
+  /**
+   * Fired when recording ends because the speaker STOPPED TALKING, immediately
+   * before the final transcript is produced. Not fired when the user clicks the
+   * button to stop, which stays a deliberate "stop but let me edit first".
+   *
+   * The parent uses this to send the question automatically, which is the whole
+   * point: dictation used to cost three deliberate actions — click mic, click
+   * mic again, click send — for one thought.
+   */
+  onSilenceStop?: () => void;
 }
 
 const RECORDER_MIME = 'audio/webm;codecs=opus';
 const GROQ_TICK_MS = 1200;
+// Quiet gap that ends an utterance. Long enough to survive the pause in the
+// middle of a real sentence ("what's the difference between … pull and fetch"),
+// short enough that finishing a question doesn't feel like waiting.
+const SILENCE_MS = 2000;
+// Never heard a word — release the mic instead of recording an empty room
+// forever (mic opened by accident, wrong input device, muted hardware).
+const NO_SPEECH_TIMEOUT_MS = 12000;
+// RMS above which a frame counts as speech. Well clear of room tone.
+const SPEECH_RMS = 0.015;
+const VAD_TICK_MS = 100;
 const WS_BASE = (import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com').replace(/^http/, 'ws');
 
-export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = false, toggleSignal }: Props) => {
+export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = false, toggleSignal, onSilenceStop }: Props) => {
   const { token } = useAuth();
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -49,11 +69,79 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
   const seqRef = useRef(0);
   const modeRef = useRef<'ws' | 'groq' | null>(null);
 
+  // ── Voice activity detection ───────────────────────────────────────────
+  // Watches the mic level so the button can end the utterance by itself.
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const vadTimerRef = useRef<number | null>(null);
+  const vadActiveRef = useRef(false);
+  const heardSpeechRef = useRef(false);
+  // stop() is defined below and the VAD loop needs it — a ref keeps the
+  // ordering honest without hoisting the whole callback above its own deps.
+  const stopRef = useRef<(() => void) | null>(null);
+
+  const stopVad = useCallback(() => {
+    vadActiveRef.current = false;
+    if (vadTimerRef.current) { clearInterval(vadTimerRef.current); vadTimerRef.current = null; }
+    try { void audioCtxRef.current?.close(); } catch { /* already closed */ }
+    audioCtxRef.current = null;
+  }, []);
+
   const releaseMedia = useCallback(() => {
+    stopVad();
     try { streamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
     streamRef.current = null;
     recorderRef.current = null;
-  }, []);
+  }, [stopVad]);
+
+  const startVad = useCallback((stream: MediaStream) => {
+    // setInterval, not requestAnimationFrame: rAF is throttled or paused when
+    // the window is backgrounded, which on the desktop app would leave the mic
+    // open with no way to notice.
+    try {
+      const Ctx: typeof AudioContext = window.AudioContext
+        || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new Ctx();
+      audioCtxRef.current = ctx;
+      // Safari (and Chrome under some autoplay policies) hands back a suspended
+      // context. A suspended analyser reads pure silence, so the loop would
+      // never hear speech and would close the mic on the no-speech timeout
+      // while the user was talking into it.
+      if (ctx.state === 'suspended') void ctx.resume().catch(() => {});
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const buf = new Uint8Array(analyser.fftSize);
+      const startedAt = Date.now();
+      let lastVoiceAt = startedAt;
+      heardSpeechRef.current = false;
+      vadActiveRef.current = true;
+      vadTimerRef.current = window.setInterval(() => {
+        if (!vadActiveRef.current) return;
+        analyser.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+        const rms = Math.sqrt(sum / buf.length);
+        const now = Date.now();
+        if (rms > SPEECH_RMS) { heardSpeechRef.current = true; lastVoiceAt = now; }
+        // Spoke, then went quiet → that was the question. Stop and let the
+        // parent send it.
+        if (heardSpeechRef.current && now - lastVoiceAt > SILENCE_MS) {
+          vadActiveRef.current = false;
+          onSilenceStop?.();
+          stopRef.current?.();
+          return;
+        }
+        // Never spoke at all → just stop. Nothing to send, so no onSilenceStop.
+        if (!heardSpeechRef.current && now - startedAt > NO_SPEECH_TIMEOUT_MS) {
+          vadActiveRef.current = false;
+          stopRef.current?.();
+        }
+      }, VAD_TICK_MS);
+    } catch {
+      // No AudioContext (or the device refused the graph) — dictation still
+      // works, it just needs the click to stop, exactly as it did before.
+    }
+  }, [onSilenceStop]);
 
   const fullText = () => (committedRef.current + ' ' + interimRef.current).trim();
 
@@ -113,8 +201,9 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     };
     rec.start(1000);
     setRecording(true);
+    startVad(stream);
     tickRef.current = window.setInterval(() => { groqTranscribe(false); }, GROQ_TICK_MS);
-  }, [groqTranscribe, releaseMedia]);
+  }, [groqTranscribe, releaseMedia, startVad]);
 
   // ── Deepgram WS path ───────────────────────────────────────────────────
   const startWs = useCallback((stream: MediaStream, ws: WebSocket) => {
@@ -161,7 +250,8 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     };
     rec.start(250); // small chunks → low-latency streaming
     setRecording(true);
-  }, [onInterim, onFinal, releaseMedia, groqTranscribe]);
+    startVad(stream);
+  }, [onInterim, onFinal, releaseMedia, groqTranscribe, startVad]);
 
   const start = useCallback(async () => {
     if (!token || disabled) return;
@@ -217,10 +307,12 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
   }, [token, disabled, onStart, startGroq, startWs]);
 
   const stop = useCallback(() => {
+    stopVad();
     if (tickRef.current) { clearInterval(tickRef.current); tickRef.current = null; }
     try { recorderRef.current?.stop(); } catch {}
     // ws is closed inside the recorder's onstop for the WS path.
-  }, []);
+  }, [stopVad]);
+  useEffect(() => { stopRef.current = stop; }, [stop]);
 
   // Toggle from a parent keyboard shortcut (Space in the Ask composer).
   const prevToggleRef = useRef(toggleSignal);
@@ -245,7 +337,9 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
       type="button"
       onClick={onClick}
       disabled={disabled || busy}
-      data-tip={active ? 'Stop dictation' : 'Dictate — text types in as you talk'}
+      data-tip={active
+        ? 'Listening — stop talking and it sends by itself. Click to stop without sending.'
+        : 'Talk instead of typing — it sends automatically when you stop.'}
       aria-label={active ? 'Stop dictation' : 'Start dictation'}
       className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
       style={{ background: active ? 'var(--danger, #ef4444)' : 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}

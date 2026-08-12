@@ -223,6 +223,9 @@ export const AskLayout = () => {
   // append to it, snowballing every prior question into the box.
   const submitSeqRef = useRef(0);
   const dictationSeqRef = useRef(0);
+  // Set when dictation ended because the speaker went quiet (not because they
+  // clicked stop) — onFinal reads it to decide whether to send automatically.
+  const autoSendRef = useRef(false);
   // Aborts the in-flight Ask stream so a stale answer can't land in a fresh /
   // switched / deleted conversation.
   const askAbortRef = useRef<AbortController | null>(null);
@@ -409,11 +412,6 @@ export const AskLayout = () => {
   };
 
   const sans: React.CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
-  const kbdStyle: React.CSSProperties = {
-    fontFamily: 'ui-monospace, monospace', fontSize: '9px', lineHeight: 1,
-    padding: '2px 5px', borderRadius: 4, color: 'var(--text-muted)',
-    background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)',
-  };
 
   // Grow the composer with the question instead of scrolling a one-line box —
   // long dictated questions stay fully visible up to the max-height.
@@ -692,12 +690,12 @@ export const AskLayout = () => {
                     it works in both web and the Electron desktop app). The
                     transcript is appended after whatever was already typed.
                     Space toggles it (single-stroke) when not mid-typing. */}
-                <span className="hidden sm:inline" style={kbdStyle} data-tip="Toggle dictation">Space</span>
                 <StreamingMicButton
                   toggleSignal={micToggle}
                   onStart={() => {
                     dictationSeqRef.current = submitSeqRef.current;
                     dictationBaseRef.current = input;
+                    autoSendRef.current = false;
                     setHistIdx(-1);
                   }}
                   onInterim={(t) => {
@@ -705,16 +703,24 @@ export const AskLayout = () => {
                     const base = dictationBaseRef.current.trim();
                     setInput(base && t ? base + ' ' + t : (t || base));
                   }}
+                  // Speaking and then stopping IS the send. One press, talk,
+                  // done — instead of click mic, click mic again, click send.
+                  onSilenceStop={() => { autoSendRef.current = true; }}
                   onFinal={(t) => {
+                    const send = autoSendRef.current;
+                    autoSendRef.current = false;
                     if (dictationSeqRef.current !== submitSeqRef.current) return;
                     const base = dictationBaseRef.current.trim();
                     const next = base && t ? base + ' ' + t : (t || base);
                     setInput(next);
                     dictationBaseRef.current = next;
+                    // Pass the text explicitly — `input` state has not committed
+                    // yet on this tick, so handleSubmit() with no argument would
+                    // read the pre-dictation value and send the wrong thing.
+                    if (send && next.trim()) handleSubmit(next);
                   }}
                   disabled={streaming}
                 />
-                <span className="hidden sm:inline" style={kbdStyle} data-tip="Send">↵</span>
                 <button
                   onClick={() => handleSubmit()}
                   disabled={(!input.trim() && pending.length === 0) || streaming}
@@ -730,7 +736,7 @@ export const AskLayout = () => {
             </div>
           </div>
           <div className="px-2 pt-1.5 text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>
-            ↵ send · ⇧↵ new line · ↑↓ history · Space talk · 📷 paste
+            Tap the mic and just talk — it sends when you stop · ↵ send · ⇧↵ new line · ↑↓ history
           </div>
         </div>
       </div>
