@@ -358,6 +358,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // the current answer when a new question arrives so Sona responds
   // immediately instead of waiting for the previous answer to finish.
   const streamAbortRef = useRef<AbortController | null>(null);
+  // True while a deliberate skip is tearing down the current stream. The abort
+  // it triggers surfaces as a stream error, and without this the panel reports
+  // "Connection failed. Try again." for something the user did on purpose.
+  const skippedRef = useRef(false);
   // Citations accumulator for the in-flight stream. Populated by the
   // `citations` SSE event and attached to the AI message on `onAnswer`.
   // Using a ref (not state) so it doesn't trigger a re-render — the
@@ -713,6 +717,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     const modePrefix = answerMode === 'short' ? '[SHORT] ' : '[DETAILED] ';
 
     activeQuestionRef.current = trimmed;
+    // Clear the skip latch per question. It is normally consumed by the abort's
+    // error/catch path, but an abort landing between frames can produce
+    // neither — and a latch left set would silently swallow the next REAL
+    // error as if the user had skipped it.
+    skippedRef.current = false;
     setMessages(prev => [...prev, { role: 'user', text: question.trim(), time: new Date() }]);
     setStreaming(true);
     setStreamText('');
@@ -805,6 +814,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         },
         onError: (data: any) => {
           clearTimeout(safetyTimer);
+          // Deliberate skip — the teardown is not a failure to report.
+          if (skippedRef.current) { skippedRef.current = false; return; }
           // Backend SSE error frames vary in field name (msg/message/detail/error).
           // Earlier code read only `data.message` so every error rendered as the
           // useless "Something went wrong" — the real reason was being thrown
@@ -821,11 +832,61 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       });
     } catch {
       clearTimeout(safetyTimer);
+      // Same reason as onError: an aborted stream is how a skip ends.
+      if (skippedRef.current) { skippedRef.current = false; setStreamText(''); setStreaming(false); return; }
       setMessages(prev => [...prev, { role: 'ai', text: 'Connection failed. Try again.', time: new Date() }]);
       setStreamText('');
       setStreaming(false);
     }
   }, [token, streaming, answerMode, systemContext, addHistoryEntry, embedded]);
+
+  /**
+   * Skip the question Sona is answering right now.
+   *
+   * Interviewers move on, rephrase, or ask something the candidate would rather
+   * answer themselves — and until now the only exits were watching the answer
+   * finish or clearing the whole session. Skip stops the stream, drops anything
+   * queued behind it, and lifts the abandoned question back out of the
+   * transcript so the next one starts on a clean page.
+   *
+   * lastAutoAskedRef is deliberately NOT cleared: the utterance that produced
+   * this question is often still arriving in fragments, and clearing it would
+   * let the very question just skipped fire again on the next coalesce window.
+   */
+  const skipCurrent = useCallback(() => {
+    skippedRef.current = true;
+    streamAbortRef.current?.abort();
+    streamAbortRef.current = null;
+    pendingQuestionRef.current = [];
+    activeQuestionRef.current = '';
+    setStreaming(false);
+    setStreamText('');
+    setMessages(prev => {
+      // Drop the trailing question that never got an answer under it. Anything
+      // already answered stays — this skips one question, it is not a reset.
+      for (let i = prev.length - 1; i >= 0; i--) {
+        if (prev[i].role === 'ai') break;
+        if (prev[i].role === 'user') return prev.slice(0, i);
+      }
+      return prev;
+    });
+  }, []);
+
+  // Esc skips, so the candidate can drop an answer without looking down for a
+  // button. Free on this surface since the behavioral tab has no listen switch
+  // for Esc to stop (see AudioCapture's locked guard).
+  useEffect(() => {
+    if (!embedded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || !streaming) return;
+      const el = e.target as HTMLElement | null;
+      if (el && (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el.isContentEditable)) return;
+      e.preventDefault();
+      skipCurrent();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [embedded, streaming, skipCurrent]);
 
   const handleSubmit = useCallback(() => {
     const typed = input.trim();
@@ -1695,6 +1756,18 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                   >
                     <SonaAvatar size={14} active />
                     <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona is answering…</span>
+                    {/* Skip — always visible while streaming, never hover-only:
+                        the moment you need it is the moment you cannot hunt for
+                        it. Esc does the same thing. */}
+                    <button
+                      onClick={skipCurrent}
+                      className="ml-auto px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide shrink-0"
+                      style={{ color: 'var(--cam-strip-heading)', border: '1px solid var(--cam-gold-leaf)' }}
+                      data-tip="Skip this question — stops the answer and clears anything queued behind it (Esc)"
+                      aria-label="Skip this question"
+                    >
+                      Skip · Esc
+                    </button>
                   </div>
                   <div className="p-3">
                     {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} /></>
