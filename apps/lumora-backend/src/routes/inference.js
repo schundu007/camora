@@ -17,6 +17,7 @@ import { streamResponse, MODEL, isElevatorPitch } from '../services/claude.js';
 import { streamResponseGemini } from '../services/gemini-stream.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
+import { normalizeImages } from '../services/visionImage.js';
 import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
 
 const router = Router();
@@ -321,10 +322,20 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null, pinned_intro: pinnedIntro = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null, pinned_intro: pinnedIntro = null, images: rawImages = null } = req.body;
   const VALID_MODES = ['general', 'coding', 'design', 'behavioral'];
   if (!VALID_MODES.includes(mode)) mode = 'general';
   const user = req.user;
+
+  // Screenshots attached to the question. Normalized here (validated, capped,
+  // downscaled under Anthropic's 5 MB inline ceiling) so the model layer only
+  // ever receives ready-to-send blocks.
+  //
+  // Their presence FORCES a cache bypass. The answer cache is keyed on question
+  // TEXT, and "what does this say?" against two different screenshots is the
+  // same text — without this the second screenshot replays the first's answer.
+  const images = await normalizeImages(rawImages);
+  if (images.length > 0) bypassCache = true;
 
   if (!question || typeof question !== 'string') {
     return res.status(400).json({ error: 'question is required' });
@@ -564,6 +575,7 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       plan: userPlan,
       userId: user.id,
       model: preferredModel || null,
+      images,
       signal: abortController.signal,
     })) {
       if (clientDisconnected) break;

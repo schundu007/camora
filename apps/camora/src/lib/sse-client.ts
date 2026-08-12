@@ -80,6 +80,10 @@ export interface StreamOptions {
    *  a subset of sources (e.g. 'coding' → algorithm + LLD problems).
    *  Default 'general' = full hybrid search, no filter. */
   mode?: 'general' | 'coding' | 'design' | 'sql' | 'behavioral' | 'sre';
+  /** Screenshots to answer about, as `data:image/...;base64,...` URLs. The
+   *  backend validates, caps and downscales them, and forces a cache bypass
+   *  when any are present (the cache is keyed on question text alone). */
+  images?: string[];
   /** Design archetype hint. When the question is detected as a design
    *  question, the backend picks a different prompt + diagram style:
    *    application    OOP / LLD / API design (LRU, parking lot, REST)
@@ -118,6 +122,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     bypassCache,
     mode,
     designKind,
+    images,
     token,
     signal: externalSignal,
     onStreamStart,
@@ -170,6 +175,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         ...(bypassCache ? { bypass_cache: true } : {}),
         ...(mode && mode !== 'general' ? { mode } : {}),
         ...(designKind ? { design_kind: designKind } : {}),
+        ...(images && images.length ? { images } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

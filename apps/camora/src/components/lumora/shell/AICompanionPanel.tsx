@@ -3,7 +3,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { streamResponse } from '@/lib/sse-client';
 import { getActiveAssistant, buildSystemContext } from '@/lib/lumora-assistant';
 import { ASSISTANT_UPDATED_EVENT, setActiveCompanyKey } from '@/lib/companyContext';
-import { dialogConfirm } from '@/components/shared/Dialog';
+import { dialogConfirm, dialogAlert } from '@/components/shared/Dialog';
+import { snapRegion } from '@/lib/lumora/snapCapture';
 import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
 import { passesNoiseFilter, shouldAutoAnswer } from './companion/question-routing';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
@@ -595,6 +596,49 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // gives back auto-answers without the meeting-chatter / Whisper-hallucination
   // flood that made blanket auto-answering unusable in noisy rooms.
   const [detectedQuestions, setDetectedQuestions] = useState<{ id: number; text: string; time: Date }[]>([]);
+
+  // Screenshots staged for the next question. A ref shadows the state because
+  // ask() runs from timers and event listeners whose closures predate the last
+  // render — reading state there would attach yesterday's screenshot, or none.
+  const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const pendingImagesRef = useRef<string[]>([]);
+  useEffect(() => { pendingImagesRef.current = pendingImages; }, [pendingImages]);
+  const MAX_IMAGES = 3;
+  const [snapping, setSnapping] = useState(false);
+
+  const addImage = useCallback((dataUrl: string) => {
+    if (!dataUrl.startsWith('data:image/')) return;
+    setPendingImages(prev => (prev.length >= MAX_IMAGES ? prev : [...prev, dataUrl]));
+  }, []);
+
+  // Screenshot straight into the composer — the shared crosshair (desktop) /
+  // share-picker (web) path used by every other camera button in Lumora.
+  const snapIntoComposer = useCallback(async () => {
+    if (snapping) return;
+    setSnapping(true);
+    try {
+      const res = await snapRegion();
+      if (res.cancelled) return;              // Escape is not a failure
+      if (!res.dataUrl) { if (res.error) dialogAlert({ title: 'Screenshot failed', message: res.error }); return; }
+      addImage(res.dataUrl);
+      inputRef.current?.focus();
+    } finally { setSnapping(false); }
+  }, [snapping, addImage]);
+
+  // Cmd+V of an image anywhere in the composer.
+  const onComposerPaste = useCallback((e: React.ClipboardEvent) => {
+    const files = Array.from(e.clipboardData?.items || [])
+      .filter(it => it.kind === 'file' && it.type.startsWith('image/'))
+      .map(it => it.getAsFile())
+      .filter((f): f is File => !!f);
+    if (!files.length) return;
+    e.preventDefault();
+    files.slice(0, MAX_IMAGES).forEach((f) => {
+      const reader = new FileReader();
+      reader.onload = () => addImage(String(reader.result || ''));
+      reader.readAsDataURL(f);
+    });
+  }, [addImage]);
   const detectedIdRef = useRef(0);
 
   // Hands-free auto-answer. ON by default — in a live interview the user's eyes
@@ -690,8 +734,13 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     try {
       const streamAbort = new AbortController();
       streamAbortRef.current = streamAbort;
+      // Staged screenshots ride with THIS question and are cleared immediately,
+      // so the next question can't silently inherit the last one's image.
+      const imgs = pendingImagesRef.current;
+      if (imgs.length) { pendingImagesRef.current = []; setPendingImages([]); }
       await streamResponse({
         question: modePrefix + question.trim(),
+        ...(imgs.length ? { images: imgs } : {}),
         token,
         signal: streamAbort.signal,
         useSearch: false,
@@ -769,7 +818,15 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   }, [token, streaming, answerMode, systemContext, addHistoryEntry, embedded]);
 
   const handleSubmit = useCallback(() => {
-    if (input.trim()) { ask(input); setInput(''); }
+    const typed = input.trim();
+    // A screenshot on its own is a complete request — "answer what's on my
+    // screen". Without a question the backend rejects the call, so supply the
+    // one the user obviously means rather than making them type it.
+    if (!typed && pendingImagesRef.current.length > 0) {
+      ask('Answer the question in this screenshot.');
+      return;
+    }
+    if (typed) { ask(input); setInput(''); }
   }, [input, ask]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1602,14 +1659,53 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             backed by session-store). The old duplicate banner that used to
             render here ("Not enrolled · Enroll My Voice") was removed — it
             shared the same store state, so the toolbar chip is authoritative. */}
+        {/* Staged screenshots — thumbnails sit ABOVE the input so the row of
+            controls keeps its fixed height and nothing reflows mid-interview. */}
+        {pendingImages.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 w-full">
+            {pendingImages.map((src, i) => (
+              <div key={i} className="relative">
+                <img src={src} alt="attached screenshot" className="h-12 w-12 object-cover rounded-md" style={{ border: '1px solid var(--cam-gold-leaf)' }} />
+                <button
+                  onClick={() => setPendingImages(prev => prev.filter((_, k) => k !== i))}
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                  style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  aria-label="Remove screenshot"
+                  data-tip="Remove this screenshot"
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
         {/* Text input — visible in both floating and embedded behavioral mode */}
         <div className="flex items-center gap-2 px-3 h-12 md:h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && input.trim()) handleSubmit(); }}
+            onKeyDown={e => { if (e.key === 'Enter' && (input.trim() || pendingImages.length > 0)) handleSubmit(); }}
+            onPaste={onComposerPaste}
             placeholder="Type a question..."
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[10px]"
             style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
-          {input.trim() && !streaming && (
+          {/* Screenshot — ask Sona about whatever is on screen. */}
+          <button
+            onClick={snapIntoComposer}
+            disabled={snapping || streaming || pendingImages.length >= MAX_IMAGES}
+            className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0 disabled:opacity-40"
+            style={{ border: '1px solid var(--border)' }}
+            aria-label="Add a screenshot"
+            data-tip={pendingImages.length >= MAX_IMAGES
+              ? `Up to ${MAX_IMAGES} screenshots per question`
+              : 'Screenshot — drag to select any area and ask about it. Pasting an image works too.'}
+          >
+            {snapping ? (
+              <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" style={{ color: 'var(--text-muted)' }} />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-3 md:h-3">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            )}
+          </button>
+          {(input.trim() || pendingImages.length > 0) && !streaming && (
             <button onClick={handleSubmit} className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4 md:w-3 md:h-3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
             </button>
