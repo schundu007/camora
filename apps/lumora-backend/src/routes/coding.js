@@ -15,73 +15,9 @@ import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dns from 'node:dns/promises';
+// Image guard shared with the behavioral answer path — see services/visionImage.js.
+import { loadSharp, ensureImageWithinAnthropicLimit } from '../services/visionImage.js';
 
-// Lazy-load sharp. The native binary fails to resolve on some Railway
-// build images (linux-x64 vs darwin-arm64 mismatch in the lockfile),
-// which used to crash the whole backend at boot. Resolve at first use
-// instead so an image-rescale failure becomes a per-request degrade
-// rather than a process-wide outage. ensureImageWithinAnthropicLimit
-// returns the original payload unchanged if sharp can't be loaded.
-let _sharpModule = null;
-let _sharpLoadFailed = false;
-async function loadSharp() {
-  if (_sharpLoadFailed) return null;
-  if (_sharpModule) return _sharpModule;
-  try {
-    const mod = await import('sharp');
-    _sharpModule = mod.default || mod;
-    return _sharpModule;
-  } catch (err) {
-    console.warn('[coding] sharp unavailable — skipping image resize. Reason:', err?.message || err);
-    _sharpLoadFailed = true;
-    return null;
-  }
-}
-
-/* ── Anthropic image-size guard ────────────────────────────────────────
-   Anthropic's vision API caps inline base64 images at 5 MB
-   (5,242,880 bytes of base64 payload). Native macOS screencapture on
-   HiDPI displays produces 4–8 MB PNGs that exceed this. Downscale via
-   sharp until under the cap; prefer PNG for OCR sharpness, fall back
-   to JPEG q85 if the image is still too large after resizing.
-
-   Returns { mediaType, data } where data is a base64 string. */
-async function ensureImageWithinAnthropicLimit(rawBase64, mediaType) {
-  const MAX_BASE64 = 4_800_000; // safety margin under the 5 MB ceiling
-  if (rawBase64.length <= MAX_BASE64) return { mediaType, data: rawBase64 };
-
-  const sharp = await loadSharp();
-  if (!sharp) {
-    // Sharp unavailable — throwing here is intentional. Passing the oversized
-    // image through always produces a 400 from Anthropic ("exceeds 5 MB").
-    // A clear 413 from us is more actionable than a cryptic Anthropic error.
-    throw Object.assign(new Error('Image too large (>5 MB) and server-side resize is unavailable. Use a smaller screenshot or the Snap button in the desktop app.'), { statusCode: 413 });
-  }
-
-  let buf = Buffer.from(rawBase64, 'base64');
-  // First pass: cap width at 1920px (still plenty for OCR on Sonnet 4.5).
-  let resized = await sharp(buf)
-    .resize({ width: 1920, withoutEnlargement: true, fit: 'inside' })
-    .png({ compressionLevel: 9, adaptiveFiltering: true })
-    .toBuffer();
-  let b64 = resized.toString('base64');
-  if (b64.length <= MAX_BASE64) return { mediaType: 'image/png', data: b64 };
-
-  // Second pass: re-encode at 1600px JPEG quality 85.
-  resized = await sharp(buf)
-    .resize({ width: 1600, withoutEnlargement: true, fit: 'inside' })
-    .jpeg({ quality: 85, progressive: true })
-    .toBuffer();
-  b64 = resized.toString('base64');
-  if (b64.length <= MAX_BASE64) return { mediaType: 'image/jpeg', data: b64 };
-
-  // Third pass: aggressive 1280px JPEG q75 — last resort.
-  resized = await sharp(buf)
-    .resize({ width: 1280, withoutEnlargement: true, fit: 'inside' })
-    .jpeg({ quality: 75, progressive: true })
-    .toBuffer();
-  return { mediaType: 'image/jpeg', data: resized.toString('base64') };
-}
 import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../lib/shared-db.js';
 import { authenticate } from '../middleware/authenticate.js';

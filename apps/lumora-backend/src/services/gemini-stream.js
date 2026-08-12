@@ -64,7 +64,11 @@ export async function* streamResponseGemini(question, history, options = {}) {
     model: rawModel = null,
     plan = null,
     signal = null,
+    // Screenshots attached to the question, already normalized by the route
+    // into Anthropic blocks: [{ mediaType, data }] with data base64.
+    images = [],
   } = options;
+  const hasImages = Array.isArray(images) && images.length > 0;
   const model = rawModel || DEFAULT_MODEL;
 
   const startTime = performance.now();
@@ -127,9 +131,21 @@ export async function* streamResponseGemini(question, history, options = {}) {
     // keeps repeat-question TTFT low.
     const questionType = isCoding ? 'coding' : isDesign ? 'design' : (isBehavioral || isShortMode ? 'behavioral' : 'general');
     const claudeModel = (rawModel && /claude/i.test(rawModel)) ? rawModel : selectModel(plan, questionType);
+    // Images ride on the CURRENT question only — history stays text. Anthropic
+    // wants image blocks BEFORE the text that refers to them; with the order
+    // reversed the model routinely answers the words and ignores the picture.
+    const userContent = hasImages
+      ? [
+          ...images.map((img) => ({
+            type: 'image',
+            source: { type: 'base64', media_type: img.mediaType, data: img.data },
+          })),
+          { type: 'text', text: cleanQuestion },
+        ]
+      : cleanQuestion;
     const messages = [
       ...recentHistory.map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
-      { role: 'user', content: cleanQuestion },
+      { role: 'user', content: userContent },
     ];
     const stream = getAnthropicClient().messages.stream({
       model: claudeModel,
@@ -168,7 +184,17 @@ export async function* streamResponseGemini(question, history, options = {}) {
           history: toGeminiHistory(recentHistory),
           generationConfig: { maxOutputTokens, temperature: 0.2 },
         });
-        const result = await chat.sendMessageStream(cleanQuestion);
+        // Carry the screenshot across the fallback too. Gemini 2.5 Flash is
+        // vision-capable, and sending text alone here would have it confidently
+        // answer a question about a picture it was never shown — worse than an
+        // error, because nothing on screen says the image was dropped.
+        const geminiParts = hasImages
+          ? [
+              ...images.map((img) => ({ inlineData: { mimeType: img.mediaType, data: img.data } })),
+              { text: cleanQuestion },
+            ]
+          : cleanQuestion;
+        const result = await chat.sendMessageStream(geminiParts);
         for await (const chunk of result.stream) {
           if (signal?.aborted) break;
           const token = chunk.text();
