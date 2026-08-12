@@ -22,13 +22,29 @@ const MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 // in Sona behavioral. Override with CLAUDE_MODEL_PAID env if needed.
 const MODEL_PAID = process.env.CLAUDE_MODEL_PAID || LIVE_ANSWER_MODEL;
 
-/** Select model by plan. Paid users get Sonnet for all question types. */
+/**
+ * Select model by plan. Paid users get the live answer model for EVERY question
+ * type; free stays on Haiku.
+ *
+ * `questionType` no longer branches. It used to carve out 'behavioral' on the
+ * rationale that "STAR answers don't benefit from Sonnet" — which contradicted
+ * modelPolicy.js, the declared single source of truth, whose LIVE_ANSWER_MODEL
+ * doc names "behavioral answers" first in its list. The carve-out was also
+ * wider than it looked: gemini-stream.js maps `isShortMode` to 'behavioral'
+ * too, so it silently downgraded every [SHORT] Ask Sona request on any tab.
+ *
+ * And the premise stopped holding. Behavioral answers now carry a real
+ * contract — archetype selection, STAR built from the anchored story with the
+ * candidate's own metrics, rebuttal anticipation, resume-truth bridging. That
+ * is exactly the reasoning frontier models are better at.
+ *
+ * The parameter stays in the signature: it is the natural axis for future
+ * policy, and callers already pass it.
+ */
+// eslint-disable-next-line no-unused-vars
 function selectModel(plan, questionType) {
   const paid = plan && plan !== 'free';
-  if (!paid) return MODEL;
-  // Behavioral stays on Haiku — STAR answers don't benefit from Sonnet
-  if (questionType === 'behavioral') return MODEL;
-  return MODEL_PAID;
+  return paid ? MODEL_PAID : MODEL;
 }
 const MAX_TOKENS_QUICK = parseInt(process.env.MAX_TOKENS_QUICK || '2000', 10);
 const MAX_TOKENS_DESIGN = parseInt(process.env.MAX_TOKENS_DESIGN || '12000', 10);
