@@ -12,27 +12,30 @@ on:
         required: true
 
 jobs:
-  # ── Windows build matrix (x64 + arm64) ─────────────────────────────────
+  # ── Windows build (ONE dual-arch installer) ────────────────────────────
   # CI builds Windows ONLY — macOS DMGs are produced locally on a Mac and
-  # uploaded separately, so we don't spend macOS runner minutes here. Both
-  # arches build in parallel on windows-latest (electron-builder cross-compiles
-  # the arm64 NSIS target). The publish job leaves existing macOS release assets
-  # untouched — it only replaces the Windows installers it uploads.
+  # uploaded separately, so we don't spend macOS runner minutes here. The
+  # publish job leaves existing macOS release assets untouched; it only replaces
+  # the Windows installer it uploads.
+  #
+  # This was a two-job x64/arm64 matrix until 2026-08-12. It never built two
+  # things. package.json sets build.win.target[0].arch = ["x64","arm64"], which
+  # overrides the --x64 / --arm64 CLI flags, so BOTH jobs packaged both arches
+  # and emitted a complete dual-arch NSIS — verified in run 31633200388:
+  #     job win-x64:   building target=nsis file=Camora-1.0.0-Setup.exe        archs=x64, arm64
+  #     job win-arm64: building target=nsis file=Camora-1.0.0-Setup-arm64.exe  archs=arm64, x64
+  # Identical content (202,194,722 bytes each), shipped under two names. The
+  # "-arm64" one was the misleading half: an x64 user who picked it got a
+  # working installer, which is exactly why nobody noticed.
+  #
+  # One job, one installer, one download link that works on both architectures.
+  # The cost is a ~200 MB download carrying both arches; the alternative is
+  # per-arch installers via -c.win.target.0.arch, which is smaller but puts a
+  # "which one am I?" question in front of every user. Not worth it for a
+  # desktop app people install once.
   build:
-    name: build ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: win-x64
-            os: windows-latest
-            script: build:win
-            artifact: apps/desktop/build/Camora-*-Setup.exe
-          - name: win-arm64
-            os: windows-latest
-            script: build:win-arm64
-            artifact: apps/desktop/build/Camora-*-Setup-arm64.exe
+    name: build win
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -70,14 +73,14 @@ jobs:
         shell: bash
         run: npm pkg set build.buildVersion="1.0.$(( 2000 + ${{ github.run_number }} ))"
 
-      - name: Build ${{ matrix.name }}
+      - name: Build Windows installer
         working-directory: apps/desktop
-        run: npm run ${{ matrix.script }}
+        run: npm run build:win
 
       - uses: actions/upload-artifact@v4
         with:
-          name: desktop-${{ matrix.name }}
-          path: ${{ matrix.artifact }}
+          name: desktop-win
+          path: apps/desktop/build/Camora-*-Setup.exe
 
   publish:
     needs: [build]
@@ -111,7 +114,13 @@ jobs:
             # replaced in place each push.
             echo "tag=desktop-v1.0.0" >> $GITHUB_OUTPUT
             echo "prerelease=false" >> $GITHUB_OUTPUT
-            echo "name=Camora Desktop v1.0.0 (build 1.0.${{ github.run_number }})" >> $GITHUB_OUTPUT
+            # Must carry the SAME +2000 offset the build step stamps as
+            # CFBundleVersion, or the release title names a build number that
+            # exists nowhere: run 1007 published "build 1.0.1007" while the app
+            # inside reported 1.0.3007. The offset exists precisely so "which
+            # build is this?" has one answer — a title that disagrees with the
+            # binary defeats it. Keep these two lines in sync.
+            echo "name=Camora Desktop v1.0.0 (build 1.0.$(( 2000 + ${{ github.run_number }} )))" >> $GITHUB_OUTPUT
           fi
 
       - name: Upload to GitHub release
