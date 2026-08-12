@@ -54,11 +54,21 @@ jobs:
       # A CI build numbered BELOW an installed local build reintroduces the same
       # stale-app bug from the other direction, so CI is offset to always win.
       # Never lower this offset — CFBundleVersion must only ever increase.
-      # The arithmetic is done in the Actions expression, not the shell: this
-      # job runs on windows-latest (pwsh), so bash $(( )) would not be portable.
+      #
+      # The arithmetic MUST happen in the shell. GitHub Actions expressions have
+      # no arithmetic operators at all (only !, comparisons, && and ||), so
+      # `${{ 2000 + github.run_number }}` is not a valid expression — it fails
+      # the whole workflow file at parse time, before any job starts. That is
+      # why every push from 2026-08-06 to 2026-08-12 showed a 0s "workflow file
+      # issue" failure and shipped no Windows installer.
+      #
+      # `shell: bash` is explicit because these runners are windows-latest and
+      # would otherwise default to pwsh, where $(( )) is not arithmetic. Git Bash
+      # ships on the Windows runner image, so this is portable as written.
       - name: Stamp unique build version
         working-directory: apps/desktop
-        run: npm pkg set build.buildVersion="1.0.${{ 2000 + github.run_number }}"
+        shell: bash
+        run: npm pkg set build.buildVersion="1.0.$(( 2000 + ${{ github.run_number }} ))"
 
       - name: Build ${{ matrix.name }}
         working-directory: apps/desktop
