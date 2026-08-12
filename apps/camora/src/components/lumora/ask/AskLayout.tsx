@@ -12,6 +12,8 @@ import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
 import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
 import Chip from '@/components/shared/ui/Chip';
 import { StreamingMicButton } from './StreamingMicButton';
+import { snapRegion } from '@/lib/lumora/snapCapture';
+import { dialogAlert } from '@/components/shared/Dialog';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('py', python);
@@ -259,6 +261,27 @@ export const AskLayout = () => {
     const files = Array.from(e.dataTransfer?.files || []);
     if (files.some(f => f.type.startsWith('image/'))) { e.preventDefault(); addImageFiles(files); }
   }, [addImageFiles]);
+
+  // Take a screenshot straight into the composer. Paste and drag-drop already
+  // worked, but neither is discoverable — the only thing that ever said so was
+  // one line of grey hint text. Reuses the shared snapRegion path: macOS
+  // crosshair on the desktop app, the browser's share picker on web.
+  const [snapping, setSnapping] = useState(false);
+  const snapIntoComposer = useCallback(async () => {
+    if (snapping) return;
+    setSnapping(true);
+    try {
+      const res = await snapRegion();
+      if (res.cancelled) return;               // Escape is not an error — stay silent
+      if (!res.dataUrl) { if (res.error) dialogAlert({ title: 'Screenshot failed', message: res.error }); return; }
+      setPending(prev => prev.length >= MAX_PENDING
+        ? prev
+        : [...prev, { id: `snap-${Date.now()}-${prev.length}`, dataUrl: res.dataUrl }]);
+      inputRef.current?.focus();
+    } finally {
+      setSnapping(false);
+    }
+  }, [snapping]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -685,6 +708,30 @@ export const AskLayout = () => {
             {/* Controls sit to the RIGHT of the box and the textarea grows with
                 the question, so nothing ever overlaps the text. */}
               <div className="flex items-center gap-2 shrink-0 pb-1">
+                {/* Screenshot → composer. Same crosshair / share-picker path as
+                    every other camera button in Lumora. Paste and drag-drop
+                    already worked; nothing on screen said so, which is the same
+                    as not having it. */}
+                <button
+                  type="button"
+                  onClick={snapIntoComposer}
+                  disabled={snapping || streaming || pending.length >= MAX_PENDING}
+                  data-tip={pending.length >= MAX_PENDING
+                    ? `Up to ${MAX_PENDING} images per question`
+                    : 'Screenshot — drag to select any area and ask about it. Pasting or dropping an image works too.'}
+                  aria-label="Add a screenshot"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
+                  style={{ background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}
+                >
+                  {snapping ? (
+                    <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" style={{ color: 'var(--text-muted)' }} />
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  )}
+                </button>
                 {/* Live dictation — text types into the composer as you talk
                     (re-transcribes the growing clip ~1/sec via the backend, so
                     it works in both web and the Electron desktop app). The
@@ -734,9 +781,6 @@ export const AskLayout = () => {
                 </button>
               </div>
             </div>
-          </div>
-          <div className="px-2 pt-1.5 text-[10px]" style={{ color: 'var(--text-muted)', ...sans }}>
-            Tap the mic and just talk — it sends when you stop · ↵ send · ⇧↵ new line · ↑↓ history
           </div>
         </div>
       </div>
