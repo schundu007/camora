@@ -620,6 +620,24 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const isEnrolling = useSessionStore(s => s.isEnrolling);
   const [enrollNudgeHidden, setEnrollNudgeHidden] = useState(false);
 
+  /**
+   * What Sona heard, and what it DID with it.
+   *
+   * Every drop between a transcript and the LLM used to be silent — noise
+   * filter, repeat guard, missing token, a stream still in flight — so "Sona
+   * isn't answering" and "Sona never heard you" and "Sona heard you and threw
+   * it away" all looked identical: a question that flashes up and vanishes.
+   * This is the one place that says which of those happened.
+   */
+  const [heardLog, setHeardLog] = useState<{ id: number; text: string; outcome: string; time: Date }[]>([]);
+  const heardIdRef = useRef(0);
+  const noteHeard = useCallback((text: string, outcome: string) => {
+    setHeardLog(prev => [
+      { id: ++heardIdRef.current, text: (text || '').slice(0, 90), outcome, time: new Date() },
+      ...prev,
+    ].slice(0, 5));
+  }, []);
+
   const addImage = useCallback((dataUrl: string) => {
     if (!dataUrl.startsWith('data:image/')) return;
     setPendingImages(prev => (prev.length >= MAX_IMAGES ? prev : [...prev, dataUrl]));
@@ -700,7 +718,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       return;
     }
     const trimmed = question.trim();
-    if (!trimmed || !token) return;
+    if (!trimmed) return;
+    if (!token) { noteHeard(trimmed, 'not answered — signed out'); return; }
     if (streaming) {
       // Let the in-flight answer finish, then answer this next. Do NOT abort
       // the current stream — aborting on every incoming transcription was the
@@ -710,6 +729,9 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       const lastQueued = pendingQuestionRef.current[pendingQuestionRef.current.length - 1] || '';
       if (!isDuplicateQuestion(trimmed, activeQuestionRef.current) && !isDuplicateQuestion(trimmed, lastQueued)) {
         pendingQuestionRef.current.push(trimmed);
+        noteHeard(trimmed, 'queued behind the current answer');
+      } else {
+        noteHeard(trimmed, 'ignored — repeat of the current question');
       }
       return;
     }
@@ -717,6 +739,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     const modePrefix = answerMode === 'short' ? '[SHORT] ' : '[DETAILED] ';
 
     activeQuestionRef.current = trimmed;
+    noteHeard(trimmed, 'answering');
     // Clear the skip latch per question. It is normally consumed by the abort's
     // error/catch path, but an abort landing between frames can produce
     // neither — and a latch left set would silently swallow the next REAL
@@ -838,7 +861,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       setStreamText('');
       setStreaming(false);
     }
-  }, [token, streaming, answerMode, systemContext, addHistoryEntry, embedded]);
+  }, [token, streaming, answerMode, systemContext, addHistoryEntry, embedded, noteHeard]);
 
   /**
    * Skip the question Sona is answering right now.
@@ -939,18 +962,23 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       //   softer / ambiguous         → tap-to-answer list, user picks
       // Both tiers sit behind the same passesNoiseFilter() floor, so auto-answer
       // can never become the hole that lets the 2026-06-29 garbage flood back in.
-      if (!full || !passesNoiseFilter(full)) return;
+      if (!full) return;
+      if (!passesNoiseFilter(full)) { noteHeard(full, 'ignored — filler, noise or not a question'); return; }
       if (autoAnswerRef.current && shouldAutoAnswer(full)) {
         // ask() dedupes against the active + last-queued question only while a
         // stream is in flight; guard the idle case too.
-        if (isDuplicateQuestion(full, lastAutoAskedRef.current)) return;
+        if (isDuplicateQuestion(full, lastAutoAskedRef.current)) {
+          noteHeard(full, 'ignored — just answered this');
+          return;
+        }
         lastAutoAskedRef.current = full;
         askRef.current?.(full);
         return;
       }
+      noteHeard(full, 'waiting for you to tap it');
       addDetectedQuestion(full);
     }, COALESCE_MS);
-  }, [addDetectedQuestion]);
+  }, [addDetectedQuestion, noteHeard]);
 
   // On unmount: drop any buffered fragment and abort an in-flight stream so we
   // stop billing tokens the browser will never render.
@@ -1461,6 +1489,26 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     </span>
                   </span>
                 </button>
+              )}
+              {/* What Sona heard and what it did with it. Every one of these
+                  outcomes used to be a silent return, which made "never heard
+                  you", "heard you and ignored it" and "answering but nothing on
+                  screen" indistinguishable. */}
+              {embedded && heardLog.length > 0 && (
+                <div className="flex flex-col gap-1 mt-1">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Heard</span>
+                    <button onClick={() => setHeardLog([])} className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear this list">Clear</button>
+                  </div>
+                  {heardLog.map(h => (
+                    <div key={h.id} className="px-2 py-1 rounded-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <p className="text-[9px] leading-snug break-words" style={{ color: 'var(--text-secondary)' }}>{h.text}</p>
+                      <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: h.outcome === 'answering' ? 'var(--cam-gold-leaf)' : 'var(--text-muted)' }}>
+                        {h.outcome} · {h.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
               {/* Pending detected questions (behavioral tap-to-answer). These are
                   the transcribed lines that did NOT clear shouldAutoAnswer() —
