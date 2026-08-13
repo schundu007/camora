@@ -17,7 +17,7 @@
 // StackStorm YAML below is from docs.stackstorm.com (rules.html, orquesta.html),
 // read 2026-08-12. NVSentinel and KAI-Scheduler are NVIDIA's own public repos.
 
-export const nvidiaGfnToolTopics = [
+const ALL_GFN_TOOL_TOPICS = [
   {
     id: 'gfn-argocd-fluxcd',
     title: 'Argo CD and Flux CD — Running Both, and Why',
@@ -600,3 +600,11 @@ export const nvidiaGfnToolTopics = [
     ],
   },
 ];
+
+// See the source-split note in nvidiaGfnTopics.js. The JD-vs-resume probes are
+// answers about the candidate's own history and choices, so they belong in the
+// personal source that behavioral mode can reach.
+const PERSONAL_TOOL_TOPIC_IDS = new Set(['gfn-resume-jd-probes']);
+
+export const nvidiaGfnToolTopics = ALL_GFN_TOOL_TOPICS.filter((t) => !PERSONAL_TOOL_TOPIC_IDS.has(t.id));
+export const nvidiaGfnPersonalToolTopics = ALL_GFN_TOOL_TOPICS.filter((t) => PERSONAL_TOOL_TOPIC_IDS.has(t.id));

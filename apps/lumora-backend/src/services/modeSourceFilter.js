@@ -75,7 +75,10 @@ const MODE_SOURCES = Object.freeze({
  * A comment used to assert this exclusion existed. It did not — 'general'
  * returned null, meaning no filter, meaning the whole KB. Now it is enforced.
  */
-export const STUDY_ONLY_SOURCES = Object.freeze(['capra-nvidia-gfn']);
+export const STUDY_ONLY_SOURCES = Object.freeze([
+  'capra-nvidia-gfn',
+  'capra-nvidia-gfn-personal',
+]);
 
 /**
  * User-tier doc_kinds withheld per mode.
@@ -115,13 +118,42 @@ export function excludedDocKindsForMode(mode) {
  * Keys are compared case-insensitively against prep_state.activeCompany.
  */
 const COMPANY_STUDY_SOURCES = Object.freeze({
-  nvidia: 'capra-nvidia-gfn',
+  nvidia: { deck: 'capra-nvidia-gfn', personal: 'capra-nvidia-gfn-personal' },
 });
 
-/** @returns {string|null} the study source for this company, if any. */
-export function studySourceForCompany(company) {
-  if (!company || typeof company !== 'string') return null;
-  return COMPANY_STUDY_SOURCES[company.trim().toLowerCase()] || null;
+/**
+ * Sources to admit for this company in this mode.
+ *
+ * Split by whose voice the content is in, not by which file it lives in.
+ *
+ *   deck     — technical study material ABOUT the company's systems. Barred
+ *              from behavioral: grounding "tell me about a time you..." on it
+ *              makes the model narrate their architecture as the candidate's
+ *              own job history.
+ *   personal — the candidate's OWN career, metrics, reasons and answers about
+ *              himself. Already first-person. Behavioral is precisely where it
+ *              belongs; blocking it was the bug, and it left the behavioral tab
+ *              unable to reach the very answers written for that round.
+ *
+ * @returns {string[]} possibly empty.
+ */
+export function studySourcesForCompany(company, mode) {
+  if (!company || typeof company !== 'string') return [];
+
+  // Match on a normalised substring, not equality. Workspace names are free
+  // text the user types — the real one here was "Nvidia-DevTools", which an
+  // exact lookup missed. That failure is silent: no error, no empty result to
+  // notice, just answers that quietly lack the deck. A workspace named for the
+  // company must match the company.
+  const key = company.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!key) return [];
+  const match = Object.entries(COMPANY_STUDY_SOURCES)
+    .find(([name]) => key.includes(name));
+  if (!match) return [];
+
+  const entry = match[1];
+  if (STUDY_DECK_FORBIDDEN_MODES.includes(mode)) return [entry.personal];
+  return [entry.deck, entry.personal];
 }
 
 /**
