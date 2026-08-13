@@ -23,7 +23,10 @@
 export const TOPIC_MANIFEST = [
   { file: 'sreTopics.js',             export: 'sreTopics',             source: 'capra-sre' },
   { file: 'devopsTopics.js',          export: 'devopsTopics',          source: 'capra-devops' },
-  { file: 'amdCiTopics.js',           export: 'amdCiTopics',           source: 'capra-amd-ci' },
+  // Company-specific study deck. Study-only: see STUDY_ONLY_SOURCES in
+  // modeSourceFilter.js — reachable solely through the 'nvidia-gfn' mode.
+  { file: 'nvidiaGfnTopics.js',       export: 'nvidiaGfnTopics',       source: 'capra-nvidia-gfn' },
+  { file: 'nvidiaGfnToolTopics.js',   export: 'nvidiaGfnToolTopics',   source: 'capra-nvidia-gfn' },
   { file: 'systemDesignTopics.js',    export: 'systemDesignTopics',    source: 'capra-system-design' },
   { file: 'scalableSystemsTopics.js', export: 'scalableSystemsTopics', source: 'capra-scalable' },
   { file: 'codingTopics.js',          export: 'codingTopics',          source: 'capra-coding' },

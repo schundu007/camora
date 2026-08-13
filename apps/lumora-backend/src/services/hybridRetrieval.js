@@ -75,27 +75,31 @@ async function bm25Kb(question, sourceFilter, excludeSources) {
     tsRank: Number(row.ts_rank),
   }));
 }
-async function vecUser(userId, vec) {
+async function vecUser(userId, vec, excludeDocKinds) {
+  const deny = excludeDocKinds?.length ? excludeDocKinds : null;
   const r = await query(
     `SELECT id, doc_kind, section, content, embedding <=> $2::vector AS distance
        FROM lumora_user_doc_chunks
        WHERE user_id = $1
+         AND ($4::text[] IS NULL OR doc_kind <> ALL($4::text[]))
        ORDER BY embedding <=> $2::vector LIMIT $3`,
-    [userId, asVecLiteral(vec), VECTOR_TOP],
+    [userId, asVecLiteral(vec), VECTOR_TOP, deny],
   );
   return r.rows.map((row) => ({
     tier: 'user', id: row.id, docKind: row.doc_kind, section: row.section,
     content: row.content, distance: Number(row.distance),
   }));
 }
-async function bm25User(userId, question) {
+async function bm25User(userId, question, excludeDocKinds) {
+  const deny = excludeDocKinds?.length ? excludeDocKinds : null;
   const r = await query(
     `SELECT id, doc_kind, section, content,
             ts_rank(content_tsv, plainto_tsquery('english', $2)) AS ts_rank
        FROM lumora_user_doc_chunks
        WHERE user_id = $1 AND content_tsv @@ plainto_tsquery('english', $2)
+         AND ($4::text[] IS NULL OR doc_kind <> ALL($4::text[]))
        ORDER BY ts_rank DESC LIMIT $3`,
-    [userId, question, BM25_TOP],
+    [userId, question, BM25_TOP, deny],
   );
   return r.rows.map((row) => ({
     tier: 'user', id: row.id, docKind: row.doc_kind, section: row.section,
@@ -158,11 +162,24 @@ export async function hybridSearchKb(question, finalK, opts = {}) {
   return fuse(results, finalK);
 }
 
+/**
+ * @param {object} [opts]
+ * @param {number[]} [opts.vec]
+ * @param {string[]} [opts.excludeDocKinds] doc_kind values to withhold. Unlike
+ *   the KB allow-list, this is a DENY-list: user-tier chunks are personal and
+ *   default to reachable from every mode. It exists for one reason — study
+ *   material a user pastes into the Prep Kit (a company's interview deck, a
+ *   competitor's architecture write-up) is written in third-person technical
+ *   voice, and grounding a *behavioral* answer on it makes the model narrate
+ *   that company's systems as the candidate's own job history. Same failure the
+ *   KB's STUDY_ONLY_SOURCES guards against, one tier down.
+ */
 export async function hybridSearchUserDocs(userId, question, finalK, opts = {}) {
   const vec = opts.vec || await embedQueryOrDegrade(question);
+  const deny = opts.excludeDocKinds;
   const results = vec
-    ? await Promise.all([vecUser(userId, vec), bm25User(userId, question)])
-    : [[], await bm25User(userId, question)];
+    ? await Promise.all([vecUser(userId, vec, deny), bm25User(userId, question, deny)])
+    : [[], await bm25User(userId, question, deny)];
   return fuse(results, finalK);
 }
 

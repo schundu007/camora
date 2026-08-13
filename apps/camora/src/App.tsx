@@ -86,7 +86,6 @@ const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 const MobileAuthPage = lazy(() => import('./pages/MobileAuthPage'));
 const PythonLearnPage = lazy(() => import('./pages/capra/PythonLearnPage'));
 const K8sPathPage = lazy(() => import('./pages/capra/K8sPathPage'));
-const AmdPrepPage = lazy(() => import('./pages/capra/AmdPrepPage')); // TEMP — AMD interview hub, remove after interview
 const CodeSignalLearnPage = lazy(() => import('./pages/capra/CodeSignalLearnPage'));
 const ProgramizLearnPage = lazy(() => import('./pages/capra/ProgramizLearnPage'));
 const LearnTopicPage = lazy(() => import('./pages/capra/LearnTopicPage'));
@@ -649,7 +648,6 @@ export const App = () => {
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
           <Route path="/capra/flashcards"   element={<ShellRoute><FlashcardsPage /></ShellRoute>} />
           <Route path="/capra/k8s" element={<ShellRoute><K8sPathPage /></ShellRoute>} />
-          <Route path="/capra/amd-prep" element={<ShellRoute><AmdPrepPage /></ShellRoute>} />{/* TEMP — remove after AMD interview */}
           <Route path="/capra/learn/python" element={<ShellRoute><PythonLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/codesignal" element={<ShellRoute><CodeSignalLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/programiz" element={<ShellRoute><ProgramizLearnPage /></ShellRoute>} />

@@ -49,15 +49,16 @@ const MODE_SOURCES = Object.freeze({
     'capra-sre',              // SLI/SLO/SLA, incident, on-call
     'capra-devops',           // CI/CD, observability, IaC
   ],
-  // Company/role-specific study material. Grounded in public repos only —
-  // see apps/camora/src/data/capra/topics/amdCiTopics.js for provenance
-  // rules (every claim traceable; unverified things stay framed as
-  // questions to ask). Reachable ONLY through this explicit mode; see
-  // STUDY_ONLY_SOURCES for why it must never surface in an unfiltered search.
-  'amd-ci': [
-    'capra-amd-ci',           // TheRock/ROCm CI, GPU fleet ops, OSDU multi-cloud
+  // Company/role-specific study material. Grounded in public sources only —
+  // see apps/camora/src/data/capra/topics/nvidiaGfnTopics.js for provenance
+  // rules (every claim traceable to a URL; unverified things stay framed as
+  // questions to ask, and the candidate never speaks as an employee).
+  // Reachable ONLY through this explicit mode; see STUDY_ONLY_SOURCES for why
+  // it must never surface in an unfiltered search.
+  'nvidia-gfn': [
+    'capra-nvidia-gfn',       // GFN platform model, zone leases, GitOps, tool depth
     'capra-devops',           // shared CI/CD + IaC grounding
-    'capra-sre',              // fleet health, incident framing
+    'capra-sre',              // fleet health, SLO and incident framing
   ],
 });
 
@@ -74,7 +75,30 @@ const MODE_SOURCES = Object.freeze({
  * A comment used to assert this exclusion existed. It did not — 'general'
  * returned null, meaning no filter, meaning the whole KB. Now it is enforced.
  */
-export const STUDY_ONLY_SOURCES = Object.freeze(['capra-amd-ci']);
+export const STUDY_ONLY_SOURCES = Object.freeze(['capra-nvidia-gfn']);
+
+/**
+ * User-tier doc_kinds withheld per mode.
+ *
+ * The KB has STUDY_ONLY_SOURCES; this is the same guard one tier down. Study
+ * material pasted into the Prep Kit ("Study Materials" in the panel) is indexed
+ * as doc_kind 'study_doc'. It is third-person writing ABOUT a company's
+ * systems, not about the candidate — so a behavioral answer grounded on it
+ * reports that company's architecture as the candidate's own job. User-tier
+ * chunks bypass source filtering by design, so without this they reach every
+ * mode including behavioral.
+ *
+ * Only behavioral is restricted. Coding and design SHOULD see study docs —
+ * that is the whole point of pasting an interview kit in.
+ */
+const MODE_EXCLUDED_DOC_KINDS = Object.freeze({
+  behavioral: ['study_doc'],
+});
+
+/** @returns {string[]} doc_kind values to withhold for this mode (possibly empty). */
+export function excludedDocKindsForMode(mode) {
+  return [...(MODE_EXCLUDED_DOC_KINDS[mode] || [])];
+}
 
 export const KNOWN_MODES = Object.freeze(Object.keys(MODE_SOURCES));
 

@@ -69,8 +69,17 @@ export async function buildSessionKit({ userId, prepData }) {
   if (!userId) return { skipped: true };
   const company = prepData?.activeCompany;
   const doc = company ? prepData.data?.[company] : null;
+  // Study docs are the densest source of distinctive technical terms a user
+  // ever supplies — an interview kit names the exact systems the round will
+  // cover. Seeding only from jd/resume/coverLetter left the kit blind to them.
+  // Bounded: seeds are counted, not concatenated in full, but a 600 KB GitHub
+  // fetch would still make the regex scan pointlessly expensive.
+  const STUDY_SCAN_CHARS = 200_000;
+  const studyText = Array.isArray(doc?.studyDocs)
+    ? doc.studyDocs.map((d) => (typeof d?.content === 'string' ? d.content : '')).join('\n\n').slice(0, STUDY_SCAN_CHARS)
+    : '';
   const haystack = doc
-    ? [doc.jd, doc.resume, doc.coverLetter].filter(Boolean).join('\n\n')
+    ? [doc.jd, doc.resume, doc.coverLetter, doc.prepMaterials, studyText].filter(Boolean).join('\n\n')
     : '';
   const seeds = haystack.trim() ? extractSeeds(haystack) : [];
   if (seeds.length === 0) {

@@ -69,3 +69,51 @@ describe('indexUserPrepDocs', () => {
     expect(jdInserts.length).toBeGreaterThan(1);
   });
 });
+
+describe('study material indexing', () => {
+  const vecs = (n) => new Array(n).fill(0).map((_, i) => new Array(1536).fill(i / 100));
+
+  it('indexes prepMaterials and studyDocs, tagging study docs as study_doc', async () => {
+    queryMock.mockResolvedValue({ rows: [] });
+    embedBatchMock.mockImplementation((texts) => Promise.resolve(vecs(texts.length)));
+    const { indexUserPrepDocs } = await import('../src/services/userDocIndexer.js');
+
+    const r = await indexUserPrepDocs({
+      userId: 7,
+      prepData: {
+        activeCompany: 'NVIDIA',
+        data: {
+          NVIDIA: {
+            resume: 'Owned ArgoCD and FluxCD rollouts across bare metal and AWS.',
+            prepMaterials: 'Hiring manager briefing: lead with developer tooling.',
+            studyDocs: [
+              { name: 'GFN Kit.docx', content: 'Zone reservation and lease system. Fencing tokens prevent a stale holder from acting.' },
+              { name: 'StackStorm.md', content: 'Sensors emit triggers; rules match criteria and fire actions or Orquesta workflows.' },
+            ],
+          },
+        },
+      },
+    });
+
+    expect(r.written).toBe(4);
+    const inserts = queryMock.mock.calls.filter(([sql]) => sql.includes('INSERT INTO lumora_user_doc_chunks'));
+    const kinds = inserts.map(([, params]) => params[2]);
+    expect(kinds).toEqual(['resume', 'prep_materials', 'study_doc', 'study_doc']);
+    // Study docs carry their original filename so citations stay attributable.
+    expect(JSON.parse(inserts[2][1][7]).fileName).toBe('GFN Kit.docx');
+  });
+
+  it('leaves R2-sourced research_doc rows alone when reindexing the prep blob', async () => {
+    queryMock.mockResolvedValue({ rows: [] });
+    embedBatchMock.mockImplementation((texts) => Promise.resolve(vecs(texts.length)));
+    const { indexUserPrepDocs } = await import('../src/services/userDocIndexer.js');
+
+    await indexUserPrepDocs({
+      userId: 9,
+      prepData: { activeCompany: 'NVIDIA', data: { NVIDIA: { resume: 'GitOps at scale.' } } },
+    });
+
+    const del = queryMock.mock.calls.find(([sql]) => sql.startsWith('DELETE FROM lumora_user_doc_chunks'));
+    expect(del[0]).toContain('source_key IS NULL');
+  });
+});
