@@ -11,7 +11,11 @@
  * query has WHERE user_id = $1. Namespace bugs are tested.
  */
 import { hybridSearchKb, hybridSearchUserDocs, hybridSearchUserCode } from './hybridRetrieval.js';
-import { sourcesForMode, excludedSourcesForMode, excludedDocKindsForMode } from './modeSourceFilter.js';
+import {
+  sourcesForMode, excludedSourcesForMode, excludedDocKindsForMode,
+  studySourceForCompany, STUDY_DECK_FORBIDDEN_MODES,
+} from './modeSourceFilter.js';
+import { peekActiveCompany, refreshActiveCompany } from './activeCompany.js';
 import { gradeChunks } from './chunkGrader.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
@@ -57,13 +61,40 @@ function resolveUseWarmKit(optsValue) {
 export async function retrieve(opts) {
   const { question, userId, timeoutMs = DEFAULT_TIMEOUT_MS, useHyde, useRerank, useWarmKit, mode } = opts;
   const t0 = performance.now();
-  const sourceFilter = sourcesForMode(mode);
+  let sourceFilter = sourcesForMode(mode);
   // Company-specific study decks are reachable only via their own explicit mode.
   // Empty when an allow-list already exists — it cannot reach them anyway.
-  const excludeSources = excludedSourcesForMode(mode);
+  let excludeSources = excludedSourcesForMode(mode);
   // User-tier deny-list. Study docs are personal uploads, so they bypass the
   // source allow-list above and would otherwise reach behavioral answers.
   const excludeDocKinds = excludedDocKindsForMode(mode);
+
+  // Admit the active company's study deck, if there is one.
+  //
+  // Cache-only and synchronous: this must add zero latency. Awaiting a query
+  // here would put a database read inside the 250ms budget, and losing that
+  // race costs the whole answer its grounding — a far worse outcome than
+  // missing the deck. On a cold cache we skip the deck for this one question
+  // and warm it in the background for the next. In practice prep.js primes the
+  // cache on every save, so the cold path is rare.
+  if (userId && !STUDY_DECK_FORBIDDEN_MODES.includes(mode)) {
+    const { hit, company } = peekActiveCompany(userId);
+    if (!hit) {
+      refreshActiveCompany(userId).catch(() => {});
+    } else {
+      const studySource = studySourceForCompany(company);
+      if (studySource) {
+        if (sourceFilter) {
+          // An allow-list cannot reach what it does not name.
+          sourceFilter = [...sourceFilter, studySource];
+        } else {
+          // No allow-list (general mode): the deck is in STUDY_ONLY_SOURCES and
+          // so is subtracted by default. Stop subtracting just this one.
+          excludeSources = excludeSources.filter((s) => s !== studySource);
+        }
+      }
+    }
+  }
 
   let timer;
   const timeout = new Promise((resolve) => {

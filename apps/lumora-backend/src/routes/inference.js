@@ -18,6 +18,7 @@ import { streamResponseGemini } from '../services/gemini-stream.js';
 import { recordUsage as recordAiHours } from '../services/aiHoursMeter.js';
 import { buildAnswerCacheKey, cacheGet, cacheSet, logCacheEvent } from '../services/answerCache.js';
 import { normalizeImages } from '../services/visionImage.js';
+import { isValidMode } from '../services/modeSourceFilter.js';
 import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
 
 const router = Router();
@@ -68,8 +69,7 @@ function getQuestionType(answer) {
 router.post('/conversations/:conversationId/stream', authenticate, checkUsage('questions'), async (req, res) => {
   const { conversationId } = req.params;
   let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null } = req.body;
-  const VALID_MODES = ['general', 'coding', 'design', 'behavioral'];
-  if (!VALID_MODES.includes(mode)) mode = 'general';
+  if (!isValidMode(mode)) mode = 'general';
   const user = req.user;
 
   if (!question || typeof question !== 'string') {
@@ -323,8 +323,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
   let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null, pinned_intro: pinnedIntro = null, images: rawImages = null } = req.body;
-  const VALID_MODES = ['general', 'coding', 'design', 'behavioral'];
-  if (!VALID_MODES.includes(mode)) mode = 'general';
+  if (!isValidMode(mode)) mode = 'general';
   const user = req.user;
 
   // Screenshots attached to the question. Normalized here (validated, capped,
