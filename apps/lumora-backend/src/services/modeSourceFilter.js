@@ -100,7 +100,57 @@ export function excludedDocKindsForMode(mode) {
   return [...(MODE_EXCLUDED_DOC_KINDS[mode] || [])];
 }
 
+/**
+ * Active company → its study deck.
+ *
+ * A study deck reached only through an explicit mode is a deck nobody reaches.
+ * The `amd-ci` mode sat in this file for months while inference.js's VALID_MODES
+ * silently rewrote any unrecognised mode to 'general' — so the mode was dead
+ * code, and the deck's only route to an answer was the unfiltered 'general'
+ * search it was supposed to be excluded from. Worst of both: unreachable when
+ * wanted, reachable when not.
+ *
+ * So gate on the Prep workspace's active company instead. It is already set,
+ * already correct, and requires nobody to remember a dropdown mid-interview.
+ * Keys are compared case-insensitively against prep_state.activeCompany.
+ */
+const COMPANY_STUDY_SOURCES = Object.freeze({
+  nvidia: 'capra-nvidia-gfn',
+});
+
+/** @returns {string|null} the study source for this company, if any. */
+export function studySourceForCompany(company) {
+  if (!company || typeof company !== 'string') return null;
+  return COMPANY_STUDY_SOURCES[company.trim().toLowerCase()] || null;
+}
+
+/**
+ * Modes where a company study deck must stay excluded even when that company is
+ * active. Behavioral only: the deck is third-person writing about the company's
+ * systems, so grounding a personal answer on it makes the model narrate their
+ * architecture as the candidate's own job — the "I work at AMD" failure. The
+ * candidate is interviewing there, not employed there, and that distinction has
+ * to survive being convenient to ignore.
+ */
+export const STUDY_DECK_FORBIDDEN_MODES = Object.freeze(['behavioral']);
+
 export const KNOWN_MODES = Object.freeze(Object.keys(MODE_SOURCES));
+
+/**
+ * Whether inference should honour this mode, or fall back to 'general'.
+ *
+ * Derived from MODE_SOURCES rather than written out again. inference.js used to
+ * carry its own literal list, which drifted: 'amd-ci' was defined here, absent
+ * there, and therefore silently rewritten to 'general' on every request. The
+ * mode looked configured and did nothing — and worse, 'general' is the one mode
+ * the deck was supposed to be excluded from. Adding a mode below is now enough
+ * to make it real.
+ */
+export function isValidMode(mode) {
+  // KNOWN_MODES is the gated modes only; 'general' is the ungated default and
+  // is deliberately absent from it.
+  return mode === 'general' || KNOWN_MODES.includes(mode);
+}
 
 /**
  * @returns {string[]|null} allow-list of sources, or null for "no allow-list".

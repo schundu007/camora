@@ -397,3 +397,67 @@ describe('retrieve.lowConfidence', () => {
     expect(r.lowConfidence).toBe(true);
   });
 });
+
+describe('company study deck admission through retrieve()', () => {
+  // This block re-mocks hybridRetrieval itself. Earlier blocks in this file
+  // vi.doMock the same module, so the top-level hybridKbMock is no longer the
+  // function retrieve() resolves by the time we get here — asserting on it
+  // silently reads a mock nobody called.
+  const setup = async (company) => {
+    vi.resetModules();
+    const kb = vi.fn().mockResolvedValue([]);
+    const user = vi.fn().mockResolvedValue([]);
+    vi.doMock('../src/services/hybridRetrieval.js', () => ({
+      hybridSearchKb: kb,
+      hybridSearchUserDocs: user,
+      hybridSearchUserCode: vi.fn().mockResolvedValue([]),
+      embedQueryOrDegrade: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
+    }));
+    vi.doMock('../src/services/embeddings.js', () => ({
+      embedQuery: vi.fn().mockResolvedValue(new Array(1536).fill(0.01)),
+    }));
+    const { _clearActiveCompanyCache, primeActiveCompany } =
+      await import('../src/services/activeCompany.js');
+    _clearActiveCompanyCache();
+    primeActiveCompany(7, company);
+    const { retrieve } = await import('../src/services/retrieval.js');
+    return { kb, user, retrieve };
+  };
+
+  it('adds the deck to a mode allow-list (coding) so it is reachable at all', async () => {
+    const { kb, retrieve } = await setup('NVIDIA');
+    await retrieve({ question: 'design the lease service', userId: 7, mode: 'coding', useWarmKit: false });
+    const { sourceFilter } = kb.mock.calls[0][2];
+    expect(sourceFilter).toContain('capra-nvidia-gfn');
+    expect(sourceFilter).toContain('capra-coding'); // the mode's own sources survive
+  });
+
+  it('stops subtracting the deck in general mode', async () => {
+    const { kb, retrieve } = await setup('NVIDIA');
+    await retrieve({ question: 'how do zone drains work', userId: 7, mode: 'general', useWarmKit: false });
+    // general has no allow-list; the deck is excluded by default via
+    // STUDY_ONLY_SOURCES, so admission means dropping it from the deny-list.
+    const { excludeSources } = kb.mock.calls[0][2];
+    expect(excludeSources || []).not.toContain('capra-nvidia-gfn');
+  });
+
+  it('never admits the deck into behavioral, even with the company active', async () => {
+    const { kb, user, retrieve } = await setup('NVIDIA');
+    await retrieve({ question: 'tell me about a time you disagreed', userId: 7, mode: 'behavioral', useWarmKit: false });
+    // Behavioral grounds on the candidate's own history only. The deck is
+    // third-person writing about NVIDIA's systems; admitting it makes the model
+    // narrate their architecture as his own job. He is interviewing there, not
+    // employed there.
+    const { sourceFilter } = kb.mock.calls[0][2];
+    expect(sourceFilter).toEqual([]);
+    const { excludeDocKinds } = user.mock.calls[0][3];
+    expect(excludeDocKinds).toContain('study_doc');
+  });
+
+  it("does not admit another company's deck", async () => {
+    const { kb, retrieve } = await setup('Google');
+    await retrieve({ question: 'how do zone drains work', userId: 7, mode: 'general', useWarmKit: false });
+    const { excludeSources } = kb.mock.calls[0][2];
+    expect(excludeSources).toContain('capra-nvidia-gfn');
+  });
+});

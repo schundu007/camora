@@ -20,6 +20,7 @@ import { authenticate } from '../middleware/authenticate.js';
 import { refreshCompanyContext } from '../services/companyContext.js';
 import { indexUserPrepDocs } from '../services/userDocIndexer.js';
 import { buildSessionKit, clearSessionKit } from '../services/sessionKit.js';
+import { primeActiveCompany, invalidateActiveCompany } from '../services/activeCompany.js';
 import { buildWebWatchlist } from '../services/webWatchlist.js';
 import { r2, R2_BUCKET } from '../lib/r2.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
@@ -87,6 +88,12 @@ router.put('/state', async (req, res, next) => {
        RETURNING updated_at`,
       [req.user.id, serialized],
     );
+
+    // Switching workspaces changes which company study deck retrieval may
+    // reach. Prime rather than invalidate: the new value is right here in the
+    // payload, so this both corrects the cache immediately and spares the
+    // retrieval path a cold miss on the first question after a save.
+    primeActiveCompany(req.user.id, data.activeCompany || null);
 
     // Fire-and-forget company-context warm-up so by the time the user
     // starts the live interview, Sona's briefing cache is already
@@ -171,6 +178,7 @@ router.delete('/state', async (req, res, next) => {
     await query('DELETE FROM lumora_prep_state WHERE user_id = $1', [req.user.id]);
     await query('DELETE FROM lumora_user_doc_chunks WHERE user_id = $1', [req.user.id]);
     await clearSessionKit(req.user.id);
+    invalidateActiveCompany(req.user.id);
     res.json({ success: true });
   } catch (err) {
     next(err);
