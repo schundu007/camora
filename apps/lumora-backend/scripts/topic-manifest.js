@@ -27,6 +27,10 @@ export const TOPIC_MANIFEST = [
   // modeSourceFilter.js — reachable solely through the 'nvidia-gfn' mode.
   { file: 'nvidiaGfnTopics.js',       export: 'nvidiaGfnTopics',       source: 'capra-nvidia-gfn' },
   { file: 'nvidiaGfnToolTopics.js',   export: 'nvidiaGfnToolTopics',   source: 'capra-nvidia-gfn' },
+  // The candidate's OWN positioning and history answers. Separate source so
+  // behavioral mode can ground on them without reaching the technical deck.
+  { file: 'nvidiaGfnTopics.js',       export: 'nvidiaGfnPersonalTopics',     source: 'capra-nvidia-gfn-personal' },
+  { file: 'nvidiaGfnToolTopics.js',   export: 'nvidiaGfnPersonalToolTopics', source: 'capra-nvidia-gfn-personal' },
   { file: 'systemDesignTopics.js',    export: 'systemDesignTopics',    source: 'capra-system-design' },
   { file: 'scalableSystemsTopics.js', export: 'scalableSystemsTopics', source: 'capra-scalable' },
   { file: 'codingTopics.js',          export: 'codingTopics',          source: 'capra-coding' },

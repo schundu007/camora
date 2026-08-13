@@ -13,7 +13,7 @@
 import { hybridSearchKb, hybridSearchUserDocs, hybridSearchUserCode } from './hybridRetrieval.js';
 import {
   sourcesForMode, excludedSourcesForMode, excludedDocKindsForMode,
-  studySourceForCompany, STUDY_DECK_FORBIDDEN_MODES,
+  studySourcesForCompany,
 } from './modeSourceFilter.js';
 import { peekActiveCompany, refreshActiveCompany } from './activeCompany.js';
 import { gradeChunks } from './chunkGrader.js';
@@ -77,20 +77,24 @@ export async function retrieve(opts) {
   // missing the deck. On a cold cache we skip the deck for this one question
   // and warm it in the background for the next. In practice prep.js primes the
   // cache on every save, so the cold path is rare.
-  if (userId && !STUDY_DECK_FORBIDDEN_MODES.includes(mode)) {
+  if (userId) {
     const { hit, company } = peekActiveCompany(userId);
     if (!hit) {
       refreshActiveCompany(userId).catch(() => {});
     } else {
-      const studySource = studySourceForCompany(company);
-      if (studySource) {
+      // Mode decides WHICH sources are admitted, not whether any are. Behavioral
+      // gets the candidate's own positioning material and not the technical deck.
+      const admitted = studySourcesForCompany(company, mode);
+      if (admitted.length) {
         if (sourceFilter) {
-          // An allow-list cannot reach what it does not name.
-          sourceFilter = [...sourceFilter, studySource];
+          // An allow-list cannot reach what it does not name. Note behavioral's
+          // allow-list is [] — empty but present — so this is how its answers
+          // reach the personal source at all.
+          sourceFilter = [...sourceFilter, ...admitted];
         } else {
-          // No allow-list (general mode): the deck is in STUDY_ONLY_SOURCES and
-          // so is subtracted by default. Stop subtracting just this one.
-          excludeSources = excludeSources.filter((s) => s !== studySource);
+          // No allow-list (general mode): these are in STUDY_ONLY_SOURCES and so
+          // subtracted by default. Stop subtracting the admitted ones.
+          excludeSources = excludeSources.filter((s) => !admitted.includes(s));
         }
       }
     }

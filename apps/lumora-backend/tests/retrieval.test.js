@@ -449,7 +449,10 @@ describe('company study deck admission through retrieve()', () => {
     // narrate their architecture as his own job. He is interviewing there, not
     // employed there.
     const { sourceFilter } = kb.mock.calls[0][2];
-    expect(sourceFilter).toEqual([]);
+    // Behavioral reaches the candidate's own positioning answers...
+    expect(sourceFilter).toEqual(['capra-nvidia-gfn-personal']);
+    // ...and never the technical deck about NVIDIA's systems.
+    expect(sourceFilter).not.toContain('capra-nvidia-gfn');
     const { excludeDocKinds } = user.mock.calls[0][3];
     expect(excludeDocKinds).toContain('study_doc');
   });

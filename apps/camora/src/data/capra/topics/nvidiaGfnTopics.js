@@ -33,7 +33,7 @@
 // is what chunker.js turns into per-Q/A chunks, the highest-value grounding
 // for a live interview. A bare count (`questions: 3`) silently indexes nothing.
 
-export const nvidiaGfnTopics = [
+const ALL_GFN_TOPICS = [
   {
     id: 'gfn-platform-model',
     title: 'What GeForce NOW Actually Is — And The Three Constraints',
@@ -384,3 +384,21 @@ export const nvidiaGfnTopics = [
     ],
   },
 ];
+
+// ── Source split: whose voice is the content in? ─────────────────────────
+//
+// Two sources, because behavioral mode must be able to reach one and not the
+// other.
+//
+// capra-nvidia-gfn is technical study material ABOUT NVIDIA's systems. It must
+// never ground a behavioral answer — that is how a model ends up narrating a
+// company's architecture as the candidate's own job history.
+//
+// capra-nvidia-gfn-personal is the candidate's OWN positioning: his career, his
+// metrics, his reasons, his answers to questions about himself. Blocking that
+// from behavioral was the bug — it is exactly what a behavioral answer should
+// be grounded on, and it is already written in his first-person voice.
+const PERSONAL_TOPIC_IDS = new Set(['hm-round-positioning']);
+
+export const nvidiaGfnTopics = ALL_GFN_TOPICS.filter((t) => !PERSONAL_TOPIC_IDS.has(t.id));
+export const nvidiaGfnPersonalTopics = ALL_GFN_TOPICS.filter((t) => PERSONAL_TOPIC_IDS.has(t.id));

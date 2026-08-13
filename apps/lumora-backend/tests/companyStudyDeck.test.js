@@ -29,21 +29,30 @@ describe('mode validation cannot drift from the mode table', () => {
 });
 
 describe('company study deck admission', () => {
-  it('maps the active company to its deck, case-insensitively', async () => {
-    const { studySourceForCompany } = await import('../src/services/modeSourceFilter.js');
-    expect(studySourceForCompany('NVIDIA')).toBe('capra-nvidia-gfn');
-    expect(studySourceForCompany('nvidia')).toBe('capra-nvidia-gfn');
-    expect(studySourceForCompany(' Nvidia ')).toBe('capra-nvidia-gfn');
-    expect(studySourceForCompany('Google')).toBeNull();
-    expect(studySourceForCompany(null)).toBeNull();
+  it('maps the active company to its sources, case-insensitively', async () => {
+    const { studySourcesForCompany } = await import('../src/services/modeSourceFilter.js');
+    // Real workspace names are free text. The live one was 'Nvidia-DevTools',
+    // which an exact-equality lookup missed — silently, with no error and no
+    // empty result anyone would notice, just answers quietly missing the deck.
+    for (const name of ['NVIDIA', 'nvidia', ' Nvidia ', 'Nvidia-DevTools', 'NVIDIA GFN', 'nvidia_gfn_platform']) {
+      expect(studySourcesForCompany(name, 'general')).toEqual(
+        ['capra-nvidia-gfn', 'capra-nvidia-gfn-personal'],
+      );
+    }
+    expect(studySourcesForCompany('Google', 'general')).toEqual([]);
+    expect(studySourcesForCompany(null, 'general')).toEqual([]);
+    expect(studySourcesForCompany('', 'general')).toEqual([]);
+    expect(studySourcesForCompany('---', 'general')).toEqual([]);
   });
 
-  it('never admits a study deck into behavioral, whatever the company', async () => {
-    const { STUDY_DECK_FORBIDDEN_MODES } = await import('../src/services/modeSourceFilter.js');
-    // Behavioral grounds on the candidate's own history. A company's deck is
-    // third-person writing about THEIR systems; admitting it produces "I work
-    // at NVIDIA" for someone who is only interviewing there.
-    expect(STUDY_DECK_FORBIDDEN_MODES).toContain('behavioral');
+  it('behavioral gets the personal source and NOT the technical deck', async () => {
+    const { studySourcesForCompany } = await import('../src/services/modeSourceFilter.js');
+    // The split is by whose voice the content is in. Personal = the candidate's
+    // own career, metrics and reasons, already first-person — exactly what a
+    // behavioral answer should ground on. The technical deck describes NVIDIA's
+    // systems and would be narrated as his own job history.
+    expect(studySourcesForCompany('Nvidia-DevTools', 'behavioral')).toEqual(['capra-nvidia-gfn-personal']);
+    expect(studySourcesForCompany('NVIDIA', 'behavioral')).not.toContain('capra-nvidia-gfn');
   });
 
   it('peek is cache-only and never queries — the retrieval path must not await a read', async () => {
