@@ -1,0 +1,112 @@
+{
+  "_comment": [
+    "Curated STAR stories for the NVIDIA GFN hiring-manager round, seeded into",
+    "lumora_user_stories so storyAnchor.js injects the RIGHT one by archetype",
+    "instead of re-deriving a generic story from raw resume text each time.",
+    "",
+    "Ordering is load-bearing: loadBestStory() falls back to the FIRST story",
+    "when no archetype matches, so the strongest tools-and-platform story leads.",
+    "",
+    "Tuned for Hardik Parekh specifically — eleven years in developer tools, then",
+    "four as a backend software engineer, now managing the GFN deployment",
+    "platform. The tool-building stories come first because that is his own",
+    "career shape and the part of this background most candidates bury.",
+    "",
+    "Every fact here traces to the resume. Nothing invented. `impact` must carry",
+    "the exact metric, never a paraphrase — that is the whole reason this table",
+    "exists (see storyAnchor.js: metrics were being softened to '~50%')."
+  ],
+  "stories": [
+    {
+      "id": "git-dboard-ci-health",
+      "title": "Built the CI health dashboard nobody had time to build",
+      "summary": "Could not answer which jobs were burning the team's week, so built git-dboard — run history, pipeline duration, failure clustering, rerun-heavy jobs per team, runner and queue visibility across the GPU cluster. Started at Trackonomy from my own pain; grew at IBM into gate evaluation and auto-merge.",
+      "archetypes": ["Innovation", "Growth", "Influence"],
+      "impact": "Turned 'CI is slow' into per-team job-level waste engineers could act on"
+    },
+    {
+      "id": "ibm-ci-100x-scaleout",
+      "title": "Scaled watsonx CI 100x to 6,000 pipeline runs a day",
+      "summary": "Owned the shared CI/CD platform for watsonx across GitHub Actions and Azure DevOps. Drove a 100x scale-out through ephemeral self-hosted runner fleets, build and layer caching keyed on lockfiles, matrix parallelisation and containerised build images. Instrumented queue wait and runner saturation separately from build duration.",
+      "archetypes": ["Leadership", "Innovation"],
+      "impact": "100x CI scale-out; 6,000+ pipeline runs/day"
+    },
+    {
+      "id": "flaky-test-detection",
+      "title": "Stopped the team from disbelieving a red build",
+      "summary": "At 6,000 runs a day a 1% flake rate is 60 spurious failures daily — engineers start re-running as a reflex and the quality gate stops being a gate. Built flaky-test and test-health detection surfacing repeatedly failing and rerun-heavy jobs per team, and turned delivery reliability into tracked SLOs with alerting instead of anecdote.",
+      "archetypes": ["Failure", "Innovation", "Collaboration"],
+      "impact": "Made CI reliability a tracked SLO rather than an anecdote"
+    },
+    {
+      "id": "gpu-bare-metal-cluster",
+      "title": "Designed and ran a 65-GPU bare-metal cluster",
+      "summary": "Built and operated a 65-GPU bare-metal cluster (A100, V100, T4) alongside AWS, Azure and OCI: PXE and image provisioning, IPMI/BMC out-of-band recovery, driver and CUDA lifecycle with staged rollouts and kernel-module compatibility validation, DCGM exporter, and automated node cordon, drain and repair that waited on workload state rather than evicting.",
+      "archetypes": ["Leadership", "Ambiguity"],
+      "impact": "99.97% uptime across 65 GPUs"
+    },
+    {
+      "id": "gitops-deployment-platform",
+      "title": "Owned a Kubernetes-native deployment platform for 100+ apps",
+      "summary": "Built the GitOps delivery platform at Trackonomy on ArgoCD and FluxCD — declarative reconciliation, continuous drift detection and auto-correction, progressive and canary rollouts, one-command rollback — across on-prem bare metal plus AWS, Azure and OCI from a single declarative control plane. Led a 6-engineer cross-functional platform team.",
+      "archetypes": ["Leadership", "Innovation"],
+      "impact": "50+ zero-downtime deployments/day across 100+ applications"
+    },
+    {
+      "id": "self-service-platform",
+      "title": "Replaced ticket-driven handoffs with self-service",
+      "summary": "Built Python platform APIs, internal CLI tooling and golden-path templates so engineers could provision infrastructure, reserve environments, ship to Kubernetes and reach observability without the platform team in the critical path. New services arrived with pipeline, Helm chart, GitOps wiring, dashboards and alerts already generated from one request.",
+      "archetypes": ["Influence", "Collaboration", "Innovation"],
+      "impact": "50+ engineers self-serving; platform team out of the routine path"
+    },
+    {
+      "id": "event-driven-remediation",
+      "title": "Automated node repair without dropping running work",
+      "summary": "Built anomaly-triggered runbooks, Slack self-service bots and alert-to-action workflows that cordoned, drained, repaired and returned failing nodes with no human involved. The rule that made it safe was that the automation waited on actual workload state rather than evicting, plus a repeat-offender guard so a dying board got a human instead of being healed forever.",
+      "archetypes": ["Innovation", "Failure"],
+      "impact": "60% MTTR improvement; 65% incident reduction"
+    },
+    {
+      "id": "staging-parity-limits",
+      "title": "Cut prod issues 90% — and learned what staging cannot do",
+      "summary": "Built prod-like staging mirroring production topology, data shape and traffic profile, which moved regression discovery left and cut production issues 90%. The honest part: almost all of that came from topology and data-shape parity. Traffic realism we never fully solved, and I would now reach for a canary on real production capacity rather than trying to simulate real users.",
+      "archetypes": ["Failure", "Growth", "Ambiguity"],
+      "impact": "90% fewer production issues; traffic realism never fully solved"
+    },
+    {
+      "id": "osdu-multivendor-release",
+      "title": "Ran releases across competing vendors on OSDU",
+      "summary": "On the OSDU open-source data platform the infrastructure-as-code was the product, contributed to by multiple energy majors and competing vendors with no shared reporting line. Coordinated staged promotion, gating on integration and security scans, and standardised versioning and release gating so releases stayed reproducible and independently deployable.",
+      "archetypes": ["Conflict", "Collaboration", "Influence"],
+      "impact": "2,317+ commits to OSDU Forum open-source infrastructure"
+    },
+    {
+      "id": "cost-reduction-influence",
+      "title": "Took infrastructure cost from $10M to $2.7M a year",
+      "summary": "Drove a 73% infrastructure cost reduction and 87% resource-sprawl elimination through capacity planning, workload bin-packing and automated scaling policies, plus consolidating five monitoring platforms into Datadog. Most of the work was influence rather than engineering — getting teams to accept quotas and bin-packing they had not asked for.",
+      "archetypes": ["Influence", "Leadership"],
+      "impact": "73% cost reduction ($10M to $2.7M/yr); 87% sprawl eliminated"
+    },
+    {
+      "id": "camora-mcp-platform",
+      "title": "Co-founded an agentic AI and MCP platform",
+      "summary": "Co-founder and principal engineer of Camora: MCP servers exposing operational and DevOps tooling to LLM agents, REST APIs with multi-provider LLM orchestration including routing and fallback, and a hybrid BM25-plus-vector RAG pipeline with reranking. Built on Python and FastAPI, shipped through the same GitOps and CI/CD patterns I run in production.",
+      "archetypes": ["Innovation", "Growth"],
+      "impact": "Production MCP servers and agent-facing developer tooling"
+    },
+    {
+      "id": "career-ic-scope",
+      "title": "Why senior IC scope now, after 15 years leading teams",
+      "summary": "Led teams for most of my career — a 4-person Linux team, then 14 in middleware engineering, then a 6-engineer platform team. What I want now is senior individual contributor scope: owning a platform end to end and being deep in it rather than in staffing plans. The leadership years make me useful at the hard parts of a senior IC role — unblocking others, mentoring, and getting designs agreed across teams that do not report to each other.",
+      "archetypes": ["Career", "Growth"],
+      "impact": "11 years at TCS, 2007-2018 — long tenure is the actual career shape"
+    },
+    {
+      "id": "fit-gfn-constraint",
+      "title": "Why this platform problem specifically",
+      "summary": "Most platform jobs are variations on ship-containers-safely. GFN has a constraint I have not had at this scale: every safe operation depends on knowing whether a person is mid-game on that machine, which collapses rollout, patching, repair and capacity planning into one dependency on a capacity system. And the hybrid shape — bare-metal GPU sites plus multi-cloud under one control plane — is close to what I actually ran.",
+      "archetypes": ["Fit", "Career"],
+      "impact": "Hybrid bare-metal GPU plus AWS/Azure/OCI from one control plane"
+    }
+  ]
+}

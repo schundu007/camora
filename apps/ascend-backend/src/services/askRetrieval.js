@@ -59,15 +59,19 @@ async function embedQuestion(text) {
  * Sona is a general assistant, so we only narrow when the question clearly
  * belongs to a specialist corpus. Everything else searches the whole KB.
  */
-const AMD_HINTS = /\b(amd|rocm|therock|the rock|gfx\d|mi300|mi325|mi350|hip|instinct|arc runner|actions runner controller)\b/i;
 const CI_HINTS = /\b(ci|cd|pipeline|workflow|runner|build system|monorepo|submodule|terraform|drift|kubernetes|k8s|gpu)\b/i;
 
 export function sourcesForQuestion(q) {
   if (!q) return null;
-  // AMD/ROCm-specific, or CI-flavoured questions during AMD prep: bias toward
-  // the company corpus plus the general CI/SRE material that supports it.
-  if (AMD_HINTS.test(q)) return ['capra-amd-ci', 'capra-devops', 'capra-sre'];
-  if (CI_HINTS.test(q)) return ['capra-amd-ci', 'capra-devops', 'capra-sre', 'capra-system-design'];
+  // CI-flavoured questions: bias toward the general CI/SRE/design material.
+  //
+  // This used to route to 'capra-amd-ci', a company-specific study deck, and
+  // the CI_HINTS branch is broad enough ("kubernetes", "pipeline", "gpu") that
+  // it pulled one company's study notes into a large share of general
+  // questions. The deck has been removed; company decks are reachable only
+  // through their own explicit mode in lumora-backend's modeSourceFilter, not
+  // from keyword sniffing here.
+  if (CI_HINTS.test(q)) return ['capra-devops', 'capra-sre', 'capra-system-design'];
   return null; // no filter — full KB
 }
 

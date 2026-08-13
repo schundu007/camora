@@ -11,7 +11,7 @@
  * query has WHERE user_id = $1. Namespace bugs are tested.
  */
 import { hybridSearchKb, hybridSearchUserDocs, hybridSearchUserCode } from './hybridRetrieval.js';
-import { sourcesForMode, excludedSourcesForMode } from './modeSourceFilter.js';
+import { sourcesForMode, excludedSourcesForMode, excludedDocKindsForMode } from './modeSourceFilter.js';
 import { gradeChunks } from './chunkGrader.js';
 
 const DEFAULT_TIMEOUT_MS = 250;
@@ -61,6 +61,9 @@ export async function retrieve(opts) {
   // Company-specific study decks are reachable only via their own explicit mode.
   // Empty when an allow-list already exists — it cannot reach them anyway.
   const excludeSources = excludedSourcesForMode(mode);
+  // User-tier deny-list. Study docs are personal uploads, so they bypass the
+  // source allow-list above and would otherwise reach behavioral answers.
+  const excludeDocKinds = excludedDocKindsForMode(mode);
 
   let timer;
   const timeout = new Promise((resolve) => {
@@ -77,6 +80,13 @@ export async function retrieve(opts) {
       const kit = await readSessionKit(userId).catch(() => null);
       if (kit && Array.isArray(kit.chunks) && kit.chunks.length > 0) {
         let kitChunks = kit.chunks;
+        // A cached kit must apply every gate the live path applies, or the
+        // exclusion survives in cached form — the exact bug the warm-kit
+        // source gating below was added to fix.
+        if (excludeDocKinds.length) {
+          const deniedKinds = new Set(excludeDocKinds);
+          kitChunks = kitChunks.filter((c) => !deniedKinds.has(c.docKind));
+        }
         // Mode gating: drop kit chunks whose source isn't in the
         // mode's allowed list. User-tier chunks (no source) always
         // pass — Prep Kit content is per-user and mode-agnostic.
@@ -120,7 +130,7 @@ export async function retrieve(opts) {
     const kbTop = willRerank ? KB_TOP_K_WIDE : KB_TOP_K_NARROW;
     const userTop = willRerank ? USER_TOP_K_WIDE : USER_TOP_K_NARROW;
     const promises = [hybridSearchKb(question, kbTop, { vec, sourceFilter, excludeSources })];
-    if (userId) promises.push(hybridSearchUserDocs(userId, question, userTop, { vec }));
+    if (userId) promises.push(hybridSearchUserDocs(userId, question, userTop, { vec, excludeDocKinds }));
     // Per-user code kit: only relevant for coding/sql modes (or general,
     // since coding follow-ups can come up in any chat). Keep CODE_TOP_K
     // small so past attempts inform but don't dominate.
