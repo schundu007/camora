@@ -20,14 +20,23 @@
  */
 export const HEAVY_TOPIC_LOADERS = {
   coding: async () => {
-    const [base, extra] = await Promise.all([
+    const [base, extra, quickRef] = await Promise.all([
       import('./codingTopics.js'),
       import('./codingTopicsExtra.js'),
+      import('./quickRefTopics.js'),
     ]);
     return {
-      codingCategories: base.codingCategories,
-      codingCategoryMap: { ...base.codingCategoryMap, ...extra.extraCodingCategoryMap },
-      codingTopics: [...base.codingTopics, ...extra.extraCodingTopics],
+      // Quick References lead: they're syntax lookup you consult *while*
+      // working a pattern, so they sit above the pattern categories.
+      codingCategories: [quickRef.quickRefCategory, ...base.codingCategories],
+      codingCategoryMap: {
+        ...quickRef.quickRefCategoryMap,
+        ...base.codingCategoryMap,
+        ...extra.extraCodingCategoryMap,
+      },
+      // Category headers in the DSA grid render on transition, so topics of
+      // one category must stay contiguous in this array.
+      codingTopics: [...quickRef.quickRefTopics, ...base.codingTopics, ...extra.extraCodingTopics],
     };
   },
 
