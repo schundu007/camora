@@ -108,6 +108,10 @@ export function buildAnswerCacheKey(parts) {
     // different function signatures, shebang/readarray boilerplate). Must be part of the
     // key or a no-starter solve gets served for a starter-code problem and produces wrong output.
     sk: parts.starterCode ? crypto.createHash('sha1').update(String(parts.starterCode)).digest('hex').slice(0, 12) : null,
+    // How many approaches the answer holds. A one-solution answer and a
+    // brute→optimized→optimal ladder are different artifacts for the same
+    // question, so they cannot share a slot.
+    sn: parts.solutionCount || null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
   // v10: CLOUD_FORBIDDEN enforcement added (2026-06-26) — invalidates stale v9 entries with wrong provider services.
@@ -117,7 +121,11 @@ export function buildAnswerCacheKey(parts) {
   // claude.js / gemini-stream.js does NOT invalidate anything on its own. This
   // version prefix is the only lever. Bump it whenever a system prompt changes
   // or users keep replaying pre-change answers for up to the 30-day TTL.
-  return `lumora:answer:v12:${h}`;
+  // v13: the coding system prompt gained the brute→optimal ladder and the
+  // interviewer follow-up block (2026-08-14). Every v12 coding answer holds a
+  // single solution and no followups, so replaying one would serve the old
+  // behaviour for up to 30 days after the deploy.
+  return `lumora:answer:v13:${h}`;
 }
 
 async function cacheGetFromDb(key) {

@@ -179,7 +179,10 @@ describe('/solve wiring', () => {
 
   it('passes ioContract then inputTrust as the 5th & 6th args to buildCodingSystemPrompt', () => {
     // A1 added a 6th arg (inputTrust). Pin both so a future refactor can't drop either.
-    expect(src).toMatch(/buildCodingSystemPrompt\(lang,[^)]*starterCode \|\| undefined, true, ioContract, inputTrust\)/s);
+    // The 4th arg was a hardcoded `true` until the brute→optimal ladder was
+    // unblocked; it is now the derived forceSingle. The positions of ioContract
+    // (5th) and inputTrust (6th) are what this test actually guards.
+    expect(src).toMatch(/buildCodingSystemPrompt\(lang,[^)]*starterCode \|\| undefined, forceSingle, ioContract, inputTrust\)/s);
   });
 
   it('computes inputTrust from problem + starterCode', () => {

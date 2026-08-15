@@ -9,7 +9,7 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
-import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC } from '../services/taskModes.js';
+import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC, isAnswerOnly, classifyUtterance } from '../services/taskModes.js';
 import { detectGap, spliceFill, gapDirective } from '../services/fillGap.js';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
@@ -692,7 +692,25 @@ For math problems: Brute Force, Mathematical Formula, Bit Manipulation
 
 Order: Solution 1 = Brute Force / Naive (simplest, easiest to explain)
        Solution 2 = Standard Optimized (what most candidates should know)
-       Solution 3 = Most Optimal / Clever (what top candidates present)`}
+       Solution 3 = Most Optimal / Clever (what top candidates present)
+
+GENUINELY DISTINCT — each solution must differ from the others in its STRATEGY:
+a different core data structure, or a different algorithmic idea. The same
+algorithm rewritten — a loop turned into a comprehension, a rename, an inlined
+helper, recursion swapped for an explicit stack over the same traversal — is ONE
+approach, not two. Their patternTags must therefore all be different; if two of
+your solutions want the same tag, one of them is a duplicate and you must
+replace it with a real alternative or return fewer solutions.
+
+The brute force EARNS ITS PLACE by being the thing the candidate says out loud
+first ("the obvious approach is to compare every pair, which is n squared —
+let me do better"), so it must be the genuinely naive idea, correct and
+runnable. Do not dress up the optimal solution and call it brute force.
+
+TRANSITION: solutions[1] and solutions[2] each need their "approach" to open by
+naming what the PREVIOUS solution wasted — the repeated scan, the redundant
+sort, the recomputation — because that sentence is what the interviewer is
+listening for.`}
 
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
@@ -783,12 +801,43 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
     {"input": "nums = [2,7,11,15], target = 9", "expected": "[0, 1]"},
     {"input": "nums = [3,2,4], target = 6", "expected": "[1, 2]"}
   ]
+  ,"followups": [
+    {"family": "scale|requirement|resource|concurrency|production", "q": "The follow-up question an interviewer would actually ask next, in their words", "a": "2-3 sentences the candidate says back. State what breaks, the fix, AND the new cost."}
+  ]
   ,"assumptions": ${ioUnknown
     ? `["Each assumption you made about the input types or the expected return value. REQUIRED — at least one entry."]`
     : `[]`}${inputTrust !== null ? `
   ,"edgeScenarios": ["two concrete edge/failure scenarios the candidate should raise proactively"]
   ,"assistantPrompts": ["2-3 well-scoped prompts the candidate could give a coding-assistant to validate/extend the solution"]` : ''}
 }
+
+##############################################################################
+# FOLLOW-UPS — WHAT THE INTERVIEWER ASKS AFTER THE CODE IS ACCEPTED
+##############################################################################
+The solution is rarely the last question. Give 3-4 follow-ups the interviewer is
+likely to ask NEXT, drawn from these five families — at most one per family, and
+only families that genuinely apply to THIS problem:
+
+  scale       — the input no longer fits in memory, or the data grows 1000x.
+  requirement — a rule moves: duplicates now allowed, matching becomes
+                case-insensitive, the input arrives as a stream not a batch.
+  resource    — a trade is forced: unlimited memory, now make it faster; or
+                the reverse, memory is capped and you may spend time.
+  concurrency — N threads call this at once.
+  production  — this is now an API used by 50 teams.
+
+EVERY follow-up MUST be derived from the code you just wrote, naming its actual
+structures. If your solution used a hash map, the concurrency follow-up is about
+THAT map — not about locking in general. A follow-up that would read identically
+under a different solution is generic filler; delete it and give one fewer.
+
+Each "a" must reach the NEW COST. Naming only the fix and stopping is the single
+most common senior-level miss: "shard the map by key" is half an answer, and
+"shard the map by key, so lookups stay O(1) but you lose a global size count
+without a second pass" is the whole one. Say what you gave up.
+
+Order them hardest-first — the one most likely to end the interview badly goes
+at the top, because that is the one worth rehearsing.
 
 ##############################################################################
 # CODE ENCODING — CRITICAL (one wrong backslash makes the solution un-runnable)
@@ -1016,6 +1065,83 @@ function isValidAnswer(parsed, isMcq) {
   return getCodeFromParsed(parsed).trim().length > 0;
 }
 
+/**
+ * Strip a solution down to its algorithmic skeleton so two spellings of the same
+ * idea collide. Identifier names, string/number literals, comments, and all
+ * whitespace go — what survives is the sequence of keywords and operators, which
+ * is what actually differs between a hash-map pass and a nested scan.
+ */
+function solutionSkeleton(code) {
+  return String(code || '')
+    .replace(/(['"`]).*?\1/gs, 'S')          // literals: only their presence matters
+    .replace(/#.*$|\/\/.*$/gm, '')           // line comments
+    .replace(/\/\*.*?\*\//gs, '')            // block comments
+    .replace(/\b\d+(\.\d+)?\b/g, 'N')
+    .replace(/(\.?)\b([A-Za-z_]\w*)\b(\s*\()?/g, (_m, dot, word, call) => {
+      const w = word.toLowerCase();
+      if (KEYWORDS.has(w)) return `${dot}${word}${call || ''}`;
+      // A builtin only counts as a strategy signal in CALL or ATTRIBUTE
+      // position. Bare `items` is somebody's variable; `.items()` is a dict
+      // traversal. Treating the two alike is how a renamed loop escaped the
+      // duplicate check.
+      if ((call || dot) && SIGNALS.has(w)) return `${dot}${word}${call || ''}`;
+      return `${dot}v${call || ''}`;
+    })
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+/** Control flow — always structural, never a variable name. */
+const KEYWORDS = new Set([
+  'for', 'while', 'if', 'elif', 'else', 'return', 'def', 'class', 'lambda', 'yield',
+  'in', 'not', 'and', 'or', 'is', 'break', 'continue', 'try', 'except', 'with',
+  'function', 'const', 'let', 'var', 'of', 'new', 'typeof', 'switch', 'case', 'do',
+]);
+
+/**
+ * Builtins whose presence marks a different strategy — a sort, a hash lookup, a
+ * heap. Preserved only in call/attribute position, because every one of these is
+ * also a name somebody has given a local variable.
+ */
+const SIGNALS = new Set([
+  'sort', 'sorted', 'set', 'dict', 'map', 'len', 'range', 'enumerate', 'zip',
+  'append', 'push', 'pop', 'add', 'get', 'keys', 'values', 'items', 'reverse',
+  'min', 'max', 'sum', 'abs', 'int', 'str', 'list', 'tuple', 'bisect', 'heapq',
+  'heappush', 'heappop', 'counter', 'defaultdict', 'deque', 'filter', 'reduce',
+]);
+
+/**
+ * Drop near-duplicate approaches before they reach the candidate.
+ *
+ * Three tabs labelled "Brute Force / Hash Map / Optimal" that all hold the same
+ * algorithm is worse than one honest tab: the candidate walks into the
+ * brute-force question with nothing real to say, having been told they had a
+ * baseline. Two solutions are duplicates when they share a patternTag (the tag
+ * vocabulary is a closed enum, so this is a decidable test, not a judgement) or
+ * when their skeletons match.
+ *
+ * Always keeps the first occurrence — the array is ordered naive→optimal, so the
+ * baseline survives and the redundant "optimisation" is what gets dropped.
+ */
+function dedupeSolutions(solutions) {
+  if (!Array.isArray(solutions) || solutions.length < 2) return solutions;
+  const seenTags = new Set();
+  const seenSkeletons = new Set();
+  const kept = [];
+  for (const sol of solutions) {
+    if (!sol || typeof sol !== 'object') continue;
+    const tag = typeof sol.patternTag === 'string' ? sol.patternTag.trim().toLowerCase() : '';
+    const skeleton = solutionSkeleton(sol.code);
+    if (tag && seenTags.has(tag)) continue;
+    if (skeleton && seenSkeletons.has(skeleton)) continue;
+    if (tag) seenTags.add(tag);
+    if (skeleton) seenSkeletons.add(skeleton);
+    kept.push(sol);
+  }
+  // Never return nothing: if every entry collided we still owe the caller one.
+  return kept.length ? kept : solutions.slice(0, 1);
+}
+
 // ---------------------------------------------------------------------------
 // JSON extraction helpers
 // ---------------------------------------------------------------------------
@@ -1221,6 +1347,24 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     || (questionType !== 'code' && detectMcq(problem, { hasStarterCode: !!starterCode }));
   const ioContract = isMcq ? null : inferIoContract(problem, starterCode);
   const inputTrust = isMcq ? null : inferInputTrust(problem, starterCode);
+  // How many approaches to return.
+  //
+  // This used to be hardcoded `true`, which made the three-solution branch of
+  // buildCodingSystemPrompt dead code and the solution tabs in CodingLayout
+  // permanently empty. Interviewers score the brute-force baseline explicitly —
+  // "jumping to optimal code without explaining foundational thinking" is a
+  // documented no-hire signal — so the candidate needs the naive approach
+  // available to talk through even when they submit the optimal one.
+  //
+  // Still single when the platform hands us a locked template (there is exactly
+  // one shape to fill) or for bash (multiple "approaches" to a shell one-liner
+  // is noise) — both of which buildCodingSystemPrompt enforces on its own. This
+  // flag is only the client's explicit opt-out, for a candidate who wants the
+  // one answer and nothing else.
+  const forceSingle = req.body?.single_solution === true;
+  // Mirrors buildCodingSystemPrompt's own `singleSolution` derivation so the
+  // retry reminder and the cache key can't drift from what the prompt asked for.
+  const solutionCount = (forceSingle || !!starterCode || lang === 'bash') ? 1 : 3;
   console.log(`[solve] lang=${lang} mcq=${isMcq} io=${ioContract} trust=${inputTrust} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({
@@ -1324,6 +1468,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     language: lang,
     model: getModelForUser(req),
     starterCode: starterCode || null,
+    // Part of the key: every answer cached before the ladder was unblocked holds
+    // exactly one solution, and replaying one of those for a three-approach
+    // request would silently serve the old behaviour forever.
+    solutionCount,
   });
   // bypass_cache=true skips the lookup but the fresh answer still gets
   // written, so the next vanilla /solve hits. Used by the frontend
@@ -1425,7 +1573,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   const systemPrompt = isMcq
     ? buildMcqSystemPrompt(typeof systemContext === 'string' ? systemContext : undefined)
-    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, true, ioContract, inputTrust);
+    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, forceSingle, ioContract, inputTrust);
   // Anthropic prompt cache — wraps the large coding system prompt as a
   // single ephemeral cache block. Subsequent /solve calls within the
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting
@@ -1433,7 +1581,10 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // pattern to services/claude.js:457. Per-request blocks are unchanged.
   const STRICT_JSON_REMINDER = isMcq
     ? 'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the MCQ schema above. No preamble, no markdown fences, no prose. Start with { and end with }. It MUST have "type":"mcq", an "mcq.options" array covering every option, and an "mcq.answer" array of the correct option keys.'
-    : 'IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly 1 complete solution object.';
+    // The count MUST track the prompt's own demand. When this said "exactly 1"
+    // against a 3-solution schema the retry pass contradicted the system prompt
+    // it was meant to rescue, and the model split the difference.
+    : `IMPORTANT: Your previous response could not be parsed. Return ONLY a single valid JSON object matching the schema above. No preamble, no markdown fences, no prose. Start with { and end with }. Every string must be properly closed. The "solutions" array must contain exactly ${solutionCount} complete solution object${solutionCount === 1 ? '' : 's'}.`;
 
   const ANTI_CHEAT_REJECTION =
     'REJECTED — your previous solution hardcoded example data instead of actually solving the problem.\n\n' +
@@ -1603,6 +1754,19 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     for (const sol of parsedJson.solutions || []) {
       if (sol.code && typeof sol.code !== 'string') {
         sol.code = String(sol.code);
+      }
+    }
+    // Reject near-duplicate approaches. The prompt asks for genuinely distinct
+    // strategies, but "give me three" reliably produces two-and-a-restatement on
+    // problems with only one good answer — and a fake baseline is worse than an
+    // honest pair, because the candidate finds out it was fake in front of the
+    // interviewer. Runs before the back-compat `code` assignment so the surviving
+    // first solution is the one that gets promoted.
+    if (parsedJson.solutions?.length > 1) {
+      const before = parsedJson.solutions.length;
+      parsedJson.solutions = dedupeSolutions(parsedJson.solutions);
+      if (parsedJson.solutions.length !== before) {
+        console.log(`[solve] dropped ${before - parsedJson.solutions.length} duplicate approach(es) — ${before} → ${parsedJson.solutions.length}`);
       }
     }
     // Set top-level code from first solution for backwards compat
@@ -2038,12 +2202,28 @@ router.post('/cofix/stream', authenticate, checkUsage('questions'), async (req, 
     try { abortController.abort(); } catch {}
   });
 
+  // ── Situation: selected once, never layered ──────────────────────────────
+  // Exactly ONE block describes what the candidate is being asked to do, so two
+  // situations can no longer contradict each other inside the same prompt.
+  //
+  // The hint doubles as the utterance channel: mid-interview the candidate drops
+  // the interviewer's actual question in there ("can we do better?", "why a hash
+  // map?"), and that question — not what the editor happens to hold — decides
+  // the situation.
+  const task = resolveTask({ requested: mode, isTemplate, utterance: hint });
+  const answerOnly = isAnswerOnly(task);
+
   // When a USER HINT is present the call is a REFINEMENT of already-working code
   // (e.g. "add print steps", "add type hints", or fix a specific error). Template
   // mode above says "add ONLY the missing implementation" — which would ignore the
   // hint and return the code unchanged. This directive overrides that so the hint
   // is actually applied, while still keeping the harness runnable.
-  const refineDirective = hint
+  //
+  // It is suppressed for answer-only situations. "Return VISIBLY CHANGED code —
+  // NEVER return the input unchanged" is the exact opposite of "set fixed_code to
+  // the input byte for byte", and shipping both is the stacked-override bug this
+  // registry was built to end. A question is not an edit instruction.
+  const refineDirective = (hint && !answerOnly)
     ? `\n══════════════════════════════════════════════════════════════════════════
 REFINEMENT — HIGHEST PRIORITY. This OVERRIDES the "add ONLY the missing implementation" limit above.
 ══════════════════════════════════════════════════════════════════════════
@@ -2054,10 +2234,6 @@ Each changes[] entry references a line you ADDED or MODIFIED to satisfy the hint
 `
     : '';
 
-  // ── Situation: selected once, never layered ──────────────────────────────
-  // Exactly ONE block describes what the candidate is being asked to do, so two
-  // situations can no longer contradict each other inside the same prompt.
-  const task = resolveTask({ requested: mode, isTemplate });
   const situationBlock = buildSituationBlock({
     task,
     templateShape: isTemplate ? buildTemplateShapeDirective(cleanedCode) : '',
@@ -2067,7 +2243,7 @@ Each changes[] entry references a line you ADDED or MODIFIED to satisfy the hint
   // of hunting for it — and so we can splice its answer back into the original.
   const fillGap = task === 'fill' ? detectGap(cleanedCode) : null;
   const gapSection = fillGap ? gapDirective(fillGap, cleanedCode) : '';
-  console.log(`[cofix] task=${task} requested=${mode || 'none'} isTemplate=${isTemplate} lang=${lang}`);
+  console.log(`[cofix] task=${task} requested=${mode || 'none'} utterance=${hint ? classifyUtterance(hint) || 'none' : 'none'} answerOnly=${answerOnly} isTemplate=${isTemplate} lang=${lang}`);
 
   const cofixUserContent = `You are CoFix, a code repair specialist. Fix the ${lang} code below.${hintSection}${companySection}${problemSection}
 ${situationBlock}${gapSection}
@@ -2966,4 +3142,5 @@ export { langCandidates, pickHackerRankTemplate, pickLeetcodeSnippet };
 export { detectPlatformTemplate, templateHasFillableFunction, isMinimalInlineTemplate, buildTemplateShapeDirective, buildCodingSystemPrompt };
 export { hasStdinEvidence, hasExampleEvidence, inferIoContract, inferInputTrust };
 export { isProblemPageUrl };
+export { dedupeSolutions, solutionSkeleton };
 

@@ -1623,6 +1623,13 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       }
       const combinedText = valid.map(r => String(r.problem || '').trim()).filter(Boolean).join('\n\n');
       const extractedStarterCode = valid.map(r => r.starter_code).find(Boolean) || null;
+      // What the screen is ASKING for. The extractor has always returned this and
+      // this component has always thrown it away — so a screenshot of buggy code
+      // with "what's wrong with this?" went to /solve, which treats starter_code
+      // as a LOCKED TEMPLATE to reproduce byte-for-byte. The interviewer's bugs
+      // were faithfully preserved and code was filled in around them.
+      const screenTask: 'review' | 'complete' | 'solve' | 'explain' | null =
+        valid.map(r => r.task).find(Boolean) || null;
       const detectedLang: string | null = valid.map(r => r.detected_language).find(Boolean) || null;
       const effectiveLang = detectedLang || resolveLanguage(combinedText);
 
@@ -1648,6 +1655,21 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setMultiPageCount(urls.length);
         setError('Problem may be cut off — snap the rest and click Coding, or click Coding again to solve with what\'s captured.');
         setIsProcessing(false);
+        return;
+      }
+
+      // A 'review' / 'explain' screen is a CoFix job, not a solve job: the
+      // deliverable is the defect list, not a new program. CoFix already owns the
+      // tuned diagnose situation and the changes/walkthrough UI, so hand off
+      // rather than growing a second reviewer here. Only divert when there is
+      // actually code to review — a mis-fire on a plain problem statement would
+      // strand the candidate in the wrong tab mid-interview.
+      if (screenTask && ['review', 'explain'].includes(screenTask) && extractedStarterCode?.trim()) {
+        setIsProcessing(false);
+        onSendToCofix?.(extractedStarterCode, effectiveLang, {
+          mode: screenTask,
+          hint: combinedText ? combinedText.slice(0, 500) : undefined,
+        });
         return;
       }
 
