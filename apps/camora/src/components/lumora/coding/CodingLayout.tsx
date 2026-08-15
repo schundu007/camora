@@ -217,7 +217,7 @@ interface TestResult {
 }
 
 interface CodingLayoutProps {
-  onSubmit: (problem: string, language: string, options?: { bypassCache?: boolean; starterCode?: string }) => void;
+  onSubmit: (problem: string, language: string, options?: { bypassCache?: boolean; starterCode?: string; task?: TaskMode }) => void;
   isLoading?: boolean;
   onBack: () => void;
   initialProblem?: string;
@@ -1644,6 +1644,35 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       //   2. Nudge at most once per capture. looksComplete() is a heuristic and
       //      false-positives on short, self-contained problems; a second Coding
       //      click must always solve rather than re-block.
+      // A 'review' / 'explain' screen is a CoFix job, not a solve job: the
+      // deliverable is the defect list, not a new program. CoFix already owns the
+      // tuned diagnose situation and the changes/walkthrough UI, so hand off
+      // rather than growing a second reviewer here.
+      //
+      // This MUST run before the cut-off check below. A buggy five-line snippet
+      // can never satisfy looksComplete() — it has no "constraints", no "sample
+      // input", and is far under 700 chars — so the nudge fired first and the
+      // review never happened. For a review there is nothing to be cut off in
+      // the first place: the code on screen IS the whole artifact.
+      //
+      // The code is whichever field the extractor put it in. A bare code
+      // screenshot has no left-hand problem panel, so it lands in `problem` and
+      // starter_code comes back null; requiring starter_code here is what let
+      // these fall through to /solve and get rewritten.
+      const reviewCode = (extractedStarterCode?.trim() || combinedText.trim());
+      if (screenTask && ['review', 'explain'].includes(screenTask) && reviewCode.length >= 5) {
+        cutoffPromptedRef.current = false;
+        setIsProcessing(false);
+        onSendToCofix?.(reviewCode, effectiveLang, {
+          mode: screenTask,
+          // Only pass the statement as a hint when it is genuinely separate from
+          // the code — echoing the code back as its own instruction confuses the
+          // refine path into treating it as an edit request.
+          hint: extractedStarterCode?.trim() && combinedText.trim() ? combinedText.slice(0, 500) : undefined,
+        });
+        return;
+      }
+
       if (fromImageSnap && !cutoffPromptedRef.current && !looksComplete(combinedText)) {
         cutoffPromptedRef.current = true;
         pendingSnapUrlsRef.current = urls;
@@ -1656,21 +1685,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setMultiPageCount(urls.length);
         setError('Problem may be cut off — snap the rest and click Coding, or click Coding again to solve with what\'s captured.');
         setIsProcessing(false);
-        return;
-      }
-
-      // A 'review' / 'explain' screen is a CoFix job, not a solve job: the
-      // deliverable is the defect list, not a new program. CoFix already owns the
-      // tuned diagnose situation and the changes/walkthrough UI, so hand off
-      // rather than growing a second reviewer here. Only divert when there is
-      // actually code to review — a mis-fire on a plain problem statement would
-      // strand the candidate in the wrong tab mid-interview.
-      if (screenTask && ['review', 'explain'].includes(screenTask) && extractedStarterCode?.trim()) {
-        setIsProcessing(false);
-        onSendToCofix?.(extractedStarterCode, effectiveLang, {
-          mode: screenTask,
-          hint: combinedText ? combinedText.slice(0, 500) : undefined,
-        });
         return;
       }
 
@@ -1688,7 +1702,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setCode(getDefaultCode(effectiveLang));
         setActiveSolutionIdx(0); setIsOutputCollapsed(true);
         setProblemTab('solution');
-        onSubmit(combinedText, effectiveLang, extractedStarterCode ? { starterCode: extractedStarterCode } : undefined);
+        // Thread the classifier's verdict even on the solve path. If the
+        // hand-off above did not fire (no CoFix callback wired, or the verdict
+        // arrived without code), the server still gets told this is a review and
+        // repairs in place rather than writing a fresh program.
+        onSubmit(combinedText, effectiveLang, {
+          ...(extractedStarterCode ? { starterCode: extractedStarterCode } : {}),
+          ...(screenTask ? { task: screenTask } : {}),
+        });
       }
     } catch (err: any) {
       setProblemText(prevProblemText);

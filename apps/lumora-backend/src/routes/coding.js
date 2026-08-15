@@ -9,7 +9,7 @@
  */
 import { Router } from 'express';
 import multer from 'multer';
-import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC, isAnswerOnly, classifyUtterance } from '../services/taskModes.js';
+import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC, isAnswerOnly, classifyUtterance, normalizeTask } from '../services/taskModes.js';
 import { detectGap, spliceFill, gapDirective } from '../services/fillGap.js';
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
@@ -890,6 +890,98 @@ ${starterCode
 - ${singleSolution ? '' : 'Order solutions from simplest (brute force) to most optimal'}${ioUnknown ? `\n- The I/O contract is UNKNOWN. Return a pure function with no driver, no print, no invented labels, and populate "assumptions".` : ''}`;
 }
 
+/**
+ * Is this /solve payload actually CODE TO REVIEW rather than a problem to solve?
+ *
+ * A code-only screenshot ("what's wrong with this?") has no left-hand problem
+ * panel, so the vision extractor puts the code in `problem` and leaves
+ * `starter_code` null. Everything downstream then treats it as a statement and
+ * /solve writes a brand-new program — wrapping loose statements in a function,
+ * turning print() into a return — which is the one thing a review must never do.
+ *
+ * The client sends its classifier's verdict, but a client-side diversion can be
+ * skipped by any path that forgets to thread it. This is the server's own check
+ * so the rewrite cannot happen regardless of how the request arrived.
+ */
+function looksLikeCodeToReview(text) {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.trim();
+  if (t.length < 12 || t.length > 8000) return false;
+
+  // A real problem statement announces itself. Any of these and it is prose.
+  if (/\b(input format|output format|sample input|sample output|constraints?:|explanation:)\b/i.test(t)) return false;
+  if (/^\s*(given|write a|implement|design|you are given|return the|find the)\b/im.test(t)) return false;
+
+  const lines = t.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return false;
+
+  // Lines that can only be code.
+  const codeLine = /^(def |class |import |from \w+ import|for |while |if |elif |else\b|return\b|print\(|function |const |let |var |public |private |#include|\w+\s*=\s*|\w+\.\w+\(|\}|\{|\w+\(.*\)\s*[:;{]?$)/;
+  const codeish = lines.filter(l => codeLine.test(l)).length;
+  return codeish / lines.length >= 0.6;
+}
+
+/**
+ * The /solve prompt for a DIAGNOSE situation.
+ *
+ * Reuses the same situation block CoFix uses, so the two routes cannot drift on
+ * what "review this" means, but keeps /solve's own response envelope so the
+ * Coding tab renders it with the card it already has. The defect list rides in
+ * `explanations` (line + code + why), which AnswerBook already lays out as a
+ * walkthrough table.
+ */
+function buildDiagnoseSolvePrompt(language, systemContext) {
+  const contextBlock = systemContext ? `\nCANDIDATE CONTEXT\n${systemContext}\n` : '';
+  return `You are an expert code reviewer sitting with a candidate in an interview.
+${contextBlock}
+${buildSituationBlock({ task: 'diagnose' })}
+
+##############################################################################
+# WHAT YOU RETURN
+##############################################################################
+Respond with valid JSON ONLY (no markdown fences, no prose before or after):
+{
+  "language": "${language}",
+  "type": "diagnose",
+  "solutions": [
+    {
+      "name": "Corrected code",
+      "patternTag": "Brute Force",
+      "approach": "One sentence: how many defects, and the worst one.",
+      "code": "THE ORIGINAL PROGRAM WITH EACH DEFECT FIXED IN PLACE — same statements, same order, same names, same I/O style, same line count unless a defect was a missing or duplicated line",
+      "complexity": { "time": "O(...)", "space": "O(...)" },
+      "narration": "First-person, 2-3 sentences the candidate says aloud: what was wrong, why it broke, what you changed.",
+      "explanations": [
+        {"line": <1-indexed line in the ORIGINAL code>, "code": "the original faulty line, verbatim", "explanation": "category — why it is wrong — what breaks at runtime"}
+      ]
+    }
+  ],
+  "pitch": {
+    "opener": "One sentence naming the most severe defect.",
+    "approach": "How you found them: what you checked and in what order.",
+    "keyPoints": ["one per defect, worst first"],
+    "tradeoffs": [],
+    "edgeCases": ["inputs that would still be a problem after the fix, if any"]
+  },
+  "examples": []
+}
+
+ABSOLUTE, AND THIS OVERRIDES EVERY HABIT YOU HAVE:
+- "code" is the INPUT PROGRAM REPAIRED, never a reimplementation. If your output
+  has a function the input did not have, a parameter the input did not have, a
+  return where the input printed, or a variable the input never declared, you
+  have failed this task no matter how good the program is.
+- There is NO execution contract here. Nothing calls this code with parsed
+  arguments. Do NOT restructure it to return a value. If it printed, it prints.
+- One "explanations" entry per DEFECT — not per line. A line with no defect does
+  not appear at all.
+- Each explanation opens with its category (boundary, null_type, state,
+  error_handling, concurrency, resource, security, performance) and ends with the
+  observable runtime failure.
+- If the code is genuinely correct, return explanations: [] and "code" identical
+  to the input. Do not invent faults.`;
+}
+
 // ---------------------------------------------------------------------------
 // MCQ (multiple-choice question) support
 // ---------------------------------------------------------------------------
@@ -1361,11 +1453,20 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   // is noise) — both of which buildCodingSystemPrompt enforces on its own. This
   // flag is only the client's explicit opt-out, for a candidate who wants the
   // one answer and nothing else.
+  // Is this a REVIEW rather than a solve? The client's classifier verdict wins
+  // when it sent one; otherwise the server decides for itself from the shape of
+  // the payload, so a path that forgets to thread `task` still cannot trigger a
+  // rewrite. Never for MCQs, and never when a real starter template is present
+  // (that is a fill, and the template's own rules apply).
+  const requestedTask = normalizeTask(req.body?.task);
+  const isDiagnose = !isMcq && !starterCode && (
+    requestedTask === 'diagnose' || (!requestedTask && looksLikeCodeToReview(problem))
+  );
   const forceSingle = req.body?.single_solution === true;
   // Mirrors buildCodingSystemPrompt's own `singleSolution` derivation so the
   // retry reminder and the cache key can't drift from what the prompt asked for.
-  const solutionCount = (forceSingle || !!starterCode || lang === 'bash') ? 1 : 3;
-  console.log(`[solve] lang=${lang} mcq=${isMcq} io=${ioContract} trust=${inputTrust} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
+  const solutionCount = (forceSingle || isDiagnose || !!starterCode || lang === 'bash') ? 1 : 3;
+  console.log(`[solve] lang=${lang} mcq=${isMcq} diagnose=${isDiagnose} io=${ioContract} trust=${inputTrust} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({
       error: `Unsupported language: ${language}. Supported: ${SUPPORTED_LANGUAGES.join(', ')}`,
@@ -1464,7 +1565,7 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   const cacheKey = buildAnswerCacheKey({
     question: problem,
     plan: planType,
-    route: isMcq ? 'solve_mcq' : 'solve',
+    route: isMcq ? 'solve_mcq' : (isDiagnose ? 'solve_diagnose' : 'solve'),
     language: lang,
     model: getModelForUser(req),
     starterCode: starterCode || null,
@@ -1530,7 +1631,9 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     role: 'user',
     content: isMcq
       ? `Answer this multiple-choice question. Return ONLY the MCQ JSON object.\n\n${problem}`
-      : `Solve this coding problem in ${lang}:\n\n${problem}${exemplarBlock}`,
+      : isDiagnose
+        ? `Review this ${lang} code. Find every defect and return the SAME program with each one corrected in place.\n\n\`\`\`${lang}\n${problem}\n\`\`\``
+        : `Solve this coding problem in ${lang}:\n\n${problem}${exemplarBlock}`,
   });
 
   // ── Call Claude with layered reliability ────────────────────────────────
@@ -1573,7 +1676,9 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
 
   const systemPrompt = isMcq
     ? buildMcqSystemPrompt(typeof systemContext === 'string' ? systemContext : undefined)
-    : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, forceSingle, ioContract, inputTrust);
+    : isDiagnose
+      ? buildDiagnoseSolvePrompt(lang, typeof systemContext === 'string' ? systemContext : undefined)
+      : buildCodingSystemPrompt(lang, typeof systemContext === 'string' ? systemContext : undefined, starterCode || undefined, forceSingle, ioContract, inputTrust);
   // Anthropic prompt cache — wraps the large coding system prompt as a
   // single ephemeral cache block. Subsequent /solve calls within the
   // 5-min TTL skip ~3-4k input tokens of re-tokenization, cutting
@@ -3145,4 +3250,5 @@ export { detectPlatformTemplate, templateHasFillableFunction, isMinimalInlineTem
 export { hasStdinEvidence, hasExampleEvidence, inferIoContract, inferInputTrust };
 export { isProblemPageUrl };
 export { dedupeSolutions, solutionSkeleton };
+export { looksLikeCodeToReview, buildDiagnoseSolvePrompt };
 

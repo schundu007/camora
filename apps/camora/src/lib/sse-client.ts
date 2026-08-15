@@ -324,6 +324,9 @@ export interface CodingStreamOptions {
       button on the solution card. */
   bypassCache?: boolean;
   starterCode?: string;
+  /** The situation, when the capture classifier named one. 'review' makes the
+   *  server repair the code in place instead of writing a new program. */
+  task?: TaskMode;
   signal?: AbortSignal;
   onStreamStart?: (data: StreamStartEvent) => void;
   onCitations?: (citations: Citation[]) => void;
@@ -347,6 +350,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
     model,
     bypassCache,
     starterCode,
+    task,
     signal: externalSignal,
     onStreamStart,
     onCitations,
@@ -384,6 +388,7 @@ export async function streamCodingResponse(options: CodingStreamOptions): Promis
         ...(model ? { model } : {}),
         ...(bypassCache ? { bypass_cache: true } : {}),
         ...(starterCode ? { starter_code: starterCode } : {}),
+        ...(task ? { task } : {}),
       }),
       credentials: 'include',
       signal: abortController.signal,

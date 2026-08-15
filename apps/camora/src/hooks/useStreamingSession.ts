@@ -6,6 +6,7 @@ import { activityTracker } from '@/lib/activity-tracker';
 import { getSystemContext } from '@/lib/lumora-assistant';
 
 import { INPUT_LIMITS } from '@/lib/constants';
+import type { TaskMode } from '@/lib/lumora/task-modes';
 
 function validateInput(input: string): { valid: boolean; error?: string } {
   const trimmed = input.trim();
@@ -174,7 +175,7 @@ export function useStreamingSession() {
       setConversationId, appendStreamChunk, setParsedBlocks, addHistoryEntry,
       stopAnswerTimer, setError, setActiveCitations, getSystemContext]);
 
-  const handleCodingSubmit = useCallback(async (problem: string, language: string, options?: { bypassCache?: boolean; starterCode?: string }) => {
+  const handleCodingSubmit = useCallback(async (problem: string, language: string, options?: { bypassCache?: boolean; starterCode?: string; task?: TaskMode }) => {
     const validation = validateInput(problem);
     if (!validation.valid) {
       setError(validation.error || 'Invalid input');
@@ -212,6 +213,7 @@ export function useStreamingSession() {
         systemContext: getSystemContext(),
         bypassCache: options?.bypassCache,
         starterCode: options?.starterCode,
+        task: options?.task,
         signal: controller.signal,
         onStreamStart: (data: any) => {
           if (abortControllerRef.current !== controller) return;
