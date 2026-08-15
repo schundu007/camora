@@ -175,7 +175,7 @@ async function completeDesktopLogin(deepLinkUrl) {
     });
 
     if (!mainWindow || mainWindow.isDestroyed()) createWindow();
-    mainWindow.loadURL(APP_URL);
+    loadAppURL(mainWindow);
     if (mainWindow.isMinimized()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
@@ -239,6 +239,24 @@ function applyOverlayMode(mode) {
 }
 
 // ── Window ──────────────────────────────────────────────────────────────
+/**
+ * Always load the app with revalidation forced.
+ *
+ * clearCache() on whenReady is not enough: several paths register their own
+ * whenReady handler EARLIER (the cold-link login at ~line 195 among them) and
+ * create the window before the clearing handler runs, so the window loads from
+ * cache first. When that cached index.html is stale it references OLD hashed
+ * chunks, which are still served happily — the user then sits on a months-old
+ * UI while every deploy succeeds and changes nothing they can see.
+ *
+ * Forcing no-cache on the HTML alone is enough: the chunk names are content
+ * hashes, so a fresh index.html pulls fresh chunks by construction.
+ */
+function loadAppURL(win, url = APP_URL) {
+  if (!win || win.isDestroyed()) return;
+  win.loadURL(url, { extraHeaders: 'Cache-Control: no-cache, no-store, must-revalidate\nPragma: no-cache\n' });
+}
+
 function createWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (mainWindow.isMinimized()) mainWindow.restore();
@@ -281,7 +299,7 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadURL(APP_URL);
+  loadAppURL(mainWindow);
   // Match Zustand default — isStealthActive starts true, so protect on launch.
   mainWindow.setContentProtection(true);
   // Overlay build starts hidden (show:false) — reveal once the renderer has painted.

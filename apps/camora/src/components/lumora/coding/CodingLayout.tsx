@@ -2620,6 +2620,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               {isProcessing ? 'Loading...' : 'Fetch'}
                             </button>
                           </div>
+                          <p className="text-center text-[10px] font-mono py-0.5 select-text" style={{ color: 'var(--text-dimmed)' }}>
+                            build {__BUILD_ID__}
+                          </p>
                         </div>
                       )}
 
