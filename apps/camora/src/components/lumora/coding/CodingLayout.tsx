@@ -18,6 +18,7 @@ import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 import { isProblemPageUrl } from '@/lib/problemPageUrl';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
+import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -1655,20 +1656,30 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       // review never happened. For a review there is nothing to be cut off in
       // the first place: the code on screen IS the whole artifact.
       //
-      // The code is whichever field the extractor put it in. A bare code
-      // screenshot has no left-hand problem panel, so it lands in `problem` and
-      // starter_code comes back null; requiring starter_code here is what let
-      // these fall through to /solve and get rewritten.
-      const reviewCode = (extractedStarterCode?.trim() || combinedText.trim());
-      if (screenTask && ['review', 'explain'].includes(screenTask) && reviewCode.length >= 5) {
+      // TWO conditions, both load-bearing:
+      //
+      // fromImageSnap — the URL flow lands here too. HackerRank and Glider
+      // assessments are auth-walled and JS-rendered, so /fetch-problem gives up
+      // and we screenshot the browser instead, arriving with fromImageSnap
+      // false. Typing a problem URL is an explicit "fetch this and solve it";
+      // diverting it to CoFix because the OCR called the page a review reads as
+      // "the URL stopped fetching". Only a deliberate snap can divert.
+      //
+      // extractedStarterCode — the divert is a UX upgrade (CoFix owns the diff
+      // view), not the correctness guarantee. /solve resolves the situation
+      // itself now, so a bare code screenshot with no editor panel is repaired
+      // in place there rather than needing to be caught here. Requiring real
+      // editor content keeps this narrow enough that it cannot misfire on a
+      // problem statement.
+      if (shouldDivertToCofix({ fromImageSnap, task: screenTask, starterCode: extractedStarterCode })) {
         cutoffPromptedRef.current = false;
         setIsProcessing(false);
-        onSendToCofix?.(reviewCode, effectiveLang, {
-          mode: screenTask,
+        onSendToCofix?.(extractedStarterCode!, effectiveLang, {
+          mode: screenTask!,
           // Only pass the statement as a hint when it is genuinely separate from
           // the code — echoing the code back as its own instruction confuses the
           // refine path into treating it as an edit request.
-          hint: extractedStarterCode?.trim() && combinedText.trim() ? combinedText.slice(0, 500) : undefined,
+          hint: combinedText.trim() ? combinedText.slice(0, 500) : undefined,
         });
         return;
       }
@@ -1702,13 +1713,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         setCode(getDefaultCode(effectiveLang));
         setActiveSolutionIdx(0); setIsOutputCollapsed(true);
         setProblemTab('solution');
-        // Thread the classifier's verdict even on the solve path. If the
-        // hand-off above did not fire (no CoFix callback wired, or the verdict
-        // arrived without code), the server still gets told this is a review and
-        // repairs in place rather than writing a fresh program.
+        // Thread the classifier's verdict on the solve path so a bare code
+        // screenshot is repaired in place instead of rewritten. Snap only, for
+        // the same reason as the divert above: a fetched problem URL is a solve
+        // request, and labelling it a review because the page happened to OCR
+        // that way would answer a question the candidate did not ask.
         onSubmit(combinedText, effectiveLang, {
           ...(extractedStarterCode ? { starterCode: extractedStarterCode } : {}),
-          ...(screenTask ? { task: screenTask } : {}),
+          ...(fromImageSnap && screenTask ? { task: screenTask } : {}),
         });
       }
     } catch (err: any) {
