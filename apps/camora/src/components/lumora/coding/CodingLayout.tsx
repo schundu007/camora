@@ -1747,6 +1747,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         if (result.needsScreenPermission) camo.openSystemPrivacy?.('screen');
         return;
       }
+      // Windows / Linux cannot scrape the browser DOM, so the desktop side
+      // returns the URL it read from the address bar instead. Route it through
+      // the backend scraper, which handles HackerRank from a URL alone — this
+      // is what makes "capture my open tab" work off macOS.
+      if (result.url && !result.text) {
+        setProblemUrl(result.url);
+        setInputMode('url');
+        await handleFetchFromUrl(result.url, { auto: true });
+        return;
+      }
       if (result.text) {
         // DOM injection got the full problem text — use directly, no screenshot needed
         const lang = resolveLanguage(result.text);

@@ -20,6 +20,7 @@ const {
   Menu, MenuItem, clipboard, screen: electronScreen,
 } = require('electron');
 const path = require('path');
+const browserProbe = require('./browserProbe');
 
 // Synchronous version lookup for preload's `window.camo.version`. Returns the
 // real CFBundleShortVersionString (1.0.0) so the UI never hardcodes a version
@@ -1110,7 +1111,9 @@ async function captureWindowByIdFallback(cgWindowId) {
 }
 
 function startHackerrankAutoDetect() {
-  if (process.platform !== 'darwin') return;
+  // Was macOS-gated because the poll body used AppleScript. getActiveBrowserInfo
+  // now has a cross-platform sibling, so the watcher runs everywhere.
+  if (process.platform !== 'darwin' && process.platform !== 'win32' && process.platform !== 'linux') return;
 
   const poll = async () => {
     try {
@@ -1402,6 +1405,16 @@ ipcMain.handle('reset-last-capture-url', () => {
 
 // Manual on-demand trigger — renderer calls this when user clicks "Fetch HackerRank"
 ipcMain.handle('hackerrank-manual-fetch', async () => {
+  // Off macOS there is no AppleScript DOM scrape. Two routes still work, and
+  // both are better than the 'macOS only' this used to return:
+  //   1. read the address bar and hand the URL back, so the renderer can use
+  //      the backend scraper (which handles HackerRank from a URL alone);
+  //   2. failing that, capture the display so the OCR path can read it.
+  if (process.platform !== 'darwin') {
+    const hit = await browserProbe.activeBrowserUrl().catch(() => null);
+    if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser };
+    return await captureDisplayFallback();
+  }
   // Screen Recording permission is required before desktopCapturer will return
   // non-empty thumbnails. Check it first so the user gets a clear error rather
   // than a confusing "could not capture" message.
@@ -1683,7 +1696,15 @@ ipcMain.handle('capture-region', async () => {
 // renderer the exact starter code (HackerRank / CoderPad / LeetCode) to pair
 // with the region OCR, instead of regressing to an OCR'd template.
 ipcMain.handle('extract-browser-problem', async () => {
-  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
+  // No AppleScript off macOS, so there is no DOM to read. Return the URL we can
+  // see instead: the renderer's next step is the backend scraper, which handles
+  // HackerRank and LeetCode from a URL alone. Reporting the URL beats reporting
+  // failure and losing the one thing we do know.
+  if (process.platform !== 'darwin') {
+    const hit = await browserProbe.activeBrowserUrl().catch(() => null);
+    if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser, text: null, starterCode: null };
+    return { ok: false, error: browserProbe.unsupportedReason() };
+  }
   try {
     const info = await getActiveBrowserInfo();
     if (!info) return { ok: false, error: 'No browser window found.' };
@@ -1725,7 +1746,18 @@ ipcMain.handle('relaunch-app', () => {
 // Returns the URL of the front Chrome/Brave/Edge tab — no screenshot, no
 // scraping. The renderer uses it to pre-fill the URL input and auto-fetch.
 ipcMain.handle('get-active-browser-url', async () => {
-  if (process.platform !== 'darwin') return { ok: false, error: 'macOS only' };
+  // Windows / Linux read the address bar through browserProbe instead of
+  // AppleScript. This used to hard-return 'macOS only', which is why the URL
+  // auto-fetch silently did nothing on Windows while the UI advertised it.
+  if (process.platform !== 'darwin') {
+    try {
+      const hit = await browserProbe.activeBrowserUrl();
+      if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser };
+      return { ok: false, error: browserProbe.unsupportedReason() };
+    } catch (err) {
+      return { ok: false, error: err?.message || 'Failed to read the browser URL' };
+    }
+  }
   try {
     const info = await getActiveBrowserInfo();
     if (!info) return { ok: false, error: 'No browser window found.' };
