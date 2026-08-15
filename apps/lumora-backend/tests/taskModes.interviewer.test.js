@@ -270,6 +270,46 @@ describe('classifyUtterance — things interviewers actually say', () => {
   });
 });
 
+describe('diagnose scores the process, not just the patch', () => {
+  const text = blockFor('diagnose');
+
+  it('tags every defect with a trackable category', () => {
+    // The tags double as the per-user weakness dimension: you cannot tell a
+    // candidate they are weak on concurrency if findings arrive untyped.
+    for (const cat of ['boundary', 'null_type', 'state', 'error_handling',
+      'concurrency', 'resource', 'security', 'performance']) {
+      expect(text, `${cat} missing from the category list`).toContain(cat);
+    }
+  });
+
+  it('orders findings by severity, because only the first two get spoken', () => {
+    expect(text).toMatch(/ORDER THE DEFECTS BY SEVERITY/);
+    expect(text).toMatch(/nitpick listed above a wrong result/);
+  });
+
+  it('requires location, reason, and the runtime failure for every defect', () => {
+    expect(text).toMatch(/WHERE/);
+    expect(text).toMatch(/WHY IT IS WRONG/);
+    expect(text).toMatch(/WHAT BREAKS AT RUNTIME/);
+    // A finding you cannot demonstrate is a guess wearing a finding's clothes.
+    expect(text).toMatch(/you have not found a defect yet/);
+  });
+
+  it('names suppression as suppression', () => {
+    expect(text).toMatch(/FIX THE CAUSE, NEVER THE SYMPTOM/);
+    expect(text).toMatch(/try\/except/);
+    expect(text).toMatch(/SUPPRESSION/);
+  });
+
+  it('keeps every constraint the original block already earned', () => {
+    // The upgrade must not reopen the bug the registry was built to close.
+    expect(text).toMatch(/SAME NUMBER OF LINES/);
+    expect(text).toMatch(/FORBIDDEN TO REWRITE/);
+    expect(text).not.toMatch(/EXECUTION CONTRACT/);
+    expect(text).not.toMatch(/you SHOULD restructure/);
+  });
+});
+
 describe('refactor and diagnose stay distinct', () => {
   it('refactor treats the code as correct and forbids behaviour changes', () => {
     const text = blockFor('refactor');

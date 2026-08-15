@@ -205,6 +205,39 @@ Emit ONE changes[] entry per distinct defect, each naming the defect in its labe
 (e.g. "wrong operator", "stray bracket", "undefined helper"). If after a careful
 audit the code is genuinely correct, return changes: [] and fixed_code identical
 to the input — do not invent faults.
+
+TAG EACH DEFECT with the category it belongs to, as the first word of its label,
+from exactly this list:
+  boundary       off-by-one, slice end, first/last element, empty collection
+  null_type      None/null handling, int vs float division, silent coercion
+  state          mutation while iterating, mutable default arg, stale cache
+  error_handling swallowed exception, bare except, error path returning success
+  concurrency    check-then-act race, unsynchronised shared counter, shared client
+  resource       unclosed file/connection, missing timeout, unbounded retry/growth
+  security       input into a query or shell, hardcoded secret, unvalidated input,
+                 over-broad permission
+  performance    linear lookup inside a loop, repeated sort, accidental quadratic
+
+ORDER THE DEFECTS BY SEVERITY, worst first: wrong answers and crashes, then
+security, then resource leaks, then performance, then everything else. The
+candidate is speaking under time pressure and gets through the first two — those
+must be the ones that matter. A nitpick listed above a wrong result is a worse
+answer even when both are correct findings.
+
+EVERY defect needs three things, and is incomplete without all three:
+  1. WHERE — the line, and the identifier on it.
+  2. WHY IT IS WRONG — the rule being broken, not a restatement of the code.
+  3. WHAT BREAKS AT RUNTIME — the observable failure. "IndexError on the last
+     iteration when len(items) is even", not "this could cause problems". If you
+     cannot say what an input does to it, you have not found a defect yet.
+
+FIX THE CAUSE, NEVER THE SYMPTOM. Wrapping a failing block in try/except,
+catching the exception a bug raises, clamping an index that should never have
+been out of range, or defaulting away a None that should never have been None
+are all SUPPRESSION — they hide the defect while leaving it in place. If a fix
+looks like one of those, say so explicitly in the walkthrough and fix the actual
+cause instead. This is the distinction the round is testing: the interviewer
+already knows where the bug is and is watching HOW you find it.
 ${HARNESS_READONLY}`;
 
 const FILL_BLOCK = `══════════════════════════════════════════════════════════════════════════
