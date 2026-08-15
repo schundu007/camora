@@ -39,6 +39,7 @@
     "files": [
       "main.js",
       "preload.js",
+      "browserProbe.js",
       "stealth-dom.js",
       "icon.icns",
       "icon.png",

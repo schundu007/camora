@@ -20,7 +20,22 @@ const {
   Menu, MenuItem, clipboard, screen: electronScreen,
 } = require('electron');
 const path = require('path');
-const browserProbe = require('./browserProbe');
+// Guarded: electron-builder's `files` array is an explicit allowlist, so a new
+// main-process module that is added to the source tree but not to that list is
+// simply absent from the packaged app — and a bare require would throw
+// MODULE_NOT_FOUND before the first window is ever created. The feature
+// degrading to "paste the URL yourself" is recoverable; the app not booting is
+// not.
+let browserProbe;
+try {
+  browserProbe = require('./browserProbe');
+} catch (err) {
+  console.error('[main] browserProbe unavailable — browser URL detection disabled:', err?.message);
+  browserProbe = {
+    activeBrowserUrl: async () => null,
+    unsupportedReason: () => 'Browser URL detection is unavailable in this build. Paste the URL and click Fetch.',
+  };
+}
 
 // Synchronous version lookup for preload's `window.camo.version`. Returns the
 // real CFBundleShortVersionString (1.0.0) so the UI never hardcodes a version
@@ -1412,7 +1427,7 @@ ipcMain.handle('hackerrank-manual-fetch', async () => {
   //   2. failing that, capture the display so the OCR path can read it.
   if (process.platform !== 'darwin') {
     const hit = await browserProbe.activeBrowserUrl().catch(() => null);
-    if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser };
+    if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser, starterCode: hit.starterCode || null };
     return await captureDisplayFallback();
   }
   // Screen Recording permission is required before desktopCapturer will return
@@ -1702,7 +1717,7 @@ ipcMain.handle('extract-browser-problem', async () => {
   // failure and losing the one thing we do know.
   if (process.platform !== 'darwin') {
     const hit = await browserProbe.activeBrowserUrl().catch(() => null);
-    if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser, text: null, starterCode: null };
+    if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser, text: null, starterCode: hit.starterCode || null };
     return { ok: false, error: browserProbe.unsupportedReason() };
   }
   try {
@@ -1752,7 +1767,7 @@ ipcMain.handle('get-active-browser-url', async () => {
   if (process.platform !== 'darwin') {
     try {
       const hit = await browserProbe.activeBrowserUrl();
-      if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser };
+      if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser, starterCode: hit.starterCode || null };
       return { ok: false, error: browserProbe.unsupportedReason() };
     } catch (err) {
       return { ok: false, error: err?.message || 'Failed to read the browser URL' };

@@ -45,6 +45,23 @@ const BROWSER_PROCS = ['chrome', 'msedge', 'brave', 'vivaldi', 'opera', 'firefox
  * We walk browser PROCESSES rather than the foreground window, because the
  * foreground window is usually Camora itself at the moment we ask.
  */
+/*
+ * Emits: browser|url|<base64 of the editor's contents>
+ *
+ * The editor field is a bonus the macOS path gets from AppleScript: coding
+ * platforms render their editor as an accessible Edit control ("Editor
+ * content…" in Monaco/Ace), so the same UIA walk that reads the omnibox also
+ * reads the starter code the candidate has to fill in. Base64 because the code
+ * carries newlines and pipes that would wreck a plain delimiter.
+ *
+ * Verified against a live Chrome on HackerRank: the address bar came back as
+ * "hackerrank.com/challenges/word-order/problem?isFullScreen=true" and the
+ * editor control as the actual Python stub.
+ *
+ * Note for editors of this string: it is a JS template literal, so a literal
+ * "${" would interpolate. PowerShell's $name form is safe; never introduce
+ * ${...} here.
+ */
 const PS_READ_URL = `
 $ErrorActionPreference = 'SilentlyContinue'
 Add-Type -AssemblyName UIAutomationClient
@@ -59,13 +76,22 @@ foreach ($n in $names) {
       [System.Windows.Automation.AutomationElement]::ControlTypeProperty,
       [System.Windows.Automation.ControlType]::Edit)
     $edits = $el.FindAll([System.Windows.Automation.TreeScope]::Descendants, $cond)
+    $foundUrl = $null
+    $foundCode = $null
     foreach ($e in $edits) {
       $v = $null
       try { $v = $e.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value } catch {}
-      if ($v -and ($v -match '^(https?://|[a-z0-9-]+\\.[a-z]{2,})')) {
-        Write-Output ("{0}|{1}" -f $n, $v)
-        exit 0
-      }
+      if (-not $v) { continue }
+      $nm = ''
+      try { $nm = $e.Current.Name } catch {}
+      if ((-not $foundUrl) -and ($v -match '^(https?://|[a-z0-9-]+\\.[a-z]{2,})')) { $foundUrl = $v; continue }
+      if ((-not $foundCode) -and ($nm -like 'Editor content*')) { $foundCode = $v }
+    }
+    if ($foundUrl) {
+      $b64 = ''
+      if ($foundCode) { $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($foundCode)) }
+      Write-Output ("{0}|{1}|{2}" -f $n, $foundUrl, $b64)
+      exit 0
     }
   }
 }
@@ -75,17 +101,28 @@ exit 1
 async function activeBrowserUrlWindows() {
   const out = await run('powershell.exe',
     ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', PS_READ_URL],
-    { timeout: 6000 });
+    // UI Automation walks the whole window tree; on a heavy page with many
+    // frames the first call can take several seconds. Too short a timeout here
+    // reads as "no browser found" and is indistinguishable from the bug this
+    // module exists to fix.
+    { timeout: 15000 });
   if (!out) return null;
-  const i = out.indexOf('|');
-  if (i < 0) return null;
-  const browser = out.slice(0, i).trim();
-  let url = out.slice(i + 1).trim();
+  const parts = out.split('|');
+  if (parts.length < 2) return null;
+  const browser = parts[0].trim();
+  let url = parts[1].trim();
   if (!url) return null;
   // The omnibox hides the scheme, so "hackerrank.com/challenges/x" comes back
   // without https:// and would fail every downstream URL parse.
   if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-  return { url, browser };
+  let starterCode = null;
+  if (parts[2]?.trim()) {
+    try {
+      const decoded = Buffer.from(parts[2].trim(), 'base64').toString('utf8');
+      if (decoded.trim().length >= 5) starterCode = decoded;
+    } catch { /* a mangled editor read must not lose the URL */ }
+  }
+  return { url, browser, starterCode };
 }
 
 /**

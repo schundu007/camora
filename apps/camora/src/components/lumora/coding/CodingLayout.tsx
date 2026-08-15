@@ -1752,6 +1752,15 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       // the backend scraper, which handles HackerRank from a URL alone — this
       // is what makes "capture my open tab" work off macOS.
       if (result.url && !result.text) {
+        // UI Automation also exposes the platform's editor as an accessible
+        // control, so a Windows capture usually carries the real starter code
+        // too. Seed it BEFORE fetching: the backend scraper does not always
+        // return a template (word-order has none), and the verbatim editor
+        // contents beat anything reconstructed from the statement.
+        if (typeof result.starterCode === 'string' && result.starterCode.trim().length >= 5) {
+          setStarterCode(result.starterCode);
+          setLanguage(resolveLanguage(result.starterCode));
+        }
         setProblemUrl(result.url);
         setInputMode('url');
         await handleFetchFromUrl(result.url, { auto: true });
