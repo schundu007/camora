@@ -388,7 +388,12 @@ function buildCodingSystemPrompt(language, systemContext, starterCode, forceSing
   // Bash problems on HackerRank always supply a starter template (function
   // stub + wrapper call). Even when OCR misses it, multiple "approaches"
   // for bash don't make sense — there's one right implementation.
-  const singleSolution = forceSingle || !!starterCode || language === 'bash';
+  // A locked platform template constrains the HARNESS and the SIGNATURE — not
+  // the ALGORITHM. Three approaches can each fill the same stub body, and the
+  // candidate still has to talk through the brute force before optimising, so
+  // starter code must NOT collapse the ladder. Only bash genuinely has one
+  // implementation, and only an explicit client opt-out should override this.
+  const singleSolution = forceSingle || language === 'bash';
   // Starter code means we HAVE a contract — the template is it. RULE #2.7 only
   // fires when we have no evidence at all.
   const ioUnknown = ioContract === 'unknown' && !starterCode;
@@ -532,7 +537,7 @@ NOTE: "Simulation" patternTag = DS&A pattern (game of life, queue sim). NOT a li
 Detect and complete partial/starter code from the problem. When you detect
 partial code with markers like "complete the function", "TODO", or empty body,
 you MUST complete the given template, NOT rewrite from scratch.
-${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\nYour single solution must follow this exact structure — return only 1 solution in the solutions array.\n` : ''}${ioUnknown ? `\n##############################################################################\n# RULE #2.7: I/O CONTRACT UNKNOWN — DO NOT INVENT ONE (HIGHEST PRIORITY)\n##############################################################################\nThe problem statement specifies NO input/output format, and NO starter code was\ncaptured. You have NO evidence of how this program is invoked or graded.\n\nEmit the LEAST-COMMITTED artifact:\n- ONE pure function. Its PARAMETERS are the inputs. It RETURNS the answer.\n- NO input(), NO sys.stdin, NO print(), NO if __name__ block, NO driver.\n- NO invented output labels. Printing "Iterative:" before a result is FORBIDDEN.\n- ONE algorithm. Never two algorithms in one file. If several approaches exist,\n  pick the one you would submit and describe the others in "tradeoffs".\n- Populate "assumptions" with exactly what you assumed about the inputs and the\n  expected return value.\n\nThis OVERRIDES the stdin/print EXCEPTION in RULE #3. A pure function wraps into\nany driver; an invented print contract is a Wrong Answer the candidate cannot see.\n` : ''}${inputTrust !== null ? `
+${starterCode ? `\n##############################################################################\n# STARTER CODE — THIS IS THE EXACT TEMPLATE FROM THE PLATFORM\n##############################################################################\nThe interview platform provides this exact starter code. Your solution MUST use\nthis as the base. DO NOT change function names, wrapper calls, input-reading\nlines, or surrounding boilerplate. ONLY fill in the missing implementation.\n\n\`\`\`${language}\n${starterCode}\n\`\`\`\n\n${singleSolution ? 'Your single solution must follow this exact structure — return only 1 solution in the solutions array.' : 'EVERY solution in the solutions array must reproduce THIS TEMPLATE byte-for-byte — same imports, same signature, same harness — and differ ONLY in the algorithm written inside the stub body. The template is the frame; the approaches are what you put in it. Do not vary the harness between solutions.'}\n` : ''}${ioUnknown ? `\n##############################################################################\n# RULE #2.7: I/O CONTRACT UNKNOWN — DO NOT INVENT ONE (HIGHEST PRIORITY)\n##############################################################################\nThe problem statement specifies NO input/output format, and NO starter code was\ncaptured. You have NO evidence of how this program is invoked or graded.\n\nEmit the LEAST-COMMITTED artifact:\n- ONE pure function. Its PARAMETERS are the inputs. It RETURNS the answer.\n- NO input(), NO sys.stdin, NO print(), NO if __name__ block, NO driver.\n- NO invented output labels. Printing "Iterative:" before a result is FORBIDDEN.\n- ONE algorithm. Never two algorithms in one file. If several approaches exist,\n  pick the one you would submit and describe the others in "tradeoffs".\n- Populate "assumptions" with exactly what you assumed about the inputs and the\n  expected return value.\n\nThis OVERRIDES the stdin/print EXCEPTION in RULE #3. A pure function wraps into\nany driver; an invented print contract is a Wrong Answer the candidate cannot see.\n` : ''}${inputTrust !== null ? `
 ##############################################################################
 # RULE #2.8: SOLUTION QUALITY — YOU ARE GRADED ON THESE
 ##############################################################################
@@ -1465,7 +1470,9 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
   const forceSingle = req.body?.single_solution === true;
   // Mirrors buildCodingSystemPrompt's own `singleSolution` derivation so the
   // retry reminder and the cache key can't drift from what the prompt asked for.
-  const solutionCount = (forceSingle || isDiagnose || !!starterCode || lang === 'bash') ? 1 : 3;
+  // Mirrors buildCodingSystemPrompt's own derivation. Starter code is NOT a
+  // reason to collapse to one — see the note there.
+  const solutionCount = (forceSingle || isDiagnose || lang === 'bash') ? 1 : 3;
   console.log(`[solve] lang=${lang} mcq=${isMcq} diagnose=${isDiagnose} io=${ioContract} trust=${inputTrust} bypass=${!!bypassCache} starter=${starterCode ? starterCode.slice(0, 60).replace(/\n/g, '↵') : 'null'}`);
   if (!SUPPORTED_LANGUAGES.includes(lang)) {
     return res.status(400).json({

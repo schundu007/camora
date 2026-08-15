@@ -95,9 +95,28 @@ describe('the ladder is actually requested', () => {
     expect(plain).toMatch(/naming what the PREVIOUS solution wasted/);
   });
 
-  it('still collapses to one solution for a locked platform template', () => {
+  it('keeps the ladder even when a locked platform template is present', () => {
+    // Reported live: a HackerRank fetch always returns a template, so starter
+    // code silently collapsed every fetched problem to one solution. The
+    // template constrains the HARNESS and the SIGNATURE, not the ALGORITHM —
+    // three approaches can each fill the same stub body, and the candidate
+    // still has to talk through the brute force before optimising.
     const withStarter = buildCodingSystemPrompt('python', undefined, 'def solve(n):\n    pass', false, null, null);
-    expect(withStarter).toMatch(/EXACTLY 1 SOLUTION REQUIRED/);
+    expect(withStarter).toMatch(/EXACTLY 3 SOLUTIONS REQUIRED/);
+  });
+
+  it('makes every approach reproduce that template byte-for-byte', () => {
+    // The failure mode of the fix above: three solutions that each invent their
+    // own harness, none of which pastes back into the locked editor.
+    const withStarter = buildCodingSystemPrompt('python', undefined, 'def solve(n):\n    pass', false, null, null);
+    expect(withStarter).toMatch(/reproduce THIS TEMPLATE byte-for-byte/);
+    expect(withStarter).toMatch(/differ ONLY in the algorithm written inside the stub body/);
+    expect(withStarter).toMatch(/Do not vary the harness between solutions/);
+  });
+
+  it('still collapses to one when the client explicitly asks for one', () => {
+    const single = buildCodingSystemPrompt('python', undefined, 'def solve(n):\n    pass', true, null, null);
+    expect(single).toMatch(/EXACTLY 1 SOLUTION REQUIRED/);
   });
 
   it('still collapses to one solution for bash', () => {
