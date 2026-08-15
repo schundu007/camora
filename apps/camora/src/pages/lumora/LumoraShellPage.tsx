@@ -28,6 +28,7 @@ import { HistoryAnswerViewer, TabLoading } from './lumora-shell/history-viewer';
 import { ScreenshotStrip, type ScreenshotEntry } from '../../components/lumora/shell/ScreenshotStrip';
 import { InterviewContextPill } from '../../components/lumora/shell/InterviewContextPill';
 import { InterviewContextDrawer } from '../../components/lumora/shell/InterviewContextDrawer';
+import type { TaskMode } from '@/lib/lumora/task-modes';
 
 // Lazy load heavy layouts — only mounted on first tab activation
 const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLayout').then(m => ({ default: m.CodingLayout })));
@@ -59,7 +60,7 @@ export const LumoraShellPage = () => {
   const codingScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
   const designScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
   const cofixScreenshotRef = useRef<((text: string, starterCode?: string) => void) | null>(null);
-  const cofixInjectRef = useRef<((code: string, lang?: string, opts?: { mode?: 'review' | 'complete' | 'solve' | 'explain'; hint?: string }) => void) | null>(null);
+  const cofixInjectRef = useRef<((code: string, lang?: string, opts?: { mode?: TaskMode; hint?: string }) => void) | null>(null);
 
   // Input mode state lifted to shell so the global strip can own the pills
   const [codingInputMode, setCodingInputMode] = useState<'paste' | 'url' | 'image'>('paste');

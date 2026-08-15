@@ -4,6 +4,7 @@
 
 import type { Citation, StreamStartEvent, TokenEvent, AnswerEvent, StatusEvent, ErrorEvent } from '@/types';
 import { getPinnedIntro } from '@/lib/lumora-assistant';
+import type { TaskMode } from '@/lib/lumora/task-modes';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -503,10 +504,12 @@ export interface CoFixStreamOptions {
    *  an empty platform-template stub instead of only repairing broken code. */
   problem?: string;
   language: string;
-  /** What the capture is asking for, from the snap classifier or the mode chips.
-   *  'review' audit for faults · 'complete' fill the skeleton · 'solve' write it
-   *  from the statement · 'explain' describe it and change nothing. */
-  mode?: 'review' | 'complete' | 'solve' | 'explain';
+  /** The situation, from the snap classifier or a mode chip. Either what the
+   *  SCREEN holds ('review' audit for faults · 'complete' fill the skeleton ·
+   *  'solve' write it from the statement · 'explain' describe it and change
+   *  nothing) or what the INTERVIEWER ASKED ('optimize', 'justify', 'extend',
+   *  'edge', 'trace', 'refactor', 'clarify', 'hint'). See lib/lumora/task-modes. */
+  mode?: TaskMode;
   token: string;
   signal?: AbortSignal;
   onToken?: (chunk: string) => void;
