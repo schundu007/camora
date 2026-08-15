@@ -1797,17 +1797,26 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       });
 
       if (!resp.ok) {
-        // Backend can't scrape this URL — silently fall back to screenshot OCR.
+        // Say WHY. This used to fall through to the screenshot path without a
+        // word, so an expired token (401) and a genuinely unscrapable platform
+        // (422) were indistinguishable from the outside — both looked like "the
+        // URL just doesn't fetch any more".
+        const detail = await resp.json().catch(() => null);
+        const reason = detail?.detail || detail?.error || `HTTP ${resp.status}`;
         const camo = (window as any).camo;
         setIsProcessing(false);
+        if (resp.status === 401) {
+          setError('Session expired — sign in again, then Fetch.');
+          return;
+        }
         if (camo?.fetchHackerrankNow) {
+          setError(`Couldn't scrape the page (${reason}) — capturing your open tab instead…`);
           await handleHackerrankFetch();
         } else {
-          // Web-only: tell the user to use the Image tab.
           setInputMode('image');
           await dialogAlert({
             title: 'Cannot scrape this URL',
-            message: 'This platform is auth-gated or JS-rendered and cannot be scraped directly. Take a screenshot of the problem + code editor and drop it in the Image tab — Lumora will OCR it and generate a matching solution.',
+            message: `${reason}\n\nTake a screenshot of the problem + code editor and drop it in the Image tab — Lumora will OCR it and generate a matching solution.`,
           });
         }
         return;
@@ -1826,10 +1835,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       // diverge). resolveLanguage still honors an explicit dropdown choice.
       const effectiveLang = resolveLanguage(fetchedStarter || text);
       if (!text) {
-        // Empty response — same fallback
+        // A 200 with nothing in it. Silent before, which is the worst possible
+        // shape for this: the request succeeded, so nothing looked wrong.
         const camo = (window as any).camo;
         setIsProcessing(false);
-        if (camo?.fetchHackerrankNow) { await handleHackerrankFetch(); }
+        if (camo?.fetchHackerrankNow) {
+          setError('The page returned no problem text — capturing your open tab instead…');
+          await handleHackerrankFetch();
+        } else {
+          setError('That page returned no problem text. Open the problem itself (not the list), or use the Image tab.');
+        }
         return;
       }
       setProblemText(text);
@@ -1856,11 +1871,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       setIsOutputCollapsed(true);
       setProblemTab('solution');
       onSubmit(text, effectiveLang, fetchedStarter ? { starterCode: fetchedStarter } : undefined);
-    } catch {
-      // Network error — fall back to OCR on desktop, show nothing on web.
+    } catch (err: any) {
+      // The worst of the three: a thrown fetch (offline, CORS, DNS, the backend
+      // unreachable) showed the user literally nothing on web and jumped
+      // straight to screenshotting on desktop. "Nothing happens when I click
+      // Fetch" was this branch.
       const camo = (window as any).camo;
+      const reason = err?.message || 'network error';
       setIsProcessing(false);
-      if (camo?.fetchHackerrankNow) { await handleHackerrankFetch(); }
+      if (camo?.fetchHackerrankNow) {
+        setError(`Couldn't reach the server (${reason}) — capturing your open tab instead…`);
+        await handleHackerrankFetch();
+      } else {
+        setError(`Couldn't reach the server (${reason}). Check your connection and try Fetch again.`);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -2577,11 +2601,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
                               {isProcessing ? 'Loading...' : 'Fetch'}
                             </button>
                           </div>
-                          {(window as any).camo?.fetchHackerrankNow && (
-                            <p className="text-center text-xs opacity-50 py-1">
-                              Desktop app detected — your open coding tab is captured automatically (HackerRank, LeetCode, CoderPad & more)
-                            </p>
-                          )}
                         </div>
                       )}
 
