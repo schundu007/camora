@@ -20,6 +20,22 @@ function getFreeLimitForCategory(category: string): number {
   return FREE_LIMITS[category] ?? DEFAULT_FREE_LIMIT;
 }
 
+// Topics that are never gated and never consume a free slot. Quick References
+// are syntax lookup, not study content — locking a cheatsheet behind the same
+// 3-topic budget as a DSA pattern makes the budget feel arbitrary, and burning
+// a slot to check a `bisect` signature is a bad first impression.
+const ALWAYS_FREE_TOPICS: Record<string, ReadonlySet<string>> = {
+  coding: new Set([
+    'python-quickref',
+    'sql-quickref',
+    'bash-quickref',
+    'git-quickref',
+  ]),
+};
+function isAlwaysFree(category: string, topicId: string): boolean {
+  return ALWAYS_FREE_TOPICS[category]?.has(topicId) ?? false;
+}
+
 type Category = string;
 
 export function useContentAccess() {
@@ -95,6 +111,7 @@ export function useContentAccess() {
   const canReadTopic = useCallback((category: Category, topicId: string): boolean => {
     if (subscriptionLoading) return true; // Don't lock while checking subscription
     if (isPaidUser) return true;
+    if (isAlwaysFree(category, topicId)) return true;
     // If category not loaded from server yet, default UNLOCKED so we don't
     // flash a lock on first paint. The mount-time prefetch (above) populates
     // the map shortly after; a subsequent render will lock if appropriate.
@@ -114,6 +131,8 @@ export function useContentAccess() {
 
   const markTopicRead = useCallback((category: Category, topicId: string) => {
     if (isPaidUser) return;
+    // Never bill a free slot for an always-free topic.
+    if (isAlwaysFree(category, topicId)) return;
 
     // Optimistic local update
     setTopicsMap(prev => {
