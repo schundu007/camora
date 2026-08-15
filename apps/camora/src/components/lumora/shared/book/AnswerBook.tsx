@@ -19,8 +19,8 @@ const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
     hljs.highlightElement(el);
   }, [code, lang]);
   return (
-    <div className="lumora-book-breakout my-4 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)] bg-[var(--bg-surface)]">
+    <div className="lumora-book-breakout my-2.5 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-elevated)]">
+      <div className="flex items-center justify-between px-2.5 py-1 border-b border-[var(--border)] bg-[var(--bg-surface)]">
         <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent-text)]">{lang}</span>
         <button
           className="font-mono text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
@@ -29,8 +29,8 @@ const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
           Copy
         </button>
       </div>
-      <pre className="overflow-x-auto p-3 m-0">
-        <code ref={ref} className={`language-${lang} text-[13px] leading-relaxed`} />
+      <pre className="overflow-x-auto p-2.5 m-0">
+        <code ref={ref} className={`language-${lang} text-[12.5px] leading-[1.5]`} />
       </pre>
     </div>
   );
@@ -62,7 +62,7 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
       return (
         <div className="lumora-book-callout">
           <div className="lumora-book-label !mt-0">{block.label}</div>
-          <ul className="space-y-1">
+          <ul className="space-y-0.5">
             {block.items.map((it, i) => <li key={i}><InlineText text={it} /></li>)}
           </ul>
         </div>
@@ -71,7 +71,7 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
     case 'list':
       // Long lists (e.g. Concepts) flow into two columns to save vertical space.
       return (
-        <ul className={`list-disc pl-5 space-y-1 mb-3 ${block.items.length > 6 ? 'sm:columns-2 sm:gap-x-8 [&>li]:break-inside-avoid' : ''}`}>
+        <ul className={`list-disc pl-4 space-y-0.5 mb-2 ${block.items.length > 6 ? 'sm:columns-2 sm:gap-x-8 [&>li]:break-inside-avoid' : ''}`}>
           {block.items.map((it, i) => <li key={i}>{it}</li>)}
         </ul>
       );
@@ -81,11 +81,11 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
 
     case 'kv':
       return (
-        <div className="flex flex-wrap gap-x-6 gap-y-1 mb-3">
+        <div className="flex flex-wrap gap-x-5 gap-y-0.5 mb-2">
           {block.pairs.map(([k, v]) => (
             <span key={k} className="flex items-baseline gap-2">
               <span className="lumora-book-label !my-0">{k}</span>
-              <span className="font-mono text-[13px] text-[var(--text-primary)]">{v}</span>
+              <span className="font-mono text-[12.5px] text-[var(--text-primary)]">{v}</span>
             </span>
           ))}
         </div>
@@ -93,14 +93,14 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
 
     case 'trace':
       return (
-        <div className="lumora-book-breakout my-3 overflow-x-auto">
-          <table className="w-full text-[13px] border-collapse">
+        <div className="lumora-book-breakout my-2 overflow-x-auto">
+          <table className="w-full text-[12.5px] border-collapse">
             <tbody>
               {block.rows.map((r, i) => (
                 <tr key={i} className="border-b border-[var(--border)] last:border-0">
-                  <td className="py-1.5 pr-3 font-mono text-[var(--accent-text)] align-top">{r.step}</td>
-                  <td className="py-1.5 pr-3 align-top">{r.action}</td>
-                  <td className="py-1.5 font-mono text-[var(--text-muted)] align-top">{r.state}</td>
+                  <td className="py-1 pr-2.5 font-mono text-[var(--accent-text)] align-top">{r.step}</td>
+                  <td className="py-1 pr-2.5 align-top">{r.action}</td>
+                  <td className="py-1 font-mono text-[var(--text-muted)] align-top">{r.state}</td>
                 </tr>
               ))}
             </tbody>
@@ -111,20 +111,20 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
     case 'walk': {
       const interactive = !!(onLineHover || onLineClick);
       return (
-        <div className="my-3 space-y-2">
+        <div className="my-2 space-y-1.5">
           {block.rows.map((r, i) => {
             const bindable = interactive && (r.line != null || !!r.code);
             return (
             <div
               key={i}
-              className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 transition-colors hover:border-[var(--cam-gold-leaf-dk)]"
+              className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1.5 transition-colors hover:border-[var(--cam-gold-leaf-dk)]"
               style={bindable ? { cursor: 'pointer' } : undefined}
               onMouseEnter={() => bindable && onLineHover?.(r.line, r.code, i)}
               onMouseLeave={() => bindable && onLineHover?.(undefined)}
               onClick={() => bindable && onLineClick?.(r.line, r.code, i)}
             >
               {(r.line != null || r.code) && (
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-1.5 mb-0.5">
                   {r.line != null && (
                     <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent-text)] shrink-0">
                       L{r.line}
@@ -133,7 +133,7 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
                   {r.code && <code className="font-mono text-[12px] text-[var(--text-muted)] truncate">{r.code}</code>}
                 </div>
               )}
-              <span className="text-[13px] leading-relaxed"><InlineText text={r.explanation} /></span>
+              <span className="text-[12.5px] leading-[1.5]"><InlineText text={r.explanation} /></span>
             </div>
             );
           })}

@@ -3474,25 +3474,33 @@ figure:has(> .viz-caption) {
    Prose in an editorial serif (Newsreader), headings in Fraunces, labels in a
    clean sans (sentence case, not mono-uppercase), code stays mono. Gold is used
    only as a hairline; text carries the hierarchy, not colour. */
+/* Density note: this reads like a book but it is NOT read like one. It lives in
+   a narrow pane the candidate SCANS while an interviewer is talking, and the
+   answer now carries up to seven sections (Solution, Complexity, Walkthrough,
+   Trace, Tradeoffs, Edge cases, Follow-up Q&A). At the original essay scale —
+   15.5px body, 1.6rem headings, 2.4rem heading margins — the chrome alone
+   pushed the actual answer below the fold. The serif and the gold hairline are
+   the identity and stay; the scale is interview density, in line with the
+   10-13px used across the rest of the Lumora shell. */
 .lumora-book {
   max-width: none;
   margin-inline: auto;
-  padding: 1.5rem 1.75rem 2.75rem;
+  padding: 0.85rem 1rem 1.4rem;
   font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
-  font-size: 15.5px;
+  font-size: 13.25px;
   color: var(--text-primary);
 }
 
 /* Tier 1 — section heading (Fraunces, neutral text + gold hairline) */
 .lumora-book-section {
   font-family: 'Fraunces', Georgia, serif;
-  font-size: 1.6rem;
+  font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
-  line-height: 1.2;
+  line-height: 1.25;
   color: var(--text-primary);
-  margin: 2.4rem 0 1rem;
-  padding-bottom: 0.5rem;
+  margin: 1.15rem 0 0.5rem;
+  padding-bottom: 0.28rem;
   border-bottom: 1px solid color-mix(in oklab, var(--cam-gold-leaf) 42%, transparent);
 }
 .lumora-book-section:first-child { margin-top: 0; }
@@ -3500,11 +3508,11 @@ figure:has(> .viz-caption) {
 /* Tier 2 — subsection (Fraunces) */
 .lumora-book-sub {
   font-family: 'Fraunces', Georgia, serif;
-  font-size: 1.18rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: -0.005em;
   color: var(--text-primary);
-  margin: 1.6rem 0 0.5rem;
+  margin: 0.85rem 0 0.35rem;
 }
 
 /* Tier 3 — label (clean sans, sentence case, muted) */
@@ -3515,14 +3523,14 @@ figure:has(> .viz-caption) {
   letter-spacing: 0.01em;
   text-transform: none;
   color: var(--text-muted);
-  margin: 1.4rem 0 0.45rem;
+  margin: 0.8rem 0 0.3rem;
 }
 
 /* Highlighted key points — a book-style aside with a gold hairline rule. */
 .lumora-book-callout {
   border-left: 2px solid color-mix(in oklab, var(--cam-gold-leaf) 55%, transparent);
-  padding: 0.15rem 0 0.15rem 1.15rem;
-  margin: 1.35rem 0;
+  padding: 0.1rem 0 0.1rem 0.8rem;
+  margin: 0.8rem 0;
   color: var(--text-primary);
 }
 
@@ -3532,8 +3540,8 @@ figure:has(> .viz-caption) {
   margin-inline: calc(50% - min(50%, calc(34ch + 3rem)));
 }
 
-.lumora-book p  { line-height: 1.62; color: var(--text-primary); margin-bottom: 0.9rem; }
-.lumora-book li { line-height: 1.6; }
+.lumora-book p  { line-height: 1.5; color: var(--text-primary); margin-bottom: 0.55rem; }
+.lumora-book li { line-height: 1.48; }
 /* Labels, code and interactive chrome opt out of the serif. */
 .lumora-book code,
 .lumora-book pre,
