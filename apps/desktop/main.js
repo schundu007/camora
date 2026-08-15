@@ -1547,6 +1547,91 @@ ipcMain.handle('capture-interactive', async () => {
   }
 });
 
+/**
+ * Shared tail for every capture path: hold the vision API's ~5 MB base64
+ * ceiling, then keep a copy on disk so the thumbnail can be reopened later.
+ * Returns the { ok, dataUrl, filePath } shape the renderer expects.
+ */
+function finalizeCapture(buf, prefix) {
+  const MAX_BASE64 = 4_800_000;
+  const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
+  let mime = 'image/png';
+  if (base64Size(buf) > MAX_BASE64) {
+    let img = nativeImage.createFromBuffer(buf);
+    img = img.resize({ width: Math.min(img.getSize().width, 1920), quality: 'best' });
+    buf = img.toPNG();
+    if (base64Size(buf) > MAX_BASE64) {
+      buf = img.toJPEG(85);
+      mime = 'image/jpeg';
+    }
+  }
+  const dataUrl = `data:${mime};base64,${buf.toString('base64')}`;
+  let filePath = null;
+  try {
+    const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Camora', 'screenshots');
+    fs.mkdirSync(folder, { recursive: true });
+    filePath = path.join(folder, `${prefix}-${Date.now()}.${mime === 'image/jpeg' ? 'jpg' : 'png'}`);
+    fs.writeFileSync(filePath, buf);
+  } catch (saveErr) {
+    console.log('[capture] save to disk failed:', saveErr.message);
+    filePath = null;
+  }
+  return { ok: true, dataUrl, filePath };
+}
+
+/**
+ * Windows / Linux screen capture via Electron's own desktopCapturer.
+ *
+ * The interactive drag-to-select path below is macOS-only because it shells out
+ * to /usr/sbin/screencapture -i. On every other platform the camera button used
+ * to return "Region capture is macOS only" — the feature simply did not exist,
+ * while the UI advertised it. desktopCapturer is cross-platform, so the button
+ * now works everywhere.
+ *
+ * The trade-off is real and worth stating: this grabs the WHOLE display rather
+ * than a dragged region, because Electron has no native picker and drawing our
+ * own selection overlay is a much larger change. The OCR pipeline already
+ * handles full screenshots — that is exactly what the original whole-window
+ * Snap fed it — so a slightly noisier image beats no capture at all.
+ */
+async function captureDisplayFallback() {
+  const wasVisible = mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible();
+  if (wasVisible) {
+    mainWindow.hide();
+    // Longer than the macOS path: Windows compositor teardown is slower, and a
+    // short wait puts Camora's own window in the shot.
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  try {
+    // Capture the display Camora is on, not blindly the primary one — on a
+    // two-monitor setup the problem is usually not on the main screen.
+    const display = (mainWindow && !mainWindow.isDestroyed())
+      ? electronScreen.getDisplayMatching(mainWindow.getBounds())
+      : electronScreen.getPrimaryDisplay();
+    const scale = display.scaleFactor || 1;
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: {
+        width: Math.round(display.size.width * scale),
+        height: Math.round(display.size.height * scale),
+      },
+    });
+    if (!sources.length) {
+      return { ok: false, error: 'No screen source available. On Linux, screen capture needs an X11 or PipeWire session.' };
+    }
+    const match = sources.find((s) => String(s.display_id) === String(display.id)) || sources[0];
+    if (!match.thumbnail || match.thumbnail.isEmpty()) {
+      return { ok: false, needsScreenPermission: true, error: 'Screen capture returned an empty image — the OS denied screen recording for Camora.' };
+    }
+    return finalizeCapture(match.thumbnail.toPNG(), 'screen');
+  } catch (err) {
+    console.error('[capture] desktopCapturer fallback failed:', err);
+    return { ok: false, error: err?.message || 'Screen capture failed' };
+  } finally {
+    if (wasVisible && mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
+  }
+}
+
 // ── IPC: macOS-native REGION capture (drag to select the area) ─────────
 // This is what the camera button in CoFix / Coding calls. `screencapture -i`
 // draws the crosshair so the user drags the EXACT area to snap; Space toggles
@@ -1554,7 +1639,9 @@ ipcMain.handle('capture-interactive', async () => {
 // first so it is never inside the shot.
 // Returns { ok, dataUrl, filePath } | { ok:false, cancelled:true } | { ok:false, error }.
 ipcMain.handle('capture-region', async () => {
-  if (process.platform !== 'darwin') return { ok: false, error: 'Region capture is macOS only.' };
+  // Windows / Linux have no `screencapture -i`; fall back to desktopCapturer
+  // rather than telling the user their platform is unsupported.
+  if (process.platform !== 'darwin') return await captureDisplayFallback();
   if (systemPreferences.getMediaAccessStatus('screen') !== 'granted') {
     return {
       ok: false,
@@ -1579,34 +1666,8 @@ ipcMain.handle('capture-region', async () => {
     fs.unlink(tmp, () => {});
     if (!buf.length) return { ok: false, cancelled: true };
 
-    // Same 5 MB vision-API ceiling as capture-interactive: downscale, then
-    // fall back to JPEG if a PNG of the region is still too large.
-    const MAX_BASE64 = 4_800_000;
-    const base64Size = (raw) => Math.ceil(raw.length / 3) * 4;
-    let mime = 'image/png';
-    if (base64Size(buf) > MAX_BASE64) {
-      let img = nativeImage.createFromBuffer(buf);
-      img = img.resize({ width: Math.min(img.getSize().width, 1920), quality: 'best' });
-      buf = img.toPNG();
-      if (base64Size(buf) > MAX_BASE64) {
-        buf = img.toJPEG(85);
-        mime = 'image/jpeg';
-      }
-    }
-    const dataUrl = `data:${mime};base64,${buf.toString('base64')}`;
-
-    // Keep a copy in the session folder so the thumbnail can be opened later.
-    let filePath = null;
-    try {
-      const folder = _sessionFolder || path.join(os.homedir(), 'Documents', 'Camora', 'screenshots');
-      fs.mkdirSync(folder, { recursive: true });
-      filePath = path.join(folder, `region-${Date.now()}.${mime === 'image/jpeg' ? 'jpg' : 'png'}`);
-      fs.writeFileSync(filePath, buf);
-    } catch (saveErr) {
-      console.log('[capture] region save to disk failed:', saveErr.message);
-      filePath = null;
-    }
-    return { ok: true, dataUrl, filePath };
+    // Same 5 MB vision-API ceiling and on-disk copy as every other capture path.
+    return finalizeCapture(buf, 'region');
   } catch (err) {
     console.error('[capture] region screencapture failed:', err);
     fs.unlink(tmp, () => {});
