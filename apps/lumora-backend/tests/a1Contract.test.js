@@ -230,6 +230,8 @@ describe('/solve wiring — inputTrust threaded through', () => {
   });
 
   it('passes inputTrust as the 6th argument to buildCodingSystemPrompt in /solve', () => {
-    expect(src).toMatch(/buildCodingSystemPrompt\(lang,[^)]*true, ioContract, inputTrust\)/s);
+    // 4th arg became the derived forceSingle when the brute→optimal ladder was
+    // unblocked. This test guards inputTrust's position, not that value.
+    expect(src).toMatch(/buildCodingSystemPrompt\(lang,[^)]*forceSingle, ioContract, inputTrust\)/s);
   });
 });

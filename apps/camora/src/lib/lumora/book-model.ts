@@ -77,6 +77,17 @@ const proseOrNull = (v: unknown): BookBlock | null => {
   return t ? { kind: 'prose', text: t } : null;
 };
 
+/** Case-insensitive dedupe that keeps first-seen order. */
+const dedupeStrings = (items: string[]): string[] => {
+  const seen = new Set<string>();
+  return items.filter(s => {
+    const k = s.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+};
+
 const listOrNull = (v: unknown): BookBlock | null => {
   const items = strList(v);
   return items.length ? { kind: 'list', items } : null;
@@ -128,7 +139,23 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   push(sections, 'trace', [trace.length ? { kind: 'trace', rows: trace } : null]);
 
   push(sections, 'tradeoffs', [listOrNull(pitchObj?.tradeoffs)]);
-  push(sections, 'edgecases', [listOrNull(pitchObj?.edgeCases)]);
+
+  // Edge cases come from two places the model fills independently: pitch.edgeCases
+  // (always present) and the top-level edgeScenarios (only when inputTrust was
+  // inferred). edgeScenarios was being generated and then dropped on the floor
+  // here — it never had a section, so it never reached the candidate.
+  const edgeItems = [...strList(pitchObj?.edgeCases), ...strList(sd.edgeScenarios)];
+  push(sections, 'edgecases', [edgeItems.length ? { kind: 'list', items: dedupeStrings(edgeItems) } : null]);
+
+  // Follow-ups: what the interviewer asks AFTER the solution is accepted. Q and A
+  // are a kv pair rather than prose so the question stays scannable — mid-interview
+  // the candidate is looking for one of these, not reading the set.
+  const followups = Array.isArray(sd.followups)
+    ? sd.followups
+        .map((f: any) => [txt(f?.q), txt(f?.a)] as [string, string])
+        .filter(([q, a]: [string, string]) => q && a)
+    : [];
+  push(sections, 'followup', [followups.length ? { kind: 'kv', pairs: followups } : null]);
 
   return { title: txt(sol?.name) || undefined, sections };
 }
