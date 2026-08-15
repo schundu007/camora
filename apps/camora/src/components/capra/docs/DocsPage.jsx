@@ -87,6 +87,36 @@ const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.co
  * Documentation Page with Sidebar Navigation and Topic Details
  * Original educational content for preparation
  */
+const PAGE_ALIASES = { dsa: 'coding', 'low-level-design': 'low-level', sql: 'databases' };
+
+/**
+ * Resolve `page` and `topic` from the location.
+ *
+ * Two URL forms are supported. The canonical one, written back by the sync
+ * effect below, is `/capra/prepare?page=coding&topic=python-quickref`. The
+ * path form `/capra/prepare/coding/python-quickref` also has to work, because
+ * CommandPalette builds it and people share it.
+ *
+ * Previously the ENTIRE path remainder was used as the page name, so the path
+ * form resolved to a page called "coding/python-quickref", matched no entry in
+ * HEAVY_TOPIC_LOADERS, loaded no data and rendered an empty "0 topics" grid.
+ * Splitting on the first slash is what makes the deep link resolve.
+ *
+ * Query params win over the path so the canonical form always round-trips.
+ */
+function parseDocsLocation(pathname, search) {
+  const params = new URLSearchParams(search);
+  const [pathPage, pathTopic] = pathname
+    .replace(/^\/(?:capra\/)?prepare/, '')   // also handles the legacy /prepare/* alias
+    .replace(/^\//, '')
+    .split('/');
+  const rawPage = params.get('page') || pathPage || 'overview';
+  return {
+    page: PAGE_ALIASES[rawPage] || rawPage,
+    topic: params.get('topic') || pathTopic || null,
+  };
+}
+
 export default function DocsPage({ onBack }) {
   const { isMobile } = useIsMobile();
   const { setActiveSection } = useAppShell();
@@ -98,16 +128,11 @@ export default function DocsPage({ onBack }) {
   const navigate = useNavigate();
   // Initialize state from URL params for persistence on refresh
   const getInitialState = () => {
+    const { page, topic } = parseDocsLocation(routerLocation.pathname, routerLocation.search);
     const params = new URLSearchParams(routerLocation.search);
-    // Support both query param (?page=...) and path segment (/prepare/system-design)
-    const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
-    const rawPage = params.get('page') || (pathSegment || 'overview');
-    // Support 'dsa' as alias for 'coding'
-    const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level', sql: 'databases' };
-    const page = pageAliases[rawPage] || rawPage;
     return {
       page,
-      topic: params.get('topic') || null,
+      topic,
       role: params.get('role') || null,
       focus: params.get('focus') || null,
       jobTitle: params.get('jobTitle') || null,
@@ -314,12 +339,8 @@ export default function DocsPage({ onBack }) {
 
   // React to URL changes from AppShell sidebar navigation
   useEffect(() => {
-    const pathSegment = routerLocation.pathname.replace('/capra/prepare', '').replace(/^\//, '');
     const params = new URLSearchParams(routerLocation.search);
-    const rawPage = params.get('page') || (pathSegment || 'overview');
-    const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level', sql: 'databases' };
-    const page = pageAliases[rawPage] || rawPage;
-    const topic = params.get('topic') || null;
+    const { page, topic } = parseDocsLocation(routerLocation.pathname, routerLocation.search);
     const role = params.get('role') || null;
     const focus = params.get('focus') || null;
     const jobTitle = params.get('jobTitle') || null;
@@ -366,11 +387,7 @@ export default function DocsPage({ onBack }) {
   // Handle browser back/forward button
   useEffect(() => {
     const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const topic = params.get('topic') || null;
-      const rawPage = params.get('page') || window.location.pathname.replace('/capra/prepare', '').replace(/^\//, '') || 'overview';
-      const pageAliases = { dsa: 'coding', 'low-level-design': 'low-level', sql: 'databases' };
-      const page = pageAliases[rawPage] || rawPage;
+      const { page, topic } = parseDocsLocation(window.location.pathname, window.location.search);
       setActivePageState(page);
       setSelectedTopicState(topic);
       setActiveSection(page);
