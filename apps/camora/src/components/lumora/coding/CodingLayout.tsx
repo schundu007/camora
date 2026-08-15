@@ -18,6 +18,7 @@ import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
 import { isProblemPageUrl } from '@/lib/problemPageUrl';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
+import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -226,7 +227,7 @@ interface CodingLayoutProps {
   /** When true, hides internal header and uses flex-1 instead of h-screen (for embedding in LumoraShell) */
   embedded?: boolean;
   /** Called when user clicks "→ CoFix" chip; receives current editor code + language */
-  onSendToCofix?: (code: string, lang: string, opts?: { mode?: 'review' | 'complete' | 'solve' | 'explain'; hint?: string }) => void;
+  onSendToCofix?: (code: string, lang: string, opts?: { mode?: TaskMode; hint?: string }) => void;
   /** Capture controls (Snap + input-mode icons) rendered inline in the
       Description/Solution toolbar row, so coding shows one toolbar instead of
       a separate strip above. Supplied by LumoraShell as an <ScreenshotStrip inline/>. */
@@ -1628,7 +1629,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       // with "what's wrong with this?" went to /solve, which treats starter_code
       // as a LOCKED TEMPLATE to reproduce byte-for-byte. The interviewer's bugs
       // were faithfully preserved and code was filled in around them.
-      const screenTask: 'review' | 'complete' | 'solve' | 'explain' | null =
+      const screenTask: ScreenMode | null =
         valid.map(r => r.task).find(Boolean) || null;
       const detectedLang: string | null = valid.map(r => r.detected_language).find(Boolean) || null;
       const effectiveLang = detectedLang || resolveLanguage(combinedText);

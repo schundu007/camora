@@ -13,6 +13,7 @@
  * the wording of an answer, so they run offline on every `vitest`.
  */
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   resolveTask,
   normalizeTask,
@@ -28,6 +29,50 @@ import {
 } from '../src/services/taskModes.js';
 
 const blockFor = (task) => buildSituationBlock({ task, templateShape: 'SHAPE' });
+
+describe('the frontend vocabulary matches this one', () => {
+  // The client sends these names as `mode` on the wire. When the two lists drift
+  // the failure is silent and remote: the chip posts a situation the server has
+  // never heard of, normalizeTask returns null, and the request quietly falls
+  // back to diagnose — the candidate gets a defect audit instead of the answer
+  // they asked for, with nothing logged as wrong.
+  const SHARED_TYPES = new URL('../../camora/src/lib/lumora/task-modes.ts', import.meta.url);
+  const src = readFileSync(SHARED_TYPES, 'utf8');
+
+  const names = (s) => (s.match(/'([a-z]+)'/g) || []).map(x => x.replace(/'/g, ''));
+  const listIn = (re) => names(src.match(re)?.[1] ?? '');
+
+  it('names every utterance situation exactly as this registry does', () => {
+    // The ask half shares its names with the server verbatim — there are no
+    // aliases to hide a typo behind, so a mismatch here is a dead chip.
+    for (const t of UTTERANCE_TASKS) {
+      expect(src, `${t} missing from the frontend union`).toContain(`'${t}'`);
+    }
+  });
+
+  it('sends screen modes as the wire aliases the server maps back', () => {
+    // Asymmetry worth stating: the screen half crosses the wire under its OLD
+    // names (review→diagnose, complete→fill, solve→explore) because the client
+    // and server deploy independently, while the ask half is new on both sides
+    // and shares one vocabulary. Compare through normalizeTask, not by string.
+    // 'template' is deliberately absent: it is proven server-side by
+    // detectPlatformTemplate reading the code, never claimed by a client. A
+    // client that could ask for it would be asserting something only the
+    // server can observe.
+    const screen = listIn(/SCREEN_MODES[^=]*=\s*\[([^\]]*)\]/);
+    const clientReachable = SCREEN_TASKS.filter(t => t !== 'template');
+    expect(screen.map(normalizeTask).sort()).toEqual([...clientReachable].sort());
+  });
+
+  it('splits ask modes the same way', () => {
+    expect(listIn(/ASK_MODE_IDS[^=]*=\s*\[([^\]]*)\]/).sort()).toEqual([...UTTERANCE_TASKS].sort());
+  });
+
+  it('agrees on which situations leave the code untouched', () => {
+    const fn = src.match(/isAnswerOnlyMode[\s\S]*?;/)?.[0] ?? '';
+    expect(names(fn).map(normalizeTask).sort()).toEqual([...ANSWER_ONLY_TASKS].sort());
+  });
+});
 
 describe('registry shape', () => {
   it('splits every situation into exactly one of screen or utterance', () => {

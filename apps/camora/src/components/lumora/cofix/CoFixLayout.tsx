@@ -28,6 +28,7 @@ import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { snapRegion } from '@/lib/lumora/snapCapture';
 import { useSessionStore } from '@/stores/session-store';
+import type { ScreenMode, AskMode, TaskMode } from '@/lib/lumora/task-modes';
 
 const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -38,13 +39,31 @@ const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.
  *    complete — a skeleton/template whose body must be written.
  *    solve    — a problem statement with no code yet.
  *    explain  — working code the candidate wants described, not changed. */
-type TaskMode = 'review' | 'complete' | 'solve' | 'explain';
-
-const TASK_MODES: { id: TaskMode; label: string; tip: string }[] = [
+// Kept to exactly the four the screenshot extractor can return — this list also
+// validates its verdict, so an ask-mode leaking in here would let the extractor
+// claim a situation it has no way to observe.
+const TASK_MODES: { id: ScreenMode; label: string; tip: string }[] = [
   { id: 'review',   label: 'Review',   tip: 'Audit the code for faults — wrong operators, stray characters, indentation, calls to things that do not exist.' },
   { id: 'complete', label: 'Complete', tip: 'Fill in the missing body of this skeleton, keeping every existing line verbatim.' },
   { id: 'solve',    label: 'Solve',    tip: 'Write the solution from the problem statement.' },
   { id: 'explain',  label: 'Explain',  tip: 'Explain what this code does. Changes nothing.' },
+];
+
+/**
+ * The interviewer's question, as a chip. These are for the moment the code is
+ * already settled and the questions start — the half of an interview the tool
+ * used to have no answer for. Typing the question into the refine box routes to
+ * the same situations; these are the shortcut when there is no time to type.
+ */
+const ASK_MODES: { id: AskMode; label: string; tip: string }[] = [
+  { id: 'clarify',  label: 'Clarify',   tip: '"Any questions before you start?" — what to ask back, and what to assume if they say you choose.' },
+  { id: 'optimize', label: 'Do better', tip: '"Can we do better?" — names the bottleneck first, then the improvement and its new cost.' },
+  { id: 'justify',  label: 'Why this',  tip: '"Why a hash map and not a tree?" — both directions, plus the condition that flips the choice.' },
+  { id: 'extend',   label: 'What if',   tip: 'Scale, changed requirements, concurrency, production. Four parts, ending in the trade-off you accepted.' },
+  { id: 'edge',     label: 'Edge cases',tip: '"What breaks it?" — real inputs run against this code, ranked by severity.' },
+  { id: 'trace',    label: 'Dry run',   tip: '"Walk me through it" — step-by-step state, or a termination proof.' },
+  { id: 'refactor', label: 'Clean up',  tip: '"Make this cleaner" — same behaviour, better shape, with the principle named.' },
+  { id: 'hint',     label: 'Took hint', tip: 'They nudged you. Names what the hint points at, follows it, states the pivot.' },
 ];
 
 /** CoFix needs something in the code field even when solving from a bare
@@ -1919,6 +1938,33 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   disabled={isLoading}
                   data-tip={m.tip}
                   className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] font-mono transition-colors"
+                  style={taskMode === m.id
+                    ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)', borderRadius: 999 }
+                    : { color: 'var(--text-muted)', borderRadius: 999 }
+                  }
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Interviewer-question chips — the other half of an interview. These
+              appear once there is code to ask ABOUT, because every one of them
+              is a question about something already on screen. Visually separated
+              from the task-mode group above: those say what the screen holds,
+              these say what was just asked, and conflating them is what sent
+              "why a hash map?" down the solve path. */}
+          {inputCode.trim().length >= 5 && (
+            <div className="flex items-center gap-0.5 px-0.5 py-0.5 shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px dashed var(--border)', borderRadius: 999 }}>
+              <span className="px-1.5 text-[9px] font-bold uppercase tracking-[0.12em] font-mono select-none" style={{ color: 'var(--text-dimmed)' }}>Asked</span>
+              {ASK_MODES.map(m => (
+                <button
+                  key={m.id}
+                  onClick={() => { setTaskMode(m.id); handleFix(undefined, { mode: m.id }); }}
+                  disabled={isLoading}
+                  data-tip={m.tip}
+                  className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] font-mono transition-colors whitespace-nowrap"
                   style={taskMode === m.id
                     ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)', borderRadius: 999 }
                     : { color: 'var(--text-muted)', borderRadius: 999 }
