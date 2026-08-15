@@ -2263,7 +2263,9 @@ Return ONLY a JSON object (no markdown fences) with this exact structure:
       "badge": <sequential integer starting at 1>,
       "type": "fix" | "added",
       "label": "2-4 word label",
-      "note": "≤ 8 words — terse, what changed. No full sentences."
+      "note": "≤ 8 words — terse, what changed. No full sentences.",
+      "category": "DIAGNOSE ONLY — one of: boundary, null_type, state, error_handling, concurrency, resource, security, performance. Omit for every other situation.",
+      "breaks": "DIAGNOSE ONLY — the observable runtime failure, e.g. 'IndexError on the last iteration when len is even'. Omit for every other situation."
     }
   ],
   "complexity": {
