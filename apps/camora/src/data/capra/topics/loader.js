@@ -26,17 +26,17 @@ export const HEAVY_TOPIC_LOADERS = {
       import('./quickRefTopics.js'),
     ]);
     return {
-      // Quick References lead: they're syntax lookup you consult *while*
-      // working a pattern, so they sit above the pattern categories.
-      codingCategories: [quickRef.quickRefCategory, ...base.codingCategories],
+      // Quick References trail the pattern categories: patterns are the
+      // study path, the cheatsheets are lookup you dip into alongside them.
+      codingCategories: [...base.codingCategories, ...quickRef.quickRefCategories],
       codingCategoryMap: {
-        ...quickRef.quickRefCategoryMap,
         ...base.codingCategoryMap,
         ...extra.extraCodingCategoryMap,
+        ...quickRef.quickRefCategoryMap,
       },
       // Category headers in the DSA grid render on transition, so topics of
       // one category must stay contiguous in this array.
-      codingTopics: [...quickRef.quickRefTopics, ...base.codingTopics, ...extra.extraCodingTopics],
+      codingTopics: [...base.codingTopics, ...extra.extraCodingTopics, ...quickRef.quickRefTopics],
     };
   },
 
