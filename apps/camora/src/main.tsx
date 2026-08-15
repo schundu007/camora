@@ -39,6 +39,46 @@ if (typeof caches !== 'undefined') {
   caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
 }
 
+// Self-heal a stale client.
+//
+// The desktop shell and browsers both cache index.html. Chunk filenames are
+// content hashes, so a cached index.html keeps pointing at OLD chunks — which
+// are immutable and still served — and the user sits on a months-old UI while
+// every deploy succeeds and changes nothing they can see. Clearing the cache at
+// the shell level is racy (a window can load before the clear runs), so the app
+// checks for itself.
+//
+// version.json is emitted by the build next to index.html and fetched with
+// no-store, so it always reflects what is actually deployed.
+(function checkForStaleBuild() {
+  const RELOAD_FLAG = 'camora:stale-reload';
+  fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((v) => {
+      if (!v?.build || v.build === __BUILD_ID__) {
+        sessionStorage.removeItem(RELOAD_FLAG);
+        return;
+      }
+      // Reload AT MOST ONCE per session. If the reload does not resolve the
+      // mismatch — a CDN still serving stale HTML, a proxy, a broken build —
+      // looping would leave the user staring at a page that never finishes.
+      if (sessionStorage.getItem(RELOAD_FLAG)) {
+        console.warn(`[camora] still stale after reload: running ${__BUILD_ID__}, deployed ${v.build}`);
+        return;
+      }
+      sessionStorage.setItem(RELOAD_FLAG, '1');
+      console.warn(`[camora] stale build ${__BUILD_ID__} (deployed ${v.build}) — reloading`);
+      if (typeof caches !== 'undefined') {
+        caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+          .catch(() => {})
+          .finally(() => window.location.reload());
+      } else {
+        window.location.reload();
+      }
+    })
+    .catch(() => { /* offline or blocked — never block boot on this */ });
+})();
+
 // Tag the body when running inside the Electron desktop build so CSS can
 // add a drag region and exempt interactive elements without each component
 // having to detect Electron individually. macOS uses titleBarStyle:
