@@ -1,8 +1,24 @@
 import { defineConfig } from 'vite';
+import { execSync } from 'child_process';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
+// Stamped into the bundle so "did the deploy reach me?" is answerable by
+// looking at the screen instead of by grepping chunk hashes. A stale client
+// shows a stale stamp; that is the whole point.
+const BUILD_ID = (() => {
+  try {
+    const sha = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+    return `${sha}`;
+  } catch {
+    return 'dev';
+  }
+})();
+
 export default defineConfig({
+  define: {
+    __BUILD_ID__: JSON.stringify(BUILD_ID),
+  },
   plugins: [react()],
   resolve: {
     alias: {
