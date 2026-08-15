@@ -23,7 +23,24 @@ export default defineConfig({
   define: {
     __BUILD_ID__: JSON.stringify(BUILD_ID),
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      // Emits /version.json next to index.html. The running app fetches it
+      // uncached on boot and compares it to its own baked-in __BUILD_ID__, so a
+      // client pinned to stale HTML can detect that and reload itself. Without
+      // this, a cached index.html referencing old (immutable, still-served)
+      // chunks keeps a user on a months-old UI while every deploy succeeds.
+      name: 'camora-version-manifest',
+      generateBundle() {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'version.json',
+          source: JSON.stringify({ build: BUILD_ID }),
+        });
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
