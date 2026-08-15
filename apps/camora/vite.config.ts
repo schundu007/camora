@@ -7,11 +7,15 @@ import path from 'path';
 // looking at the screen instead of by grepping chunk hashes. A stale client
 // shows a stale stamp; that is the whole point.
 const BUILD_ID = (() => {
+  // Vercel's build container has no .git, so `git rev-parse` fails there and
+  // the stamp would read "dev" on the one build the user actually runs.
+  // VERCEL_GIT_COMMIT_SHA is injected for exactly this.
+  const fromCI = process.env.VERCEL_GIT_COMMIT_SHA;
+  if (fromCI) return fromCI.slice(0, 8);
   try {
-    const sha = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
-    return `${sha}`;
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
   } catch {
-    return 'dev';
+    return 'local';
   }
 })();
 
