@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { codingTopics } from '../../data/capra/topics/codingTopics';
+import { quickRefTopics } from '../../data/capra/topics/quickRefTopics';
 import { systemDesignTopics } from '../../data/capra/topics/systemDesignTopics';
 import { behavioralTopics } from '../../data/capra/topics/behavioralTopics';
 
@@ -37,7 +38,8 @@ const PAGES: SearchResult[] = [
 function buildItems(): SearchResult[] {
   const items: SearchResult[] = [];
 
-  for (const t of codingTopics as Array<{ id: string; title: string; icon: string; color: string }>) {
+  // Quick References live on the coding page, so they route the same way.
+  for (const t of [...quickRefTopics, ...codingTopics] as Array<{ id: string; title: string; icon: string; color: string }>) {
     items.push({
       id: `coding-${t.id}`,
       title: t.title,
