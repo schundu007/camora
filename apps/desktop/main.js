@@ -314,11 +314,34 @@ function saveWindowState(win) {
 const ZOOM_MIN = 0.6;
 const ZOOM_MAX = 2.0;
 const ZOOM_STEP = 0.1;
-const DEFAULT_ZOOM = 1;
+
+// The starting zoom for an install that has never set one.
+//
+// A zoom factor of 1 does NOT mean "the size this UI was designed at" — it
+// means 100% OF THE OS DISPLAY SCALE. macOS reports Retina as scaleFactor 2 and
+// leaves a CSS pixel the same physical size, so 1 is right there. Windows
+// laptops ship at 125-175% scaling, where a CSS pixel really is 1.25-1.75x
+// bigger, and the same page renders correspondingly larger. That is why the
+// desktop app kept reading as oversized on Windows while the web app, drawn at
+// 13.25px on a 100% Mac display, read as correct.
+//
+// So the Windows default divides the scaling back out, with a further 0.9 to
+// land on the compact end deliberately. Ctrl +/- adjusts from there and the
+// choice is remembered, so this only decides where a fresh install starts.
+function defaultZoom() {
+  if (process.platform !== 'win32') return 1;
+  try {
+    const scale = electronScreen.getPrimaryDisplay().scaleFactor || 1;
+    const z = Math.round((0.9 / scale) * 20) / 20; // nearest 0.05
+    return Math.min(1, Math.max(0.65, z));
+  } catch {
+    return 0.9;
+  }
+}
 
 function loadZoom() {
   const z = Number(loadWindowState().zoomFactor);
-  return Number.isFinite(z) && z >= ZOOM_MIN && z <= ZOOM_MAX ? z : DEFAULT_ZOOM;
+  return Number.isFinite(z) && z >= ZOOM_MIN && z <= ZOOM_MAX ? z : defaultZoom();
 }
 
 function saveZoom(factor) {
@@ -329,7 +352,7 @@ function saveZoom(factor) {
 }
 
 function setZoom(win, factor) {
-  if (!win || win.isDestroyed()) return DEFAULT_ZOOM;
+  if (!win || win.isDestroyed()) return defaultZoom();
   // Round to one decimal so repeated stepping can't drift to 1.0000000000000002
   // and so the value that lands in the state file is readable.
   const clamped = Math.round(Math.min(Math.max(factor, ZOOM_MIN), ZOOM_MAX) * 10) / 10;
@@ -356,7 +379,7 @@ function wireZoomControls(win) {
     if (!(input.control || input.meta)) return;
     const key = input.key;
     if (key === '0') {
-      setZoom(win, DEFAULT_ZOOM);
+      setZoom(win, defaultZoom());
     } else if (key === '=' || key === '+') {
       setZoom(win, wc.getZoomFactor() + ZOOM_STEP);
     } else if (key === '-' || key === '_') {
