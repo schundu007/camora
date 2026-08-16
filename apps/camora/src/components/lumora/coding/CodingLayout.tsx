@@ -392,8 +392,18 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   const [analysisCache, setAnalysisCache] = useState<Record<string, string>>({});
   const analysisCacheRef = useRef(analysisCache);
   useEffect(() => { analysisCacheRef.current = analysisCache; }, [analysisCache]);
-  const [analysisLoading, setAnalysisLoading] = useState<string | null>(null);
-  const analysisAbortRef = useRef<AbortController | null>(null);
+  // In-flight analyses, keyed `${solutionIdx}_${tab}`. A single abort slot was
+  // enough while these only ran on click; now that all three are prefetched,
+  // several stream at once and each needs its own controller — and the key set
+  // is what stops a click from firing a SECOND request for a cell that is
+  // already streaming in from the prefetch.
+  const analysisInFlightRef = useRef<Map<string, AbortController>>(new Map());
+  const [analysisInFlight, setAnalysisInFlight] = useState<string[]>([]);
+  const abortAllAnalysis = useCallback(() => {
+    for (const c of analysisInFlightRef.current.values()) c.abort();
+    analysisInFlightRef.current.clear();
+    setAnalysisInFlight([]);
+  }, []);
 
   useEffect(() => {
     const camo = (window as any).camo;
@@ -569,7 +579,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Analysis tabs — declared here (before the useEffect at ~line 666 that lists it
   // as a dependency) to prevent TDZ: Rolldown converts const to actual const, so the
   // deps-array reference must come AFTER the const is initialized.
-  const handleAnalysis = useCallback(async (tab: 'explain' | 'issues' | 'deepdive') => {
+  // `silent` is the prefetch path: generate into the cache without stealing the
+  // tab the user is looking at.
+  const runAnalysis = useCallback(async (tab: 'explain' | 'issues' | 'deepdive', opts?: { silent?: boolean }) => {
+    const silent = opts?.silent === true;
     const sd = jsonSolution;
     const solCode = sd?.solutions?.[activeSolutionIdx]?.code
       || sd?.solutions?.[0]?.code
@@ -577,12 +590,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       || code;
     if (!solCode?.trim() || !token) return;
     const cacheKey = `${activeSolutionIdx}_${tab}`;
-    if (analysisCacheRef.current[cacheKey]) { setAnalysisTab(tab); return; }
-    analysisAbortRef.current?.abort();
+    if (!silent) setAnalysisTab(tab);
+    // Already generated, or already streaming in from the prefetch — showing it
+    // is the whole job. Re-requesting would pay for the same answer twice and
+    // restart the text under the user's eyes.
+    if (analysisCacheRef.current[cacheKey] || analysisInFlightRef.current.has(cacheKey)) return;
     const abort = new AbortController();
-    analysisAbortRef.current = abort;
-    setAnalysisTab(tab);
-    setAnalysisLoading(tab);
+    analysisInFlightRef.current.set(cacheKey, abort);
+    setAnalysisInFlight(keys => [...keys, cacheKey]);
     const lang = resolveLanguage();
     // These three chips are read mid-interview, with 30–45 minutes on the clock
     // for the whole problem. An essay is worse than useless there — the user
@@ -669,11 +684,63 @@ ${solCode}
         }
       }
     } catch (err: any) {
-      if (err?.name !== 'AbortError') setAnalysisCache(prev => ({ ...prev, [cacheKey]: `Error: ${err.message}` }));
+      // A failed prefetch stays invisible — it leaves no cache entry, so the
+      // tab simply generates on click the way it always did. Writing the error
+      // in would show the user a failure for something they never asked for.
+      if (err?.name !== 'AbortError' && !silent) {
+        setAnalysisCache(prev => ({ ...prev, [cacheKey]: `Error: ${err.message}` }));
+      }
     } finally {
-      setAnalysisLoading(null);
+      analysisInFlightRef.current.delete(cacheKey);
+      setAnalysisInFlight(keys => keys.filter(k => k !== cacheKey));
     }
   }, [jsonSolution, activeSolutionIdx, code, token, resolveLanguage]);
+
+  const handleAnalysis = useCallback(
+    (tab: 'explain' | 'issues' | 'deepdive') => { void runAnalysis(tab); },
+    [runAnalysis],
+  );
+
+  // Prefetch. These three are what the user reaches for the moment the answer
+  // lands, and each cost a 3-5s wait at exactly the point they had none to
+  // spare. They are generated up front instead, one at a time so a solve does
+  // not fire four concurrent LLM streams, and only for the approach on screen —
+  // prefetching all three views of all three solutions would be nine calls for
+  // the two or three anyone reads.
+  //
+  // Held in a ref rather than a dep: runAnalysis closes over `code`, which
+  // changes on every keystroke in the editor, and a dep would restart the queue
+  // each time.
+  const runAnalysisRef = useRef(runAnalysis);
+  useEffect(() => { runAnalysisRef.current = runAnalysis; }, [runAnalysis]);
+  const prefetchedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!jsonSolution || isStreaming || isLoading || !token) return;
+    let cancelled = false;
+    // Let the answer paint first — the solution itself is what the user is
+    // reading in the first second, and it shares the connection.
+    const timer = setTimeout(async () => {
+      for (const tab of ['explain', 'issues', 'deepdive'] as const) {
+        if (cancelled) return;
+        const key = `${activeSolutionIdx}_${tab}`;
+        if (prefetchedRef.current.has(key)) continue;
+        prefetchedRef.current.add(key);
+        await runAnalysisRef.current(tab, { silent: true });
+      }
+    }, 600);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [jsonSolution, activeSolutionIdx, isStreaming, isLoading, token]);
+
+  // Emptying the cache is no longer enough on its own: a prefetch still in
+  // flight would finish and write the OLD problem's analysis into the new
+  // problem's cell, which is keyed by index and looks legitimate.
+  const resetAnalysis = useCallback(() => {
+    abortAllAnalysis();
+    prefetchedRef.current.clear();
+    setAnalysisCache({});
+    setAnalysisTab('code');
+  }, [abortAllAnalysis]);
 
   // Restore last coding answer from sessionStorage on mount (refresh or chip-switch back).
   // Intentionally runs even when initialProblem is set — if the user refreshes a
@@ -704,11 +771,10 @@ ${solCode}
   const handleRegenerate = useCallback(() => {
     const text = problemText.trim();
     if (!text || isLoading || isStreaming) return;
-    setAnalysisCache({});
-    setAnalysisTab('code');
+    resetAnalysis();
     lastAutoGenSigRef.current = genSignature(text); // explicit regenerate — bypass dedup, refresh signature
     onSubmit(text, resolveLanguage(text), { ...(effectiveStarterCode ? { starterCode: effectiveStarterCode } : {}) });
-  }, [problemText, language, effectiveStarterCode, isLoading, isStreaming, onSubmit, resolveLanguage]);
+  }, [problemText, language, effectiveStarterCode, isLoading, isStreaming, onSubmit, resolveLanguage, resetAnalysis]);
 
   // Auto-switch to the Solution tab when a stream error fires. The
   // error card lives in the Solution tab — without this, a user who
@@ -751,13 +817,11 @@ ${solCode}
     setParsedBlocks([]);
     setLastFromCache(null);
     setSnapChipCode(null);
-    analysisAbortRef.current?.abort();
-    setAnalysisCache({});
-    setAnalysisTab('code');
+    resetAnalysis();
     useSessionStore.getState().setLiveSolveContext(null);
     lastAutoGenSigRef.current = ''; // clear dedup so re-entering the same problem solves again
     onNewProblemCallback?.();
-  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language, onNewProblemCallback]);
+  }, [clearStreamChunks, setParsedBlocks, setStreamError, setLastFromCache, language, onNewProblemCallback, resetAnalysis]);
 
   // ── Timer Logic ──────────────────────────────────────────────────────────
 
@@ -1635,8 +1699,7 @@ ${solCode}
     clearStreamChunks();
     setParsedBlocks([]);
     setJsonSolution(null);
-    setAnalysisCache({});
-    setAnalysisTab('code');
+    resetAnalysis();
     const effectiveLang = language === 'auto' ? detectLanguage(problemText) : language;
     setCode(getDefaultCode(effectiveLang));
     setActiveSolutionIdx(0);
@@ -2926,7 +2989,10 @@ ${solCode}
 
                     {ANALYSIS_VIEWS.map(view => {
                       const active = analysisTab === view.id;
-                      const loading = analysisLoading === view.id;
+                      // Prefetching counts as loading: the spinner is what says
+                      // "this is coming", and it is the honest state whether the
+                      // request was fired by a click or by the prefetch queue.
+                      const loading = analysisInFlight.includes(`${activeSolutionIdx}_${view.id}`);
                       const ready = !loading && view.id !== 'code' && !!analysisCache[`${activeSolutionIdx}_${view.id}`];
                       return (
                         <button
@@ -3005,7 +3071,7 @@ ${solCode}
                           {({ explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' } as Record<string, string>)[analysisTab]}
                         </span>
                       </div>
-                      {analysisLoading === analysisTab && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
+                      {analysisInFlight.includes(`${activeSolutionIdx}_${analysisTab}`) && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
                     </div>
                     {/* Content */}
                     <div className="p-4" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', fontSize: 12 }}>
