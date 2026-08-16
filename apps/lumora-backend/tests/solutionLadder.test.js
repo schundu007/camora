@@ -114,6 +114,31 @@ describe('the ladder is actually requested', () => {
     expect(withStarter).toMatch(/Do not vary the harness between solutions/);
   });
 
+  // Reported live: a bare paste — a class with no problem statement, no I/O
+  // format and no starter code — came back with ONE solution. RULE #2.7 fires
+  // in exactly that situation, is labelled HIGHEST PRIORITY, and said "ONE
+  // algorithm. Never two algorithms in one file... pick the one you would
+  // submit and describe the others in tradeoffs". It meant one algorithm per
+  // FILE; it read as one solution per RESPONSE, and it outranked the schema.
+  it('keeps the ladder when the I/O contract is unknown', () => {
+    const ioUnknown = buildCodingSystemPrompt('python', undefined, undefined, false, 'unknown', null);
+    expect(ioUnknown).toMatch(/I\/O CONTRACT UNKNOWN/);
+    expect(ioUnknown).toMatch(/EXACTLY 3 SOLUTIONS REQUIRED/);
+    // and the per-file rule can no longer be read as a per-response one
+    expect(ioUnknown).toMatch(/ONE algorithm PER SOLUTION/);
+    expect(ioUnknown).toMatch(/says nothing about HOW\n  MANY solutions you return/);
+    expect(ioUnknown).not.toMatch(/pick the one you would submit and describe the others/);
+  });
+
+  it('offers a tag for problems that are data structures, not algorithms', () => {
+    // Every approach to a HitCounter/LRU-style problem wants the same tag from
+    // an algorithm-only vocabulary, and dedupeSolutions drops same-tag entries
+    // — so a design problem could collapse to a single approach on tags alone.
+    expect(plain).toMatch(/Circular Buffer/);
+    expect(plain).toMatch(/Deque/);
+    expect(plain).toMatch(/Design/);
+  });
+
   it('still collapses to one when the client explicitly asks for one', () => {
     const single = buildCodingSystemPrompt('python', undefined, 'def solve(n):\n    pass', true, null, null);
     expect(single).toMatch(/EXACTLY 1 SOLUTION REQUIRED/);

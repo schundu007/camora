@@ -120,7 +120,11 @@ describe('buildCodingSystemPrompt — RULE #2.7 (unknown I/O contract)', () => {
   it('forbids drivers and invented labels when unknown', () => {
     const p = unknown();
     expect(p).toContain('NO input(), NO sys.stdin, NO print()');
-    expect(p).toContain('ONE algorithm. Never two algorithms in one file.');
+    // Per FILE, not per response. Read as per-response it outranked the schema
+    // — the rule is HIGHEST PRIORITY — and a bare paste came back with one
+    // solution instead of the ladder.
+    expect(p).toContain('ONE algorithm PER SOLUTION. Never two algorithms in one file');
+    expect(p).toContain('the required count above still holds in full');
     // /solve's schema has no hackerrank_compatible field — that belongs to /cofix.
     // RULE #2.7 must not instruct the model to emit a key the schema never declares.
     expect(p).not.toContain('hackerrank_compatible');
