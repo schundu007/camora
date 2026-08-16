@@ -57,6 +57,26 @@ describe('AnswerBook', () => {
       expect(container.querySelector('section')).not.toHaveClass('lumora-book-span');
     });
 
+    // Follow-up Q&A is a kv block like Complexity, so block kind alone cannot
+    // tell them apart — it spans by section id. Left in a column it rendered as
+    // a tall narrow ribbon with the neighbouring cell empty, because it is also
+    // the last section.
+    it('spans follow-up Q&A, whose kv values are spoken answers not tokens', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'followup', heading: 'Follow-up Q&A', blocks: [
+          { kind: 'kv', pairs: [['What if the text is huge?', 'I would switch to KMP.']], layout: 'rows' },
+        ]},
+      ] }} />);
+      expect(container.querySelector('section')).toHaveClass('lumora-book-span');
+    });
+
+    it('leaves the complexity kv in a column', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
+      ] }} />);
+      expect(container.querySelector('section')).not.toHaveClass('lumora-book-span');
+    });
+
     it('columns the trace and walkthrough — they are the longest sections', () => {
       // Exempting these would have surrendered most of the vertical saving.
       const trace = render(<AnswerBook doc={withBlock({ kind: 'trace', rows: [{ step: 1, action: 'a', state: 's' }] })} />);
