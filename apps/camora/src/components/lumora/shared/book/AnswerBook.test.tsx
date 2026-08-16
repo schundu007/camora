@@ -43,8 +43,14 @@ describe('AnswerBook', () => {
   // that rots silently: add a new wide block kind, forget WIDE_BLOCKS, and its
   // section quietly renders at half width in production only.
   describe('column spanning', () => {
+    // The section under test comes FIRST and a filler follows it, so the two
+    // fill a row. Without the filler every one of these docs would span for the
+    // uninteresting reason — a lone cell is an orphan — and the block-kind rule
+    // these tests exist to guard would go unchecked.
+    const filler: BookDoc['sections'][0] =
+      { id: 'problem', heading: 'Problem', blocks: [{ kind: 'prose', text: 'filler' }] };
     const withBlock = (block: BookDoc['sections'][0]['blocks'][0]): BookDoc => ({
-      sections: [{ id: 's', heading: 'S', blocks: [block] }],
+      sections: [{ id: 's', heading: 'S', blocks: [block] }, filler],
     });
 
     it('spans a section containing code across both columns', () => {
@@ -66,6 +72,7 @@ describe('AnswerBook', () => {
         { id: 'followup', heading: 'Follow-up Q&A', blocks: [
           { kind: 'kv', pairs: [['What if the text is huge?', 'I would switch to KMP.']], layout: 'rows' },
         ]},
+        filler,
       ] }} />);
       expect(container.querySelector('section')).toHaveClass('lumora-book-span');
     });
@@ -96,8 +103,48 @@ describe('AnswerBook', () => {
     it('leaves the complexity kv in a column', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
         { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
+        filler,
       ] }} />);
-      expect(container.querySelector('section')).not.toHaveClass('lumora-book-span');
+      expect(container.querySelector('.lumora-book-stack')).not.toHaveClass('lumora-book-span');
+    });
+
+    // Edge cases was the section people saw it on: Follow-up Q&A spans, so it
+    // cannot share Edge cases' row and pushes down, leaving Edge cases pinned
+    // to the left column with dead space beside it.
+    it('widens a section stranded alone on its row by the span that follows', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+        { id: 'tradeoffs', heading: 'Tradeoffs', blocks: [{ kind: 'list', items: ['a'] }] },
+        { id: 'edgecases', heading: 'Edge cases', blocks: [{ kind: 'list', items: ['empty input'] }] },
+        { id: 'followup', heading: 'Follow-up Q&A', blocks: [{ kind: 'kv', pairs: [['q', 'a']], layout: 'rows' }] },
+      ] }} />);
+      const spanned = [...container.querySelectorAll('.lumora-book-span h2')].map(h => h.textContent);
+      expect(spanned).toEqual(['Edge cases', 'Follow-up Q&A']);
+    });
+
+    it('widens a trailing section with no partner', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+        { id: 'tradeoffs', heading: 'Tradeoffs', blocks: [{ kind: 'list', items: ['a'] }] },
+        { id: 'edgecases', heading: 'Edge cases', blocks: [{ kind: 'list', items: ['empty input'] }] },
+      ] }} />);
+      const spanned = [...container.querySelectorAll('.lumora-book-span h2')].map(h => h.textContent);
+      expect(spanned).toEqual(['Edge cases']);
+    });
+
+    it('widens the stacked pair when it is the row\'s only cell', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
+      ] }} />);
+      expect(container.querySelector('.lumora-book-stack')).toHaveClass('lumora-book-span');
+    });
+
+    it('leaves paired cells alone', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+        { id: 'tradeoffs', heading: 'Tradeoffs', blocks: [{ kind: 'list', items: ['a'] }] },
+      ] }} />);
+      expect(container.querySelectorAll('.lumora-book-span')).toHaveLength(0);
     });
 
     it('columns the trace and walkthrough — they are the longest sections', () => {

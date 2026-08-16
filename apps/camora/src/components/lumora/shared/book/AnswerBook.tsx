@@ -193,12 +193,38 @@ const isWideSection = (id: string, blocks: BookBlock[]) =>
 // it — a single column, two rows, in this order.
 const STACKED_SECTION_IDS = ['complexity', 'walkthrough'];
 
+// A cell left alone on its row reads as a mistake: half the width filled, the
+// rest dead space beside it. The grid produces those on its own — a full-width
+// item (Code, Follow-up Q&A) cannot share a row, so it starts a new one and
+// strands whatever preceded it. Edge cases is the usual victim, sitting in the
+// left column with Follow-up Q&A pushed below, but the hole belongs to the
+// POSITION, not the section: fix it by id and the next section to land there
+// inherits the bug.
+//
+// So: walk the cells in placement order, tracking whether the current row has
+// one occupant, and widen any cell that turns out to be its row's only one.
+// Widening an orphan cannot re-rag the rows — it was already alone on that row.
+export const withOrphanSpans = (spans: boolean[]): boolean[] => {
+  const out = [...spans];
+  let pending = -1; // index of a lone cell on the current row, or -1
+  for (let i = 0; i < out.length; i++) {
+    if (out[i]) {
+      // Full-width: it takes its own row, so anything pending is stranded.
+      if (pending >= 0) out[pending] = true;
+      pending = -1;
+    } else if (pending < 0) {
+      pending = i;
+    } else {
+      pending = -1; // row filled
+    }
+  }
+  if (pending >= 0) out[pending] = true; // trailing odd cell
+  return out;
+};
+
 export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
-  const renderSection = (section: BookDoc['sections'][number]) => (
-    <section
-      key={section.id}
-      className={isWideSection(section.id, section.blocks) ? 'lumora-book-span' : undefined}
-    >
+  const renderSection = (section: BookDoc['sections'][number], className?: string) => (
+    <section key={section.id} className={className}>
       <h2 className="lumora-book-section">{section.heading}</h2>
       {section.blocks.map((block, i) => (
         <Block key={i} block={block} onLineHover={onLineHover} onLineClick={onLineClick} />
@@ -213,26 +239,40 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
   const stacked = doc.sections.filter(s => STACKED_SECTION_IDS.includes(s.id));
   const stackAnchor = doc.sections.findIndex(s => STACKED_SECTION_IDS.includes(s.id));
 
+  // One entry per grid cell, in placement order — the stacked pair collapses to
+  // a single cell. Spans are decided over this list, not over doc.sections,
+  // because the grid only ever sees cells.
+  const cells = doc.sections
+    .map((section, i) => {
+      if (!STACKED_SECTION_IDS.includes(section.id)) return { section, stack: false };
+      return i === stackAnchor ? { section, stack: true } : null;
+    })
+    .filter(Boolean) as { section: BookDoc['sections'][number]; stack: boolean }[];
+
+  const spans = withOrphanSpans(
+    cells.map(c => !c.stack && isWideSection(c.section.id, c.section.blocks)),
+  );
+
   return (
     <div className="lumora-book">
       {doc.title && <h1 className="lumora-book-section" style={{ marginTop: 0 }}>{doc.title}</h1>}
       {/* Two-column at width, one column when the panel is dragged narrow — a
           container query, not a media query, because this panel is resizable and
           its width has no fixed relationship to the viewport's. */}
-      {doc.sections.length > 0 && (
+      {cells.length > 0 && (
         <div className="lumora-book-grid">
-          {doc.sections.map((section, i) => {
-            if (STACKED_SECTION_IDS.includes(section.id)) {
-              // Emitted once, at the first member's position; the rest are
-              // rendered inside that wrapper rather than as their own cells.
-              if (i !== stackAnchor) return null;
+          {cells.map(({ section, stack }, i) => {
+            const span = spans[i] ? 'lumora-book-span' : undefined;
+            // The stacked pair is emitted once, at the first member's position;
+            // the other member renders inside that wrapper, not as its own cell.
+            if (stack) {
               return (
-                <div key="stack" className="lumora-book-stack">
-                  {stacked.map(renderSection)}
+                <div key="stack" className={`lumora-book-stack${span ? ` ${span}` : ''}`}>
+                  {stacked.map(s => renderSection(s))}
                 </div>
               );
             }
-            return renderSection(section);
+            return renderSection(section, span);
           })}
         </div>
       )}
