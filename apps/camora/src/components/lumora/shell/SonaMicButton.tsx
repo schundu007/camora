@@ -222,10 +222,12 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger,
   const aboutToTimeout = isRecording && remainingSecs <= 10;
   const hasSpeech = !!speechStartRef.current;
 
+  // The ` shortcut is surfaced in the label so the button teaches it — the
+  // whole point of the hotkey is not having to find this button mid-interview.
   const ariaLabel =
-    isRecording ? `Stop recording (${elapsedLabel})`
+    isRecording ? `Stop recording (${elapsedLabel}) — or press \``
     : isBusy ? 'Transcribing audio'
-    : 'Record voice question';
+    : 'Record voice question (press ` to toggle)';
 
   // Auto mode: compact status indicator, no clickable button
   if (autoMode) {

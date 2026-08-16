@@ -108,6 +108,12 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
   // Persist history to localStorage on every change
   useEffect(() => { saveHistory(surface, messages); }, [surface, messages]);
 
+  // Mirror of `messages` for send(). send is a useCallback that must not
+  // re-create on every token, so it reads the transcript through a ref rather
+  // than closing over state that would be stale by the time it runs.
+  const messagesRef = useRef(messages);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
   // Focus input when the sidebar opens
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 80);
@@ -169,6 +175,13 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
         token,
         useSearch: false,
         systemContext: buildContext(),
+        // Prior turns of this sidebar thread. The backend opens a fresh
+        // conversation per request, so without this a follow-up ("can you add
+        // more test cases?") arrives with no memory of what came before and
+        // Sona answers as though the chat just started.
+        history: messagesRef.current
+          .filter(m => m.text.trim())
+          .map(m => ({ role: m.role === 'ai' ? ('assistant' as const) : ('user' as const), content: m.text })),
         mode: 'coding',
         // Coding-playground context defaults design questions to the
         // application archetype (LLD / OOP). The classifier still
@@ -235,14 +248,37 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(input); }
   }, [input, send]);
 
-  // Cmd+M toggles mic when sidebar is open
+  // Mic toggle: Cmd/Ctrl+M anywhere, or a bare ` (backquote) — the one-key
+  // toggle, since reaching for the mic button mid-interview is the thing that
+  // actually costs time.
+  //
+  // ` is a printable character, so it only toggles when it would not have
+  // produced text the user wanted: from the composer it toggles ONLY while the
+  // composer is empty (start typing a backtick-quoted snippet and it types
+  // normally), and it is ignored entirely inside any other editable surface
+  // (Monaco, the problem textarea).
   useEffect(() => {
     if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'm' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setMicToggleTrigger(n => n + 1);
+        return;
       }
+      if (e.code !== 'Backquote' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el === inputRef.current) {
+        if (inputRef.current?.value) return; // mid-sentence backtick — let it type
+      } else if (
+        el?.isContentEditable ||
+        el?.tagName === 'INPUT' ||
+        el?.tagName === 'TEXTAREA' ||
+        el?.closest?.('.monaco-editor')
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setMicToggleTrigger(n => n + 1);
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
@@ -290,6 +326,10 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
 
   return (
     <aside
+      // Tagged so AudioCapture's global Backquote shortcut yields the key when
+      // it is pressed inside this sidebar — ` drives Sona's mic here and the
+      // interview mic everywhere else.
+      data-sona-sidebar
       className="shrink-0 flex flex-col border-l overflow-hidden relative"
       style={{
         width: open ? sidebarWidth : 0,

@@ -23,6 +23,12 @@ import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
 
 const router = Router();
 
+// Client-supplied conversation tail passed to the model on /stream. 8 turns is
+// ~4 exchanges — enough for "what about X?" to resolve, short enough that a
+// long Sona session doesn't quietly double the cost of every question.
+const HISTORY_TURNS = 8;
+const HISTORY_CHARS_PER_TURN = 4000;
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -322,7 +328,7 @@ router.post('/conversations/:conversationId/stream', authenticate, checkUsage('q
 // POST /stream — stream (auto-creates conversation)
 // ---------------------------------------------------------------------------
 router.post('/stream', authenticate, checkUsage('questions'), async (req, res) => {
-  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null, pinned_intro: pinnedIntro = null, images: rawImages = null } = req.body;
+  let { question, use_search: useSearch = false, system_context: systemContext, detail_level: detailLevel, cloud_provider: cloudProvider = 'aws', bypass_cache: bypassCache, mode = 'general', design_kind: designKind = null, response_format: responseFormat = null, model: preferredModel = null, pinned_intro: pinnedIntro = null, images: rawImages = null, history: rawHistory = null } = req.body;
   if (!isValidMode(mode)) mode = 'general';
   const user = req.user;
 
@@ -335,6 +341,19 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
   // same text — without this the second screenshot replays the first's answer.
   const images = await normalizeImages(rawImages);
   if (images.length > 0) bypassCache = true;
+
+  // Prior turns of THIS chat thread. Each /stream request opens a brand-new
+  // lumora_conversations row, so there is no server-side thread to read back —
+  // every question arrived at the model as turn 1 and follow-ups ("what about
+  // duplicates?", "did you read the answer above?") were answered cold. The
+  // client owns the transcript, so it sends the tail of it here. Sanitized and
+  // capped: untrusted input, and history is billed on every request.
+  const history = Array.isArray(rawHistory)
+    ? rawHistory
+      .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+      .slice(-HISTORY_TURNS)
+      .map(m => ({ role: m.role, content: m.content.slice(0, HISTORY_CHARS_PER_TURN) }))
+    : [];
 
   if (!question || typeof question !== 'string') {
     return res.status(400).json({ error: 'question is required' });
@@ -436,6 +455,9 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       route: 'stream',
       cloudProvider: cloudProvider || null,
       systemContext: systemContext || null,
+      // Without this, "what about duplicates?" asked in two different threads
+      // hashes identically and the second one replays the first thread's answer.
+      history,
     });
     const cached = bypassCache ? null : await cacheGet(cacheKey);
     if (bypassCache) {
@@ -556,11 +578,13 @@ router.post('/stream', authenticate, checkUsage('questions'), async (req, res) =
       console.info(`[inference] auto-enabling web search (low-confidence retrieval)`);
     }
 
-    // Stream tokens (empty history for new conversation).
+    // Stream tokens with the client-supplied conversation tail (empty on the
+    // first question of a thread) so follow-ups continue the exchange instead
+    // of restarting it.
     // Pass abortController.signal so the upstream call halts when the
     // client disconnects — without this, navigating away mid-answer
     // keeps tokens billing to completion.
-    for await (const evt of streamResponseGemini(question, [], {
+    for await (const evt of streamResponseGemini(question, history, {
       useSearch: effectiveUseSearch,
       resumeContext: user.resume_text || null,
       technicalContext: user.technical_context || null,

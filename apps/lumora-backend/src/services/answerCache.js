@@ -112,6 +112,12 @@ export function buildAnswerCacheKey(parts) {
     // brute→optimized→optimal ladder are different artifacts for the same
     // question, so they cannot share a slot.
     sn: parts.solutionCount || null,
+    // Conversation tail. A follow-up's text ("what about duplicates?") is
+    // meaningless without the turns before it, so two threads asking the same
+    // words expect different answers and must not share a slot.
+    hh: Array.isArray(parts.history) && parts.history.length
+      ? crypto.createHash('sha1').update(JSON.stringify(parts.history)).digest('hex').slice(0, 12)
+      : null,
   });
   const h = crypto.createHash('sha256').update(normalized).digest('hex');
   // v10: CLOUD_FORBIDDEN enforcement added (2026-06-26) — invalidates stale v9 entries with wrong provider services.
@@ -125,7 +131,10 @@ export function buildAnswerCacheKey(parts) {
   // interviewer follow-up block (2026-08-14). Every v12 coding answer holds a
   // single solution and no followups, so replaying one would serve the old
   // behaviour for up to 30 days after the deploy.
-  return `lumora:answer:v13:${h}`;
+  // v14: the coding system prompt now carries the caller's session context
+  // (2026-08-16) — v13 coding answers were generated blind to the on-screen
+  // problem, so replaying one serves an ungrounded answer for up to 30 days.
+  return `lumora:answer:v14:${h}`;
 }
 
 async function cacheGetFromDb(key) {

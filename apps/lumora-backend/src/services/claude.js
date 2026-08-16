@@ -414,6 +414,35 @@ RULES:
 - Always include all sections above`;
 }
 
+/**
+ * Wrap the caller-assembled systemContext for the CODING prompt path.
+ *
+ * Every other branch (general / design / pitch) feeds systemContext to the
+ * model through `resume`. The coding branches never read `resume`, so the
+ * "CURRENT CODING SESSION" block that CodingSonaSidebar appends — the
+ * on-screen problem, code and complexity — was built, shipped, and silently
+ * dropped. Sona then answered follow-ups blind to the problem on screen.
+ *
+ * Trim is tail-biased: the live-session block is appended LAST by the client,
+ * so an oversized context loses its middle, never the problem being asked about.
+ *
+ * @param {string|null} systemContext
+ * @returns {string} block to append to the coding system prompt ('' when empty)
+ */
+function buildSessionContextBlock(systemContext) {
+  if (!systemContext) return '';
+  const MAX = 14000;
+  const ctx = systemContext.length <= MAX
+    ? systemContext
+    : `${systemContext.slice(0, 5000)}\n\n…[context trimmed]…\n\n${systemContext.slice(-9000)}`;
+  return `
+
+=== SESSION CONTEXT ===
+${ctx}
+=== END SESSION CONTEXT ===
+When this context contains a CURRENT CODING SESSION block, the user's question is a follow-up about THAT problem and THAT code. Answer against it directly — never restate a generic version of the problem, and never invent a different one. If earlier turns are present above, continue that conversation; do not start over.`;
+}
+
 const CODING_SYSTEM_PROMPT = `You ARE the candidate in a LIVE coding interview happening right now. Speak AS the candidate so the candidate can read your output aloud verbatim.
 
 VOICE — NON-NEGOTIABLE:
@@ -759,7 +788,7 @@ summary section. Depth means fuller lines inside the same skeleton.`;
     const codingResumeBlock = resumeContext
       ? `\n\n=== CANDIDATE BACKGROUND ===\n${resumeContext.slice(0, 3000)}\nThread named projects and metrics into examples where relevant.`
       : '';
-    systemPrompt = codingGrounding + CODING_SYSTEM_PROMPT + `
+    systemPrompt = codingGrounding + CODING_SYSTEM_PROMPT + buildSessionContextBlock(systemContext) + `
 
 IMPORTANT CODE FORMATTING RULE:
 - ALL code MUST be wrapped in triple backtick code blocks with language identifier.
@@ -912,4 +941,4 @@ For technical questions, map STAR to the technical context (Situation = the prob
   }
 }
 
-export { MODEL, selectModel, getAnthropicClient, isDesignQuestion, isCodingQuestion, buildGeneralPrompt, CODING_SYSTEM_PROMPT, getDefaultResumeContext, getDefaultTechnicalContext };
+export { MODEL, selectModel, getAnthropicClient, isDesignQuestion, isCodingQuestion, buildGeneralPrompt, CODING_SYSTEM_PROMPT, buildSessionContextBlock, getDefaultResumeContext, getDefaultTechnicalContext };

@@ -423,6 +423,10 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // approach, tradeoffs, the 3-column dry-run trace table, walkthrough —
   // isn't cramped; users can still drag it to 25–70%.
   const [leftPanelWidth, setLeftPanelWidth] = useState(40);
+  // The split auto-fits to the code's longest line until the user drags it —
+  // after that their choice sticks for the rest of the session.
+  const splitRowRef = useRef<HTMLDivElement>(null);
+  const userSizedSplitRef = useRef(false);
   // null = AUTO-FIT: the output panel grows to show its full content (no internal
   // top-to-bottom scroll) up to a 75vh cap. A manual drag sets a fixed px height.
   const [outputPanelHeight, setOutputPanelHeight] = useState<number | null>(null);
@@ -550,10 +554,60 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     setAnalysisTab(tab);
     setAnalysisLoading(tab);
     const lang = resolveLanguage();
+    // These three chips are read mid-interview, with 30–45 minutes on the clock
+    // for the whole problem. An essay is worse than useless there — the user
+    // can't skim it, can't say it, and loses the room while reading. Every
+    // prompt below is budgeted in SPEAKING TIME, which constrains the model far
+    // more reliably than "be concise", and asks for the candidate's own voice
+    // so the text can be said out loud verbatim.
+    const VOICE = `You are feeding a candidate lines during a live coding interview. They have 30-45 minutes for the whole problem and are reading this while the interviewer watches.
+
+Rules:
+- Write what the candidate SAYS, first person, plain spoken English. Not documentation.
+- No headings, no preamble, no "This function...", no restating the code back.
+- Short sentences. A sentence they can't say in one breath is too long.
+- Cut anything the interviewer already knows from reading the code.`;
     const prompts: Record<string, string> = {
-      explain: `Analyze this ${lang} solution and provide:\n1. One sentence summary of what it does.\n2. Step-by-step numbered walkthrough of the algorithm.\n3. The key insight that makes this approach work.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
-      issues: `Review this ${lang} code and list all bugs, edge cases, and quality issues. For each issue:\n- Severity: CRITICAL / HIGH / MEDIUM / LOW\n- Location: line or function name\n- Problem: what is wrong\n- Fix: corrected code snippet\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
-      deepdive: `Generate 3 deep-dive questions about this ${lang} solution. For each question provide a thorough answer. Focus on: why this approach, edge cases, and how to extend it.\n\nCode:\n\`\`\`${lang}\n${solCode}\n\`\`\``,
+      // ~45 seconds of talking — the answer to "walk me through your solution".
+      explain: `${VOICE}
+
+The interviewer just said "walk me through your solution." Give the answer, out loud, in under 45 seconds of speech (about 100 words):
+- One line on the core idea — the trick, not the restatement.
+- 3-4 short beats of how it runs, in order.
+- One line on time and space complexity, with the reason in half a sentence.
+
+Nothing else. No numbered walkthrough of every line.
+
+\`\`\`${lang}
+${solCode}
+\`\`\``,
+      // Only what a real interviewer would stop them on. Ranked, one line each.
+      issues: `${VOICE}
+
+List only what THIS interviewer would actually stop and ask about. At most 4, worst first. Skip style, naming, and anything that isn't a real risk — an empty-ish list is a fine answer if the code is sound.
+
+One line each, exactly this shape:
+CRITICAL|HIGH|MEDIUM — <where> — <what breaks, and the input that breaks it> → <the fix, in a few words>
+
+Only add a code snippet if the fix is a single line. No explanations under the lines.
+
+\`\`\`${lang}
+${solCode}
+\`\`\``,
+      // The follow-ups that are actually coming, with sayable answers.
+      deepdive: `${VOICE}
+
+Name the 3 follow-up questions this interviewer is most likely to ask next about this solution — the ones that actually get asked, not trivia. For each, give the spoken answer in 2-3 sentences the candidate can say as-is (~25 seconds each).
+
+Format each as:
+Q: <the question, as they'd ask it>
+<the spoken answer>
+
+Lead with the answer, not the setup. No essays, no bullet lists inside the answers.
+
+\`\`\`${lang}
+${solCode}
+\`\`\``,
     };
     let accumulated = '';
     try {
@@ -707,6 +761,43 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
   const timerPercent = timerDuration > 0 ? (timerSeconds / timerDuration) * 100 : 0;
   const timerUrgent = timerDuration > 0 && timerSeconds < 300 && timerSeconds > 0; // < 5 min
+
+  // ── Auto-fit: editor column width follows the code, not a fixed ratio ────
+  // Monaco runs with wordWrap:'off', so the editor never needs more width than
+  // its longest line. Everything past that is dead space while the solution
+  // panel — dense prose, a 3-column dry-run table, follow-up Q&A — is starved.
+  // Measure the code, give the editor what it needs, hand the rest to the left.
+  const codeMaxLineLen = useMemo(
+    () => code.split('\n').reduce((m, l) => (l.length > m ? l.length : m), 0),
+    [code],
+  );
+
+  useEffect(() => {
+    if (userSizedSplitRef.current) return;
+    const fit = () => {
+      const total = splitRowRef.current?.clientWidth ?? 0;
+      if (total < 900) return; // stacked or narrow — the CSS floor governs
+      // 11px IBM Plex Mono ≈ 6.6px/char, + line-number gutter, padding, scrollbar.
+      // Floor of 430px keeps the editor toolbar (Lang / Run / → CoFix) on one row.
+      const wanted = Math.min(Math.max(codeMaxLineLen * 6.6 + 96, 430), total * 0.5);
+      const next = Math.min(Math.max(100 - (wanted / total) * 100, 40), 65);
+      setLeftPanelWidth((prev) => (Math.abs(prev - next) < 0.5 ? prev : next));
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, [codeMaxLineLen]);
+
+  // Editor height tracks its line count so the leftover vertical space goes to
+  // the test/output panel instead of becoming blank canvas under the last line
+  // (scrollBeyondLastLine is off, so line count × lineHeight is exact).
+  const editorContentH = useMemo(
+    () => code.split('\n').length * 19 + 26, // 19px lineHeight + padding/h-scrollbar
+    [code],
+  );
+  // Auto-fit is off while the output panel is collapsed (editor should fill) or
+  // once the user has dragged the vertical handle to a height of their own.
+  const autoFitEditorHeight = !isOutputCollapsed && outputPanelHeight == null;
 
   // ── Resize Handlers ──────────────────────────────────────────────────────
 
@@ -2435,7 +2526,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       )}
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <div ref={splitRowRef} className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
         {/* ── LEFT PANEL: Problem / Solution ── */}
         <div className={`w-full md:w-auto flex flex-col min-w-0 md:border-r border-b md:border-b-0 coding-left-panel max-h-[45dvh] md:max-h-none overflow-auto ${embedded ? 'border-[var(--border)]' : 'lumora-light-panel'}`} style={{ ['--left-w' as any]: `${leftPanelWidth}%`, background: t.surfaceBg, borderColor: t.cardBorder }}>
@@ -3107,7 +3198,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
         </div>
 
         {/* ── Horizontal Resize Handle (desktop only) ── */}
-        <div onMouseDown={() => setIsResizingH(true)}
+        <div onMouseDown={() => { userSizedSplitRef.current = true; setIsResizingH(true); }}
           className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(38,97,156,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
           <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
         </div>
@@ -3188,7 +3279,14 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
               so the user could scroll neither up nor down. It now fills the
               space between the header and the output panel and scrolls
               internally. ── */}
-          <div className="flex-1 min-h-0">
+          <div
+            className="min-h-0"
+            style={autoFitEditorHeight
+              // flex-shrink stays on: a long file still yields space rather than
+              // pushing the output panel off the bottom of the column.
+              ? { flex: '0 1 auto', height: editorContentH, minHeight: 160 }
+              : { flex: '1 1 0%' }}
+          >
           <SharedCodeEditor
             height="100%"
             language={getLanguageById(language)?.monaco || 'python'}
@@ -3232,7 +3330,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
           </div>
 
           {/* ═══ BOTTOM PANEL: Test Cases / Output ═══ */}
-          <div ref={outputPanelRef} className="border-t flex flex-col shrink-0" style={{ borderColor: t.cardBorder, background: t.surfaceBg, height: isOutputCollapsed ? 36 : (outputPanelHeight ?? undefined), maxHeight: isOutputCollapsed ? undefined : (outputPanelHeight != null ? undefined : '75vh') }}>
+          <div ref={outputPanelRef} className={`border-t flex flex-col ${autoFitEditorHeight ? 'flex-1 min-h-0' : 'shrink-0'}`} style={{ borderColor: t.cardBorder, background: t.surfaceBg, height: isOutputCollapsed ? 36 : (autoFitEditorHeight ? undefined : (outputPanelHeight ?? undefined)), minHeight: autoFitEditorHeight ? 180 : undefined, maxHeight: isOutputCollapsed || autoFitEditorHeight ? undefined : (outputPanelHeight != null ? undefined : '75vh') }}>
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-1 border-b shrink-0" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
               <div className="flex items-center gap-1">
@@ -3275,7 +3373,7 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
 
             {/* Content */}
             {!isOutputCollapsed && (
-              <div className={`${outputPanelHeight != null ? 'flex-1' : ''} overflow-y-auto p-2 md:p-3`}>
+              <div className={`${outputPanelHeight != null || autoFitEditorHeight ? 'flex-1 min-h-0' : ''} overflow-y-auto p-2 md:p-3`}>
                 {outputTab === 'testcases' && (
                   <div className="space-y-2">
                     {testCases.map((tc, i) => (
