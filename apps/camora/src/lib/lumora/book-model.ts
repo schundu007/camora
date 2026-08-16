@@ -113,11 +113,24 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   const keyPoints = strList(pitchObj?.keyPoints);
   const narration = txt(sol?.narration);
   const solApproach = txt(sol?.approach);
+  // Bullets, not a wall of paragraphs. These four sources are already four
+  // separate statements — narration, the terse written approach, and the two
+  // pitch fields — and only read as an essay because they were rendered as
+  // consecutive <p>s. As a list the card is scannable mid-interview, which is
+  // the only way it is ever actually read.
+  //
+  // Dedupe on exact text: the sources overlap often (narration and
+  // pitch.approach frequently restate each other), and paragraphs hid that in a
+  // way bullets would put on display as two near-identical points.
+  const solutionPoints = [
+    narration,
+    solApproach,
+    pitchStr || txt(pitchObj?.opener),
+    txt(pitchObj?.approach),
+  ].filter((s): s is string => !!s);
+  const points = [...new Set(solutionPoints)];
   push(sections, 'approach', [
-    narration ? { kind: 'prose', text: narration } : null,
-    solApproach && solApproach !== narration ? { kind: 'prose', text: solApproach } : null,
-    pitchStr ? { kind: 'prose', text: pitchStr } : proseOrNull(pitchObj?.opener),
-    proseOrNull(pitchObj?.approach),
+    points.length ? { kind: 'list', items: points } : null,
     keyPoints.length ? { kind: 'callout', label: 'Key points', items: keyPoints } : null,
   ]);
 
