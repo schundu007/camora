@@ -19,6 +19,7 @@ import { isProblemPageUrl } from '@/lib/problemPageUrl';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
+import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
 import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
@@ -149,32 +150,6 @@ const ANALYSIS_VIEWS = [
 const MAX_TEST_CASES = 10;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-function extractTestCasesFromProblem(text: string): Array<{ input: string; expected: string }> {
-  const testCases: Array<{ input: string; expected: string }> = [];
-  let match;
-
-  const examplePattern = /Example\s*\d*[:\s]*\n?Input[:\s]*([^\n]+(?:\n(?!Output)[^\n]+)*)\n?Output[:\s]*([^\n]+)/gi;
-  while ((match = examplePattern.exec(text)) !== null) {
-    testCases.push({ input: match[1].trim(), expected: match[2].trim() });
-  }
-
-  if (testCases.length === 0) {
-    const arrowPattern = /Input[:\s]*(.+?)\s*[-=]>\s*Output[:\s]*(.+)/gi;
-    while ((match = arrowPattern.exec(text)) !== null) {
-      testCases.push({ input: match[1].trim(), expected: match[2].trim() });
-    }
-  }
-
-  if (testCases.length === 0) {
-    const assignPattern = /(\w+\s*=\s*\[[^\]]+\](?:,\s*\w+\s*=\s*[^\n,]+)*)\s*\n?\s*Output[:\s]*(\[[^\]]+\]|[^\n]+)/gi;
-    while ((match = assignPattern.exec(text)) !== null) {
-      testCases.push({ input: match[1].trim(), expected: match[2].trim() });
-    }
-  }
-
-  return testCases.length > 0 ? testCases.slice(0, MAX_TEST_CASES) : [{ input: '', expected: '' }];
-}
 
 function extractTestCases(content: string): Array<{ input: string; expected: string }> {
   const testCases: Array<{ input: string; expected: string }> = [];
@@ -1361,14 +1336,35 @@ ${solCode}
     }
   }, [isStreaming, streamText, jsonSolution]);
 
-  // Extract test cases from problem text — only if user hasn't manually edited any
+  // Turn the statement's worked examples into RUNNABLE cases — only if the user
+  // hasn't hand-edited any.
+  //
+  // A call-style example ("Input: nums = [2,7,11,15], target = 9") cannot be
+  // emitted until there is code to call, so this deliberately re-runs when the
+  // detected signature appears. It keys on the signature rather than on `code`
+  // so typing inside a function body doesn't rebuild the list on every stroke.
   const testCasesUserEdited = useRef(false);
+  const problemExamples = useMemo(() => parseProblemExamples(problemText || ''), [problemText]);
+  const solutionFn = useMemo(
+    () => detectSolutionFn(code || '', problemExamples.find(e => e.kind === 'call')?.args.length),
+    [code, problemExamples],
+  );
   useEffect(() => {
-    if (problemText && !testCasesUserEdited.current) {
-      const extracted = extractTestCasesFromProblem(problemText);
-      if (extracted.length > 0) setTestCases(extracted);
-    }
-  }, [problemText]);
+    if (!problemText || testCasesUserEdited.current) return;
+    const fromProblem = buildTestCases(problemExamples, { code, language });
+    if (fromProblem.length === 0) return;
+    // Ground truth first, generated edge cases after. Merging (rather than
+    // replacing) matters because the generated cases usually land first: the
+    // model returns code and tests together, and only then does a call example
+    // become emittable.
+    setTestCases(prev => {
+      const kept = prev.filter(t => String(t.input ?? '').trim() || String(t.expected ?? '').trim());
+      const merged = mergeTestCases(fromProblem, kept, MAX_TEST_CASES);
+      return merged.length > 0 ? merged : [{ input: '', expected: '' }];
+    });
+    setOutputTab('testcases');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problemText, language, solutionFn?.name, solutionFn?.arity, solutionFn?.isMethod]);
 
   // Pre-fill from URL param
   useEffect(() => {
@@ -2315,7 +2311,11 @@ ${solCode}
   }, [addToSnapCollection]);
 
   const addTestCase = () => { if (testCases.length < MAX_TEST_CASES) setTestCases([...testCases, { input: '', expected: '' }]); };
-  const removeTestCase = (i: number) => { if (testCases.length > 1) setTestCases(testCases.filter((_, j) => j !== i)); };
+  // Marks the list user-owned so the extractor above does not re-add a case the
+  // candidate deliberately deleted.
+  const removeTestCase = (i: number) => {
+    if (testCases.length > 1) { testCasesUserEdited.current = true; setTestCases(testCases.filter((_, j) => j !== i)); }
+  };
   const updateTestCase = (i: number, field: 'input' | 'expected', value: string) => {
     testCasesUserEdited.current = true;
     const u = [...testCases]; u[i] = { ...u[i], [field]: value }; setTestCases(u);
