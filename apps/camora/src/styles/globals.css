@@ -3489,7 +3489,53 @@ figure:has(> .viz-caption) {
   font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
   font-size: 13.25px;
   color: var(--text-primary);
+  /* The panel is user-resizable (40–65% of the window), so its width has no
+     fixed relationship to the viewport's. Column rules below key off THIS
+     element's inline size, not the screen's — a media query here would be
+     answering a question nobody asked. */
+  container-type: inline-size;
+  container-name: book;
 }
+
+/* Two columns once the panel is wide enough to hold two readable measures.
+   Below that it stays a single column, unchanged.
+
+   720px is the breakpoint because a column narrower than ~340px starts
+   breaking the kv rows (`Time O(n log n)  Space O(n)`) onto two lines and
+   makes the trace table scroll horizontally — at which point two columns cost
+   more than they save.
+
+   Row-major order is the point: sections still read left-to-right, top-to-
+   bottom. CSS `columns` would have been shorter to write and wrong — inside a
+   scrolling panel it balances over the full document height, so you'd read the
+   left column to the bottom and then scroll back up for the right one. */
+.lumora-book-grid { display: flow-root; }
+
+@container book (min-width: 720px) {
+  .lumora-book-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 2rem;
+    row-gap: 0;
+    /* Sections size to their content instead of stretching to the tallest in
+       the row — without this every short section grows a trailing void. */
+    align-items: start;
+  }
+  /* Sections holding a code block take the whole width. */
+  .lumora-book-grid > .lumora-book-span { grid-column: 1 / -1; }
+  /* The first heading in a grid cell must not carry its 1.15rem top margin —
+     in a single column that margin separates it from the previous section; in
+     a grid it just pushes the cell down and re-ragged the rows. */
+  .lumora-book-grid > section > .lumora-book-section { margin-top: 0.9rem; }
+}
+
+/* At full width the serif measure ran to ~1070px — roughly 150 characters per
+   line, well past the ~90 where the eye starts losing its place on the return
+   sweep. Cap the measure so widening the panel buys columns, not longer lines.
+   Applies in both layouts; in the grid the column is already narrower than
+   this, so it is a no-op there. */
+.lumora-book p,
+.lumora-book li { max-width: 92ch; }
 
 /* Tier 1 — section heading (Fraunces, neutral text + gold hairline) */
 .lumora-book-section {
