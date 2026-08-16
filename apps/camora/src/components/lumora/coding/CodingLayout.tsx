@@ -95,6 +95,36 @@ type ProblemTab = 'description' | 'solution';
 type OutputTab = 'testcases' | 'output';
 type InputMode = 'paste' | 'url' | 'image';
 
+// Analysis views, as icons. These were four uppercase text chips spanning the
+// full panel width; the label now lives in the tooltip, where it costs nothing
+// until asked for. Module scope so the JSX isn't rebuilt on every render.
+const ANALYSIS_VIEWS = [
+  {
+    id: 'code' as const,
+    label: 'Code',
+    tip: 'The solution',
+    icon: <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>,
+  },
+  {
+    id: 'explain' as const,
+    label: 'Explain',
+    tip: 'Explain — what you say when asked to walk through it',
+    icon: <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>,
+  },
+  {
+    id: 'issues' as const,
+    label: 'Issues',
+    tip: 'Issues — what an interviewer would stop you on',
+    icon: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
+  },
+  {
+    id: 'deepdive' as const,
+    label: 'Deep Dive',
+    tip: 'Deep Dive — the follow-ups most likely to come next',
+    icon: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
+  },
+];
+
 const MAX_TEST_CASES = 10;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -2856,30 +2886,112 @@ ${solCode}
             {/* ═══ SOLUTION TAB — AI-Inspired Modern Display ═══ */}
             {problemTab === 'solution' && (
               <div className="p-2 md:p-3">
-                {/* ── Analysis tabs (Code | Explain | Issues | Deep Dive) ── */}
+                {/* ── ONE TOOLBAR ROW ──
+                    This was three stacked rows — analysis tabs, a cache banner
+                    carrying a full sentence of prose, and the approach ladder —
+                    costing ~110px above the answer that is the point of the
+                    screen. Every text chip is now an icon or a dropdown, and the
+                    prose moved into tooltips where it is available on demand
+                    rather than permanently. */}
                 {sd && !isStreaming && !isMcqAnswer && (
-                  <div className="flex items-center gap-0.5 mb-3 p-1 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    {(['code', 'explain', 'issues', 'deepdive'] as const).map(tab => {
-                      const labels: Record<string, string> = { code: 'Code', explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' };
-                      const active = analysisTab === tab;
-                      const loading = analysisLoading === tab;
+                  <div className="flex items-center gap-1 mb-3 px-1.5 py-1 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+
+                    {/* Approach — one dropdown instead of N full-width tabs.
+                        Hoisted out of the Code tab on purpose: the analysis
+                        views are cached per solution (`${idx}_${tab}`), so
+                        switching approach while reading Explain should retarget
+                        it rather than be unreachable. */}
+                    {sd.solutions?.length > 1 && (
+                      <>
+                        <ChipSelect
+                          label="Approach"
+                          value={String(activeSolutionIdx)}
+                          options={sd.solutions.map((s: any, i: number) => ({
+                            value: String(i),
+                            label: `${s.name || `Solution ${i + 1}`}${s.complexity?.time ? ` · ${s.complexity.time}` : ''}`,
+                          }))}
+                          onChange={(v) => {
+                            const i = Number(v);
+                            const sol = sd.solutions[i];
+                            if (!sol) return;
+                            setActiveSolutionIdx(i);
+                            const solCode = sol.code || sol.implementation || sol.solution
+                              || (sol.explanations?.length > 0 ? sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n') : null);
+                            if (solCode) setCode(solCode);
+                          }}
+                        />
+                        <div className="w-px h-4 shrink-0" style={{ background: 'var(--border)' }} />
+                      </>
+                    )}
+
+                    {ANALYSIS_VIEWS.map(view => {
+                      const active = analysisTab === view.id;
+                      const loading = analysisLoading === view.id;
+                      const ready = !loading && view.id !== 'code' && !!analysisCache[`${activeSolutionIdx}_${view.id}`];
                       return (
                         <button
-                          key={tab}
-                          onClick={() => tab === 'code' ? setAnalysisTab('code') : handleAnalysis(tab)}
-                          className="flex items-center gap-1.5 flex-1 justify-center py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors"
+                          key={view.id}
+                          onClick={() => view.id === 'code' ? setAnalysisTab('code') : handleAnalysis(view.id)}
+                          className="relative flex items-center justify-center w-7 h-7 rounded-lg transition-colors shrink-0"
                           style={active
                             ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
                             : { color: 'var(--text-muted)', border: '1px solid transparent' }}
+                          data-tip={view.tip}
+                          aria-label={view.label}
+                          aria-pressed={active}
                         >
-                          {loading && <div className="w-2.5 h-2.5 border border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
-                          {labels[tab]}
-                          {!loading && analysisCache[`${activeSolutionIdx}_${tab}`] && tab !== 'code' && (
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary)' }} />
+                          {loading ? (
+                            <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
+                          ) : (
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              {view.icon}
+                            </svg>
+                          )}
+                          {/* Already-generated marker — the dot the text chips carried. */}
+                          {ready && (
+                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary)' }} />
                           )}
                         </button>
                       );
                     })}
+
+                    <div className="ml-auto flex items-center gap-1 shrink-0">
+                      {/* Cache state — the icon alone. The sentence that used to
+                          sit beside it is the tooltip now; it is the same
+                          information, read once and never needed again. */}
+                      {lastFromCache !== null && (
+                        <span
+                          className="flex items-center justify-center w-7 h-7 rounded-lg"
+                          style={{ color: lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)' }}
+                          data-tip={lastFromCache
+                            ? 'Loaded from cache — identical problem, served instantly from Redis. Regenerate for a fresh take.'
+                            : 'Fresh solve — now cached, so repeat solves on this exact problem hit the cache.'}
+                          aria-label={lastFromCache ? 'Loaded from cache' : 'Fresh solve'}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            {lastFromCache ? (
+                              <><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><polyline points="9 12 12 15 16 9" /></>
+                            ) : (
+                              <><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>
+                            )}
+                          </svg>
+                        </span>
+                      )}
+                      <button
+                        onClick={handleRegenerate}
+                        disabled={isStreaming || isLoading}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        style={{ background: 'var(--cam-primary)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)' }}
+                        data-tip="Regenerate — force a fresh solve, ignoring the cache. The new result is cached too."
+                        aria-label="Regenerate solution"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="23 4 23 10 17 10" />
+                          <polyline points="1 20 1 14 7 14" />
+                          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 )}
                 {/* Analysis content for active tab */}
@@ -2909,66 +3021,6 @@ ${solCode}
                         );
                       })()}
                     </div>
-                  </div>
-                )}
-                {/* Cache status row — surfaces whether the current
-                    solution came from the answer cache (Redis) and
-                    offers a one-click Regenerate that bypasses the
-                    cache. Without this, repeat solves looked
-                    identical to fresh solves and users couldn't tell
-                    when caching was actually working. Only renders
-                    when a solution exists; hidden during streaming
-                    and when there's nothing to cache yet. */}
-                {sd && !isStreaming && lastFromCache !== null && (
-                  <div
-                    className="mb-3 flex items-center justify-between gap-2 px-3 py-2 rounded-lg"
-                    style={{
-                      background: lastFromCache ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
-                      border: `1px solid ${lastFromCache ? 'var(--cam-primary)' : 'var(--border)'}`,
-                    }}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-                        {lastFromCache ? (
-                          <>
-                            <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            <polyline points="9 12 12 15 16 9" />
-                          </>
-                        ) : (
-                          <>
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                          </>
-                        )}
-                      </svg>
-                      <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {lastFromCache ? 'Loaded from cache' : 'Fresh solve'}
-                      </span>
-                      <span className="hidden md:inline text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
-                        {lastFromCache
-                          ? '· Identical problem — served instantly from Redis. Click Regenerate for a fresh take.'
-                          : '· Now cached — repeat solves on this exact problem hit the cache.'}
-                      </span>
-                    </div>
-                    <button
-                      onClick={handleRegenerate}
-                      disabled={isStreaming || isLoading}
-                      className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        background: 'var(--cam-primary)',
-                        color: '#FFFFFF',
-                        border: '1px solid var(--cam-primary-dk)',
-                        fontFamily: 'var(--font-mono)',
-                      }}
-                      data-tip="Force a fresh solve, ignoring the cache. The new result is cached too — useful when the cached answer was wrong or you want a different approach."
-                    >
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="23 4 23 10 17 10" />
-                        <polyline points="1 20 1 14 7 14" />
-                        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-                      </svg>
-                      Regenerate
-                    </button>
                   </div>
                 )}
                 {/* Stream/parse error — visible retry card instead of blank state.
@@ -3123,44 +3175,6 @@ ${solCode}
                 {analysisTab === 'code' && sd && !isMcqAnswer && (
                   <div className="space-y-3 solution-cards-appear">
 
-                    {/* ── SOLUTION TABS (when multiple solutions) ── */}
-                    {sd.solutions?.length > 1 && (
-                      <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: t.sectionBg }}>
-                        {sd.solutions.map((sol: any, i: number) => {
-                          // Brute → Optimized → Most Optimal difficulty progression.
-                          // Same brand-color family, stepped intensity so the tabs read as a
-                          // progression (not rainbow — single-hue palette stays coherent).
-                          const tierAccents = ['var(--text-dimmed)', 'var(--cam-primary)', 'var(--cam-primary-dk)'];
-                          const accentColor = tierAccents[i] || 'var(--cam-primary)';
-                          return (
-                            <button key={i}
-                              onClick={() => {
-                                setActiveSolutionIdx(i);
-                                const solCode = sol.code || sol.implementation || sol.solution
-                                  || (sol.explanations?.length > 0 ? sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n') : null);
-                                if (solCode) setCode(solCode);
-                              }}
-                              className={`flex-1 px-2 py-1.5 text-[10px] md:text-xs font-semibold rounded-md transition-[background-color,color,border-color] active:scale-[0.98] text-center ${
-                                activeSolutionIdx === i ? 'shadow-sm' : ''
-                              }`}
-                              style={activeSolutionIdx === i
-                                ? { background: t.inputBg, color: t.text, borderTop: `2px solid ${accentColor}` }
-                                : { color: t.textMuted, borderTop: `2px solid transparent` }}
-                            >
-                              <div className="truncate flex items-center justify-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accentColor }} />
-                                {sol.name || `Solution ${i + 1}`}
-                              </div>
-                              {sol.complexity && (
-                                <div className="text-[9px] font-mono mt-0.5" style={{ color: t.textDim }}>
-                                  {sol.complexity.time}
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
 
                     <AnswerBook
                       doc={docFromSolution(sd, activeSolutionIdx)}

@@ -80,6 +80,24 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
       return <CodeBlock lang={block.lang} code={block.code} />;
 
     case 'kv':
+      // Row layout: one pair per row, key in a fixed left column, value taking
+      // the rest. Follow-up Q&A uses this — its values are spoken answers, and
+      // the inline layout below would pack two of them onto a shared row at
+      // full width and leave the question labels floating mid-paragraph.
+      if (block.layout === 'rows') {
+        return (
+          <div className="mb-2 flex flex-col gap-2">
+            {block.pairs.map(([k, v]) => (
+              <div key={k} className="flex gap-3 items-start">
+                <span className="lumora-book-label !my-0 shrink-0 basis-[9.5rem] max-w-[9.5rem]">{k}</span>
+                <span className="flex-1 min-w-0 text-[12.5px] leading-[1.5] text-[var(--text-primary)]">
+                  <InlineText text={v} />
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      }
       return (
         <div className="flex flex-wrap gap-x-5 gap-y-0.5 mb-2">
           {block.pairs.map(([k, v]) => (
@@ -155,7 +173,16 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
 // halving the scroll. Those two are the longest sections in a typical answer,
 // so exempting them would have given up most of the saving.
 const WIDE_BLOCKS = new Set<BookBlock['kind']>(['code']);
-const isWideSection = (blocks: BookBlock[]) => blocks.some(b => WIDE_BLOCKS.has(b.kind));
+
+// Sections that are wide by content rather than by block kind. Follow-up Q&A is
+// a kv block like Complexity, but its "values" are 2-3 sentence spoken answers,
+// not an O(...) token — in a half-width column each answer becomes a tall
+// narrow ribbon, and because it is also the LAST section, the cell beside it
+// sits empty. Both problems go away by spanning it.
+const WIDE_SECTION_IDS = new Set(['followup']);
+
+const isWideSection = (id: string, blocks: BookBlock[]) =>
+  WIDE_SECTION_IDS.has(id) || blocks.some(b => WIDE_BLOCKS.has(b.kind));
 
 export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => (
   <div className="lumora-book">
@@ -168,7 +195,7 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => (
         {doc.sections.map(section => (
           <section
             key={section.id}
-            className={isWideSection(section.blocks) ? 'lumora-book-span' : undefined}
+            className={isWideSection(section.id, section.blocks) ? 'lumora-book-span' : undefined}
           >
             <h2 className="lumora-book-section">{section.heading}</h2>
             {section.blocks.map((block, i) => (

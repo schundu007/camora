@@ -6,7 +6,11 @@ export type BookBlock =
   | { kind: 'callout'; label: string; items: string[] }
   | { kind: 'list'; items: string[] }
   | { kind: 'code'; lang: string; code: string }
-  | { kind: 'kv'; pairs: [string, string][] }
+  // layout 'inline' (default) packs pairs onto shared rows — right for short
+  // values like `Time O(n)`. 'rows' gives each pair its own row with the key in
+  // a fixed left column, which is the only readable shape once the value is a
+  // 2-3 sentence answer rather than a token.
+  | { kind: 'kv'; pairs: [string, string][]; layout?: 'inline' | 'rows' }
   | { kind: 'trace'; rows: { step: number; action: string; state: string }[] }
   | { kind: 'walk'; rows: { line?: number; code?: string; explanation: string }[] };
 
@@ -168,7 +172,7 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
         .map((f: any) => [txt(f?.q), txt(f?.a)] as [string, string])
         .filter(([q, a]: [string, string]) => q && a)
     : [];
-  push(sections, 'followup', [followups.length ? { kind: 'kv', pairs: followups } : null]);
+  push(sections, 'followup', [followups.length ? { kind: 'kv', pairs: followups, layout: 'rows' } : null]);
 
   return { title: txt(sol?.name) || undefined, sections };
 }
