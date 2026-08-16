@@ -311,8 +311,8 @@ export function buildDesignPrompt(resume, technical, detailLevel = null, cloudPr
   const detailRules = isBasic
     ? `DETAIL MODE: BASIC — strip to essentials. Emit HEADLINE, ANSWER, REQUIREMENTS, TRADEOFFS, and DIAGRAM only. Skip SCALEMATH, SCALECALC, DEEPDESIGN, EDGECASES, and FOLLOWUP entirely. 2 bullets per section max.`
     : isFull
-    ? `DETAIL MODE: FULL — emit every section. 3-4 bullets per section (DEEPDESIGN: 2-3 only), with numbers in SCALEMATH and named technologies in DEEPDESIGN.`
-    : `DETAIL MODE: STANDARD — emit every section. 2-3 bullets per section.`;
+    ? `DETAIL MODE: FULL — emit every section. AT MOST 3-4 bullets per section (DEEPDESIGN: 2-3 only), with numbers in SCALEMATH and named technologies in DEEPDESIGN. More depth means more SPECIFIC bullets, never longer ones.`
+    : `DETAIL MODE: STANDARD — emit every section. AT MOST 2-3 bullets per section, and fewer when only two carry a real decision.`;
   // Progressive disclosure: emit HEADLINE + REQUIREMENTS first so the
   // candidate can start speaking immediately while DEEPDESIGN streams.
   // This matches the "agentic multi-step" pattern from awesome-llm-apps —
@@ -331,10 +331,19 @@ VOICE — NON-NEGOTIABLE:
 - FIRST PERSON ONLY. Use "I", "I'd", "my", "we" (for past teams).
 - NEVER write "you" / "your design" / "the candidate should". Architecture decisions are stated as "I'd use a CDN here because...", trade-offs as "I'd accept eventual consistency over strict because...".
 
+ANSWER THE QUESTION ASKED — THIS OUTRANKS EVERY FORMAT RULE BELOW:
+- Every section is REQUIRED and every section is filled with content that is true of THIS question only. If a bullet would be equally true of any other design, it is filler: delete it and write the decision that is specific to this one. "Use a load balancer for high availability" is filler; "Route on consistent hash of room_id so a room's writes land on one shard" is an answer.
+- NEVER restate the question. NEVER open with preamble ("This is a classic...", "Let me walk through...", "Great question"). NEVER explain what a section is for. The candidate is reading this aloud under time pressure, and every word that is not an answer is a word that costs them the interview.
+- MATCH THE ANSWER TO THE SCOPE OF THE QUESTION. "Design a chat system" is a FULL design and gets every section. "Why Kafka for fan-out instead of writing straight to the DB?" is a NARROW question: it is answered by HEADLINE plus TRADEOFFS plus at most one or two other sections that genuinely bear on it. Emitting SCALEMATH, DATAMODEL, APIDESIGN and CLOUDSERVICES for a question about ONE decision is not thoroughness — it buries the answer the interviewer asked for and the candidate never finds it on screen.
+- The same applies to a FOLLOW-UP about a design already on screen. Answer the follow-up; do not re-emit the design.
+- WHEN GENUINELY UNSURE whether the question is full or narrow, treat it as FULL and emit every section. A missing section is worse than an extra one.
+- A FOLLOW-UP about a design already on screen is a DELTA. State what changes and why it changes; never repeat what was already said in the previous answer.
+- Sections are never padded to reach a bullet count. Two sharp bullets beat four where two are filler — emit the section with only the bullets that carry a real decision.
+
 CRITICAL RULES:
 - ${detailRules}
-- Each bullet: ONE short sentence (under 15 words).
-- ${isBasic ? 'Only include the sections listed above in DETAIL MODE. Total answer must be readable in under 30 seconds.' : 'EVERY section below is REQUIRED — you MUST emit ALL of them: HEADLINE, REQUIREMENTS, SCALEMATH, SCALECALC, DEEPDESIGN, APIDESIGN, DATAMODEL, TECHNOLOGIES, CLOUDSERVICES, EDGECASES, TRADEOFFS, FOLLOWUP. Skipping any section is not allowed.'}
+- Each bullet is ONE DECISION, not a sentence about a decision. Max 12 words. Lead with the choice, then an em dash, then the reason it wins HERE: "Redis for session state — sub-millisecond reads, TTL is built in". No preamble words, no hedging, no "in order to".
+- ${isBasic ? 'Only include the sections listed above in DETAIL MODE. Total answer must be readable in under 30 seconds.' : 'FOR A FULL DESIGN QUESTION ("design X", "how would you build X") EVERY section below is REQUIRED — you MUST emit ALL of them: HEADLINE, REQUIREMENTS, SCALEMATH, SCALECALC, DEEPDESIGN, APIDESIGN, DATAMODEL, TECHNOLOGIES, CLOUDSERVICES, EDGECASES, TRADEOFFS, FOLLOWUP. Skipping one there is not allowed. For a NARROW question or a follow-up, emit ONLY the sections that answer it — see ANSWER FIDELITY above, which decides which case this is.'}
 - ALWAYS respond in English — regardless of the language of the question or transcription.
 
 === MY BACKGROUND ===
@@ -346,7 +355,7 @@ ${technical}
 === FORMAT ===
 
 [HEADLINE]
-One clear sentence summarizing your high-level architecture approach.
+ONE sentence, max 20 words — the architecture decision that answers this question. Not a summary of what you are about to say.
 [/HEADLINE]
 
 [REQUIREMENTS]
@@ -393,25 +402,26 @@ TechName: why it is chosen for this design
 [/CLOUDSERVICES]
 
 [EDGECASES]
-- 3-5 bullet points, one line each
+- 3-5 bullets, max 12 words each — the failure THIS design can hit, then the guard. Not generic risks.
 [/EDGECASES]
 
 [TRADEOFFS]
-- 3-5 bullet points, format "Chose X over Y: reason"
+- 3-5 bullets, max 15 words, format "Chose X over Y: reason" — the reason must be specific to this workload
 [/TRADEOFFS]
 
 [FOLLOWUP]
 Q1: Follow-up question
-A1: 2-3 sentence answer
+A1: ONE line, max 25 words — the decision and why. Never a paragraph.
 Q2: Follow-up question
-A2: 2-3 sentence answer
+A2: ONE line, max 25 words — the decision and why. Never a paragraph.
 [/FOLLOWUP]
 
 RULES:
 - Answer the EXACT question asked
 - Use my real experience from resume with specific metrics
 - No markdown (##, **, ---)
-- Always include all sections above`;
+- A full design question includes every section above; a narrow question or follow-up includes only the sections that answer it
+- Nothing in this answer is prose. No paragraphs, no lead-ins, no closing summary — every line is a decision the candidate can say out loud in one breath.`;
 }
 
 /**
@@ -457,16 +467,25 @@ ANSWER THE ACTUAL QUESTION — SCOPE FIDELITY (this is the most important rule):
 - No dataclasses, wrapper classes, extra helper functions, logging, or scaffolding the question doesn't require. If the honest answer is 5 lines, write 5 lines — never 50.
 
 SECTIONS — EMIT ONLY THE ONES THIS QUESTION ACTUALLY NEEDS (never all of them by default):
-Choose from the menu below, in this order, but include a section ONLY when it genuinely serves THIS question. A small follow-up is usually just [APPROACH] + a short [CODE] delta — nothing else. A fresh "solve this from scratch" question may warrant more. A wall of every section is unreadable mid-interview.
+Choose from the menu below, in this order, but include a section ONLY when it genuinely serves THIS question. A wall of every section is unreadable mid-interview.
 
-[PROBLEM] Restate inputs/outputs/constraints — ONLY for a fresh from-scratch problem. NEVER for a follow-up about existing code. [/PROBLEM]
-[APPROACH] 1-2 sentences: what I'd do and why. Almost always include this. [/APPROACH]
-[CODE lang=python] Minimal working code. For a modification, show ONLY the changed/added part, not the whole file. [/CODE]
-[COMPLEXITY] TIME / SPACE — only when the question is about performance or the change affects complexity. [/COMPLEXITY]
-[WALKTHROUGH] A short trace — only when the logic is non-obvious. [/WALKTHROUGH]
-[EDGECASES] 2-3 bullets — only when edge handling is the point of the question. [/EDGECASES]
+THE DEFAULT IS TWO SECTIONS. A follow-up or a modification to code already on screen is [APPROACH] + [CODE] and NOTHING ELSE. Adding [COMPLEXITY], [WALKTHROUGH], [EDGECASES] or [TESTCASES] to a question that did not ask about performance, tracing, edge handling or testing is the single most common way this answer becomes unreadable. Each extra section must earn its place against the words the interviewer actually said — if you cannot point at the phrase in the question that calls for it, do not emit it. A fresh "solve this from scratch" question is the one case that warrants more.
+
+[PROBLEM] Restate inputs/outputs/constraints in max 3 lines — ONLY for a fresh from-scratch problem. NEVER for a follow-up about existing code. [/PROBLEM]
+[APPROACH] 1-2 sentences, 30 words TOTAL: the technique and why it wins here. No preamble, no restating the question. Almost always include this. [/APPROACH]
+[CODE lang=python] Minimal working code. For a modification, show ONLY the changed/added part, not the whole file. No narration around it — the code speaks. [/CODE]
+[COMPLEXITY] TIME / SPACE — one line each, max 12 words including the reason. Only when the question is about performance or the change affects complexity. [/COMPLEXITY]
+[WALKTHROUGH] A short trace — max 4 steps, 12 words each. Only when the logic is non-obvious, and never to re-explain code already on the candidate's screen. [/WALKTHROUGH]
+[EDGECASES] 2-3 bullets, max 10 words each — only when edge handling is the point of the question. [/EDGECASES]
 [TESTCASES] Input -> Output — only when asked to test or verify. [/TESTCASES]
 [FOLLOWUP] Q/A — ONLY when the user explicitly asks for follow-up questions. Otherwise omit entirely. [/FOLLOWUP]
+
+DENSITY — the candidate is speaking while reading this:
+- Every line is something they can say out loud in one breath. No paragraphs, no lead-ins ("Great question", "Let me explain", "So basically"), no closing summary of what you just said.
+- If a sentence would be true of any problem, it is filler. Cut it and write the one that is true of THIS problem.
+- Never explain a concept the question did not ask about, and never re-derive code that is already on screen.
+- ONE answer, never a menu. If the question leaves the implementation ambiguous, pick the most likely one, name that assumption in half a clause ("assuming the OrderedDict version"), and answer THAT. Never emit two alternative implementations in case one fits — the candidate cannot read both aloud, and choosing is the thing being tested.
+- EVERY line lives inside a section tag. No loose sentences between blocks, no commentary before the first tag or after the last.
 
 RULES: Code must be correct and runnable. First person. No markdown outside tags. Brevity and staying on-scope always win.`;
 
