@@ -556,11 +556,6 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
               >
                 Auto
               </button>
-              <span className="hidden md:inline text-[10px] leading-tight self-center" style={{ color: 'var(--text-muted)' }}>
-                <kbd className="font-mono">Enter</kbd> to send <span aria-hidden="true">·</span>{' '}
-                {!handsFree && <><kbd className="font-mono">⌘M</kbd> mic <span aria-hidden="true">·</span>{' '}</>}
-                <kbd className="font-mono">Shift+Enter</kbd> newline
-              </span>
             </div>
           </div>
         </>
