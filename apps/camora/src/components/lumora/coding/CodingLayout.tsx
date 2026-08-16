@@ -98,6 +98,27 @@ type InputMode = 'paste' | 'url' | 'image';
 // Analysis views, as icons. These were four uppercase text chips spanning the
 // full panel width; the label now lives in the tooltip, where it costs nothing
 // until asked for. Module scope so the JSX isn't rebuilt on every render.
+/**
+ * The rendered scale, printed next to the build id.
+ *
+ * "The desktop app's fonts are bigger than the browser's" is not answerable
+ * from a screenshot — px are px, and the multiplier sits below the page in the
+ * OS display scaling and the shell's zoom factor. devicePixelRatio is the
+ * product of both, so reading this same line in the browser and in the desktop
+ * app on the SAME machine says which of the two is off, instead of guessing.
+ *
+ * Zoom changes fire a resize, which is what keeps this honest after Ctrl +/-.
+ */
+const RenderScale = () => {
+  const [dpr, setDpr] = useState(() => (typeof window === 'undefined' ? 1 : window.devicePixelRatio));
+  useEffect(() => {
+    const onResize = () => setDpr(window.devicePixelRatio);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return <span data-tip="Rendered scale — OS display scaling x app zoom. Compare this number in your browser and in the desktop app: if they differ, that is the size difference. Ctrl and minus zooms the desktop app out, and it is remembered.">scale {dpr.toFixed(2)}x</span>;
+};
+
 const ANALYSIS_VIEWS = [
   {
     id: 'code' as const,
@@ -2805,7 +2826,7 @@ ${solCode}
                             </button>
                           </div>
                           <p className="text-center text-[10px] font-mono py-0.5 select-text" style={{ color: 'var(--text-dimmed)' }}>
-                            build {__BUILD_ID__}
+                            build {__BUILD_ID__} · <RenderScale />
                           </p>
                         </div>
                       )}
