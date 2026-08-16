@@ -26,6 +26,8 @@ import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
 import { SonaMicButton } from './SonaMicButton';
+
+const HANDS_FREE_KEY = 'lumora:sonaHandsFree';
 import { Icon } from '@/components/shared/Icons';
 import { dialogConfirm } from '@/components/shared/Dialog';
 import Chip from '@/components/shared/ui/Chip';
@@ -69,6 +71,15 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
   const [streamText, setStreamText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [micToggleTrigger, setMicToggleTrigger] = useState(0);
+  // Hands-free: the mic arms itself, stops on silence, sends, and re-arms. Off
+  // by default and remembered — an always-open mic is a choice about the room
+  // you are in, not something to switch on for someone.
+  const [handsFree, setHandsFree] = useState(() => {
+    try { return localStorage.getItem(HANDS_FREE_KEY) === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(HANDS_FREE_KEY, handsFree ? '1' : '0'); } catch {}
+  }, [handsFree]);
   const [sidebarWidth, setSidebarWidth] = useState(360);
   const dragRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -517,6 +528,8 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
             />
             <div className="flex items-end gap-3 min-h-[2rem]">
               <SonaMicButton
+                key={handsFree ? 'auto' : 'manual'}
+                autoMode={handsFree}
                 disabled={streaming}
                 toggleTrigger={micToggleTrigger}
                 onText={(t) => {
@@ -525,9 +538,27 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
                   send(full);
                 }}
               />
+              {/* Hands-free switch. In auto mode the mic renders as a status
+                  readout with nothing to click, so the way back out has to live
+                  here rather than on the mic itself. */}
+              <button
+                type="button"
+                onClick={() => setHandsFree(v => !v)}
+                aria-pressed={handsFree}
+                data-tip={handsFree
+                  ? 'Hands-free is on — the mic listens, sends on a pause, and re-arms. Click to go back to press-to-talk.'
+                  : 'Hands-free — let the mic listen continuously and send each question on a pause.'}
+                aria-label={handsFree ? 'Turn off hands-free mic' : 'Turn on hands-free mic'}
+                className="flex items-center justify-center h-8 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/30"
+                style={handsFree
+                  ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
+                  : { background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+              >
+                Auto
+              </button>
               <span className="hidden md:inline text-[10px] leading-tight self-center" style={{ color: 'var(--text-muted)' }}>
                 <kbd className="font-mono">Enter</kbd> to send <span aria-hidden="true">·</span>{' '}
-                <kbd className="font-mono">⌘M</kbd> mic <span aria-hidden="true">·</span>{' '}
+                {!handsFree && <><kbd className="font-mono">⌘M</kbd> mic <span aria-hidden="true">·</span>{' '}</>}
                 <kbd className="font-mono">Shift+Enter</kbd> newline
               </span>
             </div>

@@ -207,6 +207,27 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger,
     }
   }, [token, onText, onDone, autoMode, releaseStream, clearTimers, stopRecorder]);
 
+  // Hands-free: arm the mic and RE-arm it after every utterance. This is what
+  // makes auto mode automatic — the VAD stop, the transcribe and the send all
+  // land back on state 'idle', and without this the loop ended there and the
+  // user was back to reaching for a button mid-interview.
+  //
+  // startRecording is held in a ref: it closes over the parent's onText/onDone,
+  // which are inline lambdas, so as a dependency it would re-arm on every
+  // render of the sidebar.
+  const startRef = useRef(startRecording);
+  useEffect(() => { startRef.current = startRecording; }, [startRecording]);
+  useEffect(() => {
+    // `error` gates the loop deliberately. A denied mic permission leaves state
+    // idle, and re-arming on that would call getUserMedia forever; the user
+    // re-enables hands-free to retry.
+    if (!autoMode || disabled || error || state !== 'idle' || !token) return;
+    // A beat between utterances, so the tail of the last one doesn't open the
+    // next recording and read as speech.
+    const t = setTimeout(() => startRef.current(), 350);
+    return () => clearTimeout(t);
+  }, [autoMode, disabled, error, state, token]);
+
   /* eslint-disable react-hooks/preserve-manual-memoization -- compiler can't preserve this manual memo; DOM onClick identity is irrelevant so it's benign */
   const handleClick = useCallback(() => {
     if (disabled || autoMode) return;
