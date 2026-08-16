@@ -122,7 +122,20 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   const pairs: [string, string][] = [];
   if (time) pairs.push(['Time', time]);
   if (space) pairs.push(['Space', space]);
-  push(sections, 'complexity', [pairs.length ? { kind: 'kv', pairs } : null]);
+  // The bound alone is the half the interviewer already assumes; the derivation
+  // is what they ask for next. The backend has emitted timeWhy/spaceWhy on the
+  // CoFix path for a while and this dropped them on the floor, rendering a bare
+  // "Time O(n log n)" with no reasoning anywhere on screen.
+  // Optional by design: answers cached before the field existed simply fall back
+  // to the bounds alone rather than rendering an empty aside.
+  const whys = [
+    txt(sol?.complexity?.timeWhy) ? `Time — ${txt(sol?.complexity?.timeWhy)}` : null,
+    txt(sol?.complexity?.spaceWhy) ? `Space — ${txt(sol?.complexity?.spaceWhy)}` : null,
+  ].filter(Boolean) as string[];
+  push(sections, 'complexity', [
+    pairs.length ? { kind: 'kv', pairs } : null,
+    whys.length ? { kind: 'callout', label: 'Why these bounds', items: whys } : null,
+  ]);
 
   const walk = Array.isArray(sol?.explanations)
     ? sol.explanations

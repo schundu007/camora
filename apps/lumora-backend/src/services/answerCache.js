@@ -134,7 +134,10 @@ export function buildAnswerCacheKey(parts) {
   // v14: the coding system prompt now carries the caller's session context
   // (2026-08-16) — v13 coding answers were generated blind to the on-screen
   // problem, so replaying one serves an ungrounded answer for up to 30 days.
-  return `lumora:answer:v14:${h}`;
+  // v15: complexity gained timeWhy/spaceWhy (2026-08-16). Every v14 solve holds
+  // a bare bound with no derivation, which is exactly the gap this closed —
+  // replaying one would serve the old behaviour for the full 30-day TTL.
+  return `lumora:answer:v15:${h}`;
 }
 
 async function cacheGetFromDb(key) {
