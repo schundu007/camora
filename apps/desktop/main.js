@@ -273,8 +273,81 @@ function saveWindowState(win) {
   if (!win || win.isDestroyed()) return;
   try {
     const b = win.getBounds();
-    fs.writeFileSync(STATE_FILE, JSON.stringify(b));
+    // Merge, don't overwrite: this file also carries zoomFactor, and writing
+    // bare bounds here would erase the zoom on the next window move.
+    const prev = loadWindowState();
+    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...b, zoomFactor: prev.zoomFactor }));
   } catch {}
+}
+
+// ── Page zoom ───────────────────────────────────────────────────────────────
+//
+// Electron persists a zoom level PER ORIGIN inside the session. This shell
+// never set one, so a single accidental Ctrl+scroll on camora.cariara.com stuck
+// for the life of the install and survived every restart — and, because zoom is
+// applied on top of whatever CSS ships, it survived every web deploy too. Type
+// compacted upstream still rendered large, and nothing done on the web side
+// could ever move it. There was no way back either: Menu is never used here, so
+// a frameless window has no View → Actual Size.
+//
+// Zoom is now explicit — set on every load from a value we own, adjustable, and
+// resettable. A fresh install lands on 1.0 regardless of what the session had
+// remembered.
+const ZOOM_MIN = 0.6;
+const ZOOM_MAX = 2.0;
+const ZOOM_STEP = 0.1;
+const DEFAULT_ZOOM = 1;
+
+function loadZoom() {
+  const z = Number(loadWindowState().zoomFactor);
+  return Number.isFinite(z) && z >= ZOOM_MIN && z <= ZOOM_MAX ? z : DEFAULT_ZOOM;
+}
+
+function saveZoom(factor) {
+  try {
+    const prev = loadWindowState();
+    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...prev, zoomFactor: factor }));
+  } catch {}
+}
+
+function setZoom(win, factor) {
+  if (!win || win.isDestroyed()) return DEFAULT_ZOOM;
+  // Round to one decimal so repeated stepping can't drift to 1.0000000000000002
+  // and so the value that lands in the state file is readable.
+  const clamped = Math.round(Math.min(Math.max(factor, ZOOM_MIN), ZOOM_MAX) * 10) / 10;
+  try {
+    win.webContents.setZoomFactor(clamped);
+    saveZoom(clamped);
+  } catch {}
+  return clamped;
+}
+
+// Ctrl/Cmd +, -, 0 handled via before-input-event rather than globalShortcut:
+// these must only fire while the app is focused. Registering Ctrl+0 globally
+// would steal it from every other application on the machine.
+function wireZoomControls(win) {
+  const wc = win.webContents;
+
+  // Re-applied on every load. Electron restores its own remembered per-origin
+  // zoom on navigation, so setting this once at startup would be undone the
+  // first time the app reloaded.
+  wc.on('did-finish-load', () => setZoom(win, loadZoom()));
+
+  wc.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') return;
+    if (!(input.control || input.meta)) return;
+    const key = input.key;
+    if (key === '0') {
+      setZoom(win, DEFAULT_ZOOM);
+    } else if (key === '=' || key === '+') {
+      setZoom(win, wc.getZoomFactor() + ZOOM_STEP);
+    } else if (key === '-' || key === '_') {
+      setZoom(win, wc.getZoomFactor() - ZOOM_STEP);
+    } else {
+      return;
+    }
+    event.preventDefault();
+  });
 }
 
 // ── Overlay mode ──────────────────────────────────────────────────────────
@@ -365,6 +438,10 @@ function createWindow() {
       additionalArguments: OVERLAY_ENABLED ? ['--camora-overlay'] : [],
     },
   });
+
+  // Before the load, so the did-finish-load handler is attached in time to
+  // override whatever zoom the session had remembered for this origin.
+  wireZoomControls(mainWindow);
 
   loadAppURL(mainWindow);
   // Match Zustand default — isStealthActive starts true, so protect on launch.
