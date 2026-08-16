@@ -351,6 +351,8 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   }, [onExternalInputModeChange]);
   const [problemText, setProblemText] = useState(initialProblem || '');
   const [problemUrl, setProblemUrl] = useState('');
+  // Why auto-detect didn't fill the field. Null when it worked or hasn't run.
+  const [urlDetectNote, setUrlDetectNote] = useState<string | null>(null);
   const [code, setCode] = useState(getDefaultCode('python'));
   const [output, setOutput] = useState('');
   const [outputLog, setOutputLog] = useState<Array<{ts: Date; text: string}>>([]);
@@ -2113,30 +2115,51 @@ ${solCode}
   // When the user switches to URL mode, auto-detect Chrome's active tab URL (desktop only)
   // and immediately fetch the problem — same one-click-solve UX as IMAGE.
   // Only fires for known coding platforms; ignores GitHub, YouTube, etc.
-  useEffect(() => {
-    if (inputMode !== 'url') return;
+  // Read the browser's active tab and, when it is a problem page, fetch it.
+  //
+  // Every branch here used to `return` with no trace, so a failure was
+  // indistinguishable from the feature not existing: the field just sat on its
+  // placeholder. Each exit now says what happened. The platform dropdown no
+  // longer VETOES a detected URL either — it is a capture hint, and a URL that
+  // isProblemPageUrl() accepts has already identified its own platform, so
+  // rejecting a real leetcode.com/problems/... page because the chip still said
+  // "hackerrank" discarded the exact thing the user was asking for.
+  const detectBrowserUrl = useCallback(async (opts?: { manual?: boolean }) => {
     const camo = (window as any).camo;
-    if (!camo?.getActiveBrowserUrl) return;
-    const platformDomain: Record<string, string> = {
-      hackerrank: 'hackerrank.com',
-      leetcode: 'leetcode.com',
-      coderpad: 'coderpad.io',
-      codesignal: 'codesignal.com',
-      glider: 'glider.ai',
-    };
-    camo.getActiveBrowserUrl().then((result: any) => {
-      if (!result?.ok || !result.url) return;
+    if (!camo?.getActiveBrowserUrl) {
+      if (opts?.manual) setError('Detecting the open tab needs the Camora desktop app — in a browser, paste the URL instead.');
+      return;
+    }
+    setUrlDetectNote(null);
+    try {
+      const result = await camo.getActiveBrowserUrl();
+      if (!result?.ok || !result.url) {
+        // The common cause on macOS is Automation permission: reading Chrome's
+        // address bar is an Apple Event, and a denied grant throws in main.js.
+        setUrlDetectNote(
+          result?.error
+            ? `Couldn't read your browser tab: ${result.error}`
+            : "Couldn't read your browser tab. On macOS, allow Camora under System Settings → Privacy & Security → Automation, then try Detect.",
+        );
+        return;
+      }
       const url: string = result.url;
-      if (!isProblemPageUrl(url)) return;   // was: isCodingUrl domain check
-      if (codingPlatform && codingPlatform !== 'auto' && codingPlatform !== 'none') {
-        const expected = platformDomain[codingPlatform];
-        if (expected && !url.includes(expected)) return;
+      if (!isProblemPageUrl(url)) {
+        setUrlDetectNote(`Your active tab isn't a problem page — paste the URL instead.\n${url}`);
+        return;
       }
       setProblemUrl(url);
       handleFetchFromUrl(url, { auto: true });
-    }).catch(() => {});
+    } catch (err: any) {
+      setUrlDetectNote(`Couldn't read your browser tab: ${err?.message || 'unknown error'}`);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inputMode]);
+  }, []);
+
+  useEffect(() => {
+    if (inputMode !== 'url') return;
+    detectBrowserUrl();
+  }, [inputMode, detectBrowserUrl]);
 
   const extractAndMaybeGenerate = useCallback(async (file: File, autoGenerate: boolean) => {
     if (!token) { setError('Not authenticated'); return; }
@@ -2820,11 +2843,27 @@ ${solCode}
                               placeholder="https://leetcode.com/problems/two-sum/"
                               className="flex-1 rounded-lg px-3 py-2 text-xs md:text-sm placeholder:text-[var(--text-dimmed)] focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
+                            {/* Auto-detect fires once when this mode opens, so a
+                                tab switched afterwards had no way to be picked
+                                up. This re-runs it on demand. */}
+                            {(window as any).camo?.getActiveBrowserUrl && (
+                              <button type="button" onClick={() => detectBrowserUrl({ manual: true })} disabled={isProcessing}
+                                title="Read the URL from your open browser tab"
+                                className="px-3 py-2 text-xs font-semibold rounded-lg disabled:opacity-50 transition-colors"
+                                style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}>
+                                Detect
+                              </button>
+                            )}
                             <button type="button" onClick={() => handleFetchFromUrl()} disabled={isProcessing || !problemUrl.trim()}
                               className="px-4 py-2 bg-[var(--accent)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--accent-hover)] disabled:opacity-50 transition-colors">
                               {isProcessing ? 'Loading...' : 'Fetch'}
                             </button>
                           </div>
+                          {urlDetectNote && (
+                            <p className="text-[11px] leading-snug whitespace-pre-wrap break-all" style={{ color: 'var(--text-dimmed)' }}>
+                              {urlDetectNote}
+                            </p>
+                          )}
                           <p className="text-center text-[10px] font-mono py-0.5 select-text" style={{ color: 'var(--text-dimmed)' }}>
                             build {__BUILD_ID__} · <RenderScale />
                           </p>

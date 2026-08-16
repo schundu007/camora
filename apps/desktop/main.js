@@ -930,6 +930,14 @@ function runAppleScript(script) {
 
 const BROWSERS = ['Google Chrome', 'Brave Browser', 'Microsoft Edge', 'Arc'];
 
+/**
+ * Last AppleScript failure from a browser-URL read, so the renderer can tell a
+ * missing browser apart from a denied Automation grant. -1743 is macOS's
+ * "not authorized to send Apple events" — the app is installed and correct, the
+ * user simply declined (or never saw) the permission prompt.
+ */
+let _lastBrowserReadError = null;
+
 async function getActiveBrowserInfo() {
   // Off macOS, read the address bar through browserProbe (UI Automation on
   // Windows, xdotool on X11). The auto-detect poller was un-gated on the basis
@@ -995,7 +1003,13 @@ end tell`);
           return { browser, url, windowTitle };
         }
       }
-    } catch {}
+    } catch (err) {
+      // Reading a tab URL is an Apple Event, so a user who declined the
+      // "Camora wants to control Google Chrome" prompt lands here forever.
+      // Swallowing it reported "No browser window found", which sends the
+      // user looking at their browser instead of at Automation settings.
+      _lastBrowserReadError = err;
+    }
   }
 
   // Second pass: fall back to the front window of the first available browser.
@@ -1012,9 +1026,22 @@ end tell`);
       const url = sep >= 0 ? result.slice(0, sep).trim() : result.trim();
       const windowTitle = sep >= 0 ? result.slice(sep + 3).trim() : '';
       if (url) return { browser, url, windowTitle };
-    } catch {}
+    } catch (err) {
+      _lastBrowserReadError = err;
+    }
   }
   return null;
+}
+
+function browserReadErrorMessage() {
+  const err = _lastBrowserReadError;
+  if (!err) return null;
+  const msg = String(err.message || err);
+  if (msg.includes('-1743') || /not authoriz|not allowed to send/i.test(msg)) {
+    return 'Camora is not allowed to read your browser. Open System Settings → Privacy & Security → Automation, enable Google Chrome under Camora, then try Detect again.';
+  }
+  if (msg.includes('-600') || /isn'?t running|not running/i.test(msg)) return null; // browser simply closed
+  return `Reading the browser URL failed: ${msg}`;
 }
 
 let _lastHrUrl = null;
@@ -2051,10 +2078,14 @@ ipcMain.handle('get-active-browser-url', async () => {
   }
   try {
     const info = await getActiveBrowserInfo();
-    if (!info) return { ok: false, error: 'No browser window found.' };
+    if (!info) {
+      // A permission denial is the likely cause and is actionable; "no browser
+      // window" is only the truth when nothing threw.
+      return { ok: false, error: browserReadErrorMessage() || 'No supported browser window found. Open the problem in Chrome, Brave, Edge or Arc.' };
+    }
     return { ok: true, url: info.url, browser: info.browser };
   } catch (err) {
-    return { ok: false, error: err?.message || 'Failed to get browser URL' };
+    return { ok: false, error: browserReadErrorMessage() || err?.message || 'Failed to get browser URL' };
   }
 });
 
