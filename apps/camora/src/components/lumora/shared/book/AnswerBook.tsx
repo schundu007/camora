@@ -128,6 +128,44 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
         </div>
       );
 
+    case 'matrix':
+      return (
+        <div className="lumora-book-matrix my-2 overflow-x-auto">
+          <table className="w-full border-collapse text-[12px]">
+            <thead>
+              <tr>
+                <th className="text-left">Approach</th>
+                <th className="text-left">Time</th>
+                <th className="text-left">Space</th>
+                <th className="text-left">Verdict</th>
+              </tr>
+            </thead>
+            <tbody>
+              {block.rows.map((r, i) => (
+                <tr key={i} className={i === block.activeIndex ? 'is-active' : undefined}>
+                  <td>
+                    <span className="font-semibold">{r.name}</span>
+                    {r.pattern && r.pattern !== r.name && (
+                      <span className="lumora-book-matrix-tag">{r.pattern}</span>
+                    )}
+                  </td>
+                  {/* The derivation is why the bound is believable, but it is
+                      two sentences — a column would swamp the table, so it
+                      rides the cell as a tooltip. */}
+                  <td className="font-mono" data-tip={r.timeWhy || undefined}>{r.time || '—'}</td>
+                  <td className="font-mono" data-tip={r.spaceWhy || undefined}>{r.space || '—'}</td>
+                  <td>
+                    {r.verdict === 'best' && <span className="lumora-book-pill is-best">Best</span>}
+                    {r.verdict === 'baseline' && <span className="lumora-book-pill">Baseline</span>}
+                    {r.tleRisk && <span className="lumora-book-pill is-risk" data-tip={r.note || undefined}>TLE risk</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+
     case 'walk': {
       const interactive = !!(onLineHover || onLineClick);
       return (

@@ -1,5 +1,6 @@
 import type { ParsedBlock } from '@/types';
 import { cleanText } from '@/lib/text-utils';
+import { rankApproaches } from '@/lib/lumora/complexity-rank';
 
 export type BookBlock =
   | { kind: 'prose'; text: string }
@@ -12,7 +13,24 @@ export type BookBlock =
   // 2-3 sentence answer rather than a token.
   | { kind: 'kv'; pairs: [string, string][]; layout?: 'inline' | 'rows' }
   | { kind: 'trace'; rows: { step: number; action: string; state: string }[] }
-  | { kind: 'walk'; rows: { line?: number; code?: string; explanation: string }[] };
+  | { kind: 'walk'; rows: { line?: number; code?: string; explanation: string }[] }
+  // Every approach on one grid, so "why this one" is answerable at a glance
+  // instead of by flipping between three tabs and holding two bounds in memory.
+  | { kind: 'matrix'; rows: MatrixRow[]; activeIndex?: number };
+
+export type MatrixRow = {
+  name: string;
+  pattern?: string;
+  time?: string;
+  space?: string;
+  /** Derivations — shown on hover rather than spent as columns. */
+  timeWhy?: string;
+  spaceWhy?: string;
+  verdict?: 'best' | 'baseline';
+  /** Constraints say this bound times out, from optimality.tleRisk. */
+  tleRisk?: boolean;
+  note?: string;
+};
 
 export type BookSection = { id: string; heading: string; blocks: BookBlock[] };
 export type BookDoc = { title?: string; sections: BookSection[] };
@@ -26,6 +44,7 @@ export const SECTION_TITLES: Record<string, string> = {
   walkthrough: 'Walkthrough',
   trace: 'Dry-run trace',
   tradeoffs: 'Tradeoffs',
+  comparison: 'Approach comparison',
   edgecases: 'Edge cases',
   testcases: 'Test cases',
   followup: 'Follow-up Q&A',
@@ -97,6 +116,35 @@ const listOrNull = (v: unknown): BookBlock | null => {
   return items.length ? { kind: 'list', items } : null;
 };
 
+/**
+ * One row per approach, ranked. Null for a single-solution answer — a
+ * comparison of one is a table with nothing to compare.
+ */
+const matrixOrNull = (sd: any, activeIndex: number): BookBlock | null => {
+  const sols = Array.isArray(sd?.solutions) ? sd.solutions : [];
+  if (sols.length < 2) return null;
+
+  const { bestIdx, worstIdx } = rankApproaches(
+    sols.map((s: any) => ({ time: s?.complexity?.time, space: s?.complexity?.space })),
+  );
+
+  const rows: MatrixRow[] = sols.map((s: any, i: number) => ({
+    name: txt(s?.name) || `Solution ${i + 1}`,
+    pattern: txt(s?.patternTag) || undefined,
+    time: txt(s?.complexity?.time) || undefined,
+    space: txt(s?.complexity?.space) || undefined,
+    timeWhy: txt(s?.complexity?.timeWhy) || undefined,
+    spaceWhy: txt(s?.complexity?.spaceWhy) || undefined,
+    verdict: i === bestIdx ? 'best' : i === worstIdx ? 'baseline' : undefined,
+    tleRisk: s?.optimality?.tleRisk === true,
+    // submittableReason is the sharper of the two — it says what actually
+    // breaks — so it wins when both are present.
+    note: txt(s?.submittableReason) || txt(s?.optimality?.why) || undefined,
+  }));
+
+  return { kind: 'matrix', rows, activeIndex };
+};
+
 /** Live Coding: the parsed `jsonSolution` object. */
 export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   const sections: BookSection[] = [];
@@ -161,14 +209,24 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
     : [];
   push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
 
+  push(sections, 'tradeoffs', [listOrNull(pitchObj?.tradeoffs)]);
+
+  // Approach comparison. The three solutions already carry everything this
+  // needs — name, patternTag, both bounds with their derivations, and (when the
+  // constraints were known) optimality.tleRisk — so the matrix costs no extra
+  // generation and appears on answers that were cached before it existed.
+  //
+  // "Best" is computed from the bounds rather than taken as solutions[2]: the
+  // model is asked to order simplest → most optimal, and mostly does, but a
+  // badge that just trusts the ordering is a badge that lies when it doesn't.
+  push(sections, 'comparison', [matrixOrNull(sd, solIdx)]);
+
   const trace = Array.isArray(sol?.trace)
     ? sol.trace
         .map((r: any) => ({ step: r.step, action: txt(r.action), state: txt(r.state) }))
         .filter((r: any) => r.action || r.state)
     : [];
   push(sections, 'trace', [trace.length ? { kind: 'trace', rows: trace } : null]);
-
-  push(sections, 'tradeoffs', [listOrNull(pitchObj?.tradeoffs)]);
 
   // Edge cases come from two places the model fills independently: pitch.edgeCases
   // (always present) and the top-level edgeScenarios (only when inputTrust was

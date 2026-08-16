@@ -3517,10 +3517,16 @@ figure:has(> .viz-caption) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 2rem;
     row-gap: 0;
-    /* Sections size to their content instead of stretching to the tallest in
-       the row — without this every short section grows a trailing void. */
-    align-items: start;
+    /* Row-mates share a height. Sections are borderless so this is invisible
+       for prose, but the comparison matrix is a bordered card: left to size
+       itself it ends short of Tradeoffs beside it and the pair reads as
+       ragged. The card fills the row instead (see :has below). */
+    align-items: stretch;
   }
+  /* Scoped to the matrix on purpose — making every section a flex column would
+     stop margin collapsing inside prose sections and re-space the whole book. */
+  .lumora-book-grid > section:has(.lumora-book-matrix) { display: flex; flex-direction: column; }
+  .lumora-book-grid > section > .lumora-book-matrix { flex: 1; }
   /* Sections holding a code block take the whole width. */
   .lumora-book-grid > .lumora-book-span { grid-column: 1 / -1; }
   /* Complexity + Walkthrough share one cell and stack inside it. min-width:0
@@ -3586,6 +3592,70 @@ figure:has(> .viz-caption) {
   padding: 0.1rem 0 0.1rem 0.8rem;
   margin: 0.8rem 0;
   color: var(--text-primary);
+}
+
+/* ── Approach comparison matrix ──────────────────────────────────────────
+   The one section that IS a card: it is a grid of facts, not prose, and the
+   border is what makes the columns line up as a table rather than read as
+   three stray lines of text. */
+.lumora-book-matrix {
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  background: var(--bg-surface);
+}
+.lumora-book-matrix table { width: 100%; border-collapse: collapse; }
+.lumora-book-matrix th {
+  font-family: 'Inter', var(--font-display), sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.lumora-book-matrix td {
+  padding: 0.4rem 0.55rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  vertical-align: top;
+  color: var(--text-primary);
+}
+.lumora-book-matrix tbody tr:last-child td { border-bottom: 0; }
+/* Which approach the rest of the page is currently showing. */
+.lumora-book-matrix tbody tr.is-active { background: var(--accent-subtle); }
+.lumora-book-matrix tbody tr.is-active td:first-child {
+  box-shadow: inset 2px 0 0 var(--cam-gold-leaf);
+}
+.lumora-book-matrix-tag {
+  display: block;
+  font-family: 'Inter', var(--font-display), sans-serif;
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+.lumora-book-pill {
+  display: inline-block;
+  font-family: 'Inter', var(--font-display), sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.lumora-book-pill + .lumora-book-pill { margin-left: 0.25rem; }
+.lumora-book-pill.is-best {
+  color: var(--cam-gold-leaf-lt);
+  background: var(--cam-hero-strip);
+  border-color: var(--cam-gold-leaf);
+}
+.lumora-book-pill.is-risk {
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 45%, transparent);
 }
 
 /* Code, traces and diagrams break out wider than the text measure. */

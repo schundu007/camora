@@ -25,10 +25,60 @@ const SD = {
 const ids = (doc: { sections: { id: string }[] }) => doc.sections.map(s => s.id);
 
 describe('docFromSolution', () => {
+  // Order is layout: the two-column grid pairs cells as they arrive, so
+  // Tradeoffs sits beside Approach comparison and Dry-run trace beside Edge
+  // cases — each row a pair that is read together.
   it('emits sections in reading order', () => {
     expect(ids(docFromSolution(SD))).toEqual([
-      'approach', 'complexity', 'walkthrough', 'trace', 'tradeoffs', 'edgecases',
+      'approach', 'complexity', 'walkthrough', 'tradeoffs', 'trace', 'edgecases',
     ]);
+  });
+
+  describe('approach comparison', () => {
+    const THREE = {
+      solutions: [
+        { name: 'Brute Force', patternTag: 'Brute Force', approach: 'a',
+          complexity: { time: 'O(n^2)', space: 'O(1)', timeWhy: 'nested loops' },
+          optimality: { tleRisk: true, why: 'n reaches 1e5' } },
+        { name: 'Sorting', patternTag: 'Sorting', approach: 'b',
+          complexity: { time: 'O(n log n)', space: 'O(n)' } },
+        { name: 'Hash Map', patternTag: 'Hash Map', approach: 'c',
+          complexity: { time: 'O(n)', space: 'O(n)' } },
+      ],
+      pitch: { tradeoffs: ['space vs time'] },
+    };
+
+    it('sits directly after tradeoffs', () => {
+      const order = ids(docFromSolution(THREE));
+      expect(order[order.indexOf('tradeoffs') + 1]).toBe('comparison');
+    });
+
+    it('carries one row per approach with both bounds and the pattern', () => {
+      const s = docFromSolution(THREE).sections.find(x => x.id === 'comparison')!;
+      const block = s.blocks[0];
+      expect(block.kind).toBe('matrix');
+      if (block.kind !== 'matrix') throw new Error('expected a matrix');
+      expect(block.rows.map(r => [r.name, r.pattern, r.time, r.space])).toEqual([
+        ['Brute Force', 'Brute Force', 'O(n^2)', 'O(1)'],
+        ['Sorting', 'Sorting', 'O(n log n)', 'O(n)'],
+        ['Hash Map', 'Hash Map', 'O(n)', 'O(n)'],
+      ]);
+      expect(block.rows.map(r => r.verdict)).toEqual(['baseline', undefined, 'best']);
+      expect(block.rows[0].tleRisk).toBe(true);
+      expect(block.rows[0].timeWhy).toBe('nested loops');
+    });
+
+    it('marks the approach the rest of the page is showing', () => {
+      const s = docFromSolution(THREE, 1).sections.find(x => x.id === 'comparison')!;
+      const block = s.blocks[0];
+      if (block.kind !== 'matrix') throw new Error('expected a matrix');
+      expect(block.activeIndex).toBe(1);
+    });
+
+    // A comparison of one is a table with nothing to compare.
+    it('is absent for a single-solution answer', () => {
+      expect(ids(docFromSolution(SD))).not.toContain('comparison');
+    });
   });
 
   it('renders keyPoints as a callout, not prose', () => {
