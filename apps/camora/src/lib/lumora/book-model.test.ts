@@ -42,6 +42,44 @@ describe('docFromSolution', () => {
     expect(s.blocks[0]).toEqual({ kind: 'kv', pairs: [['Time', 'O(n)'], ['Space', 'O(1)']] });
   });
 
+  // A bare bound is the half the interviewer already assumes — "why" is the
+  // next question, and the derivation used to be dropped on the floor here even
+  // when the backend supplied it.
+  it('renders the complexity derivation alongside the bounds', () => {
+    const withWhy = {
+      solutions: [{
+        approach: 'x',
+        complexity: {
+          time: 'O(n log n)', space: 'O(n)',
+          timeWhy: 'log n levels of recursion, n work merging at each level.',
+          spaceWhy: 'One n-sized merge buffer plus log n stack frames.',
+        },
+      }],
+    };
+    const s = docFromSolution(withWhy).sections.find(x => x.id === 'complexity')!;
+    expect(s.blocks[1]).toEqual({
+      kind: 'callout',
+      label: 'Why these bounds',
+      items: [
+        'Time — log n levels of recursion, n work merging at each level.',
+        'Space — One n-sized merge buffer plus log n stack frames.',
+      ],
+    });
+  });
+
+  // Answers cached before the field existed must degrade to the bounds alone,
+  // not render an empty aside.
+  it('omits the derivation aside when the backend supplied none', () => {
+    const s = docFromSolution(SD).sections.find(x => x.id === 'complexity')!;
+    expect(s.blocks).toHaveLength(1);
+  });
+
+  it('keeps the derivation when only one of the two is present', () => {
+    const partial = { solutions: [{ approach: 'x', complexity: { time: 'O(n)', timeWhy: 'One pass.' } }] };
+    const s = docFromSolution(partial).sections.find(x => x.id === 'complexity')!;
+    expect(s.blocks[1]).toMatchObject({ kind: 'callout', items: ['Time — One pass.'] });
+  });
+
   it('drops sections with no content instead of emitting empty boxes', () => {
     const bare = { solutions: [{ approach: 'x' }] };
     expect(ids(docFromSolution(bare))).toEqual(['approach']);

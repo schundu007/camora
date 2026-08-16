@@ -59,7 +59,7 @@ describe('AnswerBook', () => {
 
     it('columns the trace and walkthrough — they are the longest sections', () => {
       // Exempting these would have surrendered most of the vertical saving.
-      const trace = render(<AnswerBook doc={withBlock({ kind: 'trace', rows: [{ step: '1', action: 'a', state: 's' }] })} />);
+      const trace = render(<AnswerBook doc={withBlock({ kind: 'trace', rows: [{ step: 1, action: 'a', state: 's' }] })} />);
       expect(trace.container.querySelector('section')).not.toHaveClass('lumora-book-span');
 
       const walk = render(<AnswerBook doc={withBlock({ kind: 'walk', rows: [{ line: 1, code: 'x', explanation: 'e' }] })} />);

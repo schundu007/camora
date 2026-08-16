@@ -727,7 +727,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -746,7 +746,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code for this approach with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -763,7 +763,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for second approach",
-      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -777,7 +777,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for third approach",
-      "complexity": { "time": "O(...)", "space": "O(...)" }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -843,6 +843,36 @@ without a second pass" is the whole one. Say what you gave up.
 
 Order them hardest-first — the one most likely to end the interview badly goes
 at the top, because that is the one worth rehearsing.
+
+##############################################################################
+# COMPLEXITY — THE BOUND IS THE CHEAP HALF
+##############################################################################
+"O(n log n)" takes two seconds to say and the interviewer's next word is "why".
+A stated bound with no derivation behind it is the most common way a correct
+solution still reads as memorised, so timeWhy and spaceWhy are not optional
+garnish — they are the part that gets graded.
+
+timeWhy must show the arithmetic, in the shape THIS code actually has:
+  loops            → how many passes over what, and what nests inside what
+  divide & conquer → levels x work per level ("log n levels, n work merging each")
+  amortised        → say so, and say what pays for it
+  early exit       → say what the worst case that defeats it looks like
+
+spaceWhy must account for EVERY allocation that grows with the input: buffers by
+name, the recursion stack AND its depth, and the output itself when it counts.
+"O(n)" with no mention of which n is a bound nobody can defend. When the
+algorithm is in place, say "O(1) auxiliary" and name what makes it so.
+
+Name the real identifiers from the code. A timeWhy that would read identically
+under a different solution is filler — the interviewer is testing whether the
+candidate derived it or recalled it, and generic phrasing answers that question
+the wrong way.
+
+State best/average/worst ONLY where they genuinely diverge — quicksort yes,
+merge sort no. Listing three identical cases is padding.
+
+Both stay SAYABLE: 1-2 sentences each, spoken register, no essay. Detail here
+means the derivation is present, not that the prose is long.
 
 ##############################################################################
 # CODE ENCODING — CRITICAL (one wrong backslash makes the solution un-runnable)
@@ -954,7 +984,7 @@ Respond with valid JSON ONLY (no markdown fences, no prose before or after):
       "patternTag": "Brute Force",
       "approach": "One sentence: how many defects, and the worst one.",
       "code": "THE ORIGINAL PROGRAM WITH EACH DEFECT FIXED IN PLACE — same statements, same order, same names, same I/O style, same line count unless a defect was a missing or duplicated line",
-      "complexity": { "time": "O(...)", "space": "O(...)" },
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "1-2 sentences deriving the bound from the corrected code.", "spaceWhy": "1-2 sentences naming every allocation that grows with the input, plus recursion depth if recursive." },
       "narration": "First-person, 2-3 sentences the candidate says aloud: what was wrong, why it broke, what you changed.",
       "explanations": [
         {"line": <1-indexed line in the ORIGINAL code>, "code": "the original faulty line, verbatim", "explanation": "category — why it is wrong — what breaks at runtime"}
