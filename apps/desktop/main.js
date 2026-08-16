@@ -1293,6 +1293,16 @@ async function doHackerrankScrape() {
   }
 
   // DOM extraction failed — fall back to a single screenshot of the browser window.
+  // This is the ONLY step that needs Screen Recording, so it is checked here
+  // rather than at the poller entry: without the grant the DOM path above still
+  // works, and only this fallback is unavailable.
+  if (process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('screen') !== 'granted') {
+    return {
+      ok: false,
+      needsScreenPermission: true,
+      error: 'Couldn\'t read the page text, and the screenshot fallback needs Screen Recording. System Settings → Privacy & Security → Screen Recording → enable Camora, then relaunch.',
+    };
+  }
   console.log('[hr-auto] DOM extraction failed, falling back to single screenshot');
   const dataUrl = await captureExactBrowserWindow(windowTitle);
   if (dataUrl) {
@@ -1438,7 +1448,16 @@ function startHackerrankAutoDetect() {
       // Skip if no platform selected, Screen Recording not granted, or manual fetch running
       if (_codingPlatform === 'none') return;
       if (_scrapeInProgress) return;
-      if (systemPreferences.getMediaAccessStatus('screen') !== 'granted') return;
+      // NO screen-permission gate here. Reading the tab URL is an Apple Event
+      // and DOM text extraction is injected JavaScript — neither touches the
+      // screen. Only the screenshot FALLBACK needs Screen Recording, and it
+      // now checks for itself in doHackerrankScrape.
+      //
+      // This gate used to sit here and silently returned on every 3s tick, so
+      // losing the Screen Recording grant killed auto-detect outright. That
+      // grant is lost routinely: re-signing on reinstall rotates the cdhash and
+      // macOS drops the approval, which is why auto-fetch "just stopped
+      // working" after a rebuild with no code change to blame.
       const info = await getActiveBrowserInfo();
       if (!info) return;
       const { url } = info;
@@ -1733,17 +1752,12 @@ ipcMain.handle('hackerrank-manual-fetch', async () => {
     if (hit?.url) return { ok: true, url: hit.url, browser: hit.browser, starterCode: hit.starterCode || null };
     return await captureDisplayFallback();
   }
-  // Screen Recording permission is required before desktopCapturer will return
-  // non-empty thumbnails. Check it first so the user gets a clear error rather
-  // than a confusing "could not capture" message.
-  const screenStatus = systemPreferences.getMediaAccessStatus('screen');
-  if (screenStatus !== 'granted') {
-    return {
-      ok: false,
-      needsScreenPermission: true,
-      error: `Camora needs Screen Recording permission to capture the HackerRank window (current status: ${screenStatus}).\n\nSystem Settings → Privacy & Security → Screen & Camera Recording → enable Camora.\n\nRestart Camora after granting permission.`,
-    };
-  }
+  // No screen-permission gate here either. This used to reject the whole manual
+  // fetch before doHackerrankScrape could try DOM text extraction, which needs
+  // only Apple Events — so a missing Screen Recording grant failed a capture
+  // that would have succeeded. doHackerrankScrape now checks the permission at
+  // the one step that actually requires it, the screenshot fallback.
+  //
   // Block the auto-detect poll while we scrape so they don't race.
   _scrapeInProgress = true;
   try {
