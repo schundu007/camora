@@ -157,6 +157,50 @@ describe('AnswerBook', () => {
     });
   });
 
+  describe('approach comparison matrix', () => {
+    const matrixDoc: BookDoc = { sections: [{ id: 'comparison', heading: 'Approach comparison', blocks: [
+      { kind: 'matrix', activeIndex: 1, rows: [
+        { name: 'Brute Force', pattern: 'Brute Force', time: 'O(n^2)', space: 'O(1)', timeWhy: 'nested loops', verdict: 'baseline', tleRisk: true, note: 'n reaches 1e5' },
+        { name: 'Hash Map', pattern: 'Hash Map', time: 'O(n)', space: 'O(n)', verdict: 'best' },
+      ]},
+    ]}] };
+
+    it('renders one row per approach with both bounds', () => {
+      const { container } = render(<AnswerBook doc={matrixDoc} />);
+      const rows = [...container.querySelectorAll('tbody tr')];
+      expect(rows).toHaveLength(2);
+      expect(rows[0].textContent).toContain('O(n^2)');
+      expect(rows[0].textContent).toContain('O(1)');
+    });
+
+    it('badges the best approach and flags the TLE risk', () => {
+      render(<AnswerBook doc={matrixDoc} />);
+      expect(screen.getByText('Best')).toBeTruthy();
+      expect(screen.getByText('Baseline')).toBeTruthy();
+      expect(screen.getByText('TLE risk')).toBeTruthy();
+    });
+
+    it('marks the row the rest of the page is showing', () => {
+      const { container } = render(<AnswerBook doc={matrixDoc} />);
+      const active = [...container.querySelectorAll('tbody tr.is-active')];
+      expect(active).toHaveLength(1);
+      expect(active[0].textContent).toContain('Hash Map');
+    });
+
+    // Two sentences of derivation would swamp a column, so it rides the cell.
+    it('hangs the derivation off the bound as a tooltip', () => {
+      const { container } = render(<AnswerBook doc={matrixDoc} />);
+      expect(container.querySelector('td[data-tip]')?.getAttribute('data-tip')).toBe('nested loops');
+    });
+
+    it('renders an em dash for a missing bound rather than an empty cell', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [{ id: 'comparison', heading: 'C', blocks: [
+        { kind: 'matrix', rows: [{ name: 'Unknown' }, { name: 'Other' }] },
+      ]}] }} />);
+      expect(container.querySelectorAll('tbody td')[1].textContent).toBe('—');
+    });
+  });
+
   it('creates no nested scroll containers', () => {
     const { container } = render(<AnswerBook doc={doc} />);
     expect(container.querySelectorAll('.overflow-y-auto')).toHaveLength(0);
