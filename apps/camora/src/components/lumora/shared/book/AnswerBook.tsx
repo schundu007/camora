@@ -148,16 +148,35 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
   }
 };
 
+// Only code genuinely needs the full measure — a wrapped or scrolling program
+// is unreadable. Everything else survives a column: the dry-run trace runs
+// ~460px of content (it was only ever centred in dead space at full width),
+// and walkthrough rows are short enough that halving them costs nothing while
+// halving the scroll. Those two are the longest sections in a typical answer,
+// so exempting them would have given up most of the saving.
+const WIDE_BLOCKS = new Set<BookBlock['kind']>(['code']);
+const isWideSection = (blocks: BookBlock[]) => blocks.some(b => WIDE_BLOCKS.has(b.kind));
+
 export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => (
   <div className="lumora-book">
     {doc.title && <h1 className="lumora-book-section" style={{ marginTop: 0 }}>{doc.title}</h1>}
-    {doc.sections.map(section => (
-      <section key={section.id}>
-        <h2 className="lumora-book-section">{section.heading}</h2>
-        {section.blocks.map((block, i) => (
-          <Block key={i} block={block} onLineHover={onLineHover} onLineClick={onLineClick} />
+    {/* Two-column at width, one column when the panel is dragged narrow — a
+        container query, not a media query, because this panel is resizable and
+        its width has no fixed relationship to the viewport's. */}
+    {doc.sections.length > 0 && (
+      <div className="lumora-book-grid">
+        {doc.sections.map(section => (
+          <section
+            key={section.id}
+            className={isWideSection(section.blocks) ? 'lumora-book-span' : undefined}
+          >
+            <h2 className="lumora-book-section">{section.heading}</h2>
+            {section.blocks.map((block, i) => (
+              <Block key={i} block={block} onLineHover={onLineHover} onLineClick={onLineClick} />
+            ))}
+          </section>
         ))}
-      </section>
-    ))}
+      </div>
+    )}
   </div>
 );

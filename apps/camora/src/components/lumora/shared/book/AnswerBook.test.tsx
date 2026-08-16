@@ -38,6 +38,35 @@ describe('AnswerBook', () => {
     expect(screen.getByText('O(n)')).toBeTruthy();
   });
 
+  // The two-column layout is a container query in globals.css, so it cannot be
+  // asserted here — but the span decision is component logic and IS the part
+  // that rots silently: add a new wide block kind, forget WIDE_BLOCKS, and its
+  // section quietly renders at half width in production only.
+  describe('column spanning', () => {
+    const withBlock = (block: BookDoc['sections'][0]['blocks'][0]): BookDoc => ({
+      sections: [{ id: 's', heading: 'S', blocks: [block] }],
+    });
+
+    it('spans a section containing code across both columns', () => {
+      const { container } = render(<AnswerBook doc={withBlock({ kind: 'code', lang: 'python', code: 'x = 1' })} />);
+      expect(container.querySelector('section')).toHaveClass('lumora-book-span');
+    });
+
+    it('leaves prose sections in a single column', () => {
+      const { container } = render(<AnswerBook doc={withBlock({ kind: 'prose', text: 'hello' })} />);
+      expect(container.querySelector('section')).not.toHaveClass('lumora-book-span');
+    });
+
+    it('columns the trace and walkthrough — they are the longest sections', () => {
+      // Exempting these would have surrendered most of the vertical saving.
+      const trace = render(<AnswerBook doc={withBlock({ kind: 'trace', rows: [{ step: '1', action: 'a', state: 's' }] })} />);
+      expect(trace.container.querySelector('section')).not.toHaveClass('lumora-book-span');
+
+      const walk = render(<AnswerBook doc={withBlock({ kind: 'walk', rows: [{ line: 1, code: 'x', explanation: 'e' }] })} />);
+      expect(walk.container.querySelector('section')).not.toHaveClass('lumora-book-span');
+    });
+  });
+
   it('creates no nested scroll containers', () => {
     const { container } = render(<AnswerBook doc={doc} />);
     expect(container.querySelectorAll('.overflow-y-auto')).toHaveLength(0);
