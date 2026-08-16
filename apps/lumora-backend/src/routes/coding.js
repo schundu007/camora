@@ -3104,11 +3104,17 @@ ${CLASSIFIER_SPEC}
     // What the screen is asking for, so the client can act on the snap
     // immediately instead of dropping a thumbnail and waiting for a click.
     // Fall back on the shape of what we extracted when the model omits it.
+    // The fallback must never GUESS 'review'. 'review' is the one verdict the
+    // client acts on by leaving the Coding tab, so inferring it from "there was
+    // code in the editor" turned every screenshot the model failed to classify
+    // — which is every screenshot of a platform with a starter template — into
+    // a code review the user never asked for. An unclassified capture with code
+    // in it is a template to finish; only the model saying so makes it a review.
     const VALID_TASKS = ['review', 'complete', 'solve', 'explain'];
     const rawTask = parsed?.task?.toLowerCase?.()?.trim() || null;
     const task = VALID_TASKS.includes(rawTask)
       ? rawTask
-      : (starterCode && starterCode.trim() ? 'review' : 'solve');
+      : (starterCode && starterCode.trim() ? 'complete' : 'solve');
     console.log(`[extract-from-image] lang_vision_raw=${rawVisionLang} lang_vision_valid=${visionLang} lang_regex=${regexLang} final=${detectedLanguage} task_raw=${rawTask} task=${task}`);
     res.json({ problem, starter_code: starterCode, kind, detected_language: detectedLanguage, task });
   } catch (err) {
