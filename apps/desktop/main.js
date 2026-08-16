@@ -11,8 +11,13 @@
 //
 // What it deliberately doesn't:
 //   • No tray (caused stale-icon issues last build).
-//   • No auto-updater.
 //   • No screen-capture entitlement gating beyond what macOS TCC handles natively.
+//
+// Auto-update (Windows only, see setupAutoUpdate below): the shell loads the
+// web app remotely, so UI ships without a new binary — but native features
+// (screen capture, URL capture, login) live here and used to require the user
+// to notice, re-download and reinstall. Nobody does that, which is how an
+// install can sit a month behind main.
 
 const {
   app, BrowserWindow, globalShortcut, systemPreferences,
@@ -35,6 +40,68 @@ try {
     activeBrowserUrl: async () => null,
     unsupportedReason: () => 'Browser URL detection is unavailable in this build. Paste the URL and click Fetch.',
   };
+}
+
+// ── Auto-update (Windows) ───────────────────────────────────────────────────
+//
+// Guarded the same way as browserProbe: if electron-updater is missing from the
+// packaged `files` allowlist, the app must still boot. A shell that cannot
+// update is a nuisance; a shell that cannot start is an outage.
+//
+// Windows only, deliberately. The macOS DMGs are built by hand and published
+// without a matching latest-mac.yml, so pointing the updater at that feed would
+// have every Mac user's app fail a check on every launch. Restore this to all
+// platforms once macOS builds in CI.
+//
+// The updater compares the semver in the release's latest.yml against
+// app.getVersion(). CI stamps package.json `version` to 1.0.<2000+run_number>
+// on every push, which is what makes that comparison meaningful — the frozen
+// 1.0.0 it used to ship would always compare equal and never update.
+function setupAutoUpdate(win) {
+  if (process.platform !== 'win32') return;
+  if (!app.isPackaged) return; // dev runs have no release to compare against
+
+  let autoUpdater;
+  try {
+    ({ autoUpdater } = require('electron-updater'));
+  } catch (err) {
+    console.error('[updater] electron-updater unavailable — auto-update disabled:', err?.message);
+    return;
+  }
+
+  // Download in the background, install on quit. Never interrupt a live
+  // interview with a restart prompt — the whole point of this app is that it
+  // is in front of someone mid-conversation.
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.logger = null;
+
+  const notify = (channel, payload) => {
+    try { win?.webContents?.send(channel, payload); } catch {}
+  };
+
+  autoUpdater.on('update-available', (info) => {
+    console.info('[updater] update available:', info?.version);
+    notify('camora:update-available', { version: info?.version });
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    console.info('[updater] update downloaded, installs on quit:', info?.version);
+    notify('camora:update-ready', { version: info?.version });
+  });
+  // A failed check must stay silent. The updater runs on every launch against a
+  // network that may be captive, offline, or behind a corporate proxy, and none
+  // of that is the user's problem while they are trying to start an interview.
+  autoUpdater.on('error', (err) => {
+    console.warn('[updater] check failed (non-fatal):', err?.message);
+  });
+
+  // Delayed so the update check never competes with the first page load for
+  // bandwidth on a cold launch.
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.warn('[updater] check failed (non-fatal):', err?.message);
+    });
+  }, 8000);
 }
 
 // Synchronous version lookup for preload's `window.camo.version`. Returns the
@@ -527,6 +594,10 @@ app.whenReady().then(async () => {
   // Guard: `activate` may have already created the window if the user
   // clicked the Dock while the async cache-clear / mic-prompt was running.
   if (!mainWindow || mainWindow.isDestroyed()) createWindow();
+
+  // Check for a newer build. Runs after the window exists so the updater has
+  // somewhere to report to, and self-disables off Windows / in dev.
+  setupAutoUpdate(mainWindow);
 
   // Start auto-detecting HackerRank in the browser (macOS only via AppleScript)
   startHackerrankAutoDetect();
