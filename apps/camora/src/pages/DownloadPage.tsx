@@ -22,7 +22,9 @@ import { cn } from '../utils/cn';
 const GITHUB_REPO = 'https://github.com/schundu007/camora';
 const RELEASES_API = 'https://api.github.com/repos/schundu007/camora/releases/latest';
 
-type OSType = 'mac-arm' | 'mac-intel' | 'windows' | 'windows-arm' | 'linux';
+// No 'windows-arm': the single Windows installer is dual-arch, so ARM users
+// take the same download. Keeping the variant only re-invited a dead link.
+type OSType = 'mac-arm' | 'mac-intel' | 'windows' | 'linux';
 
 interface PlatformInfo {
   id: OSType;
@@ -55,22 +57,19 @@ function getPlatforms(version: string): PlatformInfo[] {
       url: `${base}/Camora-${version}-x64.dmg`,
       icon: 'apple',
     },
+    // ONE Windows installer, carrying both architectures. package.json sets
+    // build.win.target[0].arch = ["x64","arm64"], so electron-builder emits a
+    // single dual-arch NSIS and CI publishes exactly that (see the comment atop
+    // .github/workflows/build-desktop.yml). The separate "Windows ARM" card
+    // that used to sit here pointed at Camora-<v>-Setup-arm64.exe, which no
+    // release has ever contained — it 404'd for every user who picked it.
     {
       id: 'windows',
       label: 'Windows',
-      arch: 'x64 (64-bit)',
-      size: '~96 MB',
+      arch: 'x64 + ARM64 (Snapdragon)',
+      size: '~192 MB',
       fileType: 'EXE',
       url: `${base}/Camora-${version}-Setup.exe`,
-      icon: 'windows',
-    },
-    {
-      id: 'windows-arm',
-      label: 'Windows ARM',
-      arch: 'ARM64 (Snapdragon)',
-      size: '~93 MB',
-      fileType: 'EXE',
-      url: `${base}/Camora-${version}-Setup-arm64.exe`,
       icon: 'windows',
     },
   ];

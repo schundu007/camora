@@ -68,10 +68,27 @@ jobs:
       # `shell: bash` is explicit because these runners are windows-latest and
       # would otherwise default to pwsh, where $(( )) is not arithmetic. Git Bash
       # ships on the Windows runner image, so this is portable as written.
+      #
+      # `version` is stamped to the SAME number, and that is what makes
+      # auto-update work at all. electron-updater compares the semver in the
+      # release's latest.yml against app.getVersion(); the frozen "1.0.0" this
+      # used to ship compared equal on every check, so an installed app would
+      # fetch the feed and conclude it was already current, forever.
+      # build.buildVersion stays too — it is CFBundleVersion, which the updater
+      # ignores and macOS needs.
+      #
+      # The installer FILENAME must not follow `version`, or the download URL on
+      # /download would change every push and every existing link would 404.
+      # win.artifactName is pinned to the literal Camora-1.0.0-Setup.exe for
+      # exactly that reason; 1.0.0 remains the marketing version.
       - name: Stamp unique build version
         working-directory: apps/desktop
         shell: bash
-        run: npm pkg set build.buildVersion="1.0.$(( 2000 + ${{ github.run_number }} ))"
+        run: |
+          BUILD="1.0.$(( 2000 + ${{ github.run_number }} ))"
+          npm pkg set build.buildVersion="$BUILD"
+          npm pkg set version="$BUILD"
+          echo "stamped version=$BUILD"
 
       # Retried because electron-builder downloads its toolchain (winCodeSign,
       # nsis) from GitHub releases DURING the build, and a 503 there fails the
@@ -93,10 +110,28 @@ jobs:
           echo "::error::build:win failed 3 times — not a transient download failure"
           exit 1
 
+      # latest.yml is the update feed: electron-updater reads it off the release
+      # to learn the newest version, the installer filename and its sha512. The
+      # EXE alone is just a file nobody is told about — without this the updater
+      # 404s on every check and silently gives up.
+      - name: Verify update feed was generated
+        working-directory: apps/desktop
+        shell: bash
+        run: |
+          if [[ ! -f build/latest.yml ]]; then
+            echo "::error::build/latest.yml missing — electron-builder did not emit an update feed."
+            echo "Check that build.publish is configured in apps/desktop/package.json."
+            ls -la build/
+            exit 1
+          fi
+          cat build/latest.yml
+
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-win
-          path: apps/desktop/build/Camora-*-Setup.exe
+          path: |
+            apps/desktop/build/Camora-*-Setup.exe
+            apps/desktop/build/latest.yml
 
   publish:
     needs: [build]
