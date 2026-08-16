@@ -291,10 +291,12 @@ function saveWindowState(win) {
   if (!win || win.isDestroyed()) return;
   try {
     const b = win.getBounds();
-    // Merge, don't overwrite: this file also carries zoomFactor, and writing
-    // bare bounds here would erase the zoom on the next window move.
+    // Merge, don't overwrite: this file also carries the zoom, and writing bare
+    // bounds here would erase it on the next window move. zoomChosen travels
+    // with the factor — dropping it would silently demote a zoom the user
+    // picked back to an unset default.
     const prev = loadWindowState();
-    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...b, zoomFactor: prev.zoomFactor }));
+    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...b, zoomFactor: prev.zoomFactor, zoomChosen: prev.zoomChosen }));
   } catch {}
 }
 
@@ -309,8 +311,8 @@ function saveWindowState(win) {
 // a frameless window has no View → Actual Size.
 //
 // Zoom is now explicit — set on every load from a value we own, adjustable, and
-// resettable. A fresh install lands on 1.0 regardless of what the session had
-// remembered.
+// resettable. A fresh install lands on the platform default regardless of what
+// the session had remembered.
 const ZOOM_MIN = 0.6;
 const ZOOM_MAX = 2.0;
 const ZOOM_STEP = 0.1;
@@ -339,26 +341,45 @@ function defaultZoom() {
   }
 }
 
+// Only a zoom the USER chose is restored. The previous build saved on every
+// load as well, so every install already on it has zoomFactor: 1 written to
+// disk — restoring that would hand the upgrade the exact oversized state the
+// new default exists to fix, and the fix would appear to do nothing. The
+// `zoomChosen` flag is what separates "the user pressed Ctrl+-" from "the app
+// wrote down what it just applied".
 function loadZoom() {
-  const z = Number(loadWindowState().zoomFactor);
+  const state = loadWindowState();
+  if (!state.zoomChosen) return defaultZoom();
+  const z = Number(state.zoomFactor);
   return Number.isFinite(z) && z >= ZOOM_MIN && z <= ZOOM_MAX ? z : defaultZoom();
+}
+
+function clearZoomChoice() {
+  try {
+    const prev = loadWindowState();
+    delete prev.zoomFactor;
+    delete prev.zoomChosen;
+    fs.writeFileSync(STATE_FILE, JSON.stringify(prev));
+  } catch {}
 }
 
 function saveZoom(factor) {
   try {
     const prev = loadWindowState();
-    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...prev, zoomFactor: factor }));
+    fs.writeFileSync(STATE_FILE, JSON.stringify({ ...prev, zoomFactor: factor, zoomChosen: true }));
   } catch {}
 }
 
-function setZoom(win, factor) {
+// persist=false for the apply-on-load path: re-writing the value we just read
+// is what turned an applied default into a remembered preference.
+function setZoom(win, factor, { persist = true } = {}) {
   if (!win || win.isDestroyed()) return defaultZoom();
   // Round to one decimal so repeated stepping can't drift to 1.0000000000000002
   // and so the value that lands in the state file is readable.
   const clamped = Math.round(Math.min(Math.max(factor, ZOOM_MIN), ZOOM_MAX) * 10) / 10;
   try {
     win.webContents.setZoomFactor(clamped);
-    saveZoom(clamped);
+    if (persist) saveZoom(clamped);
   } catch {}
   return clamped;
 }
@@ -372,14 +393,17 @@ function wireZoomControls(win) {
   // Re-applied on every load. Electron restores its own remembered per-origin
   // zoom on navigation, so setting this once at startup would be undone the
   // first time the app reloaded.
-  wc.on('did-finish-load', () => setZoom(win, loadZoom()));
+  wc.on('did-finish-load', () => setZoom(win, loadZoom(), { persist: false }));
 
   wc.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown') return;
     if (!(input.control || input.meta)) return;
     const key = input.key;
     if (key === '0') {
-      setZoom(win, defaultZoom());
+      // Reset means "forget what I chose", not "choose the default" — otherwise
+      // a later change to the platform default could never reach this install.
+      clearZoomChoice();
+      setZoom(win, defaultZoom(), { persist: false });
     } else if (key === '=' || key === '+') {
       setZoom(win, wc.getZoomFactor() + ZOOM_STEP);
     } else if (key === '-' || key === '_') {
