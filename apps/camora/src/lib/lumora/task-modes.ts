@@ -63,10 +63,39 @@ export function shouldDivertToCofix(input: {
   task: ScreenMode | null | undefined;
   /** Verbatim editor contents, when the extractor found an editor panel. */
   starterCode: string | null | undefined;
+  /** The extracted problem statement, when the capture had one. */
+  problem?: string | null;
 }): boolean {
   if (!input.fromImageSnap) return false;
   if (input.task !== 'review' && input.task !== 'explain') return false;
-  return !!input.starterCode?.trim();
+  if (!input.starterCode?.trim()) return false;
+  // A capture carrying a real problem statement is a problem to solve, whatever
+  // the classifier called the editor. Snapping a LeetCode page with the template
+  // already showing is the single most common capture there is, and it kept
+  // reading as 'review' — the user watched the Coding tab hand their problem to
+  // CoFix and answer a question they had not asked.
+  //
+  // Safe to be this conservative because the divert is UI routing, not
+  // correctness: /solve resolves the situation server-side, so a review that
+  // stays here is still repaired in place rather than rewritten.
+  return !looksLikeProblemStatement(input.problem);
+}
+
+/**
+ * Is this text a problem to solve, rather than the sentence or two of
+ * instruction that sits above a code-review screen?
+ *
+ * Length alone is a bad test — "Find the bug in the following code" is short,
+ * but so is a terse LeetCode prompt. The structural markers are what separate
+ * them: a problem statement states its inputs, its outputs and its limits.
+ */
+export function looksLikeProblemStatement(text: string | null | undefined): boolean {
+  const t = (text || '').trim();
+  if (t.length < 80) return false;
+  if (/\b(constraints?|input format|output format|sample input|sample output|example \d|explanation:)\b/i.test(t)) {
+    return true;
+  }
+  return t.length >= 300;
 }
 
 /** True when this situation returns the code unchanged and answers instead. */

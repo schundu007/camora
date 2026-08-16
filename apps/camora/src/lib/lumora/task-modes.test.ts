@@ -12,6 +12,22 @@ describe('shouldDivertToCofix', () => {
   const snap = (over: Partial<Parameters<typeof shouldDivertToCofix>[0]> = {}) =>
     shouldDivertToCofix({ fromImageSnap: true, task: 'review', starterCode: 'x = 1\nprint(x)', ...over });
 
+  // Reported live: a screenshot added in the Coding tab jumped to CoFix and
+  // started generating. Two paths produced it — the model calling a filled
+  // template 'review', and the backend's shape fallback, which read "there is
+  // code in the editor" as "this is a code review".
+  it('REGRESSION: never diverts a capture that carries a real problem statement', () => {
+    const statement = 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nConstraints:\n2 <= nums.length <= 10^4\n\nExample 1:\nInput: nums = [2,7,11,15], target = 9\nOutput: [0,1]';
+    expect(snap({ problem: statement })).toBe(false);
+    expect(snap({ problem: statement, task: 'explain' })).toBe(false);
+  });
+
+  it('still diverts a code-led capture — the instruction above it is not a problem', () => {
+    expect(snap({ problem: 'Find the bug in the following code.' })).toBe(true);
+    expect(snap({ problem: '' })).toBe(true);
+    expect(snap({ problem: null })).toBe(true);
+  });
+
   it('REGRESSION: never diverts the URL-fetch fallback', () => {
     // HackerRank and Glider are auth-walled and JS-rendered, so /fetch-problem
     // gives up and screenshots the browser — arriving in the same function with

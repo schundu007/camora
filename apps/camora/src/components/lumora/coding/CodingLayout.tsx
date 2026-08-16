@@ -1876,7 +1876,7 @@ ${solCode}
       // in place there rather than needing to be caught here. Requiring real
       // editor content keeps this narrow enough that it cannot misfire on a
       // problem statement.
-      if (shouldDivertToCofix({ fromImageSnap, task: screenTask, starterCode: extractedStarterCode })) {
+      if (shouldDivertToCofix({ fromImageSnap, task: screenTask, starterCode: extractedStarterCode, problem: combinedText })) {
         cutoffPromptedRef.current = false;
         setIsProcessing(false);
         onSendToCofix?.(extractedStarterCode!, effectiveLang, {
