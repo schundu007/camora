@@ -3527,6 +3527,10 @@ figure:has(> .viz-caption) {
      because a grid item defaults to min-content width, which a long trace row
      or code snippet inside would otherwise blow past and widen the column. */
   .lumora-book-grid > .lumora-book-stack { grid-column: span 1; min-width: 0; }
+  /* …unless it is the only cell on its row, in which case it widens like any
+     other orphan. Declared after the rule above because both have the same
+     specificity — the later one wins. */
+  .lumora-book-grid > .lumora-book-stack.lumora-book-span { grid-column: 1 / -1; }
   /* The first heading in a grid cell must not carry its 1.15rem top margin —
      in a single column that margin separates it from the previous section; in
      a grid it just pushes the cell down and re-ragged the rows. */
