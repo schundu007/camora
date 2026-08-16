@@ -80,6 +80,25 @@ describe('docFromSolution', () => {
     expect(s.blocks[1]).toMatchObject({ kind: 'callout', items: ['Time — One pass.'] });
   });
 
+  // The Solution card is scanned mid-interview, so its four sources render as
+  // bullets rather than four stacked paragraphs.
+  it('renders the solution as bullets, not paragraphs', () => {
+    const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
+    expect(s.blocks.some(b => b.kind === 'prose')).toBe(false);
+    expect(s.blocks[0]).toMatchObject({ kind: 'list' });
+  });
+
+  // Bullets put duplication on display in a way stacked paragraphs hid — the
+  // sources genuinely overlap (narration often restates pitch.approach).
+  it('collapses sources that repeat each other into one bullet', () => {
+    const dup = {
+      solutions: [{ narration: 'Same sentence.', approach: 'Same sentence.' }],
+      pitch: { opener: 'Same sentence.', approach: 'Different one.' },
+    };
+    const s = docFromSolution(dup).sections.find(x => x.id === 'approach')!;
+    expect(s.blocks[0]).toEqual({ kind: 'list', items: ['Same sentence.', 'Different one.'] });
+  });
+
   it('drops sections with no content instead of emitting empty boxes', () => {
     const bare = { solutions: [{ approach: 'x' }] };
     expect(ids(docFromSolution(bare))).toEqual(['approach']);
@@ -88,31 +107,32 @@ describe('docFromSolution', () => {
   it('accepts a pitch that is a bare string', () => {
     const strPitch = { solutions: [{ approach: 'x' }], pitch: 'just a sentence' };
     const s = docFromSolution(strPitch).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'just a sentence' });
+    expect(s.blocks).toContainEqual({ kind: 'list', items: ['x', 'just a sentence'] });
   });
 
   it('selects the requested solution index', () => {
     const two = { solutions: [{ approach: 'first' }, { approach: 'second' }] };
     const s = docFromSolution(two, 1).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'second' });
+    expect(s.blocks.find(b => b.kind === 'list')!).toMatchObject({ items: expect.arrayContaining(['second']) });
   });
 
   it('never leaves markdown in a text field', () => {
     const md = { solutions: [{ approach: '**bold** and *ital*' }] };
     const s = docFromSolution(md).sections.find(x => x.id === 'approach')!;
-    const prose = s.blocks.find(b => b.kind === 'prose') as { text: string };
-    expect(prose.text).not.toMatch(/\*/);
+    const list = s.blocks.find(b => b.kind === 'list') as { items: string[] };
+    expect(list.items.join(' ')).not.toMatch(/\*/);
   });
 
   it('keeps pitch.approach (the summary paragraph), not just opener', () => {
     const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'Two pointers converge.' });
+    expect(s.blocks.find(b => b.kind === 'list')!).toMatchObject({ items: expect.arrayContaining(['Two pointers converge.']) });
   });
 
   it('keeps both sol.approach and sol.narration when they differ', () => {
     const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'So my instinct is a two-pointer scan.' });
-    expect(s.blocks).toContainEqual({ kind: 'prose', text: 'Scan from both ends, shrinking inward.' });
+    expect(s.blocks.find(b => b.kind === 'list')!).toMatchObject({
+      items: expect.arrayContaining(['So my instinct is a two-pointer scan.', 'Scan from both ends, shrinking inward.']),
+    });
   });
 });
 

@@ -70,9 +70,11 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
 
     case 'list':
       // Long lists (e.g. Concepts) flow into two columns to save vertical space.
+      // InlineText so `identifiers` in a bullet render as code — the Solution
+      // card is a list now, and its points name real variables and functions.
       return (
         <ul className={`list-disc pl-4 space-y-0.5 mb-2 ${block.items.length > 6 ? 'sm:columns-2 sm:gap-x-8 [&>li]:break-inside-avoid' : ''}`}>
-          {block.items.map((it, i) => <li key={i}>{it}</li>)}
+          {block.items.map((it, i) => <li key={i}><InlineText text={it} /></li>)}
         </ul>
       );
 
@@ -184,26 +186,56 @@ const WIDE_SECTION_IDS = new Set(['followup']);
 const isWideSection = (id: string, blocks: BookBlock[]) =>
   WIDE_SECTION_IDS.has(id) || blocks.some(b => WIDE_BLOCKS.has(b.kind));
 
-export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => (
-  <div className="lumora-book">
-    {doc.title && <h1 className="lumora-book-section" style={{ marginTop: 0 }}>{doc.title}</h1>}
-    {/* Two-column at width, one column when the panel is dragged narrow — a
-        container query, not a media query, because this panel is resizable and
-        its width has no fixed relationship to the viewport's. */}
-    {doc.sections.length > 0 && (
-      <div className="lumora-book-grid">
-        {doc.sections.map(section => (
-          <section
-            key={section.id}
-            className={isWideSection(section.id, section.blocks) ? 'lumora-book-span' : undefined}
-          >
-            <h2 className="lumora-book-section">{section.heading}</h2>
-            {section.blocks.map((block, i) => (
-              <Block key={i} block={block} onLineHover={onLineHover} onLineClick={onLineClick} />
-            ))}
-          </section>
-        ))}
-      </div>
-    )}
-  </div>
-);
+// Complexity and Walkthrough are read as one thing: the bound, then the
+// line-by-line that earns it. Grid auto-placement was free to drop them into
+// two different columns, which puts the claim and its justification side by
+// side instead of in sequence. They now share ONE grid cell and stack inside
+// it — a single column, two rows, in this order.
+const STACKED_SECTION_IDS = ['complexity', 'walkthrough'];
+
+export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
+  const renderSection = (section: BookDoc['sections'][number]) => (
+    <section
+      key={section.id}
+      className={isWideSection(section.id, section.blocks) ? 'lumora-book-span' : undefined}
+    >
+      <h2 className="lumora-book-section">{section.heading}</h2>
+      {section.blocks.map((block, i) => (
+        <Block key={i} block={block} onLineHover={onLineHover} onLineClick={onLineClick} />
+      ))}
+    </section>
+  );
+
+  // doc.sections already carries these in Complexity → Walkthrough order, so
+  // filtering preserves it. The pair renders at the position of whichever comes
+  // first, and a doc with only one of the two still works — the wrapper simply
+  // holds a single section.
+  const stacked = doc.sections.filter(s => STACKED_SECTION_IDS.includes(s.id));
+  const stackAnchor = doc.sections.findIndex(s => STACKED_SECTION_IDS.includes(s.id));
+
+  return (
+    <div className="lumora-book">
+      {doc.title && <h1 className="lumora-book-section" style={{ marginTop: 0 }}>{doc.title}</h1>}
+      {/* Two-column at width, one column when the panel is dragged narrow — a
+          container query, not a media query, because this panel is resizable and
+          its width has no fixed relationship to the viewport's. */}
+      {doc.sections.length > 0 && (
+        <div className="lumora-book-grid">
+          {doc.sections.map((section, i) => {
+            if (STACKED_SECTION_IDS.includes(section.id)) {
+              // Emitted once, at the first member's position; the rest are
+              // rendered inside that wrapper rather than as their own cells.
+              if (i !== stackAnchor) return null;
+              return (
+                <div key="stack" className="lumora-book-stack">
+                  {stacked.map(renderSection)}
+                </div>
+              );
+            }
+            return renderSection(section);
+          })}
+        </div>
+      )}
+    </div>
+  );
+};

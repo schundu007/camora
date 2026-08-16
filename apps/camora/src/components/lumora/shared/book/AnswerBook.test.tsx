@@ -70,6 +70,29 @@ describe('AnswerBook', () => {
       expect(container.querySelector('section')).toHaveClass('lumora-book-span');
     });
 
+    // The bound and the line-by-line that earns it must read in sequence, not
+    // sit side by side in two columns — so they share one grid cell.
+    it('stacks complexity and walkthrough in a single cell, in order', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+        { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
+        { id: 'walkthrough', heading: 'Walkthrough', blocks: [{ kind: 'walk', rows: [{ line: 1, explanation: 'e' }] }] },
+      ] }} />);
+      const stack = container.querySelector('.lumora-book-stack')!;
+      expect(stack).toBeTruthy();
+      const headings = [...stack.querySelectorAll('h2')].map(h => h.textContent);
+      expect(headings).toEqual(['Complexity', 'Walkthrough']);
+      // and they are not ALSO emitted as their own grid cells
+      expect(container.querySelectorAll('.lumora-book-grid > section')).toHaveLength(1);
+    });
+
+    it('still renders the pair when only one of the two is present', () => {
+      const { container } = render(<AnswerBook doc={{ sections: [
+        { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
+      ] }} />);
+      expect(container.querySelector('.lumora-book-stack h2')?.textContent).toBe('Complexity');
+    });
+
     it('leaves the complexity kv in a column', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
         { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
