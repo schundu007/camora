@@ -1267,6 +1267,10 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
       // Backquote (` / ~) without modifier
       const isBackquote = e.code === 'Backquote' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey;
       if (!isCmdShiftA && !isBackquote) return;
+      // ` inside the Sona sidebar belongs to Sona's mic, not the interview mic.
+      // This handler runs on the capture phase and stops propagation, so without
+      // an explicit yield Sona's own listener could never see the key.
+      if (isBackquote && (e.target as HTMLElement | null)?.closest?.('[data-sona-sidebar]')) return;
       e.preventDefault();
       e.stopPropagation();
       if (locked) handleToggle(); else handleModeToggle();

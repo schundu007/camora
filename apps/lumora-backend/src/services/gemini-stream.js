@@ -11,6 +11,7 @@ import {
   buildGeneralPrompt,
   buildDesignPrompt,
   CODING_SYSTEM_PROMPT,
+  buildSessionContextBlock,
   getDefaultResumeContext,
   getDefaultTechnicalContext,
   selectModel,
@@ -97,7 +98,14 @@ export async function* streamResponseGemini(question, history, options = {}) {
     maxOutputTokens = 2000;
   } else if (isCoding) {
     const codingGrounding = retrievedContext ? `${retrievedContext}\n\n---\n\n` : '';
-    systemInstruction = codingGrounding + CODING_SYSTEM_PROMPT;
+    // Every other branch feeds the caller's systemContext to the model through
+    // `resume`. This one didn't read `resume` at all, so the "CURRENT CODING
+    // SESSION" block that CodingSonaSidebar appends — the on-screen problem,
+    // code and complexity — was assembled, shipped, and dropped here. Sona then
+    // answered follow-ups with no idea which problem was on screen.
+    // Tail-biased trim: the live-session block is appended LAST, so an oversized
+    // context loses its middle, never the problem being asked about.
+    systemInstruction = codingGrounding + CODING_SYSTEM_PROMPT + buildSessionContextBlock(systemContext);
     maxOutputTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
     systemInstruction = buildDesignPrompt(resume, technical, detailLevel, cloudProvider, designKind);

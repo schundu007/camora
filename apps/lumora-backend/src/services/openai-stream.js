@@ -11,6 +11,7 @@ import {
   buildGeneralPrompt,
   buildDesignPrompt,
   CODING_SYSTEM_PROMPT,
+  buildSessionContextBlock,
   getDefaultResumeContext,
   getDefaultTechnicalContext,
 } from './claude.js';
@@ -54,7 +55,9 @@ export async function* streamResponseOpenAI(question, history, options = {}) {
 
   if (isCoding) {
     const codingGrounding = retrievedContext ? `${retrievedContext}\n\n---\n\n` : '';
-    systemPrompt = codingGrounding + CODING_SYSTEM_PROMPT;
+    // Same fix as claude.js / gemini-stream.js: this branch never read `resume`,
+    // so the caller's live coding-session context never reached the model.
+    systemPrompt = codingGrounding + CODING_SYSTEM_PROMPT + buildSessionContextBlock(systemContext);
     maxTokens = MAX_TOKENS_DESIGN;
   } else if (isDesign) {
     systemPrompt = buildDesignPrompt(resume, technical);

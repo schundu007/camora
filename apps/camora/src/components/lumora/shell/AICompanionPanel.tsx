@@ -243,6 +243,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   };
   const [messages, setMessages] = useState<CopilotMessage[]>(() => loadMessages(storageKey));
 
+  // Mirror of `messages` read by the send path. Sending is a useCallback that
+  // deliberately does not depend on `messages` (it would re-create on every
+  // streamed token), so the transcript is read through a ref instead.
+  const messagesRef = useRef<CopilotMessage[]>(messages);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
   // Tracks which bucket the current `messages` array was loaded from.
   // The persist effect only writes when it matches `storageKey` —
   // otherwise a switch from "Nvidia" to "Fireworks" would clobber the
@@ -787,6 +793,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         signal: streamAbort.signal,
         useSearch: false,
         systemContext,
+        // Prior turns of this chat. Each request opens a new conversation on
+        // the backend, so without this every follow-up is answered as if the
+        // exchange had just begun.
+        history: messagesRef.current
+          .filter(m => typeof m.text === 'string' && m.text.trim())
+          .map(m => ({ role: m.role === 'ai' ? ('assistant' as const) : ('user' as const), content: m.text })),
         // Behavioral fullscreen → tell the backend so retrieval biases to
         // the capra-behavioral STAR sources (modeSourceFilter). The
         // floating Sona handles mixed coding/design follow-ups, so it

@@ -64,6 +64,11 @@ export interface StreamOptions {
   question: string;
   useSearch?: boolean;
   systemContext?: string;
+  /** Prior turns of THIS chat thread, oldest first. The backend opens a new
+   *  conversation row per request, so without this every follow-up reaches the
+   *  model as turn 1 and gets answered as if the exchange never happened.
+   *  Server caps it at the last 8 turns / 4k chars each. */
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   detailLevel?: 'basic' | 'full';
   responseFormat?: 'auto' | 'concise' | 'detailed' | 'star';
   /** Cloud platform the candidate is interviewing for — picked once via
@@ -116,6 +121,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
     question,
     useSearch = false,
     systemContext,
+    history,
     detailLevel,
     responseFormat,
     cloudProvider,
@@ -168,6 +174,7 @@ export async function streamResponse(options: StreamOptions): Promise<AbortContr
         question,
         use_search: useSearch,
         ...(systemContext ? { system_context: systemContext } : {}),
+        ...(history && history.length ? { history } : {}),
         ...(getPinnedIntro() ? { pinned_intro: getPinnedIntro() } : {}),
         ...(detailLevel ? { detail_level: detailLevel } : {}),
         ...(responseFormat && responseFormat !== 'auto' ? { response_format: responseFormat } : {}),
