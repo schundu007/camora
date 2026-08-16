@@ -25,6 +25,24 @@ const {
   Menu, MenuItem, clipboard, screen: electronScreen,
 } = require('electron');
 const path = require('path');
+// ── Last-resort process guards ──────────────────────────────────────────────
+//
+// An uncaught exception in the main process makes Electron show a modal
+// "A JavaScript error occurred in the main process" and take the app down. For
+// a shell that is on screen DURING an interview, dying is the worst possible
+// response to a background poller failing to read a browser URL.
+//
+// These do not excuse unhandled errors — the osascript ENOENT that motivated
+// them is fixed at its source below. They exist so that the next one degrades
+// into a log line instead of ending the session. Node's default for an
+// unhandled rejection is now to throw, so that path needs covering too.
+process.on('uncaughtException', (err) => {
+  console.error('[main] uncaught exception (app kept alive):', err?.stack || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[main] unhandled rejection (app kept alive):', reason);
+});
+
 // Guarded: electron-builder's `files` array is an explicit allowlist, so a new
 // main-process module that is added to the source tree but not to that list is
 // simply absent from the packaged app — and a bare require would throw
@@ -815,30 +833,75 @@ app.on('second-instance', (_event, argv) => {
 
 function runAppleScript(script) {
   return new Promise((resolve, reject) => {
+    // osascript exists only on macOS. Refusing here rather than spawning is the
+    // difference between a rejected promise the caller already handles and a
+    // spawn that fails asynchronously — see the 'error' listener below.
+    if (process.platform !== 'darwin') {
+      reject(new Error('AppleScript is macOS-only'));
+      return;
+    }
     const proc = spawn('osascript', ['-']);
     let out = '';
     let err = '';
+    let settled = false;
     // 8 s hard timeout — a hung osascript blocks the IPC handler thread and
     // makes the app appear frozen to the renderer. Kill the child and reject.
     const killTimer = setTimeout(() => {
       proc.kill();
-      reject(new Error('osascript timed out after 8 s'));
+      fail(new Error('osascript timed out after 8 s'));
     }, 8000);
+    const done = (v) => { if (settled) return; settled = true; clearTimeout(killTimer); resolve(v); };
+    const fail = (e) => { if (settled) return; settled = true; clearTimeout(killTimer); reject(e); };
+
+    // REQUIRED, not defensive. spawn() reports ENOENT asynchronously by emitting
+    // 'error' on the child, and an EventEmitter that emits 'error' with NO
+    // listener throws. That throw lands outside this promise, so the caller's
+    // try/catch cannot see it, the promise never settles, and Electron kills the
+    // app with "A JavaScript error occurred in the main process" — which is
+    // exactly what happened on Windows, every 3 seconds, from the auto-detect
+    // poller. A listener turns it into an ordinary handled rejection.
+    proc.on('error', fail);
+    // stdin errors the same way: writing to a process that failed to spawn
+    // raises EPIPE on the stream, which is a second uncaught path to the same
+    // dialog.
+    proc.stdin.on('error', fail);
+
     proc.stdout.on('data', d => { out += d.toString(); });
     proc.stderr.on('data', d => { err += d.toString(); });
     proc.on('close', code => {
-      clearTimeout(killTimer);
-      if (code === 0) resolve(out.trim());
-      else reject(new Error(err.trim() || `osascript exited ${code}`));
+      if (code === 0) done(out.trim());
+      else fail(new Error(err.trim() || `osascript exited ${code}`));
     });
-    proc.stdin.write(script);
-    proc.stdin.end();
+    try {
+      proc.stdin.write(script);
+      proc.stdin.end();
+    } catch (e) {
+      fail(e);
+    }
   });
 }
 
 const BROWSERS = ['Google Chrome', 'Brave Browser', 'Microsoft Edge', 'Arc'];
 
 async function getActiveBrowserInfo() {
+  // Off macOS, read the address bar through browserProbe (UI Automation on
+  // Windows, xdotool on X11). The auto-detect poller was un-gated on the basis
+  // that this function "has a cross-platform sibling" — but it never actually
+  // called the sibling, so on Windows it fell straight through to AppleScript
+  // and crashed the main process every 3 seconds. The sibling is here now.
+  if (process.platform !== 'darwin') {
+    try {
+      const url = await browserProbe.activeBrowserUrl();
+      if (!url) return null;
+      // browserProbe reads the address bar only — there is no window title or
+      // browser identity to report, and no caller requires them.
+      return { browser: null, url, windowTitle: '' };
+    } catch (err) {
+      console.debug('[browser-probe] URL read failed:', err?.message);
+      return null;
+    }
+  }
+
   // First pass: search all windows of all browsers for a platform-matching URL.
   // This prevents accidentally snapping a "focus-stolen" non-platform window
   // when the user has multiple browser windows across monitors.
