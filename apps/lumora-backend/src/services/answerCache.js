@@ -137,7 +137,10 @@ export function buildAnswerCacheKey(parts) {
   // v15: complexity gained timeWhy/spaceWhy (2026-08-16). Every v14 solve holds
   // a bare bound with no derivation, which is exactly the gap this closed —
   // replaying one would serve the old behaviour for the full 30-day TTL.
-  return `lumora:answer:v15:${h}`;
+  // v16: answers gained the identification trail and the four interview cards
+  // (2026-08-17). A v15 answer carries neither, so replaying one serves a
+  // card-less answer for the full 30-day TTL — the exact gap this closed.
+  return `lumora:answer:v16:${h}`;
 }
 
 async function cacheGetFromDb(key) {
