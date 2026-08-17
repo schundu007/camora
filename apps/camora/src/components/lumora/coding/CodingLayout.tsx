@@ -26,7 +26,7 @@ const SESSION_PAGE_NOTE =
   + 'a server fetch just gets the sign-in screen. Paste the problem text here, '
   + 'or use the desktop app to capture it from the screen.';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
-import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
+import { docFromSolution, docFromBlocks, splitDocByPane } from '@/lib/lumora/book-model';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
 import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
@@ -3366,7 +3366,7 @@ ${solCode}
 
 
                     <AnswerBook
-                      doc={docFromSolution(sd, activeSolutionIdx)}
+                      doc={splitDocByPane(docFromSolution(sd, activeSolutionIdx)).left}
                       onLineHover={(line, code, idx) => {
                         const resolved = line ?? (code ? lineForCode(code, idx ?? 0) : 0);
                         if (resolved) highlightLine(resolved); else clearHighlight();
@@ -3612,6 +3612,20 @@ ${solCode}
                         + Add Test Case ({testCases.length}/{MAX_TEST_CASES})
                       </button>
                     )}
+
+                    {/* Reference cards, beside the code rather than under the
+                        problem: these are what a candidate glances at while
+                        looking at the editor and its results. The left pane keeps
+                        the reading column — approach, walkthrough, code. */}
+                    {sd && !isMcqAnswer && (() => {
+                      const right = splitDocByPane(docFromSolution(sd, activeSolutionIdx)).right;
+                      if (!right.sections.length) return null;
+                      return (
+                        <div className="pt-2 mt-1" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
+                          <AnswerBook doc={right} />
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
 
