@@ -140,7 +140,10 @@ export function buildAnswerCacheKey(parts) {
   // v16: answers gained the identification trail and the four interview cards
   // (2026-08-17). A v15 answer carries neither, so replaying one serves a
   // card-less answer for the full 30-day TTL — the exact gap this closed.
-  return `lumora:answer:v16:${h}`;
+  // v17: the identification trail is trimmed to its decisive steps (2026-08-17).
+  // A v16 answer carries the full walk, so replaying one shows the dozen "no"
+  // answers the trim exists to remove, for the full 30-day TTL.
+  return `lumora:answer:v17:${h}`;
 }
 
 async function cacheGetFromDb(key) {

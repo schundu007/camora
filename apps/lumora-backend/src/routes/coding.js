@@ -1989,7 +1989,19 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       if (verdict.ok) {
         // Question text comes from the chart, never from the model, so the wording
         // stays consistent across answers and cannot be quietly reframed.
-        ident.path = verdict.steps;
+        //
+        // Send only the DECISIVE steps. The full walk is validated above — every
+        // edge has to exist, so the chain is proven — but a reader does not need
+        // the twelve "no" answers it passed through on the way. Trapping Rain
+        // Water answers no twelve times before the two that matter, and that wall
+        // of negatives buries the reasoning the card exists to show.
+        //
+        // Trimmed HERE rather than only in the renderer so it holds regardless of
+        // which frontend build a client is running, and for answers replayed from
+        // cache. A path that ends on a no-branch keeps its last step — that is the
+        // one that picked the technique.
+        const decisive = verdict.steps.filter(st => st.answer === 'yes');
+        ident.path = decisive.length ? decisive : verdict.steps.slice(-1);
         if (verdict.technique) ident.chartTechnique = verdict.technique;
         if (!ident.technique) ident.technique = verdict.technique;
       } else {
