@@ -38,6 +38,7 @@ export type BookDoc = { title?: string; sections: BookSection[] };
 /** Heading text per section id. Headings live here, never inside content strings. */
 export const SECTION_TITLES: Record<string, string> = {
   problem: 'Problem',
+  identification: 'How to spot it',
   approach: 'Solution',
   code: 'Code',
   complexity: 'Complexity',
@@ -158,6 +159,39 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   // Solution — narration is the spoken script and reads best; sol.approach is the
   // terse written approach (schema-distinct from narration, shown alongside it when
   // they differ); pitch.opener/approach are the object-pitch summary paragraphs.
+  /* How the pattern was identified. The technique name alone is the half an
+   * interviewer already assumes; what they actually ask is "how did you know?".
+   * The backend walks a decision chart and validates the path against it, so
+   * each step here is a real question with the words from THIS statement that
+   * settled it. Rendered first, because it is the order the reasoning happened.
+   *
+   * Optional by design: answers cached before the field existed, and any walk
+   * the backend rejected, simply render no section. */
+  const ident = sd.identification;
+  if (ident && Array.isArray(ident.path) && ident.path.length) {
+    const trail: [string, string][] = ident.path
+      .map((st: any) => {
+        const q = txt(st?.question);
+        const a = txt(st?.answer);
+        if (!q || !a) return null;
+        const ev = txt(st?.evidence);
+        return [`${q} — ${a}`, ev || '—'] as [string, string];
+      })
+      .filter(Boolean) as [string, string][];
+
+    const verdict: [string, string][] = [];
+    if (txt(ident.dataStructure)) verdict.push(['Data structure', txt(ident.dataStructure)]);
+    if (txt(ident.technique)) verdict.push(['Technique', txt(ident.technique)]);
+
+    push(sections, 'identification', [
+      verdict.length ? { kind: 'kv', pairs: verdict } : null,
+      trail.length ? { kind: 'kv', pairs: trail, layout: 'rows' } : null,
+      strList(ident.ruledOut).length
+        ? { kind: 'callout', label: 'Ruled out', items: strList(ident.ruledOut) }
+        : null,
+    ]);
+  }
+
   const keyPoints = strList(pitchObj?.keyPoints);
   const narration = txt(sol?.narration);
   const solApproach = txt(sol?.approach);

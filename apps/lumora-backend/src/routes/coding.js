@@ -8,6 +8,7 @@
  * POST /execute — Run code against test cases (Python, JS, Ruby).
  */
 import { Router } from 'express';
+import { renderTreeForPrompt, validatePath } from '../lib/algorithmFlowchart.js';
 import multer from 'multer';
 import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC, isAnswerOnly, classifyUtterance, normalizeTask } from '../services/taskModes.js';
 import { detectGap, spliceFill, gapDirective } from '../services/fillGap.js';
@@ -665,6 +666,31 @@ Example of correct HTTP call:
 - Code blocks belong ONLY in the "code" field
 
 ##############################################################################
+# RULE #4.5: IDENTIFICATION TRAIL — HOW YOU KNEW WHICH PATTERN THIS IS
+##############################################################################
+Naming the technique is the easy half; the candidate has to justify it out loud.
+So "identification" must show the REASONING, walked over the chart below.
+
+- Start at the root node \`graph\` and take ONE branch per step. Each step's \`node\`
+  MUST be the target of the previous step's answer. Never skip, reorder, or
+  invent node ids — the walk is checked against the chart and a broken one is
+  discarded.
+- Walk until you reach a technique leaf. The \`technique\` you report MUST be the
+  leaf the walk lands on, not a better idea you had on the way.
+- \`evidence\` is the part that matters. Cite what THIS statement says, not the
+  generic rule: "grid, may move to 4 adjacent cells" — never "because it is a
+  graph". Where nothing in the statement settles a branch, name the constraint
+  you inferred it from.
+- \`ruledOut\` lists the neighbours an interviewer would probe ("why not
+  Dijkstra?"), each with a one-clause reason.
+- If the chart's leaf disagrees with what your code actually does, the CODE wins:
+  keep the code and say so in ruledOut. Never bend the walk to fit a leaf you
+  did not implement.
+
+CHART — \`id | question | yes-> | no-> | cues that settle it\`:
+${renderTreeForPrompt()}
+
+##############################################################################
 
 CODE STYLE REQUIREMENTS:
 1. NO comments in code
@@ -787,6 +813,14 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       ]
     }
   ]`},
+  "identification": {
+    "path": [
+      { "node": "<node id from the chart>", "answer": "yes", "evidence": "the words in THIS statement that settle it - quote or tight paraphrase, 15 words max" }
+    ],
+    "dataStructure": "The concrete structure the solution runs on, e.g. 'implicit graph over grid cells' or 'min-heap of size k'",
+    "technique": "The leaf technique the walk lands on",
+    "ruledOut": ["Nearest technique you rejected plus the one-clause reason, e.g. \"Dijkstra - edges are unweighted\""]
+  },
   "pitch": ${singleSolution
   ? `{
     "opener": "One sentence summary of the approach",
@@ -1911,6 +1945,26 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         console.log(`[solve] dropped ${before - parsedJson.solutions.length} duplicate approach(es) — ${before} → ${parsedJson.solutions.length}`);
       }
     }
+    // Check the identification walk against the real chart. The model is asked to
+    // follow one branch per step from the root; a path that skips a node, answers
+    // an edge that does not exist, or stops short is dropped rather than shown,
+    // because a plausible-looking but invalid derivation is worse than none — the
+    // candidate would repeat it to an interviewer. A valid prefix is kept.
+    if (parsedJson.identification) {
+      const ident = parsedJson.identification;
+      const verdict = validatePath(ident.path);
+      if (verdict.ok) {
+        // Question text comes from the chart, never from the model, so the wording
+        // stays consistent across answers and cannot be quietly reframed.
+        ident.path = verdict.steps;
+        if (verdict.technique) ident.chartTechnique = verdict.technique;
+        if (!ident.technique) ident.technique = verdict.technique;
+      } else {
+        console.log(`[solve] identification rejected: ${verdict.reason}`);
+        delete parsedJson.identification;
+      }
+    }
+
     // Set top-level code from first solution for backwards compat
     if (!parsedJson.code && parsedJson.solutions?.length) {
       parsedJson.code = parsedJson.solutions[0].code || '';
