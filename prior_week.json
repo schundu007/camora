@@ -1,6 +1,6 @@
 {
-  "date": "2026-08-10",
-  "note": "PageSpeed API returned 429 RESOURCE_EXHAUSTED for all calls (quota_limit_value=0 on project 583797351490). No scores recorded — sixth consecutive week with same error (prior: 2026-08-03, 2026-07-27, 2026-07-20, 2026-07-13, 2026-07-06). ACTION NEEDED: provide a Google API key with PageSpeed Insights API enabled, or request quota increase.",
+  "date": "2026-08-17",
+  "note": "PageSpeed API returned 429 RESOURCE_EXHAUSTED for all calls (quota_limit_value=0 on project 583797351490). No scores recorded — third consecutive week with same error (first: 2026-07-06, second: 2026-07-13).",
   "homepage": {
     "mobile": null,
     "desktop": null
