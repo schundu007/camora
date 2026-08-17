@@ -289,6 +289,9 @@ interface CodingLayoutProps {
   isTabActive?: boolean;
   /** Ref that parent sets to receive screenshot OCR text — appended to problem textarea. */
   onScreenshotAppendRef?: React.MutableRefObject<((text: string, starterCode?: string) => void) | null>;
+  /** Preselect the language, e.g. when the caller also supplies a matching
+   *  starter template — a Java template with a Python answer is a mismatch. */
+  initialLanguage?: string;
   /** Called when user clicks New Problem — parent uses this to clear the screenshot strip. */
   onNewProblemCallback?: () => void;
   /** Input mode controlled from global strip in LumoraShellPage. When provided, internal
@@ -331,13 +334,13 @@ function useTheme(_dark: boolean) {
 // retrigger a solve for content another source already generated.
 const genSignature = (t: string) => (t || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix, captureControls }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, initialLanguage, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix, captureControls }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
 
   // Core state
-  const [language, setLanguage] = useState('python');
+  const [language, setLanguage] = useState(initialLanguage || 'python');
   const [problemTab, setProblemTab] = useState<ProblemTab>('description');
   const [outputTab, setOutputTab] = useState<OutputTab>('testcases');
   const [inputMode, _setInputModeLocal] = useState<InputMode>(externalInputMode ?? 'paste');
