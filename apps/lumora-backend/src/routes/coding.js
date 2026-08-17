@@ -300,7 +300,11 @@ function isApiExhaustedError(err) {
 // (explanations + traces) leaving the frontend with un-parseable
 // preamble + open braces. Reverted from the 1500/4000/6000 latency
 // experiments after answer quality regressed visibly.
-const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '16000', 10);
+// 16000 was sized before the answer carried an identification trail and four
+// interview cards. Three solutions with code, walkthroughs and narration plus
+// those cards overruns it, and whatever is last in the document is silently
+// dropped — a truncated solutions array reads as Sona answering nonsense.
+const MAX_TOKENS = parseInt(process.env.MAX_TOKENS_CODING || '24000', 10);
 const FREE_TIER_DAILY_LIMIT = parseInt(process.env.FREE_CODING_DAILY_LIMIT || '2', 10);
 
 /**
@@ -767,34 +771,6 @@ listening for.`}
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
   "language": "${language}",
-  // Emitted FIRST, before the solutions array. Two reasons, both real:
-  //  - MAX_TOKENS is 16000 and three solutions with code, walkthroughs and
-  //    narration can reach it; whatever trails the solutions is what gets
-  //    truncated away, and that was these cards.
-  //  - It is also the order the candidate needs them in: how you recognised the
-  //    pattern comes before the code that implements it, and streaming renders
-  //    them the moment they arrive rather than at the very end.
-  "interview": {
-    "budget": {
-      "n": "the binding input bound from the constraints, verbatim, e.g. \"n <= 10^5\" - or \"not stated\"",
-      "ceiling": "the complexity that bound forces, e.g. \"O(n log n) or better\"",
-      "verdict": "does your chosen solution fit that ceiling? name its complexity and say fits, or flag the TLE risk"
-    },
-    "signals": [
-      { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
-    ],
-    "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
-    "probes": [ { "q": "the follow-up an interviewer asks after this solution", "a": "your answer, 1-2 sentences" } ],
-    "pitfalls": ["a mistake people actually make on this pattern, one clause"]
-  },
-  "identification": {
-    "path": [
-      { "node": "<node id from the chart>", "answer": "yes", "evidence": "the words in THIS statement that settle it - quote or tight paraphrase, 15 words max" }
-    ],
-    "dataStructure": "The concrete structure the solution runs on, e.g. 'implicit graph over grid cells' or 'min-heap of size k'",
-    "technique": "The leaf technique the walk lands on",
-    "ruledOut": ["Nearest technique you rejected plus the one-clause reason, e.g. \"Dijkstra - edges are unweighted\""]
-  },
   "solutions": ${singleSolution
   ? `[
     {
@@ -862,6 +838,33 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       ]
     }
   ]`},
+  // AFTER the solutions array, deliberately. These were moved in front of it so
+  // a long answer could not truncate the cards away — but the budget is finite
+  // either way, and in front they truncated the SOLUTIONS instead. A missing
+  // card costs a card; a truncated solution is the whole answer, and it is also
+  // what Sona builds its context from, so follow-ups were answered against a
+  // cut-off solution. MAX_TOKENS is raised instead so both fit.
+  "interview": {
+    "budget": {
+      "n": "the binding input bound from the constraints, verbatim, e.g. \"n <= 10^5\" - or \"not stated\"",
+      "ceiling": "the complexity that bound forces, e.g. \"O(n log n) or better\"",
+      "verdict": "does your chosen solution fit that ceiling? name its complexity and say fits, or flag the TLE risk"
+    },
+    "signals": [
+      { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
+    ],
+    "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
+    "probes": [ { "q": "the follow-up an interviewer asks after this solution", "a": "your answer, 1-2 sentences" } ],
+    "pitfalls": ["a mistake people actually make on this pattern, one clause"]
+  },
+  "identification": {
+    "path": [
+      { "node": "<node id from the chart>", "answer": "yes", "evidence": "the words in THIS statement that settle it - quote or tight paraphrase, 15 words max" }
+    ],
+    "dataStructure": "The concrete structure the solution runs on, e.g. 'implicit graph over grid cells' or 'min-heap of size k'",
+    "technique": "The leaf technique the walk lands on",
+    "ruledOut": ["Nearest technique you rejected plus the one-clause reason, e.g. \"Dijkstra - edges are unweighted\""]
+  },
   "pitch": ${singleSolution
   ? `{
     "opener": "One sentence summary of the approach",

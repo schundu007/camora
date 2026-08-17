@@ -143,7 +143,10 @@ export function buildAnswerCacheKey(parts) {
   // v17: the identification trail is trimmed to its decisive steps (2026-08-17).
   // A v16 answer carries the full walk, so replaying one shows the dozen "no"
   // answers the trim exists to remove, for the full 30-day TTL.
-  return `lumora:answer:v17:${h}`;
+  // v18: the cards were briefly emitted BEFORE the solutions array, which pushed
+  // the solutions past MAX_TOKENS on long answers — those cached entries hold a
+  // truncated solution, and replaying one is the "Sona answers nonsense" report.
+  return `lumora:answer:v18:${h}`;
 }
 
 async function cacheGetFromDb(key) {
