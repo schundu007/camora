@@ -77,35 +77,26 @@ describe('AnswerBook', () => {
       expect(container.querySelector('section')).toHaveClass('lumora-book-span');
     });
 
-    // The bound and the line-by-line that earns it must read in sequence, not
-    // sit side by side in two columns — so they share one grid cell.
-    it('stacks complexity and walkthrough in a single cell, in order', () => {
+    // Complexity and Walkthrough used to share a grid cell. Complexity now pairs
+    // with the approach-comparison matrix instead, and Walkthrough spans alone,
+    // so neither goes through a shared wrapper.
+    it('gives complexity and walkthrough their own cells', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
-        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
         { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
         { id: 'walkthrough', heading: 'Walkthrough', blocks: [{ kind: 'walk', rows: [{ line: 1, explanation: 'e' }] }] },
       ] }} />);
-      const stack = container.querySelector('.lumora-book-stack')!;
-      expect(stack).toBeTruthy();
-      const headings = [...stack.querySelectorAll('h2')].map(h => h.textContent);
+      expect(container.querySelector('.lumora-book-stack')).toBeNull();
+      const headings = [...container.querySelectorAll('.lumora-book-grid > section h2')].map(h => h.textContent);
       expect(headings).toEqual(['Complexity', 'Walkthrough']);
-      // and they are not ALSO emitted as their own grid cells
-      expect(container.querySelectorAll('.lumora-book-grid > section')).toHaveLength(1);
     });
 
-    it('still renders the pair when only one of the two is present', () => {
+    it('keeps complexity narrow so it can share a row', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
         { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
+        { id: 'comparison', heading: 'Approach comparison', blocks: [{ kind: 'kv', pairs: [['a', 'b']] }] },
       ] }} />);
-      expect(container.querySelector('.lumora-book-stack h2')?.textContent).toBe('Complexity');
-    });
-
-    it('leaves the complexity kv in a column', () => {
-      const { container } = render(<AnswerBook doc={{ sections: [
-        { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
-        filler,
-      ] }} />);
-      expect(container.querySelector('.lumora-book-stack')).not.toHaveClass('lumora-book-span');
+      const spanned = [...container.querySelectorAll('.lumora-book-span h2')].map(h => h.textContent);
+      expect(spanned).toEqual([]);
     });
 
     // Edge cases was the section people saw it on: Follow-up Q&A spans, so it
@@ -132,11 +123,11 @@ describe('AnswerBook', () => {
       expect(spanned).toEqual(['Edge cases']);
     });
 
-    it('widens the stacked pair when it is the row\'s only cell', () => {
+    it('widens a lone complexity card that has no row-mate', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
         { id: 'complexity', heading: 'Complexity', blocks: [{ kind: 'kv', pairs: [['Time', 'O(n)']] }] },
       ] }} />);
-      expect(container.querySelector('.lumora-book-stack')).toHaveClass('lumora-book-span');
+      expect(container.querySelector('section')).toHaveClass('lumora-book-span');
     });
 
     it('leaves paired cells alone', () => {

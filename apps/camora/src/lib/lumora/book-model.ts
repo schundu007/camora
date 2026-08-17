@@ -466,18 +466,19 @@ const SECTION_ORDER = [
   // means the card that comes first is the one you look at first.
   'signals',
   'identification',   // how to spot it — the walk those signals led to
+  // What it costs and how the approaches compare, side by side above the
+  // Solution: both are short tables, and they are what an interviewer asks
+  // about first once you have named the pattern.
+  'complexity',
+  'comparison',
   'approach',         // Solution
   'code',
-  'complexity',
   'walkthrough',
   'trace',
   'budget',           // constraint budget
   'edgecases',
   'testcases',
-  // Tradeoffs then the comparison matrix: the matrix is the evidence for the
-  // tradeoffs sentence above it, and they are read as a pair.
   'tradeoffs',
-  'comparison',
   'probes',           // interviewer will ask
   'followup',
   'topic',            // what to review afterwards
