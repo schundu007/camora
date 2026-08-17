@@ -442,3 +442,32 @@ export function docFromCoFix(
 
   return { title: txt(analysis?.title) || undefined, sections };
 }
+
+/**
+ * Sections that belong beside the code rather than under the problem.
+ *
+ * The left pane is the reading column — the approach, the walkthrough, the code.
+ * These are reference material a candidate glances at WHILE looking at the editor
+ * and its test results, so they sit in the right pane under Test cases.
+ */
+export const RIGHT_PANE_SECTION_IDS = [
+  'identification', 'budget', 'signals', 'topic',
+  'complexity', 'tradeoffs', 'edgecases',
+] as const;
+
+/**
+ * Split one doc into the two panes, preserving section order within each.
+ * Either side may come back empty — callers must not render an empty book.
+ */
+export function splitDocByPane(
+  doc: BookDoc,
+  rightIds: readonly string[] = RIGHT_PANE_SECTION_IDS,
+): { left: BookDoc; right: BookDoc } {
+  const right = new Set(rightIds);
+  return {
+    left: { ...doc, sections: doc.sections.filter(s => !right.has(s.id)) },
+    // The title belongs to the left pane; repeating it over the right column
+    // would read as a second answer.
+    right: { sections: doc.sections.filter(s => right.has(s.id)) },
+  };
+}
