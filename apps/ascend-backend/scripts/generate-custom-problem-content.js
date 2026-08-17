@@ -19,7 +19,7 @@
 //     --limit <n>   Only process the first n problems
 //     --model <id>  Override the model (default claude-sonnet-5)
 
-import { query, closePool } from '../src/lib/shared-db.js';
+import { query, closePool, getPool } from '../src/lib/shared-db.js';
 // The real SDK, not lib/_shared/llm.js: that helper is an Anthropic-shaped shim over
 // gemini-2.5-flash (chosen for cost on the request path). This backfill's entire value
 // is statement accuracy, and it runs once, so it goes straight to Claude.
@@ -40,6 +40,24 @@ if (!process.env.DATABASE_URL) { console.error('Set DATABASE_URL'); process.exit
 if (!process.env.ANTHROPIC_API_KEY) { console.error('Set ANTHROPIC_API_KEY'); process.exit(1); }
 
 const client = new Anthropic();
+
+// This run holds a pool open for the better part of an hour while it waits on the
+// model, and an idle Postgres connection dropped by the proxy surfaces as an
+// unhandled 'error' on the pool — which killed a previous run at problem 180 of
+// 354. Absorb it here; pg opens a fresh connection on the next query.
+getPool().on('error', err => console.warn(`  [pool] ${err.message} — continuing`));
+
+/** Retry a write across a dropped connection rather than losing the generation. */
+async function writeWithRetry(sql, params, attempts = 3) {
+  for (let i = 1; ; i++) {
+    try {
+      return await query(sql, params);
+    } catch (err) {
+      if (i >= attempts) throw err;
+      await new Promise(r => setTimeout(r, 1000 * i));
+    }
+  }
+}
 
 const TOOL = {
   name: 'submit_problem',
@@ -236,7 +254,7 @@ async function worker(items) {
       skippedTitles.push(`${p.title} (${skipped})`);
     } else {
       if (!DRY) {
-        await query(
+        await writeWithRetry(
           `UPDATE coding_problems
               SET content = $2, examples = $3::jsonb, constraints = $4::jsonb,
                   content_source = 'generated', updated_at = NOW()
