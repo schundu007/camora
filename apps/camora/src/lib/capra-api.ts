@@ -166,12 +166,23 @@ export interface LcProblem {
   source: 'leetcode' | 'custom';
 }
 
+export interface EditorialApproach {
+  title: string;
+  explanation: string;
+  /** Reference implementations keyed by langSlug (python3, java, cpp, …). */
+  code: Record<string, string>;
+}
+
 export interface LcProblemDetail extends LcProblem {
   content: string | null;
   examples: { input: string; output: string; explanation?: string }[] | null;
   constraints: string[] | null;
   hints: string[] | null;
   code_snippets: { lang: string; langSlug: string; code: string }[];
+  follow_up: string | null;
+  editorial: EditorialApproach[] | null;
+  /** 'doocs' = backfilled statement, 'generated' = AI-authored. Null = from LeetCode. */
+  content_source: 'doocs' | 'generated' | null;
 }
 
 export interface ProblemsResponse {

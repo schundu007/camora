@@ -34,6 +34,7 @@ const CapraOnboarding = lazy(() => import('./pages/capra/OnboardingPage'));
 const CapraLanding = lazy(() => import('./pages/capra/CapraLandingPage'));
 const PrepPlanPage = lazy(() => import('./pages/capra/PrepPlanPage'));
 const HRLibraryPage = lazy(() => import('./pages/capra/HRLibraryPage'));
+const ProblemDetailPage = lazy(() => import('./pages/capra/ProblemDetailPage'));
 const MCQPage          = lazy(() => import('./pages/capra/MCQPage'));
 const QuizSessionPage  = lazy(() => import('./pages/capra/QuizSessionPage'));
 const FlashcardsPage   = lazy(() => import('./pages/capra/FlashcardsPage'));
@@ -483,6 +484,7 @@ const RouteTitle = () => {
       ['/capra/practice', 'Practice — Camora'],
       ['/capra/plan', 'Study Plan — Camora'],
       ['/capra/library', 'Problem Library — Camora'],
+      ['/capra/problems', 'Problem — Camora'],
       ['/capra/learn/python', 'Python — Learning Library — Camora'],
       ['/capra/learn/codesignal', 'CodeSignal Learn — Camora'],
       ['/capra/learn/programiz', 'Programiz Python — Camora'],
@@ -644,6 +646,7 @@ export const App = () => {
           <Route path="/capra/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
           <Route path="/capra/plan" element={<ShellRoute><PrepPlanPage /></ShellRoute>} />
           <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
+          <Route path="/capra/problems/:slug" element={<ShellRoute><ProtectedRoute><ProblemDetailPage /></ProtectedRoute></ShellRoute>} />
           <Route path="/capra/quiz"         element={<ShellRoute><MCQPage /></ShellRoute>} />
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
           <Route path="/capra/flashcards"   element={<ShellRoute><FlashcardsPage /></ShellRoute>} />
@@ -664,7 +667,7 @@ export const App = () => {
           <Route path="/handbook" element={<ShellRoute><Blind75Page /></ShellRoute>} />
           <Route path="/handbook/:id/practice" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
           <Route path="/handbook/:id/solution" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
-          <Route path="/problems/:slug" element={<ShellRoute><CapraDashboard /></ShellRoute>} />
+          <Route path="/problems/:slug" element={<ShellRoute><ProtectedRoute><ProblemDetailPage /></ProtectedRoute></ShellRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
 
           {/* ── Referral ────────────────────────────── */}
