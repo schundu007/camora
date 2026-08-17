@@ -81,7 +81,6 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
     try { localStorage.setItem(HANDS_FREE_KEY, handsFree ? '1' : '0'); } catch {}
   }, [handsFree]);
   const [sidebarWidth, setSidebarWidth] = useState(360);
-  const asideRef = useRef<HTMLElement | null>(null);
   const dragRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -248,15 +247,8 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
   useEffect(() => { sendRef.current = send; }, [send]);
   useEffect(() => {
     const handler = (e: Event) => {
-      const detail = (e as CustomEvent<{ text: string; autoSend?: boolean }>).detail;
-      const text = detail?.text;
-      if (!text) return;
-      // autoSend is false for speech the router would not ask on its own — no
-      // solution on screen yet, or phrasing that missed the question heuristic.
-      // Show it in the box so it can be sent with Enter rather than lost.
-      // `autoSend === undefined` keeps older emitters asking, as they did.
-      if (detail?.autoSend === false) setInput(text);
-      else sendRef.current?.(text);
+      const text = (e as CustomEvent<{ text: string }>).detail?.text;
+      if (text) sendRef.current?.(text);
     };
     window.addEventListener('lumora:coding-question', handler);
     return () => window.removeEventListener('lumora:coding-question', handler);
@@ -330,14 +322,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
     const onMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
       const delta = dragRef.current.startX - ev.clientX;
-      // Clamp against the row this panel actually sits in, not the window. The
-      // window is wider than the split row (there is a rail to its left), so a
-      // window-based cap let the panel grow past its container and squeeze the
-      // editor column to nothing — at which point dragging back the other way
-      // had nowhere to land and the handle read as stuck.
-      const row = asideRef.current?.parentElement?.clientWidth ?? window.innerWidth;
-      const maxW = Math.max(360, Math.round(row * 0.7));
-      setSidebarWidth(Math.max(280, Math.min(maxW, dragRef.current.startW + delta)));
+      setSidebarWidth(Math.max(280, Math.min(700, dragRef.current.startW + delta)));
     };
     const onUp = () => {
       dragRef.current = null;
@@ -352,7 +337,6 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
 
   return (
     <aside
-      ref={asideRef}
       // Tagged so AudioCapture's global Backquote shortcut yields the key when
       // it is pressed inside this sidebar — ` drives Sona's mic here and the
       // interview mic everywhere else.
@@ -372,12 +356,9 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
           {/* Drag handle — left edge, 6px wide, ew-resize cursor */}
           <div
             onMouseDown={handleDragStart}
-            // Double-click restores the default width — a way back that does not
-            // depend on dragging, whatever state the panel has been left in.
-            onDoubleClick={() => setSidebarWidth(360)}
             className="absolute left-0 top-0 h-full z-10 cursor-ew-resize"
             style={{ width: 6, background: 'transparent' }}
-            data-tip="Drag to resize · double-click to reset"
+            data-tip="Drag to resize"
           />
           {/* Header — navy hero strip + gold underline, matches the
               app's other tool-window chrome. */}
