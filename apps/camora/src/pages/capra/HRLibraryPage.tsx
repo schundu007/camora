@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Chip from '@/components/shared/ui/Chip';
 import { Icon } from '../../components/shared/Icons.jsx';
-import { getProblems, getProblemTags, getProblem, type LcProblem } from '../../lib/capra-api';
+import { getProblems, getProblemTags, type LcProblem } from '../../lib/capra-api';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -633,18 +633,13 @@ export default function HRLibraryPage() {
     }
   }
 
-  async function openLcProblem(p: LcProblem) {
-    try {
-      const detail = await getProblem(p.slug);
-      const pySnippet = detail.code_snippets?.find(s => s.langSlug === 'python3') ?? detail.code_snippets?.[0];
-      const starterCode = pySnippet?.code ?? '';
-      const content = detail.content
-        ? detail.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-        : p.title;
-      navigate(`/lumora/coding?problem=${encodeURIComponent(content)}&starter_code=${encodeURIComponent(starterCode)}`);
-    } catch {
-      navigate(`/lumora/coding?problem=${encodeURIComponent(p.title)}`);
-    }
+  /* Open the problem's own page — statement, examples, constraints, editorial —
+   * rather than jumping straight into the solver. This used to fetch the detail
+   * and forward it to /lumora/coding, falling back to the bare title whenever
+   * `content` was null (which it was for every premium problem), so Sona was
+   * asked to solve a question it had never been shown. */
+  function openLcProblem(p: LcProblem) {
+    navigate(`/capra/problems/${encodeURIComponent(p.slug)}`);
   }
 
   const activeCount = selectedRoles.length + selectedTypes.length + selectedDiffs.length +

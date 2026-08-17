@@ -523,6 +523,12 @@ async function runMigrations() {
       created_at      TIMESTAMPTZ DEFAULT NOW(),
       updated_at      TIMESTAMPTZ DEFAULT NOW()
     )`);
+    // Editorial content backfilled from doocs/leetcode (see scripts/import-doocs-problems.js).
+    // LeetCode's API withholds `content` for all paid-only questions, which left every
+    // premium problem in the library with a title and nothing else.
+    await query(`ALTER TABLE coding_problems ADD COLUMN IF NOT EXISTS editorial JSONB`);
+    await query(`ALTER TABLE coding_problems ADD COLUMN IF NOT EXISTS follow_up TEXT`);
+    await query(`ALTER TABLE coding_problems ADD COLUMN IF NOT EXISTS content_source VARCHAR(20)`);
     await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_difficulty ON coding_problems(difficulty)');
     await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_source ON coding_problems(source)');
     await query('CREATE INDEX IF NOT EXISTS idx_coding_problems_topic_tags ON coding_problems USING GIN(topic_tags)');
