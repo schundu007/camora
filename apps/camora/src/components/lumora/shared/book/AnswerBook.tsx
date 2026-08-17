@@ -246,7 +246,12 @@ const isWideSection = (id: string, blocks: BookBlock[]) =>
 // two different columns, which puts the claim and its justification side by
 // side instead of in sequence. They now share ONE grid cell and stack inside
 // it — a single column, two rows, in this order.
-const STACKED_SECTION_IDS = ['complexity', 'walkthrough'];
+// Complexity used to share a cell with Walkthrough — "the bound, then the
+// line-by-line that earns it". Complexity now pairs with the approach-comparison
+// matrix above the Solution instead: both are short tables and they answer the
+// same question. Walkthrough spans on its own (see WIDE_SECTION_IDS), so nothing
+// is left needing a shared wrapper.
+const STACKED_SECTION_IDS: string[] = [];
 
 // A cell left alone on its row reads as a mistake: half the width filled, the
 // rest dead space beside it. The grid produces those on its own — a full-width

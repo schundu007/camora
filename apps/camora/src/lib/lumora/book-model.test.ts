@@ -32,7 +32,7 @@ describe('docFromSolution', () => {
     // Interview reading order: what you did, what it costs, the line-by-line,
     // then the material you reach for when questioned.
     expect(ids(docFromSolution(SD))).toEqual([
-      'approach', 'complexity', 'walkthrough', 'trace', 'edgecases', 'tradeoffs',
+      'complexity', 'approach', 'walkthrough', 'trace', 'edgecases', 'tradeoffs',
     ]);
   });
 
@@ -50,9 +50,11 @@ describe('docFromSolution', () => {
       pitch: { tradeoffs: ['space vs time'] },
     };
 
-    it('sits directly after tradeoffs', () => {
+    // The matrix answers the same question as the bounds beside it, so the two
+    // sit together on one row above the Solution.
+    it('sits directly after complexity', () => {
       const order = ids(docFromSolution(THREE));
-      expect(order[order.indexOf('tradeoffs') + 1]).toBe('comparison');
+      expect(order[order.indexOf('complexity') + 1]).toBe('comparison');
     });
 
     it('carries one row per approach with both bounds and the pattern', () => {
@@ -525,9 +527,9 @@ describe('card order', () => {
     // come before the walk they led to.
     expect(at('signals')).toBe(0);
     expect(at('signals')).toBeLessThan(at('identification'));
-    expect(at('identification')).toBeLessThan(at('approach'));
-    expect(at('approach')).toBeLessThan(at('complexity'));
-    expect(at('complexity')).toBeLessThan(at('walkthrough'));
+    expect(at('identification')).toBeLessThan(at('complexity'));
+    expect(at('complexity')).toBeLessThan(at('approach'));
+    expect(at('approach')).toBeLessThan(at('walkthrough'));
     // Reference material a candidate reaches for when questioned comes after.
     expect(at('walkthrough')).toBeLessThan(at('probes'));
     expect(at('edgecases')).toBeLessThan(at('probes'));
