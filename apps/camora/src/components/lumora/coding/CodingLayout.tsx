@@ -15,7 +15,16 @@ import { codingChecks } from '@/components/lumora/shared/readiness';
 import { useToolReadiness } from '@/components/lumora/shared/useToolReadiness';
 import { ReadinessChip } from '@/components/lumora/shared/ReadinessChip';
 import { ChipSelect } from '@/components/lumora/shared/ChipSelect';
-import { isProblemPageUrl } from '@/lib/problemPageUrl';
+import { isProblemPageUrl, isAutoFetchableUrl } from '@/lib/problemPageUrl';
+
+/* Shown when we recognise the page but the server cannot read it: CoderPad rooms,
+ * CodeSignal interviews and Glider tests live inside the candidate's own session,
+ * so fetching them server-side returns a sign-in page. Saying so beats firing a
+ * request that cannot succeed. */
+const SESSION_PAGE_NOTE =
+  'Found your session page, but it can only be read while signed in as you — '
+  + 'a server fetch just gets the sign-in screen. Paste the problem text here, '
+  + 'or use the desktop app to capture it from the screen.';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
@@ -1391,9 +1400,12 @@ ${solCode}
     autoUrlFetchDone.current = true;
     setInputMode('url');
     setProblemUrl(initialUrl);
-    // Only AUTO-fetch a single-problem page — never a landing/list page. Prefill the
-    // URL either way so the user can still fetch manually if they know it's a problem.
-    if (isProblemPageUrl(initialUrl)) handleFetchFromUrl(initialUrl, { auto: true });
+    // Only AUTO-fetch a page the backend can actually read. Session pages (CoderPad,
+    // CodeSignal, Glider) are real problem pages but exist only inside the
+    // candidate's authenticated session, so a server fetch returns a sign-in page.
+    // Prefill either way so a manual fetch is still one click away.
+    if (isAutoFetchableUrl(initialUrl)) handleFetchFromUrl(initialUrl, { auto: true });
+    else if (isProblemPageUrl(initialUrl)) setUrlDetectNote(SESSION_PAGE_NOTE);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl, token]);
 
@@ -1430,7 +1442,9 @@ ${solCode}
       autoDetectedUrlRef.current = res.url;
       setInputMode('url');
       setProblemUrl(res.url);
-      handleFetchFromUrl(res.url, { auto: true });
+      // Found it either way; only fetch it when fetching can work.
+      if (isAutoFetchableUrl(res.url)) handleFetchFromUrl(res.url, { auto: true });
+      else setUrlDetectNote(SESSION_PAGE_NOTE);
     };
 
     probe();
@@ -1505,7 +1519,7 @@ ${solCode}
         // Desktop IPC or the browser-extension bridge, whichever is present.
         const activeInfo = await getActiveProblemUrl();
         const activeUrl: string | null = activeInfo.ok && activeInfo.url ? activeInfo.url : null;
-        if (activeUrl && token && isProblemPageUrl(activeUrl)) {
+        if (activeUrl && token && isAutoFetchableUrl(activeUrl)) {
           try {
             const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fetch-problem`, {
               credentials: 'include',

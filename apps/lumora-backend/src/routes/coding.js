@@ -3077,6 +3077,19 @@ router.post('/fetch-problem', authenticate, async (req, res) => {
       }
     }
 
+    // A session page (CoderPad room, CodeSignal interview, Glider test) exists only
+    // inside the candidate's authenticated session. The generic fetch below would
+    // succeed at the HTTP level and return a sign-in page, which then gets served as
+    // if it were the problem. Say what happened instead.
+    if (isProblemPageUrl(url) && !isAutoFetchableUrl(url)) {
+      return res.status(422).json({
+        error: 'That page can only be read while signed in as you — a fetch from our server '
+             + 'reaches the sign-in screen, not the problem. Paste the problem text, or use '
+             + 'the desktop app to capture it from the screen.',
+        code: 'SESSION_PAGE',
+      });
+    }
+
     const response = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Camora/1.0)' },
       signal: AbortSignal.timeout(10000),
@@ -3409,6 +3422,23 @@ function isProblemPageUrl(raw) {
   if (/(^|\.)codesignal\.com$/.test(host)) return /^\/(interview|test|challenge|coding|assessment)\//.test(path);
   if (/(^|\.)glider\.ai$/.test(host)) return /^\/(test|assessment|oa|invite)\//.test(path);
   return false;
+}
+
+/**
+ * True when this URL can actually be FETCHED server-side, not merely recognised.
+ *
+ * Only LeetCode (/problems/, via GraphQL) and HackerRank (/challenges/, via the
+ * public REST endpoint) have real scrapers. CoderPad rooms, CodeSignal interviews
+ * and Glider tests are per-candidate session pages: the generic fetch below reaches
+ * a sign-in screen, never the problem. Mirror of isAutoFetchableUrl in
+ * apps/camora/src/lib/problemPageUrl.ts — keep the two in sync.
+ */
+export function isAutoFetchableUrl(raw) {
+  if (!isProblemPageUrl(raw)) return false;
+  let u;
+  try { u = new URL(raw); } catch { return false; }
+  const host = u.hostname.replace(/^www\./, '').toLowerCase();
+  return /(^|\.)leetcode\.(com|cn)$/.test(host) || /(^|\.)hackerrank\.com$/.test(host);
 }
 
 export default router;

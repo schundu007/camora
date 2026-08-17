@@ -37,3 +37,32 @@ export function isProblemPageUrl(raw: string): boolean {
 
   return false; // unknown host — strict allowlist
 }
+
+/**
+ * True when the backend can actually FETCH the problem text from this URL.
+ *
+ * isProblemPageUrl recognises a problem page; this narrower test asks whether a
+ * server-side fetch will return the problem rather than a login wall. Only two
+ * platforms have real scrapers:
+ *
+ *   LeetCode /problems/   → GraphQL
+ *   HackerRank /challenges/ (incl. /contests/<c>/challenges/) → public REST JSON
+ *
+ * CoderPad rooms, CodeSignal /interview/ and Glider /test/ are per-candidate
+ * SESSION pages. They are legitimately problem pages, but they exist only inside
+ * an authenticated session, so `fetch(url)` from the server gets a sign-in page.
+ * Auto-fetching them fires a request that cannot succeed and reads as the feature
+ * being broken — on desktop that was masked by screenshot capture, which the web
+ * app does not have.
+ *
+ * Manual fetch stays available for every isProblemPageUrl() page: the user may be
+ * signed in somewhere the server is not, and a failed manual attempt is a choice
+ * they made rather than something that happened to them.
+ */
+export function isAutoFetchableUrl(raw: string): boolean {
+  if (!isProblemPageUrl(raw)) return false;
+  let u: URL;
+  try { u = new URL(raw); } catch { return false; }
+  const host = u.hostname.replace(/^www\./, '').toLowerCase();
+  return /(^|\.)leetcode\.(com|cn)$/.test(host) || /(^|\.)hackerrank\.com$/.test(host);
+}
