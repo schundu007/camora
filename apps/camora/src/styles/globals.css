@@ -3511,6 +3511,28 @@ figure:has(> .viz-caption) {
    left column to the bottom and then scroll back up for the right one. */
 .lumora-book-grid { display: flow-root; }
 
+/* Key/value rows (Follow-up Q&A, the identification trail, statement signals).
+   The key column used to be pinned at 9.5rem, which was fine for "Time"/"Space"
+   but wrapped a follow-up QUESTION into four cramped lines beside a mostly empty
+   answer column. fit-content lets it size to the longest key in the block — all
+   rows still align, because a grid track is shared — while the cap stops one
+   long question from starving the answer. */
+.lumora-kv-rows {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@container book (min-width: 480px) {
+  .lumora-kv-rows {
+    grid-template-columns: fit-content(22rem) minmax(0, 1fr);
+    column-gap: 0.75rem;
+    row-gap: 0.5rem;
+    align-items: start;
+  }
+}
+
 /* Short bullet lists (edge cases, concepts) flow into two columns once the panel
    is wide enough. Container query, not the `sm:` viewport breakpoint this used
    before — the book panel is resizable, so viewport width said nothing about how
@@ -3540,6 +3562,16 @@ figure:has(> .viz-caption) {
   /* A row carrying a code line can be wide; let it take the full width rather
      than wrapping its code into a two-inch column. */
   .lumora-walk-rows > .lumora-walk-wide { grid-column: 1 / -1; }
+}
+
+/* Four across on a wide panel. Laddered rather than fixed at four: the same
+   grid has to survive the panel being dragged narrow, and four columns under
+   ~1040px puts three words on a line. */
+@container book (min-width: 1040px) {
+  .lumora-walk-rows { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* Spanning all four would leave a very long single line; two is enough room
+     for a code annotation while keeping the row rhythm. */
+  .lumora-walk-rows > .lumora-walk-wide { grid-column: span 2; }
 }
 
 @container book (min-width: 720px) {

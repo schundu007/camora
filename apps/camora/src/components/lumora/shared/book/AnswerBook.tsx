@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 import hljs from 'highlight.js';
 import type { BookBlock, BookDoc } from '@/lib/lumora/book-model';
@@ -94,14 +94,14 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
       // full width and leave the question labels floating mid-paragraph.
       if (block.layout === 'rows') {
         return (
-          <div className="mb-2 flex flex-col gap-2">
+          <div className="lumora-kv-rows">
             {block.pairs.map(([k, v]) => (
-              <div key={k} className="flex gap-3 items-start">
-                <span className="lumora-book-label !my-0 shrink-0 basis-[9.5rem] max-w-[9.5rem]">{k}</span>
-                <span className="flex-1 min-w-0 text-[12.5px] leading-[1.5] text-[var(--text-primary)]">
+              <Fragment key={k}>
+                <span className="lumora-book-label !my-0">{k}</span>
+                <span className="min-w-0 text-[12.5px] leading-[1.5] text-[var(--text-primary)]">
                   <InlineText text={v} />
                 </span>
-              </div>
+              </Fragment>
             ))}
           </div>
         );
