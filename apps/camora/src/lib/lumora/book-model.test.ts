@@ -512,6 +512,7 @@ describe('card order', () => {
       identification: { path: [{ question: 'Compute a max/min?', answer: 'yes', evidence: 'water' }], technique: 'Two Pointers' },
       interview: {
         budget: { n: 'n<=2e4', ceiling: 'O(n)' },
+        signals: [{ phrase: 'trapped water', implies: 'two pointers' }],
         probes: [{ q: 'O(1) space?', a: 'no' }],
         topic: { section: 'Two Pointers' },
       },
@@ -520,7 +521,10 @@ describe('card order', () => {
     const ids = doc.sections.map(s => s.id);
     const at = (id: string) => ids.indexOf(id);
 
-    expect(at('identification')).toBeGreaterThanOrEqual(0);
+    // You read the statement first, so the phrases that gave the pattern away
+    // come before the walk they led to.
+    expect(at('signals')).toBe(0);
+    expect(at('signals')).toBeLessThan(at('identification'));
     expect(at('identification')).toBeLessThan(at('approach'));
     expect(at('approach')).toBeLessThan(at('complexity'));
     expect(at('complexity')).toBeLessThan(at('walkthrough'));
