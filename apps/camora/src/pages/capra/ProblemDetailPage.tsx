@@ -46,6 +46,13 @@ const LANGS: Record<string, [string, string]> = {
 };
 const LANG_ORDER = Object.keys(LANGS);
 
+/** LeetCode langSlug → the id used by src/data/languages.ts (the solver's picker). */
+const LANG_TO_APP: Record<string, string> = {
+  python3: 'python', java: 'java', cpp: 'cpp', c: 'c', golang: 'go',
+  rust: 'rust', javascript: 'javascript', typescript: 'typescript',
+  mysql: 'mysql', php: 'php', ruby: 'ruby',
+};
+
 const DIFF_COLOR: Record<string, string> = {
   Easy:   'var(--success, #10b981)',
   Medium: '#eab308',
@@ -77,6 +84,7 @@ export default function ProblemDetailPage() {
   const [showHints, setShowHints] = useState(false);
   const [approachIdx, setApproachIdx] = useState(0);
   const [lang, setLang] = useState<string | null>(null);
+  const [starterLang, setStarterLang] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,6 +92,7 @@ export default function ProblemDetailPage() {
     setError(null);
     setApproachIdx(0);
     setLang(null);
+    setStarterLang(null);
 
     getProblem(slug)
       .then(data => { if (!cancelled) setProblem(data); })
@@ -103,6 +112,17 @@ export default function ProblemDetailPage() {
 
     return () => { cancelled = true; };
   }, [slug]);
+
+  /* The platform's own template. The solver treats a present template as a hard
+   * contract (buildCodingSystemPrompt: "reproduce THIS TEMPLATE byte-for-byte"),
+   * so which language we forward decides what shape the answer comes back in. */
+  const snippets = useMemo(() => {
+    const list = problem?.code_snippets ?? [];
+    return LANG_ORDER.filter(l => list.some(s => s.langSlug === l))
+      .map(l => ({ langSlug: l, code: list.find(s => s.langSlug === l)!.code }));
+  }, [problem]);
+
+  const activeStarter = snippets.find(s => s.langSlug === starterLang) ?? snippets[0] ?? null;
 
   const approaches = problem?.editorial ?? [];
   const approach = approaches[approachIdx];
@@ -128,10 +148,13 @@ export default function ProblemDetailPage() {
     if (problem.constraints?.length) parts.push(`Constraints:\n${problem.constraints.map(c => `- ${c}`).join('\n')}`);
     if (problem.follow_up) parts.push(`Follow up: ${problem.follow_up}`);
 
-    const starter = problem.code_snippets?.find(s => s.langSlug === 'python3')?.code
-      ?? problem.code_snippets?.[0]?.code ?? '';
+    // Send the template and the language it is written in together — the solver
+    // defaults to Python, which would answer a Java template in the wrong language.
+    const starter = activeStarter?.code ?? '';
+    const appLang = activeStarter ? LANG_TO_APP[activeStarter.langSlug] : null;
     navigate(`/lumora/coding?problem=${encodeURIComponent(parts.join('\n\n'))}`
-      + (starter ? `&starter_code=${encodeURIComponent(starter)}` : ''));
+      + (starter ? `&starter_code=${encodeURIComponent(starter)}` : '')
+      + (appLang ? `&lang=${appLang}` : ''));
   }
 
   if (loading) {
@@ -294,6 +317,43 @@ export default function ProblemDetailPage() {
         {problem.follow_up && (
           <Section title="Follow up">
             <p style={{ fontSize: 13.5, lineHeight: 1.7, color: 'var(--text-secondary)' }}>{problem.follow_up}</p>
+          </Section>
+        )}
+
+        {/* ── Starter code ───────────────────────────────────────────────── */}
+        {activeStarter && (
+          <Section
+            title="Starter code"
+            right={
+              snippets.length > 1 ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {snippets.map(s => (
+                    <button
+                      key={s.langSlug}
+                      onClick={() => setStarterLang(s.langSlug)}
+                      style={{
+                        padding: '4px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                        border: 'none',
+                        background: s.langSlug === activeStarter.langSlug ? 'rgba(255,255,255,0.10)' : 'transparent',
+                        color: s.langSlug === activeStarter.langSlug ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      }}
+                    >{LANGS[s.langSlug][0]}</button>
+                  ))}
+                </div>
+              ) : undefined
+            }
+          >
+            <p style={{ fontSize: 12.5, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>
+              The template the platform gives you. “Solve with Sona” sends this along with the
+              problem, and the answer fills it in rather than inventing its own signature.
+            </p>
+            <SyntaxHighlighter
+              language={LANGS[activeStarter.langSlug][1]}
+              style={atomOneDark}
+              customStyle={{ borderRadius: 10, fontSize: 12.5, margin: 0, padding: 14 }}
+            >
+              {activeStarter.code}
+            </SyntaxHighlighter>
           </Section>
         )}
 

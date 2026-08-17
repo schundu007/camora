@@ -23,6 +23,7 @@ import fs from 'fs';
 import path from 'path';
 import { query, closePool } from '../src/lib/shared-db.js';
 import { parseDoocsReadme } from './lib/parseDoocsReadme.js';
+import { deriveSnippets } from './lib/deriveStarterCode.js';
 
 const argv = process.argv.slice(2);
 const flag = name => argv.includes(name);
@@ -87,7 +88,7 @@ console.log(`Parsed ${parsed.length} problems (${parseFailures} unparseable)`);
 
 // ── Index what we already have, so we only touch what needs touching ─────────
 const { rows: existingRows } = await query(
-  `SELECT id, lc_id, slug, content, topic_tags FROM coding_problems`
+  `SELECT id, lc_id, slug, content, topic_tags, code_snippets FROM coding_problems`
 );
 const byLcId = new Map();
 const bySlug = new Map();
@@ -104,6 +105,7 @@ const stats = {
   inserted: 0,        // present in doocs, absent from our library
   unchanged: 0,
   errors: 0,
+  snippetsFilled: 0,
 };
 
 function hasContent(row) {
@@ -117,6 +119,11 @@ for (const p of parsed) {
   const examples = p.examples.length ? JSON.stringify(p.examples) : null;
   const constraints = p.constraints.length ? JSON.stringify(p.constraints) : null;
   const topicTags = p.topicTags.length ? JSON.stringify(p.topicTags) : null;
+  // The starter template the platform would have shown, rebuilt from the reference
+  // signatures. Without it the solver is told the I/O contract is unknown and
+  // invents a shape instead of filling in the class the grader calls.
+  const derived = deriveSnippets(p.editorial);
+  const snippets = derived.length ? JSON.stringify(derived) : null;
 
   try {
     if (!existing) {
@@ -126,11 +133,12 @@ for (const p of parsed) {
              (lc_id, slug, title, difficulty, content, examples, constraints, follow_up,
               editorial, topic_tags, company_tags, hints, code_snippets, is_premium,
               source, content_source, updated_at)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'[]'::jsonb,'[]'::jsonb,'[]'::jsonb,$11,
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'[]'::jsonb,'[]'::jsonb,
+                   COALESCE($12::jsonb,'[]'::jsonb),$11,
                    'leetcode','doocs',NOW())
            ON CONFLICT (slug) DO NOTHING`,
           [p.lcId, p.slug, p.title, p.difficulty ?? 'Medium', p.content, examples,
-           constraints, p.followUp, editorial, topicTags, p.isPremium]
+           constraints, p.followUp, editorial, topicTags, p.isPremium, snippets]
         );
       }
       stats.inserted++;
@@ -158,14 +166,24 @@ for (const p of parsed) {
                             THEN COALESCE($8::jsonb, topic_tags)
                             ELSE topic_tags
                           END,
+           code_snippets = CASE
+                             WHEN code_snippets IS NULL
+                               OR jsonb_typeof(code_snippets) <> 'array'
+                               OR jsonb_array_length(code_snippets) = 0
+                             THEN COALESCE($9::jsonb, code_snippets)
+                             ELSE code_snippets
+                           END,
            content_source = CASE WHEN $2 OR content IS NULL OR content = ''
                                  THEN 'doocs' ELSE content_source END,
            updated_at   = NOW()
          WHERE id = $1`,
         [existing.id, needsContent, p.content, examples, constraints,
-         p.followUp, editorial, topicTags]
+         p.followUp, editorial, topicTags, snippets]
       );
     }
+
+    const hadSnippets = Array.isArray(existing.code_snippets) && existing.code_snippets.length > 0;
+    if (snippets && !hadSnippets) stats.snippetsFilled++;
 
     if (replacing) stats.contentReplaced++;
     else if (!hasContent(existing)) stats.contentFilled++;
@@ -183,6 +201,7 @@ console.log('─'.repeat(52));
 console.log(`  statements filled (were empty) : ${stats.contentFilled}`);
 console.log(`  statements replaced (--force)  : ${stats.contentReplaced}`);
 console.log(`  enriched (examples/editorial)  : ${stats.enriched}`);
+console.log(`  starter templates filled       : ${stats.snippetsFilled}`);
 console.log(`  new problems inserted          : ${stats.inserted}`);
 console.log(`  unchanged                      : ${stats.unchanged}`);
 console.log(`  errors                         : ${stats.errors}`);
@@ -195,6 +214,7 @@ if (!DRY) {
            COUNT(*) FILTER (WHERE examples IS NOT NULL)    AS with_examples,
            COUNT(*) FILTER (WHERE constraints IS NOT NULL) AS with_constraints,
            COUNT(*) FILTER (WHERE editorial IS NOT NULL)   AS with_editorial,
+           COUNT(*) FILTER (WHERE jsonb_array_length(COALESCE(NULLIF(code_snippets::text,'null')::jsonb,'[]'::jsonb)) > 0) AS with_starter,
            COUNT(*) FILTER (WHERE is_premium AND (content IS NULL OR content = '')) AS premium_still_empty
     FROM coding_problems`);
   console.log('\nLibrary coverage now:', rows[0]);

@@ -43,6 +43,7 @@ const CodingPageContent = () => {
   const initialProblem = searchParams.get('problem') || '';
   const initialUrl = searchParams.get('url') || '';
   const initialStarterCode = searchParams.get('starter_code') || null;
+  const initialLanguage = searchParams.get('lang') || undefined;
 
   return (
     <ProctorProvider surface="coding">
@@ -54,6 +55,7 @@ const CodingPageContent = () => {
           initialProblem={initialProblem}
           initialUrl={initialUrl}
           initialStarterCode={initialStarterCode}
+          initialLanguage={initialLanguage}
         />
       </ProctorGate>
     </ProctorProvider>
