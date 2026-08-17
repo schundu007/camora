@@ -39,6 +39,10 @@ export type BookDoc = { title?: string; sections: BookSection[] };
 export const SECTION_TITLES: Record<string, string> = {
   problem: 'Problem',
   identification: 'How to spot it',
+  budget: 'Constraint budget',
+  signals: 'Signals in the statement',
+  topic: 'Topic & review',
+  probes: 'Interviewer will ask',
   approach: 'Solution',
   code: 'Code',
   complexity: 'Complexity',
@@ -188,6 +192,51 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
       trail.length ? { kind: 'kv', pairs: trail, layout: 'rows' } : null,
       strList(ident.ruledOut).length
         ? { kind: 'callout', label: 'Ruled out', items: strList(ident.ruledOut) }
+        : null,
+    ]);
+  }
+
+  /* Interview cards. The backend has already dropped anything it could check and
+   * disprove — a quoted signal absent from the statement, a topic section we do
+   * not have — so whatever arrives here is renderable as-is. */
+  const iv = sd.interview;
+  if (iv && typeof iv === 'object') {
+    // Constraint budget: the bound, the ceiling it forces, and whether this
+    // solution clears it. The TLE verdict is the point of the card.
+    const bPairs: [string, string][] = [];
+    if (txt(iv.budget?.n)) bPairs.push(['Input bound', txt(iv.budget.n)]);
+    if (txt(iv.budget?.ceiling)) bPairs.push(['Forces', txt(iv.budget.ceiling)]);
+    if (txt(iv.budget?.verdict)) bPairs.push(['This solution', txt(iv.budget.verdict)]);
+    push(sections, 'budget', [bPairs.length ? { kind: 'kv', pairs: bPairs } : null]);
+
+    const sigs: [string, string][] = Array.isArray(iv.signals)
+      ? iv.signals
+          .map((g: any) => [txt(g?.phrase), txt(g?.implies)] as [string, string])
+          .filter(([a, b]: [string, string]) => Boolean(a && b))
+      : [];
+    push(sections, 'signals', [sigs.length ? { kind: 'kv', pairs: sigs, layout: 'rows' } : null]);
+
+    const tPairs: [string, string][] = [];
+    if (txt(iv.topic?.section)) tPairs.push(['Pattern', txt(iv.topic.section)]);
+    const review = Array.isArray(iv.topic?.review)
+      ? iv.topic.review
+          .map((r: any) => (txt(r?.lesson) ? `${txt(r.lesson)}${txt(r?.section) ? ` — ${txt(r.section)}` : ''}` : ''))
+          .filter(Boolean)
+      : [];
+    push(sections, 'topic', [
+      tPairs.length ? { kind: 'kv', pairs: tPairs } : null,
+      review.length ? { kind: 'callout', label: 'Review', items: review } : null,
+    ]);
+
+    const probes: [string, string][] = Array.isArray(iv.probes)
+      ? iv.probes
+          .map((q: any) => [txt(q?.q), txt(q?.a)] as [string, string])
+          .filter(([a, b]: [string, string]) => Boolean(a && b))
+      : [];
+    push(sections, 'probes', [
+      probes.length ? { kind: 'kv', pairs: probes, layout: 'rows' } : null,
+      strList(iv.pitfalls).length
+        ? { kind: 'callout', label: 'Common mistakes', items: strList(iv.pitfalls) }
         : null,
     ]);
   }

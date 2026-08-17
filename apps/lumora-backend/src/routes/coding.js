@@ -9,6 +9,7 @@
  */
 import { Router } from 'express';
 import { renderTreeForPrompt, validatePath } from '../lib/algorithmFlowchart.js';
+import { SECTION_NAMES, isKnownSection, matchLessons } from '../lib/interviewTopics.js';
 import multer from 'multer';
 import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC, isAnswerOnly, classifyUtterance, normalizeTask } from '../services/taskModes.js';
 import { detectGap, spliceFill, gapDirective } from '../services/fillGap.js';
@@ -665,6 +666,25 @@ Example of correct HTTP call:
 - The "explanation" fields MUST be plain text - NO code blocks, NO markdown
 - Code blocks belong ONLY in the "code" field
 
+
+##############################################################################
+# RULE #4.6: INTERVIEW CARDS — WHAT THE CANDIDATE NEEDS BESIDES THE CODE
+##############################################################################
+- "budget" is arithmetic, not vibes. Read the binding bound out of the
+  constraints, state the complexity it forces, then check YOUR solution against
+  it and say so plainly. If your solution exceeds the ceiling, say "TLE risk"
+  rather than quietly asserting it fits. If no bound is stated, say "not stated"
+  and skip the verdict.
+- "signals" must quote words that are actually IN the statement. If a phrase is
+  not in the text, leave it out. Two to four entries; do not pad.
+- "topic.section" must be copied exactly from the list given. "concepts" are the
+  named ideas to revise (e.g. "monotonic stack", "union find"), not sentences.
+- "probes" are the questions this specific solution invites — the space bound you
+  did not optimise, the constraint you leaned on, the variant that breaks it.
+  Generic questions ("what is the complexity?") are worthless; the answer is
+  already on screen.
+- "pitfalls" are mistakes made on THIS pattern, not general advice.
+
 ##############################################################################
 # RULE #4.5: IDENTIFICATION TRAIL — HOW YOU KNEW WHICH PATTERN THIS IS
 ##############################################################################
@@ -813,6 +833,19 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       ]
     }
   ]`},
+  "interview": {
+    "budget": {
+      "n": "the binding input bound from the constraints, verbatim, e.g. \"n <= 10^5\" - or \"not stated\"",
+      "ceiling": "the complexity that bound forces, e.g. \"O(n log n) or better\"",
+      "verdict": "does your chosen solution fit that ceiling? name its complexity and say fits, or flag the TLE risk"
+    },
+    "signals": [
+      { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
+    ],
+    "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
+    "probes": [ { "q": "the follow-up an interviewer asks after this solution", "a": "your answer, 1-2 sentences" } ],
+    "pitfalls": ["a mistake people actually make on this pattern, one clause"]
+  },
   "identification": {
     "path": [
       { "node": "<node id from the chart>", "answer": "yes", "evidence": "the words in THIS statement that settle it - quote or tight paraphrase, 15 words max" }
@@ -1963,6 +1996,46 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         console.log(`[solve] identification rejected: ${verdict.reason}`);
         delete parsedJson.identification;
       }
+    }
+
+    // Interview cards. Two of these are checkable, so check them: a quoted signal
+    // must really appear in the statement, and a topic section must be one we
+    // actually have. Anything that fails is dropped rather than shown — the cards
+    // exist to be trusted mid-interview, and a phrase the candidate cannot find in
+    // the problem is worse than a missing card.
+    if (parsedJson.interview && typeof parsedJson.interview === 'object') {
+      const iv = parsedJson.interview;
+      const haystack = String(problem).toLowerCase();
+
+      if (Array.isArray(iv.signals)) {
+        const before = iv.signals.length;
+        iv.signals = iv.signals.filter(sig => {
+          const phrase = String(sig?.phrase ?? '').trim().toLowerCase();
+          if (!phrase || !sig?.implies) return false;
+          // Allow a light paraphrase: every significant word must be present.
+          const words = phrase.replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(w => w.length > 3);
+          return words.length ? words.every(w => haystack.includes(w)) : haystack.includes(phrase);
+        });
+        if (iv.signals.length !== before) {
+          console.log(`[solve] dropped ${before - iv.signals.length} signal(s) not present in the statement`);
+        }
+        if (!iv.signals.length) delete iv.signals;
+      }
+
+      if (iv.topic) {
+        if (!isKnownSection(iv.topic.section)) delete iv.topic.section;
+        // "What to review" resolves against the real curriculum, never the
+        // model's memory of it, so every suggestion points at a lesson we have.
+        const lessons = matchLessons(Array.isArray(iv.topic.concepts) ? iv.topic.concepts : []);
+        if (lessons.length) iv.topic.review = lessons;
+        if (!iv.topic.section && !lessons.length) delete iv.topic;
+      }
+
+      if (Array.isArray(iv.probes)) {
+        iv.probes = iv.probes.filter(p => String(p?.q ?? '').trim() && String(p?.a ?? '').trim());
+        if (!iv.probes.length) delete iv.probes;
+      }
+      if (!Object.keys(iv).length) delete parsedJson.interview;
     }
 
     // Set top-level code from first solution for backwards compat

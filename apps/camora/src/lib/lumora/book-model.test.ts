@@ -391,3 +391,69 @@ describe('identification section', () => {
     expect(rows[0]).toEqual(['Is it a graph? — yes', '—']);
   });
 });
+
+describe('interview cards', () => {
+  const interview = {
+    budget: { n: 'n <= 10^5', ceiling: 'O(n log n) or better', verdict: 'O(n) hash pass — fits' },
+    signals: [{ phrase: 'contiguous subarray', implies: 'sliding window or prefix sums' }],
+    topic: {
+      section: 'Two Pointers',
+      concepts: ['sliding window'],
+      review: [{ section: 'Two Pointers', lesson: 'Sliding Window - Longest' }],
+    },
+    probes: [{ q: 'Can you do it in O(1) space?', a: 'Not while counting distinct values.' }],
+    pitfalls: ['forgetting to shrink the window when the condition breaks'],
+  };
+
+  it('renders all four cards with their content', () => {
+    const doc = docFromSolution({ solutions: [{ code: 'x' }], interview });
+    const ids = doc.sections.map(s => s.id);
+    expect(ids).toEqual(expect.arrayContaining(['budget', 'signals', 'topic', 'probes']));
+
+    const budget = doc.sections.find(s => s.id === 'budget')!;
+    expect((budget.blocks[0] as any).pairs).toContainEqual(['This solution', 'O(n) hash pass — fits']);
+    expect(budget.heading).toBe('Constraint budget');
+
+    const signals = doc.sections.find(s => s.id === 'signals')!;
+    expect((signals.blocks[0] as any).pairs[0]).toEqual(['contiguous subarray', 'sliding window or prefix sums']);
+
+    // "Review" resolves against the real curriculum on the backend, so the
+    // lesson and its section both survive into the card.
+    const topic = doc.sections.find(s => s.id === 'topic')!;
+    expect((topic.blocks[0] as any).pairs).toContainEqual(['Pattern', 'Two Pointers']);
+    expect((topic.blocks[1] as any).items).toEqual(['Sliding Window - Longest — Two Pointers']);
+
+    const probes = doc.sections.find(s => s.id === 'probes')!;
+    expect((probes.blocks[0] as any).pairs[0][0]).toBe('Can you do it in O(1) space?');
+    expect((probes.blocks[1] as any).label).toBe('Common mistakes');
+  });
+
+  it('renders nothing when the backend dropped the cards', () => {
+    const doc = docFromSolution({ solutions: [{ code: 'x' }] });
+    for (const id of ['budget', 'signals', 'topic', 'probes']) {
+      expect(doc.sections.find(s => s.id === id)).toBeUndefined();
+    }
+  });
+
+  it('renders only the cards that survived validation', () => {
+    const doc = docFromSolution({
+      solutions: [{ code: 'x' }],
+      interview: { budget: { n: 'n <= 20', ceiling: 'exponential is fine' } },
+    });
+    expect(doc.sections.find(s => s.id === 'budget')).toBeDefined();
+    expect(doc.sections.find(s => s.id === 'signals')).toBeUndefined();
+    expect(doc.sections.find(s => s.id === 'probes')).toBeUndefined();
+  });
+
+  it('drops half-formed probe and signal entries', () => {
+    const doc = docFromSolution({
+      solutions: [{ code: 'x' }],
+      interview: {
+        signals: [{ phrase: 'kth largest' }, { phrase: 'top k', implies: 'heap' }],
+        probes: [{ q: 'Why a heap?' }],
+      },
+    });
+    expect((doc.sections.find(s => s.id === 'signals')!.blocks[0] as any).pairs).toHaveLength(1);
+    expect(doc.sections.find(s => s.id === 'probes')).toBeUndefined();
+  });
+});
