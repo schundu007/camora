@@ -35,6 +35,19 @@ SyntaxHighlighter.registerLanguage('bash', bash);
 
 /* Fence label → a language the highlighter actually knows. Anything unmapped
    falls back to plain text rather than throwing. */
+/* An unlabelled fence used to fall through to plain text, which is most of why
+   the blocks looked uncoloured — Sona often emits ``` with no language. Guess
+   from the code itself before giving up. */
+function resolveHlLang(lang: string | undefined, code: string): string {
+  const mapped = HL_LANG[(lang || '').trim().toLowerCase()];
+  if (mapped) return mapped;
+  if (/^\s*(def |class |import |from \w+ import|print\()/m.test(code)) return 'python';
+  if (/^\s*(function |const |let |=>|console\.log)/m.test(code)) return 'javascript';
+  if (/^\s*(public |private |System\.out)/m.test(code)) return 'java';
+  if (/^\s*(SELECT|INSERT|UPDATE|DELETE|WITH)\b/im.test(code)) return 'sql';
+  return 'python';   // this surface is overwhelmingly Python
+}
+
 const HL_LANG: Record<string, string> = {
   python: 'python', py: 'python', python3: 'python',
   javascript: 'javascript', js: 'javascript', node: 'javascript',
@@ -580,7 +593,7 @@ export const RichText = ({ text }: { text: string }) => {
           same code in the editor two panels away, and slower to scan mid
           interview. Unknown fence labels fall through to plain text. */}
       <SyntaxHighlighter
-        language={HL_LANG[(lang || '').toLowerCase()] ?? 'text'}
+        language={resolveHlLang(lang, content)}
         style={atomOneDark}
         customStyle={{
           margin: 0,

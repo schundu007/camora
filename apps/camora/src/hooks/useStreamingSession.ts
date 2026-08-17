@@ -252,7 +252,10 @@ export function useStreamingSession() {
           const partial = parsePartialJson(codingStreamBufRef.current);
           if (partial && hasRenderableAnswer(partial)) {
             setIsCodingQuestion(true);
-            setParsedBlocks({ json: partial, format: 'ascend_json', partial: true } as any);
+            // Flag on the json itself: the consumer reads `pb.json || pb`, so a
+            // flag on the wrapper is lost and the half-written answer becomes
+            // indistinguishable from a finished one downstream.
+            setParsedBlocks({ json: { ...partial, __partial: true }, format: 'ascend_json' } as any);
           }
         },
         onAnswer: (data: any) => {
