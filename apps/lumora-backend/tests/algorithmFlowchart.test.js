@@ -147,3 +147,44 @@ describe('renderTreeForPrompt', () => {
     expect(line).toContain('island');
   });
 });
+
+// The renderer also trims, but a client can be running an older bundle and cached
+// answers are replayed verbatim — so the trim has to hold at the source too.
+describe('decisive-step trim', () => {
+  const trim = steps => {
+    const decisive = steps.filter(st => st.answer === 'yes');
+    return decisive.length ? decisive : steps.slice(-1);
+  };
+
+  it('keeps only the yes answers', () => {
+    const v = validatePath([
+      { node: 'graph', answer: 'no', evidence: 'plain array' },
+      { node: 'sorted-search', answer: 'no', evidence: 'unsorted' },
+      { node: 'kth-smallest', answer: 'no', evidence: 'no k' },
+      { node: 'linked-list', answer: 'no', evidence: 'no list' },
+      { node: 'hash-table', answer: 'no', evidence: 'no lookups' },
+      { node: 'intervals', answer: 'no', evidence: 'no ranges' },
+      { node: 'partition-array', answer: 'no', evidence: 'no partitioning' },
+      { node: 'string-segmentation', answer: 'no', evidence: 'no dictionary' },
+      { node: 'small-constraints', answer: 'no', evidence: 'n up to 2*10^4' },
+      { node: 'sums', answer: 'no', evidence: 'per-index water level' },
+      { node: 'subarrays', answer: 'no', evidence: 'not contiguous' },
+      { node: 'max/min', answer: 'yes', evidence: 'how much water it can trap' },
+      { node: 'max/min-binarysearch-hint', answer: 'no', evidence: 'not sorted' },
+      { node: 'max/min-structure', answer: 'yes', evidence: 'nearest greater bounds' },
+    ]);
+    expect(v.ok).toBe(true);
+    const shown = trim(v.steps);
+    expect(shown).toHaveLength(2);
+    expect(shown.map(s => s.node)).toEqual(['max/min', 'max/min-structure']);
+    expect(shown.every(s => s.answer === 'yes')).toBe(true);
+  });
+
+  it('keeps the last step when the walk ends on a no-branch', () => {
+    const steps = [
+      { node: 'graph', answer: 'no' },
+      { node: 'sorted-search', answer: 'no' },
+    ];
+    expect(trim(steps)).toEqual([{ node: 'sorted-search', answer: 'no' }]);
+  });
+});
