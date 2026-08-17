@@ -45,22 +45,41 @@ export function hasAnyBridge(): boolean {
   return isDesktopBridge() || isExtensionBridge();
 }
 
+/** The one error askExtension invents itself; every other reply came from the bridge. */
+const TIMED_OUT = 'bridge timed out';
+
 /**
- * The content script announces itself at document_start, which can land before this
- * module's listener is attached. Rather than race, give it a short grace period the
- * first time we look.
+ * Ask the extension, whether or not we caught its announcement.
+ *
+ * The announcement is a one-shot event, and this module cannot be listening for
+ * it: it is imported by CodingLayout, a lazy() route, so it is evaluated only
+ * once that chunk downloads and mounts — while content.js announces at
+ * document_start and again at DOMContentLoaded. On any normal page load both
+ * announcements are long gone before the listener exists, so a detector that
+ * only listens concludes there is no extension while the content script sits
+ * there, alive, waiting to be asked.
+ *
+ * So we ask. ANY reply — including "no problem tab open" — proves the bridge is
+ * there, which is the same pull-based test the desktop path uses when it checks
+ * for window.camo.
  */
-export function waitForBridge(timeoutMs = 600): Promise<boolean> {
-  if (hasAnyBridge()) return Promise.resolve(true);
-  return new Promise(resolve => {
-    const started = Date.now();
-    const tick = () => {
-      if (hasAnyBridge()) return resolve(true);
-      if (Date.now() - started >= timeoutMs) return resolve(false);
-      setTimeout(tick, 50);
-    };
-    tick();
-  });
+async function probeExtension(timeoutMs: number): Promise<ActiveUrlResult> {
+  const res = await askExtension(timeoutMs);
+  if (res.error !== TIMED_OUT) bridgeSeen = true;
+  return res;
+}
+
+/**
+ * Is any bridge available? Generous by default: a cold MV3 service worker takes
+ * a moment to wake, and a false negative here reads as the feature not existing.
+ */
+export async function waitForBridge(timeoutMs = 1500): Promise<boolean> {
+  if (hasAnyBridge()) return true;
+  const res = await probeExtension(timeoutMs);
+  // Re-check on the way out: installing or reloading the extension mid-wait
+  // injects a content script that announces itself but never saw the request we
+  // are still waiting on, so the ask times out while the bridge is in fact live.
+  return res.error !== TIMED_OUT || hasAnyBridge();
 }
 
 function askExtension(timeoutMs: number): Promise<ActiveUrlResult> {
@@ -85,7 +104,7 @@ function askExtension(timeoutMs: number): Promise<ActiveUrlResult> {
     window.addEventListener('message', onMessage);
     window.postMessage({ source: PAGE, type: 'CAMORA_GET_ACTIVE_URL', id }, window.location.origin);
     // The service worker may be cold; it still answers well inside this budget.
-    setTimeout(() => finish({ ok: false, error: 'bridge timed out', source: 'extension' }), timeoutMs);
+    setTimeout(() => finish({ ok: false, error: TIMED_OUT, source: 'extension' }), timeoutMs);
   });
 }
 
@@ -108,7 +127,12 @@ export async function getActiveProblemUrl(timeoutMs = 2500): Promise<ActiveUrlRe
     }
   }
 
-  if (await waitForBridge()) return askExtension(timeoutMs);
-
-  return { ok: false, error: 'no bridge available', source: 'none' };
+  // No waitForBridge() gate: that only ever answered "did we catch the
+  // announcement", and the answer is normally no (see probeExtension). Asking
+  // outright both detects the bridge and gets the URL in one round trip.
+  const res = await probeExtension(timeoutMs);
+  if (!bridgeSeen && res.error === TIMED_OUT) {
+    return { ok: false, error: 'no bridge available', source: 'none' };
+  }
+  return res;
 }

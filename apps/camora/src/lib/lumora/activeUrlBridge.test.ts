@@ -165,3 +165,39 @@ describe('activeUrlBridge', () => {
     });
   });
 });
+
+/* The failure this was reported for: auto-fetch silently doing nothing in the
+ * web app on LeetCode.
+ *
+ * CodingLayout is a lazy() route, so activeUrlBridge — and the listener that
+ * sets bridgeSeen — is only evaluated once that chunk downloads and mounts.
+ * content.js announces at document_start and again at DOMContentLoaded, both
+ * long before that. The page therefore never catches the announcement, and a
+ * detector that only listens concludes there is no extension at all, even
+ * though the content script is alive and would answer if asked.
+ */
+describe('bridge announced before the page was listening', () => {
+  it('detects the extension by asking it, not by having caught the announcement', async () => {
+    const b = await loadBridge();           // announcements already missed
+    const stop = mockExtension({ ok: true, url: 'https://leetcode.com/problems/two-sum/' });
+    try {
+      expect(await b.waitForBridge(200)).toBe(true);
+    } finally { stop(); }
+  });
+
+  it('auto-fetches the open LeetCode problem despite the missed announcement', async () => {
+    const b = await loadBridge();
+    const stop = mockExtension({ ok: true, url: 'https://leetcode.com/problems/two-sum/' });
+    try {
+      const res = await b.getActiveProblemUrl(200);
+      expect(res).toMatchObject({ ok: true, url: 'https://leetcode.com/problems/two-sum/', source: 'extension' });
+    } finally { stop(); }
+  });
+
+  // The distinction the UI wording depends on must survive the change.
+  it('still reports no bridge when nothing answers', async () => {
+    const b = await loadBridge();
+    expect(await b.waitForBridge(50)).toBe(false);
+    expect(await b.getActiveProblemUrl(50)).toEqual({ ok: false, error: 'no bridge available', source: 'none' });
+  });
+});
