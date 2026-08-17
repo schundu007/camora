@@ -146,7 +146,11 @@ export function buildAnswerCacheKey(parts) {
   // v18: the cards were briefly emitted BEFORE the solutions array, which pushed
   // the solutions past MAX_TOKENS on long answers — those cached entries hold a
   // truncated solution, and replaying one is the "Sona answers nonsense" report.
-  return `lumora:answer:v18:${h}`;
+  // v19: explanations became the code's inline comments (2026-08-17). A v18
+  // answer was generated under the old "at most 10 entries, KEY lines only"
+  // rule, so replaying one annotates three lines of a fifteen-line solution and
+  // reads as the feature not working — for the full 30-day TTL.
+  return `lumora:answer:v19:${h}`;
 }
 
 async function cacheGetFromDb(key) {
