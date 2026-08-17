@@ -3614,6 +3614,16 @@ figure:has(> .viz-caption) {
 .lumora-book p,
 .lumora-book li { max-width: 92ch; }
 
+/* …but not in a card that spans the whole panel. 92ch is a reading measure for
+   a half-width column; on a full-width card it stops the text mid-card and
+   leaves the right half empty, which is what "Solution is left aligned" was.
+   Sections that deliberately span (Solution, Walkthrough, Interviewer will ask,
+   Follow-up Q&A) get the width they asked for. */
+.lumora-book-span li,
+.lumora-book-stack li,
+.lumora-book-span p,
+.lumora-book-stack p { max-width: none; }
+
 /* Tier 1 — section heading (Fraunces, neutral text + gold hairline) */
 .lumora-book-section {
   font-family: 'Fraunces', Georgia, serif;
