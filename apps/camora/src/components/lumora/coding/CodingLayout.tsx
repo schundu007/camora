@@ -3635,7 +3635,10 @@ ${solCode}
                     {testResults.length > 0 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {testResults.map((r, i) => (
-                          <div key={i} className="rounded-lg border p-2 text-xs transition-[border-color,background-color]"
+                          // min-w-0 + overflow-hidden: the grid cell would otherwise be
+                          // sized by the longest unbreakable value and the text would
+                          // run out past the rounded border.
+                          <div key={i} className="rounded-lg border p-2 text-xs min-w-0 overflow-hidden transition-[border-color,background-color]"
                             style={r.passed
                               ? { borderColor: t.passedBorder, background: t.passedBg }
                               : { borderColor: t.failedBorder, background: t.failedBg }
@@ -3656,7 +3659,11 @@ ${solCode}
                               )}
                               <span className="font-bold" style={{ color: r.passed ? t.passedText : t.failedText }}>Test {i + 1}</span>
                             </div>
-                            <div className="space-y-0.5 font-mono text-[10px]">
+                            {/* Inputs and outputs are long single tokens (a JSON array
+                                with no spaces), which nothing will break on its own —
+                                anywhere lets them wrap inside the card instead of
+                                overlapping its edge. */}
+                            <div className="space-y-0.5 font-mono text-[10px] [overflow-wrap:anywhere] whitespace-pre-wrap">
                               <div><span style={{ color: t.textDim }}>In:</span> <span style={{ color: t.text }}>{r.input}</span></div>
                               <div><span style={{ color: t.textDim }}>Exp:</span> <span style={{ color: t.text }}>{r.expected}</span></div>
                               <div><span style={{ color: t.textDim }}>Out:</span> <span style={{ color: r.passed ? t.passedText : t.failedText }}>{r.output}</span></div>

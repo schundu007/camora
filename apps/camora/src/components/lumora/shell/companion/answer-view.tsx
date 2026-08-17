@@ -13,6 +13,37 @@
 import React, { useMemo } from 'react';
 import type { LumoraStory } from '@/lib/lumora-assistant';
 import { renderInlineSafe } from './inline-renderer';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import atomOneDark from 'react-syntax-highlighter/dist/esm/styles/hljs/atom-one-dark';
+import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
+import javascript from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/hljs/typescript';
+import java from 'react-syntax-highlighter/dist/esm/languages/hljs/java';
+import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
+import go from 'react-syntax-highlighter/dist/esm/languages/hljs/go';
+import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
+import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
+
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('java', java);
+SyntaxHighlighter.registerLanguage('cpp', cpp);
+SyntaxHighlighter.registerLanguage('go', go);
+SyntaxHighlighter.registerLanguage('sql', sql);
+SyntaxHighlighter.registerLanguage('bash', bash);
+
+/* Fence label → a language the highlighter actually knows. Anything unmapped
+   falls back to plain text rather than throwing. */
+const HL_LANG: Record<string, string> = {
+  python: 'python', py: 'python', python3: 'python',
+  javascript: 'javascript', js: 'javascript', node: 'javascript',
+  typescript: 'typescript', ts: 'typescript',
+  java: 'java', cpp: 'cpp', 'c++': 'cpp', c: 'cpp',
+  go: 'go', golang: 'go',
+  sql: 'sql', mysql: 'sql', postgres: 'sql', postgresql: 'sql',
+  bash: 'bash', sh: 'bash', shell: 'bash', zsh: 'bash',
+};
 
 // Theme-aware. The hardcoded slate-900 we used to ship rendered as
 // near-black on dark-navy --bg-elevated in dark mode → unreadable.
@@ -30,8 +61,10 @@ const FONT_ANSWER = "var(--font-answer)";
    FS_LEAD is the opening headline sentence — one step up so the hierarchy
    still reads. FS_SMALL is for dense secondary blocks (labels, rebuttals). */
 const FS_LEAD = '13.5px';
-const FS_BODY = '12.75px';
-const FS_SMALL = '12px';
+const FS_BODY = '11.75px';
+const FS_SMALL = '11px';
+/** Code type, matched to the editor beside it (11px) so the two do not clash. */
+const FS_CODE = '11.25px';
 const LH_BODY = '1.6';
 
 /* ── Emphasis ───────────────────────────────────────────────────────────────
@@ -542,7 +575,25 @@ export const RichText = ({ text }: { text: string }) => {
         <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--cam-strip-heading)]">{lang || 'code'}</span>
         <button onClick={() => navigator.clipboard.writeText(content)} className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]" style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>Copy</button>
       </div>
-      <pre className="px-4 py-3 overflow-x-auto" style={{ background: '#0F1B2D', color: '#E6F4FF', fontSize: '12.5px', lineHeight: '1.65', fontFamily: 'var(--font-mono)' }}><code>{content}</code></pre>
+      {/* Highlighted, not a single-colour <pre>. Sona's answers are mostly code
+          and it was rendering as one flat white block — harder to read than the
+          same code in the editor two panels away, and slower to scan mid
+          interview. Unknown fence labels fall through to plain text. */}
+      <SyntaxHighlighter
+        language={HL_LANG[(lang || '').toLowerCase()] ?? 'text'}
+        style={atomOneDark}
+        customStyle={{
+          margin: 0,
+          padding: '10px 14px',
+          background: '#0F1B2D',
+          fontSize: FS_CODE,
+          lineHeight: '1.55',
+          fontFamily: 'var(--font-mono)',
+        }}
+        codeTagProps={{ style: { fontFamily: 'var(--font-mono)', whiteSpace: 'pre' } }}
+      >
+        {content}
+      </SyntaxHighlighter>
     </div>
   );
 
