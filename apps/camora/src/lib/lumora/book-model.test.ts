@@ -337,3 +337,57 @@ it('live and history agree on the section ids they both emit (parity guard)', ()
   // and they genuinely share the core answer sections
   expect(overlap).toEqual(expect.arrayContaining(['approach', 'complexity', 'edgecases', 'tradeoffs']));
 });
+
+describe('identification section', () => {
+  const ident = {
+    path: [
+      { node: 'graph', question: 'Is it a graph?', answer: 'yes', evidence: 'grid, move to 4 adjacent cells' },
+      { node: 'tree', question: 'Is it a tree?', answer: 'no', evidence: 'cells revisit — cycles exist' },
+    ],
+    dataStructure: 'implicit graph over grid cells',
+    technique: 'DFS/backtracking',
+    ruledOut: ["Dijkstra — edges are unweighted"],
+  };
+
+  // The interviewer's real question is "how did you know?", so the trail has to
+  // survive into the rendered answer rather than only the technique name.
+  it('renders the walk, the verdict and what was ruled out', () => {
+    const doc = docFromSolution({ solutions: [{ code: 'x' }], identification: ident });
+    const sec = doc.sections.find(s => s.id === 'identification');
+    expect(sec).toBeDefined();
+    expect(sec!.heading).toBe('How to spot it');
+
+    const kvs = sec!.blocks.filter(b => b.kind === 'kv') as any[];
+    expect(kvs[0].pairs).toContainEqual(['Technique', 'DFS/backtracking']);
+    expect(kvs[0].pairs).toContainEqual(['Data structure', 'implicit graph over grid cells']);
+    expect(kvs[1].pairs[0]).toEqual(['Is it a graph? — yes', 'grid, move to 4 adjacent cells']);
+    expect(kvs[1].pairs[1][0]).toBe('Is it a tree? — no');
+
+    const callout = sec!.blocks.find(b => b.kind === 'callout') as any;
+    expect(callout.label).toBe('Ruled out');
+    expect(callout.items).toEqual(['Dijkstra — edges are unweighted']);
+  });
+
+  // Answers cached before the field existed, and walks the backend rejected as
+  // invalid, must render nothing rather than an empty card.
+  it('renders no section when identification is absent or empty', () => {
+    for (const sd of [
+      { solutions: [{ code: 'x' }] },
+      { solutions: [{ code: 'x' }], identification: {} },
+      { solutions: [{ code: 'x' }], identification: { path: [] } },
+    ]) {
+      expect(docFromSolution(sd).sections.find(s => s.id === 'identification')).toBeUndefined();
+    }
+  });
+
+  it('skips malformed steps but keeps the good ones', () => {
+    const doc = docFromSolution({
+      solutions: [{ code: 'x' }],
+      identification: { path: [{ question: 'Is it a graph?', answer: 'yes' }, { answer: 'no' }] },
+    });
+    const sec = doc.sections.find(s => s.id === 'identification')!;
+    const rows = (sec.blocks.find(b => b.kind === 'kv') as any).pairs;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toEqual(['Is it a graph? — yes', '—']);
+  });
+});
