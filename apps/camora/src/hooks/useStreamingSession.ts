@@ -7,6 +7,7 @@ import { getSystemContext } from '@/lib/lumora-assistant';
 
 import { INPUT_LIMITS } from '@/lib/constants';
 import type { TaskMode } from '@/lib/lumora/task-modes';
+import { parsePartialJson, hasRenderableAnswer } from '@/lib/lumora/partial-json';
 
 function validateInput(input: string): { valid: boolean; error?: string } {
   const trimmed = input.trim();
@@ -19,9 +20,18 @@ function validateInput(input: string): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
+/* Re-parse at most this often while streaming. Fast enough to read as live,
+ * slow enough that walking a 30KB buffer does not compete with the editor. */
+const PARTIAL_RENDER_MS = 250;
+
 export function useStreamingSession() {
   const { token } = useAuth();
   const abortControllerRef = useRef<AbortController | null>(null);
+  /* Progressive rendering of the coding answer. The buffer is kept here rather
+   * than read back from the store so a render cycle cannot interleave and hand
+   * the parser a half-applied string. */
+  const codingStreamBufRef = useRef('');
+  const lastPartialRenderRef = useRef(0);
 
   const {
     conversationId,
@@ -224,12 +234,34 @@ export function useStreamingSession() {
         },
         onToken: (data) => {
           if (abortControllerRef.current !== controller) return;
-          if (data.t) appendStreamChunk(data.t);
+          if (!data.t) return;
+          appendStreamChunk(data.t);
+
+          /* Render the answer as it arrives. The coding answer is one large JSON
+           * document and the card view used to wait for the whole thing, so a long
+           * answer looked like the app had stalled while tokens were streaming the
+           * entire time. parsePartialJson closes what is still open and drops the
+           * value mid-write, so the fields that HAVE landed can render now.
+           *
+           * Throttled: the parse walks the buffer, and doing that per token on a
+           * 30KB document burns the main thread the editor is drawing on. */
+          codingStreamBufRef.current += data.t;
+          const now = Date.now();
+          if (now - lastPartialRenderRef.current < PARTIAL_RENDER_MS) return;
+          lastPartialRenderRef.current = now;
+          const partial = parsePartialJson(codingStreamBufRef.current);
+          if (partial && hasRenderableAnswer(partial)) {
+            setIsCodingQuestion(true);
+            setParsedBlocks({ json: partial, format: 'ascend_json', partial: true } as any);
+          }
         },
         onAnswer: (data: any) => {
           if (abortControllerRef.current !== controller) return;
           setIsCodingQuestion(true);
           setIsDesignQuestion(false);
+          // The final payload replaces every partial render: it is the validated
+          // one (identification walk checked against the chart, trail trimmed).
+          codingStreamBufRef.current = '';
           setParsedBlocks(data.parsed || []);
           try { sessionStorage.setItem('lumora:lastCodingAnswer', JSON.stringify({ parsed: data.parsed, question: displayTitle, ts: Date.now() })); } catch {}
           setLastFromCache(Boolean(data.fromCache));
