@@ -46,12 +46,16 @@ export function dispatchTranscript({
     // Sona sidebar. Everything else (ambient speech, dictation with no solution
     // yet) is dropped so it can never be solved into a nonsense solution.
     const hasSolution = !!useSessionStore.getState().liveSolveContext;
-    if (hasSolution && isQuestion(trimmed)) {
-      log(`${activeTab} → sona (question after solve)`, trimmed.slice(0, 60));
-      window.dispatchEvent(new CustomEvent('lumora:coding-question', { detail: { text: trimmed } }));
-      return;
-    }
-    log(`${activeTab} voice dropped (not a problem source)`, trimmed.slice(0, 60));
+    const autoSend = hasSolution && isQuestion(trimmed);
+
+    // Always hand the transcript to the sidebar; `autoSend` decides whether it is
+    // asked or merely shown. Dropping it outright meant speech vanished with no
+    // trace while the mic was plainly working. This module's contract was always
+    // "suppress auto-submission, never the transcript".
+    log(`${activeTab} → sona ${autoSend ? '(auto)' : '(prefill only)'}`, trimmed.slice(0, 60));
+    window.dispatchEvent(new CustomEvent('lumora:coding-question', {
+      detail: { text: trimmed, autoSend },
+    }));
     return;
   }
 
