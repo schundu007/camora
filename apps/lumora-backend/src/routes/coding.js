@@ -787,7 +787,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
         {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
       ],
       "explanations": [
-        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
+        {"line": 1, "code": "the source line, verbatim", "explanation": "at most 12 words of plain text - reads as a trailing comment on that line"}
       ]
     }
   ]`
@@ -806,7 +806,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
         {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
       ],
       "explanations": [
-        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
+        {"line": 1, "code": "the source line, verbatim", "explanation": "at most 12 words of plain text - reads as a trailing comment on that line"}
       ]
     },
     {
@@ -820,7 +820,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
       "narration": "First-person spoken script, 4-6 sentences, conversational prose",
       "explanations": [
-        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
+        {"line": 1, "code": "the source line, verbatim", "explanation": "at most 12 words of plain text - reads as a trailing comment on that line"}
       ]
     },
     {
@@ -834,7 +834,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
       "narration": "First-person spoken script, 4-6 sentences, conversational prose",
       "explanations": [
-        {"line": 1, "code": "first line", "explanation": "PLAIN TEXT explanation"}
+        {"line": 1, "code": "the source line, verbatim", "explanation": "at most 12 words of plain text - reads as a trailing comment on that line"}
       ]
     }
   ]`},
@@ -989,11 +989,11 @@ Rules:
 - MANDATORY — MINIMAL IMPORTS: import ONLY modules the code actually uses. No unused imports, no "just in case" imports, no pulling in a heavy module for something a built-in already does. Prefer built-ins/stdlib; add a third-party import only if the problem truly requires it. Every import line must map to a symbol used in the solution.
 - Each solution MUST have a narration field — first-person spoken script the candidate READS OUT LOUD. Keep it SHORT: 2-3 sentences MAX (hook → core insight → complexity), natural speech, no markdown. The candidate reads this live — brevity matters.
 - Each solution MUST have a trace field — 4-6 step-by-step dry-run entries (never more) showing variable state on examples[0]. Each step: { step, action: short verb phrase, state: 'name=value' joined with commas }. No code in state.
-- CONCISE OUTPUT (live-interview readability + speed): the "explanations" array must cover ONLY the KEY lines — at most 10 entries, and skip trivial/obvious lines (imports, closing brackets, plain returns). Do NOT emit one explanation per line. Fewer, sharper annotations always win; a wall of per-line text is unreadable mid-interview and slows generation.
+- "explanations" ARE THE CODE'S COMMENTS. The client appends each entry to the line its "code" quotes, as a trailing \`# ...\` / \`// ...\` comment inside the editor — there is no separate walkthrough panel to read them in. So: one entry per MEANINGFUL line, in source order, "code" being that line's text VERBATIM (it is what the entry is matched on) and "explanation" being PLAIN TEXT, at most 12 words, no backticks, no markdown, no brackets or quote characters. Skip blank lines, closing brackets, and lines whose comment could only restate the syntax. Write what you would actually leave on that line — "evict hits older than the window", not "this is a while loop".
 ${starterCode
-  ? `- Preserve the template's own comments verbatim; add NO new comments of your own
+  ? `- Preserve the template's own comments verbatim; add NO new comments of your own — a line that already has one is left alone, so put your note in "explanations" instead
 - KEEP the template's driver/main block EXACTLY — the \`if __name__ == '__main__':\` block, the stdin reads, the wrapper call, and the print/fptr output are part of the LOCKED template and MUST appear in your "code" unchanged. Do NOT strip them. (This overrides the generic "no main blocks" rule — that rule is ONLY for from-scratch problems with no starter code.)`
-  : `- Do NOT add comments in the code
+  : `- Do NOT write comments into "code" yourself — the client renders "explanations" as the inline comments, so your own would be a second set on the same lines
 - Do NOT add main blocks or hard-coded test calls`}
 - ${singleSolution ? 'The pitch should explain the chosen approach and complexity' : 'The pitch should compare the 3 approaches conversationally'}
 - Generate COMPLETE, RUNNABLE code that includes all necessary imports for each solution

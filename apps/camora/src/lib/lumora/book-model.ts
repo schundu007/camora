@@ -295,12 +295,26 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
     whys.length ? { kind: 'callout', label: 'Why these bounds', items: whys } : null,
   ]);
 
-  const walk = Array.isArray(sol?.explanations)
-    ? sol.explanations
-        .map((e: any) => ({ line: e.line, code: e.code, explanation: txt(e.explanation) }))
-        .filter((r: any) => r.explanation || r.code)
-    : [];
-  push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
+  /* The line-by-line, but ONLY for a diagnose answer.
+   *
+   * On a normal solve `explanations` is one entry per meaningful line, and as a
+   * card it was a second copy of the program: every row restated the line's
+   * source text so you could find it again in the editor beside it. Those words
+   * now ride on the line itself (annotateSolutionCode), so the card would be a
+   * third copy.
+   *
+   * Diagnose is a different array with the same name — one entry per DEFECT,
+   * keyed to lines of the code the candidate wrote, most of which are correct
+   * and get no entry. There is nowhere else for that list to go, so it keeps
+   * its card. */
+  if (sd.type === 'diagnose') {
+    const walk = Array.isArray(sol?.explanations)
+      ? sol.explanations
+          .map((e: any) => ({ line: e.line, code: e.code, explanation: txt(e.explanation) }))
+          .filter((r: any) => r.explanation || r.code)
+      : [];
+    push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
+  }
 
   push(sections, 'tradeoffs', [listOrNull(pitchObj?.tradeoffs)]);
 
