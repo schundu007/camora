@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isProblemPageUrl } from '../src/routes/coding.js';
+import { isProblemPageUrl, isAutoFetchableUrl } from '../src/routes/coding.js';
 
 // SHARED CASES — apps/camora/src/lib/problemPageUrl.test.ts asserts the
 // same strings against the frontend copy. Keep both in sync.
@@ -38,4 +38,29 @@ const BLOCK = [
 describe('isProblemPageUrl — allowlist', () => {
   it.each(ALLOW)('ALLOWS %s', (u) => expect(isProblemPageUrl(u)).toBe(true));
   it.each(BLOCK)('BLOCKS %s', (u) => expect(isProblemPageUrl(u)).toBe(false));
+});
+
+// Mirror of the frontend isAutoFetchableUrl cases. Recognising a page and being
+// able to fetch it are different questions: session pages return a sign-in screen,
+// which the generic fetch would otherwise serve as if it were the problem.
+describe('isAutoFetchableUrl', () => {
+  const FETCHABLE = [
+    'https://leetcode.com/problems/two-sum/',
+    'https://leetcode.cn/problems/add-two-numbers/',
+    'https://www.hackerrank.com/challenges/simple-array-sum/problem',
+    'https://www.hackerrank.com/contests/w37/challenges/maximize-it',
+  ];
+  const SESSION_ONLY = [
+    'https://app.coderpad.io/ABC123XYZ',
+    'https://codesignal.com/interview/abc123/',
+    'https://app.glider.ai/test/xyz789',
+  ];
+
+  it.each(FETCHABLE)('fetches %s', u => expect(isAutoFetchableUrl(u)).toBe(true));
+  it.each(SESSION_ONLY)('refuses %s', u => expect(isAutoFetchableUrl(u)).toBe(false));
+  it.each(SESSION_ONLY)('but still recognises %s', u => expect(isProblemPageUrl(u)).toBe(true));
+  it('refuses junk', () => {
+    expect(isAutoFetchableUrl('https://github.com/foo')).toBe(false);
+    expect(isAutoFetchableUrl('')).toBe(false);
+  });
 });
