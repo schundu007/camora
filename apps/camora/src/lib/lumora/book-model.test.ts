@@ -29,11 +29,25 @@ describe('docFromSolution', () => {
   // Tradeoffs sits beside Approach comparison and Dry-run trace beside Edge
   // cases — each row a pair that is read together.
   it('emits sections in reading order', () => {
-    // Interview reading order: what you did, what it costs, the line-by-line,
-    // then the material you reach for when questioned.
+    // Interview reading order: what you did, what it costs, then the material
+    // you reach for when questioned. No walkthrough — the line-by-line rides
+    // the code itself as inline comments now.
     expect(ids(docFromSolution(SD))).toEqual([
-      'complexity', 'approach', 'edgecases', 'tradeoffs', 'walkthrough', 'trace',
+      'complexity', 'approach', 'edgecases', 'tradeoffs', 'trace',
     ]);
+  });
+
+  it('drops the walkthrough card — explanations are the code comments', () => {
+    expect(ids(docFromSolution(SD))).not.toContain('walkthrough');
+  });
+
+  // Diagnose reuses the field name for a different thing: one entry per defect
+  // in the candidate's own code, which has no other home on screen.
+  it('keeps the walkthrough card for a diagnose answer', () => {
+    const doc = docFromSolution({ ...SD, type: 'diagnose' });
+    const walk = doc.sections.find(s => s.id === 'walkthrough');
+    expect(walk).toBeTruthy();
+    expect(walk!.blocks[0].kind).toBe('walk');
   });
 
   describe('approach comparison', () => {

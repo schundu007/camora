@@ -62,7 +62,11 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
       return (
         <div className="lumora-book-callout">
           <div className="lumora-book-label !mt-0">{block.label}</div>
-          <ul className="space-y-0.5">
+          {/* Bulleted, like every other list in the book. Without markers a
+              two-column callout (Key points, Common mistakes) reads as a block
+              of loose sentences — where one item ends and the next begins is
+              guesswork once an item wraps. */}
+          <ul className="list-disc pl-4 space-y-0.5">
             {block.items.map((it, i) => <li key={i}><InlineText text={it} /></li>)}
           </ul>
         </div>

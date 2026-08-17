@@ -27,6 +27,7 @@ const SESSION_PAGE_NOTE =
   + 'or use the desktop app to capture it from the screen.';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
+import { annotateSolutionCode } from '@/lib/lumora/code-comments';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
 import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
@@ -37,6 +38,32 @@ const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.car
 // Hard cap on multi-page SNAP captures — a backstop so the page count can never
 // run away even if a capture source keeps delivering new (non-duplicate) frames.
 const MAX_SNAP_PAGES = 12;
+
+/**
+ * The code the editor shows for a solution, with its explanations as comments.
+ *
+ * Four call sites derived this independently — the parsed-blocks effect, the
+ * jsonSolution sync, the stream-repair fallback and the approach dropdown —
+ * each with its own slightly different fallback chain. One function so the
+ * editor cannot show annotated code down one path and bare code down another.
+ *
+ * Diagnose answers are returned untouched: there `explanations` is a defect
+ * list, and its home is the card (see docFromSolution). Writing "off-by-one,
+ * skips the last element" onto the candidate's own line would be an edit, not
+ * an annotation.
+ */
+const codeForSolution = (sol: any, sd: any, language: string): string => {
+  const raw = sol?.code || sol?.implementation || sol?.solution
+    || sd?.code || sd?.implementation
+    || (Array.isArray(sol?.explanations)
+      ? sol.explanations.map((e: any) => e?.code).filter(Boolean).join('\n')
+      : '');
+  if (!raw || sd?.type === 'diagnose') return raw || '';
+  // The backend's detected language beats the picker's default, which is 'auto'
+  // until the user touches it.
+  const lang = sd?.language && sd.language !== 'auto' ? sd.language : language;
+  return annotateSolutionCode(raw, sol?.explanations, lang);
+};
 
 // Returns true when the pasted text is itself a code template with placeholder
 // bodies (return [], pass, NotImplementedError, TODO). Used to auto-promote
@@ -458,10 +485,16 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // The approach card's inline explanations lack a `line` field. Resolve the editor
   // line by matching the row's code text against the current editor content; fall
   // back to 1-based row order when there's no exact match.
+  // Editor lines now carry a trailing `  # …` explanation (annotateSolutionCode),
+  // so an exact-equality match would miss every annotated line. The separator is
+  // always two spaces, which no source line ends with on its own.
   const lineForCode = useCallback((exCode: string, fallbackIdx: number): number => {
     const target = (exCode || '').trim();
     if (!target) return fallbackIdx + 1;
-    const idx = code.split('\n').findIndex(l => l.trim() === target);
+    const idx = code.split('\n').findIndex(l => {
+      const t = l.trim();
+      return t === target || t.startsWith(`${target}  `);
+    });
     return idx >= 0 ? idx + 1 : fallbackIdx + 1;
   }, [code]);
   // Stale-decoration guard: a highlight from solution A must not linger after
@@ -1230,9 +1263,7 @@ ${solCode}
       // New multi-solution format
       if (jsonData.solutions?.length > 0) {
         setActiveSolutionIdx(0);
-        const firstSol = jsonData.solutions[0];
-        const solCode = firstSol.code || firstSol.implementation
-          || (firstSol.explanations?.length > 0 ? firstSol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n') : null);
+        const solCode = codeForSolution(jsonData.solutions[0], jsonData, language);
         if (solCode) setCode(solCode);
       } else if (jsonData.code) {
         setCode(jsonData.code);
@@ -1270,14 +1301,10 @@ ${solCode}
     const sol = jsonSolution.solutions?.[idx] || jsonSolution.solutions?.[0];
     if (!sol) return;
 
-    // Try direct code field first
-    let extracted = sol.code || sol.implementation || sol.solution
-      || jsonSolution.code || jsonSolution.implementation;
-
-    // If no direct code field, reconstruct from explanations (the actual format)
-    if (!extracted && sol.explanations?.length > 0) {
-      extracted = sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n');
-    }
+    // The direct code field, else reconstructed from explanations (some
+    // streamed shapes carry the program only as explanations[].code), with the
+    // explanations appended as inline comments either way.
+    let extracted = codeForSolution(sol, jsonSolution, language);
 
     // Last resort: extract from raw stream
     if (!extracted) {
@@ -1306,10 +1333,10 @@ ${solCode}
     const idx = activeSolutionIdx || 0;
     const sol = jsonSolution.solutions?.[idx] || jsonSolution.solutions?.[0];
     if (!sol) return;
-    let solCode = sol.code || sol.implementation || sol.solution || '';
-    if (!solCode && sol.explanations?.length) {
-      solCode = sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n');
-    }
+    // Annotated, deliberately: the comments are part of the answer Sona is
+    // asked follow-ups about, and they carry the per-line reasoning that used
+    // to reach it as a separate walkthrough field.
+    const solCode = codeForSolution(sol, jsonSolution, language);
     useSessionStore.getState().setLiveSolveContext({
       surface: 'coding',
       problem: problemText.trim().slice(0, 4000),
@@ -1350,12 +1377,7 @@ ${solCode}
             // frame before the reconstruct effect (line ~547) re-filled
             // from explanations. Fall back to the same shape inline so
             // the editor never goes blank.
-            const sol0 = json.solutions[0];
-            const fallback = sol0?.code
-              || sol0?.implementation
-              || (Array.isArray(sol0?.explanations)
-                ? sol0.explanations.map((e: any) => e?.code).filter(Boolean).join('\n')
-                : null);
+            const fallback = codeForSolution(json.solutions[0], json, language);
             if (fallback) setCode(fallback);
           } else if (json.code) {
             setCode(json.code);
@@ -1369,7 +1391,9 @@ ${solCode}
         }
       } catch { /* not JSON */ }
     }
-  }, [isStreaming, streamText, jsonSolution]);
+    // `language` is the fallback comment marker when the payload names none.
+    // Re-running on a language change is a no-op once jsonSolution is set.
+  }, [isStreaming, streamText, jsonSolution, language]);
 
   // Turn the statement's worked examples into RUNNABLE cases — only if the user
   // hasn't hand-edited any.
@@ -3106,8 +3130,12 @@ ${solCode}
                         it rather than be unreachable. */}
                     {sd.solutions?.length > 1 && (
                       <>
+                        {/* No "Approach" label: the option text already reads
+                            as one ("Brute Force · O(n²)"), and the chip is short
+                            enough that the label was eating the room the name
+                            needed — it truncated to "Brute Force - Raw Time…". */}
                         <ChipSelect
-                          label="Approach"
+                          title="Approach"
                           value={String(activeSolutionIdx)}
                           options={sd.solutions.map((s: any, i: number) => ({
                             value: String(i),
@@ -3118,8 +3146,7 @@ ${solCode}
                             const sol = sd.solutions[i];
                             if (!sol) return;
                             setActiveSolutionIdx(i);
-                            const solCode = sol.code || sol.implementation || sol.solution
-                              || (sol.explanations?.length > 0 ? sol.explanations.map((ex: any) => ex.code).filter(Boolean).join('\n') : null);
+                            const solCode = codeForSolution(sol, sd, language);
                             if (solCode) setCode(solCode);
                           }}
                         />
