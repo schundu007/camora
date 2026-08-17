@@ -329,7 +329,11 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
     const onMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
       const delta = dragRef.current.startX - ev.clientX;
-      setSidebarWidth(Math.max(280, Math.min(700, dragRef.current.startW + delta)));
+      // Cap was a flat 700px, which on a wide screen stops the drag well before
+      // the panel is actually in the way — it read as the handle being stuck.
+      // Allow up to 70% of the window, still leaving the editor usable.
+      const maxW = Math.max(700, Math.round(window.innerWidth * 0.7));
+      setSidebarWidth(Math.max(280, Math.min(maxW, dragRef.current.startW + delta)));
     };
     const onUp = () => {
       dragRef.current = null;
