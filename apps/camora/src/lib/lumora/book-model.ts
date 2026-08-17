@@ -461,14 +461,17 @@ export function docFromCoFix(
  */
 const SECTION_ORDER = [
   'problem',
-  'identification',   // how to spot it — said first, before any code
+  // Reading order, not answer order: you read the statement and notice the
+  // trigger phrases, and those are what send you down the chart. Signals first
+  // means the card that comes first is the one you look at first.
+  'signals',
+  'identification',   // how to spot it — the walk those signals led to
   'approach',         // Solution
   'code',
   'complexity',
   'walkthrough',
   'trace',
   'budget',           // constraint budget
-  'signals',
   'edgecases',
   'testcases',
   // Tradeoffs then the comparison matrix: the matrix is the evidence for the
