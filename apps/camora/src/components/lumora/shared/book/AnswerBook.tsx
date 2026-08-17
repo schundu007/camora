@@ -69,12 +69,11 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
       );
 
     case 'list': {
-      // Two columns for lists of short bullets (edge cases, concepts): they are
-      // scan-and-tick items, and one column pushed the later ones off-screen.
-      // Gated on LENGTH as well as count, because the Solution card is also a
-      // list and its points are full sentences — those read worse split in half.
-      const avgLen = block.items.reduce((n, it) => n + it.length, 0) / (block.items.length || 1);
-      const twoUp = block.items.length >= 3 && avgLen <= 120;
+      // Two columns only where the block asks for it. Inferring it from bullet
+      // length caught the Solution card too, and a handful of short bullets then
+      // packed into the left column of a full-width card — which reads as the
+      // text failing to use the space rather than as a deliberate two-up list.
+      const twoUp = block.twoUp === true && block.items.length >= 3;
       // InlineText so `identifiers` in a bullet render as code — the Solution
       // card is a list now, and its points name real variables and functions.
       return (
@@ -232,7 +231,12 @@ const WIDE_BLOCKS = new Set<BookBlock['kind']>(['code']);
 // wrapped text, and with the reference cards moved to the right pane the left grid
 // was left with an odd number of cells, so the remainder sat in ragged half-rows.
 // Spanning them makes the left column read as one sequence.
-const WIDE_SECTION_IDS = new Set(['followup', 'approach', 'walkthrough', 'code']);
+const WIDE_SECTION_IDS = new Set([
+  'followup', 'approach', 'walkthrough', 'code',
+  // Interviewer will ask: question/answer rows, same shape as Follow-up Q&A.
+  // In a half-width column the question and its answer each wrap to a few words.
+  'probes',
+]);
 
 const isWideSection = (id: string, blocks: BookBlock[]) =>
   WIDE_SECTION_IDS.has(id) || blocks.some(b => WIDE_BLOCKS.has(b.kind));
