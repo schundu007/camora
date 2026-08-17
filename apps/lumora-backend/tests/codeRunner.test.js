@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { execFile } from 'node:child_process';
-import { executeCode } from '../src/services/codeRunner.js';
+import { executeCode, stripModuleLevelPrints} from '../src/services/codeRunner.js';
 
 // These tests exercise the real Python test-case harness in codeRunner.js.
 // They require a `python3` runtime; when absent (rare CI images) they self-skip
@@ -83,5 +83,63 @@ describe('codeRunner Python harness — input/output correctness', () => {
     // No opts → unchanged direct execution (regression guard).
     const plain = await executeCode('print(1 + 1)', 'python', []);
     expect(plain.direct_output).toBe('2');
+  });
+});
+
+// A model that appends its own demo driver made every test case fail:
+//
+//     print(Solution().trap([0,1,0,2,1,0,1,3,2,1,2,1]))
+//     print(Solution().trap([4,2,0,3,2,5]))
+//
+// Those execute at module level, so the captured stdout is "6\n9\n<result>"
+// while `expected` is just "<result>". The existing footer cleanup only removed a
+// trailing call to a function the code itself defined, and `print` is not one of
+// those — so both lines survived and every case compared unequal.
+describe('stripModuleLevelPrints', () => {
+  const SOLUTION = [
+    'class Solution:',
+    '    def trap(self, height):',
+    '        return 6',
+  ].join('\n');
+
+  it('removes the appended demo driver', () => {
+    const out = stripModuleLevelPrints(
+      `${SOLUTION}\n\nprint(Solution().trap([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]))\nprint(Solution().trap([4, 2, 0, 3, 2, 5]))\n`,
+    );
+    expect(out).not.toContain('print(Solution()');
+    expect(out).toContain('class Solution:');
+    expect(out).toContain('return 6');
+  });
+
+  // An indented print is inside a function body — possibly the solution's actual
+  // output. Removing it would change what the code does.
+  it('keeps prints inside function bodies', () => {
+    const code = 'def f(x):\n    print(x)\n    return x\n';
+    expect(stripModuleLevelPrints(code)).toContain('    print(x)');
+  });
+
+  it('removes a print spanning several lines whole', () => {
+    const out = stripModuleLevelPrints(
+      `${SOLUTION}\n\nprint(\n    Solution().trap(\n        [4, 2, 0, 3, 2, 5]\n    )\n)\n`,
+    );
+    expect(out).not.toContain('print(');
+    expect(out).toContain('class Solution:');
+  });
+
+  it('removes several drivers and leaves the solution intact', () => {
+    const out = stripModuleLevelPrints(`${SOLUTION}\nprint(1)\nprint(2)\nprint(3)\n`);
+    expect(out.trim()).toBe(SOLUTION);
+  });
+
+  // Truncating a program on unbalanced parens would be worse than leaving the
+  // stray line in — the syntax error at least says what is wrong.
+  it('leaves an unterminated print alone rather than truncating', () => {
+    const code = `${SOLUTION}\nprint(Solution().trap([1, 2\n`;
+    expect(stripModuleLevelPrints(code)).toContain('print(Solution().trap([1, 2');
+  });
+
+  it('is a no-op for code with no module-level print', () => {
+    expect(stripModuleLevelPrints(SOLUTION)).toBe(SOLUTION);
+    expect(stripModuleLevelPrints('')).toBe('');
   });
 });

@@ -3511,6 +3511,37 @@ figure:has(> .viz-caption) {
    left column to the bottom and then scroll back up for the right one. */
 .lumora-book-grid { display: flow-root; }
 
+/* Short bullet lists (edge cases, concepts) flow into two columns once the panel
+   is wide enough. Container query, not the `sm:` viewport breakpoint this used
+   before — the book panel is resizable, so viewport width said nothing about how
+   much room the list actually had, and a 5-item edge-case list stayed in one
+   column on a wide panel. */
+@container book (min-width: 520px) {
+  .lumora-list-2col {
+    columns: 2;
+    column-gap: 2rem;
+  }
+  .lumora-list-2col > li { break-inside: avoid; }
+}
+
+/* Walkthrough rows sit two-up once there is room. Each row is a short
+   annotation, so a single column left half the card empty and pushed the later
+   steps off-screen mid-interview. Container query, not media: this panel is
+   resizable and its width has no fixed relation to the viewport. */
+.lumora-walk-rows { display: flex; flex-direction: column; gap: 0.375rem; }
+
+@container book (min-width: 560px) {
+  .lumora-walk-rows {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.375rem;
+    align-items: start;
+  }
+  /* A row carrying a code line can be wide; let it take the full width rather
+     than wrapping its code into a two-inch column. */
+  .lumora-walk-rows > .lumora-walk-wide { grid-column: 1 / -1; }
+}
+
 @container book (min-width: 720px) {
   .lumora-book-grid {
     display: grid;
