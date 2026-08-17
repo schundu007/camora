@@ -16,6 +16,7 @@ const SOLVE_CONTEXT = {
   complexity: 'TIME=O(n), SPACE=O(1)',
   code: 'def trap(h): return 0',
   language: 'python',
+  solvedAt: 0,
 };
 
 function captureCodingEvents() {
