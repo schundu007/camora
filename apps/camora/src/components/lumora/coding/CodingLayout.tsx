@@ -21,6 +21,7 @@ import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
 import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
+import { getActiveProblemUrl, waitForBridge } from '@/lib/lumora/activeUrlBridge';
 
 const API_BASE_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
@@ -521,6 +522,9 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // immediately when useCallback runs, so resolveLanguage must exist first.
   const languageRef = useRef(language);
   const problemTextRef = useRef(problemText);
+  // Mirrored for the auto-detect probe, which runs from a window 'focus' listener
+  // and would otherwise close over the URL as it was when the listener attached.
+  const problemUrlRef = useRef(problemUrl);
   // Mirror starterCode into a ref so the auto-generate timer reads the LATEST
   // captured template (a snap sets starterCode, then the timer fires 8s later —
   // a plain closure would capture the stale null and drop the HackerRank harness).
@@ -1393,6 +1397,48 @@ ${solCode}
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUrl, token]);
 
+  /* Auto-fetch the problem you already have open.
+   *
+   * This is what "auto fetch" means outside the Electron shell. A web page cannot
+   * read another window's address bar, so it asks a bridge — the desktop IPC probe
+   * or the Camora Problem Bridge extension — and fetches whatever problem page is
+   * open. Runs on mount and again whenever the tab regains focus, because the usual
+   * sequence is: open the problem, come back here.
+   *
+   * Guards, in order of how badly each would misbehave without them:
+   *  - never overwrite a URL or problem the user has already put in;
+   *  - never re-fetch the same URL twice (focus fires often);
+   *  - only fetch pages isProblemPageUrl() accepts, same as every other entry point.
+   */
+  const autoDetectedUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    const probe = async () => {
+      if (cancelled || isProcessing) return;
+      // The user is mid-thought — do not yank the field out from under them.
+      if (problemUrlRef.current.trim() || problemTextRef.current.trim()) return;
+      if (!(await waitForBridge())) return;
+
+      const res = await getActiveProblemUrl();
+      if (cancelled || !res.ok || !res.url) return;
+      if (!isProblemPageUrl(res.url)) return;
+      if (autoDetectedUrlRef.current === res.url) return;
+      if (problemUrlRef.current.trim() || problemTextRef.current.trim()) return;
+
+      autoDetectedUrlRef.current = res.url;
+      setInputMode('url');
+      setProblemUrl(res.url);
+      handleFetchFromUrl(res.url, { auto: true });
+    };
+
+    probe();
+    window.addEventListener('focus', probe);
+    return () => { cancelled = true; window.removeEventListener('focus', probe); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
   // Starts/resets the 8-second auto-generate timer used after multi-page captures.
   // Each new page resets the clock; when it fires the combined text is submitted.
   const scheduleAutoGenerate = useCallback(() => {
@@ -1456,11 +1502,9 @@ ${solCode}
         }
 
         // First capture: try URL-first (full problem via backend scraper).
-        const camo = (window as any).camo;
-        // getActiveBrowserUrl resolves to { ok, url, browser } (or { ok:false, error }),
-        // never a bare string — extract .url before using it.
-        const activeInfo = camo?.getActiveBrowserUrl ? await camo.getActiveBrowserUrl() : null;
-        const activeUrl: string | null = activeInfo?.ok && activeInfo.url ? activeInfo.url : null;
+        // Desktop IPC or the browser-extension bridge, whichever is present.
+        const activeInfo = await getActiveProblemUrl();
+        const activeUrl: string | null = activeInfo.ok && activeInfo.url ? activeInfo.url : null;
         if (activeUrl && token && isProblemPageUrl(activeUrl)) {
           try {
             const resp = await fetch(`${API_BASE_URL}/api/v1/coding/fetch-problem`, {
@@ -1747,6 +1791,7 @@ ${solCode}
   // problem field. Anchoring to refs eliminates the race entirely.
   useEffect(() => { languageRef.current = language; }, [language]);
   useEffect(() => { problemTextRef.current = problemText; }, [problemText]);
+  useEffect(() => { problemUrlRef.current = problemUrl; }, [problemUrl]);
   useEffect(() => { starterCodeRef.current = starterCode; }, [starterCode]);
   useEffect(() => { multiPageCountRef.current = multiPageCount; }, [multiPageCount]);
 
@@ -2128,14 +2173,15 @@ ${solCode}
   // rejecting a real leetcode.com/problems/... page because the chip still said
   // "hackerrank" discarded the exact thing the user was asking for.
   const detectBrowserUrl = useCallback(async (opts?: { manual?: boolean }) => {
-    const camo = (window as any).camo;
-    if (!camo?.getActiveBrowserUrl) {
-      if (opts?.manual) setError('Detecting the open tab needs the Camora desktop app — in a browser, paste the URL instead.');
+    if (!(await waitForBridge())) {
+      if (opts?.manual) {
+        setError('Detecting the open tab needs either the Camora desktop app or the Camora Problem Bridge extension — otherwise paste the URL here.');
+      }
       return;
     }
     setUrlDetectNote(null);
     try {
-      const result = await camo.getActiveBrowserUrl();
+      const result = await getActiveProblemUrl();
       if (!result?.ok || !result.url) {
         // The common cause on macOS is Automation permission: reading Chrome's
         // address bar is an Apple Event, and a denied grant throws in main.js.
