@@ -81,6 +81,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
     try { localStorage.setItem(HANDS_FREE_KEY, handsFree ? '1' : '0'); } catch {}
   }, [handsFree]);
   const [sidebarWidth, setSidebarWidth] = useState(360);
+  const asideRef = useRef<HTMLElement | null>(null);
   const dragRef = useRef<{ startX: number; startW: number } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -329,10 +330,13 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
     const onMove = (ev: MouseEvent) => {
       if (!dragRef.current) return;
       const delta = dragRef.current.startX - ev.clientX;
-      // Cap was a flat 700px, which on a wide screen stops the drag well before
-      // the panel is actually in the way — it read as the handle being stuck.
-      // Allow up to 70% of the window, still leaving the editor usable.
-      const maxW = Math.max(700, Math.round(window.innerWidth * 0.7));
+      // Clamp against the row this panel actually sits in, not the window. The
+      // window is wider than the split row (there is a rail to its left), so a
+      // window-based cap let the panel grow past its container and squeeze the
+      // editor column to nothing — at which point dragging back the other way
+      // had nowhere to land and the handle read as stuck.
+      const row = asideRef.current?.parentElement?.clientWidth ?? window.innerWidth;
+      const maxW = Math.max(360, Math.round(row * 0.7));
       setSidebarWidth(Math.max(280, Math.min(maxW, dragRef.current.startW + delta)));
     };
     const onUp = () => {
@@ -348,6 +352,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
 
   return (
     <aside
+      ref={asideRef}
       // Tagged so AudioCapture's global Backquote shortcut yields the key when
       // it is pressed inside this sidebar — ` drives Sona's mic here and the
       // interview mic everywhere else.
@@ -367,9 +372,12 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
           {/* Drag handle — left edge, 6px wide, ew-resize cursor */}
           <div
             onMouseDown={handleDragStart}
+            // Double-click restores the default width — a way back that does not
+            // depend on dragging, whatever state the panel has been left in.
+            onDoubleClick={() => setSidebarWidth(360)}
             className="absolute left-0 top-0 h-full z-10 cursor-ew-resize"
             style={{ width: 6, background: 'transparent' }}
-            data-tip="Drag to resize"
+            data-tip="Drag to resize · double-click to reset"
           />
           {/* Header — navy hero strip + gold underline, matches the
               app's other tool-window chrome. */}
