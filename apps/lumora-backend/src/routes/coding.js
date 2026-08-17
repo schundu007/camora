@@ -766,6 +766,34 @@ listening for.`}
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
   "language": "${language}",
+  // Emitted FIRST, before the solutions array. Two reasons, both real:
+  //  - MAX_TOKENS is 16000 and three solutions with code, walkthroughs and
+  //    narration can reach it; whatever trails the solutions is what gets
+  //    truncated away, and that was these cards.
+  //  - It is also the order the candidate needs them in: how you recognised the
+  //    pattern comes before the code that implements it, and streaming renders
+  //    them the moment they arrive rather than at the very end.
+  "interview": {
+    "budget": {
+      "n": "the binding input bound from the constraints, verbatim, e.g. \"n <= 10^5\" - or \"not stated\"",
+      "ceiling": "the complexity that bound forces, e.g. \"O(n log n) or better\"",
+      "verdict": "does your chosen solution fit that ceiling? name its complexity and say fits, or flag the TLE risk"
+    },
+    "signals": [
+      { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
+    ],
+    "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
+    "probes": [ { "q": "the follow-up an interviewer asks after this solution", "a": "your answer, 1-2 sentences" } ],
+    "pitfalls": ["a mistake people actually make on this pattern, one clause"]
+  },
+  "identification": {
+    "path": [
+      { "node": "<node id from the chart>", "answer": "yes", "evidence": "the words in THIS statement that settle it - quote or tight paraphrase, 15 words max" }
+    ],
+    "dataStructure": "The concrete structure the solution runs on, e.g. 'implicit graph over grid cells' or 'min-heap of size k'",
+    "technique": "The leaf technique the walk lands on",
+    "ruledOut": ["Nearest technique you rejected plus the one-clause reason, e.g. \"Dijkstra - edges are unweighted\""]
+  },
   "solutions": ${singleSolution
   ? `[
     {
@@ -833,27 +861,6 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       ]
     }
   ]`},
-  "interview": {
-    "budget": {
-      "n": "the binding input bound from the constraints, verbatim, e.g. \"n <= 10^5\" - or \"not stated\"",
-      "ceiling": "the complexity that bound forces, e.g. \"O(n log n) or better\"",
-      "verdict": "does your chosen solution fit that ceiling? name its complexity and say fits, or flag the TLE risk"
-    },
-    "signals": [
-      { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
-    ],
-    "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
-    "probes": [ { "q": "the follow-up an interviewer asks after this solution", "a": "your answer, 1-2 sentences" } ],
-    "pitfalls": ["a mistake people actually make on this pattern, one clause"]
-  },
-  "identification": {
-    "path": [
-      { "node": "<node id from the chart>", "answer": "yes", "evidence": "the words in THIS statement that settle it - quote or tight paraphrase, 15 words max" }
-    ],
-    "dataStructure": "The concrete structure the solution runs on, e.g. 'implicit graph over grid cells' or 'min-heap of size k'",
-    "technique": "The leaf technique the walk lands on",
-    "ruledOut": ["Nearest technique you rejected plus the one-clause reason, e.g. \"Dijkstra - edges are unweighted\""]
-  },
   "pitch": ${singleSolution
   ? `{
     "opener": "One sentence summary of the approach",

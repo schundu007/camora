@@ -29,8 +29,10 @@ describe('docFromSolution', () => {
   // Tradeoffs sits beside Approach comparison and Dry-run trace beside Edge
   // cases — each row a pair that is read together.
   it('emits sections in reading order', () => {
+    // Interview reading order: what you did, what it costs, the line-by-line,
+    // then the material you reach for when questioned.
     expect(ids(docFromSolution(SD))).toEqual([
-      'approach', 'complexity', 'walkthrough', 'tradeoffs', 'trace', 'edgecases',
+      'approach', 'complexity', 'walkthrough', 'trace', 'edgecases', 'tradeoffs',
     ]);
   });
 
@@ -497,5 +499,41 @@ describe('interview cards', () => {
     });
     expect((doc.sections.find(s => s.id === 'signals')!.blocks[0] as any).pairs).toHaveLength(1);
     expect(doc.sections.find(s => s.id === 'probes')).toBeUndefined();
+  });
+});
+
+describe('card order', () => {
+  // The sections used to appear in whatever order the builder pushed them, which
+  // put reference material above the answer. This is the order the interview
+  // itself goes in: recognise the pattern, say the plan, show the code.
+  it('leads with how you spotted it, then the solution and its code', () => {
+    const doc = docFromSolution({
+      solutions: [{ name: 'Two Pointers', approach: 'scan', code: 'x', complexity: { time: 'O(n)', space: 'O(1)' }, explanations: [{ line: 1, code: 'x', explanation: 'e' }] }],
+      identification: { path: [{ question: 'Compute a max/min?', answer: 'yes', evidence: 'water' }], technique: 'Two Pointers' },
+      interview: {
+        budget: { n: 'n<=2e4', ceiling: 'O(n)' },
+        probes: [{ q: 'O(1) space?', a: 'no' }],
+        topic: { section: 'Two Pointers' },
+      },
+      pitch: { tradeoffs: ['t'], edgeCases: ['empty'] },
+    });
+    const ids = doc.sections.map(s => s.id);
+    const at = (id: string) => ids.indexOf(id);
+
+    expect(at('identification')).toBeGreaterThanOrEqual(0);
+    expect(at('identification')).toBeLessThan(at('approach'));
+    expect(at('approach')).toBeLessThan(at('complexity'));
+    expect(at('complexity')).toBeLessThan(at('walkthrough'));
+    // Reference material a candidate reaches for when questioned comes after.
+    expect(at('walkthrough')).toBeLessThan(at('probes'));
+    expect(at('edgecases')).toBeLessThan(at('probes'));
+    // What to study afterwards is last.
+    expect(at('topic')).toBe(ids.length - 1);
+  });
+
+  it('keeps unlisted sections in their original relative order', () => {
+    // docFromSolution emits no `code` section — the code lives in the editor.
+    const doc = docFromSolution({ solutions: [{ code: 'x', approach: 'a' }] });
+    expect(doc.sections.map(s => s.id)).toEqual(['approach']);
   });
 });

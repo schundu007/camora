@@ -5,7 +5,11 @@ import { rankApproaches } from '@/lib/lumora/complexity-rank';
 export type BookBlock =
   | { kind: 'prose'; text: string }
   | { kind: 'callout'; label: string; items: string[] }
-  | { kind: 'list'; items: string[] }
+  /* `twoUp` opts a list into two columns. Explicit rather than inferred: a
+   * length heuristic put the Solution card's bullets into two columns, and with
+   * a few short bullets they piled into the left one and left the right half of
+   * a full-width card empty. Only scan-and-tick lists want this. */
+  | { kind: 'list'; items: string[]; twoUp?: boolean }
   | { kind: 'code'; lang: string; code: string }
   // layout 'inline' (default) packs pairs onto shared rows — right for short
   // values like `Time O(n)`. 'rows' gives each pair its own row with the key in
@@ -322,7 +326,7 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   // inferred). edgeScenarios was being generated and then dropped on the floor
   // here — it never had a section, so it never reached the candidate.
   const edgeItems = [...strList(pitchObj?.edgeCases), ...strList(sd.edgeScenarios)];
-  push(sections, 'edgecases', [edgeItems.length ? { kind: 'list', items: dedupeStrings(edgeItems) } : null]);
+  push(sections, 'edgecases', [edgeItems.length ? { kind: 'list', items: dedupeStrings(edgeItems), twoUp: true } : null]);
 
   // Follow-ups: what the interviewer asks AFTER the solution is accepted. Q and A
   // are a kv pair rather than prose so the question stays scannable — mid-interview
@@ -334,7 +338,7 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
     : [];
   push(sections, 'followup', [followups.length ? { kind: 'kv', pairs: followups, layout: 'rows' } : null]);
 
-  return { title: txt(sol?.name) || undefined, sections };
+  return { title: txt(sol?.name) || undefined, sections: orderSections(sections) };
 }
 
 /** Block types the history renderer supports, in reading order. */
@@ -441,4 +445,49 @@ export function docFromCoFix(
   }
 
   return { title: txt(analysis?.title) || undefined, sections };
+}
+
+/**
+ * The order a candidate needs these in during an interview.
+ *
+ * Sections were emitted in whatever order the builder happened to push them,
+ * which put reference material above the answer. The sequence here follows how
+ * the conversation actually goes: how you recognised the pattern, what you are
+ * going to do, the code, what it costs, then the line-by-line, then the material
+ * you reach for when questioned.
+ *
+ * Ids not listed keep their original relative order at the end, so other doc
+ * builders (CoFix, design) are unaffected.
+ */
+const SECTION_ORDER = [
+  'problem',
+  'identification',   // how to spot it — said first, before any code
+  'approach',         // Solution
+  'code',
+  'complexity',
+  'walkthrough',
+  'trace',
+  'budget',           // constraint budget
+  'signals',
+  'edgecases',
+  'testcases',
+  // Tradeoffs then the comparison matrix: the matrix is the evidence for the
+  // tradeoffs sentence above it, and they are read as a pair.
+  'tradeoffs',
+  'comparison',
+  'probes',           // interviewer will ask
+  'followup',
+  'topic',            // what to review afterwards
+];
+
+export function orderSections(sections: BookSection[]): BookSection[] {
+  const rank = (id: string) => {
+    const i = SECTION_ORDER.indexOf(id);
+    return i === -1 ? SECTION_ORDER.length : i;
+  };
+  // Stable: equal ranks (including all unlisted ids) keep their original order.
+  return sections
+    .map((section, i) => ({ section, i }))
+    .sort((a, b) => rank(a.section.id) - rank(b.section.id) || a.i - b.i)
+    .map(({ section }) => section);
 }
