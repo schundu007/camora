@@ -173,15 +173,21 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
    * the backend rejected, simply render no section. */
   const ident = sd.identification;
   if (ident && Array.isArray(ident.path) && ident.path.length) {
-    const trail: [string, string][] = ident.path
-      .map((st: any) => {
-        const q = txt(st?.question);
-        const a = txt(st?.answer);
-        if (!q || !a) return null;
-        const ev = txt(st?.evidence);
-        return [`${q} — ${a}`, ev || '—'] as [string, string];
-      })
-      .filter(Boolean) as [string, string][];
+    /* Only the decisive steps. A full walk is mostly "no" — Trapping Rain Water
+     * answers no twelve times before the two that matter — and a wall of
+     * negatives buries the reasoning it was meant to show. The yes answers ARE
+     * the derivation; the rest is the chart's shape, not this problem's.
+     *
+     * Fallback: a path can legitimately end on a no-branch, so if nothing was
+     * answered yes, keep the last step — that is the one that picked the leaf. */
+    const steps = ident.path.filter((st: any) => txt(st?.question) && txt(st?.answer));
+    const decisive = steps.filter((st: any) => txt(st.answer).toLowerCase() === 'yes');
+    const shown = decisive.length ? decisive : steps.slice(-1);
+
+    const trail: [string, string][] = shown.map((st: any) => {
+      const ev = txt(st?.evidence);
+      return [`${txt(st.question)} — ${txt(st.answer)}`, ev || '—'] as [string, string];
+    });
 
     const verdict: [string, string][] = [];
     if (txt(ident.dataStructure)) verdict.push(['Data structure', txt(ident.dataStructure)]);

@@ -351,6 +351,47 @@ describe('identification section', () => {
 
   // The interviewer's real question is "how did you know?", so the trail has to
   // survive into the rendered answer rather than only the technique name.
+  // A full walk answers "no" a dozen times before the branch that matters, and
+  // that wall of negatives buries the reasoning the card exists to show.
+  it('shows only the decisive yes steps', () => {
+    const doc = docFromSolution({
+      solutions: [{ code: 'x' }],
+      identification: {
+        path: [
+          { question: 'Is it a graph?', answer: 'no', evidence: 'plain array' },
+          { question: 'kth smallest/largest?', answer: 'no', evidence: 'no k' },
+          { question: 'Compute a max/min?', answer: 'yes', evidence: 'how much water it can trap' },
+          { question: 'Need nearest greater/smaller bounds?', answer: 'yes', evidence: 'min(leftMax, rightMax) per index' },
+        ],
+        technique: 'Two Pointers',
+      },
+    });
+    const rows = (doc.sections.find(s => s.id === 'identification')!.blocks
+      .filter(b => b.kind === 'kv')[1] as any).pairs;
+    expect(rows).toHaveLength(2);
+    expect(rows[0][0]).toBe('Compute a max/min? — yes');
+    expect(rows[1][0]).toBe('Need nearest greater/smaller bounds? — yes');
+    expect(rows.some((r: [string, string]) => r[0].includes('— no'))).toBe(false);
+  });
+
+  // A path can legitimately end on a no-branch; showing nothing would be worse.
+  it('keeps the last step when nothing was answered yes', () => {
+    const doc = docFromSolution({
+      solutions: [{ code: 'x' }],
+      identification: {
+        path: [
+          { question: 'Is it a graph?', answer: 'no', evidence: 'plain array' },
+          { question: 'Sorted input?', answer: 'no', evidence: 'unsorted' },
+        ],
+        technique: 'Simulation',
+      },
+    });
+    const rows = (doc.sections.find(s => s.id === 'identification')!.blocks
+      .filter(b => b.kind === 'kv')[1] as any).pairs;
+    expect(rows).toHaveLength(1);
+    expect(rows[0][0]).toBe('Sorted input? — no');
+  });
+
   it('renders the walk, the verdict and what was ruled out', () => {
     const doc = docFromSolution({ solutions: [{ code: 'x' }], identification: ident });
     const sec = doc.sections.find(s => s.id === 'identification');
@@ -360,8 +401,9 @@ describe('identification section', () => {
     const kvs = sec!.blocks.filter(b => b.kind === 'kv') as any[];
     expect(kvs[0].pairs).toContainEqual(['Technique', 'DFS/backtracking']);
     expect(kvs[0].pairs).toContainEqual(['Data structure', 'implicit graph over grid cells']);
+    // Only the yes step survives the decisive filter.
+    expect(kvs[1].pairs).toHaveLength(1);
     expect(kvs[1].pairs[0]).toEqual(['Is it a graph? — yes', 'grid, move to 4 adjacent cells']);
-    expect(kvs[1].pairs[1][0]).toBe('Is it a tree? — no');
 
     const callout = sec!.blocks.find(b => b.kind === 'callout') as any;
     expect(callout.label).toBe('Ruled out');

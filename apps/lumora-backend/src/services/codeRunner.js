@@ -274,6 +274,54 @@ async function directExecute(code, runtime, stdin = null) {
 // Test case runner builders (Python, JS, Ruby)
 // ---------------------------------------------------------------------------
 
+/**
+ * Drop module-level print() statements from a call-and-return solution.
+ *
+ * Models like to append a demo driver:
+ *
+ *     print(Solution().trap([0,1,0,2,1,0,1,3,2,1,2,1]))
+ *     print(Solution().trap([4,2,0,3,2,5]))
+ *
+ * Those run at module level, so their output lands in the captured stdout BEFORE
+ * the harness prints the test-case result: every case then compares "6\n9\n6"
+ * against "6" and fails, which reads as the first two test cases being hardcoded.
+ *
+ * Safe here because the stdin/print model returns verbatim earlier in
+ * buildPythonRunner — reaching this point means the harness supplies the only
+ * print we want to compare, so a module-level print is noise by definition.
+ *
+ * Line-based with a paren-balance check, so a print() spanning several lines is
+ * removed whole rather than cut in half.
+ */
+export function stripModuleLevelPrints(code) {
+  const lines = String(code).split('\n');
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    // Column 0 only: an indented print belongs to a function body and may well be
+    // the solution's actual job.
+    if (!/^print\s*\(/.test(lines[i])) { out.push(lines[i]); continue; }
+
+    let depth = 0;
+    let j = i;
+    for (; j < lines.length; j++) {
+      for (const ch of lines[j]) {
+        if (ch === '(') depth++;
+        else if (ch === ')') depth--;
+      }
+      if (depth <= 0) break;
+    }
+    if (depth <= 0) {
+      i = j;              // balanced print(...) — drop lines i..j
+    } else {
+      // Never closed. Keep it: a syntax error naming the stray line beats a
+      // silently truncated program.
+      out.push(...lines.slice(i));
+      i = lines.length;
+    }
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
 function buildPythonRunner(code, testInput) {
   const codeB64 = Buffer.from(code).toString('base64');
   const inputB64 = Buffer.from(testInput).toString('base64');
@@ -345,6 +393,9 @@ def listToArray(head):
     /\n[ \t]*([a-zA-Z_]\w*)\s*\([^\n]*\)\s*$/,
     (m, name) => (new RegExp(`\\bdef\\s+${name}\\s*\\(`).test(cleanCode) ? '' : m),
   );
+  // The footer rule above only catches a trailing call to a DEFINED function, so
+  // `print(Solution().trap([...]))` slipped through: `print` is not one of ours.
+  cleanCode = stripModuleLevelPrints(cleanCode);
 
   return `${llHelpers}
 ${cleanCode}
@@ -362,11 +413,30 @@ def _parse_params(s, func):
         param_names = []
     if len(param_names) == 0:
         return []
-    call_match = re.match(r'^[a-zA-Z_]\\w*\\((.*)\\)$', s, re.DOTALL)
-    if call_match:
-        s = call_match.group(1).strip()
-        if not s:
+    # Peel call wrappers down to the argument list. buildTestCases emits a
+    # complete runnable statement, so a LeetCode class problem arrives as
+    # print(Solution().trap([0,1,0,...])) — two wrappers deep, with a receiver in
+    # the middle. The old single-level regex stripped only print(...) and handed
+    # "Solution().trap([0,1,...])" to the method as its FIRST ARGUMENT, so every
+    # test case died on a str where a list was expected.
+    for _peel in range(3):
+        call_match = re.match(r'^(?:[A-Za-z_]\\w*\\s*\\(\\s*\\)\\s*\\.)?[A-Za-z_]\\w*\\s*\\((.*)\\)$', s, re.DOTALL)
+        if not call_match:
+            break
+        inner = call_match.group(1).strip()
+        if not inner:
             return []
+        s = inner
+        # Stop as soon as what is left is actually a value (or a value list).
+        try:
+            ast.literal_eval(s)
+            break
+        except Exception:
+            try:
+                ast.literal_eval('(' + s + ',)')
+                break
+            except Exception:
+                continue
     def _eval(val):
         val = val.strip()
         for old, new in [('true', 'True'), ('false', 'False'), ('null', 'None')]:

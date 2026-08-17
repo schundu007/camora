@@ -68,15 +68,21 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
         </div>
       );
 
-    case 'list':
-      // Long lists (e.g. Concepts) flow into two columns to save vertical space.
+    case 'list': {
+      // Two columns for lists of short bullets (edge cases, concepts): they are
+      // scan-and-tick items, and one column pushed the later ones off-screen.
+      // Gated on LENGTH as well as count, because the Solution card is also a
+      // list and its points are full sentences — those read worse split in half.
+      const avgLen = block.items.reduce((n, it) => n + it.length, 0) / (block.items.length || 1);
+      const twoUp = block.items.length >= 3 && avgLen <= 120;
       // InlineText so `identifiers` in a bullet render as code — the Solution
       // card is a list now, and its points name real variables and functions.
       return (
-        <ul className={`list-disc pl-4 space-y-0.5 mb-2 ${block.items.length > 6 ? 'sm:columns-2 sm:gap-x-8 [&>li]:break-inside-avoid' : ''}`}>
+        <ul className={`list-disc pl-4 space-y-0.5 mb-2${twoUp ? ' lumora-list-2col' : ''}`}>
           {block.items.map((it, i) => <li key={i}><InlineText text={it} /></li>)}
         </ul>
       );
+    }
 
     case 'code':
       return <CodeBlock lang={block.lang} code={block.code} />;
@@ -169,13 +175,15 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
     case 'walk': {
       const interactive = !!(onLineHover || onLineClick);
       return (
-        <div className="my-2 space-y-1.5">
+        <div className="my-2 lumora-walk-rows">
           {block.rows.map((r, i) => {
             const bindable = interactive && (r.line != null || !!r.code);
             return (
             <div
               key={i}
-              className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1.5 transition-colors hover:border-[var(--cam-gold-leaf-dk)]"
+              className={`rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-2.5 py-1.5 transition-colors hover:border-[var(--cam-gold-leaf-dk)]${
+                (r.code?.length ?? 0) > 60 || r.explanation.length > 220 ? ' lumora-walk-wide' : ''
+              }`}
               style={bindable ? { cursor: 'pointer' } : undefined}
               onMouseEnter={() => bindable && onLineHover?.(r.line, r.code, i)}
               onMouseLeave={() => bindable && onLineHover?.(undefined)}
