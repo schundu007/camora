@@ -3660,6 +3660,21 @@ figure:has(> .viz-caption) {
 }
 
 /* Highlighted key points — a book-style aside with a gold hairline rule. */
+/* A callout inside a full-width card. Its items are short one-liners (the
+   techniques you ruled out, the mistakes to avoid), so in a spanning card they
+   stack down the left and leave the right half empty. Flowing them two-up uses
+   the width the card was given. Only when spanning — in a narrow grid column a
+   single column is already the right answer. */
+@container book (min-width: 720px) {
+  .lumora-book-span .lumora-book-callout ul,
+  .lumora-book-stack .lumora-book-callout ul {
+    columns: 2;
+    column-gap: 2rem;
+  }
+  .lumora-book-span .lumora-book-callout li,
+  .lumora-book-stack .lumora-book-callout li { break-inside: avoid; }
+}
+
 .lumora-book-callout {
   border-left: 2px solid color-mix(in oklab, var(--cam-gold-leaf) 55%, transparent);
   padding: 0.1rem 0 0.1rem 0.8rem;
