@@ -175,13 +175,14 @@ describe('docFromSolution', () => {
   it('accepts a pitch that is a bare string', () => {
     const strPitch = { solutions: [{ approach: 'x' }], pitch: 'just a sentence' };
     const s = docFromSolution(strPitch).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks).toContainEqual({ kind: 'list', items: ['x', 'just a sentence'] });
+    // Sentence-cased on the way out, like every other bullet in the book.
+    expect(s.blocks).toContainEqual({ kind: 'list', items: ['X', 'Just a sentence'] });
   });
 
   it('selects the requested solution index', () => {
     const two = { solutions: [{ approach: 'first' }, { approach: 'second' }] };
     const s = docFromSolution(two, 1).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks.find(b => b.kind === 'list')!).toMatchObject({ items: expect.arrayContaining(['second']) });
+    expect(s.blocks.find(b => b.kind === 'list')!).toMatchObject({ items: expect.arrayContaining(['Second']) });
   });
 
   it('never leaves markdown in a text field', () => {
@@ -556,5 +557,49 @@ describe('card order', () => {
     // docFromSolution emits no `code` section — the code lives in the editor.
     const doc = docFromSolution({ solutions: [{ code: 'x', approach: 'a' }] });
     expect(doc.sections.map(s => s.id)).toEqual(['approach']);
+  });
+});
+
+// House style: bullets are sentence case regardless of which schema hint the
+// model was mirroring. "Key points" arrived capitalized and "Common mistakes"
+// lowercase in the same answer, which reads as two different documents.
+describe('bullet casing', () => {
+  const cased = (sd: any, id: string) => {
+    const block = docFromSolution(sd).sections.find(s => s.id === id)!.blocks[0];
+    if (block.kind === 'list') return block.items;
+    if (block.kind === 'callout') return block.items;
+    throw new Error(`unexpected ${block.kind}`);
+  };
+
+  it('capitalizes prose bullets', () => {
+    const sd = { ...SD, pitch: { ...SD.pitch, edgeCases: ['empty array', 'all equal'] } };
+    expect(cased(sd, 'edgecases')).toEqual(['Empty array', 'All equal']);
+  });
+
+  it('capitalizes callout items too', () => {
+    const sd = {
+      ...SD,
+      interview: { pitfalls: ['forgetting to evict on every call', 'off-by-one at the boundary'] },
+    };
+    const items = docFromSolution(sd).sections.find(s => s.id === 'probes')!
+      .blocks.find(b => b.kind === 'callout')!;
+    if (items.kind !== 'callout') throw new Error('expected a callout');
+    expect(items.items[0]).toBe('Forgetting to evict on every call');
+  });
+
+  // Capitalising an identifier does not tidy it, it renames it.
+  it('leaves a code first-word alone', () => {
+    const sd = {
+      ...SD,
+      pitch: { ...SD.pitch, edgeCases: ['getHits() before any hit', 'self.hits is empty', 'nums[i] overflows', 'O(1) lookups assumed'] },
+    };
+    expect(cased(sd, 'edgecases')).toEqual([
+      'getHits() before any hit', 'self.hits is empty', 'nums[i] overflows', 'O(1) lookups assumed',
+    ]);
+  });
+
+  it('leaves an already-capitalized bullet untouched', () => {
+    const sd = { ...SD, pitch: { ...SD.pitch, edgeCases: ['Empty array'] } };
+    expect(cased(sd, 'edgecases')).toEqual(['Empty array']);
   });
 });

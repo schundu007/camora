@@ -25,6 +25,30 @@ export function stripInlineMarkdown(s: string): string {
     .trim();
 }
 
+/**
+ * A displayed bullet, in sentence case.
+ *
+ * The model's case is inherited from whichever schema hint it was mirroring —
+ * "Key insight 1" produces capitalized key points, "a mistake people actually
+ * make" produces lowercase pitfalls — so two cards in the same answer disagree
+ * about whether a bullet starts with a capital. Normalising at render time is
+ * the only fix that also covers answers already cached.
+ *
+ * Left alone when the first word is CODE: `getHits()`, `self.hits`, `nums[i]`,
+ * `n_max`, `iOS`. Capitalising an identifier does not tidy it, it renames it.
+ */
+const CODE_FIRST_WORD = /[(.[\]_=:/]|^[a-z]+[A-Z]/;
+
+export function sentenceCase(s: string): string {
+  const t = (s || '').trim();
+  if (!t) return t;
+  const first = t.split(/\s+/, 1)[0].replace(/[,;]$/, '');
+  // A backticked opener renders as code, and an all-caps opener (O(n), API,
+  // BFS) is already the case its author meant.
+  if (t.startsWith('`') || CODE_FIRST_WORD.test(first) || first === first.toUpperCase()) return t;
+  return t[0].toUpperCase() + t.slice(1);
+}
+
 /** True when a string is a plain http(s) URL pointing at an image file. */
 export function isImageUrl(s: string): boolean {
   return typeof s === 'string' && /^https?:\/\/\S+\.(png|jpe?g|svg|webp|gif|avif)(\?\S*)?$/i.test(s.trim());

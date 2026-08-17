@@ -689,6 +689,7 @@ Example of correct HTTP call:
   Generic questions ("what is the complexity?") are worthless; the answer is
   already on screen.
 - "pitfalls" are mistakes made on THIS pattern, not general advice.
+- HOUSE STYLE, every bulleted string (keyPoints, tradeoffs, edgeCases, pitfalls, ruledOut, probes): sentence case — start with a capital unless the first word is code (getHits(), self.hits, nums[i]) — and no trailing full stop on a fragment. Two cards in one answer must not disagree about it.
 
 ##############################################################################
 # RULE #4.5: IDENTIFICATION TRAIL — HOW YOU KNEW WHICH PATTERN THIS IS
@@ -854,8 +855,8 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
     ],
     "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
-    "probes": [ { "q": "the follow-up an interviewer asks after this solution", "a": "your answer, 1-2 sentences" } ],
-    "pitfalls": ["a mistake people actually make on this pattern, one clause"]
+    "probes": [ { "q": "The follow-up an interviewer asks after this solution", "a": "Your answer, 1-2 sentences" } ],
+    "pitfalls": ["A mistake people actually make on this pattern, one clause"]
   },
   "identification": {
     "path": [
@@ -1072,9 +1073,9 @@ Respond with valid JSON ONLY (no markdown fences, no prose before or after):
   "pitch": {
     "opener": "One sentence naming the most severe defect.",
     "approach": "How you found them: what you checked and in what order.",
-    "keyPoints": ["one per defect, worst first"],
+    "keyPoints": ["One per defect, worst first"],
     "tradeoffs": [],
-    "edgeCases": ["inputs that would still be a problem after the fix, if any"]
+    "edgeCases": ["Inputs that would still be a problem after the fix, if any"]
   },
   "examples": []
 }

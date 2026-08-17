@@ -1,5 +1,5 @@
 import type { ParsedBlock } from '@/types';
-import { cleanText } from '@/lib/text-utils';
+import { cleanText, sentenceCase } from '@/lib/text-utils';
 import { rankApproaches } from '@/lib/lumora/complexity-rank';
 
 export type BookBlock =
@@ -71,14 +71,18 @@ export const SECTION_TITLES: Record<string, string> = {
 
 const txt = (v: unknown): string => (typeof v === 'string' ? cleanText(v) : '');
 
+/* Every bullet the book renders goes through one of these two, so sentence case
+ * is applied once here rather than per card. Prose, kv values and code are
+ * deliberately untouched: a kv value continues its label grammatically, and
+ * code is code. */
 const strList = (v: unknown): string[] =>
-  Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
+  Array.isArray(v) ? v.map(x => sentenceCase(txt(x))).filter(Boolean) : [];
 
 /** Split a block body into bullet lines. Strips leading `-`/`•` markers; stray `*` is removed by cleanText(). */
 const bullets = (content: string): string[] =>
   content
     .split('\n')
-    .map(l => cleanText(l.replace(/^\s*[-•]\s*/, '')))
+    .map(l => sentenceCase(cleanText(l.replace(/^\s*[-•]\s*/, ''))))
     .filter(Boolean);
 
 /** `Time: O(n)` / `Space: O(1)` → kv pairs. Lines without a colon become a trailing list block. */
@@ -230,7 +234,7 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
     if (txt(iv.topic?.section)) tPairs.push(['Pattern', txt(iv.topic.section)]);
     const review = Array.isArray(iv.topic?.review)
       ? iv.topic.review
-          .map((r: any) => (txt(r?.lesson) ? `${txt(r.lesson)}${txt(r?.section) ? ` — ${txt(r.section)}` : ''}` : ''))
+          .map((r: any) => (txt(r?.lesson) ? sentenceCase(`${txt(r.lesson)}${txt(r?.section) ? ` — ${txt(r.section)}` : ''}`) : ''))
           .filter(Boolean)
       : [];
     push(sections, 'topic', [
@@ -269,7 +273,7 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
     pitchStr || txt(pitchObj?.opener),
     txt(pitchObj?.approach),
   ].filter((s): s is string => !!s);
-  const points = [...new Set(solutionPoints)];
+  const points = [...new Set(solutionPoints)].map(sentenceCase);
   push(sections, 'approach', [
     points.length ? { kind: 'list', items: points } : null,
     keyPoints.length ? { kind: 'callout', label: 'Key points', items: keyPoints } : null,
@@ -310,7 +314,7 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
   if (sd.type === 'diagnose') {
     const walk = Array.isArray(sol?.explanations)
       ? sol.explanations
-          .map((e: any) => ({ line: e.line, code: e.code, explanation: txt(e.explanation) }))
+          .map((e: any) => ({ line: e.line, code: e.code, explanation: sentenceCase(txt(e.explanation)) }))
           .filter((r: any) => r.explanation || r.code)
       : [];
     push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
@@ -446,14 +450,14 @@ export function docFromCoFix(
   if (view === 'all') {
     const walk = (answer.walkthrough || [])
       .map((w: any) => ({
-        explanation: [txt(w.context) && `(${txt(w.context)})`, txt(w.text)].filter(Boolean).join(' '),
+        explanation: sentenceCase([txt(w.context) && `(${txt(w.context)})`, txt(w.text)].filter(Boolean).join(' ')),
         code: typeof w.lines === 'string' ? `L${w.lines}` : undefined,
       }))
       .filter((r: any) => r.explanation);
     push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
 
     const changes = (answer.changes || [])
-      .map((c: any) => [txt(c.label), txt(c.note)].filter(Boolean).join(' — '))
+      .map((c: any) => sentenceCase([txt(c.label), txt(c.note)].filter(Boolean).join(' — ')))
       .filter(Boolean);
     push(sections, 'changes', [changes.length ? { kind: 'list', items: changes } : null]);
   }
