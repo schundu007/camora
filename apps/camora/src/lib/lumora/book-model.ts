@@ -1,5 +1,6 @@
 import type { ParsedBlock } from '@/types';
 import { cleanText, sentenceCase } from '@/lib/text-utils';
+import { notAlreadyIn } from '@/lib/lumora/analysis-parse';
 import { rankApproaches } from '@/lib/lumora/complexity-rank';
 
 export type BookBlock =
@@ -158,12 +159,30 @@ const matrixOrNull = (sd: any, activeIndex: number): BookBlock | null => {
   return { kind: 'matrix', rows, activeIndex };
 };
 
+/**
+ * Content generated per-solution AFTER the answer, folded into the cards it
+ * belongs in rather than shown in a panel of its own.
+ *
+ * The Deep Dive chip names the follow-ups coming next; that is the same thing
+ * "Interviewer will ask" holds. The Issues chip names what an interviewer would
+ * stop you on; that is "Common mistakes". Keeping them apart meant reading the
+ * same subject in two panes and noticing neither was complete.
+ */
+export type SolutionExtras = {
+  probes?: [string, string][];
+  pitfalls?: string[];
+};
+
 /** Live Coding: the parsed `jsonSolution` object. */
-export function docFromSolution(sd: any, solIdx = 0): BookDoc {
+export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): BookDoc {
   const sections: BookSection[] = [];
   if (!sd) return { sections };
 
   const sol = Array.isArray(sd.solutions) ? sd.solutions[solIdx] ?? sd.solutions[0] : null;
+  // Filled from sd.interview when present, then topped up from the Deep Dive /
+  // Issues chips below. Declared here so the card exists either way.
+  const probes: [string, string][] = [];
+  const pitfalls: string[] = [];
   const pitch = sd.pitch;
   const pitchObj = pitch && typeof pitch === 'object' ? pitch : null;
   const pitchStr = typeof pitch === 'string' ? txt(pitch) : '';
@@ -242,15 +261,32 @@ export function docFromSolution(sd: any, solIdx = 0): BookDoc {
       review.length ? { kind: 'callout', label: 'Review', items: review } : null,
     ]);
 
-    const probes: [string, string][] = Array.isArray(iv.probes)
+    probes.push(...(Array.isArray(iv.probes)
       ? iv.probes
           .map((q: any) => [txt(q?.q), txt(q?.a)] as [string, string])
           .filter(([a, b]: [string, string]) => Boolean(a && b))
-      : [];
+      : []));
+    pitfalls.push(...strList(iv.pitfalls));
+  }
+
+  /* The probes card is pushed out here, not inside the `interview` block, so
+   * the Deep Dive and Issues chips can fill it on an answer that has no
+   * interview object at all — every answer cached before those cards existed. */
+  {
+    const dedupeProbes = notAlreadyIn(probes.map(([q]) => q));
+    const dedupePitfalls = notAlreadyIn(pitfalls);
+    const allProbes = [
+      ...probes,
+      ...(extras?.probes || []).filter(([q]) => dedupeProbes(q)),
+    ];
+    const allPitfalls = dedupeStrings([
+      ...pitfalls,
+      ...(extras?.pitfalls || []).map(sentenceCase).filter(dedupePitfalls),
+    ]);
     push(sections, 'probes', [
-      probes.length ? { kind: 'kv', pairs: probes, layout: 'rows' } : null,
-      strList(iv.pitfalls).length
-        ? { kind: 'callout', label: 'Common mistakes', items: strList(iv.pitfalls) }
+      allProbes.length ? { kind: 'kv', pairs: allProbes, layout: 'rows' } : null,
+      allPitfalls.length
+        ? { kind: 'callout', label: 'Common mistakes', items: allPitfalls }
         : null,
     ]);
   }

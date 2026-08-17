@@ -28,6 +28,7 @@ const SESSION_PAGE_NOTE =
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { annotateSolutionCode } from '@/lib/lumora/code-comments';
+import { parseDeepDive, parseIssues } from '@/lib/lumora/analysis-parse';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
 import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
@@ -173,13 +174,13 @@ const ANALYSIS_VIEWS = [
   {
     id: 'issues' as const,
     label: 'Issues',
-    tip: 'Issues — what an interviewer would stop you on',
+    tip: 'Issues — what an interviewer would stop you on. Lands under Common mistakes.',
     icon: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
   },
   {
     id: 'deepdive' as const,
     label: 'Deep Dive',
-    tip: 'Deep Dive — the follow-ups most likely to come next',
+    tip: 'Deep Dive — the follow-ups most likely to come next. Lands in Interviewer will ask.',
     icon: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
   },
 ];
@@ -752,6 +753,23 @@ ${solCode}
     (tab: 'explain' | 'issues' | 'deepdive') => { void runAnalysis(tab); },
     [runAnalysis],
   );
+
+  /**
+   * Deep Dive and Issues, folded into the cards that already hold that subject.
+   *
+   * Deep Dive names the follow-ups coming next — that IS "Interviewer will
+   * ask". Issues names what an interviewer would stop you on — that IS "Common
+   * mistakes". Both used to render in their own panel above the answer, so the
+   * same subject was split across two panes and neither half was complete.
+   *
+   * Both are prefetched on every solve, so in practice they are already in the
+   * cache and the cards simply fill in a second or two after the answer lands.
+   * Keyed by the active approach: switching solutions swaps them with it.
+   */
+  const solutionExtras = useMemo(() => ({
+    probes: parseDeepDive(analysisCache[`${activeSolutionIdx}_deepdive`] || ''),
+    pitfalls: parseIssues(analysisCache[`${activeSolutionIdx}_issues`] || ''),
+  }), [analysisCache, activeSolutionIdx]);
 
   // Prefetch. These three are what the user reaches for the moment the answer
   // lands, and each cost a 3-5s wait at exactly the point they had none to
@@ -3164,7 +3182,17 @@ ${solCode}
                       return (
                         <button
                           key={view.id}
-                          onClick={() => view.id === 'code' ? setAnalysisTab('code') : handleAnalysis(view.id)}
+                          onClick={() => {
+                            if (view.id === 'code') { setAnalysisTab('code'); return; }
+                            // Explain still opens its own panel. Deep Dive and
+                            // Issues write into the answer book's cards, so
+                            // they generate quietly and keep the book on screen
+                            // — switching to an empty panel would hide the very
+                            // card the content is about to land in.
+                            if (view.id === 'explain') { handleAnalysis('explain'); return; }
+                            setAnalysisTab('code');
+                            void runAnalysis(view.id, { silent: true });
+                          }}
                           className="relative flex items-center justify-center w-7 h-7 rounded-lg transition-colors shrink-0"
                           style={active
                             ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
@@ -3228,14 +3256,16 @@ ${solCode}
                   </div>
                 )}
                 {/* Analysis content for active tab */}
-                {sd && analysisTab !== 'code' && (
+                {/* Explain is the only chip with a panel of its own — Deep
+                    Dive and Issues render into the answer book's cards. */}
+                {sd && analysisTab === 'explain' && (
                   <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid var(--cam-gold-leaf)', background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(38,97,156,0.07), transparent 70%), var(--bg-elevated)', boxShadow: '0 4px 20px rgba(3,19,46,0.18)' }}>
                     {/* Header strip */}
                     <div className="flex items-center justify-between px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                       <div className="flex items-center gap-2">
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cam-gold-leaf)', display: 'inline-block' }} />
                         <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
-                          {({ explain: 'Explain', issues: 'Issues', deepdive: 'Deep Dive' } as Record<string, string>)[analysisTab]}
+                          Explain
                         </span>
                       </div>
                       {analysisInFlight.includes(`${activeSolutionIdx}_${analysisTab}`) && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
@@ -3410,7 +3440,7 @@ ${solCode}
 
 
                     <AnswerBook
-                      doc={docFromSolution(sd, activeSolutionIdx)}
+                      doc={docFromSolution(sd, activeSolutionIdx, solutionExtras)}
                       onLineHover={(line, code, idx) => {
                         const resolved = line ?? (code ? lineForCode(code, idx ?? 0) : 0);
                         if (resolved) highlightLine(resolved); else clearHighlight();
