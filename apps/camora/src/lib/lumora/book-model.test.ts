@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { docFromSolution, docFromBlocks, docFromCoFix, splitDocByPane} from './book-model';
+import { docFromSolution, docFromBlocks, docFromCoFix} from './book-model';
 
 const SD = {
   language: 'python',
@@ -497,58 +497,5 @@ describe('interview cards', () => {
     });
     expect((doc.sections.find(s => s.id === 'signals')!.blocks[0] as any).pairs).toHaveLength(1);
     expect(doc.sections.find(s => s.id === 'probes')).toBeUndefined();
-  });
-});
-
-describe('splitDocByPane', () => {
-  const doc = docFromSolution({
-    solutions: [{ code: 'x', approach: 'scan', complexity: { time: 'O(n)', space: 'O(1)' } }],
-    identification: { path: [{ question: 'Compute a max/min?', answer: 'yes', evidence: 'trap water' }], technique: 'Two Pointers' },
-    interview: {
-      budget: { n: 'n <= 2*10^4', ceiling: 'O(n log n) or better' },
-      signals: [{ phrase: 'trapped water', implies: 'two pointers' }],
-      topic: { section: 'Two Pointers', review: [{ section: 'Two Pointers', lesson: 'Two Pointers Introduction' }] },
-    },
-    pitch: { tradeoffs: ['stack uses more memory'], edgeCases: ['empty array'] },
-  });
-
-  // The left pane is the reading column; these are reference cards a candidate
-  // glances at while looking at the editor, so they belong beside the code.
-  it('moves the reference sections to the right pane', () => {
-    const { left, right } = splitDocByPane(doc);
-    const rightIds = right.sections.map(s => s.id);
-    for (const id of ['identification', 'budget', 'signals', 'topic', 'complexity', 'tradeoffs', 'edgecases']) {
-      if (doc.sections.some(s => s.id === id)) expect(rightIds).toContain(id);
-    }
-    expect(left.sections.map(s => s.id)).not.toContain('identification');
-    expect(left.sections.map(s => s.id)).not.toContain('complexity');
-  });
-
-  it('keeps the reading column on the left', () => {
-    const { left } = splitDocByPane(doc);
-    const leftIds = left.sections.map(s => s.id);
-    expect(leftIds).toContain('approach');
-    expect(leftIds).not.toContain('edgecases');
-  });
-
-  it('loses no section and preserves order within each pane', () => {
-    const { left, right } = splitDocByPane(doc);
-    expect(left.sections.length + right.sections.length).toBe(doc.sections.length);
-    const order = doc.sections.map(s => s.id);
-    for (const pane of [left.sections, right.sections]) {
-      const idx = pane.map(s => order.indexOf(s.id));
-      expect(idx).toEqual([...idx].sort((a, b) => a - b));
-    }
-  });
-
-  // Rendering an empty book would draw a stray divider under Test cases.
-  it('returns an empty right pane when there is nothing to move', () => {
-    const plain = docFromSolution({ solutions: [{ code: 'x', approach: 'scan' }] });
-    expect(splitDocByPane(plain).right.sections).toEqual([]);
-  });
-
-  it('accepts a custom id list', () => {
-    const { right } = splitDocByPane(doc, ['edgecases']);
-    expect(right.sections.map(s => s.id)).toEqual(['edgecases']);
   });
 });

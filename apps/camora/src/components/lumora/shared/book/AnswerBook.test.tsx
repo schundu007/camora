@@ -113,7 +113,7 @@ describe('AnswerBook', () => {
     // to the left column with dead space beside it.
     it('widens a section stranded alone on its row by the span that follows', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
-        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+        { id: 'signals', heading: 'Signals', blocks: [{ kind: 'prose', text: 'x' }] },
         { id: 'tradeoffs', heading: 'Tradeoffs', blocks: [{ kind: 'list', items: ['a'] }] },
         { id: 'edgecases', heading: 'Edge cases', blocks: [{ kind: 'list', items: ['empty input'] }] },
         { id: 'followup', heading: 'Follow-up Q&A', blocks: [{ kind: 'kv', pairs: [['q', 'a']], layout: 'rows' }] },
@@ -124,7 +124,7 @@ describe('AnswerBook', () => {
 
     it('widens a trailing section with no partner', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
-        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+        { id: 'signals', heading: 'Signals', blocks: [{ kind: 'prose', text: 'x' }] },
         { id: 'tradeoffs', heading: 'Tradeoffs', blocks: [{ kind: 'list', items: ['a'] }] },
         { id: 'edgecases', heading: 'Edge cases', blocks: [{ kind: 'list', items: ['empty input'] }] },
       ] }} />);
@@ -141,7 +141,7 @@ describe('AnswerBook', () => {
 
     it('leaves paired cells alone', () => {
       const { container } = render(<AnswerBook doc={{ sections: [
-        { id: 'approach', heading: 'Solution', blocks: [{ kind: 'prose', text: 'x' }] },
+        { id: 'signals', heading: 'Signals', blocks: [{ kind: 'prose', text: 'x' }] },
         { id: 'tradeoffs', heading: 'Tradeoffs', blocks: [{ kind: 'list', items: ['a'] }] },
       ] }} />);
       expect(container.querySelectorAll('.lumora-book-span')).toHaveLength(0);

@@ -227,7 +227,12 @@ const WIDE_BLOCKS = new Set<BookBlock['kind']>(['code']);
 // not an O(...) token — in a half-width column each answer becomes a tall
 // narrow ribbon, and because it is also the LAST section, the cell beside it
 // sits empty. Both problems go away by spanning it.
-const WIDE_SECTION_IDS = new Set(['followup']);
+// Solution and Walkthrough are the reading column: prose and a line-by-line, both
+// read top-to-bottom. Side by side in a 2-up grid they became two narrow ribbons of
+// wrapped text, and with the reference cards moved to the right pane the left grid
+// was left with an odd number of cells, so the remainder sat in ragged half-rows.
+// Spanning them makes the left column read as one sequence.
+const WIDE_SECTION_IDS = new Set(['followup', 'approach', 'walkthrough', 'code']);
 
 const isWideSection = (id: string, blocks: BookBlock[]) =>
   WIDE_SECTION_IDS.has(id) || blocks.some(b => WIDE_BLOCKS.has(b.kind));
@@ -296,7 +301,15 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
     .filter(Boolean) as { section: BookDoc['sections'][number]; stack: boolean }[];
 
   const spans = withOrphanSpans(
-    cells.map(c => !c.stack && isWideSection(c.section.id, c.section.blocks)),
+    cells.map(c => (
+      c.stack
+        // The stacked cell holds Complexity AND Walkthrough. Walkthrough is a
+        // reading section and spans, so the wrapper carrying it must span too —
+        // otherwise the line-by-line is squeezed into a half-width column while
+        // its own rule says full width.
+        ? stacked.some(sec => isWideSection(sec.id, sec.blocks))
+        : isWideSection(c.section.id, c.section.blocks)
+    )),
   );
 
   return (
