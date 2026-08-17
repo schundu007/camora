@@ -157,6 +157,11 @@ const ANALYSIS_VIEWS = [
   },
 ];
 
+const EDITOR_FONT_PX = 11;
+/** Passed to Monaco AND used for the height math, so they cannot disagree. */
+const EDITOR_LINE_H = 16;
+/** Padding plus the horizontal scrollbar that sits under the last line. */
+const EDITOR_CHROME_PX = 26;
 const MAX_TEST_CASES = 10;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -887,7 +892,8 @@ ${solCode}
       if (total < 900) return; // stacked or narrow — the CSS floor governs
       // 11px IBM Plex Mono ≈ 6.6px/char, + line-number gutter, padding, scrollbar.
       // Floor of 430px keeps the editor toolbar (Lang / Run / → CoFix) on one row.
-      const wanted = Math.min(Math.max(codeMaxLineLen * 6.6 + 96, 430), total * 0.5);
+      // 0.6em per char for IBM Plex Mono, + gutter/padding/scrollbar.
+      const wanted = Math.min(Math.max(codeMaxLineLen * (EDITOR_FONT_PX * 0.6) + 96, 430), total * 0.5);
       const next = Math.min(Math.max(100 - (wanted / total) * 100, 40), 65);
       setLeftPanelWidth((prev) => (Math.abs(prev - next) < 0.5 ? prev : next));
     };
@@ -899,8 +905,14 @@ ${solCode}
   // Editor height tracks its line count so the leftover vertical space goes to
   // the test/output panel instead of becoming blank canvas under the last line
   // (scrollBeyondLastLine is off, so line count × lineHeight is exact).
+  //
+  // This used to assume 19px per line — Monaco's line height for its DEFAULT
+  // fontSize of 14. The editor renders at 11px, where the real line height is
+  // ~15px, so every solution was boxed about a quarter taller than its code and
+  // the gap showed as dead canvas. The line height is now passed to Monaco
+  // explicitly and reused here, so the two cannot drift apart again.
   const editorContentH = useMemo(
-    () => code.split('\n').length * 19 + 26, // 19px lineHeight + padding/h-scrollbar
+    () => code.split('\n').length * EDITOR_LINE_H + EDITOR_CHROME_PX,
     [code],
   );
   // Auto-fit is off while the output panel is collapsed (editor should fill) or
@@ -3496,7 +3508,8 @@ ${solCode}
             code={code}
             onChange={setCode}
             theme="vs-dark"
-            fontSize={11}
+            fontSize={EDITOR_FONT_PX}
+            lineHeight={EDITOR_LINE_H}
             onMount={(editor) => {
               editorRef.current = editor;
               editor.updateOptions({

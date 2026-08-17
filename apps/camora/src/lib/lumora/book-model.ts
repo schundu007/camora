@@ -473,13 +473,15 @@ const SECTION_ORDER = [
   'comparison',
   'approach',         // Solution
   'code',
+  // What you will be asked next, straight after the answer — then the two
+  // things you answer those questions with, side by side.
+  'probes',           // interviewer will ask
+  'edgecases',
+  'tradeoffs',
   'walkthrough',
   'trace',
   'budget',           // constraint budget
-  'edgecases',
   'testcases',
-  'tradeoffs',
-  'probes',           // interviewer will ask
   'followup',
   'topic',            // what to review afterwards
 ];

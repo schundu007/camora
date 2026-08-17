@@ -32,7 +32,7 @@ describe('docFromSolution', () => {
     // Interview reading order: what you did, what it costs, the line-by-line,
     // then the material you reach for when questioned.
     expect(ids(docFromSolution(SD))).toEqual([
-      'complexity', 'approach', 'walkthrough', 'trace', 'edgecases', 'tradeoffs',
+      'complexity', 'approach', 'edgecases', 'tradeoffs', 'walkthrough', 'trace',
     ]);
   });
 
@@ -529,10 +529,11 @@ describe('card order', () => {
     expect(at('signals')).toBeLessThan(at('identification'));
     expect(at('identification')).toBeLessThan(at('complexity'));
     expect(at('complexity')).toBeLessThan(at('approach'));
-    expect(at('approach')).toBeLessThan(at('walkthrough'));
-    // Reference material a candidate reaches for when questioned comes after.
-    expect(at('walkthrough')).toBeLessThan(at('probes'));
-    expect(at('edgecases')).toBeLessThan(at('probes'));
+    // What you get asked next sits straight under the answer, with the two
+    // things you answer those questions with directly beneath it.
+    expect(at('approach')).toBeLessThan(at('probes'));
+    expect(at('probes')).toBeLessThan(at('edgecases'));
+    expect(at('edgecases')).toBeLessThan(at('tradeoffs'));
     // What to study afterwards is last.
     expect(at('topic')).toBe(ids.length - 1);
   });

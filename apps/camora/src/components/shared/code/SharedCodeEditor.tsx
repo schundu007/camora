@@ -9,6 +9,10 @@ interface SharedCodeEditorProps {
   readOnly?: boolean;
   theme?: 'vs-dark' | 'vs';
   fontSize?: number;
+  /** Explicit px line height. Without it Monaco derives one from fontSize using
+   *  a platform-dependent ratio (1.5 on Mac, 1.35 elsewhere), which callers then
+   *  have to guess at when sizing the editor box to its content. */
+  lineHeight?: number;
   height?: string;
   showLineNumbers?: boolean;
   className?: string;
@@ -47,6 +51,7 @@ const SharedCodeEditor = ({
   readOnly = false,
   theme = 'vs-dark',
   fontSize = 14,
+  lineHeight,
   height = '300px',
   showLineNumbers = true,
   className,
@@ -85,6 +90,7 @@ const SharedCodeEditor = ({
           theme={theme}
           options={{
             fontSize,
+            ...(lineHeight ? { lineHeight } : {}),
             readOnly,
             lineNumbers: showLineNumbers ? 'on' : 'off',
             minimap: { enabled: false },

@@ -9,6 +9,7 @@
  */
 import { Router } from 'express';
 import { renderTreeForPrompt, validatePath } from '../lib/algorithmFlowchart.js';
+import { stripModuleLevelPrints } from '../services/codeRunner.js';
 import { SECTION_NAMES, isKnownSection, matchLessons } from '../lib/interviewTopics.js';
 import multer from 'multer';
 import { resolveTask, buildSituationBlock, WALKTHROUGH_BUDGET, CLASSIFIER_SPEC, isAnswerOnly, classifyUtterance, normalizeTask } from '../services/taskModes.js';
@@ -2055,6 +2056,21 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         if (!iv.probes.length) delete iv.probes;
       }
       if (!Object.keys(iv).length) delete parsedJson.interview;
+    }
+
+    // Strip the demo driver the model likes to append:
+    //     print(Solution().minWindow('ADOBECODEBANC', 'ABC'))
+    // The runner already ignores those lines, so test cases pass — but they are
+    // still shown in the editor as part of the answer, where they read as
+    // hardcoded output. Only when a template drives the call (starter code was
+    // supplied), because that is exactly the case where the platform, not the
+    // file, invokes the solution. A stdin/print problem keeps its prints.
+    if (ioContract === 'template' && /^py/i.test(lang) && Array.isArray(parsedJson.solutions)) {
+      for (const sol of parsedJson.solutions) {
+        if (typeof sol?.code !== 'string') continue;
+        const cleaned = stripModuleLevelPrints(sol.code);
+        if (cleaned && cleaned !== sol.code) sol.code = cleaned;
+      }
     }
 
     // Set top-level code from first solution for backwards compat
