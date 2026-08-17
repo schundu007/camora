@@ -247,8 +247,15 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
   useEffect(() => { sendRef.current = send; }, [send]);
   useEffect(() => {
     const handler = (e: Event) => {
-      const text = (e as CustomEvent<{ text: string }>).detail?.text;
-      if (text) sendRef.current?.(text);
+      const detail = (e as CustomEvent<{ text: string; autoSend?: boolean }>).detail;
+      const text = detail?.text;
+      if (!text) return;
+      // autoSend is false for speech the router would not ask on its own — no
+      // solution on screen yet, or phrasing that missed the question heuristic.
+      // Show it in the box so it can be sent with Enter rather than lost.
+      // `autoSend === undefined` keeps older emitters asking, as they did.
+      if (detail?.autoSend === false) setInput(text);
+      else sendRef.current?.(text);
     };
     window.addEventListener('lumora:coding-question', handler);
     return () => window.removeEventListener('lumora:coding-question', handler);
