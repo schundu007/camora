@@ -3539,11 +3539,14 @@ figure:has(> .viz-caption) {
    much room the list actually had, and a 5-item edge-case list stayed in one
    column on a wide panel. */
 @container book (min-width: 520px) {
-  .lumora-list-2col {
+  /* Only inside a card that spans the panel. Edge cases now shares a row with
+     Tradeoffs, and splitting its bullets again inside that half-width cell gives
+     two columns a few words wide. */
+  .lumora-book-span .lumora-list-2col {
     columns: 2;
     column-gap: 2rem;
   }
-  .lumora-list-2col > li { break-inside: avoid; }
+  .lumora-book-span .lumora-list-2col > li { break-inside: avoid; }
 }
 
 /* Walkthrough rows sit two-up once there is room. Each row is a short

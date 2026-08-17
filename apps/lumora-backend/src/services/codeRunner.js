@@ -1368,7 +1368,13 @@ export async function executeCode(code, language, testCases = [], opts = {}) {
       // AFTER the solution already printed the right answer). Previously
       // `passed = !error && ...` let any non-zero exit veto an already-correct
       // stdout — the "Out == Exp yet FAILED, with a traceback" symptom.
-      const matched = !!output && compareOutput(tc.expected, output);
+      // An empty stdout is a real answer when the expected value is empty — a
+      // problem that returns "" (no valid window, no match) prints a blank line.
+      // The `!!output` guard was there to stop a traceback-with-no-output being
+      // called a pass, so keep that by requiring no error instead.
+      const expectsEmpty = String(tc.expected ?? '').trim() === '';
+      const matched = (!!output || (expectsEmpty && !error))
+        && compareOutput(tc.expected, output);
       const passed = matched;
 
       results.push({
