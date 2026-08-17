@@ -1298,6 +1298,11 @@ ${solCode}
   // context tracks the currently-displayed approach.
   useEffect(() => {
     if (!jsonSolution || !problemText.trim()) return;
+    // Never build Sona's context from a half-streamed answer. The partial render
+    // exists so the cards appear as they arrive; feeding one of those snapshots
+    // to Sona hands it a truncated approach and an unfinished code block, and it
+    // then answers about a solution that does not exist yet.
+    if (jsonSolution.__partial) return;
     const idx = activeSolutionIdx || 0;
     const sol = jsonSolution.solutions?.[idx] || jsonSolution.solutions?.[0];
     if (!sol) return;
@@ -3633,7 +3638,11 @@ ${solCode}
                   <div className="space-y-2">
                     {/* Structured test results */}
                     {testResults.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      // auto-fit, not `sm:`: that is a viewport breakpoint, and this
+                      // panel is resizable — a wide window with a squeezed output
+                      // pane kept two columns and the cards overlapped their own
+                      // borders. Cards drop to one column when the pane is narrow.
+                      <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))' }}>
                         {testResults.map((r, i) => (
                           // min-w-0 + overflow-hidden: the grid cell would otherwise be
                           // sized by the longest unbreakable value and the text would
