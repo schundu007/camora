@@ -603,3 +603,49 @@ describe('bullet casing', () => {
     expect(cased(sd, 'edgecases')).toEqual(['Empty array']);
   });
 });
+
+// Deep Dive and Issues are folded into the cards that already hold their
+// subject, rather than rendered in a panel of their own.
+describe('solution extras', () => {
+  const probesOf = (doc: any) => doc.sections.find((s: any) => s.id === 'probes');
+
+  it('appends Deep Dive questions to Interviewer will ask', () => {
+    const sd = { ...SD, interview: { probes: [{ q: 'Why a deque?', a: 'Front eviction.' }] } };
+    const doc = docFromSolution(sd, 0, { probes: [['Distributed?', 'Shard by client.']] });
+    const kv = probesOf(doc)!.blocks.find((b: any) => b.kind === 'kv')!;
+    expect(kv.pairs).toEqual([['Why a deque?', 'Front eviction.'], ['Distributed?', 'Shard by client.']]);
+  });
+
+  it('appends Issues under Common mistakes', () => {
+    const sd = { ...SD, interview: { pitfalls: ['forgetting to evict on read'] } };
+    const doc = docFromSolution(sd, 0, { pitfalls: ['CRITICAL — f() — breaks on empty → guard it'] });
+    const callout = probesOf(doc)!.blocks.find((b: any) => b.kind === 'callout')!;
+    expect(callout.label).toBe('Common mistakes');
+    expect(callout.items).toEqual([
+      'Forgetting to evict on read',
+      'CRITICAL — f() — breaks on empty → guard it',
+    ]);
+  });
+
+  // Every answer cached before the interview cards existed has no `interview`
+  // object at all — the chips still have to be able to fill the card.
+  it('creates the card from extras alone', () => {
+    const doc = docFromSolution(SD, 0, { probes: [['Q?', 'A.']], pitfalls: ['watch the boundary'] });
+    expect(probesOf(doc)).toBeTruthy();
+    expect(probesOf(doc)!.blocks).toHaveLength(2);
+  });
+
+  it('does not duplicate what the answer already said', () => {
+    const sd = { ...SD, interview: { probes: [{ q: 'Why a deque?', a: 'Front eviction.' }], pitfalls: ['Watch the boundary'] } };
+    const doc = docFromSolution(sd, 0, {
+      probes: [['why a deque?', 'Restated.']],
+      pitfalls: ['watch  the boundary'],
+    });
+    expect(probesOf(doc)!.blocks.find((b: any) => b.kind === 'kv')!.pairs).toHaveLength(1);
+    expect(probesOf(doc)!.blocks.find((b: any) => b.kind === 'callout')!.items).toHaveLength(1);
+  });
+
+  it('renders unchanged when no extras are passed', () => {
+    expect(probesOf(docFromSolution(SD, 0))).toBeUndefined();
+  });
+});
