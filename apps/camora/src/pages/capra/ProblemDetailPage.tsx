@@ -164,6 +164,9 @@ export default function ProblemDetailPage() {
   }
 
   const statement = statementBody(problem.content ?? '');
+  // Examples alone are still something to solve against; only a row with neither
+  // a statement nor examples is genuinely empty.
+  const hasStatement = Boolean(statement.trim()) || Boolean(problem.examples?.length);
 
   return (
     <div style={{ background: 'var(--bg-app)', minHeight: '100%', color: 'var(--text-primary)' }}>
@@ -209,16 +212,34 @@ export default function ProblemDetailPage() {
             </div>
           )}
 
-          <button
-            onClick={solveWithSona}
-            style={{
-              marginTop: 18, padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
-              background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', fontWeight: 700, fontSize: 13.5,
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-            }}
-          >
-            <Icon name="code" size={16} /> Solve with Sona
-          </button>
+          {/* No statement means the solver would receive nothing but the title —
+            * the original bug. Say so plainly instead of handing Sona four words
+            * and letting it invent a question. */}
+          {hasStatement ? (
+            <button
+              onClick={solveWithSona}
+              style={{
+                marginTop: 18, padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', fontWeight: 700, fontSize: 13.5,
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+              }}
+            >
+              <Icon name="code" size={16} /> Solve with Sona
+            </button>
+          ) : (
+            <div style={{
+              marginTop: 18, padding: '12px 14px', borderRadius: 8, fontSize: 13, lineHeight: 1.6,
+              background: 'var(--bg-elevated, rgba(255,255,255,0.04))',
+              border: '1px solid var(--border-subtle, rgba(255,255,255,0.10))', color: 'var(--text-secondary)',
+            }}>
+              We don’t have the statement for this problem yet, so there is nothing to solve
+              against — asking Sona from the title alone would just produce a different problem.
+              {' '}
+              <Link to="/capra/library?tab=coding" style={{ color: 'var(--cam-gold-leaf)' }}>
+                Browse other problems
+              </Link>.
+            </div>
+          )}
         </header>
 
         {/* ── Statement ──────────────────────────────────────────────────── */}
