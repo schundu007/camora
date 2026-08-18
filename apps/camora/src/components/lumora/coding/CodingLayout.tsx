@@ -933,10 +933,11 @@ ${solCode}
   const timerUrgent = timerDuration > 0 && timerSeconds < 300 && timerSeconds > 0; // < 5 min
 
   // ── Auto-fit: editor column width follows the code, not a fixed ratio ────
-  // Monaco runs with wordWrap:'off', so the editor never needs more width than
-  // its longest line. Everything past that is dead space while the solution
-  // panel — dense prose, a 3-column dry-run table, follow-up Q&A — is starved.
-  // Measure the code, give the editor what it needs, hand the rest to the left.
+  // Give the editor the width its code wants and hand the rest to the solution
+  // panel — dense prose, a 3-column dry-run table, the interview questions —
+  // which is starved by a fixed ratio. Monaco wraps rather than clips now, so
+  // this is a comfort target, not a correctness one: too narrow costs wrapped
+  // lines, never lost characters.
   // Longest line, measured WITHOUT its trailing explanation comment. The split
   // auto-fits to this, and a 60-character comment on the longest line would
   // otherwise drag the editor open to half the window on every solve — sizing
@@ -955,9 +956,9 @@ ${solCode}
     const fit = () => {
       const total = splitRowRef.current?.clientWidth ?? 0;
       if (total < 900) return; // stacked or narrow — the CSS floor governs
-      // 11px IBM Plex Mono ≈ 6.6px/char, + line-number gutter, padding, scrollbar.
-      // Floor of 430px keeps the editor toolbar (Lang / Run / → CoFix) on one row.
-      // 0.6em per char for IBM Plex Mono, + gutter/padding/scrollbar.
+      // ~0.6em per char for JetBrains Mono at EDITOR_FONT_PX, plus the
+      // line-number gutter, padding and scrollbar. Floor of 430px keeps the
+      // editor toolbar (Lang / Run / → CoFix) on one row.
       const wanted = Math.min(Math.max(codeMaxLineLen * (EDITOR_FONT_PX * 0.6) + 96, 430), total * 0.5);
       const next = Math.min(Math.max(100 - (wanted / total) * 100, 40), 65);
       setLeftPanelWidth((prev) => (Math.abs(prev - next) < 0.5 ? prev : next));
