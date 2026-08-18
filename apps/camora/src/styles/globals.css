@@ -3863,3 +3863,62 @@ figure:has(> .viz-caption) {
 .lumora-book button { font-family: var(--font-mono); }
 .lumora-book .lumora-book-label,
 .lumora-book button { font-family: 'Inter', var(--font-display), sans-serif; }
+
+/* ── Approach chips ──────────────────────────────────────────────────────
+   The two or three solutions, laid out flat in the middle of the toolbar. This
+   is the one control on the strip that gets pressed, so it reads as a solid
+   object rather than an outline: a filled chip on a filled bar, with the bound
+   carried in a pill of its own so the name and the cost never run together as
+   one string ("Hash SetO(n)").
+
+   The selected chip is the gold hero fill — the same accent the rest of the
+   answer uses for "this is the one you are reading" — lifted by a hairline
+   inner highlight so it sits above the bar rather than being a coloured hole
+   punched in it. */
+.cam-approach-chip {
+  height: 30px;
+  padding: 0 0.5rem 0 0.7rem;
+  border-radius: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: 'Inter', var(--font-display), sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.07);
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease,
+              box-shadow 140ms ease, transform 140ms ease;
+}
+.cam-approach-chip:hover {
+  color: var(--text-primary);
+  border-color: var(--cam-gold-leaf-dk);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+.cam-approach-chip:active { transform: translateY(0); }
+.cam-approach-chip[aria-pressed="true"] {
+  background: var(--cam-hero-strip);
+  color: var(--cam-gold-leaf-lt);
+  border-color: var(--cam-gold-leaf);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* The bound is a fact about the chip, not part of its name — a pill keeps it
+   legible at 10px without borrowing the name's weight. */
+.cam-approach-chip-bound {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--text-muted) 16%, transparent);
+}
+.cam-approach-chip[aria-pressed="true"] .cam-approach-chip-bound {
+  background: color-mix(in oklab, var(--cam-gold-leaf) 28%, transparent);
+  color: var(--cam-gold-leaf-lt);
+}

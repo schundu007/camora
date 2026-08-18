@@ -162,7 +162,7 @@ function detectLangFromDescription(text: string): string | null {
 }
 
 type ProblemTab = 'description' | 'solution';
-type OutputTab = 'testcases' | 'output' | 'qa';
+type OutputTab = 'testcases' | 'output' | 'qa' | 'trace';
 type InputMode = 'paste' | 'url' | 'image';
 
 // Analysis views, as icons. These were four uppercase text chips spanning the
@@ -2515,19 +2515,25 @@ ${solCode}
   const sd = jsonSolution;
 
   /**
-   * The answer book, minus the interview questions.
+   * The answer book, minus the two sections that belong beside the code.
    *
-   * Those moved to a tab beside Test Cases and Output: they are what the
-   * interviewer says next, so they belong beside the code being discussed
-   * rather than at the bottom of a column the reader has to scroll. As a TAB
-   * they cost no vertical space at all, which is the point — nothing can push
-   * the test cases off screen. The card renders through the same AnswerBook,
-   * so it keeps its typography and its Common mistakes callout.
+   * The interview questions are what the interviewer says NEXT, and the dry-run
+   * trace is the code executed by hand — both are read against the editor and
+   * the test cases, not against the reasoning column on the left. As TABS they
+   * cost no vertical space at all, which is the point: nothing can push the test
+   * cases off screen. Both render through the same AnswerBook, so they keep the
+   * book's typography (and the questions card keeps its Common mistakes
+   * callout).
    */
-  const { bookDoc, qaSection } = useMemo(() => {
+  const { bookDoc, qaSection, traceSection } = useMemo(() => {
     const full = docFromSolution(sd, activeSolutionIdx, solutionExtras);
-    const qa = full.sections.find(sec => sec.id === 'probes') ?? null;
-    return { bookDoc: { ...full, sections: full.sections.filter(sec => sec.id !== 'probes') }, qaSection: qa };
+    const pull = (id: string) => full.sections.find(sec => sec.id === id) ?? null;
+    const moved = new Set(['probes', 'trace']);
+    return {
+      bookDoc: { ...full, sections: full.sections.filter(sec => !moved.has(sec.id)) },
+      qaSection: pull('probes'),
+      traceSection: pull('trace'),
+    };
   }, [sd, activeSolutionIdx, solutionExtras]);
 
   /* The comment header above the code: the spoken walk-through, then what the
@@ -2575,6 +2581,19 @@ ${solCode}
   const qaCount = qaSection?.blocks.reduce(
     (n, b) => n + (b.kind === 'kv' ? b.pairs.length : 0), 0,
   ) ?? 0;
+
+  /** Steps in the dry run, for its tab's badge. */
+  const traceCount = traceSection?.blocks.reduce(
+    (n, b) => n + (b.kind === 'trace' ? b.rows.length : 0), 0,
+  ) ?? 0;
+
+  // Both tabs only exist when their answer has that section, so a new answer
+  // without one can leave the panel showing a tab that is no longer there —
+  // an empty pane with no lit tab to explain it. Fall back to Test Cases.
+  useEffect(() => {
+    if (outputTab === 'qa' && qaCount === 0) setOutputTab('testcases');
+    if (outputTab === 'trace' && traceCount === 0) setOutputTab('testcases');
+  }, [outputTab, qaCount, traceCount]);
 
   // MCQ answers reuse the `sd` channel but carry type:'mcq' + an `mcq` block
   // instead of solutions/code. They render an answer card, not code cards.
@@ -3254,6 +3273,15 @@ ${solCode}
                         views are cached per solution (`${idx}_${tab}`), so
                         switching approach while reading Explain should retarget
                         it rather than be unreachable. */}
+                    {/* The chips sit in the MIDDLE of the strip, in a flex-1
+                        track of their own. They used to start hard against the
+                        left edge with every control pushed to the far right,
+                        which read as two unrelated toolbars sharing a border —
+                        and the thing being chosen, the one control anyone
+                        actually presses, was the one furthest from the eye.
+                        The track is rendered even for a single solution so the
+                        right-hand controls keep their position either way. */}
+                    <div className="flex-1 min-w-0 flex items-center justify-center gap-1.5 flex-wrap">
                     {sd.solutions?.length > 1 && (
                       <>
                         {/* One chip per approach, not a dropdown. There are two
@@ -3276,22 +3304,18 @@ ${solCode}
                               }}
                               aria-pressed={on}
                               data-tip={s.complexity?.time ? `${s.name || `Solution ${i + 1}`} — time ${s.complexity.time}` : undefined}
-                              className="h-[26px] px-2.5 rounded text-[11px] font-bold shrink-0 inline-flex items-center gap-1.5 transition-colors"
-                              style={on
-                                ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
-                                : { background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                              className="cam-approach-chip shrink-0"
                             >
-                              <span className="truncate max-w-[130px]">{s.name || `Solution ${i + 1}`}</span>
+                              <span className="truncate max-w-[150px]">{s.name || `Solution ${i + 1}`}</span>
                               {s.complexity?.time && (
-                                <span className="font-mono text-[10px] opacity-80">{s.complexity.time}</span>
+                                <span className="cam-approach-chip-bound">{s.complexity.time}</span>
                               )}
                             </button>
                           );
                         })}
-                        <div className="w-px h-4 shrink-0" style={{ background: 'var(--border)' }} />
                       </>
                     )}
-
+                    </div>
 
                     <div className="ml-auto flex items-center gap-1 shrink-0">
                       {/* Cache state — the icon alone. The sentence that used to
@@ -3705,6 +3729,17 @@ ${solCode}
                       style={{ background: t.badgeBg, color: t.badgeText }}>{qaCount}</span>
                   </button>
                 )}
+                {traceCount > 0 && (
+                  <button onClick={() => { setOutputTab('trace'); setIsOutputCollapsed(false); }}
+                    className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                      outputTab === 'trace' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
+                    }`}
+                    style={!(outputTab === 'trace' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
+                    Dry-run trace
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                      style={{ background: t.badgeBg, color: t.badgeText }}>{traceCount}</span>
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-1.5">
                 {outputLog.length > 0 && (
@@ -3768,6 +3803,14 @@ ${solCode}
                 {outputTab === 'qa' && qaSection && (
                   <div className="px-1 pb-2 overflow-y-auto">
                     <AnswerBook doc={{ sections: [qaSection] }} />
+                  </div>
+                )}
+                {/* The dry run reads against the code and the test cases beside
+                    it — same input, one executed by the machine and one by hand
+                    — which is the comparison it exists for. */}
+                {outputTab === 'trace' && traceSection && (
+                  <div className="px-1 pb-2 overflow-y-auto">
+                    <AnswerBook doc={{ sections: [traceSection] }} />
                   </div>
                 )}
                 {outputTab === 'output' && (
