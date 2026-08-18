@@ -707,3 +707,31 @@ describe('the Explain chip renders as a card', () => {
     expect(docFromSolution(SD).sections.map((s: any) => s.id)).not.toContain('explain');
   });
 });
+
+// The Complexity card states both bounds and derives them, so a probe asking
+// what they are is the same answer twice.
+describe('complexity probes are filtered out', () => {
+  const questions = (sd: any) => {
+    const card = docFromSolution(sd).sections.find(s => s.id === 'probes');
+    const kv = card?.blocks.find((b: any) => b.kind === 'kv');
+    return kv && kv.kind === 'kv' ? kv.pairs.map(p => p[0]) : [];
+  };
+
+  it('drops questions that ask for the bounds', () => {
+    const sd = { ...SD, interview: { probes: [
+      { q: 'What is the time and space complexity of your solution?', a: 'O(n) / O(1)' },
+      { q: "What's the time complexity here?", a: 'O(n)' },
+      { q: 'Why a stack?', a: 'Order matters.' },
+    ] } };
+    expect(questions(sd)).toEqual(['Why a stack?']);
+  });
+
+  // Changing the complexity is a different question with a different answer.
+  it('keeps questions about improving or trading complexity', () => {
+    const sd = { ...SD, interview: { probes: [
+      { q: 'Could you get this under O(n) space?', a: 'Two pointers.' },
+      { q: 'What would you trade to make it faster?', a: 'Memory.' },
+    ] } };
+    expect(questions(sd)).toHaveLength(2);
+  });
+});

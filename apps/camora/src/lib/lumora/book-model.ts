@@ -71,6 +71,20 @@ export const SECTION_TITLES: Record<string, string> = {
   steps: 'Step by step',
 };
 
+/**
+ * Probes that just ask what the bounds are.
+ *
+ * The Complexity card states both and derives each one, so this probe is the
+ * same answer printed twice — and it displaces a question the reader has not
+ * already been handed.
+ *
+ * Deliberately scoped to questions ASKING FOR the complexity. A question about
+ * changing it ("could you get this under O(n) space?", "what would you trade to
+ * make it faster?") is a different question with a different answer, and stays.
+ */
+const ASKS_FOR_COMPLEXITY =
+  /^\s*(?:what|what's|whats|can you (?:state|give)|tell me|explain)\b[^?]*\b(?:time|space|runtime|big[-\s]?o)\b[^?]*\bcomplexit|^\s*what[^?]*\bbig[-\s]?o\b/i;
+
 const txt = (v: unknown): string => (typeof v === 'string' ? cleanText(v) : '');
 
 /* Every bullet the book renders goes through one of these two, so sentence case
@@ -292,6 +306,7 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
     for (const [q, a] of [...probes, ...(extras?.probes || []), ...followups]) {
       const k = q.toLowerCase().replace(/\s+/g, ' ').trim();
       if (!k || seenQ.has(k)) continue;
+      if (ASKS_FOR_COMPLEXITY.test(q)) continue;
       seenQ.add(k);
       allProbes.push([q, a]);
     }
