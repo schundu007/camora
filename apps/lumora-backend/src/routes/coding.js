@@ -713,6 +713,14 @@ Example of correct HTTP call:
   it and say so plainly. If your solution exceeds the ceiling, say "TLE risk"
   rather than quietly asserting it fits. If no bound is stated, say "not stated"
   and skip the verdict.
+- "requirements" are what the STATEMENT DEMANDS, in its own words — a mandated
+  bound, a banned operation, an in-place/one-pass instruction, and the target
+  named in a Follow-up line. These are requirements, not preferences, and they
+  are read from the PROSE: "You must write an algorithm that runs in O(n) time
+  and without using the division operation" is two of them, and "Follow up: can
+  you solve it in O(1) extra space?" is a third. The numeric constraints
+  (n <= 10^5) are budget's job, not this field's. Leave the array empty rather
+  than inventing a requirement the statement does not state.
 - "signals" must quote words that are actually IN the statement. If a phrase is
   not in the text, leave it out. Two to four entries; do not pad.
 - "topic.section" must be copied exactly from the list given. "concepts" are the
@@ -723,6 +731,48 @@ Example of correct HTTP call:
   already on screen.
 - "pitfalls" are mistakes made on THIS pattern, not general advice.
 - HOUSE STYLE, every bulleted string (keyPoints, tradeoffs, edgeCases, pitfalls, ruledOut, probes): sentence case — start with a capital unless the first word is code (getHits(), self.hits, nums[i]) — and no trailing full stop on a fragment. Two cards in one answer must not disagree about it.
+
+##############################################################################
+# RULE #4.7: THE STATEMENT'S OWN REQUIREMENTS ARE BINDING
+##############################################################################
+Constraints are not only numbers. A statement that says "you must write an
+algorithm that runs in O(n) time and without using the division operation" has
+just ruled out the two solutions most people write first, and a "Follow up: can
+you do it in O(1) extra space?" names the bound the interviewer is going to ask
+for the moment the first version works. Read them out of the PROSE and put them
+in interview.requirements.
+
+Then hold every solution to them:
+
+1. Each solution carries "requirementCheck". If it breaks a stated requirement,
+   ok is false and "violates" NAMES the requirement and what breaks it. A
+   solution that meets them all has ok true and an empty array. Never mark a
+   solution ok while its own complexity contradicts a bound in the list.
+
+2. AT LEAST ONE emitted solution MUST satisfy EVERY stated requirement — the
+   mandated bound, the banned operation, and the follow-up's target when one is
+   named. That is the solution the candidate actually submits; an answer where
+   all three violate the statement is a failed answer no matter how good the
+   code is. Order still runs simplest → most optimal, so this is normally the
+   last one.
+
+3. The ladder still shows the approaches that DON'T qualify — the brute force is
+   what the candidate says out loud first, and the middle rung is how they get
+   to the last one — but each must be honestly labelled rather than quietly
+   presented as an answer. A solution that violates a requirement is a step in
+   the reasoning, not a submission.
+
+4. A banned operation is banned in EVERY solution, including the brute force:
+   "without using division" means no solution divides. A mandated BOUND is
+   different — the brute force may miss it, and says so in requirementCheck.
+
+Worked example. "Product of Array Except Self", which mandates O(n) time and no
+division, and follows up asking for O(1) extra space:
+  - nested loops, no division: O(n^2) time, O(1) extra. Violates the O(n) mandate.
+  - prefix array + suffix array: O(n) time, O(n) extra. Meets the mandate,
+    violates the follow-up.
+  - output array + one running suffix value: O(n) time, O(1) extra. Meets all
+    three — this is the one that must be present.
 
 ##############################################################################
 # RULE #4.5: IDENTIFICATION TRAIL — HOW YOU KNEW WHICH PATTERN THIS IS
@@ -898,7 +948,8 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force, Deque, Circular Buffer, Ordered Set, Counting, Design. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." },
+      "requirementCheck": { "ok": true|false, "violates": ["Each STATED requirement this solution breaks, in a few words, naming the requirement and what breaks it — e.g. \"O(n) time — this is O(n^2)\", \"no division — line 4 divides\", \"O(1) extra space — allocates two n-sized arrays\". Empty array when it meets every one."] }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -917,7 +968,8 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force, Deque, Circular Buffer, Ordered Set, Counting, Design. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code for this approach with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." },
+      "requirementCheck": { "ok": true|false, "violates": ["Each STATED requirement this solution breaks, in a few words, naming the requirement and what breaks it — e.g. \"O(n) time — this is O(n^2)\", \"no division — line 4 divides\", \"O(1) extra space — allocates two n-sized arrays\". Empty array when it meets every one."] }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -934,7 +986,8 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for second approach",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." },
+      "requirementCheck": { "ok": true|false, "violates": ["Each STATED requirement this solution breaks, in a few words, naming the requirement and what breaks it — e.g. \"O(n) time — this is O(n^2)\", \"no division — line 4 divides\", \"O(1) extra space — allocates two n-sized arrays\". Empty array when it meets every one."] }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -948,7 +1001,8 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for third approach",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." },
+      "requirementCheck": { "ok": true|false, "violates": ["Each STATED requirement this solution breaks, in a few words, naming the requirement and what breaks it — e.g. \"O(n) time — this is O(n^2)\", \"no division — line 4 divides\", \"O(1) extra space — allocates two n-sized arrays\". Empty array when it meets every one."] }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -970,6 +1024,9 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "ceiling": "the complexity that bound forces, e.g. \"O(n log n) or better\"",
       "verdict": "does your chosen solution fit that ceiling? name its complexity and say fits, or flag the TLE risk"
     },
+    "requirements": [
+      "Each requirement the STATEMENT ITSELF imposes, quoted or tightly paraphrased — a mandated bound (\"must run in O(n) time\"), a banned operation (\"without using the division operation\"), a mandated structure (\"in place\", \"one pass\", \"without extra space\"), AND the target named in a Follow-up line (\"follow-up: O(1) extra space, output excluded\"). These are the PROSE demands, not the numeric constraints — n <= 10^5 belongs in budget, not here. Empty array when the statement demands nothing beyond correctness; never invent one."
+    ],
     "signals": [
       { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
     ],
@@ -1108,7 +1165,7 @@ Rules:
 - MANDATORY — MINIMAL LINES: write the SHORTEST correct, readable solution. This is live-interview code the candidate hand-types under time pressure, so favour idiomatic constructs and standard-library conveniences (comprehensions, unpacking, built-ins, collections/itertools) over boilerplate. Do NOT add dataclasses, wrapper classes, extra helper functions, verbose try/except, logging, or scaffolding the PROBLEM does not require. If a clean solution fits in ~5-15 lines, never emit 40. Fewer lines that still read clearly and run correctly always win. (This governs the IMPLEMENTATION only — never drop a required import or the platform's locked driver/harness to save lines.)
 - MANDATORY — MINIMAL IMPORTS: import ONLY modules the code actually uses. No unused imports, no "just in case" imports, no pulling in a heavy module for something a built-in already does. Prefer built-ins/stdlib; add a third-party import only if the problem truly requires it. Every import line must map to a symbol used in the solution.
 - Each solution MUST have a narration field — first-person spoken script the candidate READS OUT LOUD. Keep it SHORT: 2-3 sentences MAX (hook → core insight → why it beats the previous approach), natural speech, no markdown. The client splits it into ONE BULLET PER SENTENCE, so every sentence must stand alone and state a FACT about the solution. Plain words, short sentences: say 'check every pair' not 'perform an exhaustive pairwise comparison'. NEVER open with filler (So, Okay, Basically, Right, Well, Obviously) and NEVER write a sentence about what you are ABOUT TO SAY — no 'let me do better than that', no 'first let's get the baseline down', no 'this is a warm-up for the next one'. Do not restate the problem, and do not repeat what "approach" already says in other words. The candidate reads this live — brevity matters.
-- Each solution MUST have a trace field — 4-6 dry-run entries (never more) on the REAL examples[0] values. Two things make it worth reading: (a) it must ARRIVE at the expected output, with the running total visible in the last step, so the reader can check the answer instead of taking it on trust; (b) at least one step must prove a single position with real arithmetic from examples[0] — the position, the values it depends on, and the sum that gives its contribution. Each step: { step, action: short verb phrase in plain English, state: 'name=value' joined with commas }. No code in state.
+- EVERY solution MUST have a trace field — 4-6 dry-run entries (never more) on the REAL examples[0] values. EVERY one: solutions[1] and solutions[2] are not exempt, and a solution without a trace is an incomplete solution, not a shorter one. They trace DIFFERENT algorithms over the same input, so a trace copied from solutions[0] is wrong — the steps must be the steps THIS code takes. Two things make it worth reading: (a) it must ARRIVE at the expected output, with the running total visible in the last step, so the reader can check the answer instead of taking it on trust; (b) at least one step must prove a single position with real arithmetic from examples[0] — the position, the values it depends on, and the sum that gives its contribution. Each step: { step, action: short verb phrase in plain English, state: 'name=value' joined with commas }. No code in state.
 - "explanations" ARE THE CODE'S COMMENTS. The client appends each entry to the line its "code" quotes, as a trailing \`# ...\` / \`// ...\` comment inside the editor — there is no separate walkthrough panel to read them in. So: one entry per MEANINGFUL line, in source order, UP TO 12 PER SOLUTION (a live answer holds three solutions; past that the wait costs more than the extra notes are worth — annotate the lines that carry the idea and skip the rest), "code" being that line's text VERBATIM (it is what the entry is matched on) and "explanation" being PLAIN TEXT, at most 12 words, no backticks, no markdown, no brackets or quote characters. Skip blank lines, closing brackets, and lines whose comment could only restate the syntax. Write what you would actually leave on that line — "evict hits older than the window", not "this is a while loop".
 ${starterCode
   ? `- Preserve the template's own comments verbatim; add NO new comments of your own — a line that already has one is left alone, so put your note in "explanations" instead
@@ -1119,7 +1176,7 @@ ${starterCode
 - Generate COMPLETE, RUNNABLE code that includes all necessary imports for each solution
 - Examples must have exact input/output pairs
 - ${singleSolution ? 'The 1 solution must produce correct output for the given examples' : 'ALL 3 solutions must produce correct output for the given examples'}
-- STYLE SELF-CHECK (silent, last thing before you emit): re-read every sentence you wrote in narration, approach, explanations, keyPoints, tradeoffs, edgeCases, pitfalls, probes and the complexity reasons. Fix these four, then emit: (1) any sentence over ~20 words gets split; (2) any word on the NEVER WRITE list gets swapped; (3) any sentence that only restates the code gets replaced with the reason the line is there; (4) every approach has at least one "Why? Because ..." and, unless it is the last one, ends by naming its cost and asking the question the next approach answers. Emit no reasoning about this check.
+- STYLE SELF-CHECK (silent, last thing before you emit): re-read every sentence you wrote in narration, approach, explanations, keyPoints, tradeoffs, edgeCases, pitfalls, probes and the complexity reasons. Fix these four, then emit: (1) any sentence over ~20 words gets split; (2) any word on the NEVER WRITE list gets swapped; (3) any sentence that only restates the code gets replaced with the reason the line is there; (3b) every solution has a non-empty trace of its OWN algorithm, and every solution has a requirementCheck; (4) every approach has at least one "Why? Because ..." and, unless it is the last one, ends by naming its cost and asking the question the next approach answers. Emit no reasoning about this check.
 - Use the LATEST modern patterns and APIs for ${language}
 - ${singleSolution ? '' : 'Order solutions from simplest (brute force) to most optimal'}${ioUnknown ? `\n- The I/O contract is UNKNOWN. Return a pure function with no driver, no print, no invented labels, and populate "assumptions".` : ''}`;
 }

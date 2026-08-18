@@ -171,6 +171,15 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
                     {r.verdict === 'best' && <span className="lumora-book-pill is-best">Best</span>}
                     {r.verdict === 'baseline' && <span className="lumora-book-pill">Baseline</span>}
                     {r.tleRisk && <span className="lumora-book-pill is-risk" data-tip={r.note || undefined}>TLE risk</span>}
+                    {/* A stated requirement broken is not a slower approach — it
+                        is one the candidate cannot submit at all. The pill says
+                        so at a glance; which requirement it breaks is the
+                        tooltip, because it is a sentence and this is a table. */}
+                    {r.violates?.length ? (
+                      <span className="lumora-book-pill is-risk" data-tip={r.violates.join(' · ')}>
+                        Breaks {r.violates.length === 1 ? 'a requirement' : `${r.violates.length} requirements`}
+                      </span>
+                    ) : null}
                   </td>
                 </tr>
               ))}

@@ -35,6 +35,8 @@ export type MatrixRow = {
   /** Constraints say this bound times out, from optimality.tleRisk. */
   tleRisk?: boolean;
   note?: string;
+  /** Stated requirements this approach breaks, from requirementCheck.violates. */
+  violates?: string[];
 };
 
 export type BookSection = { id: string; heading: string; blocks: BookBlock[] };
@@ -45,6 +47,7 @@ export const SECTION_TITLES: Record<string, string> = {
   problem: 'Problem',
   identification: 'How to spot it',
   ruledout: 'Ruled out',
+  mandates: 'What the statement demands',
   budget: 'Constraint budget',
   signals: 'Signals in the statement',
   probes: 'Interview questions',
@@ -147,6 +150,24 @@ const listOrNull = (v: unknown): BookBlock | null => {
 };
 
 /**
+ * The stated requirements THIS solution breaks.
+ *
+ * A statement's prose carries requirements the constraints never mention: a
+ * mandated bound ("must run in O(n) time"), a banned operation ("without using
+ * the division operation"), and the target named in a Follow-up line. The
+ * backend reads them into interview.requirements and marks each solution
+ * against them; this is the per-solution half of that.
+ *
+ * Absent on answers generated before the field existed, which read as "meets
+ * everything" — the same as before, rather than a wall of false warnings.
+ */
+const violationsOf = (sol: any): string[] | undefined => {
+  if (sol?.requirementCheck?.ok === true) return undefined;
+  const items = strList(sol?.requirementCheck?.violates);
+  return items.length ? items : undefined;
+};
+
+/**
  * One row per approach, ranked. Null for a single-solution answer — a
  * comparison of one is a table with nothing to compare.
  */
@@ -167,6 +188,7 @@ const matrixOrNull = (sd: any, activeIndex: number): BookBlock | null => {
     spaceWhy: txt(s?.complexity?.spaceWhy) || undefined,
     verdict: i === bestIdx ? 'best' : i === worstIdx ? 'baseline' : undefined,
     tleRisk: s?.optimality?.tleRisk === true,
+    violates: violationsOf(s),
     // submittableReason is the sharper of the two — it says what actually
     // breaks — so it wins when both are present.
     note: txt(s?.submittableReason) || txt(s?.optimality?.why) || undefined,
@@ -228,6 +250,16 @@ export function complexityBeat(sd: any, solIdx = 0): [string, string] | null {
   if (others.length) {
     lines.push('', 'Against the alternatives —');
     others.forEach((o: string) => lines.push(`  ${o}`));
+  }
+
+  // What the STATEMENT demanded and this approach does not do. Placed above the
+  // constraint check because it is the harder failure: too slow is a submission
+  // that scores badly, while "the statement said no division" is a submission
+  // that does not count at all.
+  const violates = violationsOf(sol);
+  if (violates?.length) {
+    lines.push('', 'Does not meet the statement —');
+    violates.forEach((v: string) => lines.push(`  ${v}`));
   }
 
   // optimality is only filled when the statement gave constraints, so this
@@ -437,6 +469,24 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
           .filter(([a, b]: [string, string]) => Boolean(a && b))
       : [];
     push(sections, 'signals', [sigs.length ? { kind: 'kv', pairs: sigs, layout: 'rows' } : null]);
+
+    /* What the statement DEMANDS, as opposed to what it merely allows.
+     *
+     * The constraint budget reads the numbers — n <= 1e5, therefore O(n log n)
+     * or better. It never read the prose, and the prose is where the hard
+     * requirements live: "must run in O(n) time", "without using the division
+     * operation", "in place", and the bound named in a Follow-up line. Those
+     * rule out approaches outright, which is a different thing from being slow,
+     * and nothing on screen used to say so — the answer would offer prefix and
+     * suffix arrays for a problem whose follow-up asks for O(1) extra space and
+     * never mention the mismatch.
+     *
+     * The per-solution half of this is the Approach comparison's Requirements
+     * column; this card is the list being checked against.
+     */
+    push(sections, 'mandates', [
+      strList(iv.requirements).length ? { kind: 'list', items: strList(iv.requirements) } : null,
+    ]);
 
     /* No "Topic & review" card.
      *
@@ -747,6 +797,7 @@ const SECTION_ORDER = [
   // means the card that comes first is the one you look at first.
   'signals',
   'identification',   // how to spot it — the walk those signals led to
+  'mandates',         // what the statement demands — the bar every approach below is held to
   'ruledout',         // what you considered and dropped — asked about the moment the approach is on screen
   // The answer itself, straight after how you found it, with the alternatives
   // you weighed against it directly underneath.
