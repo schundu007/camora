@@ -30,7 +30,6 @@ import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { annotateSolutionCode } from '@/lib/lumora/code-comments';
 import { normalizeProblemText } from '@/lib/lumora/problem-text';
 import { stripDemoCalls } from '@/lib/lumora/demo-calls';
-import { normalizeExamples } from '@/lib/lumora/test-input';
 import { parseDeepDive, parseIssues, parseExplain } from '@/lib/lumora/analysis-parse';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
@@ -1312,7 +1311,7 @@ ${solCode}
       // Only apply backend-detected language when the user hasn't explicitly chosen one.
       if (jsonData.language && jsonData.language !== 'auto' && language === 'auto') setLanguage(jsonData.language);
       if (jsonData.examples?.length > 0) {
-        setTestCases(normalizeExamples(jsonData.examples));
+        setTestCases(jsonData.examples.map((ex: any) => ({ input: ex.input || '', expected: ex.expected || '' })));
         setOutputTab('testcases');
         setIsOutputCollapsed(false);
       }
@@ -1425,7 +1424,7 @@ ${solCode}
           }
           if (json.language && json.language !== 'auto') setLanguage(json.language);
           if (json.examples?.length > 0) {
-            setTestCases(normalizeExamples(json.examples));
+            setTestCases(json.examples.map((ex: any) => ({ input: ex.input || '', expected: ex.expected || '' })));
             setOutputTab('testcases');
             setIsOutputCollapsed(false);
           }
