@@ -186,7 +186,7 @@ const RenderScale = () => {
 
 const EDITOR_FONT_PX = 13;
 /** Passed to Monaco AND used for the height math, so they cannot disagree. */
-const EDITOR_LINE_H = 20;
+const EDITOR_LINE_H = 16;
 /** Padding plus the horizontal scrollbar that sits under the last line. */
 const EDITOR_CHROME_PX = 26;
 const MAX_TEST_CASES = 10;
@@ -2529,12 +2529,18 @@ ${solCode}
   const walkthroughKeyRef = useRef<string>('');
   useEffect(() => {
     const beats = solutionExtras.explain;
-    if (!sd || !beats?.length) return;
-    const key = `${activeSolutionIdx}:${beats.length}`;
+    // Wait for the stream to finish. The beats parse incrementally, so acting
+    // on a partial set writes half a header — and keying the guard on the beat
+    // count made every new beat look like a new answer and prepend again.
+    if (!sd || !beats?.length || analysisInFlight.includes(`${activeSolutionIdx}_explain`)) return;
+    const key = String(activeSolutionIdx);
     if (walkthroughKeyRef.current === key) return;
     walkthroughKeyRef.current = key;
     setCode(prev => withWalkthrough(prev, sd, beats, language));
-  }, [solutionExtras, sd, activeSolutionIdx, language]);
+  }, [solutionExtras, sd, activeSolutionIdx, language, analysisInFlight]);
+
+  // A new answer is a new header, even at the same solution index.
+  useEffect(() => { walkthroughKeyRef.current = ''; }, [jsonSolution]);
 
   /** Questions in the card, for the tab's count badge. */
   const qaCount = qaSection?.blocks.reduce(
