@@ -777,6 +777,13 @@ The reader is in a live interview. They must UNDERSTAND it in one pass and SAY
 it out loud. Write the way the best explanations do — NeetCode, algo.monster, a
 good textbook — never the way a research paper does.
 
+READ THIS FIRST. Every example below is written about SOME OTHER PROBLEM on
+purpose. They show you the SHAPE of a good sentence — nothing else. Never borrow
+their words, their comparisons, or their subject matter. The picture, the
+variables, the numbers and the gotcha must all come from the problem actually in
+front of you. If the problem has nothing to do with windows, sorting or pointers,
+none of those words belong in your answer.
+
 RULE 1 — SIMPLE ENGLISH. This outranks every other style rule here.
 - Use the shortest word that is still exact. Never a long word where a short one
   does the same job.
@@ -810,11 +817,12 @@ Delete outright: aforementioned, respectively, it should be noted that, it is
 important to note, essentially, fundamentally, leveraging the fact that.
 
 RULE 2 — BOOK ORDER. Explain every approach in exactly this order:
-  1. THE PICTURE. One everyday comparison for what the algorithm does. Physical,
-     from real life. ("Think of the bars as walls. Water sits between two walls,
-     and the shorter wall decides how high it goes.")
+  1. THE PICTURE. One everyday comparison for what THIS algorithm does. Physical,
+     from real life, and drawn from this problem's own subject. (Shape only:
+     a sliding window reads as "a frame you drag along the row, adding what comes
+     in and dropping what falls out".)
   2. WHAT WE KEEP. Name every variable in plain words BEFORE using it.
-     ("left[i] is the tallest bar at or before spot i.")
+     (Shape only: "seen is the set of numbers we have already gone past.")
   3. THE STEPS. Numbered, one short sentence each, in the order the code runs.
   4. WHAT IT COSTS. The bound, then the count behind it, then what n is.
   5. WHAT THE LAST APPROACH WASTED. From the second approach onward, open by
@@ -822,29 +830,30 @@ RULE 2 — BOOK ORDER. Explain every approach in exactly this order:
      reason this approach exists.
 
 RULE 3 — NEVER NARRATE THE CODE. "We loop from 0 to n" tells the reader what
-they can already see. Say WHY the line is there: "we scan right to left so each
-spot already knows the tallest bar ahead of it."
+they can already see. Say WHY the line is there — the reason, in this problem's
+own terms. (Shape only: "we walk backwards so each step already knows the answer
+for everything after it.")
 
 RULE 4 — USE THE REAL NUMBERS. When you explain a step, use the actual values
-from examples[0], not letters. "At spot 5 the left wall is 2 and the right wall
-is 3, so 2 - 0 = 2 units of water sit there."
+from examples[0], never letters. Name the position, the values it depends on, and
+the arithmetic that produces that step's result.
 
 RULE 5 — ASK "WHY?" AND ANSWER IT. This is the one move that separates a good
 explanation from a summary. State what you do, then ask why, then answer in one
-sentence. "We find the tallest bar on each side of spot i. Why? Because the
-shorter of those two is as high as the water can get before it spills."
+sentence, about THIS problem. (Shape only: "We keep a running total instead of
+adding the whole block again. Why? Because only the two ends ever change.")
 Every approach needs at least one of these.
 
 RULE 6 — ANSWER THE QUESTION THE READER IS ABOUT TO ASK. Name the thing that
 confuses people about THIS problem and settle it in one line, before it trips
-them up. "Does a container need a floor? No — it needs two walls. The ground
-is the floor." Put it in pitch.keyPoints or the approach text, wherever it lands
-first.
+them up. It must be THIS problem's confusion — the definition people misread, the
+boundary they assume wrongly, the case they think cannot happen. Put it in
+pitch.keyPoints or the approach text, wherever it lands first.
 
 RULE 7 — HAND OFF TO THE NEXT APPROACH. End each approach (except the last) the
 way a good article does: name the cost you just paid, then ask the question that
-leads to the next one. "That is O(n) time but O(n) space. Can we do it without
-the extra arrays?"
+leads to the next one. (Shape only: "That is O(n) time but it costs O(n) extra
+memory. Can we get there without storing anything?")
 
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
@@ -933,7 +942,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
     ],
     "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
     "probes": [ { "q": "The follow-up an interviewer really asks after this solution, in their words", "a": "The answer in 1-2 short plain sentences the candidate can say out loud" } ],
-    "pitfalls": ["A mistake people really make on this pattern, one short plain sentence, e.g. 'Moving the taller side first, which breaks the rule that the shorter wall decides'"]
+    "pitfalls": ["A mistake people really make on THIS pattern, one short plain sentence naming what they do and what it costs them"]
   },
   "identification": {
     "path": [
@@ -947,16 +956,16 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
   ? `{
     "opener": "One sentence summary of the approach",
     "approach": "Brief explanation of the chosen strategy",
-    "keyPoints": ["One short plain-English sentence a reader remembers, e.g. 'The shorter wall decides the water level'", "Second one", "Third one"],
-    "tradeoffs": ["What you give up and what you get, in one short plain sentence, e.g. 'Two pointers use no extra memory but the reason they work is harder to explain'", "Second one"],
-    "edgeCases": ["A real input that breaks a careless version, in plain words, e.g. 'An empty list — there are no walls, so the answer is 0'", "Second one", "Third one"]
+    "keyPoints": ["The one sentence a reader should still remember tomorrow - the rule this problem turns on, in plain words", "Second one", "Third one"],
+    "tradeoffs": ["What you give up and what you get, in one short plain sentence", "Second one"],
+    "edgeCases": ["A real input that breaks a careless version, named in plain words, with what the right answer is for it", "Second one", "Third one"]
   }`
   : `{
     "opener": "One sentence hook comparing the approaches",
     "approach": "Summary of the 3 approaches and why you'd pick each",
-    "keyPoints": ["One short plain-English sentence a reader remembers, e.g. 'The shorter wall decides the water level'", "Second one", "Third one"],
+    "keyPoints": ["The one sentence a reader should still remember tomorrow - the rule this problem turns on, in plain words", "Second one", "Third one"],
     "tradeoffs": ["Tradeoff between approach 1 vs 2", "Tradeoff between approach 2 vs 3"],
-    "edgeCases": ["A real input that breaks a careless version, in plain words, e.g. 'An empty list — there are no walls, so the answer is 0'", "Second one", "Third one"]
+    "edgeCases": ["A real input that breaks a careless version, named in plain words, with what the right answer is for it", "Second one", "Third one"]
   }`},
   "examples": [
     {"input": "nums = [2,7,11,15], target = 9", "expected": "[0, 1]"},
@@ -1066,7 +1075,7 @@ Rules:
 - MANDATORY — MINIMAL LINES: write the SHORTEST correct, readable solution. This is live-interview code the candidate hand-types under time pressure, so favour idiomatic constructs and standard-library conveniences (comprehensions, unpacking, built-ins, collections/itertools) over boilerplate. Do NOT add dataclasses, wrapper classes, extra helper functions, verbose try/except, logging, or scaffolding the PROBLEM does not require. If a clean solution fits in ~5-15 lines, never emit 40. Fewer lines that still read clearly and run correctly always win. (This governs the IMPLEMENTATION only — never drop a required import or the platform's locked driver/harness to save lines.)
 - MANDATORY — MINIMAL IMPORTS: import ONLY modules the code actually uses. No unused imports, no "just in case" imports, no pulling in a heavy module for something a built-in already does. Prefer built-ins/stdlib; add a third-party import only if the problem truly requires it. Every import line must map to a symbol used in the solution.
 - Each solution MUST have a narration field — first-person spoken script the candidate READS OUT LOUD. Keep it SHORT: 2-3 sentences MAX (hook → core insight → complexity), natural speech, no markdown. The candidate reads this live — brevity matters.
-- Each solution MUST have a trace field — 4-6 dry-run entries (never more) on the REAL examples[0] values. Two things make it worth reading: (a) it must ARRIVE at the expected output, with the running total visible in the last step, so the reader can check the answer instead of taking it on trust; (b) at least one step must prove a single spot with real arithmetic — 'spot 1: left wall 4, right wall 5, so min(4,5) - 2 = 2 units'. Each step: { step, action: short verb phrase in plain English, state: 'name=value' joined with commas }. No code in state.
+- Each solution MUST have a trace field — 4-6 dry-run entries (never more) on the REAL examples[0] values. Two things make it worth reading: (a) it must ARRIVE at the expected output, with the running total visible in the last step, so the reader can check the answer instead of taking it on trust; (b) at least one step must prove a single position with real arithmetic from examples[0] — the position, the values it depends on, and the sum that gives its contribution. Each step: { step, action: short verb phrase in plain English, state: 'name=value' joined with commas }. No code in state.
 - "explanations" ARE THE CODE'S COMMENTS. The client appends each entry to the line its "code" quotes, as a trailing \`# ...\` / \`// ...\` comment inside the editor — there is no separate walkthrough panel to read them in. So: one entry per MEANINGFUL line, in source order, "code" being that line's text VERBATIM (it is what the entry is matched on) and "explanation" being PLAIN TEXT, at most 12 words, no backticks, no markdown, no brackets or quote characters. Skip blank lines, closing brackets, and lines whose comment could only restate the syntax. Write what you would actually leave on that line — "evict hits older than the window", not "this is a while loop".
 ${starterCode
   ? `- Preserve the template's own comments verbatim; add NO new comments of your own — a line that already has one is left alone, so put your note in "explanations" instead
