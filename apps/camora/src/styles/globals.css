@@ -3552,7 +3552,7 @@ figure:has(> .viz-caption) {
 }
 
 .lumora-book-grid > section,
-.lumora-book-grid > .lumora-book-stack {
+.lumora-book-grid > .lumora-book-stack > section {
   border: 1px solid var(--border);
   border-radius: 0.6rem;
   /* Elevated, not surface: the panel behind the book IS surface, so a card
@@ -3564,19 +3564,29 @@ figure:has(> .viz-caption) {
   min-width: 0;
 }
 
+/* The stacked pair is a COLUMN of cards, not one card holding two sections: it
+   carries no chrome of its own, and its two members are cards in their own
+   right, one above the other. */
+.lumora-book-grid > .lumora-book-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 /* The heading is the card's own title now, so its top margin — which existed
    to separate one run of text from the last — is dead space inside a border. */
 .lumora-book-grid > section > .lumora-book-section,
 .lumora-book-grid > .lumora-book-stack .lumora-book-section { margin-top: 0; }
 /* …and the last block's bottom margin is the same dead space at the other end. */
 .lumora-book-grid > section > :last-child,
-.lumora-book-grid > .lumora-book-stack > section:last-child > :last-child { margin-bottom: 0; }
+.lumora-book-grid > .lumora-book-stack > section > :last-child { margin-bottom: 0; }
 
 /* The comparison matrix is the one block that was already a card. Inside one it
    would be a border drawn a few pixels inside another border — so it gives up
    its own and runs full-bleed to the card's edges instead, which puts its row
    rules where a table's rules belong: all the way across. */
-.lumora-book-grid > section > .lumora-book-matrix {
+.lumora-book-grid > section > .lumora-book-matrix,
+.lumora-book-grid > .lumora-book-stack > section > .lumora-book-matrix {
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -3759,21 +3769,13 @@ figure:has(> .viz-caption) {
   margin: 0.8rem 0 0.3rem;
 }
 
-/* Highlighted key points — a book-style aside with a gold hairline rule. */
-/* A callout inside a full-width card. Its items are short one-liners (the
-   techniques you ruled out, the mistakes to avoid), so in a spanning card they
-   stack down the left and leave the right half empty. Flowing them two-up uses
-   the width the card was given. Only when spanning — in a narrow grid column a
-   single column is already the right answer. */
-@container book (min-width: 720px) {
-  .lumora-book-span .lumora-book-callout ul,
-  .lumora-book-stack .lumora-book-callout ul {
-    columns: 2;
-    column-gap: 2rem;
-  }
-  .lumora-book-span .lumora-book-callout li,
-  .lumora-book-stack .lumora-book-callout li { break-inside: avoid; }
-}
+/* Highlighted key points — a book-style aside with a gold hairline rule.
+
+   One item per row, at every width. These used to flow two-up inside a spanning
+   card, on the reasoning that short one-liners left the right half empty — but
+   a two-column flow reads DOWN the left column and back up, which is the wrong
+   motion for a list you scan once and act on, and it puts two unrelated points
+   on the same eye line. A row each is slower to lay out and faster to read. */
 
 .lumora-book-callout {
   border-left: 2px solid color-mix(in oklab, var(--cam-gold-leaf) 55%, transparent);

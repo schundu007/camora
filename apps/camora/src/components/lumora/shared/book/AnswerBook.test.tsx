@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { AnswerBook } from './AnswerBook';
+import { AnswerBook, withStackOnTheRight } from './AnswerBook';
 import type { BookDoc } from '@/lib/lumora/book-model';
 
 const doc: BookDoc = {
@@ -246,4 +246,37 @@ describe('AnswerBook', () => {
     expect(codes[0].textContent).toBe('foo()');
   });
 
+});
+
+/* The stacked pair (Tradeoffs + Constraint budget) is two cards tall. Starting
+ * one on the left strands whatever follows it beside a double-height column. */
+describe('withStackOnTheRight', () => {
+  const cells = ['a', 'b', 'stack', 'd'];
+
+  it('swaps the pair with its row-mate when it would start a row', () => {
+    // a|b fill row 1, so the pair would open row 2 on the left.
+    const [out] = withStackOnTheRight(cells, [false, false, false, false], 2);
+    expect(out).toEqual(['a', 'b', 'd', 'stack']);
+  });
+
+  it('leaves it alone when it already lands on the right', () => {
+    // 'a' spans, so 'b' opens row 2 and the pair follows it on the right.
+    const [out] = withStackOnTheRight(cells, [true, false, false, false], 2);
+    expect(out).toEqual(cells);
+  });
+
+  it('does not swap past a full-width card', () => {
+    const [out] = withStackOnTheRight(cells, [false, false, false, true], 2);
+    expect(out).toEqual(cells);
+  });
+
+  it('leaves a pair that is already full width alone', () => {
+    const [out] = withStackOnTheRight(cells, [false, false, true, false], 2);
+    expect(out).toEqual(cells);
+  });
+
+  it('is a no-op when there is no pair', () => {
+    const [out] = withStackOnTheRight(cells, [false, false, false, false], -1);
+    expect(out).toEqual(cells);
+  });
 });

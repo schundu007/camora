@@ -115,10 +115,13 @@ describe('docFromSolution', () => {
 
   // The Solution card is scanned mid-interview, so its four sources render as
   // bullets rather than four stacked paragraphs.
-  it('renders the solution as bullets, not paragraphs', () => {
+  // Book format: the spoken narration is a paragraph — it is read aloud in one
+  // breath, and as bullets it looked like four unrelated facts — and the terse
+  // written sources below it are bullets.
+  it('leads with the spoken paragraph, then bullets the written sources', () => {
     const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks.some(b => b.kind === 'prose')).toBe(false);
-    expect(s.blocks[0]).toMatchObject({ kind: 'list' });
+    expect(s.blocks[0]).toMatchObject({ kind: 'prose' });
+    expect(s.blocks[1]).toMatchObject({ kind: 'list' });
   });
 
   // Bullets put duplication on display in a way stacked paragraphs hid — the
@@ -129,7 +132,10 @@ describe('docFromSolution', () => {
       pitch: { opener: 'Same sentence.', approach: 'Different one.' },
     };
     const s = docFromSolution(dup).sections.find(x => x.id === 'approach')!;
-    expect(s.blocks[0]).toEqual({ kind: 'list', items: ['Same sentence.', 'Different one.'] });
+    // The narration takes the sentence as its paragraph; the three sources that
+    // restate it contribute only what it did not already say.
+    expect(s.blocks[0]).toEqual({ kind: 'prose', text: 'Same sentence.' });
+    expect(s.blocks[1]).toEqual({ kind: 'list', items: ['Different one.'] });
   });
 
   it('drops sections with no content instead of emitting empty boxes', () => {
@@ -164,11 +170,12 @@ describe('docFromSolution', () => {
 
   it('keeps both sol.approach and sol.narration when they differ', () => {
     const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
-    // "So" is gone: a spoken warm-up word is three characters the eye has to
-    // skip on every bullet. The sentence it opened is untouched.
     expect(s.blocks.find(b => b.kind === 'list')!).toMatchObject({
-      items: expect.arrayContaining(['My instinct is a two-pointer scan.', 'Scan from both ends, shrinking inward.']),
+      items: expect.arrayContaining(['Scan from both ends, shrinking inward.']),
     });
+    // "So" is gone from the spoken paragraph: a warm-up word is three
+    // characters the eye skips before the sentence starts.
+    expect(s.blocks.find(b => b.kind === 'prose')).toMatchObject({ text: 'My instinct is a two-pointer scan.' });
   });
 });
 
@@ -391,9 +398,13 @@ describe('identification section', () => {
     expect(kvs[1].pairs).toHaveLength(1);
     expect(kvs[1].pairs[0]).toEqual(['Is it a graph? — yes', 'grid, move to 4 adjacent cells']);
 
-    const callout = sec!.blocks.find(b => b.kind === 'callout') as any;
-    expect(callout.label).toBe('Ruled out');
-    expect(callout.items).toEqual(['Dijkstra — edges are unweighted']);
+    // Ruled out left this card: the techniques you did NOT pick answer "why not
+    // a heap?", which is asked while the approach is on screen, not while the
+    // reader is still following how the pattern was recognised.
+    expect(sec!.blocks.some(b => b.kind === 'callout')).toBe(false);
+    const ruled = doc.sections.find(s => s.id === 'ruledout')!;
+    expect(ruled.heading).toBe('Ruled out');
+    expect(ruled.blocks[0]).toEqual({ kind: 'list', items: ['Dijkstra — edges are unweighted'] });
   });
 
   // Answers cached before the field existed, and walks the backend rejected as
@@ -493,7 +504,11 @@ describe('card order', () => {
   it('leads with how you spotted it, then the solution and its code', () => {
     const doc = docFromSolution({
       solutions: [{ name: 'Two Pointers', approach: 'scan', code: 'x', complexity: { time: 'O(n)', space: 'O(1)' }, explanations: [{ line: 1, code: 'x', explanation: 'e' }] }],
-      identification: { path: [{ question: 'Compute a max/min?', answer: 'yes', evidence: 'water' }], technique: 'Two Pointers' },
+      identification: {
+        path: [{ question: 'Compute a max/min?', answer: 'yes', evidence: 'water' }],
+        technique: 'Two Pointers',
+        ruledOut: ['Sorting — order matters'],
+      },
       interview: {
         budget: { n: 'n<=2e4', ceiling: 'O(n)' },
         signals: [{ phrase: 'trapped water', implies: 'two pointers' }],
@@ -509,14 +524,17 @@ describe('card order', () => {
     // come before the walk they led to.
     expect(at('signals')).toBe(0);
     expect(at('signals')).toBeLessThan(at('identification'));
-    // What the constraints can afford is checked BEFORE an approach is picked —
-    // it is what rules approaches out — and the answer comes straight after.
-    expect(at('identification')).toBeLessThan(at('budget'));
-    expect(at('budget')).toBeLessThan(at('approach'));
-    // Then what you run it against, then what you say when pushed on it.
+    // What you considered and dropped sits between how you spotted it and what
+    // you chose — it is asked about the moment the approach is on screen.
+    expect(at('identification')).toBeLessThan(at('ruledout'));
+    expect(at('ruledout')).toBeLessThan(at('approach'));
+    // Then what you run it against, then what you say when pushed on it. The
+    // constraint budget follows Tradeoffs because the two are stacked into one
+    // cell: what you gave up, and the ceiling that made you give it up.
     expect(at('approach')).toBeLessThan(at('edgecases'));
     expect(at('edgecases')).toBeLessThan(at('tradeoffs'));
-    expect(at('tradeoffs')).toBeLessThan(at('probes'));
+    expect(at('tradeoffs')).toBeLessThan(at('budget'));
+    expect(at('budget')).toBeLessThan(at('probes'));
     // What to study afterwards is last.
     expect(at('topic')).toBe(ids.length - 1);
   });
@@ -757,35 +775,37 @@ describe('complexityBeat', () => {
 });
 
 describe('condensePoints', () => {
-  it('gives each sentence its own bullet', () => {
+  // Grouped by source: the caller renders the first group as a paragraph and
+  // the rest as bullets, which it cannot do from one flat list.
+  it('splits each source into its sentences', () => {
     expect(condensePoints(['Build the map first. Then scan it once.']))
-      .toEqual(['Build the map first.', 'Then scan it once.']);
+      .toEqual([['Build the map first.', 'Then scan it once.']]);
   });
 
-  it('drops a sentence already said in an earlier bullet', () => {
+  it('drops a sentence already said in an earlier source', () => {
     expect(condensePoints([
       'Check every pair. That is n squared.',
       'That is n squared! So we do better.',
-    ])).toEqual(['Check every pair.', 'That is n squared.', 'We do better.']);
+    ])).toEqual([['Check every pair.', 'That is n squared.'], ['We do better.']]);
   });
 
   it('strips spoken filler and hedges from the front of a sentence', () => {
     // They stack, so the strip loops: "So, basically …" is two markers deep.
     expect(condensePoints(['So, basically the map holds each value.']))
-      .toEqual(['The map holds each value.']);
+      .toEqual([['The map holds each value.']]);
     expect(condensePoints(['The obvious approach here is to just compare every pair.']))
-      .toEqual(['Compare every pair.']);
+      .toEqual([['Compare every pair.']]);
   });
 
   // Cutting the hedge must never cut the whole sentence: "The key idea is that"
   // followed by nothing means the original was carrying the point.
   it('never empties a sentence', () => {
-    expect(condensePoints(['The key idea is.'])).toEqual(['The key idea is.']);
+    expect(condensePoints(['The key idea is.'])).toEqual([['The key idea is.']]);
   });
 
   it('keeps a rhetorical question with its answer', () => {
     expect(condensePoints(['Why two passes? Because it explains cleanly.']))
-      .toEqual(['Why two passes? Because it explains cleanly.']);
+      .toEqual([['Why two passes? Because it explains cleanly.']]);
   });
 });
 
@@ -814,11 +834,11 @@ describe('the Solution card drops the shared pitch when there are alternatives',
 describe('condensePoints leaves real sentences alone', () => {
   it('keeps a right pointer a right pointer', () => {
     expect(condensePoints(['Right pointer moves inward until they meet.']))
-      .toEqual(['Right pointer moves inward until they meet.']);
-    expect(condensePoints(['Now walk the array once.'])).toEqual(['Now walk the array once.']);
+      .toEqual([['Right pointer moves inward until they meet.']]);
+    expect(condensePoints(['Now walk the array once.'])).toEqual([['Now walk the array once.']]);
   });
 
   it('still cuts them when they are punctuated filler', () => {
-    expect(condensePoints(['Right, the map holds each value.'])).toEqual(['The map holds each value.']);
+    expect(condensePoints(['Right, the map holds each value.'])).toEqual([['The map holds each value.']]);
   });
 });

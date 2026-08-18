@@ -49,6 +49,31 @@ export function sentenceCase(s: string): string {
   return t[0].toUpperCase() + t.slice(1);
 }
 
+/**
+ * Sentence boundary. Not a full parser — it only has to find the gap between
+ * "…once. Then…" without splitting "O(n log n)" or "1e5." mid-token, which is
+ * why the next character has to look like the start of something.
+ */
+const SENTENCE_GAP = /(?<=[.!?])\s+(?=[A-Za-z"'`(])/;
+
+/**
+ * sentenceCase applied to EVERY sentence in a string, not just the first.
+ *
+ * House style is book style: a sentence starts with a capital. The model writes
+ * to that most of the time and then drops it on the second sentence of a
+ * paragraph, or on a bullet whose first word it treated as a continuation — and
+ * one lowercase opener in a card of otherwise-capitalised lines reads as a
+ * typo rather than as a style.
+ *
+ * Per-sentence rather than per-string so the identifier guards in sentenceCase
+ * apply where they matter: `hits` and O(n) keep their case wherever they fall.
+ */
+export function sentenceCaseAll(s: string): string {
+  const t = (s || '').trim();
+  if (!t) return t;
+  return t.split(SENTENCE_GAP).map(sentenceCase).join(' ');
+}
+
 /** True when a string is a plain http(s) URL pointing at an image file. */
 export function isImageUrl(s: string): boolean {
   return typeof s === 'string' && /^https?:\/\/\S+\.(png|jpe?g|svg|webp|gif|avif)(\?\S*)?$/i.test(s.trim());
