@@ -171,23 +171,19 @@ const ANALYSIS_VIEWS = [
     tip: 'Explain — what you say when asked to walk through it',
     icon: <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>,
   },
-  {
-    id: 'issues' as const,
-    label: 'Issues',
-    tip: 'Issues — what an interviewer would stop you on. Lands under Common mistakes.',
-    icon: <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
-  },
-  {
-    id: 'deepdive' as const,
-    label: 'Deep Dive',
-    tip: 'Deep Dive — the follow-ups most likely to come next. Lands in Interviewer will ask.',
-    icon: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>,
-  },
 ];
 
-const EDITOR_FONT_PX = 11;
+/* Issues and Deep Dive have no chip: their content is not a view you switch to,
+ * it is part of two cards in the answer book — "Common mistakes" and
+ * "Interviewer will ask". Both are still generated on every solve by the
+ * prefetch below; a button whose only effect is filling in a card you are
+ * already looking at is a button that appears to do nothing. */
+
+// 11px was a squint. This is interview code being read under pressure, often
+// on a shared screen, so it gets a readable size.
+const EDITOR_FONT_PX = 13;
 /** Passed to Monaco AND used for the height math, so they cannot disagree. */
-const EDITOR_LINE_H = 16;
+const EDITOR_LINE_H = 20;
 /** Padding plus the horizontal scrollbar that sits under the last line. */
 const EDITOR_CHROME_PX = 26;
 const MAX_TEST_CASES = 10;
@@ -634,15 +630,20 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // deps-array reference must come AFTER the const is initialized.
   // `silent` is the prefetch path: generate into the cache without stealing the
   // tab the user is looking at.
-  const runAnalysis = useCallback(async (tab: 'explain' | 'issues' | 'deepdive', opts?: { silent?: boolean }) => {
+  const runAnalysis = useCallback(async (tab: 'explain' | 'issues' | 'deepdive', opts?: { silent?: boolean; solIdx?: number }) => {
     const silent = opts?.silent === true;
     const sd = jsonSolution;
-    const solCode = sd?.solutions?.[activeSolutionIdx]?.code
-      || sd?.solutions?.[0]?.code
-      || sd?.code
-      || code;
+    // Which approach this is ABOUT — not necessarily the one on screen. The
+    // prefetch below warms every solution, and reading the active index here
+    // meant three identical analyses of whichever one happened to be showing.
+    const idx = opts?.solIdx ?? activeSolutionIdx;
+    const targeted = typeof opts?.solIdx === 'number';
+    const solCode = sd?.solutions?.[idx]?.code
+      // The editor's contents stand in for the approach on screen only: for any
+      // other index they are simply a different program.
+      || (targeted ? null : (sd?.solutions?.[0]?.code || sd?.code || code));
     if (!solCode?.trim() || !token) return;
-    const cacheKey = `${activeSolutionIdx}_${tab}`;
+    const cacheKey = `${idx}_${tab}`;
     if (!silent) setAnalysisTab(tab);
     // Already generated, or already streaming in from the prefetch — showing it
     // is the whole job. Re-requesting would pay for the same answer twice and
@@ -791,12 +792,22 @@ ${solCode}
     // Let the answer paint first — the solution itself is what the user is
     // reading in the first second, and it shares the connection.
     const timer = setTimeout(async () => {
-      for (const tab of ['explain', 'issues', 'deepdive'] as const) {
-        if (cancelled) return;
-        const key = `${activeSolutionIdx}_${tab}`;
-        if (prefetchedRef.current.has(key)) continue;
-        prefetchedRef.current.add(key);
-        await runAnalysisRef.current(tab, { silent: true });
+      // EVERY solution, not just the one on screen. Issues and Deep Dive are
+      // part of two answer-book cards now, so a solution whose analyses are
+      // missing shows half a card — and warming only the active index meant
+      // switching approach started three generations at the moment the user
+      // wanted to read, which is exactly the wait this prefetch exists to
+      // remove. Active index first so the visible cards fill in first.
+      const count = Math.max(1, jsonSolution?.solutions?.length ?? 1);
+      const order = [activeSolutionIdx, ...Array.from({ length: count }, (_, i) => i)];
+      for (const idx of order) {
+        for (const tab of ['explain', 'issues', 'deepdive'] as const) {
+          if (cancelled) return;
+          const key = `${idx}_${tab}`;
+          if (prefetchedRef.current.has(key)) continue;
+          prefetchedRef.current.add(key);
+          await runAnalysisRef.current(tab, { silent: true, solIdx: idx });
+        }
       }
     }, 600);
     return () => { cancelled = true; clearTimeout(timer); };
@@ -2547,7 +2558,7 @@ ${solCode}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', padding: '3px 10px' }}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--cam-gold-leaf-lt)' }}>{lang || 'code'}</span>
                 </div>
-                <pre style={{ padding: '10px 12px', fontSize: 11, fontFamily: 'var(--font-mono)', color: '#CBD5E1', background: '#03132E', whiteSpace: 'pre' as const, overflowX: 'auto' as const, margin: 0, lineHeight: 1.6 }}>{codeText}</pre>
+                <pre style={{ padding: '10px 12px', fontSize: 12.5, fontFamily: 'var(--font-code)', color: '#CBD5E1', background: '#03132E', whiteSpace: 'pre' as const, overflowX: 'auto' as const, margin: 0, lineHeight: 1.6 }}>{codeText}</pre>
               </div>
             );
           }
@@ -3148,26 +3159,38 @@ ${solCode}
                         it rather than be unreachable. */}
                     {sd.solutions?.length > 1 && (
                       <>
-                        {/* No "Approach" label: the option text already reads
-                            as one ("Brute Force · O(n²)"), and the chip is short
-                            enough that the label was eating the room the name
-                            needed — it truncated to "Brute Force - Raw Time…". */}
-                        <ChipSelect
-                          title="Approach"
-                          value={String(activeSolutionIdx)}
-                          options={sd.solutions.map((s: any, i: number) => ({
-                            value: String(i),
-                            label: `${s.name || `Solution ${i + 1}`}${s.complexity?.time ? ` · ${s.complexity.time}` : ''}`,
-                          }))}
-                          onChange={(v) => {
-                            const i = Number(v);
-                            const sol = sd.solutions[i];
-                            if (!sol) return;
-                            setActiveSolutionIdx(i);
-                            const solCode = codeForSolution(sol, sd, language);
-                            if (solCode) setCode(solCode);
-                          }}
-                        />
+                        {/* One chip per approach, not a dropdown. There are two
+                            or three of them and the choice is the thing you
+                            compare — a dropdown hid the alternatives behind a
+                            click and truncated the one it did show
+                            ("Stack with Hash Map · …"). Laid out flat, the names
+                            and their bounds are all readable at once. */}
+                        {sd.solutions.map((s: any, i: number) => {
+                          const on = i === activeSolutionIdx;
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => {
+                                if (!s) return;
+                                setActiveSolutionIdx(i);
+                                const solCode = codeForSolution(s, sd, language);
+                                if (solCode) setCode(solCode);
+                              }}
+                              aria-pressed={on}
+                              data-tip={s.complexity?.time ? `${s.name || `Solution ${i + 1}`} — time ${s.complexity.time}` : undefined}
+                              className="h-[26px] px-2.5 rounded text-[11px] font-bold shrink-0 inline-flex items-center gap-1.5 transition-colors"
+                              style={on
+                                ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
+                                : { background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                            >
+                              <span className="truncate max-w-[130px]">{s.name || `Solution ${i + 1}`}</span>
+                              {s.complexity?.time && (
+                                <span className="font-mono text-[10px] opacity-80">{s.complexity.time}</span>
+                              )}
+                            </button>
+                          );
+                        })}
                         <div className="w-px h-4 shrink-0" style={{ background: 'var(--border)' }} />
                       </>
                     )}
@@ -3182,17 +3205,7 @@ ${solCode}
                       return (
                         <button
                           key={view.id}
-                          onClick={() => {
-                            if (view.id === 'code') { setAnalysisTab('code'); return; }
-                            // Explain still opens its own panel. Deep Dive and
-                            // Issues write into the answer book's cards, so
-                            // they generate quietly and keep the book on screen
-                            // — switching to an empty panel would hide the very
-                            // card the content is about to land in.
-                            if (view.id === 'explain') { handleAnalysis('explain'); return; }
-                            setAnalysisTab('code');
-                            void runAnalysis(view.id, { silent: true });
-                          }}
+                          onClick={() => view.id === 'code' ? setAnalysisTab('code') : handleAnalysis('explain')}
                           className="relative flex items-center justify-center w-7 h-7 rounded-lg transition-colors shrink-0"
                           style={active
                             ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
@@ -3575,13 +3588,23 @@ ${solCode}
             onMount={(editor) => {
               editorRef.current = editor;
               editor.updateOptions({
-                fontFamily: "'IBM Plex Mono', 'Cascadia Code', monospace",
+                // JetBrains Mono is the only mono webfont this app actually
+                // loads (globals.css imports it from Bunny). Asking for IBM Plex
+                // Mono — which nothing imports — fell through Cascadia Code to
+                // whatever generic `monospace` the OS picked, which is where the
+                // "hard to read" came from. Then the platform stack, so a failed
+                // webfont lands on a real UI mono rather than a bitmap default.
+                fontFamily: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
                 // Ligatures + negative letter-spacing desync Monaco's per-char
                 // width measurement from the rendering, drifting the caret/click
                 // toward the line end. Plain metrics = accurate hit-testing.
                 fontLigatures: false,
                 letterSpacing: 0,
-                lineHeight: 19,
+                // EDITOR_LINE_H, not a second opinion: this used to say 19 while
+                // the height math counted 16, so the editor box came up ~3px per
+                // line short and the last lines needed a scroll that looked like
+                // truncation.
+                lineHeight: EDITOR_LINE_H,
               });
             }}
           />

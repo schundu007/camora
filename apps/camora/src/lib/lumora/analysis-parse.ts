@@ -13,12 +13,28 @@
  * line.
  */
 
-import { stripInlineMarkdown } from '@/lib/text-utils';
-
 /** Fenced blocks and the failure string runAnalysis writes into the cache. */
 const isNoise = (text: string) => !text || /^Error:/i.test(text.trim());
 
-const clean = (s: string) => stripInlineMarkdown(s || '').trim();
+/**
+ * Markdown out, identifiers intact.
+ *
+ * Deliberately NOT stripInlineMarkdown: that treats `__x__` as bold, which
+ * turns `__init__` into `init` — and these two chips talk about code, where a
+ * dunder is far likelier than an underscore-bolded word. Renaming a method in a
+ * bullet that names methods is worse than leaving a stray marker.
+ */
+const clean = (s: string) =>
+  (s || '')
+    .replace(/`+/g, '')
+    .replace(/\*\*/g, '')
+    // Paired only, and never across a space after the opener — `n * m` is
+    // multiplication, not emphasis, and these bullets do talk arithmetic.
+    .replace(/\*([^*\s][^*]*?)\*/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/, '')
+    .replace(/~~([^~]+)~~/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
 
 /**
  * `Q: <question>` followed by the spoken answer, per the deepdive prompt.
