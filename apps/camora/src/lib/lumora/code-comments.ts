@@ -135,7 +135,7 @@ const dropUnbalanced = (s: string, open: string, close: string): string => {
  * (an odd apostrophe trips the same class of scanner), brackets only where they
  * balance, and short enough to sit at the end of a line of code.
  */
-const commentText = (value: unknown): string => {
+const commentText = (value: unknown, maxLen = 88): string => {
   const s = String(value ?? '')
     .replace(/[`*"']/g, '')
     .replace(/\s+/g, ' ')
@@ -143,7 +143,7 @@ const commentText = (value: unknown): string => {
   if (!s) return '';
   // Truncate BEFORE balancing — cutting the tail is itself a way to strand an
   // opening bracket.
-  const capped = s.length > 88 ? `${s.slice(0, 87).trimEnd()}…` : s;
+  const capped = s.length > maxLen ? `${s.slice(0, maxLen - 1).trimEnd()}…` : s;
   return ['()', '[]', '{}'].reduce((acc, [o, c]) => dropUnbalanced(acc, o, c), capped);
 };
 
@@ -209,4 +209,48 @@ export function annotateSolutionCode(
   });
 
   return out.join('\n');
+}
+
+/**
+ * The spoken walk-through, written above the code as a comment header.
+ *
+ * It used to be a card ("Walk them through it") beside the editor, which meant
+ * reading the explanation in one pane and the code it explains in another. As a
+ * header the two arrive together, and it copies out with the solution — the
+ * candidate pastes the code and the reasoning travels with it.
+ *
+ * Beats keep their labels because they answer different questions (what the
+ * idea is, how it runs, what it costs) and a reader skims for one of them.
+ */
+export function prependWalkthrough(
+  code: string,
+  beats?: [string, string][] | null,
+  language?: string,
+): string {
+  if (!code || !Array.isArray(beats) || beats.length === 0) return code;
+
+  const token = commentTokenFor(language, code);
+  const WIDTH = 78;
+  const lines: string[] = [];
+
+  beats.forEach(([label, text], i) => {
+    const body = commentText(text, 2000);
+    if (!body) return;
+    if (i > 0) lines.push(token);
+    if (label) lines.push(`${token} ${label.toUpperCase()}`);
+    // Wrap on words: a comment that runs off the pane is the problem this is
+    // meant to solve, not a new one.
+    let line = '';
+    for (const word of body.split(' ')) {
+      if (line && (line.length + 1 + word.length) > WIDTH) {
+        lines.push(`${token} ${line}`);
+        line = word;
+      } else {
+        line = line ? `${line} ${word}` : word;
+      }
+    }
+    if (line) lines.push(`${token} ${line}`);
+  });
+
+  return lines.length ? `${lines.join('\n')}\n\n${code}` : code;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { annotateSolutionCode, commentTokenFor } from './code-comments';
+import { annotateSolutionCode, commentTokenFor, prependWalkthrough } from './code-comments';
 
 const PY = [
   'class HitCounter:',
@@ -145,5 +145,42 @@ describe('annotateSolutionCode', () => {
     ], 'javascript');
     expect(out).toContain('\nline\n');
     expect(out).toContain('return s;  // yes');
+  });
+});
+
+describe('prependWalkthrough', () => {
+  const BEATS: [string, string][] = [
+    ['Approach', 'Use a stack to track the closing bracket we expect next.'],
+    ['Complexity', 'O(n) time because each character is pushed and popped once.'],
+  ];
+
+  it('writes the beats above the code, labelled', () => {
+    const out = prependWalkthrough('def f():\n    return 1', BEATS, 'python');
+    const lines = out.split('\n');
+    expect(lines[0]).toBe('# APPROACH');
+    expect(out).toContain('# COMPLEXITY');
+    expect(out).toContain('def f():');
+    expect(out.indexOf('APPROACH')).toBeLessThan(out.indexOf('def f():'));
+  });
+
+  it('separates beats with a blank comment line and the code with a blank line', () => {
+    const out = prependWalkthrough('x = 1', BEATS, 'python');
+    expect(out).toContain('#\n# COMPLEXITY');
+    expect(out).toMatch(/\n\nx = 1$/);
+  });
+
+  it('wraps long prose instead of running off the pane', () => {
+    const long: [string, string][] = [['Walkthrough', 'word '.repeat(60).trim()]];
+    const out = prependWalkthrough('x = 1', long, 'python');
+    for (const line of out.split('\n')) expect(line.length).toBeLessThanOrEqual(82);
+  });
+
+  it('uses the language comment marker', () => {
+    expect(prependWalkthrough('let a = 1;', BEATS, 'javascript')).toContain('// APPROACH');
+  });
+
+  it('is a no-op without beats', () => {
+    expect(prependWalkthrough('x = 1', [], 'python')).toBe('x = 1');
+    expect(prependWalkthrough('x = 1', undefined, 'python')).toBe('x = 1');
   });
 });

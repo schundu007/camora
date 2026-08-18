@@ -58,7 +58,6 @@ export const SECTION_TITLES: Record<string, string> = {
   edgecases: 'Edge cases',
   testcases: 'Test cases',
   followup: 'Follow-up Q&A',
-  explain: 'Walk them through it',
   requirements: 'Requirements',
   scalemath: 'Scale math',
   deepdesign: 'Layer design',
@@ -391,9 +390,10 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
   /* The spoken walk-through, in the reader's hands rather than behind a chip.
    * It is the answer to "walk me through your solution" — the thing said out
    * loud straight after naming the approach, which is where it now sits. */
-  push(sections, 'explain', [
-    extras?.explain?.length ? { kind: 'kv', pairs: extras.explain, layout: 'rows' } : null,
-  ]);
+  /* No 'explain' card. The spoken walk-through is written above the code as a
+   * comment header instead (prependWalkthrough) — read beside the lines it
+   * describes rather than in a pane next to them, and it travels with the code
+   * when the candidate copies it out. */
 
   push(sections, 'tradeoffs', [listOrNull(pitchObj?.tradeoffs)]);
 
@@ -558,7 +558,6 @@ const SECTION_ORDER = [
   // them between "here is how I spotted it" and "here is what I would do" broke
   // the one sequence the reader follows top to bottom.
   'approach',         // Solution
-  'explain',          // say this out loud
   'complexity',
   'comparison',
   'code',
