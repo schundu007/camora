@@ -21,7 +21,7 @@ export function parsePartialJson(raw: string): any | null {
   // Models often open with a fence or a sentence before the object.
   const start = raw.indexOf('{');
   if (start === -1) return null;
-  let text = raw.slice(start);
+  const text = raw.slice(start);
 
   // Fast path: already complete.
   try { return JSON.parse(text); } catch { /* still streaming */ }

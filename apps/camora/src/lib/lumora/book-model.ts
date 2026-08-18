@@ -47,7 +47,7 @@ export const SECTION_TITLES: Record<string, string> = {
   budget: 'Constraint budget',
   signals: 'Signals in the statement',
   topic: 'Topic & review',
-  probes: 'Interviewer will ask',
+  probes: 'Interview questions',
   approach: 'Solution',
   code: 'Code',
   complexity: 'Complexity',
@@ -58,6 +58,7 @@ export const SECTION_TITLES: Record<string, string> = {
   edgecases: 'Edge cases',
   testcases: 'Test cases',
   followup: 'Follow-up Q&A',
+  explain: 'Walk them through it',
   requirements: 'Requirements',
   scalemath: 'Scale math',
   deepdesign: 'Layer design',
@@ -171,6 +172,8 @@ const matrixOrNull = (sd: any, activeIndex: number): BookBlock | null => {
 export type SolutionExtras = {
   probes?: [string, string][];
   pitfalls?: string[];
+  /** The Explain chip: the spoken walk-through, as labelled beats. */
+  explain?: [string, string][];
 };
 
 /** Live Coding: the parsed `jsonSolution` object. */
@@ -273,12 +276,26 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
    * the Deep Dive and Issues chips can fill it on an answer that has no
    * interview object at all — every answer cached before those cards existed. */
   {
-    const dedupeProbes = notAlreadyIn(probes.map(([q]) => q));
+    /* One card, not two. "Interviewer will ask" and "Follow-up Q&A" were the
+     * same thing under different names — questions this interviewer asks about
+     * this solution — split only by which field of the answer they arrived in.
+     * Reading them meant checking two places and noticing neither was complete.
+     * Everything is appended in the order it becomes relevant (during the
+     * solution, then after it), deduped on the question. */
+    const followups: [string, string][] = Array.isArray(sd.followups)
+      ? sd.followups
+          .map((f: any) => [txt(f?.q), txt(f?.a)] as [string, string])
+          .filter(([q, a]: [string, string]) => Boolean(q && a))
+      : [];
+    const allProbes: [string, string][] = [];
+    const seenQ = new Set<string>();
+    for (const [q, a] of [...probes, ...(extras?.probes || []), ...followups]) {
+      const k = q.toLowerCase().replace(/\s+/g, ' ').trim();
+      if (!k || seenQ.has(k)) continue;
+      seenQ.add(k);
+      allProbes.push([q, a]);
+    }
     const dedupePitfalls = notAlreadyIn(pitfalls);
-    const allProbes = [
-      ...probes,
-      ...(extras?.probes || []).filter(([q]) => dedupeProbes(q)),
-    ];
     const allPitfalls = dedupeStrings([
       ...pitfalls,
       ...(extras?.pitfalls || []).map(sentenceCase).filter(dedupePitfalls),
@@ -356,6 +373,13 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
     push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
   }
 
+  /* The spoken walk-through, in the reader's hands rather than behind a chip.
+   * It is the answer to "walk me through your solution" — the thing said out
+   * loud straight after naming the approach, which is where it now sits. */
+  push(sections, 'explain', [
+    extras?.explain?.length ? { kind: 'kv', pairs: extras.explain, layout: 'rows' } : null,
+  ]);
+
   push(sections, 'tradeoffs', [listOrNull(pitchObj?.tradeoffs)]);
 
   // Approach comparison. The three solutions already carry everything this
@@ -382,15 +406,8 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
   const edgeItems = [...strList(pitchObj?.edgeCases), ...strList(sd.edgeScenarios)];
   push(sections, 'edgecases', [edgeItems.length ? { kind: 'list', items: dedupeStrings(edgeItems), twoUp: true } : null]);
 
-  // Follow-ups: what the interviewer asks AFTER the solution is accepted. Q and A
-  // are a kv pair rather than prose so the question stays scannable — mid-interview
-  // the candidate is looking for one of these, not reading the set.
-  const followups = Array.isArray(sd.followups)
-    ? sd.followups
-        .map((f: any) => [txt(f?.q), txt(f?.a)] as [string, string])
-        .filter(([q, a]: [string, string]) => q && a)
-    : [];
-  push(sections, 'followup', [followups.length ? { kind: 'kv', pairs: followups, layout: 'rows' } : null]);
+  // No 'followup' section: sd.followups is merged into the single interview-questions
+  // card above, where the reader looks for any question an interviewer might ask.
 
   return { title: txt(sol?.name) || undefined, sections: orderSections(sections) };
 }
@@ -526,6 +543,7 @@ const SECTION_ORDER = [
   'complexity',
   'comparison',
   'approach',         // Solution
+  'explain',          // say this out loud
   'code',
   // What you will be asked next, straight after the answer — then the two
   // things you answer those questions with, side by side.

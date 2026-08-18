@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseDeepDive, parseIssues, notAlreadyIn } from './analysis-parse';
+import { parseDeepDive, parseIssues, parseExplain, notAlreadyIn } from './analysis-parse';
 
 describe('parseDeepDive', () => {
   // The shape the deepdive prompt asks for.
@@ -88,5 +88,44 @@ describe('code identifiers survive markdown stripping', () => {
   it('still strips real markdown emphasis and backticks', () => {
     expect(parseDeepDive('**Q:** Why a `deque`?\n*Because* eviction is O(1).'))
       .toEqual([['Why a deque?', 'Because eviction is O(1).']]);
+  });
+});
+
+describe('parseExplain', () => {
+  const CANON = `[APPROACH]
+My core idea is to use a stack to keep track of expected closing brackets.
+
+[WALKTHROUGH]
+I go through the string one character at a time. If I see an opener, I push its
+closer onto the stack.
+
+[COMPLEXITY]
+TIME: O(n) because I go through the string once.`;
+
+  it('splits the spoken walk-through into its labelled beats', () => {
+    expect(parseExplain(CANON)).toEqual([
+      ['Approach', 'My core idea is to use a stack to keep track of expected closing brackets.'],
+      ['Walkthrough', 'I go through the string one character at a time. If I see an opener, I push its closer onto the stack.'],
+      ['Complexity', 'TIME: O(n) because I go through the string once.'],
+    ]);
+  });
+
+  it('accepts markdown headings and bold markers as beat markers', () => {
+    expect(parseExplain('## Approach\nUse a stack.\n**Complexity**\nO(n).')).toEqual([
+      ['Approach', 'Use a stack.'],
+      ['Complexity', 'O(n).'],
+    ]);
+  });
+
+  // The words are the point; the labels are only how we lay them out.
+  it('keeps unlabelled output whole rather than dropping it', () => {
+    expect(parseExplain('I scan once and keep a running total.')).toEqual([
+      ['In short', 'I scan once and keep a running total.'],
+    ]);
+  });
+
+  it('returns nothing for empty or failed generations', () => {
+    expect(parseExplain('')).toEqual([]);
+    expect(parseExplain('Error: Request failed')).toEqual([]);
   });
 });

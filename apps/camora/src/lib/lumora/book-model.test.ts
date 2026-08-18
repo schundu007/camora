@@ -649,3 +649,59 @@ describe('solution extras', () => {
     expect(probesOf(docFromSolution(SD, 0))).toBeUndefined();
   });
 });
+
+// "Interviewer will ask" and "Follow-up Q&A" were the same thing under two
+// names, split only by which field of the answer they arrived in.
+describe('one interview-questions card', () => {
+  const card = (doc: any) => doc.sections.find((s: any) => s.id === 'probes');
+
+  it('merges probes, Deep Dive and follow-ups in that order', () => {
+    const sd = {
+      ...SD,
+      interview: { probes: [{ q: 'Why a stack?', a: 'Order matters.' }] },
+      followups: [{ q: 'How would you scale it?', a: 'Shard by key.' }],
+    };
+    const doc = docFromSolution(sd, 0, { probes: [['What about threads?', 'Use a lock.']] });
+    const kv = card(doc)!.blocks.find((b: any) => b.kind === 'kv')!;
+    expect(kv.pairs.map((p: any) => p[0])).toEqual([
+      'Why a stack?', 'What about threads?', 'How would you scale it?',
+    ]);
+  });
+
+  it('is titled Interview questions and there is no separate follow-up card', () => {
+    const sd = { ...SD, followups: [{ q: 'Scale?', a: 'Shard.' }] };
+    const doc = docFromSolution(sd);
+    expect(card(doc)!.heading).toBe('Interview questions');
+    expect(doc.sections.map((s: any) => s.id)).not.toContain('followup');
+  });
+
+  it('drops a follow-up that repeats a probe, whatever its case', () => {
+    const sd = {
+      ...SD,
+      interview: { probes: [{ q: 'Why a stack?', a: 'Order matters.' }] },
+      followups: [{ q: 'why a  stack?', a: 'Restated.' }],
+    };
+    const kv = card(docFromSolution(sd))!.blocks.find((b: any) => b.kind === 'kv')!;
+    expect(kv.pairs).toHaveLength(1);
+    expect(kv.pairs[0][1]).toBe('Order matters.');
+  });
+
+  it('still builds the card from follow-ups alone', () => {
+    const doc = docFromSolution({ ...SD, followups: [{ q: 'Scale?', a: 'Shard.' }] });
+    expect(card(doc)!.blocks.find((b: any) => b.kind === 'kv')!.pairs).toEqual([['Scale?', 'Shard.']]);
+  });
+});
+
+describe('the Explain chip renders as a card', () => {
+  it('appears as "Walk them through it" right after the Solution', () => {
+    const doc = docFromSolution(SD, 0, { explain: [['Approach', 'Use a stack.']] });
+    const s = doc.sections.find((x: any) => x.id === 'explain')!;
+    expect(s.heading).toBe('Walk them through it');
+    const ids = doc.sections.map((x: any) => x.id);
+    expect(ids.indexOf('explain')).toBe(ids.indexOf('approach') + 1);
+  });
+
+  it('renders no card when Explain has not generated', () => {
+    expect(docFromSolution(SD).sections.map((s: any) => s.id)).not.toContain('explain');
+  });
+});

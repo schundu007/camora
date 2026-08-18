@@ -100,7 +100,11 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
           <div className="lumora-kv-rows">
             {block.pairs.map(([k, v]) => (
               <Fragment key={k}>
-                <span className="lumora-book-label !my-0">{k}</span>
+                {/* Not lumora-book-label: that is the caption style for a token
+                    key ("Time", "Pattern"). A rows-layout key is a SENTENCE — an
+                    interviewer's question, a quoted signal — and at 11px muted it
+                    came out smaller and dimmer than its own answer. */}
+                <span className="lumora-kv-key">{k}</span>
                 <span className="min-w-0 text-[12.5px] leading-[1.5] text-[var(--text-primary)]">
                   <InlineText text={v} />
                 </span>
@@ -236,7 +240,7 @@ const WIDE_BLOCKS = new Set<BookBlock['kind']>(['code']);
 // was left with an odd number of cells, so the remainder sat in ragged half-rows.
 // Spanning them makes the left column read as one sequence.
 const WIDE_SECTION_IDS = new Set([
-  'followup', 'approach', 'walkthrough', 'code',
+  'followup', 'approach', 'walkthrough', 'code', 'explain',
   // Interviewer will ask: question/answer rows, same shape as Follow-up Q&A.
   // In a half-width column the question and its answer each wrap to a few words.
   'probes',
