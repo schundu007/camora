@@ -3565,7 +3565,14 @@ figure:has(> .viz-caption) {
 
 @container book (min-width: 480px) {
   .lumora-kv-rows {
-    grid-template-columns: fit-content(22rem) minmax(0, 1fr);
+    /* The 22rem cap is right for a card that spans the panel and far too big
+       for one sharing a row. This container query keys off the BOOK, so it
+       fires for both — and inside a ~400px half-width cell a 352px key column
+       left ~40px for the value, which wrapped into a thin ribbon pinned to the
+       right edge. The percentage resolves against the grid's own inline size,
+       i.e. the actual card, so the cap shrinks with the cell it is in while a
+       spanning card still gets the full 22rem. */
+    grid-template-columns: fit-content(min(22rem, 45%)) minmax(0, 1fr);
     column-gap: 0.75rem;
     row-gap: 0.5rem;
     align-items: start;
