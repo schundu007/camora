@@ -28,6 +28,8 @@ const SESSION_PAGE_NOTE =
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { annotateSolutionCode } from '@/lib/lumora/code-comments';
+import { normalizeProblemText } from '@/lib/lumora/problem-text';
+import { stripDemoCalls } from '@/lib/lumora/demo-calls';
 import { parseDeepDive, parseIssues, parseExplain } from '@/lib/lumora/analysis-parse';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
@@ -54,12 +56,17 @@ const MAX_SNAP_PAGES = 12;
  * an annotation.
  */
 const codeForSolution = (sol: any, sd: any, language: string): string => {
-  const raw = sol?.code || sol?.implementation || sol?.solution
+  let raw = sol?.code || sol?.implementation || sol?.solution
     || sd?.code || sd?.implementation
     || (Array.isArray(sol?.explanations)
       ? sol.explanations.map((e: any) => e?.code).filter(Boolean).join('\n')
       : '');
   if (!raw || sd?.type === 'diagnose') return raw || '';
+  // The model keeps emitting `print(Solution().foo([1,2,3]))` despite the
+  // prompt forbidding it. The backend strips module-level prints before RUNNING
+  // the code, but nothing stripped them from what the candidate reads — so they
+  // were looking at a hardcoded call they had to spot and delete themselves.
+  raw = stripDemoCalls(raw);
   // The backend's detected language beats the picker's default, which is 'auto'
   // until the user touches it.
   const lang = sd?.language && sd.language !== 'auto' ? sd.language : language;
@@ -1461,7 +1468,7 @@ ${solCode}
   // Pre-fill from URL param
   useEffect(() => {
     if (initialProblem) {
-      setProblemText(initialProblem);
+      setProblemText(normalizeProblemText(initialProblem));
       setProblemTab('description');
       setInputMode('paste');
     }
@@ -1663,7 +1670,7 @@ ${solCode}
     const sc = pendingHackerrankStarterCode?.trim() || null;
     onHackerrankStarterCodeConsumed?.();
     if (sc) setStarterCode(sc);
-    setProblemText(trimmed);
+    setProblemText(normalizeProblemText(trimmed));
     setSnapChipCode(trimmed);
     setInputMode('paste');
     if (!claimAutoGen(trimmed)) return; // same problem — show it, don't regenerate
@@ -2028,7 +2035,7 @@ ${solCode}
         pendingSnapUrlsRef.current = urls;
         setSnapImageUrls(urls);
         setImagePreview(urls[urls.length - 1] ?? null);
-        setProblemText(combinedText);
+        setProblemText(normalizeProblemText(combinedText));
         setInputMode('image');
         multiPageCapturingRef.current = true;
         setMultiPageCapturing(true);
@@ -2039,7 +2046,7 @@ ${solCode}
       }
 
       cutoffPromptedRef.current = false;
-      setProblemText(combinedText);
+      setProblemText(normalizeProblemText(combinedText));
       setSnapChipCode(combinedText);
       setStarterCode(extractedStarterCode);
       if (detectedLang) setLanguage(detectedLang);
@@ -2108,7 +2115,7 @@ ${solCode}
       if (result.text) {
         // DOM injection got the full problem text — use directly, no screenshot needed
         const lang = resolveLanguage(result.text);
-        setProblemText(result.text);
+        setProblemText(normalizeProblemText(result.text));
         if (result.starterCode) setStarterCode(result.starterCode);
         setInputMode('paste');
         lastAutoGenSigRef.current = genSignature(result.text); // explicit fetch — suppress trailing auto re-solve
@@ -2205,7 +2212,7 @@ ${solCode}
         }
         return;
       }
-      setProblemText(text);
+      setProblemText(normalizeProblemText(text));
       setStarterCode(fetchedStarter);
       setInputMode('paste');
       // Auto URL-mode fetch (mode switch / initialUrl) dedupes so re-entering
