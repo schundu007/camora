@@ -23,7 +23,10 @@ export type BookBlock =
   // instead of by flipping between three tabs and holding two bounds in memory.
   /* `unchecked` — this answer predates the requirements check, so an empty
      verdict is "nobody looked", not "nothing to report". */
-  | { kind: 'matrix'; rows: MatrixRow[]; activeIndex?: number; unchecked?: boolean };
+  | { kind: 'matrix'; rows: MatrixRow[]; activeIndex?: number; unchecked?: boolean }
+  /* A muted aside the book uses to admit to not knowing something. Not a
+     callout: a callout is a finding, and this is a disclaimer. */
+  | { kind: 'note'; text: string };
 
 export type MatrixRow = {
   name: string;
@@ -150,6 +153,13 @@ const listOrNull = (v: unknown): BookBlock | null => {
   const items = strList(v);
   return items.length ? { kind: 'list', items } : null;
 };
+
+/**
+ * Said in both places it can appear, so they cannot drift apart: under the
+ * comparison matrix when there is one, and under the Solution when there is not.
+ */
+export const UNCHECKED_NOTE =
+  'Requirements not checked — this answer predates the check. Regenerate to verify it against what the statement demands.';
 
 /**
  * The stated requirements THIS solution breaks.
@@ -587,10 +597,16 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
   // the pitch), which is what bullets are for.
   const spoken = spokenSentences?.join(' ') ?? '';
   const points = (writtenGroups ?? []).flat();
+  // A single-solution answer has no comparison matrix, so the matrix's caption
+  // has nowhere to live and the disclaimer would silently vanish on exactly the
+  // answers that show the fewest verdicts. It rides the Solution card instead.
+  const unchecked = sd.requirementsChecked !== true;
+  const hasMatrix = Array.isArray(sd.solutions) && sd.solutions.length > 1;
   push(sections, 'approach', [
     spoken ? { kind: 'prose', text: spoken } : null,
     points.length ? { kind: 'list', items: points } : null,
     keyPoints.length ? { kind: 'callout', label: 'Key points', items: keyPoints } : null,
+    unchecked && !hasMatrix ? { kind: 'note', text: UNCHECKED_NOTE } : null,
   ]);
 
   /* No Complexity card.

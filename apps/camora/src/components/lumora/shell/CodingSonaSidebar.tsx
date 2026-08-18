@@ -577,8 +577,44 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
    halo — so Sona's affordance reads identically across every tab.
    When a solve is on screen we add a small gold "context ready"
    dot at the top-right corner. */
-export const CodingSonaSidebarToggle = ({ open, onToggle, hasSolve }: { open: boolean; onToggle: () => void; hasSolve: boolean }) => {
+export const CodingSonaSidebarToggle = ({ open, onToggle, hasSolve, variant = 'fab' }: {
+  open: boolean;
+  onToggle: () => void;
+  hasSolve: boolean;
+  /* 'strip' docks Sona into the coding toolbar as a control among controls.
+     The FAB floats over the bottom-right corner — which on Coding is the OUTPUT
+     pane, so the one object permanently on top of the screen was covering the
+     test results and the Run button. Design has no toolbar to dock into and
+     keeps the FAB. */
+  variant?: 'fab' | 'strip';
+}) => {
   if (open) return null;
+
+  if (variant === 'strip') {
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        data-tip={hasSolve ? 'Sona has live context — ask a follow-up about your solution' : 'Open Sona Q&A sidebar'}
+        aria-label="Open Sona Q&A sidebar"
+        className="relative shrink-0 flex items-center justify-center w-7 h-6 rounded-md transition-[background-color,color,transform] active:scale-[0.98] hover:opacity-90"
+        style={{ color: hasSolve ? 'var(--cam-gold-leaf-lt)' : 'var(--cam-strip-text)' }}
+      >
+        <Icon name="messageSquare" size={13} aria-hidden="true" />
+        {/* Live-context dot. The FAB's version is a 16px pill with an aura; at
+            strip scale that would be a third of the button, so it is a plain
+            4px dot in the corner — same meaning, same colour. */}
+        {hasSolve && (
+          <span
+            aria-hidden="true"
+            className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full"
+            style={{ background: 'var(--cam-gold-leaf)', boxShadow: '0 0 5px rgba(217,181,67,0.8)' }}
+          />
+        )}
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"

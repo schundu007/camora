@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { docFromSolution, docFromBlocks, docFromCoFix, complexityBeat, condensePoints } from './book-model';
+import { docFromSolution, docFromBlocks, docFromCoFix, complexityBeat, condensePoints, UNCHECKED_NOTE } from './book-model';
 
 const SD = {
   language: 'python',
@@ -914,6 +914,32 @@ describe('stated requirements', () => {
     const block = doc.sections.find(s => s.id === 'comparison')!.blocks[0];
     if (block.kind !== 'matrix') throw new Error('expected a matrix');
     expect(block.unchecked).toBe(false);
+  });
+
+  // A one-solution answer has no matrix, so the caption has nowhere to live —
+  // and it would vanish on exactly the answers that show the fewest verdicts.
+  it('carries the disclaimer on the Solution when there is no matrix', () => {
+    const one = { solutions: [{ approach: 'Scan once.', complexity: { time: 'O(n)' } }] };
+    const blocks = docFromSolution(one).sections.find(s => s.id === 'approach')!.blocks;
+    expect(blocks.at(-1)).toEqual({ kind: 'note', text: UNCHECKED_NOTE });
+  });
+
+  it('drops it once the server has stamped the answer', () => {
+    const one = { requirementsChecked: true, solutions: [{ approach: 'Scan once.', complexity: { time: 'O(n)' } }] };
+    const blocks = docFromSolution(one).sections.find(s => s.id === 'approach')!.blocks;
+    expect(blocks.some(b => b.kind === 'note')).toBe(false);
+  });
+
+  // …and never twice: a multi-solution answer says it under the matrix.
+  it('does not repeat it on the Solution when a matrix carries it', () => {
+    const two = { solutions: [
+      { approach: 'Scan once.', complexity: { time: 'O(n)' } },
+      { approach: 'Sort first.', complexity: { time: 'O(n log n)' } },
+    ] };
+    const doc = docFromSolution(two);
+    expect(doc.sections.find(s => s.id === 'approach')!.blocks.some(b => b.kind === 'note')).toBe(false);
+    const matrix = doc.sections.find(s => s.id === 'comparison')!.blocks[0];
+    expect(matrix.kind === 'matrix' && matrix.unchecked).toBe(true);
   });
 
   it('has no card when the statement demands nothing', () => {

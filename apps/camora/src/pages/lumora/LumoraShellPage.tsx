@@ -627,6 +627,14 @@ export const LumoraShellPage = () => {
                         externalInputMode={codingInputMode}
                         onExternalInputModeChange={(m) => setCodingInputMode(m as 'paste' | 'url' | 'image')}
                         onSendToCofix={(code, lang, opts) => navigate('/lumora/fix', { state: { injectCode: code, injectLang: lang, injectMode: opts?.mode, injectHint: opts?.hint } })}
+                        sonaControl={
+                          <CodingSonaSidebarToggle
+                            variant="strip"
+                            open={sonaSidebarOpen}
+                            onToggle={() => setSonaSidebarOpen(true)}
+                            hasSolve={!!useSessionStore.getState().liveSolveContext}
+                          />
+                        }
                         captureControls={
                           <ScreenshotStrip
                             inline
@@ -967,7 +975,10 @@ export const LumoraShellPage = () => {
           closed. Uses the live solve context as a "context ready"
           indicator so the user knows asking Sona right now will hit
           a grounded prompt. */}
-      {(activeTab === 'coding' || activeTab === 'design') && (
+      {/* Design only. Coding docks the same control into its toolbar strip
+          (passed below as sonaControl), because the FAB's corner on that tab is
+          the output pane — the test results and the Run button. */}
+      {activeTab === 'design' && (
         <CodingSonaSidebarToggle
           open={sonaSidebarOpen}
           onToggle={() => setSonaSidebarOpen(true)}

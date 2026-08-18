@@ -312,6 +312,9 @@ interface CodingLayoutProps {
       Description/Solution toolbar row, so coding shows one toolbar instead of
       a separate strip above. Supplied by LumoraShell as an <ScreenshotStrip inline/>. */
   captureControls?: React.ReactNode;
+  /* Sona's opener, docked into the toolbar. Supplied by LumoraShell as a strip
+     button rather than rendered by it as a floating FAB — see the strip below. */
+  sonaControl?: React.ReactNode;
   /** Ref that parent sets to receive voice transcriptions as problem input */
   onVoiceProblemRef?: React.MutableRefObject<((text: string) => void) | null>;
   /** DataURL from F9 auto-capture of HackerRank window. Processed via OCR. */
@@ -387,7 +390,7 @@ function useTheme(_dark: boolean) {
 // retrigger a solve for content another source already generated.
 const genSignature = (t: string) => (t || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
-export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, initialLanguage, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix, captureControls }: CodingLayoutProps) {
+export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, initialUrl, initialStarterCode, initialLanguage, embedded, onVoiceProblemRef, pendingHackerrankCapture, onHackerrankCaptureConsumed, pendingHackerrankText, onHackerrankTextConsumed, pendingHackerrankStarterCode, onHackerrankStarterCodeConsumed, pendingHackerrankDataUrls, onHackerrankDataUrlsConsumed, codingPlatform, onEmbeddedTranscription, isTabActive, onScreenshotAppendRef, onNewProblemCallback, externalInputMode, onExternalInputModeChange, onSendToCofix, captureControls, sonaControl }: CodingLayoutProps) {
   const { token } = useAuth();
   const { theme: globalTheme } = useGlobalTheme();
   const t = useTheme(globalTheme === 'dark');
@@ -2998,6 +3001,19 @@ ${solCode}
               <>
                 <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-strip-icon-border)' }} />
                 {captureControls}
+              </>
+            )}
+
+            {/* Sona, docked. She used to be a 56px circle floating over the
+                bottom-right corner of the window — over the OUTPUT pane, which
+                is where the test results and the run button live, so the one
+                object permanently on top of the screen was covering the pane
+                you look at after every run. In the strip she is a control among
+                controls, always in the same place, costing nothing. */}
+            {sonaControl && (
+              <>
+                <div className="w-px h-4 shrink-0" style={{ background: 'var(--cam-strip-icon-border)' }} />
+                {sonaControl}
               </>
             )}
 
