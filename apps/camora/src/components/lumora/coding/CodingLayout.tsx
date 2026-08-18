@@ -30,6 +30,7 @@ import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { annotateSolutionCode } from '@/lib/lumora/code-comments';
 import { normalizeProblemText } from '@/lib/lumora/problem-text';
 import { stripDemoCalls } from '@/lib/lumora/demo-calls';
+import { normalizeExamples } from '@/lib/lumora/test-input';
 import { parseDeepDive, parseIssues, parseExplain } from '@/lib/lumora/analysis-parse';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
@@ -1311,7 +1312,7 @@ ${solCode}
       // Only apply backend-detected language when the user hasn't explicitly chosen one.
       if (jsonData.language && jsonData.language !== 'auto' && language === 'auto') setLanguage(jsonData.language);
       if (jsonData.examples?.length > 0) {
-        setTestCases(jsonData.examples.map((ex: any) => ({ input: ex.input || '', expected: ex.expected || '' })));
+        setTestCases(normalizeExamples(jsonData.examples));
         setOutputTab('testcases');
         setIsOutputCollapsed(false);
       }
@@ -1424,7 +1425,7 @@ ${solCode}
           }
           if (json.language && json.language !== 'auto') setLanguage(json.language);
           if (json.examples?.length > 0) {
-            setTestCases(json.examples.map((ex: any) => ({ input: ex.input || '', expected: ex.expected || '' })));
+            setTestCases(normalizeExamples(json.examples));
             setOutputTab('testcases');
             setIsOutputCollapsed(false);
           }
@@ -3616,17 +3617,6 @@ ${solCode}
                     outputTab === 'testcases' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                   }`}
                   style={!(outputTab === 'testcases' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>Test Cases</button>
-                {qaCount > 0 && (
-                  <button onClick={() => { setOutputTab('qa'); setIsOutputCollapsed(false); }}
-                    className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
-                      outputTab === 'qa' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
-                    }`}
-                    style={!(outputTab === 'qa' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
-                    Interviewer asks
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
-                      style={{ background: t.badgeBg, color: t.badgeText }}>{qaCount}</span>
-                  </button>
-                )}
                 <button onClick={() => { setOutputTab('output'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                     outputTab === 'output' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
@@ -3641,6 +3631,17 @@ ${solCode}
                       }>{passedCount}/{totalTests}</span>
                   )}
                 </button>
+                {qaCount > 0 && (
+                  <button onClick={() => { setOutputTab('qa'); setIsOutputCollapsed(false); }}
+                    className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                      outputTab === 'qa' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
+                    }`}
+                    style={!(outputTab === 'qa' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
+                    Interviewer asks
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                      style={{ background: t.badgeBg, color: t.badgeText }}>{qaCount}</span>
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-1.5">
                 {outputLog.length > 0 && (
