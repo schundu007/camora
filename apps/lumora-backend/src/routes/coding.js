@@ -769,6 +769,83 @@ naming what the PREVIOUS solution wasted — the repeated scan, the redundant
 sort, the recomputation — because that sentence is what the interviewer is
 listening for.`}
 
+
+##############################################################################
+# HOUSE STYLE — THIS GOVERNS EVERY WORD YOU WRITE
+##############################################################################
+The reader is in a live interview. They must UNDERSTAND it in one pass and SAY
+it out loud. Write the way the best explanations do — NeetCode, algo.monster, a
+good textbook — never the way a research paper does.
+
+RULE 1 — SIMPLE ENGLISH. This outranks every other style rule here.
+- Use the shortest word that is still exact. Never a long word where a short one
+  does the same job.
+- One idea per sentence. Aim for 12-15 words. If you could not say it in one
+  breath, split it.
+- Say "you" and "we". Active voice. Present tense.
+- No word a first-year student would have to look up.
+
+NEVER WRITE  ->  WRITE INSTEAD
+  utilize / leverage / employ   ->  use
+  traverse / iterate over       ->  go through / walk / loop over
+  optimal                       ->  best / fastest
+  redundant                     ->  repeated / wasted
+  auxiliary                     ->  extra
+  monotonic                     ->  always going up (or down)
+  amortized                     ->  on average
+  contiguous                    ->  next to each other
+  subsequent / prior            ->  next / earlier
+  denote                        ->  call / mean
+  obtain / yield                ->  get / give
+  terminate                     ->  stop
+  encounter                     ->  find / hit
+  sufficient                    ->  enough
+  initialize                    ->  start with / set up
+  decrement / increment         ->  subtract 1 / add 1
+  in order to                   ->  to
+  due to the fact that          ->  because
+  hence / thus / therefore      ->  so
+  i.e. / e.g.                   ->  that is / for example
+Delete outright: aforementioned, respectively, it should be noted that, it is
+important to note, essentially, fundamentally, leveraging the fact that.
+
+RULE 2 — BOOK ORDER. Explain every approach in exactly this order:
+  1. THE PICTURE. One everyday comparison for what the algorithm does. Physical,
+     from real life. ("Think of the bars as walls. Water sits between two walls,
+     and the shorter wall decides how high it goes.")
+  2. WHAT WE KEEP. Name every variable in plain words BEFORE using it.
+     ("left[i] is the tallest bar at or before spot i.")
+  3. THE STEPS. Numbered, one short sentence each, in the order the code runs.
+  4. WHAT IT COSTS. The bound, then the count behind it, then what n is.
+  5. WHAT THE LAST APPROACH WASTED. From the second approach onward, open by
+     naming the exact work the previous one repeated. That sentence is the whole
+     reason this approach exists.
+
+RULE 3 — NEVER NARRATE THE CODE. "We loop from 0 to n" tells the reader what
+they can already see. Say WHY the line is there: "we scan right to left so each
+spot already knows the tallest bar ahead of it."
+
+RULE 4 — USE THE REAL NUMBERS. When you explain a step, use the actual values
+from examples[0], not letters. "At spot 5 the left wall is 2 and the right wall
+is 3, so 2 - 0 = 2 units of water sit there."
+
+RULE 5 — ASK "WHY?" AND ANSWER IT. This is the one move that separates a good
+explanation from a summary. State what you do, then ask why, then answer in one
+sentence. "We find the tallest bar on each side of spot i. Why? Because the
+shorter of those two is as high as the water can get before it spills."
+Every approach needs at least one of these.
+
+RULE 6 — ANSWER THE QUESTION THE READER IS ABOUT TO ASK. Name the thing that
+confuses people about THIS problem and settle it in one line, before it trips
+them up. "Does a container need a floor? No — it needs two walls. The ground
+is the floor." Put it in pitch.keyPoints or the approach text, wherever it lands
+first.
+
+RULE 7 — HAND OFF TO THE NEXT APPROACH. End each approach (except the last) the
+way a good article does: name the cost you just paid, then ask the question that
+leads to the next one. "That is O(n) time but O(n) space. Can we do it without
+the extra arrays?"
+
 Respond with valid JSON in EXACTLY this format (no text before/after):
 {
   "language": "${language}",
@@ -779,11 +856,11 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force, Deque, Circular Buffer, Ordered Set, Counting, Design. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
-      "narration": "First-person spoken script the candidate reads ALOUD. 2-3 sentences MAX: hook → core insight → complexity. Conversational, no markdown/code/bullets.",
+      "narration": "What the candidate SAYS out loud, first person, 2-3 short sentences. Plain spoken English a nervous person can read off a screen. Order: the picture, the key idea, the cost. No markdown, no code, no long words.",
       "trace": [
         {"step": 1, "action": "Short description of what happens this step", "state": "variable=value, array=[...], counter=0"}
       ],
@@ -798,7 +875,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag — MUST be one of: Two Pointers, Sliding Window, Fast & Slow Pointers, Hash Map, Hash Set, Binary Search, BFS, DFS, Topological Sort, Union-Find, DP - Memoization, DP - Tabulation, Greedy, Backtracking, Heap, Priority Queue, Trie, Bit Manipulation, Divide & Conquer, Monotonic Stack, Monotonic Queue, Matrix Traversal, Linked List, Prefix Sum, Math, Simulation, Brute Force, Deque, Circular Buffer, Ordered Set, Counting, Design. Pick the single most accurate tag for THIS solution.",
       "approach": "Brief 1-2 sentence description of HOW this approach works",
       "code": "complete runnable code for this approach with \\n for newlines",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
@@ -815,11 +892,11 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for second approach",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
-      "narration": "First-person spoken script, 4-6 sentences, conversational prose",
+      "narration": "What the candidate SAYS out loud, first person, 3-4 short sentences of plain spoken English: what the last approach wasted, the picture, the key idea, the cost.",
       "explanations": [
         {"line": 1, "code": "the source line, verbatim", "explanation": "at most 12 words of plain text - reads as a trailing comment on that line"}
       ]
@@ -829,11 +906,11 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       "patternTag": "Canonical pattern tag from the list above",
       "approach": "Brief description",
       "code": "complete runnable code for third approach",
-      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "The DERIVATION, 1-2 sentences — every allocation that grows with the input, named, PLUS recursion-stack depth if recursive. Say 'O(1) auxiliary' and why, when nothing scales." }${inputTrust !== null ? `,
+      "complexity": { "time": "O(...)", "space": "O(...)", "timeWhy": "The DERIVATION, 1-2 sentences — the arithmetic behind the bound, naming the actual loops/recursion in THIS code. Not a restatement of the bound.", "spaceWhy": "Plain English, 1-2 short sentences: name every thing you store that grows with the input, plus how deep recursion goes if it recurses. If nothing grows, say 'we only keep a few numbers' and name them." }${inputTrust !== null ? `,
       "optimality": { "required": "O(?) the constraints demand", "achieved": "O(?) this code is", "tleRisk": true|false, "why": "one line tying n's max size to the op count" },
       "submittable": true|false,
       "submittableReason": "if false, one line why (e.g. recursion depth > limit for max n)"` : ''},
-      "narration": "First-person spoken script, 4-6 sentences, conversational prose",
+      "narration": "What the candidate SAYS out loud, first person, 3-4 short sentences of plain spoken English: what the last approach wasted, the picture, the key idea, the cost.",
       "explanations": [
         {"line": 1, "code": "the source line, verbatim", "explanation": "at most 12 words of plain text - reads as a trailing comment on that line"}
       ]
@@ -855,8 +932,8 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
     ],
     "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
-    "probes": [ { "q": "The follow-up an interviewer asks after this solution", "a": "Your answer, 1-2 sentences" } ],
-    "pitfalls": ["A mistake people actually make on this pattern, one clause"]
+    "probes": [ { "q": "The follow-up an interviewer really asks after this solution, in their words", "a": "The answer in 1-2 short plain sentences the candidate can say out loud" } ],
+    "pitfalls": ["A mistake people really make on this pattern, one short plain sentence, e.g. 'Moving the taller side first, which breaks the rule that the shorter wall decides'"]
   },
   "identification": {
     "path": [
@@ -870,16 +947,16 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
   ? `{
     "opener": "One sentence summary of the approach",
     "approach": "Brief explanation of the chosen strategy",
-    "keyPoints": ["Key insight 1", "Key insight 2", "Key insight 3"],
-    "tradeoffs": ["Tradeoff 1", "Tradeoff 2"],
-    "edgeCases": ["Edge case 1", "Edge case 2", "Edge case 3"]
+    "keyPoints": ["One short plain-English sentence a reader remembers, e.g. 'The shorter wall decides the water level'", "Second one", "Third one"],
+    "tradeoffs": ["What you give up and what you get, in one short plain sentence, e.g. 'Two pointers use no extra memory but the reason they work is harder to explain'", "Second one"],
+    "edgeCases": ["A real input that breaks a careless version, in plain words, e.g. 'An empty list — there are no walls, so the answer is 0'", "Second one", "Third one"]
   }`
   : `{
     "opener": "One sentence hook comparing the approaches",
     "approach": "Summary of the 3 approaches and why you'd pick each",
-    "keyPoints": ["Key insight 1", "Key insight 2", "Key insight 3"],
+    "keyPoints": ["One short plain-English sentence a reader remembers, e.g. 'The shorter wall decides the water level'", "Second one", "Third one"],
     "tradeoffs": ["Tradeoff between approach 1 vs 2", "Tradeoff between approach 2 vs 3"],
-    "edgeCases": ["Edge case 1", "Edge case 2", "Edge case 3"]
+    "edgeCases": ["A real input that breaks a careless version, in plain words, e.g. 'An empty list — there are no walls, so the answer is 0'", "Second one", "Third one"]
   }`},
   "examples": [
     {"input": "nums = [2,7,11,15], target = 9", "expected": "[0, 1]"},
@@ -989,7 +1066,7 @@ Rules:
 - MANDATORY — MINIMAL LINES: write the SHORTEST correct, readable solution. This is live-interview code the candidate hand-types under time pressure, so favour idiomatic constructs and standard-library conveniences (comprehensions, unpacking, built-ins, collections/itertools) over boilerplate. Do NOT add dataclasses, wrapper classes, extra helper functions, verbose try/except, logging, or scaffolding the PROBLEM does not require. If a clean solution fits in ~5-15 lines, never emit 40. Fewer lines that still read clearly and run correctly always win. (This governs the IMPLEMENTATION only — never drop a required import or the platform's locked driver/harness to save lines.)
 - MANDATORY — MINIMAL IMPORTS: import ONLY modules the code actually uses. No unused imports, no "just in case" imports, no pulling in a heavy module for something a built-in already does. Prefer built-ins/stdlib; add a third-party import only if the problem truly requires it. Every import line must map to a symbol used in the solution.
 - Each solution MUST have a narration field — first-person spoken script the candidate READS OUT LOUD. Keep it SHORT: 2-3 sentences MAX (hook → core insight → complexity), natural speech, no markdown. The candidate reads this live — brevity matters.
-- Each solution MUST have a trace field — 4-6 step-by-step dry-run entries (never more) showing variable state on examples[0]. Each step: { step, action: short verb phrase, state: 'name=value' joined with commas }. No code in state.
+- Each solution MUST have a trace field — 4-6 dry-run entries (never more) on the REAL examples[0] values. Two things make it worth reading: (a) it must ARRIVE at the expected output, with the running total visible in the last step, so the reader can check the answer instead of taking it on trust; (b) at least one step must prove a single spot with real arithmetic — 'spot 1: left wall 4, right wall 5, so min(4,5) - 2 = 2 units'. Each step: { step, action: short verb phrase in plain English, state: 'name=value' joined with commas }. No code in state.
 - "explanations" ARE THE CODE'S COMMENTS. The client appends each entry to the line its "code" quotes, as a trailing \`# ...\` / \`// ...\` comment inside the editor — there is no separate walkthrough panel to read them in. So: one entry per MEANINGFUL line, in source order, "code" being that line's text VERBATIM (it is what the entry is matched on) and "explanation" being PLAIN TEXT, at most 12 words, no backticks, no markdown, no brackets or quote characters. Skip blank lines, closing brackets, and lines whose comment could only restate the syntax. Write what you would actually leave on that line — "evict hits older than the window", not "this is a while loop".
 ${starterCode
   ? `- Preserve the template's own comments verbatim; add NO new comments of your own — a line that already has one is left alone, so put your note in "explanations" instead
@@ -1000,6 +1077,7 @@ ${starterCode
 - Generate COMPLETE, RUNNABLE code that includes all necessary imports for each solution
 - Examples must have exact input/output pairs
 - ${singleSolution ? 'The 1 solution must produce correct output for the given examples' : 'ALL 3 solutions must produce correct output for the given examples'}
+- STYLE SELF-CHECK (silent, last thing before you emit): re-read every sentence you wrote in narration, approach, explanations, keyPoints, tradeoffs, edgeCases, pitfalls, probes and the complexity reasons. Fix these four, then emit: (1) any sentence over ~20 words gets split; (2) any word on the NEVER WRITE list gets swapped; (3) any sentence that only restates the code gets replaced with the reason the line is there; (4) every approach has at least one "Why? Because ..." and, unless it is the last one, ends by naming its cost and asking the question the next approach answers. Emit no reasoning about this check.
 - Use the LATEST modern patterns and APIs for ${language}
 - ${singleSolution ? '' : 'Order solutions from simplest (brute force) to most optimal'}${ioUnknown ? `\n- The I/O contract is UNKNOWN. Return a pure function with no driver, no print, no invented labels, and populate "assumptions".` : ''}`;
 }
