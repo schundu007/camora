@@ -396,7 +396,9 @@ describe('identification section', () => {
     expect(kvs[0].pairs).toContainEqual(['Data structure', 'implicit graph over grid cells']);
     // Only the yes step survives the decisive filter.
     expect(kvs[1].pairs).toHaveLength(1);
-    expect(kvs[1].pairs[0]).toEqual(['Is it a graph? — yes', 'grid, move to 4 adjacent cells']);
+    // Sentence-cased: the evidence is quoted from the statement, so it arrives
+    // however the statement wrote it, and the card renders it as a sentence.
+    expect(kvs[1].pairs[0]).toEqual(['Is it a graph? — yes', 'Grid, move to 4 adjacent cells']);
 
     // Ruled out left this card: the techniques you did NOT pick answer "why not
     // a heap?", which is asked while the approach is on screen, not while the
@@ -444,23 +446,23 @@ describe('interview cards', () => {
     pitfalls: ['forgetting to shrink the window when the condition breaks'],
   };
 
-  it('renders all four cards with their content', () => {
+  it('renders each card with its content', () => {
     const doc = docFromSolution({ solutions: [{ code: 'x' }], interview });
     const ids = doc.sections.map(s => s.id);
-    expect(ids).toEqual(expect.arrayContaining(['budget', 'signals', 'topic', 'probes']));
+    expect(ids).toEqual(expect.arrayContaining(['budget', 'signals', 'probes']));
 
     const budget = doc.sections.find(s => s.id === 'budget')!;
     expect((budget.blocks[0] as any).pairs).toContainEqual(['This solution', 'O(n) hash pass — fits']);
     expect(budget.heading).toBe('Constraint budget');
 
+    // The phrase is quoted from the statement and its reading is a sentence of
+    // its own; both open with a capital, like every other line in the book.
     const signals = doc.sections.find(s => s.id === 'signals')!;
-    expect((signals.blocks[0] as any).pairs[0]).toEqual(['contiguous subarray', 'sliding window or prefix sums']);
+    expect((signals.blocks[0] as any).pairs[0]).toEqual(['Contiguous subarray', 'Sliding window or prefix sums']);
 
-    // "Review" resolves against the real curriculum on the backend, so the
-    // lesson and its section both survive into the card.
-    const topic = doc.sections.find(s => s.id === 'topic')!;
-    expect((topic.blocks[0] as any).pairs).toContainEqual(['Pattern', 'Two Pointers']);
-    expect((topic.blocks[1] as any).items).toEqual(['Sliding Window - Longest — Two Pointers']);
+    // Topic & review is gone: a curriculum section and a reading list are for
+    // afterwards, and its Pattern line was already on two other cards.
+    expect(ids).not.toContain('topic');
 
     const probes = doc.sections.find(s => s.id === 'probes')!;
     expect((probes.blocks[0] as any).pairs[0][0]).toBe('Can you do it in O(1) space?');
@@ -469,7 +471,7 @@ describe('interview cards', () => {
 
   it('renders nothing when the backend dropped the cards', () => {
     const doc = docFromSolution({ solutions: [{ code: 'x' }] });
-    for (const id of ['budget', 'signals', 'topic', 'probes']) {
+    for (const id of ['budget', 'signals', 'probes']) {
       expect(doc.sections.find(s => s.id === id)).toBeUndefined();
     }
   });
@@ -535,8 +537,9 @@ describe('card order', () => {
     expect(at('edgecases')).toBeLessThan(at('tradeoffs'));
     expect(at('tradeoffs')).toBeLessThan(at('budget'));
     expect(at('budget')).toBeLessThan(at('probes'));
-    // What to study afterwards is last.
-    expect(at('topic')).toBe(ids.length - 1);
+    // Nothing follows the questions — the study-plan card that used to sit
+    // after them is gone.
+    expect(at('probes')).toBe(ids.length - 1);
   });
 
   it('keeps unlisted sections in their original relative order', () => {

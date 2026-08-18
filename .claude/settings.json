@@ -3,5 +3,17 @@
     "claude-mem@thedotmack": true,
     "superpowers@claude-plugins-official": true,
     "superpowers@superpowers-marketplace": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npx vitest run)",
+      "Bash(npx vitest run *)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(pnpm build:camora)",
+      "Bash(npx eslint *)",
+      "Bash(railway deployment list *)",
+      "Bash(railway status *)"
+    ]
   }
 }
