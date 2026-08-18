@@ -74,3 +74,19 @@ describe('notAlreadyIn', () => {
     expect(fresh('Shard by client')).toBe(true);
   });
 });
+
+// stripInlineMarkdown treats __x__ as bold, which renamed __init__ to init in a
+// bullet whose whole job is naming the method at fault.
+describe('code identifiers survive markdown stripping', () => {
+  it('keeps Python dunder names intact', () => {
+    expect(parseIssues('MEDIUM — __init__ — no validation of monotonic timestamps → assert it'))
+      .toEqual(['MEDIUM — __init__ — no validation of monotonic timestamps → assert it']);
+    expect(parseDeepDive('Q: Why __slots__?\nIt cuts per-instance memory.'))
+      .toEqual([['Why __slots__?', 'It cuts per-instance memory.']]);
+  });
+
+  it('still strips real markdown emphasis and backticks', () => {
+    expect(parseDeepDive('**Q:** Why a `deque`?\n*Because* eviction is O(1).'))
+      .toEqual([['Why a deque?', 'Because eviction is O(1).']]);
+  });
+});
