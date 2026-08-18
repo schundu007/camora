@@ -138,7 +138,7 @@ function detectLangFromDescription(text: string): string | null {
 }
 
 type ProblemTab = 'description' | 'solution';
-type OutputTab = 'testcases' | 'output';
+type OutputTab = 'testcases' | 'output' | 'qa';
 type InputMode = 'paste' | 'url' | 'image';
 
 // Analysis views, as icons. These were four uppercase text chips spanning the
@@ -2490,6 +2490,28 @@ ${solCode}
 
   const streamingSolution = streamText;
   const sd = jsonSolution;
+
+  /**
+   * The answer book, minus the interview questions.
+   *
+   * Those moved to a tab beside Test Cases and Output: they are what the
+   * interviewer says next, so they belong beside the code being discussed
+   * rather than at the bottom of a column the reader has to scroll. As a TAB
+   * they cost no vertical space at all, which is the point — nothing can push
+   * the test cases off screen. The card renders through the same AnswerBook,
+   * so it keeps its typography and its Common mistakes callout.
+   */
+  const { bookDoc, qaSection } = useMemo(() => {
+    const full = docFromSolution(sd, activeSolutionIdx, solutionExtras);
+    const qa = full.sections.find(sec => sec.id === 'probes') ?? null;
+    return { bookDoc: { ...full, sections: full.sections.filter(sec => sec.id !== 'probes') }, qaSection: qa };
+  }, [sd, activeSolutionIdx, solutionExtras]);
+
+  /** Questions in the card, for the tab's count badge. */
+  const qaCount = qaSection?.blocks.reduce(
+    (n, b) => n + (b.kind === 'kv' ? b.pairs.length : 0), 0,
+  ) ?? 0;
+
   // MCQ answers reuse the `sd` channel but carry type:'mcq' + an `mcq` block
   // instead of solutions/code. They render an answer card, not code cards.
   const isMcqAnswer = !!(sd && sd.type === 'mcq' && sd.mcq);
@@ -3400,7 +3422,7 @@ ${solCode}
 
 
                     <AnswerBook
-                      doc={docFromSolution(sd, activeSolutionIdx, solutionExtras)}
+                      doc={bookDoc}
                       onLineHover={(line, code, idx) => {
                         const resolved = line ?? (code ? lineForCode(code, idx ?? 0) : 0);
                         if (resolved) highlightLine(resolved); else clearHighlight();
@@ -3594,6 +3616,17 @@ ${solCode}
                     outputTab === 'testcases' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                   }`}
                   style={!(outputTab === 'testcases' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>Test Cases</button>
+                {qaCount > 0 && (
+                  <button onClick={() => { setOutputTab('qa'); setIsOutputCollapsed(false); }}
+                    className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                      outputTab === 'qa' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
+                    }`}
+                    style={!(outputTab === 'qa' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
+                    Interviewer asks
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                      style={{ background: t.badgeBg, color: t.badgeText }}>{qaCount}</span>
+                  </button>
+                )}
                 <button onClick={() => { setOutputTab('output'); setIsOutputCollapsed(false); }}
                   className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                     outputTab === 'output' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
@@ -3668,6 +3701,11 @@ ${solCode}
                   </div>
                 )}
 
+                {outputTab === 'qa' && qaSection && (
+                  <div className="px-1 pb-2 overflow-y-auto">
+                    <AnswerBook doc={{ sections: [qaSection] }} />
+                  </div>
+                )}
                 {outputTab === 'output' && (
                   <div className="space-y-2">
                     {/* Structured test results */}
