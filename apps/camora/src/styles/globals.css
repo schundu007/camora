@@ -3491,7 +3491,12 @@ figure:has(> .viz-caption) {
   margin-inline: auto;
   padding: 0.85rem 1rem 1.4rem;
   font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
-  font-size: 13.25px;
+  /* 13.25px was set against the dark theme, where light-on-dark text gains
+     apparent weight from halation and a thin serif still reads solid. Inverted
+     to dark-on-white the same strokes go spindly — the reported "hard to read
+     in light mode". A serif needs the size a sans does not. */
+  font-size: 14.5px;
+  line-height: 1.6;
   color: var(--text-primary);
   /* The panel is user-resizable (40–65% of the window), so its width has no
      fixed relationship to the viewport's. Column rules below key off THIS
@@ -3513,6 +3518,19 @@ figure:has(> .viz-caption) {
    bottom. CSS `columns` would have been shorter to write and wrong — inside a
    scrolling panel it balances over the full document height, so you'd read the
    left column to the bottom and then scroll back up for the right one. */
+/* Light mode pays back the apparent weight that dark mode gets from halation.
+   Newsreader ships 500 (see the Google Fonts link in index.html), so this is a
+   real weight, not a synthesised bold. Applied to the book only — the rest of
+   the app is sans, which does not suffer the same thinning. */
+[data-theme="light"] .lumora-book {
+  font-weight: 500;
+  -webkit-font-smoothing: auto;
+}
+[data-theme="light"] .lumora-book .lumora-book-label,
+[data-theme="light"] .lumora-book .lumora-kv-key {
+  color: var(--text-primary);
+}
+
 .lumora-book-grid { display: flow-root; }
 
 /* Key/value rows (Follow-up Q&A, the identification trail, statement signals).
