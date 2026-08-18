@@ -694,17 +694,12 @@ describe('one interview-questions card', () => {
   });
 });
 
-describe('the Explain chip renders as a card', () => {
-  it('appears as "Walk them through it" right after the Solution', () => {
+// The spoken walk-through is written above the code as a comment header
+// (prependWalkthrough) rather than shown as a card beside it.
+describe('the Explain chip is not a card', () => {
+  it('renders no section even when the beats are present', () => {
     const doc = docFromSolution(SD, 0, { explain: [['Approach', 'Use a stack.']] });
-    const s = doc.sections.find((x: any) => x.id === 'explain')!;
-    expect(s.heading).toBe('Walk them through it');
-    const ids = doc.sections.map((x: any) => x.id);
-    expect(ids.indexOf('explain')).toBe(ids.indexOf('approach') + 1);
-  });
-
-  it('renders no card when Explain has not generated', () => {
-    expect(docFromSolution(SD).sections.map((s: any) => s.id)).not.toContain('explain');
+    expect(doc.sections.map((x: any) => x.id)).not.toContain('explain');
   });
 });
 

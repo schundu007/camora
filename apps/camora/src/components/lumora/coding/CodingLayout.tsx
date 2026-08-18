@@ -27,7 +27,7 @@ const SESSION_PAGE_NOTE =
   + 'or use the desktop app to capture it from the screen.';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
-import { annotateSolutionCode } from '@/lib/lumora/code-comments';
+import { annotateSolutionCode, prependWalkthrough } from '@/lib/lumora/code-comments';
 import { normalizeProblemText } from '@/lib/lumora/problem-text';
 import { stripDemoCalls } from '@/lib/lumora/demo-calls';
 import { parseDeepDive, parseIssues, parseExplain } from '@/lib/lumora/analysis-parse';
@@ -71,6 +71,19 @@ const codeForSolution = (sol: any, sd: any, language: string): string => {
   // until the user touches it.
   const lang = sd?.language && sd.language !== 'auto' ? sd.language : language;
   return annotateSolutionCode(raw, sol?.explanations, lang);
+};
+
+/**
+ * The same code, with the spoken walk-through written above it as comments.
+ *
+ * Separate from codeForSolution because the walk-through arrives LATER — it is
+ * prefetched a second after the answer — so folding it in at derivation time
+ * would mean the editor filled in and then rewrote itself under the reader.
+ */
+const withWalkthrough = (code: string, sd: any, beats: [string, string][] | undefined, language: string): string => {
+  if (!code || !beats?.length || sd?.type === 'diagnose') return code;
+  const lang = sd?.language && sd.language !== 'auto' ? sd.language : language;
+  return prependWalkthrough(code, beats, lang);
 };
 
 // Returns true when the pasted text is itself a code template with placeholder
@@ -2506,6 +2519,22 @@ ${solCode}
     const qa = full.sections.find(sec => sec.id === 'probes') ?? null;
     return { bookDoc: { ...full, sections: full.sections.filter(sec => sec.id !== 'probes') }, qaSection: qa };
   }, [sd, activeSolutionIdx, solutionExtras]);
+
+  /* Write the walk-through above the code once its beats arrive.
+   *
+   * They are prefetched a second after the answer, so this cannot happen at
+   * derivation time — the editor would fill in and then rewrite itself. Keyed
+   * per solution so switching approach re-applies it to the new code, and
+   * guarded by a ref so a re-render cannot stack a second copy on top. */
+  const walkthroughKeyRef = useRef<string>('');
+  useEffect(() => {
+    const beats = solutionExtras.explain;
+    if (!sd || !beats?.length) return;
+    const key = `${activeSolutionIdx}:${beats.length}`;
+    if (walkthroughKeyRef.current === key) return;
+    walkthroughKeyRef.current = key;
+    setCode(prev => withWalkthrough(prev, sd, beats, language));
+  }, [solutionExtras, sd, activeSolutionIdx, language]);
 
   /** Questions in the card, for the tab's count badge. */
   const qaCount = qaSection?.blocks.reduce(
