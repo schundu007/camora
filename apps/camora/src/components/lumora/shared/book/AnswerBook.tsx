@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef } from 'react';
 import type { ReactElement } from 'react';
 import hljs from 'highlight.js';
+import { UNCHECKED_NOTE } from '@/lib/lumora/book-model';
 import type { BookBlock, BookDoc } from '@/lib/lumora/book-model';
 
 type Props = {
@@ -188,14 +189,12 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
           {/* An answer generated before the statement's requirements were read
               has no verdicts to show, and a blank Verdict column would read as
               "all clear". Say which it is. */}
-          {block.unchecked && (
-            <p className="lumora-book-matrix-note">
-              Requirements not checked — this answer predates the check. Regenerate to verify it against
-              what the statement demands.
-            </p>
-          )}
+          {block.unchecked && <p className="lumora-book-matrix-note">{UNCHECKED_NOTE}</p>}
         </div>
       );
+
+    case 'note':
+      return <p className="lumora-book-matrix-note">{block.text}</p>;
 
     case 'walk': {
       const interactive = !!(onLineHover || onLineClick);
