@@ -831,11 +831,25 @@ ${solCode}
   // Regenerate — re-submit the same problem. Backend will serve from
   // cache (Redis → DB) so no LLM call unless this is a genuinely new problem.
   const handleRegenerate = useCallback(() => {
-    const text = problemText.trim();
-    if (!text || isLoading || isStreaming) return;
+    /* Fall back to the store's question, and say so when there is nothing to
+     * regenerate FROM. The restore path (sessionStorage, on refresh or a
+     * chip-switch back) repopulates the ANSWER but never problemText, so the
+     * button sat there enabled over a visible answer and did nothing at all
+     * when clicked — the same silent-return shape that made auto-fetch look
+     * broken. A no-op the user cannot distinguish from a dead button is worse
+     * than an error. */
+    const text = (problemText.trim() || useSessionStore.getState().question || '').trim();
+    if (isLoading || isStreaming) return;
+    if (!text) {
+      setProblemTab('description');
+      setInputMode('paste');
+      setError('Nothing to regenerate — the problem text was not restored with this answer. Paste or re-fetch the problem, then Coding.');
+      return;
+    }
     resetAnalysis();
     lastAutoGenSigRef.current = genSignature(text); // explicit regenerate — bypass dedup, refresh signature
     onSubmit(text, resolveLanguage(text), { ...(effectiveStarterCode ? { starterCode: effectiveStarterCode } : {}) });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problemText, language, effectiveStarterCode, isLoading, isStreaming, onSubmit, resolveLanguage, resetAnalysis]);
 
   // Auto-switch to the Solution tab when a stream error fires. The
