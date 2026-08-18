@@ -3922,3 +3922,14 @@ figure:has(> .viz-caption) {
   background: color-mix(in oklab, var(--cam-gold-leaf) 28%, transparent);
   color: var(--cam-gold-leaf-lt);
 }
+
+/* A caption under the comparison matrix — the one place the book admits to not
+   knowing something. Muted and small: it is a disclaimer, not a finding. */
+.lumora-book-matrix-note {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin: 0.4rem 0 0;
+  padding: 0 0.55rem;
+  max-width: none;
+}

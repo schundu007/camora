@@ -185,6 +185,15 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
               ))}
             </tbody>
           </table>
+          {/* An answer generated before the statement's requirements were read
+              has no verdicts to show, and a blank Verdict column would read as
+              "all clear". Say which it is. */}
+          {block.unchecked && (
+            <p className="lumora-book-matrix-note">
+              Requirements not checked — this answer predates the check. Regenerate to verify it against
+              what the statement demands.
+            </p>
+          )}
         </div>
       );
 
