@@ -2146,6 +2146,22 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
         ident.path = decisive.length ? decisive : verdict.steps.slice(-1);
         if (verdict.technique) ident.chartTechnique = verdict.technique;
         if (!ident.technique) ident.technique = verdict.technique;
+      } else if (verdict.steps.length) {
+        /* The walk diverged from the chart partway. Every step BEFORE the
+         * divergence was checked — node id AND answer — so that prefix is
+         * proven and worth showing; only the unproven tail goes.
+         *
+         * Deleting the whole card on any divergence meant one near-miss on a
+         * node id ("subarrays" where the chart says "sums" — the same idea,
+         * the wrong token) erased an entire correct derivation. Worse, it
+         * erased it LATE: the card renders during streaming from the
+         * unvalidated draft and then vanished when the validated payload
+         * replaced it, which reads as the answer losing a card it had. */
+        const decisive = verdict.steps.filter(st => st.answer === 'yes');
+        ident.path = decisive.length ? decisive : verdict.steps.slice(-1);
+        // No chart-verified technique to claim — the walk never reached a leaf.
+        delete ident.chartTechnique;
+        console.log(`[solve] identification trimmed to ${ident.path.length} verified step(s): ${verdict.reason}`);
       } else {
         console.log(`[solve] identification rejected: ${verdict.reason}`);
         delete parsedJson.identification;
