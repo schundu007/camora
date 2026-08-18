@@ -47,7 +47,6 @@ export const SECTION_TITLES: Record<string, string> = {
   ruledout: 'Ruled out',
   budget: 'Constraint budget',
   signals: 'Signals in the statement',
-  topic: 'Topic & review',
   probes: 'Interview questions',
   approach: 'Solution',
   code: 'Code',
@@ -384,8 +383,8 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
     const shown = decisive.length ? decisive : steps.slice(-1);
 
     const trail: [string, string][] = shown.map((st: any) => {
-      const ev = txt(st?.evidence);
-      return [`${txt(st.question)} — ${txt(st.answer)}`, ev || '—'] as [string, string];
+      const ev = sentenceCaseAll(txt(st?.evidence));
+      return [`${sentenceCaseAll(txt(st.question))} — ${txt(st.answer)}`, ev || '—'] as [string, string];
     });
 
     const verdict: [string, string][] = [];
@@ -424,27 +423,35 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
     const bPairs: [string, string][] = [];
     if (txt(iv.budget?.n)) bPairs.push(['Input bound', txt(iv.budget.n)]);
     if (txt(iv.budget?.ceiling)) bPairs.push(['Forces', txt(iv.budget.ceiling)]);
-    if (txt(iv.budget?.verdict)) bPairs.push(['This solution', txt(iv.budget.verdict)]);
+    if (txt(iv.budget?.verdict)) bPairs.push(['This solution', sentenceCaseAll(txt(iv.budget.verdict))]);
     push(sections, 'budget', [bPairs.length ? { kind: 'kv', pairs: bPairs } : null]);
 
+    /* Both halves sentence-cased. The phrase is quoted from the statement, so it
+     * arrives however the statement wrote it — mid-sentence, lowercase ("unique
+     * integers") — and its reading is a sentence of its own. Rendered as a
+     * row's key and value they are the card's two columns of prose, and house
+     * style is a capital at the start of each. */
     const sigs: [string, string][] = Array.isArray(iv.signals)
       ? iv.signals
-          .map((g: any) => [txt(g?.phrase), txt(g?.implies)] as [string, string])
+          .map((g: any) => [sentenceCaseAll(txt(g?.phrase)), sentenceCaseAll(txt(g?.implies))] as [string, string])
           .filter(([a, b]: [string, string]) => Boolean(a && b))
       : [];
     push(sections, 'signals', [sigs.length ? { kind: 'kv', pairs: sigs, layout: 'rows' } : null]);
 
-    const tPairs: [string, string][] = [];
-    if (txt(iv.topic?.section)) tPairs.push(['Pattern', txt(iv.topic.section)]);
-    const review = Array.isArray(iv.topic?.review)
-      ? iv.topic.review
-          .map((r: any) => (txt(r?.lesson) ? sentenceCaseAll(`${txt(r.lesson)}${txt(r?.section) ? ` — ${txt(r.section)}` : ''}`) : ''))
-          .filter(Boolean)
-      : [];
-    push(sections, 'topic', [
-      tPairs.length ? { kind: 'kv', pairs: tPairs } : null,
-      review.length ? { kind: 'callout', label: 'Review', items: review } : null,
-    ]);
+    /* No "Topic & review" card.
+     *
+     * It was the one card in the book that was not for the live 45 minutes: a
+     * curriculum section name and up to five lesson titles to read AFTERWARDS.
+     * Its Pattern line already appeared twice on screen — as Technique on "How
+     * to spot it" and as the tag in the approach-comparison matrix — and the
+     * lesson list is a study plan, which is not what someone with an
+     * interviewer watching is scrolling for.
+     *
+     * The backend still emits interview.topic (section + concepts, matched to
+     * real lessons by matchLessons); nothing renders it. Left in place rather
+     * than ripped out of the schema, so the study-plan links can be picked up
+     * elsewhere without regenerating anything.
+     */
 
     probes.push(...(Array.isArray(iv.probes)
       ? iv.probes
@@ -476,7 +483,7 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
       if (!k || seenQ.has(k)) continue;
       if (ASKS_FOR_COMPLEXITY.test(q)) continue;
       seenQ.add(k);
-      allProbes.push([q, a]);
+      allProbes.push([sentenceCaseAll(q), sentenceCaseAll(a)]);
     }
     const dedupePitfalls = notAlreadyIn(pitfalls);
     const allPitfalls = dedupeStrings([
@@ -726,7 +733,6 @@ export function docFromCoFix(
  *   write it       code → walkthrough → trace
  *   prove it       testcases → edgecases
  *   defend it      tradeoffs + budget → probes → followup
- *   afterwards     topic
  *
  * There is no 'complexity' entry any more: that card is gone, and its content
  * lives in the code header instead (see complexityBeat).
@@ -762,7 +768,6 @@ const SECTION_ORDER = [
   'budget',           // constraint budget — the ceiling the tradeoff was made against
   'probes',           // interviewer will ask
   'followup',
-  'topic',            // what to review afterwards
 ];
 
 export function orderSections(sections: BookSection[]): BookSection[] {
