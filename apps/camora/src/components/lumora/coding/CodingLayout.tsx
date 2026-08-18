@@ -28,7 +28,7 @@ const SESSION_PAGE_NOTE =
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
 import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
 import { annotateSolutionCode } from '@/lib/lumora/code-comments';
-import { parseDeepDive, parseIssues } from '@/lib/lumora/analysis-parse';
+import { parseDeepDive, parseIssues, parseExplain } from '@/lib/lumora/analysis-parse';
 import { shouldDivertToCofix } from '@/lib/lumora/task-modes';
 import { parseProblemExamples, buildTestCases, detectSolutionFn, mergeTestCases } from '@/lib/lumora/example-extract';
 import type { ScreenMode, TaskMode } from '@/lib/lumora/task-modes';
@@ -158,29 +158,12 @@ const RenderScale = () => {
   return <span data-tip="Rendered scale — OS display scaling x app zoom. Compare this number in your browser and in the desktop app: if they differ, that is the size difference. Ctrl and minus zooms the desktop app out, and it is remembered.">scale {dpr.toFixed(2)}x</span>;
 };
 
-const ANALYSIS_VIEWS = [
-  {
-    id: 'code' as const,
-    label: 'Code',
-    tip: 'The solution',
-    icon: <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>,
-  },
-  {
-    id: 'explain' as const,
-    label: 'Explain',
-    tip: 'Explain — what you say when asked to walk through it',
-    icon: <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>,
-  },
-];
+/* No analysis chips. Explain, Issues and Deep Dive all render inside the answer
+ * book now — as "Walk them through it", "Common mistakes" and the interview
+ * questions card. A chip whose only effect is filling in a card already on
+ * screen is a chip that appears to do nothing. They are still generated, by the
+ * prefetch below, for every solution. */
 
-/* Issues and Deep Dive have no chip: their content is not a view you switch to,
- * it is part of two cards in the answer book — "Common mistakes" and
- * "Interviewer will ask". Both are still generated on every solve by the
- * prefetch below; a button whose only effect is filling in a card you are
- * already looking at is a button that appears to do nothing. */
-
-// 11px was a squint. This is interview code being read under pressure, often
-// on a shared screen, so it gets a readable size.
 const EDITOR_FONT_PX = 13;
 /** Passed to Monaco AND used for the height math, so they cannot disagree. */
 const EDITOR_LINE_H = 20;
@@ -428,7 +411,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
   // Extracted code from the last image snap — drives quick-action chips.
   const [snapChipCode, setSnapChipCode] = useState<string | null>(null);
   // Analysis tabs — Explain / Issues / Deep Dive generated from the active solution code
-  const [analysisTab, setAnalysisTab] = useState<'code' | 'explain' | 'issues' | 'deepdive'>('code');
   const [analysisCache, setAnalysisCache] = useState<Record<string, string>>({});
   const analysisCacheRef = useRef(analysisCache);
   useEffect(() => { analysisCacheRef.current = analysisCache; }, [analysisCache]);
@@ -644,7 +626,6 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
       || (targeted ? null : (sd?.solutions?.[0]?.code || sd?.code || code));
     if (!solCode?.trim() || !token) return;
     const cacheKey = `${idx}_${tab}`;
-    if (!silent) setAnalysisTab(tab);
     // Already generated, or already streaming in from the prefetch — showing it
     // is the whole job. Re-requesting would pay for the same answer twice and
     // restart the text under the user's eyes.
@@ -770,6 +751,7 @@ ${solCode}
   const solutionExtras = useMemo(() => ({
     probes: parseDeepDive(analysisCache[`${activeSolutionIdx}_deepdive`] || ''),
     pitfalls: parseIssues(analysisCache[`${activeSolutionIdx}_issues`] || ''),
+    explain: parseExplain(analysisCache[`${activeSolutionIdx}_explain`] || ''),
   }), [analysisCache, activeSolutionIdx]);
 
   // Prefetch. These three are what the user reaches for the moment the answer
@@ -820,7 +802,6 @@ ${solCode}
     abortAllAnalysis();
     prefetchedRef.current.clear();
     setAnalysisCache({});
-    setAnalysisTab('code');
   }, [abortAllAnalysis]);
 
   // Restore last coding answer from sessionStorage on mount (refresh or chip-switch back).
@@ -942,8 +923,16 @@ ${solCode}
   // its longest line. Everything past that is dead space while the solution
   // panel — dense prose, a 3-column dry-run table, follow-up Q&A — is starved.
   // Measure the code, give the editor what it needs, hand the rest to the left.
+  // Longest line, measured WITHOUT its trailing explanation comment. The split
+  // auto-fits to this, and a 60-character comment on the longest line would
+  // otherwise drag the editor open to half the window on every solve — sizing
+  // the pane to prose rather than to the code it exists to show. Comments wrap;
+  // code should not have to.
   const codeMaxLineLen = useMemo(
-    () => code.split('\n').reduce((m, l) => (l.length > m ? l.length : m), 0),
+    () => code.split('\n').reduce((m, l) => {
+      const bare = l.replace(/\s{2,}(#|\/\/|--)\s.*$/, '').trimEnd();
+      return bare.length > m ? bare.length : m;
+    }, 0),
     [code],
   );
 
@@ -3195,39 +3184,6 @@ ${solCode}
                       </>
                     )}
 
-                    {ANALYSIS_VIEWS.map(view => {
-                      const active = analysisTab === view.id;
-                      // Prefetching counts as loading: the spinner is what says
-                      // "this is coming", and it is the honest state whether the
-                      // request was fired by a click or by the prefetch queue.
-                      const loading = analysisInFlight.includes(`${activeSolutionIdx}_${view.id}`);
-                      const ready = !loading && view.id !== 'code' && !!analysisCache[`${activeSolutionIdx}_${view.id}`];
-                      return (
-                        <button
-                          key={view.id}
-                          onClick={() => view.id === 'code' ? setAnalysisTab('code') : handleAnalysis('explain')}
-                          className="relative flex items-center justify-center w-7 h-7 rounded-lg transition-colors shrink-0"
-                          style={active
-                            ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
-                            : { color: 'var(--text-muted)', border: '1px solid transparent' }}
-                          data-tip={view.tip}
-                          aria-label={view.label}
-                          aria-pressed={active}
-                        >
-                          {loading ? (
-                            <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
-                          ) : (
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              {view.icon}
-                            </svg>
-                          )}
-                          {/* Already-generated marker — the dot the text chips carried. */}
-                          {ready && (
-                            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary)' }} />
-                          )}
-                        </button>
-                      );
-                    })}
 
                     <div className="ml-auto flex items-center gap-1 shrink-0">
                       {/* Cache state — the icon alone. The sentence that used to
@@ -3265,37 +3221,6 @@ ${solCode}
                           <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
                         </svg>
                       </button>
-                    </div>
-                  </div>
-                )}
-                {/* Analysis content for active tab */}
-                {/* Explain is the only chip with a panel of its own — Deep
-                    Dive and Issues render into the answer book's cards. */}
-                {sd && analysisTab === 'explain' && (
-                  <div className="mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid var(--cam-gold-leaf)', background: 'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(38,97,156,0.07), transparent 70%), var(--bg-elevated)', boxShadow: '0 4px 20px rgba(3,19,46,0.18)' }}>
-                    {/* Header strip */}
-                    <div className="flex items-center justify-between px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-                      <div className="flex items-center gap-2">
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cam-gold-leaf)', display: 'inline-block' }} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
-                          Explain
-                        </span>
-                      </div>
-                      {analysisInFlight.includes(`${activeSolutionIdx}_${analysisTab}`) && <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />}
-                    </div>
-                    {/* Content */}
-                    <div className="p-4" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)', fontSize: 12 }}>
-                      {(() => {
-                        const key = `${activeSolutionIdx}_${analysisTab}`;
-                        const content = analysisCache[key];
-                        if (content) return renderAnalysisContent(content);
-                        return (
-                          <div className="flex items-center gap-2 py-2" style={{ color: 'var(--text-muted)' }}>
-                            <div className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--cam-primary)', borderTopColor: 'transparent' }} />
-                            <span style={{ fontSize: 11, fontStyle: 'italic' }}>Generating analysis…</span>
-                          </div>
-                        );
-                      })()}
                     </div>
                   </div>
                 )}
@@ -3448,7 +3373,7 @@ ${solCode}
                 )}
 
                 {/* JSON Solution — Modern Cards */}
-                {analysisTab === 'code' && sd && !isMcqAnswer && (
+                {sd && !isMcqAnswer && (
                   <div className="space-y-3 solution-cards-appear">
 
 
@@ -3600,6 +3525,13 @@ ${solCode}
                 // toward the line end. Plain metrics = accurate hit-testing.
                 fontLigatures: false,
                 letterSpacing: 0,
+                // Wrap, never clip. Lines carry a trailing explanation comment
+                // now, so they run well past the pane when it is dragged narrow
+                // — and Monaco's default is to cut them off with no scrollbar in
+                // view, which reads as the code being truncated. Continuation
+                // lines indent so a wrapped line still looks like one statement.
+                wordWrap: 'on',
+                wrappingIndent: 'indent',
                 // EDITOR_LINE_H, not a second opinion: this used to say 19 while
                 // the height math counted 16, so the editor box came up ~3px per
                 // line short and the last lines needed a scroll that looked like

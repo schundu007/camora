@@ -113,3 +113,47 @@ export const notAlreadyIn = (existing: string[]) => {
   const seen = new Set(existing.map(s => s.toLowerCase().replace(/\s+/g, ' ').trim()));
   return (candidate: string) => !seen.has(candidate.toLowerCase().replace(/\s+/g, ' ').trim());
 };
+
+/**
+ * The Explain chip: the spoken walk-through, split into its labelled beats.
+ *
+ * Its prompt asks for the core idea, 3-4 beats of how it runs, and the cost —
+ * and the model marks those with bracket labels ([APPROACH], [WALKTHROUGH],
+ * [COMPLEXITY]). Unlabelled output is kept whole rather than dropped: the words
+ * are the point, the labels are only how we lay them out.
+ */
+export function parseExplain(text: string): [string, string][] {
+  if (isNoise(text)) return [];
+
+  const out: [string, string][] = [];
+  let label = '';
+  let body: string[] = [];
+  let inFence = false;
+
+  const flush = () => {
+    const t = clean(body.join(' '));
+    if (t) out.push([label || 'In short', t]);
+    body = [];
+  };
+
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith('```')) { inFence = !inFence; continue; }
+    if (inFence || !line) continue;
+
+    // [APPROACH] / ## Approach / **Approach** — all mean "new beat starts here".
+    const bracket = line.match(/^\[([A-Za-z][A-Za-z\s/_-]{1,30})\]$/);
+    const heading = line.match(/^#{1,4}\s+(.{2,40})$/) || line.match(/^\*\*(.{2,40})\*\*:?$/);
+    const marker = bracket?.[1] ?? heading?.[1];
+    if (marker) {
+      flush();
+      const m = marker.trim().toLowerCase();
+      label = m.charAt(0).toUpperCase() + m.slice(1);
+      continue;
+    }
+    body.push(line);
+  }
+  flush();
+
+  return out;
+}

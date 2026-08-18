@@ -3528,6 +3528,23 @@ figure:has(> .viz-caption) {
   margin-bottom: 0.5rem;
 }
 
+/* The key of a rows-layout pair is a SENTENCE — the interviewer's question, the
+   phrase quoted from the statement — not a caption like "Time". It used to
+   borrow .lumora-book-label, so the question rendered at 11px in --text-muted
+   while its own answer sat beside it at 12.5px in --text-primary: the most
+   important line in the card was the faintest thing on screen. Question leads,
+   answer follows. */
+.lumora-kv-key {
+  font-family: 'Inter', var(--font-display), sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  margin: 0;
+  min-width: 0;
+}
+
 @container book (min-width: 480px) {
   .lumora-kv-rows {
     grid-template-columns: fit-content(22rem) minmax(0, 1fr);
