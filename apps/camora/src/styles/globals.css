@@ -79,7 +79,7 @@
     --cat-primary:    #2563EB;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
-    /* Fonts — Plus Jakarta Sans (display/headings) + Inter (body) + IBM Plex Mono (code) */
+    /* Fonts — Plus Jakarta Sans (display/headings) + Inter (body) + JetBrains Mono (code) */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-display: 'Plus Jakarta Sans', 'Satoshi', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -1154,7 +1154,7 @@
 
      Tier 1  SECTION      Fraunces display · 2rem  · family accent  (colour)
      Tier 2  SUBSECTION   Fraunces         · 1.4rem · neutral + accent marker
-     Tier 3  MICRO-LABEL  IBM Plex Mono    · 0.75rem· family accent, UPPERCASE
+     Tier 3  MICRO-LABEL  JetBrains Mono   · 0.75rem· family accent, UPPERCASE
 
    The alternating colour (accent → neutral → accent) and the serif→mono
    switch at the smallest level make the hierarchy legible at a glance. All
