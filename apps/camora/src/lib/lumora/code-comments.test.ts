@@ -184,3 +184,35 @@ describe('prependWalkthrough', () => {
     expect(prependWalkthrough('x = 1', undefined, 'python')).toBe('x = 1');
   });
 });
+
+describe('prependWalkthrough is idempotent', () => {
+  const A: [string, string][] = [['Approach', 'Sort descending and index in.']];
+  const B: [string, string][] = [
+    ['Approach', 'Sort descending and index in.'],
+    ['Complexity', 'O(n log n) for the sort.'],
+  ];
+
+  // The beats stream in, so a second call with a fuller set is legitimate —
+  // it must replace the header, never stack a second one on top.
+  it('replaces an existing header rather than stacking', () => {
+    const once = prependWalkthrough('nums.sort()', A, 'python');
+    const twice = prependWalkthrough(once, B, 'python');
+    expect(twice.match(/# APPROACH/g)).toHaveLength(1);
+    expect(twice).toContain('# COMPLEXITY');
+    expect(twice).toContain('nums.sort()');
+  });
+
+  it('re-applying the same beats changes nothing', () => {
+    const once = prependWalkthrough('x = 1', B, 'python');
+    expect(prependWalkthrough(once, B, 'python')).toBe(once);
+  });
+
+  // A starter template's own comments have no ALL-CAPS label line.
+  it("leaves a starter template's own comments alone", () => {
+    const starter = '# Complete the function below\n# Do not modify the driver\ndef solve(n):\n    pass';
+    const out = prependWalkthrough(starter, A, 'python');
+    expect(out).toContain('# Complete the function below');
+    expect(out).toContain('# Do not modify the driver');
+    expect(out.match(/# APPROACH/g)).toHaveLength(1);
+  });
+});

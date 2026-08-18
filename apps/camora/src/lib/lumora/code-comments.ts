@@ -222,6 +222,34 @@ export function annotateSolutionCode(
  * Beats keep their labels because they answer different questions (what the
  * idea is, how it runs, what it costs) and a reader skims for one of them.
  */
+/**
+ * A header this function wrote earlier, removed so re-applying cannot stack.
+ *
+ * The beats stream in, so the caller may legitimately call this twice with a
+ * fuller set the second time. Idempotence has to live here rather than in the
+ * caller's guard, because the caller cannot see what is already in the code.
+ *
+ * Recognised by an ALL-CAPS beat label on its own line — the shape only this
+ * function produces. A starter template's own comments have no such line, so
+ * they survive.
+ */
+const HEADER_LABEL = /^\s*(?:#|\/\/|--)\s+[A-Z][A-Z ]{2,}\s*$/;
+
+function stripWalkthroughHeader(code: string, token: string): string {
+  const lines = code.split('\n');
+  let end = 0;
+  while (end < lines.length && (lines[end].startsWith(token) || lines[end].trim() === '')) end++;
+  if (end === 0) return code;
+
+  const head = lines.slice(0, end);
+  if (!head.some(l => HEADER_LABEL.test(l))) return code;
+
+  // Drop the header, then any blank lines it left behind.
+  let start = end;
+  while (start < lines.length && lines[start].trim() === '') start++;
+  return lines.slice(start).join('\n');
+}
+
 export function prependWalkthrough(
   code: string,
   beats?: [string, string][] | null,
@@ -230,6 +258,8 @@ export function prependWalkthrough(
   if (!code || !Array.isArray(beats) || beats.length === 0) return code;
 
   const token = commentTokenFor(language, code);
+  // Idempotent: replace any header already there rather than stacking on it.
+  const body = stripWalkthroughHeader(code, token);
   const WIDTH = 78;
   const lines: string[] = [];
 
@@ -252,5 +282,5 @@ export function prependWalkthrough(
     if (line) lines.push(`${token} ${line}`);
   });
 
-  return lines.length ? `${lines.join('\n')}\n\n${code}` : code;
+  return lines.length ? `${lines.join('\n')}\n\n${body}` : body;
 }

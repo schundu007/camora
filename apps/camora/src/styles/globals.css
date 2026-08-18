@@ -3491,12 +3491,13 @@ figure:has(> .viz-caption) {
   margin-inline: auto;
   padding: 0.85rem 1rem 1.4rem;
   font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
-  /* 13.25px was set against the dark theme, where light-on-dark text gains
-     apparent weight from halation and a thin serif still reads solid. Inverted
-     to dark-on-white the same strokes go spindly — the reported "hard to read
-     in light mode". A serif needs the size a sans does not. */
-  font-size: 14.5px;
-  line-height: 1.6;
+  /* Back to 13.25px by request — 14.5px pushed the cards past what fits on
+     screen. The light-mode legibility fix that actually mattered is the weight
+     step below: light-on-dark text gains apparent weight from halation, so the
+     same thin serif that reads solid on dark goes spindly on white. Weight,
+     not size, is what buys it back. */
+  font-size: 13.25px;
+  line-height: 1.55;
   color: var(--text-primary);
   /* The panel is user-resizable (40–65% of the window), so its width has no
      fixed relationship to the viewport's. Column rules below key off THIS
