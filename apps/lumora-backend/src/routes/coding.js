@@ -71,6 +71,35 @@ function toGeminiHistory(msgs) {
 // ── Anthropic lazy client — resolved at call time so admin-panel key
 //    changes take effect without restarting the service.
 const ANTHROPIC_MODEL = LIVE_ANSWER_MODEL;
+
+/**
+ * Thinking, configured explicitly rather than inherited.
+ *
+ * This is a model-bump trap. On Sonnet 4.6 a request that omitted `thinking`
+ * ran WITHOUT thinking; on Sonnet 5 the same request runs ADAPTIVE thinking at
+ * the default effort of `high`. Moving the model turned on ~11k tokens of
+ * reasoning per solve that nobody asked for.
+ *
+ * It is invisible, which is why it read as a hang: thinking arrives as
+ * `thinking_delta`, our forwarder only relays `text_delta`, so 90+ seconds of
+ * real work streams past with nothing reaching the browser. `max_tokens` also
+ * caps thinking AND text together, so a long answer can truncate on top.
+ *
+ * Disabled by default: the solve prompt is a 19k-token specification that
+ * already tells the model exactly what to produce, and the candidate is sitting
+ * in a live interview. Both dials are env-tunable so quality can be traded back
+ * for latency without a deploy — CODING_THINKING=adaptive, CODING_EFFORT=medium.
+ * (Sonnet 5 at medium is roughly Sonnet 4.6 at high.)
+ */
+const THINKING_MODE = process.env.CODING_THINKING || 'disabled';
+const CODING_EFFORT = process.env.CODING_EFFORT || '';
+const anthropicThinking = () => (
+  THINKING_MODE === 'adaptive' ? { type: 'adaptive' } : { type: 'disabled' }
+);
+const anthropicOutputConfig = () => (
+  CODING_EFFORT ? { output_config: { effort: CODING_EFFORT } } : {}
+);
+
 let _anthropicClient = null;
 let _anthropicKey = null;
 function getAnthropicClient() {
@@ -154,6 +183,8 @@ async function streamWithProvider(providerName, messages, systemPrompt, onToken,
         max_tokens: MAX_TOKENS,
         system: systemPrompt,
         messages: anthropicMsgs,
+        thinking: anthropicThinking(),
+        ...anthropicOutputConfig(),
       });
       for await (const event of stream) {
         if (isAborted()) break;
@@ -222,6 +253,8 @@ async function generateWithProvider(providerName, messages, systemPrompt) {
         max_tokens: MAX_TOKENS,
         system: systemPrompt,
         messages: anthropicMsgs,
+        thinking: anthropicThinking(),
+        ...anthropicOutputConfig(),
       });
       return { raw: resp.content?.[0]?.text || '', model: ANTHROPIC_MODEL };
     }
