@@ -3532,7 +3532,58 @@ figure:has(> .viz-caption) {
   color: var(--text-primary);
 }
 
-.lumora-book-grid { display: flow-root; }
+/* ── The book as a grid of cards ─────────────────────────────────────────
+   Sections used to be borderless runs of text stacked down one column, which
+   made a long answer read as one undifferentiated scroll: nothing told you
+   where "Edge cases" ended and "Tradeoffs" began except a heading, and a
+   heading is easy to slide past when you are skimming with the interviewer
+   waiting. Each section is a card now — its own border, its own ground — so
+   the eye can jump to the one it wants and stop there.
+
+   Cards also buy the space back. A borderless section needs generous margins
+   to separate it from its neighbour; a bordered one needs almost none, because
+   the border does that work. The gutter between cards is a quarter of what the
+   old column gap was, and the vertical rhythm inside a card is tighter than
+   the old between-section margins were. */
+.lumora-book-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lumora-book-grid > section,
+.lumora-book-grid > .lumora-book-stack {
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  /* Elevated, not surface: the panel behind the book IS surface, so a card
+     painted the same colour is a rectangle of outline with nothing inside it.
+     One step up lifts it off the panel in both themes — white on grey in light,
+     a shade lighter than the ground in dark. */
+  background: var(--bg-elevated);
+  padding: 0.55rem 0.8rem 0.6rem;
+  min-width: 0;
+}
+
+/* The heading is the card's own title now, so its top margin — which existed
+   to separate one run of text from the last — is dead space inside a border. */
+.lumora-book-grid > section > .lumora-book-section,
+.lumora-book-grid > .lumora-book-stack .lumora-book-section { margin-top: 0; }
+/* …and the last block's bottom margin is the same dead space at the other end. */
+.lumora-book-grid > section > :last-child,
+.lumora-book-grid > .lumora-book-stack > section:last-child > :last-child { margin-bottom: 0; }
+
+/* The comparison matrix is the one block that was already a card. Inside one it
+   would be a border drawn a few pixels inside another border — so it gives up
+   its own and runs full-bleed to the card's edges instead, which puts its row
+   rules where a table's rules belong: all the way across. */
+.lumora-book-grid > section > .lumora-book-matrix {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin-inline: -0.8rem;
+  width: auto;
+}
+
 
 /* Key/value rows (Follow-up Q&A, the identification trail, statement signals).
    The key column used to be pinned at 9.5rem, which was fine for "Time"/"Space"
@@ -3624,16 +3675,19 @@ figure:has(> .viz-caption) {
   .lumora-walk-rows > .lumora-walk-wide { grid-column: span 2; }
 }
 
-@container book (min-width: 720px) {
+/* Two up. The threshold used to be 720px, chosen when each column had to hold a
+   full reading measure of borderless prose; a card carries its own edges, so it
+   survives a narrower column — and 620px is inside the width this panel is
+   actually dragged to, which the old threshold rarely was. Container query, not
+   media: the panel is resizable and its width has no fixed relationship to the
+   viewport's. */
+@container book (min-width: 620px) {
   .lumora-book-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 2rem;
-    row-gap: 0;
-    /* Row-mates share a height. Sections are borderless so this is invisible
-       for prose, but the comparison matrix is a bordered card: left to size
-       itself it ends short of Tradeoffs beside it and the pair reads as
-       ragged. The card fills the row instead (see :has below). */
+    gap: 0.5rem;
+    /* Row-mates share a height, so two cards on a row have their borders line
+       up top and bottom instead of one ending short of the other. */
     align-items: stretch;
   }
   /* Scoped to the matrix on purpose — making every section a flex column would
@@ -3642,18 +3696,14 @@ figure:has(> .viz-caption) {
   .lumora-book-grid > section > .lumora-book-matrix { flex: 1; }
   /* Sections holding a code block take the whole width. */
   .lumora-book-grid > .lumora-book-span { grid-column: 1 / -1; }
-  /* Complexity + Walkthrough share one cell and stack inside it. min-width:0
-     because a grid item defaults to min-content width, which a long trace row
-     or code snippet inside would otherwise blow past and widen the column. */
+  /* A stacked pair holds two sections in one cell. min-width:0 because a grid
+     item defaults to min-content width, which a long trace row or code snippet
+     inside would otherwise blow past and widen the column. */
   .lumora-book-grid > .lumora-book-stack { grid-column: span 1; min-width: 0; }
   /* …unless it is the only cell on its row, in which case it widens like any
      other orphan. Declared after the rule above because both have the same
      specificity — the later one wins. */
   .lumora-book-grid > .lumora-book-stack.lumora-book-span { grid-column: 1 / -1; }
-  /* The first heading in a grid cell must not carry its 1.15rem top margin —
-     in a single column that margin separates it from the previous section; in
-     a grid it just pushes the cell down and re-ragged the rows. */
-  .lumora-book-grid > section > .lumora-book-section { margin-top: 0.9rem; }
 }
 
 /* At full width the serif measure ran to ~1070px — roughly 150 characters per

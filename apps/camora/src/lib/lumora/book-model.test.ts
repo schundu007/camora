@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { docFromSolution, docFromBlocks, docFromCoFix} from './book-model';
+import { docFromSolution, docFromBlocks, docFromCoFix, complexityBeat, condensePoints } from './book-model';
 
 const SD = {
   language: 'python',
@@ -29,11 +29,12 @@ describe('docFromSolution', () => {
   // Tradeoffs sits beside Approach comparison and Dry-run trace beside Edge
   // cases — each row a pair that is read together.
   it('emits sections in reading order', () => {
-    // Interview reading order: what you did, what it costs, then the material
-    // you reach for when questioned. No walkthrough — the line-by-line rides
-    // the code itself as inline comments now.
+    // The order the WORK happens in: what you did, then the dry run, then what
+    // you run it against, then what you say when pushed. No walkthrough — the
+    // line-by-line rides the code itself as inline comments now — and no
+    // complexity, which is written above the code (complexityBeat).
     expect(ids(docFromSolution(SD))).toEqual([
-      'approach', 'complexity', 'edgecases', 'tradeoffs', 'trace',
+      'approach', 'trace', 'edgecases', 'tradeoffs',
     ]);
   });
 
@@ -64,11 +65,12 @@ describe('docFromSolution', () => {
       pitch: { tradeoffs: ['space vs time'] },
     };
 
-    // The matrix answers the same question as the bounds beside it, so the two
-    // sit together on one row above the Solution.
-    it('sits directly after complexity', () => {
+    // The alternatives you weighed belong under the one you picked — and with
+    // the Complexity card gone, this table is the only place bounds appear in
+    // the book at all.
+    it('sits directly after the solution', () => {
       const order = ids(docFromSolution(THREE));
-      expect(order[order.indexOf('complexity') + 1]).toBe('comparison');
+      expect(order[order.indexOf('approach') + 1]).toBe('comparison');
     });
 
     it('carries one row per approach with both bounds and the pattern', () => {
@@ -105,47 +107,10 @@ describe('docFromSolution', () => {
     expect(callout).toEqual({ kind: 'callout', label: 'Key points', items: ['Pointers never cross', 'One pass'] });
   });
 
-  it('renders complexity as a kv strip', () => {
-    const s = docFromSolution(SD).sections.find(x => x.id === 'complexity')!;
-    expect(s.blocks[0]).toEqual({ kind: 'kv', pairs: [['Time', 'O(n)'], ['Space', 'O(1)']] });
-  });
-
-  // A bare bound is the half the interviewer already assumes — "why" is the
-  // next question, and the derivation used to be dropped on the floor here even
-  // when the backend supplied it.
-  it('renders the complexity derivation alongside the bounds', () => {
-    const withWhy = {
-      solutions: [{
-        approach: 'x',
-        complexity: {
-          time: 'O(n log n)', space: 'O(n)',
-          timeWhy: 'log n levels of recursion, n work merging at each level.',
-          spaceWhy: 'One n-sized merge buffer plus log n stack frames.',
-        },
-      }],
-    };
-    const s = docFromSolution(withWhy).sections.find(x => x.id === 'complexity')!;
-    expect(s.blocks[1]).toEqual({
-      kind: 'callout',
-      label: 'Why these bounds',
-      items: [
-        'Time — log n levels of recursion, n work merging at each level.',
-        'Space — One n-sized merge buffer plus log n stack frames.',
-      ],
-    });
-  });
-
-  // Answers cached before the field existed must degrade to the bounds alone,
-  // not render an empty aside.
-  it('omits the derivation aside when the backend supplied none', () => {
-    const s = docFromSolution(SD).sections.find(x => x.id === 'complexity')!;
-    expect(s.blocks).toHaveLength(1);
-  });
-
-  it('keeps the derivation when only one of the two is present', () => {
-    const partial = { solutions: [{ approach: 'x', complexity: { time: 'O(n)', timeWhy: 'One pass.' } }] };
-    const s = docFromSolution(partial).sections.find(x => x.id === 'complexity')!;
-    expect(s.blocks[1]).toMatchObject({ kind: 'callout', items: ['Time — One pass.'] });
+  // Complexity is not a card any more. It was the same two bounds the code
+  // header already carried, one pane away from the loops they count.
+  it('has no complexity card', () => {
+    expect(ids(docFromSolution(SD))).not.toContain('complexity');
   });
 
   // The Solution card is scanned mid-interview, so its four sources render as
@@ -199,8 +164,10 @@ describe('docFromSolution', () => {
 
   it('keeps both sol.approach and sol.narration when they differ', () => {
     const s = docFromSolution(SD).sections.find(x => x.id === 'approach')!;
+    // "So" is gone: a spoken warm-up word is three characters the eye has to
+    // skip on every bullet. The sentence it opened is untouched.
     expect(s.blocks.find(b => b.kind === 'list')!).toMatchObject({
-      items: expect.arrayContaining(['So my instinct is a two-pointer scan.', 'Scan from both ends, shrinking inward.']),
+      items: expect.arrayContaining(['My instinct is a two-pointer scan.', 'Scan from both ends, shrinking inward.']),
     });
   });
 });
@@ -354,7 +321,7 @@ it('live and history agree on the section ids they both emit (parity guard)', ()
     expect(blockIds.has(id)).toBe(true);
   }
   // and they genuinely share the core answer sections
-  expect(overlap).toEqual(expect.arrayContaining(['approach', 'complexity', 'edgecases', 'tradeoffs']));
+  expect(overlap).toEqual(expect.arrayContaining(['approach', 'edgecases', 'tradeoffs']));
 });
 
 describe('identification section', () => {
@@ -542,15 +509,14 @@ describe('card order', () => {
     // come before the walk they led to.
     expect(at('signals')).toBe(0);
     expect(at('signals')).toBeLessThan(at('identification'));
-    // The answer comes straight after how you spotted it — complexity and the
-    // approach comparison are reference tables and sit below, not between.
-    expect(at('identification')).toBeLessThan(at('approach'));
-    expect(at('approach')).toBeLessThan(at('complexity'));
-    // What you get asked next sits straight under the answer, with the two
-    // things you answer those questions with directly beneath it.
-    expect(at('approach')).toBeLessThan(at('probes'));
-    expect(at('probes')).toBeLessThan(at('edgecases'));
+    // What the constraints can afford is checked BEFORE an approach is picked —
+    // it is what rules approaches out — and the answer comes straight after.
+    expect(at('identification')).toBeLessThan(at('budget'));
+    expect(at('budget')).toBeLessThan(at('approach'));
+    // Then what you run it against, then what you say when pushed on it.
+    expect(at('approach')).toBeLessThan(at('edgecases'));
     expect(at('edgecases')).toBeLessThan(at('tradeoffs'));
+    expect(at('tradeoffs')).toBeLessThan(at('probes'));
     // What to study afterwards is last.
     expect(at('topic')).toBe(ids.length - 1);
   });
@@ -728,5 +694,131 @@ describe('complexity probes are filtered out', () => {
       { q: 'What would you trade to make it faster?', a: 'Memory.' },
     ] } };
     expect(questions(sd)).toHaveLength(2);
+  });
+});
+
+/* Complexity left the book and became the comment header above the code, so
+ * everything the card carried — and the parts it never had room for — has to
+ * come out of here. */
+describe('complexityBeat', () => {
+  const SOLS = {
+    solutions: [
+      { name: 'Brute Force', complexity: { time: 'O(n^2)', space: 'O(1)' } },
+      {
+        name: 'Hash Map',
+        complexity: {
+          time: 'O(n)', space: 'O(n)',
+          timeWhy: 'One pass over nums; each lookup is constant time.',
+          spaceWhy: 'The map holds up to n entries.',
+        },
+        optimality: { required: 'O(n log n) or better', achieved: 'O(n)', tleRisk: false, why: 'n reaches 1e4.' },
+      },
+    ],
+  };
+
+  it('leads with each bound and puts its derivation underneath', () => {
+    const [label, body] = complexityBeat(SOLS, 1)!;
+    expect(label).toBe('Complexity');
+    expect(body).toContain('Time — O(n)');
+    expect(body).toContain('  One pass over nums; each lookup is constant time.');
+    expect(body).toContain('Space — O(n)');
+    expect(body).toContain('  The map holds up to n entries.');
+  });
+
+  // "Why not just sort it?" is asked far more often than "what is the bound?".
+  it('prices the alternatives it was chosen over', () => {
+    const [, body] = complexityBeat(SOLS, 1)!;
+    expect(body).toContain('Brute Force: O(n^2) time, O(1) space');
+    expect(body).not.toContain('Hash Map:');
+  });
+
+  it('checks the bound against what the constraints demand', () => {
+    const [, body] = complexityBeat(SOLS, 1)!;
+    expect(body).toContain('The constraints demand O(n log n) or better — O(n) fits.');
+    expect(body).toContain('  n reaches 1e4.');
+  });
+
+  it('says so when the bound is over budget', () => {
+    const tle = { solutions: [{ complexity: { time: 'O(n^2)' }, optimality: { required: 'O(n log n)', achieved: 'O(n^2)', tleRisk: true } }] };
+    expect(complexityBeat(tle)![1]).toContain('O(n^2) is over that budget');
+  });
+
+  // Answers cached before optimality existed, and problems that gave no
+  // constraints, simply have no verdict paragraph — not an empty one.
+  it('degrades to the bounds alone', () => {
+    const bare = { solutions: [{ complexity: { time: 'O(n)' } }] };
+    expect(complexityBeat(bare)![1]).toBe('Time — O(n)');
+  });
+
+  it('is null when there is no bound to state', () => {
+    expect(complexityBeat({ solutions: [{ approach: 'x' }] })).toBeNull();
+    expect(complexityBeat(null)).toBeNull();
+  });
+});
+
+describe('condensePoints', () => {
+  it('gives each sentence its own bullet', () => {
+    expect(condensePoints(['Build the map first. Then scan it once.']))
+      .toEqual(['Build the map first.', 'Then scan it once.']);
+  });
+
+  it('drops a sentence already said in an earlier bullet', () => {
+    expect(condensePoints([
+      'Check every pair. That is n squared.',
+      'That is n squared! So we do better.',
+    ])).toEqual(['Check every pair.', 'That is n squared.', 'We do better.']);
+  });
+
+  it('strips spoken filler and hedges from the front of a sentence', () => {
+    // They stack, so the strip loops: "So, basically …" is two markers deep.
+    expect(condensePoints(['So, basically the map holds each value.']))
+      .toEqual(['The map holds each value.']);
+    expect(condensePoints(['The obvious approach here is to just compare every pair.']))
+      .toEqual(['Compare every pair.']);
+  });
+
+  // Cutting the hedge must never cut the whole sentence: "The key idea is that"
+  // followed by nothing means the original was carrying the point.
+  it('never empties a sentence', () => {
+    expect(condensePoints(['The key idea is.'])).toEqual(['The key idea is.']);
+  });
+
+  it('keeps a rhetorical question with its answer', () => {
+    expect(condensePoints(['Why two passes? Because it explains cleanly.']))
+      .toEqual(['Why two passes? Because it explains cleanly.']);
+  });
+});
+
+/* The pitch describes the SET of approaches — it is top-level, not per-solution
+ * — so on a multi-solution answer it was appended, verbatim, to every card. */
+describe('the Solution card drops the shared pitch when there are alternatives', () => {
+  const pitch = { opener: 'The brute force checks every pair.', approach: 'Start brute, then hash.' };
+  const items = (sd: any, i = 0) => {
+    const block = docFromSolution(sd, i).sections.find(s => s.id === 'approach')!.blocks[0];
+    return block.kind === 'list' ? block.items : [];
+  };
+
+  it('leaves only this solution\'s own words on a multi-solution answer', () => {
+    const sd = { solutions: [{ approach: 'Compare pairs.' }, { approach: 'Use a map.' }], pitch };
+    expect(items(sd, 1)).toEqual(['Use a map.']);
+  });
+
+  it('keeps the pitch when it is the only description there is', () => {
+    const sd = { solutions: [{ approach: 'Compare pairs.' }], pitch };
+    expect(items(sd)).toEqual(['Compare pairs.', 'The brute force checks every pair.', 'Start brute, then hash.']);
+  });
+});
+
+/* Half the filler words are ordinary openers in this domain, so they only count
+ * as filler when punctuated. */
+describe('condensePoints leaves real sentences alone', () => {
+  it('keeps a right pointer a right pointer', () => {
+    expect(condensePoints(['Right pointer moves inward until they meet.']))
+      .toEqual(['Right pointer moves inward until they meet.']);
+    expect(condensePoints(['Now walk the array once.'])).toEqual(['Now walk the array once.']);
+  });
+
+  it('still cuts them when they are punctuated filler', () => {
+    expect(condensePoints(['Right, the map holds each value.'])).toEqual(['The map holds each value.']);
   });
 });
