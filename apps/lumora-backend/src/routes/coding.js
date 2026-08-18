@@ -974,7 +974,7 @@ Respond with valid JSON in EXACTLY this format (no text before/after):
       { "phrase": "exact words from THIS statement", "implies": "the technique or structure those words point to" }
     ],
     "topic": { "section": "exactly one of: ${SECTION_NAMES.join(' | ')}", "concepts": ["named concept to review, 2-4 of them"] },
-    "probes": [ { "q": "The follow-up an interviewer really asks after this solution, in their words", "a": "The answer in 1-2 short plain sentences the candidate can say out loud" } ],
+    "probes": [ { "q": "The follow-up an interviewer really asks after this solution, in their words. NEVER ask what the time or space complexity is — the answer already states both bounds AND derives them, so that question is the same answer printed twice. Asking to CHANGE a bound (\"could you do this in O(1) space?\") is fine; asking what it IS is not.", "a": "The answer in 1-2 short plain sentences the candidate can say out loud" } ],
     "pitfalls": ["A mistake people really make on THIS pattern, one short plain sentence naming what they do and what it costs them"]
   },
   "identification": {
