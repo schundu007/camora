@@ -21,7 +21,9 @@ export type BookBlock =
   | { kind: 'walk'; rows: { line?: number; code?: string; explanation: string }[] }
   // Every approach on one grid, so "why this one" is answerable at a glance
   // instead of by flipping between three tabs and holding two bounds in memory.
-  | { kind: 'matrix'; rows: MatrixRow[]; activeIndex?: number };
+  /* `unchecked` — this answer predates the requirements check, so an empty
+     verdict is "nobody looked", not "nothing to report". */
+  | { kind: 'matrix'; rows: MatrixRow[]; activeIndex?: number; unchecked?: boolean };
 
 export type MatrixRow = {
   name: string;
@@ -194,7 +196,10 @@ const matrixOrNull = (sd: any, activeIndex: number): BookBlock | null => {
     note: txt(s?.submittableReason) || txt(s?.optimality?.why) || undefined,
   }));
 
-  return { kind: 'matrix', rows, activeIndex };
+  // Stamped server-side on every generated answer (see coding.js). Absent means
+  // the answer was cached before the statement's requirements were read at all —
+  // which is not the same as an answer that met them, and must not look like one.
+  return { kind: 'matrix', rows, activeIndex, unchecked: sd?.requirementsChecked !== true };
 };
 
 /**

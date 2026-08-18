@@ -900,6 +900,22 @@ describe('stated requirements', () => {
     expect(complexityBeat(old)![1]).not.toContain('Does not meet');
   });
 
+  // An empty Requirements column has two meanings and they are not the same:
+  // "this answer met everything" and "nobody looked". The server stamps the
+  // answers it actually checked, so the client can tell them apart.
+  it('flags an answer generated before the check existed', () => {
+    const block = docFromSolution(SD_REQ).sections.find(s => s.id === 'comparison')!.blocks[0];
+    if (block.kind !== 'matrix') throw new Error('expected a matrix');
+    expect(block.unchecked).toBe(true);
+  });
+
+  it('says nothing when the server stamped the answer as checked', () => {
+    const doc = docFromSolution({ ...SD_REQ, requirementsChecked: true });
+    const block = doc.sections.find(s => s.id === 'comparison')!.blocks[0];
+    if (block.kind !== 'matrix') throw new Error('expected a matrix');
+    expect(block.unchecked).toBe(false);
+  });
+
   it('has no card when the statement demands nothing', () => {
     const doc = docFromSolution({ solutions: [{ complexity: { time: 'O(n)' } }], interview: { requirements: [] } });
     expect(doc.sections.find(s => s.id === 'mandates')).toBeUndefined();
