@@ -537,13 +537,15 @@ const SECTION_ORDER = [
   // means the card that comes first is the one you look at first.
   'signals',
   'identification',   // how to spot it — the walk those signals led to
-  // What it costs and how the approaches compare, side by side above the
-  // Solution: both are short tables, and they are what an interviewer asks
-  // about first once you have named the pattern.
-  'complexity',
-  'comparison',
+  // The answer itself, straight after how you found it. Complexity and the
+  // approach comparison used to sit here, on the reasoning that an interviewer
+  // asks about bounds first — but they are reference tables, and putting two of
+  // them between "here is how I spotted it" and "here is what I would do" broke
+  // the one sequence the reader follows top to bottom.
   'approach',         // Solution
   'explain',          // say this out loud
+  'complexity',
+  'comparison',
   'code',
   // What you will be asked next, straight after the answer — then the two
   // things you answer those questions with, side by side.

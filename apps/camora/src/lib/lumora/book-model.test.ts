@@ -33,7 +33,7 @@ describe('docFromSolution', () => {
     // you reach for when questioned. No walkthrough — the line-by-line rides
     // the code itself as inline comments now.
     expect(ids(docFromSolution(SD))).toEqual([
-      'complexity', 'approach', 'edgecases', 'tradeoffs', 'trace',
+      'approach', 'complexity', 'edgecases', 'tradeoffs', 'trace',
     ]);
   });
 
@@ -542,8 +542,10 @@ describe('card order', () => {
     // come before the walk they led to.
     expect(at('signals')).toBe(0);
     expect(at('signals')).toBeLessThan(at('identification'));
-    expect(at('identification')).toBeLessThan(at('complexity'));
-    expect(at('complexity')).toBeLessThan(at('approach'));
+    // The answer comes straight after how you spotted it — complexity and the
+    // approach comparison are reference tables and sit below, not between.
+    expect(at('identification')).toBeLessThan(at('approach'));
+    expect(at('approach')).toBeLessThan(at('complexity'));
     // What you get asked next sits straight under the answer, with the two
     // things you answer those questions with directly beneath it.
     expect(at('approach')).toBeLessThan(at('probes'));
