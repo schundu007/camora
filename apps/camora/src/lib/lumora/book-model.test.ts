@@ -845,3 +845,63 @@ describe('condensePoints leaves real sentences alone', () => {
     expect(condensePoints(['Right, the map holds each value.'])).toEqual([['The map holds each value.']]);
   });
 });
+
+/* A statement's PROSE carries requirements the numeric constraints never
+ * mention — a mandated bound, a banned operation, the target in a Follow-up
+ * line — and they rule approaches out rather than merely slowing them down. */
+describe('stated requirements', () => {
+  const SD_REQ = {
+    solutions: [
+      { name: 'Brute Force', complexity: { time: 'O(n^2)', space: 'O(1)' },
+        requirementCheck: { ok: false, violates: ['O(n) time — this is O(n^2)'] } },
+      { name: 'Prefix and Suffix Arrays', complexity: { time: 'O(n)', space: 'O(n)' },
+        requirementCheck: { ok: false, violates: ['Follow-up O(1) extra space — allocates two n-sized arrays'] } },
+      { name: 'Running Suffix', complexity: { time: 'O(n)', space: 'O(1)' },
+        requirementCheck: { ok: true, violates: [] } },
+    ],
+    interview: { requirements: ['Must run in O(n) time', 'Without using the division operation'] },
+  };
+
+  it('lists what the statement demands, above the solution', () => {
+    const doc = docFromSolution(SD_REQ);
+    const card = doc.sections.find(s => s.id === 'mandates')!;
+    expect(card.heading).toBe('What the statement demands');
+    expect(card.blocks[0]).toEqual({
+      kind: 'list',
+      items: ['Must run in O(n) time', 'Without using the division operation'],
+    });
+    const order = doc.sections.map(s => s.id);
+    expect(order.indexOf('mandates')).toBeLessThan(order.indexOf('comparison'));
+  });
+
+  it('marks the rows that break one, and only those', () => {
+    const block = docFromSolution(SD_REQ).sections.find(s => s.id === 'comparison')!.blocks[0];
+    if (block.kind !== 'matrix') throw new Error('expected a matrix');
+    expect(block.rows.map(r => r.violates)).toEqual([
+      ['O(n) time — this is O(n^2)'],
+      ['Follow-up O(1) extra space — allocates two n-sized arrays'],
+      undefined,
+    ]);
+  });
+
+  it('names the broken requirement in the code header', () => {
+    const [, body] = complexityBeat(SD_REQ, 1)!;
+    expect(body).toContain('Does not meet the statement —');
+    expect(body).toContain('  Follow-up O(1) extra space — allocates two n-sized arrays');
+  });
+
+  // Answers cached before the field existed must read as "meets everything",
+  // not as a wall of warnings on every row.
+  it('says nothing when the backend supplied no check', () => {
+    const old = { solutions: [{ name: 'A', complexity: { time: 'O(n)' } }, { name: 'B', complexity: { time: 'O(n^2)' } }] };
+    const block = docFromSolution(old).sections.find(s => s.id === 'comparison')!.blocks[0];
+    if (block.kind !== 'matrix') throw new Error('expected a matrix');
+    expect(block.rows.every(r => r.violates === undefined)).toBe(true);
+    expect(complexityBeat(old)![1]).not.toContain('Does not meet');
+  });
+
+  it('has no card when the statement demands nothing', () => {
+    const doc = docFromSolution({ solutions: [{ complexity: { time: 'O(n)' } }], interview: { requirements: [] } });
+    expect(doc.sections.find(s => s.id === 'mandates')).toBeUndefined();
+  });
+});
