@@ -22,11 +22,21 @@ import { useSpeakerAudio } from './SpeakerAudio';
  *     active session, it stays dismissed until the next reconnect.
  */
 
-// Live-but-silent ceiling. Was 30 min — uselessly long for an interview that
-// often runs shorter than that, so a stuck-but-"connected" stream never got
-// flagged. 4 min tolerates a candidate's long spoken answer (interviewer
-// stream is quiet meanwhile) without false-firing every question.
-const STALE_AFTER_MS = 4 * 60 * 1000;     // 4 minutes
+// Live-but-silent ceiling.
+//
+// 4 minutes was wrong in practice. Silence on a LIVE stream is not evidence of
+// anything: the candidate talks for minutes at a stretch, a take-home stretch
+// or a coding round can run half an hour with the interviewer muted, and the
+// banner fired through all of it — an interruption, mid-interview, over a
+// stream that was working. The genuine failure this watchdog exists for is the
+// share picker stopping in the background, and that arrives as
+// `droppedUnexpectedly`, which still surfaces IMMEDIATELY (see below) and does
+// not wait on this timer at all.
+//
+// So this is now a long backstop rather than a nag: an hour of live-but-silent
+// audio is genuinely odd and worth one prompt, and it cannot fire twice within
+// a session anyone is actually using.
+const STALE_AFTER_MS = 60 * 60 * 1000;    // 1 hour
 const SPEECH_THRESHOLD = 0.012;
 const SAMPLE_INTERVAL_MS = 5000;          // sample the level every 5s — cheap
 
@@ -86,7 +96,12 @@ export const SilentStreamBanner = () => {
     if (silentForMs < STALE_AFTER_MS) return null;
   }
 
+  // "silent for 63 min" is arithmetic the reader has to do; past an hour, say
+  // hours. The threshold is an hour now, so this is the normal case.
   const minutes = Math.floor(silentForMs / 60000);
+  const silentFor = minutes >= 60
+    ? `${Math.floor(minutes / 60)} hr${minutes >= 120 ? 's' : ''}`
+    : `${minutes || 'several'} min`;
   const accent = dead ? '#dc2626' : '#f59e0b';
 
   return (
@@ -107,7 +122,7 @@ export const SilentStreamBanner = () => {
       </svg>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-bold">
-          {dead ? 'Speaker audio disconnected — Sona can’t hear the interviewer' : `Speaker audio has been silent for ${minutes || 'several'} min`}
+          {dead ? 'Speaker audio disconnected — Sona can’t hear the interviewer' : `Speaker audio has been silent for ${silentFor}`}
         </div>
         <div className="text-[12px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>
           {dead

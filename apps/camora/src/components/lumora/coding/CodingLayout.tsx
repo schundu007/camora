@@ -406,6 +406,25 @@ export function CodingLayout({ onSubmit, isLoading, onBack, initialProblem, init
     onExternalInputModeChange?.(mode);
   }, [onExternalInputModeChange]);
   const [problemText, setProblemText] = useState(initialProblem || '');
+  /* The paste box grows to hold the whole statement.
+   *
+   * Measured rather than guessed: set the height to auto so scrollHeight
+   * reports the CONTENT height rather than the current box height, then adopt
+   * it. A callback ref rather than a plain one because the box unmounts and
+   * remounts with the input-mode tabs, and a fresh element needs measuring
+   * before paint — an effect alone would show one frame at the floor height.
+   */
+  const problemBoxRef = useRef<HTMLTextAreaElement | null>(null);
+  const fitProblemBox = useCallback((el: HTMLTextAreaElement | null) => {
+    problemBoxRef.current = el;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+  // Typing is handled by the ref above only on mount, so re-fit on every change
+  // — including the ones nobody typed: Snap extraction and multi-page capture
+  // both write into this box.
+  useEffect(() => { fitProblemBox(problemBoxRef.current); }, [problemText, fitProblemBox]);
   const [problemUrl, setProblemUrl] = useState('');
   // Why auto-detect didn't fill the field. Null when it worked or hasn't run.
   const [urlDetectNote, setUrlDetectNote] = useState<string | null>(null);
@@ -3028,6 +3047,7 @@ ${solCode}
                       {inputMode === 'paste' && (
                         <div className="space-y-2">
                           <textarea id="problem-text"
+                            ref={fitProblemBox}
                             value={problemText}
                             onChange={(e) => {
                               setProblemText(e.target.value);
@@ -3042,7 +3062,14 @@ ${solCode}
                             onDrop={handleDrop}
                             onDragOver={(e) => e.preventDefault()}
                             placeholder="Paste your coding problem here...&#10;&#10;Example: Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target."
-                            className="w-full h-[140px] sm:h-[180px] md:h-[220px] max-h-[40dvh] rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-[var(--text-primary)] resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-all"
+                            /* Height follows the text (see fitProblemBox). A fixed
+                               220px box showed the first third of a real problem and
+                               made you scroll a small window inside a scrolling panel
+                               to read the constraints — the one part you have to read
+                               carefully. The floor keeps an empty box looking like a
+                               box; the ceiling is a screenful, past which there is no
+                               more room to give it. */
+                            className="w-full min-h-[140px] max-h-[70dvh] overflow-y-auto rounded-lg p-3 text-xs md:text-sm leading-relaxed placeholder:text-[var(--text-primary)] resize-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/20 focus:outline-none transition-[border-color,box-shadow]"
                             style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }}
                           />
                           {/* Multi-page capture session: auto-capture appending pages, generate after 8s idle */}
@@ -3235,18 +3262,22 @@ ${solCode}
                         }
                       }}
                       disabled={isLoading}
-                      className="flex-1 py-2.5 text-white text-sm font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] flex items-center justify-center gap-2"
+                      /* A chip on the right, not a bar across the pane. At full
+                         width it was the largest object on the left window and read
+                         as the panel's title rather than as the one button on it —
+                         and the readiness chip beside it had nowhere to sit. */
+                      className="ml-auto shrink-0 px-3.5 py-1.5 text-white text-[12px] font-bold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-[opacity,transform] active:scale-[0.98] inline-flex items-center gap-1.5"
                       style={
                         degrading.length > 0
                           ? { background: 'transparent', border: '1px solid var(--warning)', color: 'var(--warning-text)', borderRadius: '10px' }
                           : { background: 'linear-gradient(135deg, var(--cam-primary-dk), var(--cam-primary-dk))', borderRadius: '10px' }
                       }>
                       {isLoading ? (
-                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
+                        <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</>
                       ) : multiPageCapturing ? (
-                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding ({multiPageCount} page{multiPageCount > 1 ? 's' : ''})</>
+                        <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding ({multiPageCount} page{multiPageCount > 1 ? 's' : ''})</>
                       ) : (
-                        <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
+                        <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>Coding</>
                       )}
                       {degrading.length > 0 && !isLoading && <span aria-hidden="true">▲</span>}
                     </button>
