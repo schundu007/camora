@@ -150,7 +150,11 @@ export function buildAnswerCacheKey(parts) {
   // answer was generated under the old "at most 10 entries, KEY lines only"
   // rule, so replaying one annotates three lines of a fifteen-line solution and
   // reads as the feature not working — for the full 30-day TTL.
-  return `lumora:answer:v19:${h}`;
+  // v20: the coding prompt gained a house style — simple English, book order,
+  // "Why? Because ...", real numbers from the example (2026-08-17). Every v19
+  // answer is written in the dense register that change exists to replace, so
+  // replaying one serves the old voice for the full 30-day TTL.
+  return `lumora:answer:v20:${h}`;
 }
 
 async function cacheGetFromDb(key) {
