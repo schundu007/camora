@@ -249,16 +249,13 @@ const WIDE_SECTION_IDS = new Set([
 const isWideSection = (id: string, blocks: BookBlock[]) =>
   WIDE_SECTION_IDS.has(id) || blocks.some(b => WIDE_BLOCKS.has(b.kind));
 
-// Sections that must share ONE grid cell and stack inside it, in this order —
-// for a pair read in sequence that auto-placement would otherwise drop into two
+// Sections that share ONE grid cell and stack inside it, in this order — for a
+// pair read in sequence that auto-placement would otherwise drop into two
 // different columns, side by side.
 //
-// Empty, and has been since Complexity left the book: that card was the one
-// thing here needing a partner (it stacked with Walkthrough — "the bound, then
-// the line-by-line that earns it"), and its content is now written above the
-// code instead. The machinery stays because it is the only way to defeat
-// auto-placement for a pair that must read top-to-bottom.
-const STACKED_SECTION_IDS: string[] = [];
+// Tradeoffs and the constraint budget are that pair: what you gave up, and the
+// ceiling that made you give it up. Two short cards, one column, two rows.
+const STACKED_SECTION_IDS: string[] = ['tradeoffs', 'budget'];
 
 // A cell left alone on its row reads as a mistake: half the width filled, the
 // rest dead space beside it. The grid produces those on its own — a full-width
@@ -289,6 +286,34 @@ export const withOrphanSpans = (spans: boolean[]): boolean[] => {
   return out;
 };
 
+/**
+ * Put the stacked pair in the RIGHT column.
+ *
+ * The grid places cells in order, so which column the pair lands in is an
+ * accident of how many half-width cards precede it. A stacked pair is two cards
+ * tall, and starting one on the left leaves whatever follows it stranded beside
+ * a column of double height; on the right it closes its row.
+ *
+ * Only ever swaps with the cell immediately after it, and only when that cell is
+ * half-width too — so the pair trades places with its own row-mate and nothing
+ * else moves. If the pair is last, or the next card spans, it is alone on its
+ * row and withOrphanSpans has already widened it, which makes columns moot.
+ */
+export const withStackOnTheRight = <T,>(cells: T[], spans: boolean[], stackAt: number): [T[], boolean[]] => {
+  if (stackAt < 0 || spans[stackAt] || stackAt + 1 >= cells.length || spans[stackAt + 1]) return [cells, spans];
+
+  // Which column the pair currently starts in: every full-width card closes its
+  // row, every half-width one flips the column.
+  let col = 0;
+  for (let i = 0; i < stackAt; i++) col = spans[i] ? 0 : 1 - col;
+  if (col === 1) return [cells, spans]; // already on the right
+
+  const outCells = [...cells];
+  const outSpans = [...spans];
+  [outCells[stackAt], outCells[stackAt + 1]] = [outCells[stackAt + 1], outCells[stackAt]];
+  return [outCells, outSpans];
+};
+
 export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
   const renderSection = (section: BookDoc['sections'][number], className?: string) => (
     <section key={section.id} className={className}>
@@ -316,7 +341,7 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
     })
     .filter(Boolean) as { section: BookDoc['sections'][number]; stack: boolean }[];
 
-  const spans = withOrphanSpans(
+  const rawSpans = withOrphanSpans(
     cells.map(c => (
       c.stack
         // A wrapper carrying a section that spans must span too — otherwise
@@ -326,6 +351,7 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
         : isWideSection(c.section.id, c.section.blocks)
     )),
   );
+  const [placed, spans] = withStackOnTheRight(cells, rawSpans, cells.findIndex(c => c.stack));
 
   return (
     <div className="lumora-book">
@@ -333,9 +359,9 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
       {/* Two-column at width, one column when the panel is dragged narrow — a
           container query, not a media query, because this panel is resizable and
           its width has no fixed relationship to the viewport's. */}
-      {cells.length > 0 && (
+      {placed.length > 0 && (
         <div className="lumora-book-grid">
-          {cells.map(({ section, stack }, i) => {
+          {placed.map(({ section, stack }, i) => {
             const span = spans[i] ? 'lumora-book-span' : undefined;
             // The stacked pair is emitted once, at the first member's position;
             // the other member renders inside that wrapper, not as its own cell.

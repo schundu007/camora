@@ -1,5 +1,5 @@
 import type { ParsedBlock } from '@/types';
-import { cleanText, sentenceCase } from '@/lib/text-utils';
+import { cleanText, sentenceCase, sentenceCaseAll } from '@/lib/text-utils';
 import { notAlreadyIn } from '@/lib/lumora/analysis-parse';
 import { rankApproaches } from '@/lib/lumora/complexity-rank';
 
@@ -44,6 +44,7 @@ export type BookDoc = { title?: string; sections: BookSection[] };
 export const SECTION_TITLES: Record<string, string> = {
   problem: 'Problem',
   identification: 'How to spot it',
+  ruledout: 'Ruled out',
   budget: 'Constraint budget',
   signals: 'Signals in the statement',
   topic: 'Topic & review',
@@ -91,13 +92,13 @@ const txt = (v: unknown): string => (typeof v === 'string' ? cleanText(v) : '');
  * deliberately untouched: a kv value continues its label grammatically, and
  * code is code. */
 const strList = (v: unknown): string[] =>
-  Array.isArray(v) ? v.map(x => sentenceCase(txt(x))).filter(Boolean) : [];
+  Array.isArray(v) ? v.map(x => sentenceCaseAll(txt(x))).filter(Boolean) : [];
 
 /** Split a block body into bullet lines. Strips leading `-`/`•` markers; stray `*` is removed by cleanText(). */
 const bullets = (content: string): string[] =>
   content
     .split('\n')
-    .map(l => sentenceCase(cleanText(l.replace(/^\s*[-•]\s*/, ''))))
+    .map(l => sentenceCaseAll(cleanText(l.replace(/^\s*[-•]\s*/, ''))))
     .filter(Boolean);
 
 /** `Time: O(n)` / `Space: O(1)` → kv pairs. Lines without a colon become a trailing list block. */
@@ -124,7 +125,9 @@ const push = (out: BookSection[], id: string, blocks: (BookBlock | null)[]) => {
 };
 
 const proseOrNull = (v: unknown): BookBlock | null => {
-  const t = txt(v);
+  // Book style all the way down: a paragraph's every sentence opens with a
+  // capital, not just the one the model happened to start with.
+  const t = sentenceCaseAll(txt(v));
   return t ? { kind: 'prose', text: t } : null;
 };
 
@@ -296,12 +299,11 @@ const SENTENCES = /(?<=[.!?])\s+(?=[A-Z"'`(])/;
  * that states a fact survives, because the alternative is a card that quietly
  * loses the reason an approach was chosen.
  *
- * And the sentences come out as separate bullets. A three-sentence narration in
- * one bullet is a paragraph wearing a dot: it is read as prose, top to bottom,
- * which is exactly what nobody has time for with the interviewer watching. One
- * statement per line is what makes the card skimmable.
+ * The sentences come back split, one per entry, so the caller can decide what
+ * each source becomes: the spoken narration reads as a paragraph, and the terse
+ * written sources become one bullet per statement.
  */
-export const condensePoints = (raw: string[]): string[] => {
+export const condensePoints = (raw: string[]): string[][] => {
   const seen = new Set<string>();
   const key = (t: string) => t.toLowerCase().replace(/[^a-z0-9 ]+/g, '').replace(/\s+/g, ' ').trim();
 
@@ -315,8 +317,11 @@ export const condensePoints = (raw: string[]): string[] => {
       return acc;
     }, []);
 
-  return raw.flatMap(point =>
-    joinQuestions(point.split(SENTENCES).map(part => part.trim()))
+  // Grouped by source, not flattened: the caller renders the FIRST group (the
+  // spoken narration) as a paragraph and the rest as bullets, and it cannot do
+  // that if every sentence arrives in one undifferentiated list.
+  return raw.map(point =>
+    joinQuestions((point || '').split(SENTENCES).map(part => part.trim()))
       .filter(part => {
         const k = key(part);
         // Anything with no letters or digits left after normalising is
@@ -335,7 +340,7 @@ export const condensePoints = (raw: string[]): string[] => {
         trimmed = trimmed.replace(HEDGE, '').trim();
         // Never strip a sentence down to nothing: if the hedge WAS the
         // sentence, the original said something the cut version does not.
-        return sentenceCase(trimmed || part);
+        return sentenceCaseAll(trimmed || part);
       }),
   );
 };
@@ -389,10 +394,23 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
 
     push(sections, 'identification', [
       verdict.length ? { kind: 'kv', pairs: verdict } : null,
+      // Sentences, both halves: the key is the chart's question and the value is
+      // the words in the statement that answered it.
       trail.length ? { kind: 'kv', pairs: trail, layout: 'rows' } : null,
-      strList(ident.ruledOut).length
-        ? { kind: 'callout', label: 'Ruled out', items: strList(ident.ruledOut) }
-        : null,
+    ]);
+
+    /* Ruled out is its own card, directly above the Solution.
+     *
+     * It was a callout at the foot of "How to spot it", which is where it was
+     * written but not where it is read: the techniques you did NOT pick are the
+     * answer to "why not a heap?", and that question comes when the interviewer
+     * is looking at the approach — not while they are still following how you
+     * recognised the pattern. As a card of its own it sits where the question
+     * gets asked, and it stops the identification card ending on a list of
+     * things the answer is not.
+     */
+    push(sections, 'ruledout', [
+      strList(ident.ruledOut).length ? { kind: 'list', items: strList(ident.ruledOut) } : null,
     ]);
   }
 
@@ -420,7 +438,7 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
     if (txt(iv.topic?.section)) tPairs.push(['Pattern', txt(iv.topic.section)]);
     const review = Array.isArray(iv.topic?.review)
       ? iv.topic.review
-          .map((r: any) => (txt(r?.lesson) ? sentenceCase(`${txt(r.lesson)}${txt(r?.section) ? ` — ${txt(r.section)}` : ''}`) : ''))
+          .map((r: any) => (txt(r?.lesson) ? sentenceCaseAll(`${txt(r.lesson)}${txt(r?.section) ? ` — ${txt(r.section)}` : ''}`) : ''))
           .filter(Boolean)
       : [];
     push(sections, 'topic', [
@@ -493,13 +511,22 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
   // Approach comparison card's job and it is dropped here; on a single-solution
   // answer the pitch IS about this solution, so it stays.
   const multi = Array.isArray(sd.solutions) && sd.solutions.length > 1;
-  const solutionPoints = [
+  const [spokenSentences, ...writtenGroups] = condensePoints([
     narration,
     solApproach,
     ...(multi ? [] : [pitchStr || txt(pitchObj?.opener), txt(pitchObj?.approach)]),
-  ].filter((s): s is string => !!s);
-  const points = condensePoints(solutionPoints);
+  ]);
+  // Book format: the paragraph you SAY, then the bullets you scan.
+  //
+  // The narration is continuous speech — it is meant to be read aloud in one
+  // breath — and chopping it into bullets made the card look like a checklist
+  // of four unrelated facts. It is a paragraph. Everything after it is terse
+  // written material (the one-line approach, and on a single-solution answer
+  // the pitch), which is what bullets are for.
+  const spoken = spokenSentences?.join(' ') ?? '';
+  const points = (writtenGroups ?? []).flat();
   push(sections, 'approach', [
+    spoken ? { kind: 'prose', text: spoken } : null,
     points.length ? { kind: 'list', items: points } : null,
     keyPoints.length ? { kind: 'callout', label: 'Key points', items: keyPoints } : null,
   ]);
@@ -534,7 +561,7 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
   if (sd.type === 'diagnose') {
     const walk = Array.isArray(sol?.explanations)
       ? sol.explanations
-          .map((e: any) => ({ line: e.line, code: e.code, explanation: sentenceCase(txt(e.explanation)) }))
+          .map((e: any) => ({ line: e.line, code: e.code, explanation: sentenceCaseAll(txt(e.explanation)) }))
           .filter((r: any) => r.explanation || r.code)
       : [];
     push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
@@ -671,14 +698,14 @@ export function docFromCoFix(
   if (view === 'all') {
     const walk = (answer.walkthrough || [])
       .map((w: any) => ({
-        explanation: sentenceCase([txt(w.context) && `(${txt(w.context)})`, txt(w.text)].filter(Boolean).join(' ')),
+        explanation: sentenceCaseAll([txt(w.context) && `(${txt(w.context)})`, txt(w.text)].filter(Boolean).join(' ')),
         code: typeof w.lines === 'string' ? `L${w.lines}` : undefined,
       }))
       .filter((r: any) => r.explanation);
     push(sections, 'walkthrough', [walk.length ? { kind: 'walk', rows: walk } : null]);
 
     const changes = (answer.changes || [])
-      .map((c: any) => sentenceCase([txt(c.label), txt(c.note)].filter(Boolean).join(' — ')))
+      .map((c: any) => sentenceCaseAll([txt(c.label), txt(c.note)].filter(Boolean).join(' — ')))
       .filter(Boolean);
     push(sections, 'changes', [changes.length ? { kind: 'list', items: changes } : null]);
   }
@@ -695,18 +722,14 @@ export function docFromCoFix(
  * nothing they have not needed yet appears above something they have.
  *
  *   read it        problem → signals → identification
- *   size it up     budget — what the constraints can afford, checked BEFORE
- *                  picking an approach, because it is what rules approaches out
  *   decide         approach → comparison (what you weighed, and its cost)
  *   write it       code → walkthrough → trace
  *   prove it       testcases → edgecases
- *   defend it      tradeoffs → probes → followup
+ *   defend it      tradeoffs + budget → probes → followup
  *   afterwards     topic
  *
- * Two moves against the old sequence: the constraint budget came last but is
- * consulted first — an O(n^2) plan is dead before you write it if n is 1e5 —
- * and there is no 'complexity' entry any more, because that card is gone (its
- * content lives in the code header now; see complexityBeat).
+ * There is no 'complexity' entry any more: that card is gone, and its content
+ * lives in the code header instead (see complexityBeat).
  *
  * Ids not listed keep their original relative order at the end, so other doc
  * builders (CoFix, design) are unaffected.
@@ -718,7 +741,7 @@ const SECTION_ORDER = [
   // means the card that comes first is the one you look at first.
   'signals',
   'identification',   // how to spot it — the walk those signals led to
-  'budget',           // constraint budget — the ceiling every approach below has to clear
+  'ruledout',         // what you considered and dropped — asked about the moment the approach is on screen
   // The answer itself, straight after how you found it, with the alternatives
   // you weighed against it directly underneath.
   'approach',         // Solution
@@ -730,7 +753,13 @@ const SECTION_ORDER = [
   // is what you say when the interviewer starts pushing.
   'testcases',
   'edgecases',
+  // Tradeoffs and the constraint budget are one thought — what you gave up, and
+  // the ceiling that made you give it up — so they are stacked into a single
+  // cell (STACKED_SECTION_IDS in AnswerBook) and read as two rows of one column.
+  // That pairing is why budget sits here rather than up with identification,
+  // where the order of the WORK would otherwise put it.
   'tradeoffs',
+  'budget',           // constraint budget — the ceiling the tradeoff was made against
   'probes',           // interviewer will ask
   'followup',
   'topic',            // what to review afterwards
