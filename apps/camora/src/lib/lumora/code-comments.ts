@@ -263,24 +263,51 @@ export function prependWalkthrough(
   const WIDTH = 78;
   const lines: string[] = [];
 
-  beats.forEach(([label, text], i) => {
-    const body = commentText(text, 2000);
-    if (!body) return;
-    if (i > 0) lines.push(token);
-    if (label) lines.push(`${token} ${label.toUpperCase()}`);
-    // Wrap on words: a comment that runs off the pane is the problem this is
-    // meant to solve, not a new one.
+  // Wrap one paragraph on words, keeping its leading indent on every line it
+  // wraps onto. A comment that runs off the pane is the problem this is meant
+  // to solve, not a new one — and a derivation indented under its bound stops
+  // reading as a nested note the moment its second line starts at column zero.
+  const wrap = (paragraph: string) => {
+    const indent = paragraph.match(/^ */)![0];
+    const body = commentText(paragraph, 2000);
+    // A blank paragraph is a deliberate break between the beat's parts.
+    if (!body) { lines.push(token); return; }
+    const width = Math.max(24, WIDTH - indent.length);
     let line = '';
     for (const word of body.split(' ')) {
-      if (line && (line.length + 1 + word.length) > WIDTH) {
-        lines.push(`${token} ${line}`);
+      if (line && (line.length + 1 + word.length) > width) {
+        lines.push(`${token} ${indent}${line}`);
         line = word;
       } else {
         line = line ? `${line} ${word}` : word;
       }
     }
-    if (line) lines.push(`${token} ${line}`);
+    if (line) lines.push(`${token} ${indent}${line}`);
+  };
+
+  beats.forEach(([label, text], i) => {
+    // Newlines inside a beat are structure, not noise: the Complexity beat is
+    // built as bound / derivation / comparison / verdict, one line each, and
+    // collapsing it to a paragraph buries every bound in the middle of a
+    // sentence. Split first, wrap each part on its own.
+    const paragraphs = String(text ?? '').split('\n');
+    if (!paragraphs.some(par => commentText(par, 2000))) return;
+    if (i > 0) lines.push(token);
+    if (label) lines.push(`${token} ${label.toUpperCase()}`);
+    // Leading and trailing blanks would print as stray `#` lines against the
+    // label above and the separator below.
+    while (paragraphs.length && !paragraphs[0].trim()) paragraphs.shift();
+    while (paragraphs.length && !paragraphs[paragraphs.length - 1].trim()) paragraphs.pop();
+    paragraphs.forEach(wrap);
   });
 
-  return lines.length ? `${lines.join('\n')}\n\n${body}` : body;
+  // No run of empty comment lines, and none at either end. A beat whose parts
+  // are all blank, or a separator landing next to one, would otherwise print as
+  // two or three bare `#` lines — which read as something failing to render
+  // rather than as breathing room.
+  const tidy = lines.filter((l, i) => l !== token || (i > 0 && lines[i - 1] !== token));
+  while (tidy.length && tidy[0] === token) tidy.shift();
+  while (tidy.length && tidy[tidy.length - 1] === token) tidy.pop();
+
+  return tidy.length ? `${tidy.join('\n')}\n\n${body}` : body;
 }

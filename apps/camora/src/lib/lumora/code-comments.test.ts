@@ -216,3 +216,42 @@ describe('prependWalkthrough is idempotent', () => {
     expect(out.match(/# APPROACH/g)).toHaveLength(1);
   });
 });
+
+/* The Complexity beat is written as several lines, some of them indented under
+ * the bound they explain, because it is the only place the bounds appear now —
+ * the card that used to hold them is gone. Collapsing it to a paragraph would
+ * bury both bounds mid-sentence. */
+describe('prependWalkthrough — multi-line beats', () => {
+  const COST: [string, string][] = [[
+    'Complexity',
+    'Time — O(n)\n  One pass over nums.\n\nAgainst the alternatives —\n  Brute Force: O(n^2) time, O(1) space',
+  ]];
+
+  it('keeps each line on its own line', () => {
+    const out = prependWalkthrough('x = 1', COST, 'python');
+    expect(out).toContain('# Time — O(n)');
+    expect(out).toContain('#   One pass over nums.');
+    expect(out).toContain('# Against the alternatives —');
+    expect(out).toContain('#   Brute Force: O(n^2) time, O(1) space');
+  });
+
+  it('keeps the indent on every line a long note wraps onto', () => {
+    const long = '  ' + 'word '.repeat(40).trim();
+    const out = prependWalkthrough('x = 1', [['Complexity', `Time — O(n)\n${long}`]], 'python');
+    const wrapped = out.split('\n').filter(l => l.startsWith('#   word'));
+    expect(wrapped.length).toBeGreaterThan(1);
+  });
+
+  it('leaves no run of blank comment lines, and none at either end', () => {
+    const out = prependWalkthrough('x = 1', [['Complexity', '\n\nTime — O(n)\n\n\n\nSpace — O(1)\n\n']], 'python');
+    expect(out).not.toMatch(/#\n#\n/);
+    expect(out.split('\n')[0]).toBe('# COMPLEXITY');
+    expect(out).toContain('# Space — O(1)\n\nx = 1');
+  });
+
+  it('skips a beat whose every line is blank', () => {
+    const out = prependWalkthrough('x = 1', [['Approach', 'Real text.'], ['Complexity', '\n \n']], 'python');
+    expect(out).not.toContain('COMPLEXITY');
+    expect(out).toContain('# Real text.');
+  });
+});

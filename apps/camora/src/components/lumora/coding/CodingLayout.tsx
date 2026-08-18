@@ -26,7 +26,7 @@ const SESSION_PAGE_NOTE =
   + 'a server fetch just gets the sign-in screen. Paste the problem text here, '
   + 'or use the desktop app to capture it from the screen.';
 import { AnswerBook } from '@/components/lumora/shared/book/AnswerBook';
-import { docFromSolution, docFromBlocks } from '@/lib/lumora/book-model';
+import { docFromSolution, docFromBlocks, complexityBeat } from '@/lib/lumora/book-model';
 import { annotateSolutionCode, prependWalkthrough } from '@/lib/lumora/code-comments';
 import { normalizeProblemText } from '@/lib/lumora/problem-text';
 import { stripDemoCalls } from '@/lib/lumora/demo-calls';
@@ -72,6 +72,17 @@ const codeForSolution = (sol: any, sd: any, language: string): string => {
   const lang = sd?.language && sd.language !== 'auto' ? sd.language : language;
   return annotateSolutionCode(raw, sol?.explanations, lang);
 };
+
+/**
+ * A spoken beat that is really the complexity beat, under whichever label the
+ * model reached for. Those are dropped in favour of complexityBeat(), which
+ * derives both bounds instead of asserting them — see the header effect below.
+ *
+ * Matched on the LABEL only. A walk-through beat that mentions the cost in
+ * passing ("that's the pass that makes it linear") is still walk-through, and
+ * cutting it would take the sentence the candidate actually says out loud.
+ */
+const SAYS_COMPLEXITY = /^\s*(?:time|space|complexity|cost|big[-\s]?o|performance|runtime|efficiency)\b/i;
 
 /**
  * The same code, with the spoken walk-through written above it as comments.
@@ -673,10 +684,9 @@ Rules:
 
 The interviewer just said "walk me through your solution." Give the answer, out loud, in under 45 seconds of speech (about 100 words):
 - One line on the core idea — the trick, not the restatement.
-- 3-4 short beats of how it runs, in order.
-- One line on time and space complexity, with the reason in half a sentence.
+- 4-5 short beats of how it runs, in order.
 
-Nothing else. No numbered walkthrough of every line.
+Nothing else. No numbered walkthrough of every line. Do NOT state the time or space complexity — that is written above the code already, and repeating it spends the seconds these beats need.
 
 \`\`\`${lang}
 ${solCode}
@@ -2520,20 +2530,39 @@ ${solCode}
     return { bookDoc: { ...full, sections: full.sections.filter(sec => sec.id !== 'probes') }, qaSection: qa };
   }, [sd, activeSolutionIdx, solutionExtras]);
 
-  /* Write the walk-through above the code once its beats arrive.
+  /* The comment header above the code: the spoken walk-through, then what the
+   * solution costs.
    *
-   * They are prefetched a second after the answer, so this cannot happen at
-   * derivation time — the editor would fill in and then rewrite itself. Keyed
-   * per solution so switching approach re-applies it to the new code, and
-   * guarded by a ref so a re-render cannot stack a second copy on top. */
+   * Complexity is no longer a card in the book, so this header is the only
+   * place the bounds appear — which is why the two halves are written on
+   * different schedules. The complexity beat is built from `sd` and is ready
+   * the moment the answer parses; the walk-through beats are prefetched a
+   * second later. Waiting for the second would leave the code with no bounds on
+   * it for that second, and folding them in at derivation time would mean the
+   * editor filled in and then rewrote itself under the reader.
+   *
+   * So: write what is ready, and write again when the rest lands.
+   * prependWalkthrough strips the header it wrote last time, so the second pass
+   * replaces rather than stacks. The ref keys on WHICH of the two states was
+   * written, so exactly two writes are possible per solution — not one per beat
+   * as they stream in.
+   *
+   * The model's own complexity beat is dropped: it is one spoken line, and the
+   * one built from the structured fields derives both bounds, prices the
+   * alternatives and checks the constraints. Keeping both would put the thin
+   * version above the thorough one. */
   const walkthroughKeyRef = useRef<string>('');
   useEffect(() => {
-    const beats = solutionExtras.explain;
+    if (!sd) return;
     // Wait for the stream to finish. The beats parse incrementally, so acting
     // on a partial set writes half a header — and keying the guard on the beat
     // count made every new beat look like a new answer and prepend again.
-    if (!sd || !beats?.length || analysisInFlight.includes(`${activeSolutionIdx}_explain`)) return;
-    const key = String(activeSolutionIdx);
+    const streaming = analysisInFlight.includes(`${activeSolutionIdx}_explain`);
+    const spoken = streaming ? [] : (solutionExtras.explain ?? []).filter(([label]) => !SAYS_COMPLEXITY.test(label));
+    const cost = complexityBeat(sd, activeSolutionIdx);
+    const beats = [...spoken, ...(cost ? [cost] : [])];
+    if (!beats.length) return;
+    const key = `${activeSolutionIdx}:${spoken.length ? 'full' : 'cost'}`;
     if (walkthroughKeyRef.current === key) return;
     walkthroughKeyRef.current = key;
     setCode(prev => withWalkthrough(prev, sd, beats, language));

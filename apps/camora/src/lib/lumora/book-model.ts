@@ -174,6 +174,76 @@ const matrixOrNull = (sd: any, activeIndex: number): BookBlock | null => {
 };
 
 /**
+ * What this solution costs, deep enough to defend out loud — as a beat for the
+ * comment header above the code (see prependWalkthrough).
+ *
+ * Complexity used to be a card in the book AND one spoken line in that header:
+ * the same two bounds written twice, a pane apart, and neither copy sat beside
+ * the loops being counted. The card is gone and this is what replaced it, so it
+ * has to carry everything the card carried and then the parts the card never
+ * had room for:
+ *
+ *   - the bound, and under it the derivation the model already emits
+ *     (timeWhy / spaceWhy — the arithmetic, naming the real loops);
+ *   - what the alternatives would have cost, which is the answer to "why not
+ *     just sort it?" — asked far more often than a request to restate the bound;
+ *   - what the constraints demand, and whether this clears that bar, because a
+ *     bound only means something next to the size of n it has to survive.
+ *
+ * Assembled from the structured fields rather than from the model's spoken beat:
+ * it costs no extra generation, it cannot drift from the matrix beside it, and
+ * it appears on answers cached long before any of this existed.
+ *
+ * Newlines are load-bearing — the header wraps each line separately and keeps
+ * its indent, so a two-space indent renders as a note nested under its bound.
+ */
+export function complexityBeat(sd: any, solIdx = 0): [string, string] | null {
+  const sols = Array.isArray(sd?.solutions) ? sd.solutions : [];
+  const sol = sols[solIdx] ?? sols[0] ?? null;
+  const time = txt(sol?.complexity?.time);
+  const space = txt(sol?.complexity?.space);
+  // No bound, no beat: a header that says "Complexity" and then nothing is
+  // worse than one that skips the subject.
+  if (!time && !space) return null;
+
+  const lines: string[] = [];
+  if (time) {
+    lines.push(`Time — ${time}`);
+    if (txt(sol?.complexity?.timeWhy)) lines.push(`  ${txt(sol.complexity.timeWhy)}`);
+  }
+  if (space) {
+    lines.push(`Space — ${space}`);
+    if (txt(sol?.complexity?.spaceWhy)) lines.push(`  ${txt(sol.complexity.spaceWhy)}`);
+  }
+
+  // The alternatives, by name and bound. Only the ones that are not this
+  // solution, and only when they actually state a cost.
+  const others = sols
+    .map((s: any, i: number) => ({ s, i }))
+    .filter(({ s, i }: any) => i !== solIdx && (txt(s?.complexity?.time) || txt(s?.complexity?.space)))
+    .map(({ s, i }: any) =>
+      `${txt(s?.name) || `Solution ${i + 1}`}: ${txt(s?.complexity?.time) || '?'} time, ${txt(s?.complexity?.space) || '?'} space`);
+  if (others.length) {
+    lines.push('', 'Against the alternatives —');
+    others.forEach((o: string) => lines.push(`  ${o}`));
+  }
+
+  // optimality is only filled when the statement gave constraints, so this
+  // whole paragraph is absent rather than empty on a problem that gave none.
+  const required = txt(sol?.optimality?.required);
+  if (required) {
+    const achieved = txt(sol?.optimality?.achieved) || time || space;
+    const verdict = sol?.optimality?.tleRisk === true
+      ? `${achieved} is over that budget, so the biggest inputs time out`
+      : `${achieved} fits`;
+    lines.push('', `The constraints demand ${required} — ${verdict}.`);
+    if (txt(sol?.optimality?.why)) lines.push(`  ${txt(sol.optimality.why)}`);
+  }
+
+  return ['Complexity', lines.join('\n')];
+}
+
+/**
  * Content generated per-solution AFTER the answer, folded into the cards it
  * belongs in rather than shown in a panel of its own.
  *
@@ -187,6 +257,87 @@ export type SolutionExtras = {
   pitfalls?: string[];
   /** The Explain chip: the spoken walk-through, as labelled beats. */
   explain?: [string, string][];
+};
+
+/**
+ * Spoken filler, at the head of a sentence only.
+ *
+ * The model is asked for the candidate's own voice, and a person warming up
+ * says "So, basically, what I'd do here is…". Read aloud that is natural; read
+ * off a card mid-interview it is three words before the sentence starts, on
+ * every bullet, and it is the first thing the eye has to skip past.
+ *
+ * Two groups, because half these words are also ordinary sentence openers in
+ * this domain. "So" and "basically" begin nothing else, so they go bare; "right"
+ * and "now" must be punctuated to count, or "Right pointer moves inward" loses
+ * its pointer and "Now walk the array" loses its instruction.
+ */
+const FILLER_OPENER =
+  /^(?:(?:so|ok|okay|alright|basically|essentially|honestly|i mean)\b[,:]?\s+|(?:right|well|now|look|clearly|obviously)\s*[,:]\s*)/i;
+
+/** "The obvious approach here is to just X" → "X". Hedges that carry no fact. */
+const HEDGE =
+  /^(?:the (?:obvious|simple|naive|first|straightforward) (?:approach|idea|thing|way)(?: here)? (?:is|would be) to (?:just )?|my (?:first )?(?:instinct|thought|approach)(?: here)? (?:is|was) to (?:just )?|what i(?:'d| would) do(?: here)? is (?:to )?(?:just )?|the (?:key )?idea (?:here )?is (?:to |that )?)/i;
+
+/** Sentence-ish split that does not break on O(n log n) or 1e5. */
+const SENTENCES = /(?<=[.!?])\s+(?=[A-Z"'`(])/;
+
+/**
+ * The Solution card's bullets: same facts, fewer words, nothing said twice.
+ *
+ * Its sources overlap by construction — narration is the spoken version of
+ * approach, and both are written from the same notes — so exact-text dedupe
+ * caught almost none of it: the repeats came back as the same sentence inside
+ * two different paragraphs. Deduping at SENTENCE level is what actually removes
+ * them, and it lets a bullet keep the half of itself that is new instead of
+ * being dropped or kept whole.
+ *
+ * Then the openers go. Filler and hedges are the only words cut — every clause
+ * that states a fact survives, because the alternative is a card that quietly
+ * loses the reason an approach was chosen.
+ *
+ * And the sentences come out as separate bullets. A three-sentence narration in
+ * one bullet is a paragraph wearing a dot: it is read as prose, top to bottom,
+ * which is exactly what nobody has time for with the interviewer watching. One
+ * statement per line is what makes the card skimmable.
+ */
+export const condensePoints = (raw: string[]): string[] => {
+  const seen = new Set<string>();
+  const key = (t: string) => t.toLowerCase().replace(/[^a-z0-9 ]+/g, '').replace(/\s+/g, ' ').trim();
+
+  // A rhetorical question belongs with its answer. "Why two passes?" on its own
+  // line is a bullet that asks the reader something instead of telling them.
+  const joinQuestions = (parts: string[]): string[] =>
+    parts.reduce<string[]>((acc, part) => {
+      const prev = acc[acc.length - 1];
+      if (prev?.endsWith('?')) acc[acc.length - 1] = `${prev} ${part}`;
+      else acc.push(part);
+      return acc;
+    }, []);
+
+  return raw.flatMap(point =>
+    joinQuestions(point.split(SENTENCES).map(part => part.trim()))
+      .filter(part => {
+        const k = key(part);
+        // Anything with no letters or digits left after normalising is
+        // punctuation debris, not a statement. Length is deliberately NOT a
+        // test: "Use a heap." is eleven characters and is the whole answer.
+        if (!k || seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .map(part => {
+        // Looped: they stack. "So, basically, what I'd do here is…" is three
+        // markers deep before the sentence starts. Bounded so a pathological
+        // string cannot spin.
+        let trimmed = part;
+        for (let i = 0; i < 3 && FILLER_OPENER.test(trimmed); i++) trimmed = trimmed.replace(FILLER_OPENER, '');
+        trimmed = trimmed.replace(HEDGE, '').trim();
+        // Never strip a sentence down to nothing: if the hedge WAS the
+        // sentence, the original said something the cut version does not.
+        return sentenceCase(trimmed || part);
+      }),
+  );
 };
 
 /** Live Coding: the parsed `jsonSolution` object. */
@@ -334,37 +485,39 @@ export function docFromSolution(sd: any, solIdx = 0, extras?: SolutionExtras): B
   // Dedupe on exact text: the sources overlap often (narration and
   // pitch.approach frequently restate each other), and paragraphs hid that in a
   // way bullets would put on display as two near-identical points.
+  //
+  // The two pitch fields describe the SET of approaches, not the one on screen —
+  // `pitch` is top-level, so the same "start with the brute force, then the hash
+  // map" paragraph was appended to every solution's card, twice over once its
+  // opener restated it. Where there are alternatives, that comparison is the
+  // Approach comparison card's job and it is dropped here; on a single-solution
+  // answer the pitch IS about this solution, so it stays.
+  const multi = Array.isArray(sd.solutions) && sd.solutions.length > 1;
   const solutionPoints = [
     narration,
     solApproach,
-    pitchStr || txt(pitchObj?.opener),
-    txt(pitchObj?.approach),
+    ...(multi ? [] : [pitchStr || txt(pitchObj?.opener), txt(pitchObj?.approach)]),
   ].filter((s): s is string => !!s);
-  const points = [...new Set(solutionPoints)].map(sentenceCase);
+  const points = condensePoints(solutionPoints);
   push(sections, 'approach', [
     points.length ? { kind: 'list', items: points } : null,
     keyPoints.length ? { kind: 'callout', label: 'Key points', items: keyPoints } : null,
   ]);
 
-  const time = txt(sol?.complexity?.time);
-  const space = txt(sol?.complexity?.space);
-  const pairs: [string, string][] = [];
-  if (time) pairs.push(['Time', time]);
-  if (space) pairs.push(['Space', space]);
-  // The bound alone is the half the interviewer already assumes; the derivation
-  // is what they ask for next. The backend has emitted timeWhy/spaceWhy on the
-  // CoFix path for a while and this dropped them on the floor, rendering a bare
-  // "Time O(n log n)" with no reasoning anywhere on screen.
-  // Optional by design: answers cached before the field existed simply fall back
-  // to the bounds alone rather than rendering an empty aside.
-  const whys = [
-    txt(sol?.complexity?.timeWhy) ? `Time — ${txt(sol?.complexity?.timeWhy)}` : null,
-    txt(sol?.complexity?.spaceWhy) ? `Space — ${txt(sol?.complexity?.spaceWhy)}` : null,
-  ].filter(Boolean) as string[];
-  push(sections, 'complexity', [
-    pairs.length ? { kind: 'kv', pairs } : null,
-    whys.length ? { kind: 'callout', label: 'Why these bounds', items: whys } : null,
-  ]);
+  /* No Complexity card.
+   *
+   * The bounds were on screen twice: a kv strip with a "Why these bounds" aside
+   * here, and a COMPLEXITY beat in the comment header above the code. Two copies
+   * of one fact, a pane apart, and the copy in the book was the one you could not
+   * read beside the loops it was counting.
+   *
+   * The card is the copy that goes. complexityBeat() below carries the same
+   * fields — and considerably more of them — into the code header, where the
+   * derivation sits next to the lines it derives from and travels with the
+   * solution when the candidate copies it out. The approach-comparison matrix
+   * keeps its Time/Space columns: that table exists to compare the alternatives,
+   * which is a different question from what THIS solution costs.
+   */
 
   /* The line-by-line, but ONLY for a diagnose answer.
    *
@@ -536,11 +689,24 @@ export function docFromCoFix(
 /**
  * The order a candidate needs these in during an interview.
  *
- * Sections were emitted in whatever order the builder happened to push them,
- * which put reference material above the answer. The sequence here follows how
- * the conversation actually goes: how you recognised the pattern, what you are
- * going to do, the code, what it costs, then the line-by-line, then the material
- * you reach for when questioned.
+ * Chronological, in the sense that matters here: the order the WORK happens in,
+ * from reading the statement to the questions that come after the code runs. A
+ * reader who starts at the top and keeps going is walking their own solve, so
+ * nothing they have not needed yet appears above something they have.
+ *
+ *   read it        problem → signals → identification
+ *   size it up     budget — what the constraints can afford, checked BEFORE
+ *                  picking an approach, because it is what rules approaches out
+ *   decide         approach → comparison (what you weighed, and its cost)
+ *   write it       code → walkthrough → trace
+ *   prove it       testcases → edgecases
+ *   defend it      tradeoffs → probes → followup
+ *   afterwards     topic
+ *
+ * Two moves against the old sequence: the constraint budget came last but is
+ * consulted first — an O(n^2) plan is dead before you write it if n is 1e5 —
+ * and there is no 'complexity' entry any more, because that card is gone (its
+ * content lives in the code header now; see complexityBeat).
  *
  * Ids not listed keep their original relative order at the end, so other doc
  * builders (CoFix, design) are unaffected.
@@ -552,24 +718,20 @@ const SECTION_ORDER = [
   // means the card that comes first is the one you look at first.
   'signals',
   'identification',   // how to spot it — the walk those signals led to
-  // The answer itself, straight after how you found it. Complexity and the
-  // approach comparison used to sit here, on the reasoning that an interviewer
-  // asks about bounds first — but they are reference tables, and putting two of
-  // them between "here is how I spotted it" and "here is what I would do" broke
-  // the one sequence the reader follows top to bottom.
+  'budget',           // constraint budget — the ceiling every approach below has to clear
+  // The answer itself, straight after how you found it, with the alternatives
+  // you weighed against it directly underneath.
   'approach',         // Solution
-  'complexity',
-  'comparison',
+  'comparison',       // approach comparison — the only table of bounds left in the book
   'code',
-  // What you will be asked next, straight after the answer — then the two
-  // things you answer those questions with, side by side.
-  'probes',           // interviewer will ask
+  'walkthrough',
+  'trace',            // the dry run: the code, executed by hand
+  // Proof, then defence. Test cases and edge cases are what you run; the rest
+  // is what you say when the interviewer starts pushing.
+  'testcases',
   'edgecases',
   'tradeoffs',
-  'walkthrough',
-  'trace',
-  'budget',           // constraint budget
-  'testcases',
+  'probes',           // interviewer will ask
   'followup',
   'topic',            // what to review afterwards
 ];

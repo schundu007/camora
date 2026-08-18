@@ -68,5 +68,15 @@ export function cleanText(s: string): string {
     // like architecture/code/scale/summary are never touched.
     .replace(blockTagStripRe(), '')
     .replace(/~~([^~]+)~~/g, '$1') // Remove strikethrough markdown
+    // Markdown removal leaves debris of its own. Dropping `**` from "the
+    // **fast** pointer" closes up cleanly, but dropping a heading or a block tag
+    // leaves the line it stood on, and dropping an inline tag leaves two spaces
+    // where a word used to be. Neither is visible in the source; both are
+    // visible on screen — a double space opens a hole mid-sentence, and a
+    // stranded blank line becomes an empty bullet or a gap inside a card.
+    // Newlines are preserved (they separate bullets); only runs of them close up.
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/^ +| +$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

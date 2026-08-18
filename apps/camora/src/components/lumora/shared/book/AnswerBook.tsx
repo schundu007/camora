@@ -230,10 +230,10 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
 const WIDE_BLOCKS = new Set<BookBlock['kind']>(['code']);
 
 // Sections that are wide by content rather than by block kind. Follow-up Q&A is
-// a kv block like Complexity, but its "values" are 2-3 sentence spoken answers,
-// not an O(...) token — in a half-width column each answer becomes a tall
-// narrow ribbon, and because it is also the LAST section, the cell beside it
-// sits empty. Both problems go away by spanning it.
+// a kv block, but its "values" are 2-3 sentence spoken answers, not a short
+// token — in a half-width column each answer becomes a tall narrow ribbon, and
+// because it is also the LAST section, the cell beside it sits empty. Both
+// problems go away by spanning it.
 // Solution and Walkthrough are the reading column: prose and a line-by-line, both
 // read top-to-bottom. Side by side in a 2-up grid they became two narrow ribbons of
 // wrapped text, and with the reference cards moved to the right pane the left grid
@@ -249,16 +249,15 @@ const WIDE_SECTION_IDS = new Set([
 const isWideSection = (id: string, blocks: BookBlock[]) =>
   WIDE_SECTION_IDS.has(id) || blocks.some(b => WIDE_BLOCKS.has(b.kind));
 
-// Complexity and Walkthrough are read as one thing: the bound, then the
-// line-by-line that earns it. Grid auto-placement was free to drop them into
-// two different columns, which puts the claim and its justification side by
-// side instead of in sequence. They now share ONE grid cell and stack inside
-// it — a single column, two rows, in this order.
-// Complexity used to share a cell with Walkthrough — "the bound, then the
-// line-by-line that earns it". Complexity now pairs with the approach-comparison
-// matrix above the Solution instead: both are short tables and they answer the
-// same question. Walkthrough spans on its own (see WIDE_SECTION_IDS), so nothing
-// is left needing a shared wrapper.
+// Sections that must share ONE grid cell and stack inside it, in this order —
+// for a pair read in sequence that auto-placement would otherwise drop into two
+// different columns, side by side.
+//
+// Empty, and has been since Complexity left the book: that card was the one
+// thing here needing a partner (it stacked with Walkthrough — "the bound, then
+// the line-by-line that earns it"), and its content is now written above the
+// code instead. The machinery stays because it is the only way to defeat
+// auto-placement for a pair that must read top-to-bottom.
 const STACKED_SECTION_IDS: string[] = [];
 
 // A cell left alone on its row reads as a mistake: half the width filled, the
@@ -300,10 +299,10 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
     </section>
   );
 
-  // doc.sections already carries these in Complexity → Walkthrough order, so
-  // filtering preserves it. The pair renders at the position of whichever comes
-  // first, and a doc with only one of the two still works — the wrapper simply
-  // holds a single section.
+  // doc.sections already carries a stacked pair in reading order, so filtering
+  // preserves it. The pair renders at the position of whichever comes first, and
+  // a doc with only one of the two still works — the wrapper simply holds a
+  // single section.
   const stacked = doc.sections.filter(s => STACKED_SECTION_IDS.includes(s.id));
   const stackAnchor = doc.sections.findIndex(s => STACKED_SECTION_IDS.includes(s.id));
 
@@ -320,10 +319,9 @@ export const AnswerBook = ({ doc, onLineHover, onLineClick }: Props) => {
   const spans = withOrphanSpans(
     cells.map(c => (
       c.stack
-        // The stacked cell holds Complexity AND Walkthrough. Walkthrough is a
-        // reading section and spans, so the wrapper carrying it must span too —
-        // otherwise the line-by-line is squeezed into a half-width column while
-        // its own rule says full width.
+        // A wrapper carrying a section that spans must span too — otherwise
+        // that section is squeezed into a half-width column while its own rule
+        // says full width.
         ? stacked.some(sec => isWideSection(sec.id, sec.blocks))
         : isWideSection(c.section.id, c.section.blocks)
     )),
