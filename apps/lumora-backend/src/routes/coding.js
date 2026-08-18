@@ -1076,7 +1076,7 @@ Rules:
 - MANDATORY — MINIMAL IMPORTS: import ONLY modules the code actually uses. No unused imports, no "just in case" imports, no pulling in a heavy module for something a built-in already does. Prefer built-ins/stdlib; add a third-party import only if the problem truly requires it. Every import line must map to a symbol used in the solution.
 - Each solution MUST have a narration field — first-person spoken script the candidate READS OUT LOUD. Keep it SHORT: 2-3 sentences MAX (hook → core insight → complexity), natural speech, no markdown. The candidate reads this live — brevity matters.
 - Each solution MUST have a trace field — 4-6 dry-run entries (never more) on the REAL examples[0] values. Two things make it worth reading: (a) it must ARRIVE at the expected output, with the running total visible in the last step, so the reader can check the answer instead of taking it on trust; (b) at least one step must prove a single position with real arithmetic from examples[0] — the position, the values it depends on, and the sum that gives its contribution. Each step: { step, action: short verb phrase in plain English, state: 'name=value' joined with commas }. No code in state.
-- "explanations" ARE THE CODE'S COMMENTS. The client appends each entry to the line its "code" quotes, as a trailing \`# ...\` / \`// ...\` comment inside the editor — there is no separate walkthrough panel to read them in. So: one entry per MEANINGFUL line, in source order, "code" being that line's text VERBATIM (it is what the entry is matched on) and "explanation" being PLAIN TEXT, at most 12 words, no backticks, no markdown, no brackets or quote characters. Skip blank lines, closing brackets, and lines whose comment could only restate the syntax. Write what you would actually leave on that line — "evict hits older than the window", not "this is a while loop".
+- "explanations" ARE THE CODE'S COMMENTS. The client appends each entry to the line its "code" quotes, as a trailing \`# ...\` / \`// ...\` comment inside the editor — there is no separate walkthrough panel to read them in. So: one entry per MEANINGFUL line, in source order, UP TO 12 PER SOLUTION (a live answer holds three solutions; past that the wait costs more than the extra notes are worth — annotate the lines that carry the idea and skip the rest), "code" being that line's text VERBATIM (it is what the entry is matched on) and "explanation" being PLAIN TEXT, at most 12 words, no backticks, no markdown, no brackets or quote characters. Skip blank lines, closing brackets, and lines whose comment could only restate the syntax. Write what you would actually leave on that line — "evict hits older than the window", not "this is a while loop".
 ${starterCode
   ? `- Preserve the template's own comments verbatim; add NO new comments of your own — a line that already has one is left alone, so put your note in "explanations" instead
 - KEEP the template's driver/main block EXACTLY — the \`if __name__ == '__main__':\` block, the stdin reads, the wrapper call, and the print/fptr output are part of the LOCKED template and MUST appear in your "code" unchanged. Do NOT strip them. (This overrides the generic "no main blocks" rule — that rule is ONLY for from-scratch problems with no starter code.)`
@@ -1917,9 +1917,18 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
     let streamOk = false;
     for (const provider of providerList) {
       if (clientDisconnected) break;
+      // Time to FIRST token, separately from total duration. They diagnose
+      // different faults: a long ttft is the model or the queue in front of it,
+      // a long tail after a fast ttft is simply a big answer being written. A
+      // report of "N minutes before anything appeared" cannot be told apart
+      // from "N minutes to finish" without both numbers.
+      let ttftMs = -1;
       const result = await streamWithProvider(
         provider, messages, systemPrompt,
-        (token) => sendEvent('token', { t: token }),
+        (token) => {
+          if (ttftMs < 0) ttftMs = Math.round(performance.now() - passStart);
+          sendEvent('token', { t: token });
+        },
         () => clientDisconnected,
       );
       if (clientDisconnected) return;
@@ -1937,7 +1946,8 @@ router.post(['/solve', '/stream'], authenticate, checkUsage('questions'), async 
       if (result.usage) { inputTokens = result.usage.input || 0; outputTokens = result.usage.output || 0; }
       console.log(
         `[coding/solve] pass=primary_stream provider=${provider} model=${result.model} ok=true ` +
-        `rawLen=${rawAnswer.length} durMs=${Math.round(performance.now() - passStart)} ua=${JSON.stringify(userAgent)}`,
+        `rawLen=${rawAnswer.length} ttftMs=${ttftMs} durMs=${Math.round(performance.now() - passStart)} ` +
+        `outTok=${outputTokens} ua=${JSON.stringify(userAgent)}`,
       );
       streamOk = true;
       break;
