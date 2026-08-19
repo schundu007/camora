@@ -53,6 +53,7 @@ export const sreTopicCategoryMap = {
   // Incidents
   'incident-command':          'incidents',
   'mttr-mttd-mttf':            'incidents',
+  'reliability-math':          'incidents',
   'incident-severity':         'incidents',
   'blameless-postmortems':     'incidents',
   'five-whys':                 'incidents',
@@ -3523,6 +3524,7 @@ Healthy benchmarks (from industry surveys):
       { term: 'MTT-Mitigate', definition: 'Sub-component of MTTR: detection → symptom mitigated (regardless of root cause). The user-experienced duration. SRE-correct optimization target.' },
       { term: 'MTBF', definition: 'Mean Time Between Failures. For repairable systems. Tracked for trend; rarely a useful target.' },
       { term: 'MTTF', definition: 'Mean Time To Failure. For non-repairable hardware (disks, etc.). Less common in software.' },
+      { term: 'MTTI / MTTA (synonyms you will hear)', definition: 'Mean Time To Identify / Acknowledge — the ITIL and PagerDuty names for the detection phase this topic calls MTTD. Critical difference: those frameworks treat the phase as sitting BEFORE MTTR and add the two (total downtime = MTTI + MTTR), whereas the Google SRE model nests detection INSIDE MTTR. See the Reliability Math topic for the reconciliation and the arithmetic.' },
       { term: 'Availability formula', definition: 'Availability = MTBF / (MTBF + MTTR). Improving MTTR is usually the higher-leverage lever.' },
     ],
     keyQuestions: [
@@ -3612,6 +3614,293 @@ The interview-quality framing: every "we want N nines" claim should come with an
     ],
     references: [
       'https://sre.google/sre-book/managing-incidents/',
+      'https://www.atlassian.com/incident-management/kpis/common-metrics',
+    ],
+  },
+
+  {
+    id: 'reliability-math',
+    title: 'Reliability Math',
+    icon: 'gauge',
+    color: '#ef4444',
+    questions: 5,
+    description: 'Every incident and reliability number you may be asked to compute on the spot — timeline metrics, SLI ratios, error budgets, RTO/RPO checks, downtime cost. Formulas are cloud-agnostic; only the metric names change per provider.',
+    introduction: `## Overview
+Interviews and postmortems ask you to *compute*, not just define. This topic is the arithmetic sheet: every formula here should be doable in your head or on a whiteboard.
+
+The organising principle: **the math is universal, the metric names are not.** An availability SLI is "good events over valid events" whether you read it from Prometheus, CloudWatch, Cloud Monitoring, or Azure Monitor. Learn the formula once; keep a translation table for the provider you are in front of.
+
+---
+
+## 1. Timeline metrics
+
+All four are means — sum the per-incident durations, divide by the incident count.
+
+| Metric | Measures | Formula |
+| --- | --- | --- |
+| MTTD — Mean Time To **Detect** | issue start → monitoring fires | total detection delay / incidents |
+| MTTA — Mean Time To **Acknowledge** | alert fires → human acks the page | total ack delay / pages |
+| MTTI — Mean Time To **Identify** | issue start → team knows and owns it | total identification delay / incidents |
+| MTTR — Mean Time To **Repair / Restore** | work begins → user impact gone | total repair duration / incidents |
+| MTBF — Mean Time **Between Failures** | steady-state reliability frequency | total operational time / failures |
+
+### The convention trap — read this before you add anything up
+
+Two conventions are in wide use and they are **not compatible**:
+
+- **Nested (Google SRE Book / Workbook).** MTTR spans the whole incident, issue start → resolved, and decomposes into \`MTTD + MTT-Mitigate + MTT-Resolve\`. Detection is *inside* MTTR.
+- **Additive (ITIL / PagerDuty / Atlassian).** MTTI (or MTTD+MTTA) is the detection phase; MTTR is measured *from* that point. Total downtime per incident = \`MTTI + MTTR\`.
+
+Under the nested convention, adding MTTI to MTTR double-counts detection. Under the additive convention, quoting MTTR alone understates user-visible downtime.
+
+**The rule: state your boundaries before you compute.** Say "MTTR measured from detection" or "MTTR measured from issue start." Interviewers are testing whether you know the ambiguity exists — naming it scores better than picking a side.
+
+### Worked example (additive convention)
+
+- 60 min cumulative detection delay across 5 incidents → MTTI = **12 min**
+- 150 min cumulative repair across the same 5 → MTTR = **30 min**
+- Total downtime per incident = 12 + 30 = **42 min**
+- 720 h (30 days) of operation, 3 outages → MTBF = **240 h**
+
+Cross-check it against the availability identity:
+
+\`Availability = MTBF / (MTBF + MTTR_total)\` = 240 / (240 + 0.7) = **99.71%**
+
+That is *below* a 99.9% SLO — 42 minutes × 3 outages is 126 minutes against a 43.2-minute monthly budget. The timeline metrics and the error budget must tell the same story; if they don't, one of them is measured wrong.
+
+---
+
+## 2. SLI formulas — one shape, four dialects
+
+Every request-driven SLI is the same ratio:
+
+\`SLI = good_events / valid_events × 100\`
+
+"Valid" excludes what isn't your responsibility (404s for routes that don't exist, requests rejected upstream). "Good" is per the SLI definition: 2xx for availability, 2xx **and** under the latency threshold for latency.
+
+Expressed as a subtraction — the form load-balancer metrics force on you, because they give you totals and errors, not successes:
+
+\`Availability % = ((Total − Errors) / Total) × 100\`
+
+### Metric-name translation table
+
+| Concept | Prometheus / OTel | AWS CloudWatch | GCP Cloud Monitoring | Azure Monitor |
+| --- | --- | --- | --- | --- |
+| Total requests | \`http_requests_total\` (counter) | ALB \`RequestCount\`; API GW \`Count\` | \`loadbalancing.googleapis.com/https/request_count\` | App Gateway \`TotalRequests\`; Front Door \`RequestCount\` |
+| Server errors | \`http_requests_total{status=~"5.."}\` | ALB \`HTTPCode_Target_5XX_Count\` / \`HTTPCode_ELB_5XX_Count\`; API GW \`5XXError\` | same metric filtered \`response_code_class = 500\` | App Gateway \`FailedRequests\`; App Service \`Http5xx\` |
+| Latency distribution | \`http_request_duration_seconds_bucket\` (histogram) | ALB \`TargetResponseTime\` (p99 statistic) | \`https/total_latencies\` (distribution) | \`BackendLastByteResponseTime\` |
+| Ratio mechanism | PromQL division | Metric Math expression | MQL ratio / Managed Prometheus | Metric math or KQL over logs |
+
+### The same availability SLI in each dialect
+
+Prometheus (generic):
+\`\`\`promql
+sum(rate(http_requests_total{status!~"5.."}[5m]))
+  / sum(rate(http_requests_total[5m])) * 100
+\`\`\`
+
+Prometheus (Kubernetes NGINX ingress):
+\`\`\`promql
+sum(rate(nginx_ingress_controller_requests{status!~"5.."}[5m]))
+  / sum(rate(nginx_ingress_controller_requests[5m])) * 100
+\`\`\`
+
+AWS CloudWatch Metric Math — bind \`b\` = RequestCount (Sum), \`a\` = HTTPCode_Target_5XX_Count (Sum):
+\`\`\`
+((b - a) / b) * 100
+\`\`\`
+
+GCP — Managed Service for Prometheus takes the PromQL above verbatim; native MQL divides \`request_count\` filtered to non-5xx by unfiltered \`request_count\`.
+
+Azure — Log Analytics KQL over diagnostic logs:
+\`\`\`kusto
+AzureDiagnostics
+| summarize availability = 100.0 * countif(httpStatus_d < 500) / count()
+\`\`\`
+
+### Latency SLI
+
+\`Latency SLI = (requests served under X ms) / valid requests × 100\`
+
+In Prometheus the histogram bucket gives you the numerator directly — the \`le\` label is cumulative, so the bucket *is* the count under the threshold:
+\`\`\`promql
+sum(rate(http_request_duration_seconds_bucket{le="0.5"}[5m]))
+  / sum(rate(http_request_duration_seconds_count[5m])) * 100
+\`\`\`
+This is why a threshold SLI beats a percentile SLI: it aggregates across instances correctly, and percentiles do not.
+
+---
+
+## 3. Error budget and burn rate
+
+\`\`\`
+Error budget %      = 100% − SLO%
+Budget (time)       = window × (1 − SLO)
+Budget (volume)     = total events in window × (1 − SLO)
+Burn rate           = (% of budget consumed) / (% of window elapsed)
+\`\`\`
+
+Worked: 99.9% SLO, 30-day window, 10M requests → 0.1% budget → **43.2 min/month** *or* **10,000 allowed failed requests**. Quote whichever denomination the audience thinks in — engineers usually want requests, executives usually want minutes.
+
+Burn-rate thresholds are derived, not memorised:
+
+\`burn = (budget fraction × window hours) / alert window hours\`
+
+| Burn | Derivation | Consumes | Action |
+| --- | --- | --- | --- |
+| 14.4× | 0.02 × 30 × 24 / 1 | 2% of budget in 1 h | page on-call |
+| 6× | 0.05 × 30 × 24 / 6 | 5% of budget in 6 h | ticket / Slack |
+| 1× | 0.10 × 30 × 24 / 72 | 10% of budget in 3 days | ticket, low priority |
+
+Pair every long window with a short confirmation window (1 h + 5 min, 6 h + 30 min) so a burst that already stopped doesn't page anyone.
+
+---
+
+## 4. RTO and RPO — targets vs. measured reality
+
+\`\`\`
+RTO holds  ⟺  measured downtime  ≤  stated RTO
+RPO holds  ⟺  backup interval (or replication lag)  ≤  stated RPO
+\`\`\`
+
+The sharp point most candidates miss: **an RTO is a cap, so compare it against p95 or worst-case downtime, never the mean.** Comparing a cap to an average passes roughly half the time by construction. If MTTR is 30 min and RTO is 45 min you have proven nothing — the incidents that breach RTO are exactly the ones a mean hides.
+
+When the check fails, the remedies are the same everywhere; only the product names change:
+
+| Remedy | AWS | GCP | Azure |
+| --- | --- | --- | --- |
+| Health-checked failover | Route 53 / Application Recovery Controller | Cloud DNS + Global LB | Traffic Manager / Front Door |
+| Automated recovery runbook | Systems Manager Automation | Cloud Workflows | Azure Automation |
+| RPO = 0 storage | Aurora Global (sync), multi-AZ sync | Spanner, regional PD sync | Cosmos DB strong, zone-redundant |
+
+---
+
+## 5. Cost of downtime
+
+\`\`\`
+Cost = (hourly revenue loss + hourly productivity loss) × downtime hours
+hourly productivity loss = affected headcount × loaded hourly rate × fraction blocked
+\`\`\`
+
+Worked, using the numbers from section 1:
+- $100M ARR / 8,760 h → **$11.4K/h** revenue exposure
+- 200 engineers × $100/h loaded × 50% blocked → **$10K/h** productivity
+- $21.4K/h × 0.7 h (42 min) → **~$15K per incident**; × 5 incidents → **~$75K**
+
+That $75K is the budget ceiling for the fix. Reliability spend is justified only while marginal cost is below marginal downtime avoided — which is the same argument as "100% is the wrong target," expressed in dollars instead of nines.`,
+    whenToUse: [
+      'Any interview that hands you incident timestamps and asks for a number — compute, then state your MTTR boundary convention',
+      'Writing an SLI in a provider you have not used before — start from good/valid, then look up the two metric names',
+      'Postmortem review — cross-check that timeline metrics and error-budget consumption agree',
+      'DR drill sign-off — compare p95 recovery time to RTO, not the mean',
+      'Building the business case for reliability headcount or infrastructure spend',
+    ],
+    keyConcepts: [
+      { term: 'MTTI / MTTA', definition: 'Mean Time To Identify / Acknowledge. The detection-and-ownership phase. MTTA specifically measures alert-fire → human ack and is the cleanest on-call health signal. Under the additive convention these sit BEFORE MTTR; under the Google SRE convention detection is nested inside MTTR as MTTD.' },
+      { term: 'Total downtime per incident', definition: 'MTTI + MTTR under the additive (ITIL/PagerDuty) convention. Under the nested (Google SRE) convention MTTR already spans the whole incident and nothing is added. Always state which you mean before summing.' },
+      { term: 'Good / valid ratio', definition: 'The universal SLI shape: good_events / valid_events. Load balancers expose totals and errors rather than successes, so in practice you compute ((total − errors) / total) × 100 — algebraically identical.' },
+      { term: 'Metric-name portability', definition: 'The formula never changes across clouds; only the metric identifiers do. Requests: RequestCount (AWS ALB) / request_count (GCP) / TotalRequests (Azure) / http_requests_total (Prometheus). Knowing the shape lets you write an SLI in a console you have never opened.' },
+      { term: 'Burn rate derivation', definition: 'burn = (budget fraction × window hours) / alert window hours. 14.4x is 0.02 × 30 × 24 / 1 — 2% of a 30-day budget in one hour. Deriving it beats memorising it, because the constant changes when the window does.' },
+      { term: 'Cap vs. mean', definition: 'RTO and RPO are caps. Validating them against MTTR (a mean) is a category error — use p95 or worst-case observed recovery time.' },
+    ],
+    approach: [
+      'Write the formula before the numbers — interviewers score the setup more than the arithmetic',
+      'Declare your MTTR boundary ("from detection" or "from issue start") in the same breath as the number',
+      'Express error budgets in both minutes and requests; let the audience pick',
+      'Derive burn-rate thresholds rather than reciting 14.4x — the derivation survives a changed window',
+      'For SLIs, name the metric shape first (good/valid), then the provider metric names second',
+      'Sanity-check every reliability claim two ways: timeline metrics AND error budget consumption should agree',
+    ],
+    pitfalls: [
+      'Adding MTTI to an MTTR that already contains detection — double-counts the detection phase and inflates downtime.',
+      'Validating an RTO against MTTR. RTO is a cap; a mean clears it roughly half the time by construction. Use p95.',
+      'Quoting availability without the denominator. 99.9% over 1,000 requests is one failure; over 10M it is 10,000. The percentage alone is not a budget.',
+      'Assuming the load balancer 5xx count equals your error budget consumption. It misses errors the LB never saw — DNS failures, client-side timeouts, and 200 responses carrying an error body.',
+      'Using mean latency in a latency SLI. Switch to a threshold count (histogram bucket) which aggregates correctly across instances; percentiles do not average.',
+      'Computing burn rate over a window shorter than the alert confirmation window — produces flapping pages on bursts that already ended.',
+      'Treating MTBF as a target. Optimising for "longer between failures" quietly incentivises not filing small incidents.',
+    ],
+    keyQuestions: [
+      {
+        question: 'We had 5 incidents. Cumulative detection delay 60 min, cumulative repair 150 min. What is our average downtime, and what does it imply?',
+        answer: `MTTI = 60 / 5 = 12 minutes. MTTR = 150 / 5 = 30 minutes. Total downtime per incident = 42 minutes — but only under the additive convention, where MTTR is measured from the point of identification. I'd state that explicitly, because under the Google SRE convention MTTR already spans detection and the answer would be 30.
+
+What it implies matters more than the number. 12 minutes of detection on a 42-minute incident is 29% of the impact spent before anyone knew — that is an observability problem, not a response problem, and it's the cheaper of the two to fix (alerting thresholds, symptom-based alerts, synthetic probes).
+
+Then cross-check against the budget: 5 incidents × 42 min = 210 minutes. A 99.9% SLO allows 43.2 min/month. Even one of these incidents blows the monthly budget nearly to 100%. So the honest conclusion is that the SLO is either wrong or being violated continuously, and the error-budget policy should already have frozen launches.`,
+      },
+      {
+        question: 'Write me an availability SLI. I will not tell you which cloud we are on.',
+        answer: `The formula is provider-independent, so I'll write that first:
+
+\`SLI = good_events / valid_events × 100\`
+
+Because load balancers report totals and errors rather than successes, the practical form is:
+
+\`Availability % = ((Total − 5xx) / Total) × 100\`
+
+Then I bind two metric names per platform:
+- Prometheus: \`sum(rate(http_requests_total{status!~"5.."}[5m])) / sum(rate(http_requests_total[5m]))\`
+- AWS: CloudWatch Metric Math \`((b - a) / b) * 100\` with b = ALB RequestCount, a = HTTPCode_Target_5XX_Count (or API Gateway Count and 5XXError)
+- GCP: \`request_count\` filtered by \`response_code_class\`, or the same PromQL via Managed Service for Prometheus
+- Azure: Application Gateway TotalRequests and FailedRequests, or KQL \`countif(httpStatus_d < 500) / count()\`
+
+Two caveats I'd raise unprompted. First, "valid" needs a definition — I'd exclude 404s on nonexistent routes and health-check traffic, because those aren't user-visible failures. Second, the LB only sees what reached it: DNS failures, client timeouts, and 200s carrying an error payload are all invisible here. If the SLO is customer-facing, the SLI eventually needs client-side or synthetic measurement too.`,
+      },
+      {
+        question: 'Our RTO is 45 minutes and our MTTR is 30 minutes. Are we compliant?',
+        answer: `Not demonstrated — and the comparison as framed is a category error.
+
+RTO is a cap: "no recovery may exceed 45 minutes." MTTR is a mean. A mean of 30 minutes is perfectly consistent with half the incidents taking 60+ minutes. Comparing a cap against an average passes by construction while telling you nothing about the incidents that actually breach it.
+
+What I'd ask for instead: the p95 and the maximum observed recovery time over the last 12 months, and the distribution shape. If p95 is 40 minutes we're plausibly compliant; if p95 is 90 minutes we're breaching regularly and the mean is hiding it.
+
+Two more things before I'd sign off. RTO compliance is only meaningful if it has been measured in a drill, not just in incidents — the failure modes DR is for (region loss) rarely appear in routine incident data. And RTO is only half the pair: I'd separately verify RPO by checking that backup interval or replication lag is under the stated target, because a 20-minute recovery that loses an hour of writes is still a failed DR posture.`,
+      },
+      {
+        question: 'Justify spending on reliability. Give me a number.',
+        answer: `Cost of downtime = (hourly revenue loss + hourly productivity loss) × downtime hours.
+
+Take a $100M ARR service: $100M / 8,760 hours is about $11.4K/hour of direct revenue exposure. Add internal productivity — 200 engineers at a $100/hour loaded rate, half of them blocked during an outage, is another $10K/hour. Call it $21.4K/hour.
+
+At 42 minutes average downtime that's roughly $15K per incident, or $75K across 5 incidents. That $75K is the ceiling on what the fix should cost. If an engineer-quarter of automation work removes most of that recurrence, it clears the bar comfortably; if the proposal is a duplicate multi-region footprint costing $500K/year, it does not.
+
+I'd flag two things about the model. The revenue term is usually understated because it ignores churn and SLA credits, which are real but harder to attribute. And the argument cuts both ways — it's also the reason not to chase more nines than the business needs. That's the "100% is the wrong target" argument expressed in dollars instead of nines.`,
+      },
+      {
+        question: 'Where does the 14.4x burn rate come from, and would it change?',
+        answer: `It's derived, not a constant to memorise:
+
+\`burn = (budget fraction consumed × window hours) / alert window hours\`
+
+For "2% of a 30-day budget in 1 hour": 0.02 × 30 × 24 / 1 = 14.4. The same formula gives the other standard rows — 6x is 0.05 × 30 × 24 / 6, and 1x is 0.10 × 30 × 24 / 72.
+
+Yes, it changes. The 30 in that expression is the SLO window. On a 7-day rolling window, "2% in 1 hour" becomes 0.02 × 7 × 24 / 1 = 3.36x. Anyone who hardcodes 14.4 into a 7-day-window alert has silently made it 4x less sensitive than intended.
+
+The other half of the pattern matters as much as the number: each long window is paired with a short confirmation window (1h + 5min, 6h + 30min) and both must be firing. Without the short window, a burst that has already stopped keeps paging for the rest of the long window.`,
+      },
+    ],
+    quickFire: [
+      { q: 'What is MTTI and how is it calculated?', a: 'Mean Time To Identify — total detection-and-ownership delay divided by the number of incidents. It is the phase before repair work begins. Google SRE material calls the monitoring half of it MTTD; ITIL/PagerDuty material calls the whole phase MTTI.' },
+      { q: 'Is total downtime per incident MTTI + MTTR?', a: 'Only under the additive (ITIL/PagerDuty) convention. Under the Google SRE convention MTTR already spans issue start to resolution, so adding MTTI double-counts detection. State your boundary before summing.' },
+      { q: 'What is the MTBF formula?', a: 'Total operational time / number of failures. 720 hours over 3 outages is an MTBF of 240 hours.' },
+      { q: 'Give the availability SLI as a subtraction.', a: '((Total requests − 5xx errors) / Total requests) × 100. Load balancers report totals and errors rather than successes, so this is the form the metrics force on you.' },
+      { q: 'What are the AWS metric names for an ALB availability SLI?', a: 'RequestCount as the denominator and HTTPCode_Target_5XX_Count (or HTTPCode_ELB_5XX_Count) as the errors, combined in a CloudWatch Metric Math expression ((b - a) / b) * 100. API Gateway uses Count and 5XXError.' },
+      { q: 'What are the GCP and Azure equivalents?', a: 'GCP: loadbalancing.googleapis.com/https/request_count filtered by response_code_class, or the same PromQL via Managed Service for Prometheus. Azure: Application Gateway TotalRequests and FailedRequests, or KQL countif(httpStatus_d < 500) / count().' },
+      { q: 'How do you compute a latency SLI in Prometheus without percentiles?', a: 'Divide the cumulative histogram bucket at the threshold by the total count: http_request_duration_seconds_bucket{le="0.5"} / http_request_duration_seconds_count. The le label is cumulative, so the bucket is already the count of requests under the threshold. Threshold counts aggregate across instances correctly; percentiles do not.' },
+      { q: 'What is the raw error budget volume for 10M requests at a 99.9% SLO?', a: '10,000,000 × 0.001 = 10,000 allowed failed requests. The same budget in time is 43.2 minutes over a 30-day window.' },
+      { q: 'Why can you not validate an RTO against MTTR?', a: 'RTO is a cap and MTTR is a mean. A mean below the cap is consistent with half of incidents breaching it. Compare RTO against p95 or worst-case observed recovery time instead.' },
+      { q: 'What is the RPO compliance check?', a: 'Backup interval — or replication lag, whichever is the actual recovery source — must be less than or equal to the stated RPO. RPO = 0 requires synchronous replication; asynchronous replication makes RPO equal to the lag at the moment of failure.' },
+      { q: 'Give the cost-of-downtime formula.', a: '(hourly revenue loss + hourly productivity loss) × downtime hours. Hourly productivity loss is affected headcount × loaded hourly rate × the fraction blocked. The result is the ceiling on what the fix should cost.' },
+      { q: 'Does the 14.4x burn rate hold on a 7-day SLO window?', a: 'No. It is derived as budget fraction × window hours / alert window hours, so on a 7-day window "2% in 1 hour" is 0.02 × 7 × 24 = 3.36x. Hardcoding 14.4 on a shorter window makes the alert far less sensitive than intended.' },
+    ],
+    references: [
+      'https://sre.google/workbook/implementing-slos/',
+      'https://sre.google/workbook/alerting-on-slos/',
+      'https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/using-metric-math.html',
+      'https://cloud.google.com/monitoring/api/metrics_gcp',
+      'https://learn.microsoft.com/en-us/azure/azure-monitor/reference/supported-metrics/metrics-index',
+      'https://prometheus.io/docs/practices/histograms/',
       'https://www.atlassian.com/incident-management/kpis/common-metrics',
     ],
   },
