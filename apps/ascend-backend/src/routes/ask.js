@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../config/database.js';
@@ -111,6 +112,59 @@ async function processImages(images, userId, convId) {
   return { parts, stored };
 }
 
+/**
+ * Claude is the Ask tab's model. Gemini is the fallback under it.
+ *
+ * The tab shipped Gemini-only while the request body said provider:'claude', so
+ * nothing in the UI or the payload told you which model answered. Flash does not
+ * hold this prompt: across repeated runs on the same question it kept the code
+ * table on one attempt and slid back to restating the official names on the next
+ * ("504 — took too long to respond"), and it drops whole sections once the
+ * format contract gets long. Claude held the same contract first try.
+ *
+ * Env-tunable so the model can move without a deploy.
+ */
+const ASK_ANTHROPIC_MODEL = process.env.ASK_ANTHROPIC_MODEL || 'claude-sonnet-5';
+
+let _anthropic = null;
+let _anthropicKey = null;
+function getAnthropic() {
+  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY || '';
+  if (!key) return null;
+  if (!_anthropic || _anthropicKey !== key) {
+    _anthropic = new Anthropic({ apiKey: key });
+    _anthropicKey = key;
+  }
+  return _anthropic;
+}
+
+/**
+ * Gemini's message shape → Anthropic's.
+ *
+ * Two things bite here, and both have already cost a live interview elsewhere in
+ * this codebase: Anthropic rejects a history whose first turn is 'assistant'
+ * (the tail slice lands wherever it lands), and it wants image blocks BEFORE the
+ * text that refers to them — reversed, the model answers the words and ignores
+ * the screenshot.
+ */
+function toAnthropicMessages(msgs, imageParts = []) {
+  const mapped = msgs
+    .filter((m) => m && typeof m.content === 'string' && m.content.trim())
+    .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
+  while (mapped.length && mapped[0].role === 'assistant') mapped.shift();
+  if (imageParts.length && mapped.length) {
+    const last = mapped[mapped.length - 1];
+    last.content = [
+      ...imageParts.map((p) => ({
+        type: 'image',
+        source: { type: 'base64', media_type: p.inlineData.mimeType, data: p.inlineData.data },
+      })),
+      { type: 'text', text: last.content },
+    ];
+  }
+  return mapped;
+}
+
 let _genAI = null;
 let _genAIKey = null;
 function getGenAI() {
@@ -193,10 +247,79 @@ use those exact anchors so the candidate can find the part they need mid-sentenc
 - A fault, error code, or outage question ("what is a 504", "service is throwing 5xx"):
   **What it is** / **Why it happens** (2-3 lines) / **Where to look** (1-2 lines) /
   **How to fix** (2-3 lines) / **Prevent** (1 line)
-- A comparison ("X vs Y"): **The split** / **Pick X when** / **Pick Y when** / **I use**
+- A comparison ("X vs Y"): **The split** / **Pick X when** / **Pick Y when** /
+  **Trade-off** (optional, 1 line) / **I use**
 - A "how does it work" question: **Shape** / **Flow** (2-3 lines) / **Catch** / **In practice**
 - A design question: **Shape** / **Data** / **Scale** / **Fails when** / **I'd start with**
 - Behavioral: **Situation** / **Task** / **Did** (3-4 lines) / **Result** (with the number)
+
+WHEN THE QUESTION NAMES A FAMILY, PUT THE MEMBERS IN A TABLE. "4xx vs 5xx", "HTTP
+status codes", "the GC collectors", "isolation levels", "exit codes" — the
+interviewer is checking whether the candidate knows the actual members, and one
+summary line does not show that. Ten of them as ten bullets is a wall of text; the
+same ten as a table is one glance. Open with **The split**, then the table:
+
+**The split** — 4xx the caller sent something wrong; 5xx my server broke.
+
+| Code | Who emits it | What's actually wrong |
+|---|---|---|
+| **400** | my app or the gateway | malformed JSON, bad query param, wrong content type |
+| **401** | auth layer, before my app | no token, or it expired mid-session |
+| **403** | auth layer or IAM | token is fine, it just lacks that scope or role |
+| **404** | ingress OR my app | route never matched, or the object genuinely isn't there |
+| **429** | rate limiter at the edge | client blew its quota — usually a retry storm |
+| **500** | my app | unhandled exception; null deref, bad config, failed dependency call |
+| **502** | proxy, about my app | app crashed mid-response or sent something unparseable |
+| **503** | load balancer | no healthy pods — failed readiness, or shedding load on purpose |
+| **504** | proxy, about my app | read timeout fired first; slow query or saturated thread pool |
+
+Table rules. THREE columns, always: the member, who emits it, what's actually wrong.
+The third column is where the answer is won — it must name the real cause an on-call
+engineer would say, never a restatement of the official name. "read timeout fired
+first; slow query or saturated thread pool" is right. "took too long to respond" is
+the name in different words and teaches nothing. Same for "temporarily unavailable"
+and "Bad Gateway error". Keep cells under 12 words. Cover the 5-8 members that come
+up in real systems; do not recite the whole RFC.
+
+For a family whose members you CHOOSE between — isolation levels, GC collectors,
+consistency models — the three columns become the member, what it gives you, and
+what it costs.
+
+Restating the official name is the failure to avoid. Every one of these is wrong:
+  "**502** — Bad Gateway error."               ← the name, nothing else
+  "**504** — upstream took too long to respond." ← the name in different words
+  "**503** — service temporarily unavailable."   ← same
+These are right:
+  "**502** — my app died mid-response or sent something the proxy couldn't parse."
+  "**504** — the proxy's read timeout fired before my app answered — slow query,
+    saturated thread pool, or a hung downstream call."
+  "**503** — nothing healthy behind the load balancer: pod not ready, or the app
+    is shedding load on purpose."
+  "**401** — no token or an expired one; the caller never got past auth."
+  "**403** — auth passed, the token just doesn't carry that scope or role."
+
+Where two codes get confused, spend a line on the difference. This is the part the
+interviewer is actually listening for, and it separates a textbook answer from
+someone who has been on call:
+  **401 vs 403** — 401 is "who are you"; 403 is "I know you, you still can't."
+  **502 vs 503 vs 504** — 502 answered wrong, 503 nothing healthy to ask, 504 never answered.
+
+Then one **Which layer** line, because the status code does not say who produced it.
+Any hop can emit one — CDN, WAF, load balancer, ingress, service mesh, the app
+itself — and naming that is the first move in a real triage:
+  **Which layer** — ingress can 404 a path that never reached my app; check upstream_status first.
+
+And where the family has a trap worth flagging, one **Careful** line:
+  **Careful** — a bad deploy shows up as 4xx too; broken routing 404s, broken auth 401s.
+
+Cover the 5-8 that come up in real systems; do not recite the whole RFC. These
+enumeration lines do NOT count against the 5-8 line budget below — a family question
+runs longer by design.
+
+After the members, close with **Trade-off** (1 line, what you give up moving up the
+list) and **I use** (1 line, which one you actually pick and why) when the members
+are things you choose between — isolation levels, GC collectors, consistency models.
+Error codes are not chosen, so those go to Where to look / How to fix instead.
 
 Use those anchor words EXACTLY as written above. Never invent a new anchor. If a
 part needs two lines, repeat the same anchor on both — "**Prevent**" twice, never
@@ -543,7 +666,45 @@ router.post('/stream', async (req, res) => {
       if (!geminiOk || !full) full = '';
     }
 
-    // ── Gemini final stream (coding always; non-coding when not Gemini-only) ──
+    // ── Claude primary — code and general alike ───────────────────────────────
+    if (!full && provider !== 'gemini') {
+      const anthropic = getAnthropic();
+      if (!anthropic) {
+        console.warn('[Ask/Claude] No Anthropic key — set it in Admin > API Keys or ANTHROPIC_API_KEY. Using Gemini.');
+      } else {
+        let sent = false;
+        try {
+          const stream = anthropic.messages.stream({
+            model: ASK_ANTHROPIC_MODEL,
+            max_tokens: 8000,
+            // No `temperature` here on purpose. Sonnet 5 removed the sampling
+            // parameters and 400s on them — that is the exact bug that took every
+            // live Sona answer down and hid itself behind a fallback.
+            system: [{ type: 'text', text: finalSystem, cache_control: { type: 'ephemeral' } }],
+            messages: toAnthropicMessages(msgs, imageParts),
+          });
+          for await (const evt of stream) {
+            if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+              sent = true;
+              full += evt.delta.text;
+              res.write(`data: ${JSON.stringify({ text: evt.delta.text })}\n\n`);
+            }
+          }
+        } catch (err) {
+          // Only fall through to Gemini when NOTHING reached the browser. Once
+          // tokens are on screen, restarting on another model rewrites the answer
+          // under the candidate mid-read.
+          if (sent) {
+            console.error('[Ask/Claude] mid-stream error, keeping partial:', err.message);
+          } else {
+            console.error('[Ask/Claude] stream error — falling back to Gemini:', err.message);
+            full = '';
+          }
+        }
+      }
+    }
+
+    // ── Gemini fallback (also the Gemini-only provider path) ──────────────────
     if (!full) {
       let geminiOk = false;
       try {
