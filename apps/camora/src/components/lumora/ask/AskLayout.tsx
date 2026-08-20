@@ -105,6 +105,50 @@ const inlineMarkdown = (raw: string): React.ReactNode[] => {
   return nodes;
 };
 
+// Pipe tables. Ten HTTP codes as ten bullet lines is a wall; the same ten as
+// Code / Who emits it / What's wrong is one glance. The model emits standard
+// markdown, so the parser only has to recognise a header row followed by a
+// |---|---| rule. Scrolls inside its own box — a wide table must never push the
+// answer column sideways.
+const isTableRow = (s: string) => s.startsWith('|') && s.endsWith('|') && s.length > 2;
+const isTableRule = (s: string) => isTableRow(s) && /^\|[\s:|-]+\|$/.test(s) && s.includes('-');
+const tableCells = (s: string) => s.slice(1, -1).split('|').map((c) => c.trim());
+
+const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
+  <div className="my-2 overflow-x-auto rounded-lg" style={{ border: '1px solid var(--border-subtle, rgba(255,255,255,0.10))' }}>
+    <table className="w-full border-collapse text-[13px]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      <thead>
+        <tr>
+          {head.map((h, i) => (
+            <th
+              key={i}
+              className="text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+              style={{ color: 'var(--cam-gold-leaf-dk)', background: 'rgba(30,77,120,0.10)' }}
+            >
+              {inlineMarkdown(h)}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={i} style={{ borderTop: '1px solid var(--border-subtle, rgba(255,255,255,0.08))' }}>
+            {head.map((_, j) => (
+              <td
+                key={j}
+                className="px-3 py-2 align-top leading-relaxed"
+                style={{ color: 'var(--text-secondary)', fontWeight: j === 0 ? 700 : 400 }}
+              >
+                {inlineMarkdown(r[j] ?? '')}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
 const renderContent = (text: string) => {
   const parts = text.split(/(```[\s\S]*?```)/g);
   const result: React.ReactNode[] = [];
@@ -140,8 +184,27 @@ const renderContent = (text: string) => {
       listItems.length = 0;
     };
 
-    for (const line of lines) {
-      const trimmed = line.trim();
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+
+      // A header row followed by a |---|---| rule opens a table; consume every
+      // row after it. Anything that only looks like a row (a lone piped line)
+      // falls through to the paragraph path unchanged.
+      if (isTableRow(trimmed) && isTableRule((lines[i + 1] || '').trim())) {
+        flushList();
+        const head = tableCells(trimmed);
+        const rows: string[][] = [];
+        let j = i + 2;
+        for (; j < lines.length; j++) {
+          const r = lines[j].trim();
+          if (!isTableRow(r)) break;
+          rows.push(tableCells(r));
+        }
+        result.push(<AnswerTable key={key++} head={head} rows={rows} />);
+        i = j - 1;
+        continue;
+      }
+
       if (trimmed.match(/^[-*•]\s/)) {
         listItems.push(trimmed.replace(/^[-*•]\s/, ''));
       } else {
@@ -161,7 +224,7 @@ const renderContent = (text: string) => {
   return result;
 };
 
-const AskResponse = ({ content }: { content: string }) => {
+export const AskResponse = ({ content }: { content: string }) => {
   const sections = content.split(/^### /m).filter(Boolean);
   if (sections.length <= 1) return <div>{renderContent(content)}</div>;
   return (
