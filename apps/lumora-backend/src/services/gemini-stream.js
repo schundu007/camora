@@ -18,6 +18,7 @@ import {
   getAnthropicClient,
 } from './claude.js';
 import { getApiKey } from './adminConfig.js';
+import { supportsSamplingParams } from './modelPolicy.js';
 import { DETAILED_MODE_OVERRIDE, STAR_MODE_OVERRIDE, buildPitchPrompt } from './answerFormat.js';
 
 const DEFAULT_MODEL = 'gemini-2.5-flash';
@@ -41,10 +42,19 @@ function getGeminiClient() {
  * Gemini roles are 'user' and 'model' (not 'assistant').
  */
 function toGeminiHistory(messages) {
-  return messages.map((m) => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
+  const mapped = messages
+    .filter((m) => m && typeof m.content === 'string' && m.content.trim())
+    .map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    }));
+  // Gemini rejects a history that opens on a model turn ("First content should
+  // be with role 'user', got model") and the transcript tail we get here starts
+  // on whichever turn the slice landed on. Drop leading model turns — an
+  // assistant reply with no question above it carries no context anyway.
+  let start = 0;
+  while (start < mapped.length && mapped[start].role === 'model') start += 1;
+  return mapped.slice(start);
 }
 
 /**
@@ -158,7 +168,9 @@ export async function* streamResponseGemini(question, history, options = {}) {
     const stream = getAnthropicClient().messages.stream({
       model: claudeModel,
       max_tokens: maxOutputTokens,
-      temperature: 0.2,
+      // Sonnet 5 rejects `temperature` outright (400). Haiku 4.5 — the free
+      // tier's model — still takes it and still wants it low.
+      ...(supportsSamplingParams(claudeModel) ? { temperature: 0.2 } : {}),
       system: [{ type: 'text', text: systemInstruction, cache_control: { type: 'ephemeral' } }],
       messages,
     }, signal ? { signal } : undefined);
