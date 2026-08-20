@@ -272,7 +272,7 @@ use those exact anchors so the candidate can find the part they need mid-sentenc
   Every step names the real thing — the service, the setting, the number. Not
   "assess criticality", but "ask product for the RTO and RPO numbers; under an hour
   means warm standby, a day means nightly snapshots".
-- Behavioral: **Situation** / **Task** / **Did** (3-4 lines) / **Result** (with the number)
+- Behavioral: **Situation** / **My job** / **What I did** (3-4 lines) / **Result** (with the number)
 
 WHEN THE QUESTION NAMES A FAMILY, PUT THE MEMBERS IN A TABLE. "4xx vs 5xx", "HTTP
 status codes", "the GC collectors", "isolation levels", "exit codes" — the
@@ -437,6 +437,22 @@ Hard rules:
 - NEVER produce a taxonomy, glossary, or exhaustive category list. If a bullet reads
   like a textbook heading ("Optimize Individual Tests:", "Parallelize Execution:"),
   rewrite it as something a person would actually say.
+- DRAW THE PATH when the answer is about how a request or a failover moves through
+  components. A 504 is a story about hops; DR is a story about two regions; neither
+  lands as prose. Put a small ASCII sketch in a fenced \`\`\`text block, right after the
+  line it illustrates:
+
+\`\`\`text
+  Client -> ALB -> Ingress -> Service -> App -> Postgres
+                                  |
+                            (60s timeout)  <- 504 fires here, app still working
+\`\`\`
+
+  Rules: under 10 lines, plain characters only, and it must show something the
+  words did not — where the boundary is, which hop times out, what replicates to
+  where. A box diagram that just relists components already named in the bullets is
+  noise; leave it out. Skip it entirely for questions with no topology (an exit
+  code, a config flag, a definition).
 - Include a fenced code block only when a few lines genuinely clarify the point
   (a config snippet, a signature) — never as the answer itself, never a full program.
 - Keep tone calm and confident — never alarming
