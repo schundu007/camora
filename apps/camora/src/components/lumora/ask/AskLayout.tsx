@@ -47,9 +47,31 @@ const SUGGESTIONS = [
 // ── Syntax-highlighted code block ─────────────────────────────────────────────
 const KNOWN_LANGS = new Set(['python','py','javascript','js','typescript','ts','java','go','sql','cpp','c','bash','sh']);
 
+// An ASCII path sketch is not code. Sent through the highlighter it gets the
+// python fallback, which colours arrows and component names at random and turns a
+// diagram into confetti. These render as plain monospace instead.
+const PLAIN_LANGS = new Set(['text', 'txt', 'plain', 'ascii', 'diagram', '']);
+
 const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
   const normalizedLang = KNOWN_LANGS.has(lang?.toLowerCase()) ? lang.toLowerCase() : 'python';
   const [copied, setCopied] = useState(false);
+
+  if (PLAIN_LANGS.has((lang || '').toLowerCase())) {
+    return (
+      <pre
+        className="my-2 px-4 py-3 rounded-lg overflow-x-auto text-[12px] leading-[1.65]"
+        style={{
+          background: '#282c34',
+          color: '#abb2bf',
+          border: '1px solid rgba(255,255,255,0.12)',
+          fontFamily: "'IBM Plex Mono', monospace",
+          letterSpacing: '-0.02em',
+        }}
+      >
+        {code.trim()}
+      </pre>
+    );
+  }
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code.trim()).then(() => {
