@@ -57,6 +57,19 @@ export const LIVE_TRANSCRIBE_CHAIN = [
   { provider: 'openai', model: 'gpt-4o-mini-transcribe', why: 'current generation, always answers' },
 ];
 
+/**
+ * Does this Anthropic model still accept `temperature` / `top_p` / `top_k`?
+ *
+ * The Claude 5 generation (and Opus 4.7/4.8) REMOVED the sampling parameters:
+ * sending one is a 400 `temperature is deprecated for this model`, which
+ * failed every Sona answer on the paid tier and pushed it onto the Gemini
+ * fallback. Haiku 4.5 and older still accept them, and those calls want a low
+ * temperature, so this is a per-model question, not a blanket delete.
+ */
+export function supportsSamplingParams(model) {
+  return !/^claude-(fable-5|mythos-5|opus-5|sonnet-5|opus-4-7|opus-4-8)\b/.test(String(model || ''));
+}
+
 /** Log the live policy once at boot so which models served an interview is a
  *  fact in the logs, not an archaeology exercise. */
 export function logModelPolicy() {

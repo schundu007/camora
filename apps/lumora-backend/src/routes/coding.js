@@ -62,10 +62,16 @@ function geminiGetModel(systemInstruction, opts = {}) {
 }
 
 function toGeminiHistory(msgs) {
-  return msgs.map(m => ({
+  const mapped = msgs.map(m => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: typeof m.content === 'string' ? m.content : (Array.isArray(m.content) ? m.content.map(b => b.text || '').join('') : String(m.content)) }],
-  }));
+  })).filter(m => m.parts[0].text.trim());
+  // Gemini rejects a history that opens on a model turn ("First content should
+  // be with role 'user', got model"). conversationHistory arrives from the
+  // client, so it can start on either turn — drop leading model turns.
+  let start = 0;
+  while (start < mapped.length && mapped[start].role === 'model') start += 1;
+  return mapped.slice(start);
 }
 
 // ── Anthropic lazy client — resolved at call time so admin-panel key

@@ -414,10 +414,17 @@ IMPORTANT CODE FORMATTING RULE:
   let firstTokenAt = 0;
 
   try {
-    const geminiHistory = messages.slice(0, -1).map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
+    const geminiHistory = messages.slice(0, -1)
+      .filter(m => m && typeof m.content === 'string' && m.content.trim())
+      .map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+    // Gemini rejects a history that opens on a model turn ("First content
+    // should be with role 'user', got model"), and the history window above is
+    // a tail slice that can land on an assistant reply. Drop leading model
+    // turns rather than fail the whole answer.
+    while (geminiHistory.length && geminiHistory[0].role === 'model') geminiHistory.shift();
     const lastMsg = messages[messages.length - 1].content;
     const gmodel = getGenAI().getGenerativeModel({
       model: 'gemini-2.5-flash',
