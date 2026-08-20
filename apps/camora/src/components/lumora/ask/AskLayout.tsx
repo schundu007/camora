@@ -59,7 +59,8 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
   if (PLAIN_LANGS.has((lang || '').toLowerCase())) {
     return (
       <pre
-        className="my-2 px-4 py-3 rounded-lg overflow-x-auto text-[12px] leading-[1.65]"
+        className="ask-code my-2 px-4 py-3 rounded-lg overflow-x-auto text-[12px] leading-[1.65]"
+        data-overlay-keep
         style={{
           background: '#282c34',
           color: '#abb2bf',
@@ -81,7 +82,7 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
   };
 
   return (
-    <div className="my-3 rounded-lg overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
+    <div className="ask-code my-3 rounded-lg overflow-hidden" data-overlay-keep style={{ border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
       <div className="flex items-center justify-between px-3 py-1.5" style={{ background: '#1e222a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <span className="text-[10px] font-mono font-semibold uppercase tracking-widest" style={{ color: '#61afef' }}>{lang || 'code'}</span>
         <button

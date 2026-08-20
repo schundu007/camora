@@ -1863,9 +1863,22 @@ html[data-overlay='on'] .lumora-shell-root .monaco-editor .margin {
    code (Monaco), and colored chips/buttons KEEP their own colors. No text-shadow:
    the graphite frost (0.9 opacity) supplies the contrast; shadows/glows on text are
    banned per design. */
-html[data-overlay='on'] .lumora-shell-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not([class*='heading']):not([class*='Heading']):not([class*='title']):not([class*='Title']):not([class*='eyebrow']):not(button):not(button *):not([class*='chip']):not([class*='chip'] *):not([class*='badge']):not([class*='badge'] *):not([class*='pill']):not([class*='mtk']):not(.monaco-editor):not(.monaco-editor *):not([class*='view-line']):not([class*='view-line'] *) {
+html[data-overlay='on'] .lumora-shell-root :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6):not([class*='heading']):not([class*='Heading']):not([class*='title']):not([class*='Title']):not([class*='eyebrow']):not(button):not(button *):not([class*='chip']):not([class*='chip'] *):not([class*='badge']):not([class*='badge'] *):not([class*='pill']):not([class*='mtk']):not(.monaco-editor):not(.monaco-editor *):not([class*='view-line']):not([class*='view-line'] *):not(.ask-code):not(.ask-code *) {
   color: #ffffff !important;
   text-shadow: none !important;
+}
+/* SAME CARVE-OUT AS MONACO, FOR THE ASK TAB'S CODE BLOCKS. The Coding tab renders
+   through Monaco and was exempted above by its `mtk`/`view-line` classes. Ask renders
+   through react-syntax-highlighter, which had no exemption — so every token, comment
+   and keyword got painted #ffffff and the block came out as one flat wall of white
+   text with a PYTHON label on top. `.ask-code` carries the exemption for it, and the
+   scrim below is the same legibility floor Monaco gets: the strip rule erases the
+   block's own #282c34, which would otherwise leave syntax colours sitting straight on
+   whatever the meeting is showing. */
+html[data-overlay='on'] .lumora-shell-root .ask-code,
+html[data-overlay='on'] .lumora-shell-root .ask-code pre,
+html[data-overlay='on'] .lumora-shell-root .ask-code code {
+  background-color: rgba(16, 18, 24, 0.78) !important;
 }
 /* ── LIGHT THEME + OVERLAY ──────────────────────────────────────────────────
    The overlay is a graphite GLASS surface (dark by design, like Raycast/Cluely).
