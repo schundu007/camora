@@ -258,7 +258,7 @@ export const AskLayout = () => {
   const [input, setInput]               = useState('');
   const [streaming, setStreaming]       = useState(false);
   const [streamText, setStreamText]     = useState('');
-  const [provider, setProvider]         = useState<Provider>('gemini');
+  const [provider, setProvider]         = useState<Provider>('claude');
   const [convId, setConvId]             = useState<string | null>(null);
   const [history, setHistory]           = useState<Conv[]>([]);
   const [showHistory, setShowHistory]   = useState(false);
