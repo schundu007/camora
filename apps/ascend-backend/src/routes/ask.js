@@ -261,25 +261,46 @@ same ten as a table is one glance. Open with **The split**, then the table:
 
 **The split** — 4xx the caller sent something wrong; 5xx my server broke.
 
-| Code | Who emits it | What's actually wrong |
+| Code | Emitted by | What's actually wrong |
 |---|---|---|
-| **400** | my app or the gateway | malformed JSON, bad query param, wrong content type |
-| **401** | auth layer, before my app | no token, or it expired mid-session |
-| **403** | auth layer or IAM | token is fine, it just lacks that scope or role |
-| **404** | ingress OR my app | route never matched, or the object genuinely isn't there |
-| **429** | rate limiter at the edge | client blew its quota — usually a retry storm |
-| **500** | my app | unhandled exception; null deref, bad config, failed dependency call |
-| **502** | proxy, about my app | app crashed mid-response or sent something unparseable |
-| **503** | load balancer | no healthy pods — failed readiness, or shedding load on purpose |
-| **504** | proxy, about my app | read timeout fired first; slow query or saturated thread pool |
+| **400** | API gateway, or the app's validation layer | malformed JSON, bad query param, wrong content type |
+| **401** | auth middleware or the gateway, before any app code | no token, or it expired mid-session |
+| **403** | IAM, the WAF, or the app's authorization check | token is fine, it just lacks that scope or role |
+| **404** | nginx ingress, the CDN, or the app's router | route never matched, or the object genuinely isn't there |
+| **429** | WAF or gateway rate limiter | client blew its quota — usually a retry storm |
+| **500** | the app process itself | unhandled exception, OOM kill, CPU throttled, or an exhausted connection pool |
+| **502** | nginx or the ALB, about the app behind it | app died mid-response — crash, OOMKill, or a restart during the request |
+| **503** | the ALB or ingress, with no healthy target | readiness failing, OOMKill restart loop, or HPA behind the traffic |
+| **504** | nginx or the ALB, about the app behind it | read timeout fired first — slow query, saturated thread pool, CPU throttled |
 
-Table rules. THREE columns, always: the member, who emits it, what's actually wrong.
+Table rules. THREE columns, always: the member, what emitted it, what's actually wrong.
+
+The middle column NAMES THE COMPONENT. "my app", "the server", "the backend" name
+nothing — the candidate reads that out and the interviewer learns they don't know
+which box to open. Say the actual hop in the request path: the CDN, the WAF, the
+ALB, nginx ingress, the API gateway, the Envoy sidecar, the auth middleware, the
+app process itself, the database driver. "nginx or the ALB, about the app behind
+it" tells the interviewer this person has read that access log. "my app" does not.
 The third column is where the answer is won — it must name the real cause an on-call
 engineer would say, never a restatement of the official name. "read timeout fired
 first; slow query or saturated thread pool" is right. "took too long to respond" is
 the name in different words and teaches nothing. Same for "temporarily unavailable"
-and "Bad Gateway error". Keep cells under 12 words. Cover the 5-8 members that come
-up in real systems; do not recite the whole RFC.
+and "Bad Gateway error".
+
+NAME CAUSES FROM MORE THAN ONE CLASS. The same status code comes out of four very
+different failures, and each one sends the candidate somewhere else:
+  - code — unhandled exception, null deref, a bad migration
+  - resources — OOM kill, CPU throttling, exhausted thread / connection / FD pool,
+    disk full, a pod stuck in a restart loop
+  - dependencies — the database, a downstream service, a queue backing up
+  - config and deploy — wrong port, missing env var, bad routing, a rollout mid-flight
+"**500** — unhandled exception" is the shallow answer; a 500 is just as often an OOM
+kill or a connection pool at its ceiling, and those are found in different places.
+Give the cell at least two classes wherever two genuinely apply. Resource
+exhaustion is the one candidates forget and interviewers ask about.
+
+Keep cells under 16 words. Cover the 5-8 members that come up in real systems; do
+not recite the whole RFC.
 
 For a family whose members you CHOOSE between — isolation levels, GC collectors,
 consistency models — the three columns become the member, what it gives you, and
