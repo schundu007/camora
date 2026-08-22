@@ -24,6 +24,10 @@ apps/
   playground-backend/ # Express — interactive hands-on lab sessions (k8s/etcd/linux).
                    #   Nomad container orchestration (nomadClient), SSH (ssh2), WS proxy,
                    #   R2/S3 session storage, Redis, Postgres, log streaming.
+  extension/       # Browser extension — reads the coding-problem tab you already
+                   #   have open so camora.cariara.com can load it without a
+                   #   pasted URL (the web equivalent of the desktop app's
+                   #   Electron IPC `window.camo.getActiveBrowserUrl`).
   desktop/         # Electron 41 shell that loads camora.cariara.com (arm64 DMG)
   mobile/          # Expo (React Native) — iOS + Android. Reviewer-facing
                    #   framing is "Study & Live Notes" (not "interview AI") to
@@ -35,8 +39,11 @@ packages/
   shared-types/    # TypeScript types (User, Conversation, Subscription, PlanType, etc.)
   shared-db/       # PostgreSQL pool (getPool, query, closePool) + migrations
   shared-auth/     # JWT auth (verifyToken, createToken, authenticate middleware, SSO cookie)
-  shared-llm/      # LLM client factories (getAnthropicClient, getOpenAIClient) — shared
-                   #   Anthropic + OpenAI SDK singletons across backends
+  shared-llm/      # LLM client factories (getAnthropicClient, getOpenAIClient).
+                   #   Currently UNUSED — no app imports it. Unlike the same-named
+                   #   helpers inside each backend, this one is a REAL Anthropic
+                   #   client, so importing it from ascend-backend would break the
+                   #   provider separation. Prefer the in-app _shared/llm.js.
 ```
 
 Package manager: **pnpm 9.15** with workspaces (`apps/*`, `packages/*`).
@@ -106,9 +113,60 @@ cd apps/camora && npx eslint .
 
 - ES6+ JavaScript, Express 5
 - Routes mounted at `/api/v1/*` and some at `/api/*` in `src/index.js`
-- Key services: `claude.js` (43KB), `openai.js` (30KB), `ascendPrep.js` (57KB — interview prep generation)
+- Key services: `claude.js`, `openai.js`, `ascendPrep.js` (interview prep generation).
+  **Both service filenames lie** — see LLM Provider Separation below. `claude.js`
+  imports `GoogleGenerativeAI`; `openai.js` does too.
+- Ask Sona (`routes/ask.js`) — the `/lumora/ask` tab. Streams SSE from
+  `POST /api/v1/ask/stream`. Routes each turn to a code or prose template via
+  `looksLikeCodeTask(text, { hasImages })`; screenshots are decoded to Gemini
+  `inlineData` and archived to R2 off the critical path.
 - Uses Redis for problem caching (`problemCache.js`)
 - Graceful shutdown with connection tracking
+
+## LLM Provider Separation
+
+**Rule: ascend-backend never spends Anthropic keys. lumora-backend does.**
+Claude is Lumora's model; ascend answers on Gemini.
+
+This is enforced by naming that actively works against you, so read this before
+changing any model call:
+
+- `apps/ascend-backend/src/lib/_shared/llm.js` and
+  `apps/ascend-backend/src/lumora/lib/_shared/llm.js` export
+  **`getAnthropicClient()` that returns a GEMINI client** wearing an
+  Anthropic-shaped interface (`messages.create` / `messages.stream`, responses as
+  `{ content: [{ type:'text', text }] }`). Call sites read as Anthropic and are not.
+- `apps/ascend-backend/src/services/claude.js` imports `GoogleGenerativeAI`, and
+  its `getApiKey()` returns the **Gemini** key.
+- `claude-sonnet-4-6` / `claude-haiku-*` strings scattered through ascend
+  (`solve.js`, `analyze.js`, `fix.js`, `diagram.js`, `ascendPrep.js`,
+  `lumora/routes/coding.js`) are arguments to those shims and are **ignored**.
+  They are naming debt, not Anthropic calls.
+- `routes/ask.js` keeps a real Anthropic branch behind `ANTHROPIC_ENABLED = false`.
+  Flip that one constant only if Ask moves to lumora-backend.
+
+Auditing this: grepping for `@anthropic-ai/sdk` is **not sufficient** — a raw
+`fetch('https://api.anthropic.com/v1/messages')` slipped past exactly that check.
+Grep for both, plus `x-api-key`.
+
+Trap in the other direction: **lumora-backend's `lib/_shared/llm.js`
+`getAnthropicClient()` is ALSO a Gemini shim.** Nothing imports it today (the
+only import from that module is `getOpenAIClient`, by `openai-stream.js`), so it
+is harmless — but importing it in Lumora silently violates the rule while
+looking correct.
+
+`getAnthropicClient` is defined **four separate times** in lumora-backend, and
+three of them are the real thing:
+
+| Definition | Real Anthropic? |
+|---|---|
+| `services/claude.js:55` (exported; the canonical one) | yes |
+| `services/companyContext.js:200` | yes |
+| `routes/coding.js:111` | yes |
+| `lib/_shared/llm.js:20` | **no — Gemini** |
+
+So `grep -rn getAnthropicClient` tells you nothing on its own. Always check which
+module a call site imports from.
 
 ### Shared Auth Flow
 
@@ -134,7 +192,14 @@ cd apps/camora && npx eslint .
 ### Backends
 - `DATABASE_URL` — PostgreSQL connection string
 - `JWT_SECRET` — JWT signing key (canonical). `JWT_SECRET_KEY` was the prior name and is still read as a fallback for backward compat — set `JWT_SECRET` going forward.
-- `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` — AI model access
+- `ANTHROPIC_API_KEY` — **lumora-backend only.** ascend-backend must not hold or
+  spend it (see LLM Provider Separation); it is no longer in ascend's
+  `requiredEnvVars`, so that service boots without it.
+- `GEMINI_API_KEY` / `GOOGLE_AI_API_KEY` — ascend-backend's primary model access,
+  and Gemini elsewhere. Most call sites read `GOOGLE_AI_API_KEY` first; as of
+  2026-07 ascend's `GEMINI_API_KEY` was stale and returned `API_KEY_INVALID`.
+- `OPENAI_API_KEY` — Whisper transcription, and the GPT-4o-mini tail of lumora's
+  fallback chain
 - `GROQ_API_KEY` — optional. When set, lumora-backend uses Groq `whisper-large-v3-turbo` for transcription (~100ms vs ~300ms). Falls back to OpenAI Whisper when absent or on error.
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — Payments
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — OAuth
@@ -158,7 +223,14 @@ cd apps/camora && npx eslint .
 - **Error responses**: `{ error: string }` or `{ detail: string }` format.
 - **Streaming responses**: SSE via `text/event-stream` content type, flushed per chunk.
 - **File naming**: React components PascalCase (`.tsx`/`.jsx`), services/utils camelCase (`.ts`/`.js`).
-- **Tailwind theme**: Primary emerald (#10b981), fonts Plus Jakarta Sans (display) + IBM Plex Mono (code).
+- **Theme** (`apps/camora/src/styles/globals.css`, the source of truth): primary is
+  the Navy Atlas ramp — canon `#26619C`, lightened to `#6E96C0` for the dark
+  default because the base is too dark on charcoal; `[data-theme="light"]` uses
+  the base ramp. Accent `--cam-gold-leaf` `#D4A043`. **`#10b981` is
+  `--cam-success`, not the primary** — an older version of this file called it
+  "primary emerald", which it never was.
+- **Fonts**: Plus Jakarta Sans (display) + Inter (body) + JetBrains Mono (code).
+  IBM Plex Mono was the code font for a long time and is no longer used.
 
 ## Billing & Stripe Integration
 

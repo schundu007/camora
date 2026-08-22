@@ -23,7 +23,7 @@
 
 ## Products
 
-**Lumora** — Real-time AI interview co-pilot. Live mic transcription, instant answers from Sona (Claude / GPT-4o / Gemini), and contextual follow-ups — all during a live interview.
+**Lumora** — Real-time AI interview co-pilot. Live mic transcription, instant answers from Sona, and contextual follow-ups — all during a live interview.
 
 **Capra** — Interview prep platform. Study DSA, system design, behavioral topics, and DevOps challenges with AI-generated explanations, spaced repetition, and mock coding environments.
 
@@ -33,20 +33,26 @@
 |---------|-------------|--------|
 | `apps/camora` | React 19 + Vite 8 frontend | Vercel |
 | `apps/lumora-backend` | Express 5 — live interview API | Railway |
-| `apps/ascend-backend` | Express 5 — prep & study API | Railway |
+| `apps/ascend-backend` | Express 5 — prep & study API, plus a Lumora route mirror | Railway |
 | `apps/ai-services` | FastAPI — speaker verification & diagrams | Railway |
+| `apps/code-runner` | Express — sandboxed code execution (port 4000) | Railway |
+| `apps/playground-backend` | Express — hands-on k8s/etcd/linux lab sessions | Railway |
 | `apps/desktop` | Electron 41 desktop shell | DMG |
 | `apps/mobile` | Expo (React Native) iOS + Android | — |
-| `packages/shared-*` | Shared types, DB pool, auth | — |
+| `apps/extension` | Browser extension — reads your open coding-problem tab | — |
+| `packages/shared-*` | Shared types, DB pool, auth, LLM clients | — |
 
 ## Tech Stack
 
 - **Frontend**: React 19, Vite 8, Tailwind CSS 4, React Router DOM v7, Zustand
-- **Backend**: Express 5, PostgreSQL, Redis, Anthropic SDK, OpenAI SDK
-- **AI**: Claude (Anthropic), GPT-4o (OpenAI), Gemini (Google)
+- **Backend**: Express 5, PostgreSQL, Redis, Anthropic SDK, Google Generative AI SDK, OpenAI SDK
+- **AI**: Claude (Anthropic) powers lumora-backend; Gemini (Google) powers
+  ascend-backend; OpenAI covers Whisper transcription and the fallback tail.
+  The two services are deliberately kept on separate providers — see
+  "LLM Provider Separation" in `CLAUDE.md` before changing a model call.
 - **Auth**: Google OAuth → JWT → `cariara_sso` cookie
 - **Payments**: Stripe subscriptions
 - **RAG**: pgvector hybrid search (BM25 + cosine), HyDE, Cohere reranking, CRAG chunk grading, session warm-kit
-- **AI providers**: Claude (primary), Gemini, Qwen-2.5-72B, DeepSeek-V3, GPT-4o-mini (auto-fallback chain)
+- **AI providers** (lumora live answers): Claude (primary), Gemini, Qwen-2.5-72B, DeepSeek-V3, GPT-4o-mini (auto-fallback chain)
 - **Voice**: Whisper transcription → sentence-boundary streaming → SSE token delivery
 - **Behavioral**: Resume story parser → archetype-matched story anchor injection per question

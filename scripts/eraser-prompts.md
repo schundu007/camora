@@ -5,7 +5,7 @@ For each problem below, generate 3 diagrams on https://app.eraser.io (click "Gen
 - **GCP** version → save as `eraser-gcp.png`
 - **Azure** version → save as `eraser-azure.png`
 
-Save each PNG to: `apps/frontend/public/diagrams/{problem-id}/`
+Save each PNG to: `apps/camora/public/diagrams/{problem-id}/`
 
 Select **"Cloud Architecture Diagram"** as diagram type, **Light** theme, **2x** scale.
 
@@ -13,7 +13,7 @@ Select **"Cloud Architecture Diagram"** as diagram type, **Light** theme, **2x**
 
 ## 1. facebook-newsfeed (missing: AWS, Azure)
 
-Save to: `apps/frontend/public/diagrams/facebook-newsfeed/`
+Save to: `apps/camora/public/diagrams/facebook-newsfeed/`
 
 **AWS Prompt:**
 ```
@@ -41,7 +41,7 @@ Deploy across Availability Zones 1, 2, 3. Include VMSS autoscaling, Azure Monito
 
 ## 2. spotify
 
-Save to: `apps/frontend/public/diagrams/spotify/`
+Save to: `apps/camora/public/diagrams/spotify/`
 
 **AWS Prompt:**
 ```
@@ -80,7 +80,7 @@ Deploy across Availability Zones 1, 2, 3. AKS autoscaling, Azure Monitor, WAF, V
 
 ## 3. airbnb
 
-Save to: `apps/frontend/public/diagrams/airbnb/`
+Save to: `apps/camora/public/diagrams/airbnb/`
 
 **AWS Prompt:**
 ```
@@ -119,7 +119,7 @@ Deploy Availability Zones 1, 2, 3. AKS autoscaling, Azure Monitor, WAF, VNet. HA
 
 ## 4. doordash
 
-Save to: `apps/frontend/public/diagrams/doordash/`
+Save to: `apps/camora/public/diagrams/doordash/`
 
 **AWS Prompt:**
 ```
@@ -158,7 +158,7 @@ Deploy Availability Zones 1, 2, 3. AKS autoscaling, WAF, VNet. HA: Azure SQL geo
 
 ## 5. google-maps
 
-Save to: `apps/frontend/public/diagrams/google-maps/`
+Save to: `apps/camora/public/diagrams/google-maps/`
 
 **AWS Prompt:**
 ```
@@ -197,7 +197,7 @@ Deploy Availability Zones, global distribution. AKS autoscaling, Azure Monitor, 
 
 ## 6. zoom
 
-Save to: `apps/frontend/public/diagrams/zoom/`
+Save to: `apps/camora/public/diagrams/zoom/`
 
 **AWS Prompt:**
 ```
@@ -236,7 +236,7 @@ Deploy Availability Zones + global. VMSS autoscaling, Azure Monitor, WAF, VNet. 
 
 ## 7. linkedin
 
-Save to: `apps/frontend/public/diagrams/linkedin/`
+Save to: `apps/camora/public/diagrams/linkedin/`
 
 **AWS Prompt:**
 ```
@@ -275,7 +275,7 @@ Deploy Availability Zones. AKS autoscaling, Azure Monitor, WAF, VNet. HA: Cosmos
 
 ## 8. tinder
 
-Save to: `apps/frontend/public/diagrams/tinder/`
+Save to: `apps/camora/public/diagrams/tinder/`
 
 **AWS Prompt:**
 ```
@@ -314,7 +314,7 @@ Deploy Availability Zones. AKS autoscaling, Azure Monitor, WAF, VNet. HA: SQL ge
 
 ## 9. yelp
 
-Save to: `apps/frontend/public/diagrams/yelp/`
+Save to: `apps/camora/public/diagrams/yelp/`
 
 **AWS Prompt:**
 ```
@@ -353,7 +353,7 @@ Deploy Availability Zones. AKS autoscaling, WAF, VNet. HA: SQL geo-replication. 
 
 ## 10. hotel-booking
 
-Save to: `apps/frontend/public/diagrams/hotel-booking/`
+Save to: `apps/camora/public/diagrams/hotel-booking/`
 
 **AWS Prompt:**
 ```
@@ -392,7 +392,7 @@ Deploy Availability Zones. AKS autoscaling, WAF, VNet. HA: SQL geo-replication. 
 
 ## 11. unique-id-generator
 
-Save to: `apps/frontend/public/diagrams/unique-id-generator/`
+Save to: `apps/camora/public/diagrams/unique-id-generator/`
 
 **AWS Prompt:**
 ```
@@ -431,7 +431,7 @@ Deploy Availability Zones. HA: Workers per zone, ZooKeeper quorum. DR: Separate 
 
 ## 12. twitter-trends
 
-Save to: `apps/frontend/public/diagrams/twitter-trends/`
+Save to: `apps/camora/public/diagrams/twitter-trends/`
 
 **AWS Prompt:**
 ```
@@ -470,7 +470,7 @@ Deploy Availability Zones. Autoscaling, WAF, VNet. HA: Event Hubs partitions, Re
 
 ## 13. typeahead
 
-Save to: `apps/frontend/public/diagrams/typeahead/`
+Save to: `apps/camora/public/diagrams/typeahead/`
 
 **AWS Prompt:**
 ```
@@ -509,7 +509,7 @@ Deploy Availability Zones. Autoscaling, WAF, VNet. HA: Trie replicas, Redis clus
 
 ## 14. web-crawler
 
-Save to: `apps/frontend/public/diagrams/web-crawler/`
+Save to: `apps/camora/public/diagrams/web-crawler/`
 
 **AWS Prompt:**
 ```
@@ -548,7 +548,7 @@ Deploy Availability Zones. VMSS autoscaling, WAF, VNet. HA: Multi-zone fetchers.
 
 ## 15. key-value-store
 
-Save to: `apps/frontend/public/diagrams/key-value-store/`
+Save to: `apps/camora/public/diagrams/key-value-store/`
 
 **AWS Prompt:**
 ```
@@ -587,7 +587,7 @@ Deploy Availability Zones (3 = RF 3). HA: Quorum across zones. DR: Geo-redundant
 
 ## 16. pastebin
 
-Save to: `apps/frontend/public/diagrams/pastebin/`
+Save to: `apps/camora/public/diagrams/pastebin/`
 
 **AWS Prompt:**
 ```
@@ -626,7 +626,7 @@ Deploy Availability Zones. Autoscaling, WAF, VNet. HA: SQL geo-replication. DR: 
 
 ## 17. news-aggregator
 
-Save to: `apps/frontend/public/diagrams/news-aggregator/`
+Save to: `apps/camora/public/diagrams/news-aggregator/`
 
 **AWS Prompt:**
 ```
@@ -665,7 +665,7 @@ Deploy Availability Zones. AKS autoscaling, WAF, VNet. HA: SQL geo-replication. 
 
 ## 18. leaderboard
 
-Save to: `apps/frontend/public/diagrams/leaderboard/`
+Save to: `apps/camora/public/diagrams/leaderboard/`
 
 **AWS Prompt:**
 ```
@@ -707,7 +707,7 @@ Deploy Availability Zones. AKS autoscaling, WAF, VNet. HA: Redis clustering, SQL
 For the remaining problems, use this template pattern. Replace `{TITLE}`, `{COMPONENTS}`, and the cloud-specific services:
 
 ### 19. slack
-Save to: `apps/frontend/public/diagrams/slack/`
+Save to: `apps/camora/public/diagrams/slack/`
 ```
 Design a production-grade Slack Team Communication system architecture.
 Components: WebSocket Gateway (per-workspace persistent connections), Kafka (message bus — ordered per channel), Cassandra (message store — partitioned by channel), Elasticsearch (message search across workspace), Redis (presence tracking + pub/sub for typing indicators), Object Storage S3 (file uploads), Channel Service (public/private/DM), Thread Service (threaded replies), Notification Service (push/email/badge counts).
@@ -716,7 +716,7 @@ Deploy {MULTI_AZ}. Show HA, DR, autoscaling, monitoring. Show data flow arrows w
 ```
 
 ### 20. tiktok
-Save to: `apps/frontend/public/diagrams/tiktok/`
+Save to: `apps/camora/public/diagrams/tiktok/`
 ```
 Design a production-grade TikTok Short Video Platform architecture.
 Components: CDN (multi-tier global — edge + regional + origin), Blob Storage (raw + transcoded videos), Kafka (upload events, engagement events), GPU Transcoding Farm (multiple resolutions + codecs), ML Recommendation Service (For You Page — real-time engagement signals), Vitess/sharded MySQL (user data, video metadata), Redis (cache — hot videos, user sessions), Vector DB (video embeddings for similarity), Content Moderation (ML — NSFW, violence, copyright), Creator Analytics Dashboard.
@@ -724,7 +724,7 @@ Components: CDN (multi-tier global — edge + regional + origin), Blob Storage (
 ```
 
 ### 21. reddit
-Save to: `apps/frontend/public/diagrams/reddit/`
+Save to: `apps/camora/public/diagrams/reddit/`
 ```
 Design a production-grade Reddit Social News Platform architecture.
 Components: PostgreSQL with ltree (threaded comment trees), Redis sorted sets (hot/top/new/rising rankings with time-decay), Kafka (vote events, post events), Ranking Worker (Wilson score interval for confidence-based ranking), CDN (static assets, thumbnails), Elasticsearch (subreddit + post search), Vote Service (optimistic counting with anti-cheat), Comment Service (recursive tree rendering), Subreddit Service (community management), Moderation Queue (AutoMod rules + ML spam detection).
@@ -732,7 +732,7 @@ Components: PostgreSQL with ltree (threaded comment trees), Redis sorted sets (h
 ```
 
 ### 22. twitch
-Save to: `apps/frontend/public/diagrams/twitch/`
+Save to: `apps/camora/public/diagrams/twitch/`
 ```
 Design a production-grade Twitch Live Streaming Platform architecture.
 Components: RTMP Ingest PoPs (global — streamers push to nearest), GPU Transcoding Farm (adaptive bitrate — 160p to 1080p60), CDN multi-tier (edge PoPs + origin shield + origin), WebSocket Gateway Cluster (chat — millions concurrent per popular stream), Redis Pub/Sub (chat message fan-out to all viewers), Cassandra (chat history — partitioned by channel + time), PostgreSQL (stream metadata, user profiles, subscriptions), S3/Object Storage (VOD recordings, clips), Subscription/Bits Service (monetization), Channel Points/Predictions.
@@ -740,7 +740,7 @@ Components: RTMP Ingest PoPs (global — streamers push to nearest), GPU Transco
 ```
 
 ### 23. gmail
-Save to: `apps/frontend/public/diagrams/gmail/`
+Save to: `apps/camora/public/diagrams/gmail/`
 ```
 Design a production-grade Gmail Email Service architecture.
 Components: MX Servers (SMTP inbound — receive from internet), Kafka (mail processing pipeline — spam check, virus scan, categorize), Spam Pipeline (ML classifier + SpamAssassin rules + reputation scoring), Bigtable (mail store — row per user, column per message), Blob Storage GCS (large attachments), Elasticsearch (full-text mail search with filters), Redis (session cache, IMAP state), Push Notification (new mail alerts — APNs/FCM), IMAP/POP3 Gateway (third-party client access), SMTP Outbound (sending — SPF/DKIM/DMARC).
@@ -748,7 +748,7 @@ Components: MX Servers (SMTP inbound — receive from internet), Kafka (mail pro
 ```
 
 ### 24. google-drive
-Save to: `apps/frontend/public/diagrams/google-drive/`
+Save to: `apps/camora/public/diagrams/google-drive/`
 ```
 Design a production-grade Google Drive Cloud Storage & Sync architecture.
 Components: Sync Service (delta sync — only changed blocks, conflict resolution with last-write-wins or manual merge), Content-Addressable Blob Storage (dedup by content hash), Metadata DB Spanner (file tree, permissions, sharing — globally consistent), Redis (cache + pub/sub for real-time change notifications), CDN (preview thumbnails, public file sharing), Elasticsearch (file name + content search), Change Log (event sourcing — ordered list of all file operations), Sharing/Permissions Service (ACL with inheritance).
@@ -756,7 +756,7 @@ Components: Sync Service (delta sync — only changed blocks, conflict resolutio
 ```
 
 ### 25. shopify
-Save to: `apps/frontend/public/diagrams/shopify/`
+Save to: `apps/camora/public/diagrams/shopify/`
 ```
 Design a production-grade Shopify E-commerce Platform architecture.
 Components: Pod-based infrastructure (tenant isolation — each merchant gets isolated compute/data), Vitess sharded MySQL (product catalog, orders — sharded by merchant), Redis (shopping carts, inventory counters — atomic decrement), CDN (storefront assets — Shopify Edge), Payment Gateway (multi-provider — Stripe, PayPal), Kafka (order events, webhook delivery), S3 (product images, theme assets), Webhook Service (notify merchants of events), Liquid Template Engine (storefront rendering), App/API Platform (third-party integrations).
@@ -764,7 +764,7 @@ Components: Pod-based infrastructure (tenant isolation — each merchant gets is
 ```
 
 ### 26. flash-sale
-Save to: `apps/frontend/public/diagrams/flash-sale/`
+Save to: `apps/camora/public/diagrams/flash-sale/`
 ```
 Design a production-grade Flash Sale System architecture.
 Components: Virtual Queue Service (FIFO with position tracking — prevent thundering herd), Inventory Lock Redis (atomic DECR — prevent overselling), Order Service (state machine), Payment Service (timeout-based release if unpaid), Rate Limiter (DDoS protection — token bucket), CDN (static product page), Database PostgreSQL (order persistence), Notification Service (confirmation), Anti-bot/CAPTCHA (proof of humanity), Circuit Breaker (graceful degradation under load).
@@ -772,7 +772,7 @@ Components: Virtual Queue Service (FIFO with position tracking — prevent thund
 ```
 
 ### 27. stock-exchange
-Save to: `apps/frontend/public/diagrams/stock-exchange/`
+Save to: `apps/camora/public/diagrams/stock-exchange/`
 ```
 Design a production-grade Stock Exchange Trading System architecture.
 Components: Order Matching Engine (price-time priority — continuous double auction), Order Book (in-memory — bid/ask sorted by price), Market Data Feed (multicast/UDP — real-time quotes to all subscribers), Risk Engine (pre-trade checks — margin, position limits, circuit breakers), Settlement Service (T+1 clearing), FIX Gateway (Financial Information eXchange protocol — broker connectivity), Time-Series DB (tick data, OHLCV candles), Kafka (trade events — audit trail), Sequencer (total ordering — deterministic replay).
@@ -780,7 +780,7 @@ Components: Order Matching Engine (price-time priority — continuous double auc
 ```
 
 ### 28. distributed-cache
-Save to: `apps/frontend/public/diagrams/distributed-cache/`
+Save to: `apps/camora/public/diagrams/distributed-cache/`
 ```
 Design a production-grade Distributed Cache System architecture.
 Components: Cache Nodes (in-memory hash table — O(1) get/set), Consistent Hashing Ring (virtual nodes — minimize redistribution on scale), Replication (primary-replica — async for speed, sync option for consistency), Eviction Policy (LRU/LFU — configurable per cache), Gossip Protocol (membership detection — phi accrual failure detector), Client Library (smart routing — hash key to correct node), Monitoring (hit rate, eviction rate, memory usage, latency p99), Hot Key Detection (split hot keys across replicas).
@@ -788,7 +788,7 @@ Components: Cache Nodes (in-memory hash table — O(1) get/set), Consistent Hash
 ```
 
 ### 29. distributed-lock
-Save to: `apps/frontend/public/diagrams/distributed-lock/`
+Save to: `apps/camora/public/diagrams/distributed-lock/`
 ```
 Design a production-grade Distributed Lock Service architecture.
 Components: Lock Manager (acquire/release/extend with TTL), ZooKeeper or etcd (consensus-based — Paxos/Raft), Fencing Tokens (monotonically increasing — prevent stale lock holders from corrupting data), Heartbeat Service (lease renewal — auto-extend while holder alive), Client SDK (retry with exponential backoff, auto-release on crash), Monitoring (lock contention metrics, wait time p99, deadlock detection), Dead Lock Detection (wait-for graph analysis).
@@ -796,7 +796,7 @@ Components: Lock Manager (acquire/release/extend with TTL), ZooKeeper or etcd (c
 ```
 
 ### 30. distributed-search
-Save to: `apps/frontend/public/diagrams/distributed-search/`
+Save to: `apps/camora/public/diagrams/distributed-search/`
 ```
 Design a production-grade Distributed Search Engine architecture.
 Components: Index Shards (inverted index — partitioned by document hash or term range), Query Coordinator (scatter-gather — fan out to all shards, merge results), Crawler (URL frontier with BFS, politeness), Indexer Pipeline (MapReduce — tokenize, stem, build inverted index), Ranking Service (BM25 baseline + ML re-ranking — LambdaMART), Cache (query result cache — LRU, invalidate on index update), Load Balancer (route queries to coordinator replicas), Spell Correction (edit distance, n-gram suggestions).
@@ -804,7 +804,7 @@ Components: Index Shards (inverted index — partitioned by document hash or ter
 ```
 
 ### 31. distributed-task-scheduler
-Save to: `apps/frontend/public/diagrams/distributed-task-scheduler/`
+Save to: `apps/camora/public/diagrams/distributed-task-scheduler/`
 ```
 Design a production-grade Distributed Task Scheduler architecture.
 Components: Scheduler Service (cron + one-time + delayed tasks), Task Queue Kafka (partitioned by priority — high/medium/low), Worker Pool (auto-scaling by queue depth — heterogeneous CPU/GPU), ZooKeeper (leader election for scheduler HA), Database PostgreSQL (task state — pending/running/completed/failed), Monitoring Prometheus (SLA tracking, task latency), Dead Letter Queue (failed tasks after max retries), Retry/Backoff Engine (exponential backoff with jitter).
@@ -812,7 +812,7 @@ Components: Scheduler Service (cron + one-time + delayed tasks), Task Queue Kafk
 ```
 
 ### 32. api-gateway
-Save to: `apps/frontend/public/diagrams/api-gateway/`
+Save to: `apps/camora/public/diagrams/api-gateway/`
 ```
 Design a production-grade API Gateway architecture.
 Components: Gateway Service (request routing — path-based and header-based), Rate Limiter (token bucket per API key/IP), Auth Service (JWT validation, OAuth2 token introspection), Service Registry Consul (dynamic service discovery — health check based), Load Balancer (weighted round-robin to upstream services), Cache (response cache — TTL per route), Logging/Metrics (ELK stack + Prometheus — request logs, latency histograms), Circuit Breaker (half-open/open/closed — prevent cascade failures), Request Transformation (header injection, body mapping).
@@ -820,7 +820,7 @@ Components: Gateway Service (request routing — path-based and header-based), R
 ```
 
 ### 33. blob-store
-Save to: `apps/frontend/public/diagrams/blob-store/`
+Save to: `apps/camora/public/diagrams/blob-store/`
 ```
 Design a production-grade Blob Storage System (S3-compatible) architecture.
 Components: API Gateway (S3-compatible REST — PUT/GET/DELETE/LIST), Metadata Service PostgreSQL (object metadata — bucket, key, size, ACL, versioning), Data Nodes (erasure-coded chunks — 6+3 encoding for 1.5x storage overhead vs 3x replication), Replication Manager (cross-region async replication), Garbage Collector (mark-sweep for deleted/overwritten objects), CDN (presigned URL support for direct edge delivery), Consistent Hashing (map objects to data node groups), Versioning Service (keep all object versions, lifecycle rules for expiry).
@@ -828,7 +828,7 @@ Components: API Gateway (S3-compatible REST — PUT/GET/DELETE/LIST), Metadata S
 ```
 
 ### 34. cdn
-Save to: `apps/frontend/public/diagrams/cdn/`
+Save to: `apps/camora/public/diagrams/cdn/`
 ```
 Design a production-grade Content Delivery Network architecture.
 Components: Edge PoPs (300+ global locations — cache static + dynamic content), Origin Shield (mid-tier cache — reduce origin load by 90%), Origin Server (source of truth — web server or object storage), DNS GeoDNS (latency-based routing — direct users to nearest PoP), Cache Invalidation (tag-based purge — instant global propagation), TLS Termination (edge SSL — reduce latency by terminating close to user), Load Balancer (distribute within PoP), Monitoring (real-time analytics — cache hit ratio, bandwidth, errors), DDoS Mitigation (L3/L4/L7 — rate limiting, IP reputation, challenge pages).
@@ -836,7 +836,7 @@ Components: Edge PoPs (300+ global locations — cache static + dynamic content)
 ```
 
 ### 35. ci-cd-pipeline
-Save to: `apps/frontend/public/diagrams/ci-cd-pipeline/`
+Save to: `apps/camora/public/diagrams/ci-cd-pipeline/`
 ```
 Design a production-grade CI/CD Pipeline System architecture.
 Components: Source Control Git (webhook on push/PR — trigger pipeline), Build Agents (containerized — ephemeral, parallel builds), Artifact Registry (Docker images, npm packages — versioned + signed), Test Runners (parallel unit/integration/e2e — matrix strategy), Deployment Service (blue-green + canary + rolling strategies), Queue Kafka (build events — decouple trigger from execution), Database (pipeline state — run history, logs), Notification Service (Slack/email on success/failure), Secret Manager (inject credentials at build time — never in code).
@@ -844,7 +844,7 @@ Components: Source Control Git (webhook on push/PR — trigger pipeline), Build 
 ```
 
 ### 36. chatgpt-llm-system
-Save to: `apps/frontend/public/diagrams/chatgpt-llm-system/`
+Save to: `apps/camora/public/diagrams/chatgpt-llm-system/`
 ```
 Design a production-grade ChatGPT/LLM Serving System architecture.
 Components: API Gateway (streaming SSE — token-by-token response), Load Balancer (GPU-aware — route to available GPU nodes), GPU Inference Cluster (A100/H100 — tensor parallelism across GPUs), Model Registry (versioned model weights — A/B test different models), Token Queue (request scheduling — FIFO with priority, batch similar-length requests), KV Cache (attention key-value cache — avoid recomputation for long contexts), Object Storage (model artifacts — 100GB+ checkpoints), Monitoring (tokens/sec, time-to-first-token, GPU utilization), Rate Limiter (per-user token budgets), Safety/Content Filter (input/output moderation — classifier + rules).
@@ -852,7 +852,7 @@ Components: API Gateway (streaming SSE — token-by-token response), Load Balanc
 ```
 
 ### 37. calendar-system
-Save to: `apps/frontend/public/diagrams/calendar-system/`
+Save to: `apps/camora/public/diagrams/calendar-system/`
 ```
 Design a production-grade Calendar System (Google Calendar) architecture.
 Components: Calendar Service (CRUD calendars, sharing), Event Service (create/update/delete events — single + recurring), Notification Service (email reminders, push alerts — 15min/1hr/1day before), Recurring Event Engine (RRULE expansion — generate instances on-the-fly, handle exceptions), Timezone Service (IANA timezone database — convert between zones), Database PostgreSQL (events, calendars, attendees), Cache Redis (user's upcoming events, free/busy), Push Service (APNs/FCM for mobile), Free/Busy Lookup (aggregate across calendars — for scheduling), CalDAV Sync (standard protocol for third-party clients).
@@ -860,7 +860,7 @@ Components: Calendar Service (CRUD calendars, sharing), Event Service (create/up
 ```
 
 ### 38. deployment-system
-Save to: `apps/frontend/public/diagrams/deployment-system/`
+Save to: `apps/camora/public/diagrams/deployment-system/`
 ```
 Design a production-grade Deployment System (Kubernetes-like) architecture.
 Components: API Server (REST — all cluster operations go through here), Scheduler (bin-packing — assign pods to nodes by resource requests), Controller Manager (reconciliation loops — desired state vs actual state), etcd (distributed state store — Raft consensus, all cluster state), Kubelet (node agent — manage containers on each node), Container Runtime containerd (pull images, run containers, manage lifecycle), Service Mesh Istio/Envoy (mTLS, traffic splitting, observability between services), Ingress Controller (L7 routing — path/host-based to services), HPA (horizontal pod autoscaler — scale by CPU/memory/custom metrics).
@@ -868,7 +868,7 @@ Components: API Server (REST — all cluster operations go through here), Schedu
 ```
 
 ### 39. digital-wallet
-Save to: `apps/frontend/public/diagrams/digital-wallet/`
+Save to: `apps/camora/public/diagrams/digital-wallet/`
 ```
 Design a production-grade Digital Wallet (Apple Pay/Venmo) architecture.
 Components: Wallet Service (balance management — load/withdraw/transfer), Transaction Service (ACID transfers — debit sender + credit receiver atomically), Ledger (double-entry immutable — every transaction = debit + credit entry), Fraud Detection ML (real-time scoring — velocity checks, device fingerprint, geo anomaly), KYC Service (identity verification — document upload, face match, watchlist screening), Payment Rail Integration (ACH bank transfers, Visa Direct, wire), Notification Service (transaction alerts — push + SMS + email), HSM (tokenization — encrypt card numbers, generate payment tokens), Compliance/AML (anti-money laundering — pattern detection, SAR filing).
@@ -876,7 +876,7 @@ Components: Wallet Service (balance management — load/withdraw/transfer), Tran
 ```
 
 ### 40. job-scheduler
-Save to: `apps/frontend/public/diagrams/job-scheduler/`
+Save to: `apps/camora/public/diagrams/job-scheduler/`
 ```
 Design a production-grade Job Scheduler System architecture.
 Components: Scheduler Service (priority-based — earliest-deadline-first), Job Queue (partitioned by priority — separate high/medium/low lanes), Worker Pool (heterogeneous — CPU workers vs GPU workers, auto-scale), Cron Engine (time-trigger — cron expression parsing, next-fire-time calculation), Database (job state/history — PostgreSQL with state machine), Monitoring (SLA tracking — alert on missed deadlines), Dead Letter Queue (failed jobs after N retries — manual review), API Gateway (submit/cancel/query jobs), Dependency Graph Resolver (DAG execution — topological sort, parallel independent tasks).
@@ -884,7 +884,7 @@ Components: Scheduler Service (priority-based — earliest-deadline-first), Job 
 ```
 
 ### 41. object-storage
-Save to: `apps/frontend/public/diagrams/object-storage/`
+Save to: `apps/camora/public/diagrams/object-storage/`
 ```
 Design a production-grade Object Storage System architecture.
 Components: API Gateway (S3-compatible REST API — presigned URLs), Metadata Service (sharded PostgreSQL — bucket/key lookup, ACLs), Data Nodes (erasure coding 6+3 — Reed-Solomon, 12 data nodes per group), Replication (cross-datacenter async — RPO < 1 min), Garbage Collector (mark-sweep — reclaim space from deleted/overwritten), Monitoring (capacity planning — growth projection, disk health), Lifecycle Manager (storage tiering — hot/warm/cold/archive based on access patterns).
@@ -892,7 +892,7 @@ Components: API Gateway (S3-compatible REST API — presigned URLs), Metadata Se
 ```
 
 ### 42. online-chess
-Save to: `apps/frontend/public/diagrams/online-chess/`
+Save to: `apps/camora/public/diagrams/online-chess/`
 ```
 Design a production-grade Online Chess (Chess.com) system architecture.
 Components: Game Service (state machine — waiting/playing/ended, FEN board representation), WebSocket Gateway (real-time moves — sub-100ms latency), Matchmaking Service (ELO-based — pair players within rating range, expand over time), Rating Engine Glicko-2 (update ratings after each game — accounts for rating uncertainty), Move Validator (legal move checking — verify against chess rules + clock), Database (game history — PGN notation, player profiles), Redis (active games cache — board state, clock), Spectator Service (fan-out live moves to viewers), Puzzle/Analysis Engine (Stockfish — post-game analysis, daily puzzles).
@@ -900,7 +900,7 @@ Components: Game Service (state machine — waiting/playing/ended, FEN board rep
 ```
 
 ### 43. recommendation-engine
-Save to: `apps/frontend/public/diagrams/recommendation-engine/`
+Save to: `apps/camora/public/diagrams/recommendation-engine/`
 ```
 Design a production-grade Recommendation Engine system architecture.
 Components: Feature Store (online low-latency + offline batch features — user history, item attributes), ML Training Pipeline (batch on Spark — collaborative filtering, deep learning embeddings), Model Serving (low-latency inference — <50ms p99, model versioning), User Activity Collector (clickstream — views, clicks, purchases, dwell time), Kafka (event ingestion — real-time user signals), Vector DB (ANN search — find similar items/users by embedding distance), A/B Testing Framework (experiment assignment, metric tracking, statistical significance), Cache (precomputed recommendations for cold-start + popular), Cold-Start Handler (content-based for new users, popularity-based for new items).
@@ -908,7 +908,7 @@ Components: Feature Store (online low-latency + offline batch features — user 
 ```
 
 ### 44. time-series-db
-Save to: `apps/frontend/public/diagrams/time-series-db/`
+Save to: `apps/camora/public/diagrams/time-series-db/`
 ```
 Design a production-grade Time-Series Database system architecture.
 Components: Write-Ahead Log (durability — fsync before acknowledging write), LSM Tree / Columnar Store (optimized for time-range scans — sorted by timestamp), Compaction Service (size-tiered — merge small SSTables into larger ones, remove tombstones), Query Engine (time-range + aggregation — downsampling, GROUP BY time window), Retention Manager (TTL + downsampling — raw data 30d, 1-min aggregates 1y, 1-hr aggregates forever), Replication (Raft consensus — 3-node quorum writes), API Gateway (PromQL/InfluxQL compatible query language), Ingestion Buffer (batch writes — amortize WAL fsync overhead).
@@ -916,7 +916,7 @@ Components: Write-Ahead Log (durability — fsync before acknowledging write), L
 ```
 
 ### 45. metrics-monitoring
-Save to: `apps/frontend/public/diagrams/metrics-monitoring/`
+Save to: `apps/camora/public/diagrams/metrics-monitoring/`
 ```
 Design a production-grade Metrics Monitoring System (Datadog-like) architecture.
 Components: Agent Collector (host/container agent — collect CPU, memory, disk, network, custom metrics), Ingestion Pipeline Kafka (time-series data stream — partitioned by metric name), Time-Series DB InfluxDB/Prometheus (optimized columnar storage), Query Engine PromQL (aggregation, rate, percentiles), Alerting Service (threshold + anomaly-based — PagerDuty/Slack integration), Dashboard API Grafana (visualization — graphs, heatmaps, tables), Object Storage (long-term metric archive — downsample to 1hr granularity), Anomaly Detection ML (statistical + ML-based — detect unusual patterns).
@@ -924,7 +924,7 @@ Components: Agent Collector (host/container agent — collect CPU, memory, disk,
 ```
 
 ### 46. ad-click-aggregation
-Save to: `apps/frontend/public/diagrams/ad-click-aggregation/`
+Save to: `apps/camora/public/diagrams/ad-click-aggregation/`
 ```
 Design a production-grade Ad Click Aggregation System architecture.
 Components: Click Ingestion Service (high-throughput — 100K clicks/sec), Stream Processor Flink/Spark Streaming (windowed aggregation — 1min/5min/1hr tumbling windows), Kafka (click event stream — partitioned by advertiser_id), Time-Series DB ClickHouse (pre-aggregated metrics — fast OLAP queries), Aggregation Service (rollup — campaign/ad_group/creative level), Dashboard API (real-time + historical reports), Cache (recent aggregates for dashboard), Fraud Detection (click fraud — bot detection, click injection, attribution fraud).
@@ -953,8 +953,8 @@ For each, create the directory and copy the 3 PNGs:
 for pair in "autocomplete-system:typeahead" "ecommerce-platform:amazon" "messaging-app:whatsapp" "payment-gateway:payment-system" "proximity-service:yelp" "tiny-url:url-shortener" "top-k-leaderboard:leaderboard"; do
   target="${pair%%:*}"
   source="${pair##*:}"
-  mkdir -p apps/frontend/public/diagrams/$target
-  cp apps/frontend/public/diagrams/$source/eraser-*.png apps/frontend/public/diagrams/$target/
+  mkdir -p apps/camora/public/diagrams/$target
+  cp apps/camora/public/diagrams/$source/eraser-*.png apps/camora/public/diagrams/$target/
 done
 ```
 
