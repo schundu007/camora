@@ -1,13 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { getApiKey } from './adminConfig.js';
 import { Resend } from 'resend';
 import jwt from 'jsonwebtoken';
 import { queryJobs } from './jobsDb.js';
-
-function getAnthropicClient() {
-  const key = getApiKey('anthropic') || process.env.ANTHROPIC_API_KEY || '';
-  return key ? new Anthropic({ apiKey: key }) : null;
-}
+// Service separation: ascend-backend does not spend Anthropic keys. This is the
+// shared Gemini client behind an Anthropic-shaped interface — `messages.create`
+// returns `{ content: [{ type: 'text', text }] }`, which is the shape the digest
+// ranking below already reads, so the call site is unchanged.
+import { getAnthropicClient } from '../lib/_shared/llm.js';
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM = process.env.EMAIL_FROM || 'Camora <noreply@cariara.com>';
 
@@ -107,15 +105,16 @@ async function rankJobsWithClaude(jobs, user) {
 
   const prompt = `${userContent}\n\nReturn ONLY a JSON array of up to 10 objects:\n[{"index":<1-based>,"summary":"<2 sentences>"}]\n\nValid JSON only, no markdown.`;
 
-  const anthropic = getAnthropicClient();
-  if (!anthropic) {
-    console.warn('[JobAlerts] No Anthropic API key configured, using recency fallback');
+  const client = getAnthropicClient();
+  if (!client) {
+    console.warn('[JobAlerts] No model client available, using recency fallback');
     return jobs.slice(0, 10).map(j => ({ ...j, ai_digest_summary: j.ai_summary || '' }));
   }
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const response = await client.messages.create({
+      // Ignored by the Gemini-backed shim, which pins its own model. Left off
+      // rather than naming a Claude model this service will never call.
       max_tokens: 1500,
       system: systemPrompt,
       messages: [{ role: 'user', content: prompt }],
@@ -128,7 +127,7 @@ async function rankJobsWithClaude(jobs, user) {
       .slice(0, 10)
       .map(r => ({ ...jobs[r.index - 1], ai_digest_summary: r.summary }));
   } catch (err) {
-    console.error('[JobAlerts] Claude ranking failed, using recency fallback:', err.message);
+    console.error('[JobAlerts] AI ranking failed, using recency fallback:', err.message);
     return jobs.slice(0, 10).map(j => ({ ...j, ai_digest_summary: j.ai_summary || '' }));
   }
 }

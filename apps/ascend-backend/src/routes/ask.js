@@ -125,17 +125,26 @@ async function archiveImages(parsed, userId, convId, messageId) {
 }
 
 /**
- * Claude is the Ask tab's model. Gemini is the fallback under it.
+ * SERVICE SEPARATION: ascend-backend does not spend Anthropic keys.
  *
- * The tab shipped Gemini-only while the request body said provider:'claude', so
- * nothing in the UI or the payload told you which model answered. Flash does not
- * hold this prompt: across repeated runs on the same question it kept the code
- * table on one attempt and slid back to restating the official names on the next
- * ("504 — took too long to respond"), and it drops whole sections once the
- * format contract gets long. Claude held the same contract first try.
+ * Claude belongs to lumora-backend. Every other model entry point in this
+ * service already honours that — both `_shared/llm.js` modules export a
+ * `getAnthropicClient()` that is really a Gemini client wearing an
+ * Anthropic-shaped interface, and `lumora/services/claude.js` calls
+ * GoogleGenerativeAI directly despite its name. Ask was the one route holding a
+ * live Anthropic SDK, so it is gated back in line here.
  *
- * Env-tunable so the model can move without a deploy.
+ * The Claude branch below is kept whole, and @anthropic-ai/sdk stays in
+ * package.json, so this is one constant to flip if Ask ever moves to
+ * lumora-backend — where Claude is the correct model.
+ *
+ * Known cost of the switch, recorded so it is not rediscovered: Flash does not
+ * hold this prompt. Across repeated runs on the same question it kept the code
+ * table on one attempt and slid back to restating the official names on the
+ * next, and it drops whole sections once the format contract gets long. That is
+ * why code turns route to GEMINI_CODING_MODEL (2.5 Pro) rather than Flash.
  */
+const ANTHROPIC_ENABLED = false;
 const ASK_ANTHROPIC_MODEL = process.env.ASK_ANTHROPIC_MODEL || 'claude-sonnet-5';
 
 let _anthropic = null;
@@ -736,12 +745,17 @@ router.post('/stream', async (req, res) => {
     let full = '';
 
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
-    if (provider === 'gemini' && !geminiKey) {
+    // With Anthropic disabled for this service, the client's `provider` field no
+    // longer selects a vendor — every turn takes a Gemini branch. It still picks
+    // the MODEL: code turns get 2.5 Pro, prose turns get Flash, exactly as the
+    // provider-toggle paths were already tuned.
+    const useGemini = !ANTHROPIC_ENABLED || provider === 'gemini';
+    if (useGemini && !geminiKey) {
       console.warn('[Ask/Gemini] No API key — set GEMINI_API_KEY or GOOGLE_AI_API_KEY. Falling back to Gemini SDK.');
     }
 
     // ── Coding: Gemini 2.5 Pro primary (when user picks Gemini provider) ────────
-    if (isCode && provider === 'gemini' && geminiKey) {
+    if (isCode && useGemini && geminiKey) {
       let geminiOk = false;
       try {
         const resp = await fetch(
@@ -837,7 +851,10 @@ router.post('/stream', async (req, res) => {
     // invent an algorithm; when the candidate has already handed us the code,
     // it just delays the first token — and SYS_CODE_DUAL would overwrite the
     // review template and the screenshot instructions on the way past.
-    if (isCode && !isReview && provider !== 'gemini' && geminiKey) {
+    // Also gated on Anthropic: the draft exists to give Claude a second opinion
+    // to verify. With Claude off, it would be Gemini cross-checking Gemini for a
+    // blocking round trip and no gain.
+    if (isCode && !isReview && ANTHROPIC_ENABLED && provider !== 'gemini' && geminiKey) {
       res.write(`data: ${JSON.stringify({ status: 'Drafting with Gemini…' })}\n\n`);
       const draft = await fetchGeminiDraft(effectiveMessage, conversationContext(history, effectiveMessage), geminiKey);
       if (draft) {
@@ -847,7 +864,7 @@ router.post('/stream', async (req, res) => {
     }
 
     // ── Non-coding Gemini path (provider toggle in UI) ─────────────────────────
-    if (!isCode && provider === 'gemini' && geminiKey) {
+    if (!isCode && useGemini && geminiKey) {
       let geminiOk = false;
       try {
         const resp = await fetch(
@@ -897,7 +914,7 @@ router.post('/stream', async (req, res) => {
     }
 
     // ── Claude primary — code and general alike ───────────────────────────────
-    if (!full && provider !== 'gemini') {
+    if (ANTHROPIC_ENABLED && !full && provider !== 'gemini') {
       const anthropic = getAnthropic();
       if (!anthropic) {
         console.warn('[Ask/Claude] No Anthropic key — set it in Admin > API Keys or ANTHROPIC_API_KEY. Using Gemini.');

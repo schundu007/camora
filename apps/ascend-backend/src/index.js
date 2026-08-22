@@ -1353,7 +1353,10 @@ app.get('/api/diagram/debug', authenticate, async (req, res) => {
     graphviz: { available: false, version: null, error: null },
     diagrams: { available: false, error: null },
     anthropic: { available: false, error: null },
-    anthropicKey: !!process.env.ANTHROPIC_API_KEY
+    // Service separation: diagram generation runs on Gemini here (routes/
+    // diagram.js goes through the Gemini-backed shim), so reporting the
+    // Anthropic key told you nothing about whether diagrams would work.
+    geminiKey: !!(process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY)
   };
 
   // Check Python

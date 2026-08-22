@@ -12,6 +12,10 @@ import { safeLog } from './utils.js';
 import fetch from 'node-fetch';
 
 // Configuration (mirrors vassist.py's AppConfig)
+// Service separation: ascend-backend answers on Gemini. Matches the model id
+// used by every other Gemini call site in this service.
+const VOICE_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
 const CONFIG = {
   // VAD settings
   VAD_THRESHOLD: 0.12,           // Default threshold, adjustable via calibration
@@ -189,15 +193,16 @@ class VoiceSession {
     this.pendingQuestions = []; // FIFO queue
 
     // Options
-    this.provider = options.provider || 'claude';
-    this.model = options.model || 'claude-sonnet-4-6';
+    // Service separation: this service answers on Gemini, never Anthropic.
+    this.provider = options.provider || 'gemini';
+    this.model = options.model || VOICE_MODEL;
     this.jobDescription = options.jobDescription || '';
     this.resume = options.resume || '';
     this.prepMaterial = options.prepMaterial || '';
     this.transcriptionProvider = options.transcriptionProvider || 'deepgram';
 
-    // API keys
-    this.anthropicKey = options.anthropicKey || '';
+    // API keys. No anthropicKey: ascend-backend must not call Anthropic, and
+    // must not relay a caller's Anthropic key on their behalf either.
     this.openaiKey = options.openaiKey || '';
     this.deepgramKey = options.deepgramKey || '';
 
@@ -461,7 +466,7 @@ class VoiceSession {
     try {
       let fullAnswer = '';
 
-      fullAnswer = await this._streamClaude(systemPrompt, messages);
+      fullAnswer = await this._streamAnswer(systemPrompt, messages);
 
       if (fullAnswer.trim()) {
         this.history.append('user', question);
@@ -560,42 +565,54 @@ RULES:
   }
 
   /**
-   * Stream answer from Claude
+   * Stream the answer.
+   *
+   * SERVICE SEPARATION: ascend-backend does not spend Anthropic keys — Claude is
+   * lumora-backend's model. This used to POST straight to api.anthropic.com,
+   * which the SDK-based audits miss because it is a raw fetch.
+   *
+   * It was also already broken: the key it sent as `x-api-key` came from
+   * `claudeService.getApiKey()`, and that function returns the GEMINI key
+   * (services/claude.js:8) — so unless the caller passed `anthropicKey` in the
+   * request body, every call here was a 401 dressed up as "Claude API error".
+   * The BYO-key path is gone too: this service must not relay a caller's
+   * Anthropic key either.
    */
-  async _streamClaude(systemPrompt, messages) {
-    const apiKey = this.anthropicKey || claudeService.getApiKey();
+  async _streamAnswer(systemPrompt, messages) {
+    const apiKey = claudeService.getApiKey();
     if (!apiKey) {
-      throw new Error('Anthropic API key not configured');
+      throw new Error('Gemini API key not configured');
     }
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: this.model || 'claude-sonnet-4-6',
-        max_tokens: CONFIG.MAX_ANSWER_TOKENS,
-        system: systemPrompt,
-        messages: messages.map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
-        stream: true,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${VOICE_MODEL}:streamGenerateContent?key=${apiKey}&alt=sse`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: messages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }],
+          })),
+          generationConfig: {
+            maxOutputTokens: CONFIG.MAX_ANSWER_TOKENS,
+            // Live voice answers are latency-critical; dynamic thinking would
+            // sit in front of the first spoken token.
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Claude API error: ${error}`);
+      throw new Error(`Gemini API error: ${error}`);
     }
 
     let fullAnswer = '';
     const reader = response.body;
 
-    // Parse SSE stream from Claude
     const decoder = new TextDecoder();
     let buffer = '';
 
@@ -606,13 +623,12 @@ RULES:
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const data = line.slice(6);
+          const data = line.slice(6).trim();
           if (data === '[DONE]') continue;
 
           try {
-            const parsed = JSON.parse(data);
-            if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-              const token = parsed.delta.text;
+            const token = JSON.parse(data).candidates?.[0]?.content?.parts?.[0]?.text || '';
+            if (token) {
               fullAnswer += token;
               this.push('token', { t: token });
             }
@@ -687,7 +703,6 @@ RULES:
     if (options.resume !== undefined) this.resume = options.resume;
     if (options.prepMaterial !== undefined) this.prepMaterial = options.prepMaterial;
     if (options.transcriptionProvider) this.transcriptionProvider = options.transcriptionProvider;
-    if (options.anthropicKey) this.anthropicKey = options.anthropicKey;
     if (options.openaiKey) this.openaiKey = options.openaiKey;
     if (options.deepgramKey) this.deepgramKey = options.deepgramKey;
   }

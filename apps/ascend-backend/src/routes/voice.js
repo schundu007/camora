@@ -75,7 +75,6 @@ router.post('/session', (req, res) => {
       resume,
       prepMaterial,
       transcriptionProvider,
-      anthropicKey,
       openaiKey,
       deepgramKey,
     } = req.body;
@@ -87,7 +86,6 @@ router.post('/session', (req, res) => {
       resume,
       prepMaterial,
       transcriptionProvider,
-      anthropicKey,
       openaiKey,
       deepgramKey,
     });
