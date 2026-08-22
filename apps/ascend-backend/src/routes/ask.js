@@ -235,15 +235,12 @@ export const looksLikeCodeTask = (text = '', { hasImages = false } = {}) => {
   return !CONCEPT_RE.test(text) || ATTACHED_REF_RE.test(text);
 };
 
-// Both were dated PREVIEW aliases, and Google retired them: a call to
-// gemini-2.5-flash-preview-05-20 now comes back 404 "not found for API version
-// v1beta". Neither branch had ever failed loudly — the 404 was caught, logged,
-// and the request fell through to the final Gemini stream — so the Ask tab kept
-// answering while both provider-toggle paths were dead and paying a wasted
-// round trip on every question. Pinned to the stable ids, which ListModels
-// confirms are live.
-const GEMINI_CODING_MODEL  = 'gemini-2.5-pro';
-const GEMINI_GENERAL_MODEL = 'gemini-2.5-flash';
+// Match the model IDs every other Gemini call site in both backends uses. The
+// previous values were dated `-preview-05-06` / `-preview-05-20` aliases; a
+// retired preview 404s, and the handler then silently pays a second full round
+// trip on the generic fallback below before the first token reaches the user.
+const GEMINI_CODING_MODEL  = process.env.GEMINI_CODING_MODEL || 'gemini-2.5-flash';
+const GEMINI_GENERAL_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 // 2.5 models do dynamic "thinking" by default, which buys nothing on a
 // grounded explain/fix turn and costs seconds of dead air before the first
