@@ -83,33 +83,45 @@ function parseDataUrl(u) {
   return { mimeType, data };
 }
 
-async function processImages(images, userId, convId) {
-  if (!Array.isArray(images) || !images.length) return { parts: [], stored: [] };
-  const parsed = images.map(parseDataUrl).filter(Boolean).slice(0, MAX_IMAGES);
-  const parts = [];
+/** Decode attachments into Gemini vision parts. Pure and synchronous — nothing
+ *  here should sit between the request and the first streamed token. */
+function buildImageParts(images) {
+  if (!Array.isArray(images) || !images.length) return [];
+  return images.map(parseDataUrl).filter(Boolean).slice(0, MAX_IMAGES);
+}
+
+/**
+ * Archive attachments to R2 and attach the keys to an already-written message
+ * row. Deliberately NOT awaited by the stream handler: uploading up to 4×6 MB
+ * to object storage was costing seconds of dead air before the model was even
+ * called, and the model never needs the upload — it gets the bytes inline.
+ * Purely a durability step for replaying history later.
+ */
+async function archiveImages(parsed, userId, convId, messageId) {
+  if (!parsed.length || !userId || !convId || !messageId) return;
   const stored = [];
   for (let i = 0; i < parsed.length; i++) {
     const { mimeType, data } = parsed[i];
-    parts.push({ inlineData: { mimeType, data } });
-    // Only persist to R2 when we have a conversation to attach it to; the
-    // vision `parts` are still sent to the model either way.
-    if (userId && convId) {
-      const ext = mimeType.split('/')[1] || 'png';
-      const key = `ask/${userId}/${convId}/${Date.now()}-${i}.${ext}`;
-      try {
-        await r2.send(new PutObjectCommand({
-          Bucket: R2_BUCKET,
-          Key: key,
-          Body: Buffer.from(data, 'base64'),
-          ContentType: mimeType,
-        }));
-        stored.push({ key, mimeType });
-      } catch (e) {
-        console.warn('[Ask] image R2 upload failed (non-fatal):', e.message);
-      }
+    const ext = mimeType.split('/')[1] || 'png';
+    const key = `ask/${userId}/${convId}/${Date.now()}-${i}.${ext}`;
+    try {
+      await r2.send(new PutObjectCommand({
+        Bucket: R2_BUCKET,
+        Key: key,
+        Body: Buffer.from(data, 'base64'),
+        ContentType: mimeType,
+      }));
+      stored.push({ key, mimeType });
+    } catch (e) {
+      console.warn('[Ask] image R2 upload failed (non-fatal):', e.message);
     }
   }
-  return { parts, stored };
+  if (!stored.length) return;
+  try {
+    await query(`UPDATE lumora_ask_messages SET images = $2 WHERE id = $1`, [messageId, JSON.stringify(stored)]);
+  } catch (e) {
+    console.warn('[Ask] image key persist failed (non-fatal):', e.message);
+  }
 }
 
 /**
@@ -190,15 +202,38 @@ const CODE_SNIPPET_RE = /```|\bdef\s+\w+\s*\(|\bclass\s+\w+\s*[:({]|\bfunction\s
  * "produce code", whatever the object ("implement an LRU cache"). */
 const CODE_STRONG_RE = /\b(write|implement|code up|complete|fill in)\b/i;
 /* Weaker verbs are ambiguous ("solve this conflict", "fix the process"), so
- * they also need a code-ish object nearby. */
-const CODE_WEAK_RE = /\b(fix|debug|refactor|optimi[sz]e|solve|finish)\b[^.?!]{0,40}\b(function|method|class|program|script|snippet|solution|algorithm|query|code|bug|test case|leetcode|problem)\b/i;
+ * they also need a code-ish object nearby. Nouns take an optional plural: the
+ * list used to end each alternative at a hard \b, so "fix any bugs" and "explain
+ * these methods" fell through to the prose template. */
+const CODE_WEAK_RE = /\b(fix|debug|refactor|optimi[sz]e|solve|finish|review|trace|walk through)\b[^.?!]{0,40}\b(functions?|methods?|classe?s?|programs?|scripts?|snippets?|solutions?|algorithms?|quer(?:y|ies)|code|bugs?|errors?|exceptions?|tests?|test cases?|leetcode|problems?|stack ?traces?|outputs?)\b/i;
 /* Conceptual framings stay prose even when they name code nouns — "how would
  * you implement a rate limiter" is a discussion question, not a coding task. */
 const CONCEPT_RE = /^\s*(what|why|when|who|which|how\s+(do|does|would|did|can|is|are)|explain|describe|compare|contrast|tell me|walk me|talk me|difference|pros and cons|trade-?offs?)\b/i;
+/* …but a conceptual opener does NOT win when the question points at something
+ * concrete the user put in front of us. "Explain each line of this code and fix
+ * any bugs" is a review of *their* snippet, not a discussion of a topic, and
+ * answering it as a spoken interview answer is exactly the wrong output. */
+const ATTACHED_REF_RE = /\b(this|that|these|those|the|my|below|above|attached|following|screenshot|screen ?shot|image)\b[^.?!]{0,30}\b(code|snippet|functions?|methods?|classe?s?|programs?|scripts?|solutions?|implementations?|lines?|bugs?|errors?|exceptions?|stack ?traces?|outputs?|screenshots?)\b/i;
 
-const looksLikeCodeTask = (text = '') =>
-  CODE_SNIPPET_RE.test(text) ||
-  ((CODE_STRONG_RE.test(text) || CODE_WEAK_RE.test(text)) && !CONCEPT_RE.test(text));
+/**
+ * Route a turn to the code template or the prose template.
+ *
+ * `hasImages` matters as much as the text: a pasted screenshot of a failing
+ * program carries the whole question, and the accompanying text is often just
+ * "explain each line and fix any bugs" — which on its own reads conceptual.
+ * Routing that to the spoken-answer template produced long, generic prose about
+ * the topic instead of an answer about the code on screen.
+ */
+export const looksLikeCodeTask = (text = '', { hasImages = false } = {}) => {
+  if (CODE_SNIPPET_RE.test(text)) return true;
+  // A screenshot plus any reference to code/errors is a review of what's in the
+  // image. A screenshot with no text at all is also almost always a code or
+  // error capture in this product — the alternative (a photo to discuss) does
+  // not occur in an interview assistant.
+  if (hasImages && (!text.trim() || ATTACHED_REF_RE.test(text) || CODE_WEAK_RE.test(text))) return true;
+  if (!CODE_STRONG_RE.test(text) && !CODE_WEAK_RE.test(text)) return false;
+  return !CONCEPT_RE.test(text) || ATTACHED_REF_RE.test(text);
+};
 
 // Both were dated PREVIEW aliases, and Google retired them: a call to
 // gemini-2.5-flash-preview-05-20 now comes back 404 "not found for API version
@@ -209,6 +244,11 @@ const looksLikeCodeTask = (text = '') =>
 // confirms are live.
 const GEMINI_CODING_MODEL  = 'gemini-2.5-pro';
 const GEMINI_GENERAL_MODEL = 'gemini-2.5-flash';
+
+// 2.5 models do dynamic "thinking" by default, which buys nothing on a
+// grounded explain/fix turn and costs seconds of dead air before the first
+// token. Same setting lumora-backend's coding route already uses.
+const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } };
 
 const SYS_GENERAL = `You are Sona, a live interview assistant. The candidate is in an active job interview right now.
 
@@ -511,6 +551,52 @@ Respond in EXACTLY this structure:
 
 ALWAYS respond in English.`;
 
+/* Reviewing code the candidate already has (pasted, or on screen in a
+ * screenshot) is a different job from producing a solution, and SYS_CODE was
+ * wrong for it in both directions: it asked for "Missing Code" when nothing is
+ * missing, and its "cover every non-trivial line" walk-through turned a
+ * two-bug review into a line-by-line tour that opened on the import list. The
+ * bugs are the answer; the tour is support. */
+const SYS_CODE_REVIEW = `You are Sona, a live interview coding assistant. The candidate is in an active coding interview and has put their own code in front of you — pasted, or in a screenshot.
+
+Answer about THAT code. Never restate the topic generically, and never solve a different problem than the one on screen.
+
+Respond in EXACTLY this structure:
+
+### What's Wrong
+- **<line or symbol>**: what breaks, and the one-line fix.
+(Only real defects — bugs, crashes, wrong output, missing cases. If the code is
+correct, say "No bugs — it runs correctly" and move on. Never pad this list.)
+
+### Fixed Code
+\`\`\`<lang>
+<the complete corrected code — their structure, minimally changed>
+\`\`\`
+
+### Walk-Through (say to interviewer)
+- **<symbol or line range>**: <plain English, what the candidate says out loud>
+
+Hard rules for the walk-through:
+- At most 8 bullets. Group related lines; never one bullet per line.
+- SKIP imports, enum members, trivial constructors, getters, and anything whose
+  purpose is obvious from its name. Those bullets are noise, not explanation.
+- Spend the bullets on the logic that matters: the algorithm, the concurrency,
+  the data structure choice, and every line you changed.
+- If the candidate explicitly asked for a line-by-line explanation, still skip
+  the boilerplate — explain each meaningful line, not each physical line.
+
+Total response: under 400 words outside the code block.
+ALWAYS respond in English.`;
+
+/* Appended when screenshots are attached, on whichever template is in play. */
+const VISION_ADDENDUM = `
+
+The attached screenshot(s) are the question. Read the code, the error message, the
+stack trace, or the test output out of the image and answer about exactly what is
+shown — quote the real identifiers and the real error text. If the image is
+cropped or unreadable, say precisely what you cannot see instead of guessing at
+the missing part.`;
+
 const SYS_CODE_DUAL = (draft) => `You are Sona, a live interview coding assistant. The candidate is in an active coding interview.
 
 A secondary AI model produced this draft solution:
@@ -563,7 +649,7 @@ async function fetchGeminiDraft(message, history, geminiKey, timeoutMs = 6000) {
         body: JSON.stringify({
           system_instruction: { parts: [{ text: SYS_CODE }] },
           contents,
-          generationConfig: { maxOutputTokens: 4096, temperature: 0.1 },
+          generationConfig: { maxOutputTokens: 4096, temperature: 0.1, ...NO_THINKING },
         }),
       }
     );
@@ -595,14 +681,21 @@ router.post('/stream', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
 
-    const isCode = looksLikeCodeTask(effectiveMessage);
-    const system = isCode ? SYS_CODE : SYS_GENERAL;
+    // Route on the whole turn, attachments included — `hasImages` is why a
+    // screenshot of failing code reaches the code template at all.
+    const isCode = looksLikeCodeTask(effectiveMessage, { hasImages });
+    // The candidate already has code in front of us (pasted or on screen), so
+    // this is a review, not a fresh solve.
+    const isReview = isCode && (hasImages || CODE_SNIPPET_RE.test(effectiveMessage));
+    let system = isReview ? SYS_CODE_REVIEW : isCode ? SYS_CODE : SYS_GENERAL;
+    if (hasImages) system += VISION_ADDENDUM;
     const userId = req.user?.id;
     const dbContent = message?.trim() || '📷 Screenshot';
 
     // Persist conversation + user message — isolated so a missing table never kills the stream.
-    // Screenshots are uploaded to R2 (keyed by conv) and the keys stored on the
-    // user row; `imageParts` (inlineData) always builds so the model sees them.
+    // `imageParts` (inlineData) is what the model sees and is built synchronously,
+    // so it survives a DB failure. The R2 archive that backs history replay runs
+    // detached, off the critical path.
     let convId = conversationId || null;
     let imageParts = [];
     try {
@@ -614,13 +707,16 @@ router.post('/stream', async (req, res) => {
         convId = rows[0].id;
         res.write(`data: ${JSON.stringify({ conversationId: convId })}\n\n`);
       }
-      const { parts, stored } = await processImages(images, userId, convId);
-      imageParts = parts;
+      const parsedImages = buildImageParts(images);
+      imageParts = parsedImages.map(({ mimeType, data }) => ({ inlineData: { mimeType, data } }));
       if (userId && convId) {
-        await query(
-          `INSERT INTO lumora_ask_messages (conversation_id, role, content, images) VALUES ($1, 'user', $2, $3)`,
-          [convId, dbContent, stored.length ? JSON.stringify(stored) : null]
+        const { rows } = await query(
+          `INSERT INTO lumora_ask_messages (conversation_id, role, content) VALUES ($1, 'user', $2) RETURNING id`,
+          [convId, dbContent]
         );
+        // Fire-and-forget: R2 is for replaying history, not for answering.
+        archiveImages(parsedImages, userId, convId, rows[0]?.id)
+          .catch(e => console.warn('[Ask] image archive failed (non-fatal):', e.message));
       }
     } catch (dbErr) {
       console.error('[Ask] DB write error (non-fatal):', dbErr.message);
@@ -657,9 +753,13 @@ router.post('/stream', async (req, res) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              system_instruction: { parts: [{ text: SYS_CODE }] },
+              // `system`, not `finalSystem` — that is declared below this
+              // branch, and code turns take no KB/background grounding anyway.
+              // It already carries the review template and, when screenshots
+              // are attached, the vision instructions.
+              system_instruction: { parts: [{ text: system }] },
               contents: geminiContents,
-              generationConfig: { maxOutputTokens: 8000, temperature: 0.1 },
+              generationConfig: { maxOutputTokens: 8000, temperature: 0.1, ...NO_THINKING },
             }),
           }
         );
@@ -707,23 +807,40 @@ router.post('/stream', async (req, res) => {
     // experience question fabricate a persona — the KB is impersonal study
     // material and carries nothing about who the candidate actually is.
     // Deterministic and injected whether or not KB vector retrieval hits.
-    try {
-      const background = await getCandidateBackground(userId);
-      if (background) finalSystem += background;
-    } catch (e) {
-      console.error('[Ask] candidate background skipped:', e?.message || e);
-    }
-    try {
-      const chunks = await retrieveForAsk(effectiveMessage);
-      if (chunks.length > 0) {
-        finalSystem += formatContext(chunks);
-        res.write(`data: ${JSON.stringify({ sources: chunks.map((c) => ({ source: c.source, title: c.topic_title, section: c.section })) })}\n\n`);
+    //
+    // Both lookups are skipped for code turns, and run CONCURRENTLY otherwise.
+    // They used to run one after the other on the critical path: a DB read plus
+    // an embedding API call plus a pgvector scan, all before the model was
+    // contacted. Neither helps a code turn — a résumé cannot fix an off-by-one,
+    // and the KB is impersonal study material, so injecting it into a review of
+    // the user's own snippet only adds text the model has to ignore.
+    if (!isCode) {
+      const [bgResult, kbResult] = await Promise.allSettled([
+        getCandidateBackground(userId),
+        retrieveForAsk(effectiveMessage),
+      ]);
+      if (bgResult.status === 'fulfilled') {
+        if (bgResult.value) finalSystem += bgResult.value;
+      } else {
+        console.error('[Ask] candidate background skipped:', bgResult.reason?.message || bgResult.reason);
       }
-    } catch (e) {
-      console.error('[Ask] KB grounding skipped:', e?.message || e);
+      if (kbResult.status === 'fulfilled') {
+        const chunks = kbResult.value || [];
+        if (chunks.length > 0) {
+          finalSystem += formatContext(chunks);
+          res.write(`data: ${JSON.stringify({ sources: chunks.map((c) => ({ source: c.source, title: c.topic_title, section: c.section })) })}\n\n`);
+        }
+      } else {
+        console.error('[Ask] KB grounding skipped:', kbResult.reason?.message || kbResult.reason);
+      }
     }
 
-    if (isCode && provider !== 'gemini' && geminiKey) {
+    // Review turns skip the draft entirely. Drafting a fresh solution to
+    // cross-check against is worth a blocking round trip when the model has to
+    // invent an algorithm; when the candidate has already handed us the code,
+    // it just delays the first token — and SYS_CODE_DUAL would overwrite the
+    // review template and the screenshot instructions on the way past.
+    if (isCode && !isReview && provider !== 'gemini' && geminiKey) {
       res.write(`data: ${JSON.stringify({ status: 'Drafting with Gemini…' })}\n\n`);
       const draft = await fetchGeminiDraft(effectiveMessage, conversationContext(history, effectiveMessage), geminiKey);
       if (draft) {
@@ -747,7 +864,7 @@ router.post('/stream', async (req, res) => {
               // ungrounded (and fabricated a persona) while Claude did not.
               system_instruction: { parts: [{ text: finalSystem }] },
               contents: geminiContents,
-              generationConfig: { maxOutputTokens: 8000, temperature: 0.2 },
+              generationConfig: { maxOutputTokens: 8000, temperature: 0.2, ...NO_THINKING },
             }),
           }
         );
@@ -829,6 +946,7 @@ router.post('/stream', async (req, res) => {
         // Single user turn: joined text + any pasted screenshots (inlineData).
         const _stream = await _model.generateContentStream({
           contents: [{ role: 'user', parts: [{ text: _msgs.join('\n\n') }, ...imageParts] }],
+          generationConfig: { maxOutputTokens: 8000, ...NO_THINKING },
         });
         for await (const chunk of _stream.stream) {
           const token = chunk.text();
