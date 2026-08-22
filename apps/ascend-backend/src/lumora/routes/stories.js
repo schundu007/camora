@@ -1,6 +1,10 @@
 import { Router } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
 import { authenticate } from '../middleware/authenticate.js';
+// Service separation: ascend-backend does not spend Anthropic keys, mirror
+// included — this was the last real Anthropic SDK under src/lumora/. Sibling
+// routes (coding.js) already import this Gemini-backed, Anthropic-shaped
+// client, and `content[].text` is the shape the parser below already reads.
+import { getAnthropicClient } from '../lib/_shared/llm.js';
 
 const router = Router();
 
@@ -46,9 +50,10 @@ router.post('/parse', authenticate, async (req, res) => {
   }
 
   try {
-    const client = new Anthropic();
+    const client = getAnthropicClient();
     const msg = await client.messages.create({
-      model: process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001',
+      // No `model`: the shim pins its own. Naming a Claude model here would be
+      // a lie this service cannot honour.
       max_tokens: 2400,
       system: STORY_PARSE_PROMPT,
       messages: [{ role: 'user', content: `RESUME:\n\n${trimmed}` }],

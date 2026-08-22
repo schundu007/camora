@@ -2,9 +2,12 @@
  * Configuration module - validates environment variables at startup
  */
 
-const requiredEnvVars = [
-  'ANTHROPIC_API_KEY',
-];
+// Service separation: ascend-backend does not spend Anthropic keys — Claude is
+// lumora-backend's model. Requiring ANTHROPIC_API_KEY here forced a key onto a
+// service that must never call Anthropic. Gemini is this service's provider and
+// its key is validated where it is used, which fails open to a degraded answer
+// rather than refusing to boot.
+const requiredEnvVars = [];
 
 const optionalEnvVars = {
   PORT: '3009',

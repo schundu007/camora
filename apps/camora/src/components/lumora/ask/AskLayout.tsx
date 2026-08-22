@@ -10,7 +10,6 @@ import go from 'react-syntax-highlighter/dist/esm/languages/hljs/go';
 import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
 import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
 import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
-import Chip from '@/components/shared/ui/Chip';
 import { StreamingMicButton } from './StreamingMicButton';
 import { snapRegion } from '@/lib/lumora/snapCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
@@ -281,7 +280,10 @@ export const AskLayout = () => {
   const [input, setInput]               = useState('');
   const [streaming, setStreaming]       = useState(false);
   const [streamText, setStreamText]     = useState('');
-  const [provider, setProvider]         = useState<Provider>('claude');
+  // Fixed, not state: ascend-backend serves Ask and never calls Anthropic, so
+  // there is nothing to switch between. Still sent on every request and stored
+  // per conversation so the field keeps its meaning.
+  const provider: Provider = 'gemini';
   const [convId, setConvId]             = useState<string | null>(null);
   const [history, setHistory]           = useState<Conv[]>([]);
   const [showHistory, setShowHistory]   = useState(false);
@@ -729,30 +731,13 @@ export const AskLayout = () => {
       {/* Input bar */}
       <div className="shrink-0 px-4 pb-4 pt-3" style={{ borderTop: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--bg-surface)' }}>
         <div style={{ maxWidth: 780, margin: '0 auto' }}>
-          {/* Provider toggle */}
-          <div className="flex items-center justify-end gap-1.5 mb-2">
-            {(['claude', 'gemini'] as Provider[]).map(p => (
-              <button
-                key={p}
-                onClick={() => {
-                  if (p === provider) return;
-                  askAbortRef.current?.abort();
-                  setStreaming(false);
-                  setProvider(p);
-                  setMessages([]);
-                  setConvId(null);
-                  setStreamText('');
-                  setShowHistory(false);
-                }}
-                className="transition-all"
-              >
-                <Chip variant={provider === p ? 'gold' : 'default'}>
-                  {p === 'claude' ? '✦ Claude' : '◆ Gemini'}
-                </Chip>
-              </button>
-            ))}
-          </div>
-
+          {/* Provider toggle removed: Ask runs on ascend-backend, which does not
+              spend Anthropic keys (Claude belongs to lumora-backend), so the
+              Claude chip offered a model the service will never call — the same
+              "nothing tells you which model answered" confusion the toggle was
+              added to fix, just inverted. `provider` is still sent on the
+              request and stored per conversation, so restoring the toggle is a
+              UI-only change if Ask ever moves services. */}
           {/* Input box */}
           <div
             className="relative rounded-2xl flex flex-col"
