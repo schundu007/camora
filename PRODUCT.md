@@ -30,7 +30,7 @@ Sharp, authoritative, efficient. The product respects the user's time. It does n
 2. **Respect the reading experience.** Topic pages are long-form content. Typography, measure, and spacing must make sustained reading comfortable, not just scannable.
 3. **Density that earns trust.** Camora has 1,400+ topics. The grid should feel comprehensive and organized, not overwhelming. Density is a feature when it's controlled.
 4. **Nothing screams "made with AI."** Every layout decision should feel considered — asymmetric where it helps, structured where it aids comprehension.
-5. **The brand palette is an asset.** Navy (#0047AB) and gold (#C9A227) are distinctive. Use them with intent: navy for structure, gold for signal and momentum.
+5. **The brand palette is an asset.** Navy (#26619C) and gold (#C9A227) are distinctive. Use them with intent: navy for structure, gold for signal and momentum. `DESIGN.md` and `apps/camora/src/styles/globals.css` are the source of truth for exact values.
 
 ## Accessibility & Inclusion
 
