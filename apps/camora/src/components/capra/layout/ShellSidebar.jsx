@@ -79,7 +79,7 @@ export default function ShellSidebar() {
             <img src="/camora_favicon.png" alt="Camora" width={32} height={32} style={{ borderRadius: 7, display: 'block', flexShrink: 0 }} />
             <div>
               <span className="block text-[15px] font-bold tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Camora</span>
-              <span className="block text-[8.5px] font-mono uppercase tracking-[0.18em] -mt-0.5" style={{ color: 'var(--accent)' }}>Apply · Prepare · Practice · Attend</span>
+              <span className="block text-[12px] font-mono uppercase tracking-[0.18em] -mt-0.5" style={{ color: 'var(--accent)' }}>Apply · Prepare · Practice · Attend</span>
             </div>
           </Link>
         )}

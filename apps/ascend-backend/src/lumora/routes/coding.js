@@ -838,7 +838,12 @@ router.post('/execute', authenticate, async (req, res) => {
   try {
     const response = await fetch(`${codeRunnerUrl}/run`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(process.env.CODE_RUNNER_API_KEY
+          ? { 'X-API-Key': process.env.CODE_RUNNER_API_KEY }
+          : {}),
+      },
       body: JSON.stringify({ code, language, test_cases: testCases || [] }),
     });
     const result = await response.json();

@@ -293,7 +293,7 @@ export default function LandingPage() {
       {/* ═══════════ LOGO STRIP ═══════════ */}
       <section className="border-y border-[var(--border)] bg-[var(--bg-surface)] py-6">
         <Container>
-          <p className="text-center font-mono text-[10.5px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">
+          <p className="text-center font-mono text-[12px] font-bold uppercase tracking-[0.22em] text-[var(--text-muted)]">
             Trusted by engineers at
           </p>
           <div className="relative mt-6 overflow-hidden">

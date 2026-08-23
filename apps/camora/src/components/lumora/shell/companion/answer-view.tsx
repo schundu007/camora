@@ -529,7 +529,7 @@ export const StoryBankPanel = ({ stories, activeArchetype }: { stories?: LumoraS
               <div className="flex items-start gap-1.5">
                 <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
                   {s.archetypes.slice(0, 2).map(t => (
-                    <span key={t} className="text-[7px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
+                    <span key={t} className="text-[12px] font-bold uppercase tracking-wider px-1 py-0.5 rounded"
                       style={{
                         background: (matches && t === activeArchetype) ? 'var(--cam-primary)' : 'var(--accent-subtle)',
                         color: (matches && t === activeArchetype) ? '#FFFFFF' : 'var(--cam-primary-dk)',

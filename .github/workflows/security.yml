@@ -37,19 +37,19 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: pnpm audit (high + critical)
-        run: pnpm audit --audit-level=high 2>&1 || true
+        run: pnpm audit --audit-level=high
 
       - name: Audit lumora-backend
         working-directory: apps/lumora-backend
         run: |
-          npm audit --audit-level=high --json > /tmp/audit-lumora.json 2>&1 || true
-          python3 -c "import json; d=json.load(open('/tmp/audit-lumora.json')); v=d.get('metadata',{}).get('vulnerabilities',{}); print('lumora-backend:',v.get('high',0)+v.get('critical',0),'high/critical')" 2>/dev/null || echo 'lumora-backend: could not parse audit output'
+          npm audit --audit-level=high --json > /tmp/audit-lumora.json
+          python3 -c "import json; d=json.load(open('/tmp/audit-lumora.json')); v=d.get('metadata',{}).get('vulnerabilities',{}); print('lumora-backend:',v.get('high',0)+v.get('critical',0),'high/critical')"
 
       - name: Audit ascend-backend
         working-directory: apps/ascend-backend
         run: |
-          npm audit --audit-level=high --json > /tmp/audit-ascend.json 2>&1 || true
-          python3 -c "import json; d=json.load(open('/tmp/audit-ascend.json')); v=d.get('metadata',{}).get('vulnerabilities',{}); print('ascend-backend:',v.get('high',0)+v.get('critical',0),'high/critical')" 2>/dev/null || echo 'ascend-backend: could not parse audit output'
+          npm audit --audit-level=high --json > /tmp/audit-ascend.json
+          python3 -c "import json; d=json.load(open('/tmp/audit-ascend.json')); v=d.get('metadata',{}).get('vulnerabilities',{}); print('ascend-backend:',v.get('high',0)+v.get('critical',0),'high/critical')"
 
   # ── Python audit ──────────────────────────────────────────────────────────
   audit-python:
@@ -67,7 +67,7 @@ jobs:
 
       - name: Audit ai-services
         working-directory: apps/ai-services
-        run: pip-audit -r requirements.txt --format markdown 2>&1 || true
+        run: pip-audit -r requirements.txt --format markdown
 
   # ── Secret detection ──────────────────────────────────────────────────────
   scan-secrets:
