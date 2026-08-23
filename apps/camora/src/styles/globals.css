@@ -306,20 +306,20 @@
        Gold is absent by design: #C2963E measures 2.72:1 here and
        used to carry the category labels.
        See docs/superpowers/specs/2026-08-23-lumora-fluent-light-theme-design.md */
-    --lum-bg: #f2f3f3;
+    --lum-bg: #eef5fc;
     --lum-surface: #ffffff;
-    --lum-surface-hover: #f0fbff;
-    --lum-border: #ebebf0;
-    --lum-border-strong: #c6c6cd;
+    --lum-surface-hover: #e8f2fb;
+    --lum-border: #c8d9ed;
+    --lum-border-strong: #9eb9d6;
     --lum-text: #0f141a;
     --lum-text-2: #424650;
-    --lum-accent: #006ce0;
-    --lum-accent-sm: #002b66;
-    --lum-accent-bg: #f0fbff;
+    --lum-accent: #0078d4;
+    --lum-accent-sm: #005a9e;
+    --lum-accent-bg: #eff6fc;
     --lum-ok: #00802f;
     --lum-radius: 8px;
     --lum-shadow:         0 0.3px 0.9px rgba(0,0,0,0.07), 0 1.6px 3.6px rgba(0,0,0,0.07);
-    --lum-cmdbar-bg: #ffffff;
+    --lum-cmdbar-bg: #f8fbff;
 
     --lum-tag-design-fg: #006ce0;
     --lum-tag-design-bg: #f0fbff;
@@ -446,11 +446,11 @@
     --light-bg-faint:      #EAF2FB;
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip: #f2f3f3;
+    --cam-hero-strip: #eef5fc;
     --cam-hero-bg:            linear-gradient(160deg, #FDFEFF 0%, #F3F7FC 40%, #E6EEF8 100%);
     --cam-gold-leaf:          var(--accent);
-    --cam-gold-leaf-lt:       #4A4D54;
-    --cam-gold-leaf-dk:       #1B1D22;
+    --cam-gold-leaf-lt:       #005a9e;
+    --cam-gold-leaf-dk:       #26619c;
     --cam-gold-leaf-text:     var(--accent-text);
     --cam-gold-leaf-50:       var(--accent-subtle);
     --bg-base:                #F3F7FC;

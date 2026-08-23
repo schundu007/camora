@@ -145,7 +145,7 @@ const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
             <th
               key={i}
               className="text-left px-3 py-2 text-[12px] font-bold uppercase tracking-widest whitespace-nowrap"
-              style={{ color: 'var(--cam-gold-leaf-dk)', background: 'rgba(30,77,120,0.10)' }}
+              style={{ color: 'var(--lum-accent-sm)', background: 'var(--lum-accent-bg)' }}
             >
               {inlineMarkdown(h)}
             </th>
@@ -257,7 +257,7 @@ export const AskResponse = ({ content }: { content: string }) => {
         const body = nl > -1 ? sec.slice(nl + 1) : '';
         return (
           <div key={i}>
-            <p className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}>
+            <p className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
               {title}
             </p>
             <div>{renderContent(body)}</div>
@@ -592,9 +592,9 @@ export const AskLayout = () => {
           "History (N)" chip brings it back in one click, the ‹ chevron here
           collapses it. Replaces the old top drop-down that covered the chat. */}
       {showHistory && (
-        <aside className="shrink-0 w-[260px] h-full flex flex-col border-r" style={{ borderColor: 'var(--cam-gold-leaf-dk)', background: 'var(--cam-hero-strip)' }}>
-          <div className="flex items-center justify-between px-3 h-12 shrink-0 border-b" style={{ borderColor: 'var(--cam-gold-leaf-dk)' }}>
-            <span className="text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
+        <aside className="shrink-0 w-[260px] h-full flex flex-col border-r" style={{ borderColor: 'var(--lum-border)', background: 'var(--lum-bg)' }}>
+          <div className="flex items-center justify-between px-3 h-12 shrink-0 border-b" style={{ borderColor: 'var(--lum-border)' }}>
+            <span className="text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--lum-accent)', ...sans }}>
               History ({history.length})
             </span>
             <div className="flex items-center gap-1">
@@ -603,19 +603,19 @@ export const AskLayout = () => {
                   Clear
                 </button>
               )}
-              <button onClick={() => setShowHistory(false)} data-tip="Collapse history" aria-label="Collapse history" className="p-1 rounded transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-gold-leaf)' }}>
+              <button onClick={() => setShowHistory(false)} data-tip="Collapse history" aria-label="Collapse history" className="p-1 rounded transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-accent)' }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
               </button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
             {history.length === 0 ? (
-              <p className="p-4 text-[12px]" style={{ color: 'var(--cam-gold-leaf-dk)', ...sans }}>No history yet</p>
+              <p className="p-4 text-[12px]" style={{ color: 'var(--lum-text-2)', ...sans }}>No history yet</p>
             ) : history.map(c => (
               <div key={c.id} className="flex items-center gap-2 border-b hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)] transition-colors" style={{ borderColor: 'rgba(217,181,67,0.15)' }}>
                 <button onClick={() => loadConversation(c.id)} className="flex-1 text-left px-3 py-2.5 text-[13px] flex flex-col gap-1 min-w-0" style={{ color: 'var(--cam-strip-text)', ...sans }}>
                   <span className="truncate w-full">{c.title}</span>
-                  <span className="text-[12px] px-1.5 py-0.5 rounded self-start" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>{c.provider}</span>
+                  <span className="text-[12px] px-1.5 py-0.5 rounded self-start" style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent)' }}>{c.provider}</span>
                 </button>
                 <button onClick={e => deleteConversation(c.id, e)} className="shrink-0 mr-2 p-1 rounded hover:bg-[var(--danger)]/40 transition-colors" data-tip="Delete conversation" style={{ color: 'var(--danger)' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
@@ -630,16 +630,16 @@ export const AskLayout = () => {
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
 
       {/* Top bar — navy strip with gold-leaf border */}
-      <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+      <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--lum-surface)', borderBottom: '2px solid var(--lum-accent)' }}>
         <div className="flex items-center gap-2">
           {hasMessages && (
-            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-gold-leaf)', border: '1px solid rgba(217,181,67,0.35)', ...sans }}>
+            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-accent)', border: '1px solid var(--lum-border)', ...sans }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New
             </button>
           )}
         </div>
-        <span className="text-[12px] uppercase tracking-widest font-bold" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>Ask Sona</span>
+        <span className="text-[12px] uppercase tracking-widest font-bold" style={{ color: 'var(--lum-accent)', ...sans }}>Ask Sona</span>
         {/* Single-click chip: opens the left History sidebar (collapse lives
             inside the sidebar). Hidden while the sidebar is open so there's one
             unambiguous control at a time. */}
@@ -648,7 +648,7 @@ export const AskLayout = () => {
             onClick={() => setShowHistory(true)}
             data-tip="Show conversation history"
             className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-medium transition-colors"
-            style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)', ...sans }}
+            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
             History ({history.length})
@@ -677,7 +677,7 @@ export const AskLayout = () => {
                     </div>
                   )}
                   {m.content && (
-                    <div className="px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf-dk)', color: '#FFFFFF', ...sans }}>
+                    <div className="px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--lum-accent)', border: '1px solid var(--lum-accent-sm)', color: '#FFFFFF', ...sans }}>
                       {m.content}
                     </div>
                   )}
@@ -716,7 +716,7 @@ export const AskLayout = () => {
                 key={i}
                 onClick={() => handleSubmit(s)}
                 className="flex items-center gap-3 text-left px-4 py-3 rounded-xl transition-all hover:bg-[var(--bg-elevated)] active:scale-[0.99]"
-                style={{ color: 'var(--text-secondary)', fontSize: 13, background: 'var(--bg-surface)', border: '1px solid rgba(217,181,67,0.18)', ...sans }}
+                style={{ color: 'var(--text-secondary)', fontSize: 13, background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', ...sans }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--cam-gold-leaf)', flexShrink: 0 }}>
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
@@ -729,7 +729,7 @@ export const AskLayout = () => {
       )}
 
       {/* Input bar */}
-      <div className="shrink-0 px-4 pb-4 pt-3" style={{ borderTop: '1px solid var(--cam-gold-leaf-dk)', background: 'var(--bg-surface)' }}>
+      <div className="shrink-0 px-4 pb-4 pt-3" style={{ borderTop: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}>
         <div style={{ maxWidth: 780, margin: '0 auto' }}>
           {/* Provider toggle removed: Ask runs on ascend-backend, which does not
               spend Anthropic keys (Claude belongs to lumora-backend), so the
@@ -741,7 +741,7 @@ export const AskLayout = () => {
           {/* Input box */}
           <div
             className="relative rounded-2xl flex flex-col"
-            style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf-dk)', boxShadow: '0 0 0 1px rgba(217,181,67,0.1), 0 4px 20px rgba(0,0,0,0.3)' }}
+            style={{ background: 'var(--lum-surface)', border: '1px solid var(--lum-border-strong)', boxShadow: 'var(--lum-shadow)' }}
             onDrop={onComposerDrop}
             onDragOver={e => e.preventDefault()}
           >
