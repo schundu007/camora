@@ -370,7 +370,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
                          background:'var(--lum-surface)', border:'1px solid var(--lum-border)',
                          borderRadius:'var(--lum-radius)', boxShadow:'var(--lum-shadow)' }}>
                 <span style={{ display:'flex', alignItems:'center', gap:9 }}>
-                  <span aria-hidden="true" style={{ width:28, height:28, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+                  <span aria-hidden="true" data-overlay-keep style={{ width:28, height:28, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
                                borderRadius:'var(--lum-radius)', background:'var(--lum-accent-bg)', color:'var(--lum-accent)' }}>
                     {cp.icon}
                   </span>
@@ -386,7 +386,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
         <section>
           <h3 style={SECTION_H}>Suggested prompts</h3>
           <p style={SECTION_HINT}>Common starters. Select one to begin immediately.</p>
-          <div style={{ border:'1px solid var(--lum-border)', borderRadius:'var(--lum-radius)',
+          <div data-overlay-keep style={{ border:'1px solid var(--lum-border)', borderRadius:'var(--lum-radius)',
                         background:'var(--lum-surface)', overflow:'hidden' }}>
             {QUICK_PROMPTS.map((p, i) => (
               <button key={p.text} onClick={() => handlePromptClick(p)} className="lum-row"
@@ -395,7 +395,7 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
                          background:'transparent', border:'none',
                          borderBottom: i < QUICK_PROMPTS.length - 1 ? '1px solid var(--lum-border)' : 'none' }}>
                 <span>
-                  <span style={{ ...TAG_BASE, ...TAG_TONE[p.type] }}>{p.type}</span>
+                  <span data-overlay-keep style={{ ...TAG_BASE, ...TAG_TONE[p.type] }}>{p.type}</span>
                 </span>
                 <span style={{ fontSize:13, color:'var(--lum-text)' }}>{p.text}</span>
                 <span aria-hidden="true" style={{ fontSize:13, color:'var(--lum-text-2)' }}>&rarr;</span>
