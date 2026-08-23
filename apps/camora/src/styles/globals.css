@@ -1868,6 +1868,48 @@ html[data-overlay='on'] body,
 html[data-overlay='on'] #root {
   background: transparent !important;
 }
+/* ── Lumora shell: retire navy-gold in favour of the Fluent ramp ───────────
+   Lumora carries ~900 references to the Camora brand tokens: 202 to
+   --cam-gold-leaf alone, plus the navy strip and chrome families. Converting
+   them file by file would be a very large diff and would keep drifting, so
+   they are remapped once here instead, onto --lum-*.
+
+   Scoped to .lumora-shell-root (LumoraShellPage.tsx:421, `fixed inset-0`),
+   which contains the icon rail, the topbar and every tool panel. Capra and
+   the marketing pages sit outside it and keep Navy Atlas untouched.
+
+   --cam-primary is deliberately NOT remapped: it is already a blue, several
+   call sites use it as a fill under white --cam-on-accent text, and pointing
+   it at a lighter accent would drop those pairs below AA. Gold and the navy
+   strips are what actually read as dated. */
+.lumora-shell-root {
+  --cam-gold-leaf:          var(--lum-accent);
+  --cam-gold-leaf-lt:       var(--lum-accent-sm);
+  --cam-gold-leaf-dk:       var(--lum-border);
+  --cam-gold-leaf-text:     var(--lum-accent-sm);
+  --cam-gold-leaf-50:       var(--lum-accent-bg);
+
+  --cam-hero-strip:         var(--lum-surface);
+  --cam-strip-heading:      var(--lum-text);
+  --cam-strip-text:         var(--lum-text-2);
+  --cam-strip-text-muted:   var(--lum-text-2);
+  --cam-strip-icon-bg:      var(--lum-accent-bg);
+  --cam-strip-icon-border:  var(--lum-border);
+
+  --cam-chip-active-bg:     var(--lum-accent-bg);
+  --cam-chip-active-text:   var(--lum-accent-sm);
+  --cam-accent-fill:        var(--lum-accent-bg);
+  --cam-accent-fill-text:   var(--lum-accent-sm);
+
+  --lumora-chrome-bg:       var(--lum-surface);
+  --lumora-chrome-text:     var(--lum-text);
+  --lumora-chrome-border:   var(--lum-border);
+  --lumora-chrome-shadow:   none;
+  --lumora-topbar-border-color: var(--lum-border);
+  --lumora-tab-active-bg:   var(--lum-accent-bg);
+  --lumora-tab-active-text: var(--lum-accent-sm);
+}
+
 /* GRAPHITE GLASS overlay scheme (modeled on macOS Control Center / Raycast / Cluely):
    a cool graphite tint blended from the app's own --bg-app so it matches the theme,
    not a random black. A subtle inner hairline gives the glass edge, a faint text-shadow
