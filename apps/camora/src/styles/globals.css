@@ -449,25 +449,25 @@
     --light-bg-white:      #ffffff;
     --light-bg-faint:      #EAF2FB;
 
-    /* ── Fluent education light theme ── */
-    --cam-hero-strip: #0078d4;
-    --cam-hero-bg:            linear-gradient(160deg, #ffffff 0%, #f4f9fe 40%, #e8f2fb 100%);
+    /* ── Linode/iximiuz education light theme ── */
+    --cam-hero-strip: #f2f3f3;
+    --cam-hero-bg:            linear-gradient(160deg, #ffffff 0%, #f9f9fb 40%, #f2f3f3 100%);
     --cam-gold-leaf:          var(--accent);
     --cam-gold-leaf-lt:       #42b4ff;
     --cam-gold-leaf-dk:       #006ce0;
     --cam-gold-leaf-text:     var(--accent-text);
     --cam-gold-leaf-50:       var(--accent-subtle);
-    --bg-base:                #eef5fc;
-    --bg-app:                 #f5f9fd;
+    --bg-base:                #f2f3f3;
+    --bg-app:                 #f9f9fb;
     --bg-surface:             #EFF5FB;
     --bg-elevated:            #ffffff;
-    /* Strip-header tokens — white text on Fluent blue chrome */
-    --cam-section-label-text: #ffffff;
-    --cam-strip-heading:      #ffffff;
-    --cam-strip-text:         rgba(255,255,255,0.86);
-    --cam-strip-text-muted:   rgba(255,255,255,0.68);
-    --cam-strip-icon-bg:      rgba(255,255,255,0.12);
-    --cam-strip-icon-border:  rgba(255,255,255,0.28);
+    /* Strip-header tokens — dark text on light bg */
+    --cam-section-label-text: var(--text-primary);
+    --cam-strip-heading:      var(--text-primary);
+    --cam-strip-text:         var(--text-secondary);
+    --cam-strip-text-muted:   var(--text-muted);
+    --cam-strip-icon-bg:      var(--accent-subtle);
+    --cam-strip-icon-border:  rgba(0,108,224,0.20);
 
     /* ── POLISH: light-mode card & surface rounding uniformity ── */
     --radius-card:   12px;
