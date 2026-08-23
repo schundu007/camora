@@ -8,7 +8,7 @@ import { snapRegion } from '@/lib/lumora/snapCapture';
 import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
 import { passesNoiseFilter, shouldAutoAnswer } from './companion/question-routing';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
-import { AnswerView, StoryBankPanel, getArchetype } from './companion/answer-view';
+import { AnswerView } from './companion/answer-view';
 import { Citations } from '@/components/lumora/Citations';
 import { useSessionStore } from '@/stores/session-store';
 import { sonaRegistry } from '@/lib/sona-registry';
@@ -616,24 +616,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const MAX_IMAGES = 3;
   const [snapping, setSnapping] = useState(false);
 
-  // Voice enrollment gates whether Sona can tell the candidate's voice from the
-  // interviewer's. Unenrolled, the mic feeds BOTH into the question stream and
-  // the candidate's own answers come back as the next question. Nothing said so
-  // — the filter simply sat inert — so the panel says it, once, where the
-  // questions appear. Dismissable for the session only; the toolbar chip stays
-  // the permanent way in, so nothing is lost by hiding this.
-  const voiceEnrolled = useSessionStore(s => s.voiceEnrolled);
-  const isEnrolling = useSessionStore(s => s.isEnrolling);
-  const [enrollNudgeHidden, setEnrollNudgeHidden] = useState(false);
-
-  // Live capture is running. Everything in the rail that exists to SET UP an
-  // interview — the story bank, the starter questions, the enrollment nudge,
-  // the auto-answer switch — is dead weight once one is underway: you are not
-  // enrolling a voice or picking a practice prompt while an interviewer is
-  // talking. During live the rail is what Sona heard and what it's answering,
-  // and nothing else.
-  const isRecording = useSessionStore(s => s.isRecording);
-
   /**
    * What Sona heard, and what it DID with it.
    *
@@ -693,15 +675,14 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // automatically; softer prompts still land in the tap list, so the noisy-room
   // flood 45d885ae fixed stays fixed. Persisted so the choice survives a reload
   // mid-interview.
+  // The in-rail switch is gone (the rail is a Q&A window and nothing else), so
+  // this is now read-only: whatever was last persisted, defaulting to on.
   const AUTO_ANSWER_KEY = 'lumora_behavioral_autoanswer_v1';
-  const [autoAnswer, setAutoAnswer] = useState<boolean>(() => {
+  const [autoAnswer] = useState<boolean>(() => {
     try { return localStorage.getItem(AUTO_ANSWER_KEY) !== '0'; } catch { return true; }
   });
-  useEffect(() => {
-    try { localStorage.setItem(AUTO_ANSWER_KEY, autoAnswer ? '1' : '0'); } catch { /* ignore */ }
-  }, [autoAnswer]);
   // submitCoalesced's flush runs from a timer that captured its closure when the
-  // window opened; a ref keeps the decision honest if the user toggles during it.
+  // window opened; a ref keeps the decision honest.
   const autoAnswerRef = useRef(autoAnswer);
   useEffect(() => { autoAnswerRef.current = autoAnswer; }, [autoAnswer]);
   // Last auto-asked utterance. ask() only dedupes while a stream is in flight,
@@ -1466,48 +1447,21 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
             </div>
-            {/* Capped at a third of the rail and scrolling inside itself: the
-                story bank has no bound of its own, and as a fixed block in a
-                flex column a long resume would push the questions list off the
-                bottom — the exact failure this layout exists to prevent. */}
-            {!isRecording && (
-              <div className="shrink-0 max-h-[33%] overflow-auto">
-                <StoryBankPanel
-                  stories={activeAssistant?.stories}
-                  activeArchetype={(() => {
-                    const lastAi = [...messages].reverse().find(m => m.role === 'ai');
-                    if (!lastAi && streamText) return getArchetype(streamText);
-                    return lastAi ? getArchetype(lastAi.text) : null;
-                  })()}
-                />
-              </div>
-            )}
-            {/* The questions list owns every pixel between the story bank and
-                the footer. It used to share the column with the enrollment
-                nudge and the auto-answer switch, which pushed questions below
-                the fold while the bottom half of the rail sat empty — those two
-                now live in the pinned footer below. */}
+            {/* The rail is a Q&A window: the questions asked, the ones Sona
+                heard, and nothing else. The story bank, the starter prompts,
+                the enrollment nudge and the auto-answer switch were all
+                pre-interview setup living in the middle of the one list that
+                has to stay readable mid-call, so they are gone rather than
+                merely hidden. Enrollment keeps its home in the toolbar's voice
+                chip; auto-answer keeps its stored setting. */}
             <div className="flex-1 min-h-0 overflow-auto p-3 space-y-1.5">
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: 'var(--text-muted)' }}>Questions</p>
-              {messages.filter(m => m.role === 'user').length === 0 && !streaming && !isRecording && (
-                <div className="py-2">
-                  <p className="text-[10px] mb-2" style={{ color: 'var(--text-muted)' }}>Ask a question to get started</p>
-                  <div className="space-y-1.5">
-                    {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
-                      <button key={s} onClick={() => { ask(s); setMobileRailOpen(false); }} className="w-full text-left px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] transition-[background-color,border-color,color] active:scale-[0.98]" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--border)'; }}>{s}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* With the setup blocks gone, a live rail with nothing heard yet
-                  would be an empty column — which reads as broken, not as
-                  ready. One line says which of the two it is. */}
-              {isRecording && !streaming && !liveTranscript && detectedQuestions.length === 0 &&
+              {/* An empty column reads as broken rather than ready — one line
+                  says which of the two it is. */}
+              {!streaming && !liveTranscript && detectedQuestions.length === 0 &&
                 messages.filter(m => m.role === 'user').length === 0 && (
                 <p className="text-[10px] px-1 py-2" style={{ color: 'var(--text-muted)' }}>
-                  Listening — questions Sona hears land here.
+                  Questions land here — ask one below, or let Sona pick them up from the call.
                 </p>
               )}
               {/* Live preview — shows each Whisper chunk immediately as it
@@ -1653,92 +1607,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 </div>
               ))}
             </div>
-            {/* Rail footer — the enrollment nudge and the auto-answer switch,
-                pinned under the list and collapsed to one line each. Both are
-                status you glance at, not text you read twice; as full cards in
-                the middle of the list they cost four question slots between
-                them. The tooltips still carry the long explanation.
-
-                Gone entirely once capture starts — both are pre-interview
-                setup. Enrollment stays reachable from the toolbar's voice chip;
-                auto-answer is a decision you make before the call. */}
-            {embedded && !isRecording && (
-              <div className="shrink-0 border-t px-2 py-1.5 flex flex-col gap-1" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
-                {!voiceEnrolled && !enrollNudgeHidden && (
-                  <div
-                    className="flex items-center gap-1.5 px-2 py-1 rounded-md"
-                    style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-gold-leaf)' }}
-                    data-tip="Without a sample of your voice, your own answers can come back as questions. Takes five seconds."
-                  >
-                    <span className="min-w-0 flex-1 text-[9px] font-bold uppercase tracking-[0.12em] truncate" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>
-                      {isEnrolling ? 'Listening — 5s' : 'Sona hears you too'}
-                    </span>
-                    {!isEnrolling && (
-                      <>
-                        <button
-                          onClick={() => {
-                            window.dispatchEvent(new CustomEvent('lumora:start-voice-enrollment'));
-                            // The listener lives in VoiceEnrollment, mounted by the
-                            // behavioral toolbar. If that toolbar isn't there, the
-                            // event lands nowhere and the button would look dead —
-                            // so say what happened instead of failing silently.
-                            setTimeout(() => {
-                              if (!useSessionStore.getState().isEnrolling) {
-                                dialogAlert({
-                                  title: 'Enrollment unavailable here',
-                                  message: 'Use the voice chip in the toolbar above, or Settings → Voice, to record your 5-second sample.',
-                                });
-                              }
-                            }, 2000);
-                          }}
-                          className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide"
-                          style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-accent-fill-text, #0a0e1a)' }}
-                          data-tip="Record a 5-second sample so Sona can tell your voice from the interviewer's"
-                        >
-                          Enroll
-                        </button>
-                        <button
-                          onClick={() => setEnrollNudgeHidden(true)}
-                          className="shrink-0 p-0.5 rounded"
-                          style={{ color: 'var(--text-muted)' }}
-                          data-tip="Hide for now — the voice chip in the toolbar always does this"
-                          aria-label="Hide enrollment prompt"
-                        >
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-                <button
-                  onClick={() => setAutoAnswer(v => !v)}
-                  className="flex items-center gap-2 px-2 py-1 rounded-md w-full text-left transition-colors"
-                  style={{
-                    background: autoAnswer ? 'var(--accent-subtle)' : 'var(--bg-surface)',
-                    border: `1px solid ${autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
-                  }}
-                  role="switch"
-                  aria-checked={autoAnswer}
-                  data-tip={autoAnswer
-                    ? 'Every question Sona hears is answered automatically. Turn off to tap each one instead.'
-                    : 'Nothing is answered automatically — every question Sona hears waits for a tap.'}
-                >
-                  <span
-                    className="shrink-0 inline-flex items-center rounded-full transition-colors"
-                    style={{
-                      width: 24, height: 14, padding: 2,
-                      background: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)',
-                      justifyContent: autoAnswer ? 'flex-end' : 'flex-start',
-                    }}
-                  >
-                    <span className="block rounded-full" style={{ width: 10, height: 10, background: '#fff' }} />
-                  </span>
-                  <span className="min-w-0 flex-1 text-[9px] font-bold uppercase tracking-[0.12em] truncate" style={{ color: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                    Auto-answer {autoAnswer ? 'on' : 'off'}
-                  </span>
-                </button>
-              </div>
-            )}
           </div>
           {/* Right: answers. Cards are width-capped at 880px (≈80-char
               line length, the typographic sweet spot for sustained
@@ -1751,7 +1619,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto p-3 sm:p-4 md:p-5 min-w-0">
             {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
               <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
-                <p className="text-sm md:text-xs px-4 text-center">Tap the menu to pick a starter question, or use the mic below.</p>
+                <p className="text-sm md:text-xs px-4 text-center">Answers appear here — type a question below, or let Sona pick them up from the call.</p>
               </div>
             ) : (
               <div className="space-y-3 sm:space-y-4 mx-auto w-full" style={{ maxWidth: 880 }}>
