@@ -196,7 +196,7 @@ export default function CaraBar() {
           </span>
           <div style={{ flex: 1 }} />
           <kbd style={{
-            fontSize: 11,
+            fontSize: 12,
             fontFamily: 'var(--font-mono)',
             color: 'var(--cam-strip-text-muted)',
             background: 'rgba(255,255,255,0.07)',

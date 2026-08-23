@@ -48,7 +48,7 @@ export default function PlaygroundPage() {
         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
           Playground
         </span>
-        <span className="badge-neutral" style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em' }}>BETA</span>
+        <span className="badge-neutral" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.06em' }}>BETA</span>
         <div style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0, marginLeft: 4 }} />
         <div className="tab-group">
           {TABS.map(t => (

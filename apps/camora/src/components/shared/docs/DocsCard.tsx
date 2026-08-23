@@ -72,7 +72,7 @@ export default function DocsCard({
               clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
             }}
           />
-          <div className="text-[10px] font-extrabold uppercase tracking-[0.14em]" style={{ color: NAVY }}>
+          <div className="text-[12px] font-extrabold uppercase tracking-[0.14em]" style={{ color: NAVY }}>
             {eyebrow}
           </div>
         </div>
@@ -86,7 +86,7 @@ export default function DocsCard({
         {children}
       </div>
       {interactive && (
-        <div className="mt-3 flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: ACCENT_TEXT }}>
+        <div className="mt-3 flex items-center gap-1 text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: ACCENT_TEXT }}>
           <span>Read more</span>
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M3 6h6M6 3l3 3-3 3" />

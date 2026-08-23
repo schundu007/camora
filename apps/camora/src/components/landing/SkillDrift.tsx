@@ -27,7 +27,7 @@ function SkillDriftImpl({ skills, duration = 48 }: Props) {
         {[...skills, ...skills].map((s, i) => (
           <span
             key={`${s}-${i}`}
-            className="shrink-0 inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1 font-mono text-[11px] font-semibold tracking-wide text-[var(--text-primary)] transition-colors hover:border-[var(--cam-primary)] hover:text-[var(--cam-primary)]"
+            className="shrink-0 inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-1 font-mono text-[12px] font-semibold tracking-wide text-[var(--text-primary)] transition-colors hover:border-[var(--cam-primary)] hover:text-[var(--cam-primary)]"
           >
             {s}
           </span>

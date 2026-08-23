@@ -45,14 +45,14 @@ function LiveSessionPreviewImpl() {
             />
           </span>
           <span
-            className="text-[11px] font-mono tracking-[0.14em] uppercase font-semibold"
+            className="text-[12px] font-mono tracking-[0.14em] uppercase font-semibold"
             style={{ color: 'var(--text-muted)' }}
           >
             Sona · Live session
           </span>
         </div>
         <span
-          className="text-[11px] font-mono tabular-nums"
+          className="text-[12px] font-mono tabular-nums"
           style={{ color: 'var(--text-muted)' }}
         >
           {formatElapsed(secs)}
@@ -66,7 +66,7 @@ function LiveSessionPreviewImpl() {
           style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
         >
           <p
-            className="text-[10px] font-mono uppercase tracking-[0.14em] mb-2 font-bold"
+            className="text-[12px] font-mono uppercase tracking-[0.14em] mb-2 font-bold"
             style={{ color: 'var(--text-muted)' }}
           >
             Question
@@ -86,7 +86,7 @@ function LiveSessionPreviewImpl() {
         >
           <div className="flex items-center justify-between mb-2">
             <p
-              className="text-[11px] font-mono uppercase tracking-[0.14em] font-bold"
+              className="text-[12px] font-mono uppercase tracking-[0.14em] font-bold"
               style={{ color: 'var(--accent)' }}
             >
               Sona
@@ -102,7 +102,7 @@ function LiveSessionPreviewImpl() {
             {['Architecture', 'Scalability', 'Draw diagram'].map((t) => (
               <span
                 key={t}
-                className="text-[10px] font-mono rounded-full px-2.5 py-0.5"
+                className="text-[12px] font-mono rounded-full px-2.5 py-0.5"
                 style={{
                   color: 'var(--text-secondary)',
                   background: 'var(--bg-surface)',
@@ -121,10 +121,10 @@ function LiveSessionPreviewImpl() {
         className="flex items-center justify-between px-4 py-2.5"
         style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-surface)' }}
       >
-        <span className="text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>
+        <span className="text-[12px] font-mono" style={{ color: 'var(--text-muted)' }}>
           Voice captured · transcribed in 0.4s
         </span>
-        <span className="text-[11px] font-mono font-semibold" style={{ color: '#4ade80' }}>
+        <span className="text-[12px] font-mono font-semibold" style={{ color: '#4ade80' }}>
           Answer ready
         </span>
       </div>

@@ -183,7 +183,7 @@ export default function YamlBreakdown({ code }) {
 
   return (
     <div className="mt-5">
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] mb-3 landing-mono" style={{ color: 'var(--text-muted)' }}>
+      <p className="text-[12px] font-bold uppercase tracking-[0.16em] mb-3 landing-mono" style={{ color: 'var(--text-muted)' }}>
         {isBash ? 'COMMAND FLOW' : 'CONFIGURATION FLOW'}
       </p>
       <div className="relative pl-4" style={{ borderLeft: '2px solid var(--border)' }}>
@@ -204,7 +204,7 @@ export default function YamlBreakdown({ code }) {
             />
             <div className="flex flex-col gap-0.5 min-w-0">
               <span
-                className="inline-flex self-start text-[11px] font-bold landing-mono px-1.5 py-0.5 rounded"
+                className="inline-flex self-start text-[12px] font-bold landing-mono px-1.5 py-0.5 rounded"
                 style={{
                   color: 'var(--accent)',
                   background: 'color-mix(in oklab, var(--accent) 10%, transparent)',

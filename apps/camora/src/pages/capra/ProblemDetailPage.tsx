@@ -283,7 +283,7 @@ export default function ProblemDetailPage() {
                 background: 'var(--bg-elevated, rgba(255,255,255,0.03))',
                 border: '1px solid var(--border-subtle, rgba(255,255,255,0.08))',
               }}>
-                <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: 9 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: 9 }}>
                   Example {i + 1}
                 </div>
                 {([['Input', ex.input], ['Output', ex.output], ['Explanation', ex.explanation]] as const).map(([label, value]) =>
@@ -332,7 +332,7 @@ export default function ProblemDetailPage() {
                       key={s.langSlug}
                       onClick={() => setStarterLang(s.langSlug)}
                       style={{
-                        padding: '4px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                        padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         border: 'none',
                         background: s.langSlug === activeStarter.langSlug ? 'rgba(255,255,255,0.10)' : 'transparent',
                         color: s.langSlug === activeStarter.langSlug ? 'var(--text-primary)' : 'var(--text-secondary)',
@@ -420,7 +420,7 @@ export default function ProblemDetailPage() {
                       key={l}
                       onClick={() => setLang(l)}
                       style={{
-                        padding: '4px 10px', borderRadius: 6, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                        padding: '4px 10px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         border: 'none', background: l === activeLang ? 'rgba(255,255,255,0.10)' : 'transparent',
                         color: l === activeLang ? 'var(--text-primary)' : 'var(--text-secondary)',
                       }}

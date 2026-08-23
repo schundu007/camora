@@ -14,7 +14,7 @@ const DEFAULT_CODE: Record<PlaygroundLanguage, string> = {
   terraform: 'resource "null_resource" "example" {\n  triggers = {\n    value = "hello"\n  }\n}\n',
 };
 
-const sans: CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
+const sans: CSSProperties = { fontFamily: 'var(--font-sans)' };
 
 interface ExplainState {
   rich: ExplainResult | null;

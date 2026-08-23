@@ -228,7 +228,7 @@ export default function ProblemInput({ onSubmit, onFetchUrl, onScreenshot, onCle
                 <button
                   key={tab.id}
                   onClick={() => handleTabSwitch(tab.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-[12px] md:text-xs font-bold uppercase tracking-wider transition-all"
                   style={
                     activeTab === tab.id
                       ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }

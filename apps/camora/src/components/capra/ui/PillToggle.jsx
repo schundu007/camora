@@ -39,7 +39,7 @@ export function PillToggle({ active, onClick, children, title, className = '' })
       onClick={onClick}
       data-tip={title}
       aria-pressed={active}
-      className={`px-3.5 py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all ${className}`}
+      className={`px-3.5 py-1 text-[12px] md:text-xs font-bold uppercase tracking-wider transition-all ${className}`}
       style={
         active
           ? {

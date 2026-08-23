@@ -174,7 +174,7 @@ export default function FormattedContent({ content, inline = false }) {
   const renderStarEyebrow = (keyword, key) => (
     <span
       key={key}
-      className="inline-block mr-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] landing-mono"
+      className="inline-block mr-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] landing-mono"
     >
       {keyword}
     </span>
@@ -367,7 +367,7 @@ export default function FormattedContent({ content, inline = false }) {
                     {headers.map((h, ci) => (
                       <th
                         key={ci}
-                        className="px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] landing-mono whitespace-nowrap"
+                        className="px-3 py-2.5 text-left text-[12px] font-bold uppercase tracking-[0.12em] landing-mono whitespace-nowrap"
                         style={{
                           background: 'var(--bg-elevated)',
                           color: 'var(--cam-gold-leaf, var(--accent))',
@@ -491,7 +491,7 @@ export default function FormattedContent({ content, inline = false }) {
               return (
                 <li key={i} className="flex items-start gap-3">
                   <span
-                    className="inline-flex items-center justify-center min-w-[26px] h-[22px] px-1.5 text-[11px] font-bold landing-mono tabular-nums flex-shrink-0 mt-0.5"
+                    className="inline-flex items-center justify-center min-w-[26px] h-[22px] px-1.5 text-[12px] font-bold landing-mono tabular-nums flex-shrink-0 mt-0.5"
                     style={{
                       background: 'color-mix(in oklab, var(--accent) 12%, transparent)',
                       color: 'var(--accent)',
@@ -649,7 +649,7 @@ export default function FormattedContent({ content, inline = false }) {
             pushBody(
               <div
                 key={`star-${blockIdx}-${lineIdx}`}
-                className="mt-6 mb-2 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
+                className="mt-6 mb-2 first:mt-0 text-[12px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
               >
                 {keyword}
               </div>,
@@ -675,7 +675,7 @@ export default function FormattedContent({ content, inline = false }) {
           pushBody(
             <div
               key={`star-${blockIdx}-${lineIdx}`}
-              className="mt-4 mb-1 first:mt-0 text-[10px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
+              className="mt-4 mb-1 first:mt-0 text-[12px] uppercase tracking-[0.16em] font-bold text-[var(--text-muted)] landing-mono"
             >
               {keyword}
             </div>,
@@ -697,7 +697,7 @@ export default function FormattedContent({ content, inline = false }) {
                 className="flex items-center gap-2 mt-6 mb-2 first:mt-0"
               >
                 <span
-                  className="text-[11px] font-bold landing-mono px-2 py-0.5 rounded"
+                  className="text-[12px] font-bold landing-mono px-2 py-0.5 rounded"
                   style={{
                     background: 'color-mix(in oklab, var(--cam-primary, #26619C) 8%, transparent)',
                     color: 'var(--cam-primary, #26619C)',
@@ -837,7 +837,7 @@ export default function FormattedContent({ content, inline = false }) {
           flushAll();
           pushBody(
             <div key={`ord-${blockIdx}-${lineIdx}`} className="flex gap-3 my-3.5 items-start">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] text-[11px] font-bold text-[var(--accent-text)] flex items-center justify-center mt-[3px] landing-mono select-none">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] text-[12px] font-bold text-[var(--accent-text)] flex items-center justify-center mt-[3px] landing-mono select-none">
                 {num}
               </span>
               <span className="flex-1 text-[15px] leading-[1.75] landing-body text-[var(--text-secondary)]">

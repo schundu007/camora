@@ -64,7 +64,7 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
           background: '#282c34',
           color: '#abb2bf',
           border: '1px solid rgba(255,255,255,0.12)',
-          fontFamily: "'IBM Plex Mono', monospace",
+          fontFamily: "var(--font-mono)",
           letterSpacing: '-0.02em',
         }}
       >
@@ -90,7 +90,7 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
           style={{
             color: copied ? '#98c379' : '#abb2bf',
             background: copied ? 'rgba(152,195,121,0.12)' : 'rgba(255,255,255,0.06)',
-            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            fontFamily: 'var(--font-sans)',
           }}
         >
           {copied ? '✓ Copied' : 'Copy'}
@@ -99,7 +99,7 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
       <SyntaxHighlighter
         language={normalizedLang}
         style={atomOneDark}
-        customStyle={{ margin: 0, padding: '14px 16px', fontSize: '11px', lineHeight: '1.65', fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', background: '#282c34', borderRadius: 0 }}
+        customStyle={{ margin: 0, padding: '14px 16px', fontSize: '11px', lineHeight: '1.65', fontFamily: "var(--font-mono)", letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', background: '#282c34', borderRadius: 0 }}
         showLineNumbers={false}
         wrapLongLines={false}
       >
@@ -119,7 +119,7 @@ const inlineMarkdown = (raw: string): React.ReactNode[] => {
     if (m[1] !== undefined) {
       nodes.push(<strong key={m.index} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
     } else {
-      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(30,77,120,0.12)', borderRadius: 4, color: '#1e4d78', fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.02em' }}>{m[2]}</code>);
+      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(30,77,120,0.12)', borderRadius: 4, color: '#1e4d78', fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: '-0.02em' }}>{m[2]}</code>);
     }
     last = m.index + m[0].length;
   }
@@ -138,7 +138,7 @@ const tableCells = (s: string) => s.slice(1, -1).split('|').map((c) => c.trim())
 
 const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
   <div className="my-2 overflow-x-auto rounded-lg" style={{ border: '1px solid var(--border-subtle, rgba(255,255,255,0.10))' }}>
-    <table className="w-full border-collapse text-[13px]" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+    <table className="w-full border-collapse text-[13px]" style={{ fontFamily: 'var(--font-sans)' }}>
       <thead>
         <tr>
           {head.map((h, i) => (
@@ -257,7 +257,7 @@ export const AskResponse = ({ content }: { content: string }) => {
         const body = nl > -1 ? sec.slice(nl + 1) : '';
         return (
           <div key={i}>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}>
               {title}
             </p>
             <div>{renderContent(body)}</div>
@@ -522,7 +522,7 @@ export const AskLayout = () => {
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
-  const sans: React.CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
+  const sans: React.CSSProperties = { fontFamily: 'var(--font-sans)' };
 
   // Grow the composer with the question instead of scrolling a one-line box —
   // long dictated questions stay fully visible up to the max-height.

@@ -116,7 +116,7 @@ export default function GamificationWidget() {
             <div style={{ width: 120, height: 5, borderRadius: 99, background: 'var(--bg-elevated)', overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: 99, background: 'linear-gradient(90deg, var(--success), var(--accent))', width: `${profile.progressPct}%`, transition: 'width 0.6s ease' }} />
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 3 }}>{xpInLevel.toLocaleString()} / {xpNeeded.toLocaleString()} XP</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{xpInLevel.toLocaleString()} / {xpNeeded.toLocaleString()} XP</div>
           </div>
         </div>
 
@@ -138,7 +138,7 @@ export default function GamificationWidget() {
                 </svg>
                 <span style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{s.value}</span>
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 500, marginTop: 1 }}>{s.label}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, marginTop: 1 }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -152,7 +152,7 @@ export default function GamificationWidget() {
                 <div key={badge.key} data-tip={badge.desc}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: 'var(--accent-subtle)', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--accent)' }}>
                   {MINI_ICONS[badge.icon] || <span style={{ fontSize: 12 }}>{badge.icon}</span>}
-                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--accent)' }}>{badge.title}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>{badge.title}</span>
                 </div>
               ))}
             </div>

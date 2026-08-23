@@ -566,11 +566,11 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           }}
         >
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[11px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>
+            <span className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>
               Cloud Architecture
             </span>
             {diagramData?.cloudProvider && (
-              <Chip variant="default" className="text-[10px] font-bold uppercase tracking-wider">
+              <Chip variant="default" className="text-[12px] font-bold uppercase tracking-wider">
                 {diagramData.cloudProvider}
               </Chip>
             )}
@@ -591,7 +591,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 style={{ color: 'var(--cam-strip-text)', borderRadius: 999 }}
                 data-tip="Zoom out"
               >−</button>
-              <span className="text-[10px] font-mono w-9 text-center tabular-nums" style={{ color: 'var(--cam-strip-text-muted)' }}>
+              <span className="text-[12px] font-mono w-9 text-center tabular-nums" style={{ color: 'var(--cam-strip-text-muted)' }}>
                 {Math.round(diagramScale * 100)}%
               </span>
               <button
@@ -602,7 +602,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
               >+</button>
               <button
                 onClick={() => { setDiagramScale(1); setDiagramTranslate({ x: 0, y: 0 }); }}
-                className="px-3 h-6 text-[10px] font-bold uppercase tracking-wider"
+                className="px-3 h-6 text-[12px] font-bold uppercase tracking-wider"
                 style={{ background: 'var(--cam-gold-leaf)', color: '#020617', borderRadius: 999, boxShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
                 data-tip="Reset to fit"
               >Fit</button>
@@ -718,7 +718,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
           borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
       >
-        <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-strip-heading)' }}>System Design</span>
+        <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-strip-heading)' }}>System Design</span>
         {/* Cloud-platform selector — same instance as the docs header,
             backed by useCloudProvider so a flip here propagates to every
             other diagram surface in the same browser. */}
@@ -964,7 +964,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 actions={
                   <button
                     onClick={() => setDiagramDetailLevel(diagramDetailLevel === 'detailed' ? 'overview' : 'detailed')}
-                    className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full"
+                    className="px-2.5 py-1 text-[12px] font-bold uppercase tracking-wider rounded-full"
                     style={{
                       background: 'var(--cam-gold-leaf)',
                       color: '#020617',

@@ -6,11 +6,11 @@ function PodRow({ pod }) {
   const color = phase === 'Running' ? '#10b981' : phase === 'Pending' ? '#f59e0b' : '#ef4444';
   return (
     <tr>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11 }}>{pod.metadata?.namespace ?? '-'}</span></td>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11 }}>{pod.metadata?.name ?? '-'}</span></td>
-      <td style={td}><span style={{ color, fontWeight: 700, fontSize: 11 }}>{phase}</span></td>
-      <td style={td}><span style={{ fontSize: 11, color: ready ? '#10b981' : 'rgba(255,255,255,0.3)' }}>{ready ? 'Ready' : 'Not ready'}</span></td>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{pod.spec?.nodeName ?? '-'}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{pod.metadata?.namespace ?? '-'}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{pod.metadata?.name ?? '-'}</span></td>
+      <td style={td}><span style={{ color, fontWeight: 700, fontSize: 12 }}>{phase}</span></td>
+      <td style={td}><span style={{ fontSize: 12, color: ready ? '#10b981' : 'rgba(255,255,255,0.3)' }}>{ready ? 'Ready' : 'Not ready'}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{pod.spec?.nodeName ?? '-'}</span></td>
     </tr>
   );
 }
@@ -20,9 +20,9 @@ function NodeRow({ node }) {
   const version = node.status?.nodeInfo?.kubeletVersion ?? '-';
   return (
     <tr>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11 }}>{node.metadata?.name ?? '-'}</span></td>
-      <td style={td}><span style={{ color: ready ? '#10b981' : '#ef4444', fontWeight: 700, fontSize: 11 }}>{ready ? 'Ready' : 'NotReady'}</span></td>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>{version}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{node.metadata?.name ?? '-'}</span></td>
+      <td style={td}><span style={{ color: ready ? '#10b981' : '#ef4444', fontWeight: 700, fontSize: 12 }}>{ready ? 'Ready' : 'NotReady'}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{version}</span></td>
     </tr>
   );
 }
@@ -31,11 +31,11 @@ function EventRow({ event }) {
   const isWarn = event.type === 'Warning';
   return (
     <tr>
-      <td style={td}><span style={{ fontSize: 10, color: isWarn ? '#f59e0b' : 'rgba(255,255,255,0.4)' }}>{event.type}</span></td>
-      <td style={td}><span style={{ fontSize: 11, fontFamily: '"IBM Plex Mono",monospace', color: 'rgba(255,255,255,0.6)' }}>{event.reason ?? '-'}</span></td>
-      <td style={td}><span style={{ fontSize: 11, fontFamily: '"IBM Plex Mono",monospace', color: 'rgba(255,255,255,0.4)' }}>{event.involvedObject?.name ?? '-'}</span></td>
+      <td style={td}><span style={{ fontSize: 12, color: isWarn ? '#f59e0b' : 'rgba(255,255,255,0.4)' }}>{event.type}</span></td>
+      <td style={td}><span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.6)' }}>{event.reason ?? '-'}</span></td>
+      <td style={td}><span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)' }}>{event.involvedObject?.name ?? '-'}</span></td>
       <td style={{ ...td, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{event.message ?? '-'}</span>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{event.message ?? '-'}</span>
       </td>
     </tr>
   );
@@ -46,10 +46,10 @@ function SvcRow({ svc }) {
   const ports = (svc.spec?.ports ?? []).map(p => `${p.port}/${p.protocol ?? 'TCP'}`).join(', ') || '-';
   return (
     <tr>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11 }}>{svc.metadata?.namespace ?? '-'}</span></td>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11 }}>{svc.metadata?.name ?? '-'}</span></td>
-      <td style={td}><span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)' }}>{type}</span></td>
-      <td style={td}><span style={{ fontFamily: '"IBM Plex Mono",monospace', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>{ports}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{svc.metadata?.namespace ?? '-'}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{svc.metadata?.name ?? '-'}</span></td>
+      <td style={td}><span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)' }}>{type}</span></td>
+      <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{ports}</span></td>
     </tr>
   );
 }
@@ -58,8 +58,8 @@ function Section({ title, count, children }) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{title}</span>
-        <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>{count}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{title}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, padding: '1px 6px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>{count}</span>
       </div>
       {children}
     </div>
@@ -120,7 +120,7 @@ export default function ClusterPanel({ sessionId, enabled }) {
 }
 
 function Empty({ text }) {
-  return <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: '4px 0 0', fontStyle: 'italic' }}>{text}</p>;
+  return <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: '4px 0 0', fontStyle: 'italic' }}>{text}</p>;
 }
 
 function Table({ cols, children }) {
@@ -129,7 +129,7 @@ function Table({ cols, children }) {
       <thead>
         <tr>
           {cols.map(c => (
-            <th key={c} style={{ ...td, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.08em', paddingBottom: 4, textAlign: 'left' }}>{c}</th>
+            <th key={c} style={{ ...td, fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.08em', paddingBottom: 4, textAlign: 'left' }}>{c}</th>
           ))}
         </tr>
       </thead>

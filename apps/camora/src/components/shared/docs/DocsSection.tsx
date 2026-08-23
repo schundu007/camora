@@ -45,7 +45,7 @@ export default function DocsSection({
             }}
           />
           <div
-            className="text-[10px] font-extrabold uppercase tracking-[0.16em]"
+            className="text-[12px] font-extrabold uppercase tracking-[0.16em]"
             style={{ color: NAVY }}
           >
             {eyebrow}

@@ -208,7 +208,7 @@ export default function MCQPage() {
 
           {/* type badge */}
           <span style={{
-            padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
+            padding: '2px 10px', borderRadius: 4, fontSize: 12, fontWeight: 700,
             background: 'var(--bg-elevated)', border: '1px solid var(--border)',
             color: 'var(--text-secondary)', letterSpacing: '0.04em',
           }}>
@@ -314,7 +314,7 @@ export default function MCQPage() {
               </svg>
               Explanation
               {streaming && (
-                <span style={{ fontSize: 11, color: 'var(--cam-gold-leaf, #d4af37)', fontWeight: 400 }}>
+                <span style={{ fontSize: 12, color: 'var(--cam-gold-leaf, #d4af37)', fontWeight: 400 }}>
                   · generating…
                 </span>
               )}

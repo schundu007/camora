@@ -60,7 +60,7 @@ export default function RootShell({ children }: RootShellProps) {
           <Link
             key={to}
             to={to}
-            className="text-[10px] font-mono uppercase tracking-wider transition-colors hover:text-[var(--accent)]"
+            className="text-[12px] font-mono uppercase tracking-wider transition-colors hover:text-[var(--accent)]"
             style={{ color: 'var(--text-muted)' }}
           >
             {label}
@@ -68,7 +68,7 @@ export default function RootShell({ children }: RootShellProps) {
         ))}
         <a
           href="mailto:support@cariara.com"
-          className="text-[10px] font-mono uppercase tracking-wider transition-colors hover:text-[var(--accent)]"
+          className="text-[12px] font-mono uppercase tracking-wider transition-colors hover:text-[var(--accent)]"
           style={{ color: 'var(--text-muted)' }}
         >
           Support

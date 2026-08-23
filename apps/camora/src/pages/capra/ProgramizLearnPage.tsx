@@ -94,10 +94,10 @@ function CategorySection({ category, paths }: { category: string; paths: LearnPa
     <section>
       <div className="flex items-center gap-3 mb-3">
         <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: accent }} />
-        <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: accent }}>
+        <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: accent }}>
           {label}
         </h2>
-        <span className="font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{paths.length}</span>
+        <span className="font-mono text-[12px]" style={{ color: 'var(--text-muted)' }}>{paths.length}</span>
       </div>
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {paths.map(p => <PathCard key={p.slug} path={p} />)}
@@ -167,7 +167,7 @@ export default function ProgramizLearnPage() {
             <button
               key={tab.value}
               onClick={() => setLevelFilter(tab.value)}
-              className="font-mono text-[11px] px-3 py-1 rounded-md transition-colors"
+              className="font-mono text-[12px] px-3 py-1 rounded-md transition-colors"
               style={{
                 background: levelFilter === tab.value ? 'var(--cam-primary)' : 'transparent',
                 color: levelFilter === tab.value ? 'white' : 'var(--text-muted)',

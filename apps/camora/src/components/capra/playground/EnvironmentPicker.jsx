@@ -180,7 +180,7 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
 
   return (
     <div style={{ padding: '24px 20px' }}>
-      <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 16 }}>
+      <p style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: 16 }}>
         Choose Environment
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -223,7 +223,7 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
                 <span style={{ display: 'flex', gap: 4 }}>
                   {env.badge && (
                     <span style={{
-                      fontSize: 11, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
+                      fontSize: 12, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
                       background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
                       border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)',
                       color: 'var(--cam-gold-leaf-lt)',
@@ -233,7 +233,7 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
                   )}
                   {locked && (
                     <span style={{
-                      fontSize: 11, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
+                      fontSize: 12, fontWeight: 700, padding: '2px 5px', borderRadius: 3,
                       background: 'var(--accent-secondary-subtle)', border: '1px solid color-mix(in oklab, var(--accent-secondary) 35%, transparent)', color: 'var(--accent-secondary-text)',
                     }}>
                       PRO
@@ -249,16 +249,16 @@ export default function EnvironmentPicker({ selected, onChange, userPlan, disabl
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                 <span style={{
-                  fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
+                  fontSize: 12, fontWeight: 600, padding: '2px 6px', borderRadius: 3,
                   background: 'var(--bg-base)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
                 }}>
                   {env.category}
                 </span>
                 {isSelected && (
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--cam-gold-leaf-lt)' }}>✓ Selected</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--cam-gold-leaf-lt)' }}>✓ Selected</span>
                 )}
                 {locked && (
-                  <span style={{ fontSize: 10 }}>🔒</span>
+                  <span style={{ fontSize: 12 }}>🔒</span>
                 )}
               </div>
             </button>

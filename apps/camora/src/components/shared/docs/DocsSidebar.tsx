@@ -127,7 +127,7 @@ export default function DocsSidebar() {
           style={{ background: 'var(--cam-primary)' }}
         />
         <span
-          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.16em]"
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-extrabold uppercase tracking-[0.16em]"
           style={{
             background: 'var(--bg-elevated)',
             border: '1px solid var(--cam-gold-leaf)',
@@ -171,7 +171,7 @@ function ModeButton({
     <button
       type="button"
       onClick={onClick}
-      className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors"
+      className="px-3 py-1 rounded-full text-[12px] font-extrabold uppercase tracking-[0.1em] transition-colors"
       style={{
         background: active ? 'var(--cam-accent-fill)' : 'transparent',
         color: active ? 'var(--cam-accent-fill-text)' : 'var(--text-secondary)',

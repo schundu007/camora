@@ -284,7 +284,7 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
         }}>
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>Custom Setup</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
               Pick tools to pre-install on your Ubuntu VM
             </div>
           </div>
@@ -308,13 +308,13 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
             padding: '10px 14px', borderRadius: 8, marginBottom: 20,
             background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)',
           }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
               Core Tools — Always Included
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {['bash', 'git', 'curl', 'wget', 'vim', 'nano', 'python3', 'jq', 'tmux', 'htop', 'fzf'].map(t => (
                 <span key={t} style={{
-                  fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+                  fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
                   background: 'rgba(16,185,129,0.15)', color: '#10b981',
                 }}>{t}</span>
               ))}
@@ -325,7 +325,7 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
           {CATEGORIES.map(cat => (
             <div key={cat.id} style={{ marginBottom: 22 }}>
               <div style={{
-                fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
                 textTransform: 'uppercase', color: cat.color, marginBottom: 10,
               }}>
                 {cat.label}
@@ -344,12 +344,12 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
                         border: active ? `1px solid ${cat.color}` : '1px solid rgba(255,255,255,0.1)',
                         background: active ? `${cat.color}22` : 'rgba(255,255,255,0.03)',
                         color: active ? cat.color : 'rgba(255,255,255,0.55)',
-                        fontSize: 11, fontWeight: active ? 700 : 500,
+                        fontSize: 12, fontWeight: active ? 700 : 500,
                         transition: 'all 0.12s',
                         display: 'flex', alignItems: 'center', gap: 5,
                       }}
                     >
-                      {active && <span style={{ fontSize: 9, color: cat.color }}>✓</span>}
+                      {active && <span style={{ fontSize: 12, color: cat.color }}>✓</span>}
                       {tool.label}
                     </button>
                   );
@@ -367,12 +367,12 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
                 style={{
                   width: '100%', padding: '8px 14px', borderRadius: 6, cursor: 'pointer',
                   border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)',
-                  color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 600,
+                  color: 'rgba(255,255,255,0.45)', fontSize: 12, fontWeight: 600,
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}
               >
                 <span>Preview setup.sh</span>
-                <span style={{ fontSize: 10 }}>{scriptVisible ? '▲' : '▼'}</span>
+                <span style={{ fontSize: 12 }}>{scriptVisible ? '▲' : '▼'}</span>
               </button>
               {scriptVisible && (
                 <div style={{ marginTop: 8, borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -381,12 +381,12 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
                     padding: '6px 12px', background: '#161b22',
                     borderBottom: '1px solid rgba(255,255,255,0.06)',
                   }}>
-                    <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontFamily: '"IBM Plex Mono", monospace' }}>setup.sh</span>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-mono)' }}>setup.sh</span>
                     <button
                       type="button"
                       onClick={handleCopy}
                       style={{
-                        fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+                        fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
                         border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)',
                         color: copied ? '#10b981' : 'rgba(255,255,255,0.45)', cursor: 'pointer',
                       }}
@@ -396,8 +396,8 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
                   </div>
                   <pre style={{
                     margin: 0, padding: '12px', maxHeight: 260, overflowY: 'auto',
-                    fontSize: 10, lineHeight: 1.6, color: 'rgba(255,255,255,0.6)',
-                    fontFamily: '"IBM Plex Mono", monospace', background: '#090d13',
+                    fontSize: 12, lineHeight: 1.6, color: 'rgba(255,255,255,0.6)',
+                    fontFamily: 'var(--font-mono)', background: '#090d13',
                     whiteSpace: 'pre-wrap', wordBreak: 'break-all',
                   }}>
                     {script}
@@ -415,7 +415,7 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
           display: 'flex', alignItems: 'center', gap: 10,
           background: '#0a0f1a',
         }}>
-          <div style={{ flex: 1, fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>
+          <div style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
             {selected.size === 0
               ? 'No extra tools — starts as base Ubuntu'
               : `${selected.size} tool${selected.size === 1 ? '' : 's'} selected · installs after boot`}

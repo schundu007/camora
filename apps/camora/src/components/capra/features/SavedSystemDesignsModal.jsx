@@ -90,7 +90,7 @@ export default function SavedSystemDesignsModal({
             <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
             <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>Saved System Designs</h2>
             <span
-              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
+              className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5"
               style={{
                 background: 'var(--cam-strip-icon-bg)',
                 border: '1px solid var(--cam-strip-icon-border)',

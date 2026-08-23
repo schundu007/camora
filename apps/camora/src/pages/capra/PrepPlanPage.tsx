@@ -273,7 +273,7 @@ export default function PrepPlanPage() {
                   >
                     <div className="flex items-center gap-2">
                       <span
-                        className="font-mono text-[11px] font-bold uppercase tracking-widest"
+                        className="font-mono text-[12px] font-bold uppercase tracking-widest"
                         style={{ color: allDone ? '#22c55e' : 'var(--cam-primary)' }}
                       >
                         Day {day.day}

@@ -397,7 +397,7 @@ function SidebarSection({
           onClick={() => setOpen((v) => !v)}
           className="flex items-center justify-between w-full mb-1 px-2 cursor-pointer select-none group"
           style={{
-            fontSize: '10px',
+            fontSize: '12px',
             fontWeight: 700,
             textTransform: 'uppercase',
             letterSpacing: '0.12em',
@@ -569,7 +569,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         )}
         {!isCollapsed && (
-          <span className="px-2.5 block" style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+          <span className="px-2.5 block" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
             &copy; 2026 Cariara
           </span>
         )}

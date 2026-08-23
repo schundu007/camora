@@ -52,7 +52,7 @@ export default function FlyerPage() {
             {f.label} <span style={{ opacity: 0.7 }}>· {f.size}</span>
           </button>
         ))}
-        <span className="text-[11px] ml-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+        <span className="text-[12px] ml-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
           Tip: Cmd+Shift+4 → spacebar → click the flyer to screenshot at exact dims.
         </span>
       </div>

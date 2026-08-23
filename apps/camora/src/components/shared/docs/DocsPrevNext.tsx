@@ -47,7 +47,7 @@ function renderPanel(link: DocsPrevNextLink, side: 'prev' | 'next') {
     <>
       {isPrev && <Chevron side="prev" />}
       <div className="min-w-0">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
+        <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)]">
           {eyebrow}
         </div>
         <div className="text-[14px] font-semibold text-[var(--text-primary)] truncate">

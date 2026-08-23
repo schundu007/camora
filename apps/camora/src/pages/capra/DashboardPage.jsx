@@ -1006,7 +1006,7 @@ function Header({ ascendMode, onModeChange, showSidebar, onToggleSidebar, isLoad
           {user?.image ? (
             <img src={user.image} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
           ) : (
-            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{user?.name?.[0] || '?'}</div>
+            <div className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold" style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}>{user?.name?.[0] || '?'}</div>
           )}
           <span className="text-sm font-medium" style={{ color: 'var(--cam-strip-heading)' }}>{user?.name?.split(' ')[0] || 'Dashboard'}</span>
         </Link>
@@ -1166,7 +1166,7 @@ function CodingLayout({
               <button
                 onClick={onSavedDesignsClick}
                 aria-label="View saved designs"
-                className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider transition-all"
                 style={{
                   background: 'var(--cam-strip-icon-bg)',
                   border: '1px solid var(--cam-strip-icon-border)',
@@ -1297,7 +1297,7 @@ function CodingLayout({
                     <button
                       onClick={onSavedDesignsClick}
                       aria-label="View saved designs"
-                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all"
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 text-[12px] font-bold uppercase tracking-wider transition-all"
                       style={{
                         background: 'var(--cam-strip-icon-bg)',
                         border: '1px solid var(--cam-strip-icon-border)',

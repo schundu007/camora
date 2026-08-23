@@ -75,7 +75,7 @@ export default function FeatureMatrix({
         <thead>
           <tr style={{ background: 'var(--bg-elevated)' }}>
             <th
-              className="text-left px-5 py-4 text-[11px] font-bold uppercase tracking-[0.14em]"
+              className="text-left px-5 py-4 text-[12px] font-bold uppercase tracking-[0.14em]"
               style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', borderBottom: '1px solid var(--border)' }}
             >
               Features
@@ -100,7 +100,7 @@ export default function FeatureMatrix({
                     {p.name}
                   </div>
                   {p.highlight && (
-                    <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
+                    <div className="mt-0.5 text-[12px] font-semibold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
                       {p.highlight}
                     </div>
                   )}
@@ -141,7 +141,7 @@ function FeatureMatrixSectionRows({
       <tr>
         <th
           colSpan={plans.length + 1}
-          className="text-left px-5 py-3 text-[11px] font-bold uppercase tracking-[0.14em]"
+          className="text-left px-5 py-3 text-[12px] font-bold uppercase tracking-[0.14em]"
           style={{
             color: 'var(--text-secondary)',
             background: 'var(--bg-elevated)',
@@ -163,7 +163,7 @@ function FeatureMatrixSectionRows({
               {row.feature}
             </div>
             {row.hint && (
-              <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              <div className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
                 {row.hint}
               </div>
             )}

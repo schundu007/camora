@@ -136,7 +136,7 @@ export default function OAuthLogin() {
                 <p className="text-sm text-[var(--text-muted)] leading-snug landing-body">{f.desc}</p>
                 <div className="mt-2.5 flex flex-wrap gap-1">
                   {f.tags.map(t => (
-                    <span key={t} className="text-[10px] landing-mono px-2 py-1 border border-[var(--border)] text-[var(--text-muted)] rounded">{t}</span>
+                    <span key={t} className="text-[12px] landing-mono px-2 py-1 border border-[var(--border)] text-[var(--text-muted)] rounded">{t}</span>
                   ))}
                 </div>
               </Link>

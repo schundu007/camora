@@ -35,7 +35,7 @@ export default function DocsDiagram({
     <figure className="my-6">
       {label && (
         <p
-          className="text-[11px] font-bold uppercase tracking-[0.16em] mb-1.5"
+          className="text-[12px] font-bold uppercase tracking-[0.16em] mb-1.5"
           style={{ color: 'var(--accent)' }}
         >
           {label}

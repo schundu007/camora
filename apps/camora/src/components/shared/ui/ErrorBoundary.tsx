@@ -69,7 +69,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               We hit an unexpected error rendering this page. Try again — if it keeps happening,
               refreshing the tab usually clears it.
             </p>
-            <p className="text-[11px] mb-5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            <p className="text-[12px] mb-5" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
               {this.state.error?.message || 'unknown'}
             </p>
             <div className="flex items-center justify-center gap-2">

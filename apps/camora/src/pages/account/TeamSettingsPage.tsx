@@ -458,7 +458,7 @@ export default function TeamSettingsPage() {
       <section className="relative overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
         <div className="relative page-wrap pt-16 pb-20" style={{ maxWidth: '56rem' }}>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--cam-gold-leaf-lt)' }}>ACCOUNT</p>
+          <p className="text-[12px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--cam-gold-leaf-lt)' }}>ACCOUNT</p>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--cam-strip-heading)' }}>Team <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>sharing</span></h1>
           <p className="mt-2 text-sm" style={{ color: 'var(--cam-strip-text)' }}>
             Pool your AI hours with up to {team ? team.seat_limit : 5} mates. Per-member usage is broken out below.
@@ -520,18 +520,18 @@ export default function TeamSettingsPage() {
           <div className="rounded-xl p-5 mb-6" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your AI hours</p>
+                <p className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your AI hours</p>
                 <p className="text-base font-bold">
                   {formatHours(budget.used_hours)} <span className="text-[12px] font-normal" style={{ color: 'var(--text-muted)' }}>used / {formatHours(budget.pool_hours)} {budget.period === 'lifetime' ? 'lifetime' : `this ${budget.period === 'yearly' ? 'year' : 'month'}`}</span>
                 </p>
                 {budget.topup_hours > 0 && (
-                  <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
                     Includes {formatHours(budget.topup_hours)} from active top-ups (90-day expiry)
                   </p>
                 )}
                 <div className="mt-2"><UsageEstimateBadge surface="capra_prep" /></div>
               </div>
-              <Link to="/pricing" className="px-3 py-1.5 text-[11px] font-bold rounded-lg text-white" style={{ background: 'var(--accent)' }}>
+              <Link to="/pricing" className="px-3 py-1.5 text-[12px] font-bold rounded-lg text-white" style={{ background: 'var(--accent)' }}>
                 {budget.exhausted ? 'Top up now' : 'Buy a top-up'}
               </Link>
             </div>
@@ -588,15 +588,15 @@ export default function TeamSettingsPage() {
             {/* Plan + pool summary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-xl p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Plan</p>
+                <p className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Plan</p>
                 <p className="text-base font-bold">{planLabel(team.plan_type)}</p>
               </div>
               <div className="rounded-xl p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Seats</p>
+                <p className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Seats</p>
                 <p className="text-base font-bold">{team.members.length} <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>/ {team.seat_limit}</span></p>
               </div>
               <div className="rounded-xl p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>AI hours used</p>
+                <p className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>AI hours used</p>
                 <p className="text-base font-bold">
                   {formatHours(usage?.used_hours || 0)} <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>/ {formatHours(team.hours_pool_total || 0)}</span>
                 </p>
@@ -609,7 +609,7 @@ export default function TeamSettingsPage() {
             {isOwner && subDetails && ['pro_monthly', 'pro_yearly', 'team'].includes(subDetails.plan_type) && (
               <section className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Subscription</h2>
+                  <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Subscription</h2>
                 </div>
                 <div className="p-5 flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
@@ -652,7 +652,7 @@ export default function TeamSettingsPage() {
             {/* Top-up history — every recent purchase with refund-request affordance. */}
             {topups.length > 0 && (
               <section>
-                <h2 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
+                <h2 className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>
                   Recent top-ups
                 </h2>
                 <div className="rounded-xl divide-y" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
@@ -666,10 +666,10 @@ export default function TeamSettingsPage() {
                           <p className="text-sm font-semibold">
                             {t.hours} hr{t.hours !== 1 ? 's' : ''} · ${(Number(t.amount_cents || 0) / 100).toFixed(2)}
                             {t.auto_charged && (
-                              <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>AUTO</span>
+                              <span className="ml-2 px-1.5 py-0.5 rounded text-[12px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>AUTO</span>
                             )}
                           </p>
-                          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                             Bought {new Date(t.created_at).toLocaleDateString()}
                             {refunded && ' · refunded'}
                             {!refunded && !expired && ` · expires ${new Date(t.expires_at).toLocaleDateString()}`}
@@ -678,17 +678,17 @@ export default function TeamSettingsPage() {
                         </div>
                         <div className="shrink-0">
                           {refundStatus === 'pending' && (
-                            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-md" style={{ background: 'rgba(217, 119, 6, 0.1)', color: '#b45309', border: '1px solid rgba(217, 119, 6, 0.3)' }}>
+                            <span className="px-2.5 py-1 text-[12px] font-semibold rounded-md" style={{ background: 'rgba(217, 119, 6, 0.1)', color: '#b45309', border: '1px solid rgba(217, 119, 6, 0.3)' }}>
                               Refund pending review
                             </span>
                           )}
                           {refundStatus === 'denied' && (
-                            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-md" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                            <span className="px-2.5 py-1 text-[12px] font-semibold rounded-md" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                               Refund denied
                             </span>
                           )}
                           {refunded && (
-                            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-md" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+                            <span className="px-2.5 py-1 text-[12px] font-semibold rounded-md" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
                               Refunded
                             </span>
                           )}
@@ -696,7 +696,7 @@ export default function TeamSettingsPage() {
                             <button
                               onClick={() => handleRequestRefund(t.id, t.hours, t.amount_cents)}
                               disabled={refundingId === t.id}
-                              className="px-2.5 py-1 text-[11px] font-semibold rounded-md"
+                              className="px-2.5 py-1 text-[12px] font-semibold rounded-md"
                               style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                             >
                               {refundingId === t.id ? '…' : 'Request refund'}
@@ -707,7 +707,7 @@ export default function TeamSettingsPage() {
                     );
                   })}
                 </div>
-                <p className="mt-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                <p className="mt-2 text-[12px]" style={{ color: 'var(--text-muted)' }}>
                   Refund requests are reviewed by an admin within 1-2 business days. Stripe issues the actual refund only after approval.
                 </p>
               </section>
@@ -717,7 +717,7 @@ export default function TeamSettingsPage() {
             {isOwner && (
               <section className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Auto top-up</h2>
+                  <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Auto top-up</h2>
                 </div>
                 <div className="p-5">
                 <p className="text-[12px] mb-3" style={{ color: 'var(--text-secondary)' }}>
@@ -736,7 +736,7 @@ export default function TeamSettingsPage() {
                     <option value="topup_25h">25 hrs · $250/charge</option>
                   </select>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Cap $</span>
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Cap $</span>
                     <input
                       type="number"
                       placeholder="50"
@@ -747,7 +747,7 @@ export default function TeamSettingsPage() {
                       className="w-20 px-2 py-2 text-sm rounded-lg"
                       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                     />
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>/mo</span>
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>/mo</span>
                   </div>
                   <button
                     onClick={saveAutoTopup}
@@ -759,7 +759,7 @@ export default function TeamSettingsPage() {
                   </button>
                 </div>
                 {autoPack && (
-                  <p className="mt-3 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  <p className="mt-3 text-[12px]" style={{ color: 'var(--text-muted)' }}>
                     Charged to your saved card. Disable any time. Failed charges fall through to the normal "buy a top-up" prompt.
                   </p>
                 )}
@@ -771,7 +771,7 @@ export default function TeamSettingsPage() {
             {isOwner && (
               <section className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Invite a mate</h2>
+                  <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Invite a mate</h2>
                 </div>
                 <div className="p-5">
                 <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-2">
@@ -807,10 +807,10 @@ export default function TeamSettingsPage() {
                       </p>
                     )}
                     <div className="p-3 rounded-lg flex items-center justify-between gap-3" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                      <code className="text-[11px] truncate flex-1" style={{ color: 'var(--text-secondary)' }}>{lastInviteUrl}</code>
+                      <code className="text-[12px] truncate flex-1" style={{ color: 'var(--text-secondary)' }}>{lastInviteUrl}</code>
                       <button
                         onClick={() => copyInviteLink(lastInviteUrl)}
-                        className="px-3 py-1.5 text-[11px] font-semibold rounded-md text-white shrink-0"
+                        className="px-3 py-1.5 text-[12px] font-semibold rounded-md text-white shrink-0"
                         style={{ background: 'var(--accent)' }}
                       >
                         Copy link
@@ -830,19 +830,19 @@ export default function TeamSettingsPage() {
             {/* Pending invites */}
             {isOwner && team.pending_invites.length > 0 && (
               <section>
-                <h2 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Pending invites</h2>
+                <h2 className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Pending invites</h2>
                 <div className="rounded-xl divide-y" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                   {team.pending_invites.map((inv) => (
                     <div key={inv.id} className="p-3 flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-sm font-semibold truncate">{inv.email}</p>
-                        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                        <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                           Expires {new Date(inv.expires_at).toLocaleDateString()}
                         </p>
                       </div>
                       <button
                         onClick={() => cancelInvite(inv.invite_token)}
-                        className="px-3 py-1.5 text-[11px] font-semibold rounded-md"
+                        className="px-3 py-1.5 text-[12px] font-semibold rounded-md"
                         style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                       >
                         Cancel
@@ -855,7 +855,7 @@ export default function TeamSettingsPage() {
 
             {/* Members + per-member usage */}
             <section>
-              <h2 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Members &amp; usage</h2>
+              <h2 className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Members &amp; usage</h2>
               <div className="rounded-xl divide-y" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                 {team.members.map((m) => {
                   const memberUsage = usage?.members.find((mu) => mu.user_id === m.user_id);
@@ -866,15 +866,15 @@ export default function TeamSettingsPage() {
                         <div className="min-w-0">
                           <p className="text-sm font-semibold truncate">
                             {m.name || m.email}
-                            {m.role === 'owner' && <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>OWNER</span>}
+                            {m.role === 'owner' && <span className="ml-2 px-1.5 py-0.5 rounded text-[12px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>OWNER</span>}
                           </p>
-                          <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{m.email}</p>
+                          <p className="text-[12px] truncate" style={{ color: 'var(--text-muted)' }}>{m.email}</p>
                         </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 sm:shrink-0 sm:flex-nowrap">
                         <div className="sm:text-right">
                           <p className="text-sm font-semibold">{formatHours(memberUsage?.hours_used || 0)}</p>
-                          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                             {memberUsage?.calls || 0} calls
                             {m.per_member_hour_cap != null && (
                               <span className="ml-1.5">· cap {m.per_member_hour_cap}h</span>
@@ -892,20 +892,20 @@ export default function TeamSettingsPage() {
                                   placeholder="hr"
                                   value={capInput}
                                   onChange={(e) => setCapInput(e.target.value)}
-                                  className="w-16 px-2 py-1 text-[11px] rounded-md"
+                                  className="w-16 px-2 py-1 text-[12px] rounded-md"
                                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                                   autoFocus
                                 />
                                 <button
                                   onClick={() => saveCap(m.user_id)}
-                                  className="px-2 py-1 text-[10px] font-semibold rounded-md text-white"
+                                  className="px-2 py-1 text-[12px] font-semibold rounded-md text-white"
                                   style={{ background: 'var(--accent)' }}
                                 >
                                   Save
                                 </button>
                                 <button
                                   onClick={() => { setEditingCapFor(null); setCapInput(''); }}
-                                  className="px-2 py-1 text-[10px] font-semibold rounded-md"
+                                  className="px-2 py-1 text-[12px] font-semibold rounded-md"
                                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                                 >
                                   Cancel
@@ -918,7 +918,7 @@ export default function TeamSettingsPage() {
                                     setEditingCapFor(m.user_id);
                                     setCapInput(m.per_member_hour_cap != null ? String(m.per_member_hour_cap) : '');
                                   }}
-                                  className="px-2 py-1 text-[10px] font-semibold rounded-md"
+                                  className="px-2 py-1 text-[12px] font-semibold rounded-md"
                                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                                   data-tip="Set or clear an hour cap for this member"
                                 >
@@ -926,7 +926,7 @@ export default function TeamSettingsPage() {
                                 </button>
                                 <button
                                   onClick={() => removeMember(m.user_id, m.email)}
-                                  className="px-2 py-1 text-[10px] font-semibold rounded-md"
+                                  className="px-2 py-1 text-[12px] font-semibold rounded-md"
                                   style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                                 >
                                   Remove

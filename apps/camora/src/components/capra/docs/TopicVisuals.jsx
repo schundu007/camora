@@ -21,7 +21,7 @@ export function ComparisonCard({ comparison }) {
             <thead>
               <tr className="border-b border-[var(--border)]">
                 {headers.map((h, i) => (
-                  <th key={i} className="px-3 py-2 text-left text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-mono">{h}</th>
+                  <th key={i} className="px-3 py-2 text-left text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-mono">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -63,7 +63,7 @@ export function ComparisonCard({ comparison }) {
           <div className="space-y-2">
             {left.items.map((item, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className="text-[10px] landing-mono font-bold text-[var(--text-muted)] mt-0.5 w-20 flex-shrink-0 uppercase tracking-wider">{item.label}</span>
+                <span className="text-[12px] landing-mono font-bold text-[var(--text-muted)] mt-0.5 w-20 flex-shrink-0 uppercase tracking-wider">{item.label}</span>
                 <span className="text-xs text-[var(--text-secondary)] landing-body">{item.value}</span>
               </div>
             ))}
@@ -77,7 +77,7 @@ export function ComparisonCard({ comparison }) {
           <div className="space-y-2">
             {right.items.map((item, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className="text-[10px] landing-mono font-bold text-[var(--text-muted)] mt-0.5 w-20 flex-shrink-0 uppercase tracking-wider">{item.label}</span>
+                <span className="text-[12px] landing-mono font-bold text-[var(--text-muted)] mt-0.5 w-20 flex-shrink-0 uppercase tracking-wider">{item.label}</span>
                 <span className="text-xs text-[var(--text-secondary)] landing-body">{item.value}</span>
               </div>
             ))}
@@ -99,7 +99,7 @@ export function CheatSheetCard({ card }) {
       <div className="px-4 py-3 border-b border-[var(--border)] flex items-center gap-2">
         {card.icon && <Icon name={card.icon} size={14} className="text-[var(--text-muted)]" />}
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">{card.title}</h3>
-        <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{card.items?.length || 0}</span>
+        <span className="text-[12px] landing-mono text-[var(--text-muted)] ml-auto">{card.items?.length || 0}</span>
       </div>
       <div className="p-3 space-y-1.5">
         {(card.items || []).map((item, i) => (
@@ -112,7 +112,7 @@ export function CheatSheetCard({ card }) {
                   style={{ width: `${Math.max(item.bar || 0, 3)}%` }}
                 />
               </div>
-              <span className="text-[10px] landing-mono font-semibold text-[var(--text-muted)] w-[25%] flex-shrink-0 text-right">{item.value}</span>
+              <span className="text-[12px] landing-mono font-semibold text-[var(--text-muted)] w-[25%] flex-shrink-0 text-right">{item.value}</span>
             </div>
           ) : (
             <div key={i} className="flex items-start gap-2.5 p-2 rounded hover:bg-[var(--bg-elevated)] transition-colors">
@@ -140,7 +140,7 @@ export function EvolutionTimeline({ steps }) {
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="trendingUp" size={14} className="text-[var(--accent)]" />
         <h3 className="text-[15px] font-bold text-[var(--text-primary)] landing-display">Architecture Evolution</h3>
-        <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{steps.length} stages</span>
+        <span className="text-[12px] landing-mono text-[var(--text-muted)] ml-auto">{steps.length} stages</span>
       </div>
 
       {/* Step Selector - Horizontal */}
@@ -168,10 +168,10 @@ export function EvolutionTimeline({ steps }) {
                 {s.icon ? (
                   <Icon name={s.icon} size={12} style={{ color: i <= activeStep ? '#fff' : 'var(--text-muted)' }} />
                 ) : (
-                  <span className="text-[10px] font-bold" style={{ color: i <= activeStep ? '#fff' : 'var(--text-muted)' }}>{i + 1}</span>
+                  <span className="text-[12px] font-bold" style={{ color: i <= activeStep ? '#fff' : 'var(--text-muted)' }}>{i + 1}</span>
                 )}
               </div>
-              <span className={`text-[9px] landing-mono font-semibold text-center leading-tight transition-colors ${
+              <span className={`text-[12px] landing-mono font-semibold text-center leading-tight transition-colors ${
                 i === activeStep ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'
               }`}>
                 {s.title}
@@ -186,7 +186,7 @@ export function EvolutionTimeline({ steps }) {
         <div className="flex items-start gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-bold landing-mono px-1.5 py-0.5 rounded uppercase tracking-[0.14em] text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]">
+              <span className="text-[12px] font-bold landing-mono px-1.5 py-0.5 rounded uppercase tracking-[0.14em] text-[var(--text-muted)] bg-[var(--bg-elevated)] border border-[var(--border)]">
                 Stage {current.step || activeStep + 1}
               </span>
               <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display">{current.title}</h4>
@@ -197,12 +197,12 @@ export function EvolutionTimeline({ steps }) {
             {(current.capacity || current.rps) && (
               <div className="flex items-center gap-2 mb-3">
                 {current.capacity && (
-                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
+                  <span className="text-[12px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
                     <Icon name="users" size={10} className="inline mr-1" />{current.capacity}
                   </span>
                 )}
                 {current.rps && (
-                  <span className="text-[10px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
+                  <span className="text-[12px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-elevated)]">
                     <Icon name="zap" size={10} className="inline mr-1" />{current.rps} RPS
                   </span>
                 )}
@@ -214,10 +214,10 @@ export function EvolutionTimeline({ steps }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {current.pros && (
                   <div>
-                    <span className="text-[10px] landing-mono font-bold text-[var(--success)] uppercase tracking-wider">Pros</span>
+                    <span className="text-[12px] landing-mono font-bold text-[var(--success)] uppercase tracking-wider">Pros</span>
                     <ul className="mt-1 space-y-0.5">
                       {current.pros.map((p, i) => (
-                        <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
+                        <li key={i} className="flex items-start gap-1 text-[12px] text-[var(--text-secondary)] landing-body">
                           <span className="text-[var(--accent)] mt-px flex-shrink-0">+</span>
                           <span>{p}</span>
                         </li>
@@ -227,10 +227,10 @@ export function EvolutionTimeline({ steps }) {
                 )}
                 {current.cons && (
                   <div>
-                    <span className="text-[10px] landing-mono font-bold text-[var(--text-muted)] uppercase tracking-[0.14em]">Cons</span>
+                    <span className="text-[12px] landing-mono font-bold text-[var(--text-muted)] uppercase tracking-[0.14em]">Cons</span>
                     <ul className="mt-1 space-y-0.5">
                       {current.cons.map((c, i) => (
-                        <li key={i} className="flex items-start gap-1 text-[11px] text-[var(--text-secondary)] landing-body">
+                        <li key={i} className="flex items-start gap-1 text-[12px] text-[var(--text-secondary)] landing-body">
                           <span className="text-[var(--text-muted)] mt-px flex-shrink-0">−</span>
                           <span>{c}</span>
                         </li>
@@ -274,12 +274,12 @@ export function PatternCard({ pattern }) {
           <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display mb-0.5">{pattern.name}</h4>
           <p className="text-xs text-[var(--text-muted)] landing-body mb-1.5">{pattern.description}</p>
           <div className="flex flex-wrap gap-1">
-            <span className="text-[9px] landing-mono px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] uppercase tracking-[0.1em]">
+            <span className="text-[12px] landing-mono px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)] uppercase tracking-[0.1em]">
               Use when: {pattern.useWhen}
             </span>
           </div>
           {pattern.example && (
-            <p className="text-[10px] text-[var(--text-muted)] mt-1 landing-mono">{pattern.example}</p>
+            <p className="text-[14px] text-[var(--text-muted)] mt-1 landing-mono">{pattern.example}</p>
           )}
         </div>
       </div>
@@ -295,7 +295,7 @@ export function PatternCardGrid({ patterns, title = 'Design Patterns' }) {
       <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)] flex items-center gap-2">
         <Icon name="puzzle" size={14} className="text-[var(--accent)]" />
         <h3 className="text-sm font-bold text-[var(--text-primary)] landing-display">{title}</h3>
-        <span className="text-[10px] landing-mono text-[var(--text-muted)] ml-auto">{patterns.length} patterns</span>
+        <span className="text-[12px] landing-mono text-[var(--text-muted)] ml-auto">{patterns.length} patterns</span>
       </div>
       <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2">
         {patterns.map((pattern) => (
@@ -354,7 +354,7 @@ export function StaticDiagram({ diagram }) {
               <button
                 key={p.id}
                 onClick={() => handleProviderChange(p.id)}
-                className="px-2 py-0.5 text-[10px] font-bold rounded transition-colors landing-mono"
+                className="px-2 py-0.5 text-[12px] font-bold rounded transition-colors landing-mono"
                 style={{
                   background: provider === p.id ? `${p.color}20` : 'transparent',
                   color: provider === p.id ? p.color : 'var(--text-muted)',
@@ -367,7 +367,7 @@ export function StaticDiagram({ diagram }) {
           </div>
         )}
         {!isCloudDiagram && diagram.type && (
-          <span className="text-[9px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-muted)] ml-auto uppercase">{diagram.type}</span>
+          <span className="text-[12px] landing-mono px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-muted)] ml-auto uppercase">{diagram.type}</span>
         )}
       </div>
       {diagram.description && (
@@ -453,7 +453,7 @@ export function FlowchartCard({ flowchart }) {
         {flowchart.steps && hasDiagram && (
           <button
             onClick={() => setShowSteps(!showSteps)}
-            className="text-[10px] landing-mono font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--accent)]/5"
+            className="text-[12px] landing-mono font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors px-2 py-1 rounded-md hover:bg-[var(--accent)]/5"
           >
             {showSteps ? 'Hide steps' : 'Show steps'}
           </button>
@@ -486,10 +486,10 @@ export function FlowchartCard({ flowchart }) {
             <ol className="space-y-1">
               {flowchart.steps.map((s, i) => (
                 <li key={i} className="flex items-start gap-2 py-1">
-                  <span className="w-5 h-5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[10px] font-bold flex items-center justify-center landing-mono flex-shrink-0 mt-0.5">{s.step}</span>
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-[12px] font-bold flex items-center justify-center landing-mono flex-shrink-0 mt-0.5">{s.step}</span>
                   <div>
                     <span className="text-[12px] font-semibold text-[var(--text-primary)] landing-display">{s.label}</span>
-                    {s.detail && <span className="text-[11px] text-[var(--text-muted)] landing-body ml-1">— {s.detail}</span>}
+                    {s.detail && <span className="text-[12px] text-[var(--text-muted)] landing-body ml-1">— {s.detail}</span>}
                   </div>
                 </li>
               ))}
@@ -532,7 +532,7 @@ export function ChartCard({ chart }) {
                       className="h-full rounded transition-colors duration-500"
                       style={{ width: `${Math.max(logWidth, 4)}%`, background: d.color }}
                     />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] landing-mono font-semibold text-[var(--text-muted)]">
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[12px] landing-mono font-semibold text-[var(--text-muted)]">
                       {d.value >= 1000000 ? `${(d.value / 1000000).toFixed(0)}ms` : d.value >= 1000 ? `${(d.value / 1000).toFixed(0)}μs` : `${d.value}ns`}
                     </span>
                   </div>
@@ -553,14 +553,14 @@ export function ChartCard({ chart }) {
                 <div key={i}>
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-xs text-[var(--text-secondary)] landing-body">{d.label}</span>
-                    <span className="text-[10px] landing-mono text-[var(--text-muted)]">{d.read}:{d.write} R:W</span>
+                    <span className="text-[12px] landing-mono text-[var(--text-muted)]">{d.read}:{d.write} R:W</span>
                   </div>
                   <div className="flex h-5 rounded overflow-hidden">
                     <div className="h-full flex items-center justify-center" style={{ width: `${readPct}%`, background: `${d.color}` }}>
-                      <span className="text-[8px] landing-mono text-white font-bold">READ</span>
+                      <span className="text-[12px] landing-mono text-white font-bold">READ</span>
                     </div>
                     <div className="h-full flex items-center justify-center bg-[var(--border)]" style={{ width: `${writePct}%` }}>
-                      {writePct > 15 && <span className="text-[8px] landing-mono text-[var(--text-secondary)] font-bold">WRITE</span>}
+                      {writePct > 15 && <span className="text-[12px] landing-mono text-[var(--text-secondary)] font-bold">WRITE</span>}
                     </div>
                   </div>
                 </div>

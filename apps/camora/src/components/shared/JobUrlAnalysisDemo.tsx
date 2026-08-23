@@ -143,7 +143,7 @@ export default function JobUrlAnalysisDemo() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.35 }}
             className="px-6 pt-5 pb-3 overflow-hidden">
-            <div className="text-[11px] flex items-center gap-1.5 mb-1.5" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
+            <div className="text-[12px] flex items-center gap-1.5 mb-1.5" style={{ color: 'var(--text-muted)', fontFamily: F.mono }}>
               <span>Home</span>
               <span>/</span>
               <span style={{ color: accent }}>Jobs</span>
@@ -267,7 +267,7 @@ export default function JobUrlAnalysisDemo() {
                     initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: ci * 0.15 }}
                     className="rounded-xl p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: accent, fontFamily: F.mono }}>
+                    <p className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: accent, fontFamily: F.mono }}>
                       {col.label}
                     </p>
                     <div className="flex flex-col gap-1.5">
@@ -275,7 +275,7 @@ export default function JobUrlAnalysisDemo() {
                         <motion.span key={item}
                           initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: ci * 0.15 + ii * 0.1 + 0.2 }}
-                          className="text-[11px] px-2 py-1 rounded-md font-medium"
+                          className="text-[12px] px-2 py-1 rounded-md font-medium"
                           style={{ color: 'var(--text-secondary)', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                           {item}
                         </motion.span>
@@ -304,7 +304,7 @@ export default function JobUrlAnalysisDemo() {
                   <motion.div key={g.group}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: gi * 0.15 }}>
-                    <p className="text-[11px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-primary)', fontFamily: F.display }}>
+                    <p className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-primary)', fontFamily: F.display }}>
                       {g.group}
                     </p>
                     <div className="flex flex-col gap-1">
@@ -327,7 +327,7 @@ export default function JobUrlAnalysisDemo() {
               <motion.span key={tech}
                 initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.03 }}
-                className="text-[10px] px-2 py-0.5 rounded-md font-medium"
+                className="text-[12px] px-2 py-0.5 rounded-md font-medium"
                 style={{ color: 'var(--text-muted)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
                 {tech}
               </motion.span>

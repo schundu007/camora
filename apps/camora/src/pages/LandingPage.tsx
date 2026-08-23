@@ -277,7 +277,7 @@ export default function LandingPage() {
               {HERO_STATS.map((stat) => (
                 <div key={stat.label} className="bg-[var(--bg-surface)] flex flex-col items-center justify-center py-3.5 px-1.5 sm:px-3">
                   <span className="font-display text-[20px] sm:text-[28px] font-bold tracking-tight text-[var(--cam-primary)] leading-none">{stat.value}</span>
-                  <span className="mt-1 text-center font-mono text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-[var(--text-muted)]">{stat.label}</span>
+                  <span className="mt-1 text-center font-mono text-[12px] sm:text-[12px] font-bold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-[var(--text-muted)]">{stat.label}</span>
                 </div>
               ))}
             </motion.div>
@@ -334,7 +334,7 @@ export default function LandingPage() {
               <div className="px-6 pt-6 pb-8 md:px-10 md:pt-8">
                 {/* Header */}
                 <div className="mb-5">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-code)' }}>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.22em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-code)' }}>
                     The process
                   </p>
                   <h2 className="text-[26px] md:text-[32px] font-bold tracking-tight leading-tight" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>
@@ -362,7 +362,7 @@ export default function LandingPage() {
                       </span>
 
                       <div>
-                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: step.color, fontFamily: 'var(--font-code)' }}>
+                        <p className="text-[12px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: step.color, fontFamily: 'var(--font-code)' }}>
                           {step.label}
                         </p>
                         <p className="text-[17px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
@@ -454,7 +454,7 @@ export default function LandingPage() {
                       <div className="flex flex-col sm:flex-row gap-6 p-7">
                         <div className="shrink-0 flex flex-col items-start sm:items-center sm:justify-start sm:pt-1 min-w-[80px]">
                           <span className="font-display text-[52px] font-bold leading-none tracking-tight text-[var(--cam-primary)]">{f.stat}</span>
-                          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] mt-1 whitespace-nowrap">{f.statLabel}</span>
+                          <span className="font-mono text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--text-muted)] mt-1 whitespace-nowrap">{f.statLabel}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <Eyebrow tone="accent">{f.label}</Eyebrow>
@@ -473,7 +473,7 @@ export default function LandingPage() {
                       <div className="p-7">
                         <div className="flex items-center justify-between gap-2">
                           <Eyebrow tone="accent">{f.label}</Eyebrow>
-                          <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-[var(--cam-primary)] whitespace-nowrap">{f.stat} {f.statLabel}</span>
+                          <span className="font-mono text-[12px] font-bold tracking-[0.14em] text-[var(--cam-primary)] whitespace-nowrap">{f.stat} {f.statLabel}</span>
                         </div>
                         <h3 className="mt-3 font-display text-[22px] font-semibold tracking-tight leading-snug text-[var(--text-primary)]">{f.title}</h3>
                         <ul className="mt-3 space-y-1.5">
@@ -498,7 +498,7 @@ export default function LandingPage() {
               {HIGHLIGHTS.map((f, i) => (
                 <span key={f} className="flex items-center">
                   {i > 0 && <span className="mx-5 h-3 w-px bg-[var(--border)]" aria-hidden="true" />}
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">{f}</span>
+                  <span className="font-mono text-[12px] font-semibold uppercase tracking-[0.16em] text-[var(--text-muted)]">{f}</span>
                 </span>
               ))}
             </div>

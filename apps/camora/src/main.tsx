@@ -61,7 +61,7 @@ function showStaleBanner(running: string, deployed: string) {
   el.style.cssText = [
     'position:fixed', 'left:0', 'right:0', 'bottom:0', 'z-index:2147483647',
     'padding:10px 14px', 'background:#7A2E2E', 'color:#fff',
-    'font:600 12px/1.45 Inter,system-ui,sans-serif', 'display:flex',
+    'font:700 12px/1.45 var(--font-sans,system-ui),system-ui,sans-serif', 'display:flex',
     'gap:12px', 'align-items:center', 'justify-content:center',
   ].join(';');
   el.textContent =

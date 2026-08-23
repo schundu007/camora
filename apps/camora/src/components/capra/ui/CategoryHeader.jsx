@@ -51,7 +51,7 @@ export default function CategoryHeader({
       </h3>
       {count !== undefined && count !== null && !progress && (
         <span
-          className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 flex-shrink-0"
+          className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 flex-shrink-0"
           style={{
             background: 'var(--cam-strip-icon-bg)',
             border: '1px solid var(--cam-strip-icon-border)',
@@ -66,7 +66,7 @@ export default function CategoryHeader({
       {progress && (
         <>
           <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 flex-shrink-0"
+            className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 flex-shrink-0"
             style={{
               background: 'var(--cam-strip-icon-bg)',
               border: '1px solid var(--cam-strip-icon-border)',

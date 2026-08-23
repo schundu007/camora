@@ -187,7 +187,7 @@ export default function AdminTeamsPage() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8" style={{ paddingTop: 96 }}>
         <header className="mb-6">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)' }}>OPERATOR</p>
+          <p className="text-[12px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)' }}>OPERATOR</p>
           <h1 className="text-2xl font-bold mb-2">Teams</h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
             Every team in the system with current-period usage, auto-topup config, and 30-day auto-charge total.
@@ -227,10 +227,10 @@ export default function AdminTeamsPage() {
                       {rr.user_name || rr.user_email}
                       <span className="ml-2 text-[12px] font-normal" style={{ color: 'var(--text-muted)' }}>
                         {rr.hours} hr · {fmtMoney(rr.amount_cents)}
-                        {rr.auto_charged && <span className="ml-1.5 px-1 py-0.5 rounded text-[9px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>AUTO</span>}
+                        {rr.auto_charged && <span className="ml-1.5 px-1 py-0.5 rounded text-[12px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>AUTO</span>}
                       </span>
                     </p>
-                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                       {rr.user_email} · purchased {new Date(rr.topup_created_at).toLocaleDateString()} · requested {new Date(rr.requested_at).toLocaleDateString()}
                     </p>
                     {rr.reason && (
@@ -269,13 +269,13 @@ export default function AdminTeamsPage() {
             <table className="w-full text-sm">
               <thead style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
                 <tr>
-                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Team / owner</th>
-                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Plan</th>
-                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Members</th>
-                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Used / Pool</th>
-                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Auto top-up</th>
-                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>30d auto-charged</th>
-                  <th className="text-left px-3 py-2.5 font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Actions</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Team / owner</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Plan</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Members</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Used / Pool</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Auto top-up</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>30d auto-charged</th>
+                  <th className="text-left px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -288,7 +288,7 @@ export default function AdminTeamsPage() {
                     <tr key={t.id} style={{ borderTop: '1px solid var(--border)' }}>
                       <td className="px-3 py-2.5 align-top">
                         <p className="text-[13px] font-semibold">{t.name || '—'}</p>
-                        <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{t.owner_email}</p>
+                        <p className="text-[12px] truncate" style={{ color: 'var(--text-muted)' }}>{t.owner_email}</p>
                       </td>
                       <td className="px-3 py-2.5 align-top text-[12px]">{t.plan_type}</td>
                       <td className="px-3 py-2.5 align-top text-[12px]">{t.member_count} / {t.seat_limit}</td>
@@ -304,7 +304,7 @@ export default function AdminTeamsPage() {
                         {t.auto_topup_pack ? (
                           <>
                             <p>{t.auto_topup_pack.replace('topup_', '').replace('h', 'h pack')}</p>
-                            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>cap {fmtMoney(Number(t.auto_topup_monthly_cap_cents || 0))}/mo</p>
+                            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>cap {fmtMoney(Number(t.auto_topup_monthly_cap_cents || 0))}/mo</p>
                           </>
                         ) : (
                           <span style={{ color: 'var(--text-muted)' }}>off</span>
@@ -319,7 +319,7 @@ export default function AdminTeamsPage() {
                         {t.auto_topup_pack && (
                           <button
                             onClick={() => disableAutoTopup(t.id, t.owner_email)}
-                            className="px-2.5 py-1 text-[11px] font-semibold rounded-md"
+                            className="px-2.5 py-1 text-[12px] font-semibold rounded-md"
                             style={{ background: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.3)' }}
                             data-tip="Force-disable auto top-up"
                           >

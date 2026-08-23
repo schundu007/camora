@@ -64,7 +64,7 @@ function ScoreRing({ score, total }: { score: number; total: number }) {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
         <span style={{ fontSize: 26, fontWeight: 800, color, lineHeight: 1 }}>{pct}%</span>
-        <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{score}/{total}</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{score}/{total}</span>
       </div>
     </div>
   );
@@ -269,7 +269,7 @@ export default function QuizSessionPage() {
 
   // ── Shared filter-chip styles (used in all screens) ─────────────────────────
   const chipBase: React.CSSProperties = {
-    padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+    padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
     letterSpacing: '0.03em', border: '1px solid transparent',
     cursor: 'pointer', whiteSpace: 'nowrap' as const, transition: 'all 0.12s',
   };
@@ -289,13 +289,13 @@ export default function QuizSessionPage() {
       padding: '10px 24px', display: 'flex', flexDirection: 'column', gap: 8,
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Topic</span>
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Topic</span>
         {DOMAIN_CATS.map(cat => (
           <button key={cat.value} style={activeCat === cat.value ? chipActive : chipInactive} onClick={() => handleNewQuiz(cat.value, diffFilter)}>{cat.label}</button>
         ))}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Level</span>
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: 2 }}>Level</span>
         <button style={!diffFilter ? chipActive : chipInactive} onClick={() => handleNewQuiz(activeCat, null)}>All</button>
         {DIFF_OPTS.map(d => (
           <button key={d} style={diffFilter === d ? chipActive : chipInactive} onClick={() => handleNewQuiz(activeCat, d)}>{d.charAt(0).toUpperCase() + d.slice(1)}</button>
@@ -332,7 +332,7 @@ export default function QuizSessionPage() {
           <span style={{
             padding: '2px 10px', borderRadius: 20,
             background: 'rgba(0,71,171,0.18)', border: '1px solid rgba(0,71,171,0.3)',
-            color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
+            color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, letterSpacing: '0.03em',
           }}>
             {domainFilters.length === 1 ? domainFilters[0] : `${domainFilters.length} domains`}
           </span>
@@ -487,7 +487,7 @@ export default function QuizSessionPage() {
               borderRadius: 12, padding: '20px 24px', marginBottom: 28,
             }}>
               <div style={{
-                fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+                fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
                 color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 16,
               }}>
                 Domain Breakdown
@@ -556,7 +556,7 @@ export default function QuizSessionPage() {
           {/* Per-question review */}
           <div style={{ marginTop: 40 }}>
             <div style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+              fontSize: 12, fontWeight: 700, letterSpacing: '0.08em',
               color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 16,
             }}>
               Question Review
@@ -578,7 +578,7 @@ export default function QuizSessionPage() {
                         borderRadius: '50%',
                         background: skipped ? 'rgba(255,255,255,0.1)' : wasRight ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
                         border: `1.5px solid ${skipped ? 'rgba(255,255,255,0.15)' : wasRight ? '#22c55e' : '#ef4444'}`,
-                        fontSize: 11, fontWeight: 700,
+                        fontSize: 12, fontWeight: 700,
                         color: skipped ? 'var(--text-muted)' : wasRight ? '#22c55e' : '#ef4444',
                       }}>
                         {i + 1}
@@ -590,7 +590,7 @@ export default function QuizSessionPage() {
                         }}>
                           {qn.question.length > 100 ? qn.question.slice(0, 100) + '…' : qn.question}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                           {skipped
                             ? 'Skipped'
                             : wasRight
@@ -686,7 +686,7 @@ export default function QuizSessionPage() {
             <span style={{
               padding: '2px 10px', borderRadius: 4,
               background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)',
-              color: 'var(--text-secondary)', fontSize: 11, fontWeight: 700, letterSpacing: '0.03em',
+              color: 'var(--text-secondary)', fontSize: 12, fontWeight: 700, letterSpacing: '0.03em',
             }}>
               MCQ
             </span>
@@ -794,7 +794,7 @@ export default function QuizSessionPage() {
                 padding: '1px 8px', borderRadius: 10,
                 background: picked === q.correctLetter ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
                 color: picked === q.correctLetter ? '#22c55e' : '#ef4444',
-                fontSize: 11, fontWeight: 700, letterSpacing: 0,
+                fontSize: 12, fontWeight: 700, letterSpacing: 0,
               }}>
                 {picked === q.correctLetter ? 'Correct' : `Wrong — Answer: ${q.correctLetter}`}
               </span>

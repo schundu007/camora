@@ -5763,17 +5763,17 @@ export default function Blind75PracticePage() {
           </Link>
           <div style={{ width: 1, height: 18, background: 'var(--cam-strip-icon-border)' }} />
           <span style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF' }}>{problem.title}</span>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6, color: 'var(--cam-primary-dk)', background: 'var(--cam-gold-leaf)' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, padding: '2px 8px', borderRadius: 6, color: 'var(--cam-primary-dk)', background: 'var(--cam-gold-leaf)' }}>
             {problem.difficulty}
           </span>
-          <span style={{ fontSize: 11, color: 'var(--cam-strip-text-muted)' }}>{problem.category}</span>
+          <span style={{ fontSize: 12, color: 'var(--cam-strip-text-muted)' }}>{problem.category}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button onClick={() => setActiveTab('practice')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: 'none',
             background: activeTab === 'practice' ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-bg)', color: activeTab === 'practice' ? 'var(--cam-primary-dk)' : 'var(--cam-strip-text)' }}>Practice</button>
           <button onClick={() => setActiveTab('solution')} style={{ fontSize: 12, fontWeight: 600, padding: '5px 14px', borderRadius: 7, cursor: 'pointer', border: 'none',
             background: activeTab === 'solution' ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-bg)', color: activeTab === 'solution' ? 'var(--cam-primary-dk)' : 'var(--cam-strip-text)' }}>Solution</button>
-          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--cam-strip-icon-border)', background: 'transparent', color: 'var(--cam-strip-text)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <a href={problem.leetcode} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 500, padding: '5px 12px', borderRadius: 7, border: '1px solid var(--cam-strip-icon-border)', background: 'transparent', color: 'var(--cam-strip-text)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
             LeetCode <Icon name="externalLink" size={9} aria-hidden="true" />
           </a>
         </div>
@@ -5784,7 +5784,7 @@ export default function Blind75PracticePage() {
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           {/* Left: Problem */}
           <div style={{ width: '40%', borderRight: '1px solid var(--border)', overflow: 'auto', padding: '28px 24px', background: 'var(--bg-surface)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{problem.category}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{problem.category}</div>
             <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 16px 0' }}>{problem.title}</h1>
             <div style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.8, whiteSpace: 'pre-wrap', marginBottom: 24 }}>{problem.description}</div>
 
@@ -5841,7 +5841,7 @@ export default function Blind75PracticePage() {
             </div>
             {/* Output */}
             <div style={{ borderTop: '1px solid #333', background: '#1a1a1a', padding: 12, minHeight: 80, maxHeight: 200, overflow: 'auto' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>OUTPUT</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>OUTPUT</div>
               <pre style={{ margin: 0, fontSize: 13, fontFamily: "var(--font-mono)", color: output.startsWith('Error') ? 'var(--danger)' : 'var(--success)', whiteSpace: 'pre-wrap' }}>
                 {output || 'Click "Run Code" to execute'}
               </pre>
@@ -5854,7 +5854,7 @@ export default function Blind75PracticePage() {
           <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 24px' }}>
             {/* Problem header */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{problem.category}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{problem.category}</div>
               <h2 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', margin: '4px 0 8px' }}>{problem.title}</h2>
               <p style={{ fontSize: 14, color: 'var(--text-muted)', lineHeight: 1.7, margin: 0 }}>{problem.description}</p>
             </div>
@@ -5913,7 +5913,7 @@ export default function Blind75PracticePage() {
                           </span>
                           <button
                             onClick={() => { navigator.clipboard.writeText(codeStr); }}
-                            style={{ fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 5, border: '1px solid #334155', background: '#0f172a', color: '#94a3b8', cursor: 'pointer' }}>
+                            style={{ fontSize: 12, fontWeight: 500, padding: '3px 10px', borderRadius: 5, border: '1px solid #334155', background: '#0f172a', color: '#94a3b8', cursor: 'pointer' }}>
                             Copy
                           </button>
                         </div>
@@ -5929,11 +5929,11 @@ export default function Blind75PracticePage() {
                       {/* Complexity badges */}
                       <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 14px', boxShadow: 'none' }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>TIME</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>TIME</span>
                           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>{approach.complexity.time}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', borderRadius: 8, border: '1px solid var(--border)', padding: '8px 14px', boxShadow: 'none' }}>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>SPACE</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>SPACE</span>
                           <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent)' }}>{approach.complexity.space}</span>
                         </div>
                       </div>

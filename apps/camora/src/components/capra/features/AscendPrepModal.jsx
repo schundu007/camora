@@ -1765,7 +1765,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                 <span className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: 'var(--cam-gold-leaf)' }} />
                 <h2 className="text-[12px] font-bold uppercase tracking-[0.12em] whitespace-nowrap" style={{ color: 'var(--cam-strip-heading)' }}>Job Description</h2>
                 <span
-                  className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5"
+                  className="inline-flex items-center text-[12px] font-bold uppercase tracking-wider px-2 py-0.5"
                   style={{
                     background: 'var(--cam-strip-icon-bg)',
                     border: '1px solid var(--cam-strip-icon-border)',
@@ -1776,7 +1776,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                   {activeCompany || 'No company'}
                 </span>
                 {inputs.jobDescription?.trim() && (
-                  <span className="text-[10px] font-mono" style={{ color: 'var(--cam-strip-text-muted)' }}>
+                  <span className="text-[12px] font-mono" style={{ color: 'var(--cam-strip-text-muted)' }}>
                     {inputs.jobDescription.length.toLocaleString()} chars
                   </span>
                 )}

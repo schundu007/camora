@@ -15,8 +15,8 @@ const CodeBlock = ({ code }: { code: string }) => {
   return (
     <div className="relative rounded-xl overflow-hidden" style={{ background: '#0d1117', border: '1px solid color-mix(in oklab, var(--cam-primary) 25%, transparent)' }}>
       <div className="flex items-center justify-between px-4 py-2" style={{ background: 'color-mix(in oklab, var(--cam-primary) 12%, #0d1117)', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, transparent)' }}>
-        <span className="font-mono text-[10px] font-bold uppercase tracking-widest opacity-60 text-white">Python</span>
-        <button onClick={copy} className="font-mono text-[10px] px-2 py-0.5 rounded transition-colors"
+        <span className="font-mono text-[12px] font-bold uppercase tracking-widest opacity-60 text-white">Python</span>
+        <button onClick={copy} className="font-mono text-[12px] px-2 py-0.5 rounded transition-colors"
           style={{ color: copied ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.5)', background: copied ? 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)' : 'transparent' }}>
           {copied ? 'Copied!' : 'Copy'}
         </button>
@@ -40,7 +40,7 @@ const TopicButton = ({ topic, active, onClick }: { topic: Topic; active: boolean
       style={{ color: active ? 'var(--cam-gold-leaf-dk)' : 'var(--text-secondary)' }}>
       {topic.title}
     </span>
-    <span className="font-mono text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>{topic.estimatedMins}m</span>
+    <span className="font-mono text-[12px] shrink-0" style={{ color: 'var(--text-muted)' }}>{topic.estimatedMins}m</span>
   </button>
 );
 
@@ -50,8 +50,8 @@ const TopicGroup = ({ label, topics, selectedId, onSelect, accent }: {
   <div>
     <div className="flex items-center gap-2 mb-2 px-1">
       <div className="w-1.5 h-1.5 rounded-full" style={{ background: accent }} />
-      <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: accent }}>{label}</span>
-      <span className="font-mono text-[10px]" style={{ color: 'var(--text-muted)' }}>{topics.length}</span>
+      <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: accent }}>{label}</span>
+      <span className="font-mono text-[12px]" style={{ color: 'var(--text-muted)' }}>{topics.length}</span>
     </div>
     <div className="space-y-0.5">
       {topics.map(t => <TopicButton key={t.id} topic={t} active={t.id === selectedId} onClick={() => onSelect(t.id)} />)}
@@ -69,10 +69,10 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>{topic.title}</span>
+            <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>{topic.title}</span>
             <Chip>{topic.track}</Chip>
           </div>
-          <span className="font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>~{topic.estimatedMins} min</span>
+          <span className="font-mono text-[12px]" style={{ color: 'var(--text-muted)' }}>~{topic.estimatedMins} min</span>
         </div>
         <div className="px-6 py-5">
           <p className="text-[15px] leading-relaxed text-[var(--text-secondary)]">{topic.intro}</p>
@@ -82,7 +82,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       {/* Reference Code */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Reference Code</span>
+          <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Reference Code</span>
         </div>
         <div className="p-4">
           <CodeBlock code={topic.cleanCode} />
@@ -92,7 +92,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       {/* How It Works — line-by-line walkthrough */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>How It Works — Line by Line</span>
+          <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>How It Works — Line by Line</span>
         </div>
         <div className="divide-y divide-[var(--border)]/40">
           {topic.walkthrough.map((step, i) => (
@@ -101,7 +101,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
                 <pre className="text-[12px] leading-relaxed overflow-x-auto" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}><code>{step.code}</code></pre>
               </div>
               <div className="px-5 py-3 flex items-start gap-2.5">
-                <span className="font-mono text-[10px] font-bold mt-1 shrink-0 w-4 h-4 rounded flex items-center justify-center" style={{ background: 'color-mix(in oklab, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{i + 1}</span>
+                <span className="font-mono text-[12px] font-bold mt-1 shrink-0 w-4 h-4 rounded flex items-center justify-center" style={{ background: 'color-mix(in oklab, var(--cam-primary) 12%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>{i + 1}</span>
                 <span className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{step.explain}</span>
               </div>
             </div>
@@ -112,11 +112,11 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       {/* Code Examples */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-6 py-3 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Examples</span>
+          <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Examples</span>
           <div className="flex gap-1">
             {topic.examples.map((ex, i) => (
               <button key={i} onClick={() => setActiveExample(i)}
-                className="font-mono text-[11px] px-3 py-1 rounded-lg transition-colors"
+                className="font-mono text-[12px] px-3 py-1 rounded-lg transition-colors"
                 style={{
                   background: i === activeExample ? 'var(--cam-accent-fill)' : 'var(--bg-elevated)',
                   color: i === activeExample ? 'var(--cam-accent-fill-text)' : 'var(--text-muted)',
@@ -134,12 +134,12 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       {/* Edge Cases */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, #f59e0b 20%, var(--border))' }}>
         <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, #f59e0b 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, #f59e0b 15%, var(--border))' }}>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#d97706' }}>Edge Cases to Know</span>
+          <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: '#d97706' }}>Edge Cases to Know</span>
         </div>
         <ul className="divide-y divide-[var(--border)]/40">
           {topic.edgeCases.map((ec, i) => (
             <li key={i} className="flex items-start gap-3 px-6 py-3">
-              <span className="shrink-0 mt-1 text-[11px]" style={{ color: '#d97706' }}>▸</span>
+              <span className="shrink-0 mt-1 text-[12px]" style={{ color: '#d97706' }}>▸</span>
               <span className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{ec}</span>
             </li>
           ))}
@@ -150,13 +150,13 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       <div className="grid grid-cols-2 gap-4">
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, #ef4444 20%, var(--border))' }}>
           <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, #ef4444 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, #ef4444 15%, var(--border))' }}>
-            <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#dc2626' }}>Common Gotcha</span>
+            <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: '#dc2626' }}>Common Gotcha</span>
           </div>
           <p className="px-5 py-4 text-[13px] leading-relaxed text-[var(--text-secondary)]">{topic.gotcha}</p>
         </div>
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 25%, var(--border))' }}>
           <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 20%, var(--border))' }}>
-            <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Pro Tip</span>
+            <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf-dk)' }}>Pro Tip</span>
           </div>
           <p className="px-5 py-4 text-[13px] leading-relaxed text-[var(--text-secondary)]">{topic.tip}</p>
         </div>
@@ -213,7 +213,7 @@ export default function PythonLearnPage() {
                 <path fill="url(#pyHeroYellow)" d="M55.5 105c21.6 0 20.2-9.1 20.2-9.1l0-9.4H55.1v-2.8h33.1S105 86 105 64.1C105 42.3 92.9 43.1 92.9 43.1h-7.2v10.1s.4 12.1-11.9 12.1H53.3S41.8 65.1 41.8 76.4v27.3S40.4 105 55.5 105zm11.4-6.6c-2.1 0-3.7-1.7-3.7-3.7 0-2.1 1.7-3.7 3.7-3.7 2.1 0 3.7 1.7 3.7 3.7 0 2.1-1.7 3.7-3.7 3.7z"/>
               </svg>
             </div>
-            <span className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Learning Library</span>
+            <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Learning Library</span>
           </div>
           <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--cam-strip-heading)' }}>Python <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Mastery</span></h1>
           <p className="text-sm mb-5" style={{ color: 'var(--cam-strip-text)' }}>From variables to async — {PYTHON_TOPICS.length} topics, ~{Math.round(totalMins / 60)}h of material</p>
@@ -246,7 +246,7 @@ export default function PythonLearnPage() {
 
             {filtered ? (
               <div className="space-y-1">
-                <p className="font-mono text-[10px] uppercase tracking-widest px-2 mb-2" style={{ color: 'var(--text-muted)' }}>{filtered.length} results</p>
+                <p className="font-mono text-[12px] uppercase tracking-widest px-2 mb-2" style={{ color: 'var(--text-muted)' }}>{filtered.length} results</p>
                 {filtered.map(t => <TopicButton key={t.id} topic={t} active={t.id === selectedId} onClick={() => { setTopic(t.id); setSearch(''); }} />)}
                 {filtered.length === 0 && <p className="text-xs text-[var(--text-muted)] px-2">No topics match</p>}
               </div>

@@ -549,23 +549,23 @@ export default function ResumeOptimizer({
       <div key={i} style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '2px', fontFamily: 'Arial, Helvetica, sans-serif', letterSpacing: '-0.01em' }}>{clean}</div>
     );
     if (isSection) return (
-      <div key={i} style={{ fontSize: '10px', fontWeight: 800, color: '#0f172a', borderBottom: '1.5px solid #94a3b8', paddingBottom: '4px', marginTop: '20px', marginBottom: '7px', letterSpacing: '0.12em', fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'uppercase' as const }}>{clean.toUpperCase()}</div>
+      <div key={i} style={{ fontSize: '12px', fontWeight: 800, color: '#0f172a', borderBottom: '1.5px solid #94a3b8', paddingBottom: '4px', marginTop: '20px', marginBottom: '7px', letterSpacing: '0.12em', fontFamily: 'Arial, Helvetica, sans-serif', textTransform: 'uppercase' as const }}>{clean.toUpperCase()}</div>
     );
     if (isBullet) return (
-      <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#1e293b', lineHeight: '1.65', marginBottom: '3px', fontFamily: 'Arial, Helvetica, sans-serif', paddingLeft: '4px' }}>
+      <div key={i} style={{ display: 'flex', gap: '8px', fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '3px', fontFamily: 'Arial, Helvetica, sans-serif', paddingLeft: '4px' }}>
         <span style={{ flexShrink: 0, marginTop: '2px' }}>•</span>
         <span>{bulletContent}</span>
       </div>
     );
     return (
-      <div key={i} style={{ fontSize: '11.5px', color: '#1e293b', lineHeight: '1.65', marginBottom: '2px', fontFamily: 'Arial, Helvetica, sans-serif' }}>{clean}</div>
+      <div key={i} style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.65', marginBottom: '2px', fontFamily: 'Arial, Helvetica, sans-serif' }}>{clean}</div>
     );
   }
 
   const chipStyle = (active: boolean): React.CSSProperties => ({
     padding: '3px 12px',
     borderRadius: '20px',
-    fontSize: '11px',
+    fontSize: '12px',
     fontWeight: 700,
     letterSpacing: '0.02em',
     cursor: 'pointer',
@@ -577,8 +577,8 @@ export default function ResumeOptimizer({
   });
 
   const labelStyle: React.CSSProperties = {
-    fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace",
-    fontSize: '10px',
+    fontFamily: "var(--font-mono)",
+    fontSize: '12px',
     fontWeight: 700,
     color: 'var(--text-muted)',
     textTransform: 'uppercase',
@@ -591,7 +591,7 @@ export default function ResumeOptimizer({
     border: '1px solid var(--border)',
     borderRadius: '10px',
     fontSize: '13px',
-    fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif",
+    fontFamily: "var(--font-sans)",
     color: 'var(--text-primary)',
     background: 'var(--bg-elevated)',
     resize: 'vertical' as const,
@@ -601,14 +601,14 @@ export default function ResumeOptimizer({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif" }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontFamily: "var(--font-sans)" }}>
 
       {/* ── Header ── */}
       <div>
-        <span style={{ display: 'block', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: '4px' }}>
+        <span style={{ display: 'block', fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: '4px' }}>
           AI-Powered
         </span>
-        <h2 style={{ fontFamily: "'Clash Display', Satoshi, sans-serif", fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontFamily: "var(--font-sans)", fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
           Resume Optimizer
         </h2>
       </div>
@@ -654,13 +654,13 @@ export default function ResumeOptimizer({
               onChange={(e) => setJobUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleFetchJd(); }}
               placeholder="https://jobs.example.com/posting/123"
-              style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "'Source Code Pro', monospace", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const }}
+              style={{ flex: 1, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "var(--font-mono)", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const }}
             />
             <button
               type="button"
               onClick={handleFetchJd}
               disabled={fetchingJd || !jobUrl.trim()}
-              style={{ padding: '10px 16px', borderRadius: '8px', background: fetchingJd || !jobUrl.trim() ? 'var(--bg-elevated)' : 'var(--accent)', color: fetchingJd || !jobUrl.trim() ? 'var(--text-muted)' : '#fff', border: '1px solid var(--border)', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: fetchingJd || !jobUrl.trim() ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const, opacity: fetchingJd ? 0.65 : 1, transition: 'all 0.15s' }}
+              style={{ padding: '10px 16px', borderRadius: '8px', background: fetchingJd || !jobUrl.trim() ? 'var(--bg-elevated)' : 'var(--accent)', color: fetchingJd || !jobUrl.trim() ? 'var(--text-muted)' : '#fff', border: '1px solid var(--border)', fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: fetchingJd || !jobUrl.trim() ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap' as const, opacity: fetchingJd ? 0.65 : 1, transition: 'all 0.15s' }}
             >
               {fetchingJd ? 'Fetching…' : 'Fetch'}
             </button>
@@ -715,7 +715,7 @@ export default function ResumeOptimizer({
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
             <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)' }}>Click to upload or drag & drop</span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>.txt · .pdf · .docx</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>.txt · .pdf · .docx</span>
           </div>
         )}
 
@@ -725,8 +725,8 @@ export default function ResumeOptimizer({
             <span style={{ fontSize: '13px', color: '#22c55e', fontWeight: 500, flex: 1 }}>
               {uploadedFileName ? `✓ ${uploadedFileName}` : `Resume loaded — ${resume.split('\n').filter(Boolean).length} lines`}
             </span>
-            <button type="button" onClick={() => setResume('')} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}>Remove</button>
-            <button type="button" onClick={() => fileInputRef.current?.click()} style={{ fontSize: '11px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>Replace</button>
+            <button type="button" onClick={() => setResume('')} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}>Remove</button>
+            <button type="button" onClick={() => fileInputRef.current?.click()} style={{ fontSize: '12px', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>Replace</button>
           </div>
         )}
 
@@ -736,26 +736,26 @@ export default function ResumeOptimizer({
       {/* ── Target Company + Role ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace" }}>Target Company</label>
+          <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontFamily: "var(--font-mono)" }}>Target Company</label>
           <input
             list="company-suggestions"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             placeholder="e.g. Google, Zscaler…"
-            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const, width: '100%' }}
+            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "var(--font-sans)", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const, width: '100%' }}
           />
           <datalist id="company-suggestions">
             {COMPANIES.map((c) => <option key={c} value={c} />)}
           </datalist>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <label style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace" }}>Target Role</label>
+          <label style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.1em', fontFamily: "var(--font-mono)" }}>Target Role</label>
           <input
             type="text"
             value={role}
             onChange={(e) => setRole(e.target.value)}
             placeholder="e.g. Senior Software Engineer"
-            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const, width: '100%' }}
+            style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '13px', fontFamily: "var(--font-sans)", color: 'var(--text-primary)', background: 'var(--bg-elevated)', outline: 'none', boxSizing: 'border-box' as const, width: '100%' }}
           />
         </div>
       </div>
@@ -765,7 +765,7 @@ export default function ResumeOptimizer({
         type="button"
         onClick={handleGenerateAll}
         disabled={loading}
-        style={{ width: '100%', padding: '12px 20px', border: '1px solid var(--border)', borderRadius: '10px', background: loading ? 'var(--bg-elevated)' : 'var(--accent)', color: '#ffffff', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.65 : 1, transition: 'all 0.15s' }}
+        style={{ width: '100%', padding: '12px 20px', border: '1px solid var(--border)', borderRadius: '10px', background: loading ? 'var(--bg-elevated)' : 'var(--accent)', color: '#ffffff', fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.65 : 1, transition: 'all 0.15s' }}
       >
         {generationStep ? `Generating ${generationStep}…` : 'Generate Resume + Cover Letter + ATS'}
       </button>
@@ -774,8 +774,8 @@ export default function ResumeOptimizer({
       <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
           <div>
-            <span style={{ display: 'block', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: '2px' }}>Output</span>
-            <h3 style={{ fontFamily: "'Clash Display', Satoshi, sans-serif", fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.016em' }}>Document Preview</h3>
+            <span style={{ display: 'block', fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', marginBottom: '2px' }}>Output</span>
+            <h3 style={{ fontFamily: "var(--font-sans)", fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.016em' }}>Document Preview</h3>
           </div>
           {hasOutput && (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -783,12 +783,12 @@ export default function ResumeOptimizer({
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 Preview
               </button>
-              <button type="button" onClick={handleCopy} style={{ padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-surface)', fontFamily: "'JetBrains Mono', 'IBM Plex Mono', monospace", fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <button type="button" onClick={handleCopy} style={{ padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-surface)', fontFamily: "var(--font-mono)", fontSize: '12px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
                 {copied ? 'Copied!' : 'Copy'}
               </button>
               {(['docx', 'pdf'] as const).map((fmt) => (
-                <button key={fmt} type="button" onClick={fmt === 'docx' ? handleDownloadDocx : handleDownloadPdf} style={{ padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-surface)', fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: "Satoshi, 'Plus Jakarta Sans', sans-serif" }}>
+                <button key={fmt} type="button" onClick={fmt === 'docx' ? handleDownloadDocx : handleDownloadPdf} style={{ padding: '6px 14px', border: '1px solid var(--border)', borderRadius: '8px', background: 'var(--bg-surface)', fontSize: '12px', fontWeight: 500, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: "var(--font-sans)" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                   .{fmt}
                 </button>
@@ -865,11 +865,11 @@ export default function ResumeOptimizer({
                   { title: 'Keywords Missing', items: atsData.keywordsMissing || [], pill: '#dc2626', pillBg: 'rgba(220,38,38,.12)' },
                 ].map(({ title, items, pill, pillBg }) => (
                   <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
                     {items.length === 0 ? <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>None</span> : (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {items.map((k: string) => (
-                          <span key={k} style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 999, color: pill, background: pillBg, border: `1px solid ${pill}33` }}>{k}</span>
+                          <span key={k} style={{ fontSize: 12, fontWeight: 600, padding: '3px 9px', borderRadius: 999, color: pill, background: pillBg, border: `1px solid ${pill}33` }}>{k}</span>
                         ))}
                       </div>
                     )}
@@ -882,11 +882,11 @@ export default function ResumeOptimizer({
                 { title: 'Suggestions', items: atsData.suggestions || [], icon: '→', iconColor: '#3b82f6', iconBg: 'rgba(59,130,246,.12)' },
               ].map(({ title, items, icon, iconColor, iconBg }) => items.length > 0 && (
                 <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {items.map((item: string, i: number) => (
                       <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                        <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: '50%', background: iconBg, color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, marginTop: 1 }}>{icon}</span>
+                        <span style={{ flexShrink: 0, width: 20, height: 20, borderRadius: '50%', background: iconBg, color: iconColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, marginTop: 1 }}>{icon}</span>
                         <span style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.55 }}>{item}</span>
                       </div>
                     ))}
@@ -895,7 +895,7 @@ export default function ResumeOptimizer({
               ))}
             </div>
           ) : outputContent && outputContent !== 'ats-rendered' ? (
-            <pre style={{ margin: 0, padding: '20px', fontFamily: "'Source Code Pro', monospace", fontSize: '13px', lineHeight: '1.7', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowY: 'auto', flex: 1 }}>
+            <pre style={{ margin: 0, padding: '20px', fontFamily: "var(--font-mono)", fontSize: '13px', lineHeight: '1.7', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowY: 'auto', flex: 1 }}>
               {outputContent}
             </pre>
           ) : (

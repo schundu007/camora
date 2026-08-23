@@ -107,12 +107,12 @@ export function ApplyAnim() {
             }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-              <span style={{ fontSize: 10, fontWeight: 800, fontFamily: MONO, color: 'var(--text-secondary)', letterSpacing: '0.06em' }}>{j.co}</span>
-              <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{j.role}</span>
+              <span style={{ fontSize: 12, fontWeight: 800, fontFamily: MONO, color: 'var(--text-secondary)', letterSpacing: '0.06em' }}>{j.co}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{j.role}</span>
             </div>
             <span
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 800,
                 padding: '2px 6px',
                 borderRadius: 3,
@@ -147,7 +147,7 @@ export function PrepareAnim() {
               borderRadius: 4,
               padding: '7px 4px',
               textAlign: 'center',
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: 800,
               fontFamily: MONO,
               color: ACCENT,
@@ -183,7 +183,7 @@ export function PracticeAnim() {
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--text-muted)' }} />
         <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
       </div>
-      <div style={{ fontSize: 8.5, lineHeight: 1.55 }}>
+      <div style={{ fontSize: 12, lineHeight: 1.55 }}>
         {lines.map((l, i) => (
           <div
             key={i}
@@ -253,8 +253,8 @@ export function AttendAnim() {
             animation: 'card-dot 1.1s ease-in-out infinite',
           }}
         />
-        <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--danger)', fontFamily: MONO, letterSpacing: '0.18em' }}>LIVE</span>
-        <span style={{ fontSize: 9, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.12em' }}>TRANSCRIBING</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--danger)', fontFamily: MONO, letterSpacing: '0.18em' }}>LIVE</span>
+        <span style={{ fontSize: 12, color: 'var(--text-dimmed)', fontFamily: MONO, letterSpacing: '0.12em' }}>TRANSCRIBING</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 3, height: 38 }}>
@@ -276,7 +276,7 @@ export function AttendAnim() {
 
       <div
         style={{
-          fontSize: 10,
+          fontSize: 12,
           color: 'var(--text-dimmed)',
           fontFamily: MONO,
           lineHeight: 1.3,
@@ -320,8 +320,8 @@ export function FeatureLiveAIAnim() {
             animation: 'card-dot 1.1s ease-in-out infinite',
           }}
         />
-        <span style={{ fontSize: 8, fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.2em' }}>LIVE</span>
-        <span style={{ marginLeft: 'auto', fontSize: 8, color: 'var(--text-dimmed)', letterSpacing: '0.08em' }}>0.3s</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--danger)', letterSpacing: '0.2em' }}>LIVE</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-dimmed)', letterSpacing: '0.08em' }}>0.3s</span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -343,7 +343,7 @@ export function FeatureLiveAIAnim() {
         </div>
         <span
           style={{
-            fontSize: 9,
+            fontSize: 12,
             color: 'var(--border)',
             overflow: 'hidden',
             whiteSpace: 'nowrap',
@@ -356,13 +356,13 @@ export function FeatureLiveAIAnim() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontSize: 8, fontWeight: 800, color: ACCENT, letterSpacing: '0.18em' }}>AI · SKILLS</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, letterSpacing: '0.18em' }}>AI · SKILLS</span>
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {skills.map((s, i) => (
             <span
               key={s}
               style={{
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: 700,
                 padding: '2px 7px',
                 borderRadius: 10,
@@ -453,7 +453,7 @@ export function FeatureJobMatchAnim() {
           <span
             key={s}
             style={{
-              fontSize: 8.5,
+              fontSize: 12,
               fontWeight: 800,
               padding: '2px 7px',
               borderRadius: 3,
@@ -500,10 +500,10 @@ export function FeatureJobMatchAnim() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
-            <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>{c.co}</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>{c.co}</span>
             <span
               style={{
-                fontSize: 9,
+                fontSize: 12,
                 fontWeight: 800,
                 padding: '1px 5px',
                 borderRadius: 3,
@@ -690,7 +690,7 @@ export function FeatureMockSessionAnim() {
                   {g.score}
                 </text>
               </svg>
-              <span style={{ fontSize: 7.5, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.14em' }}>{g.label}</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.14em' }}>{g.label}</span>
             </div>
           );
         })}
@@ -705,7 +705,7 @@ export function FeatureMockSessionAnim() {
           animation: 'card-fade-up 0.45s ease-out 1.7s forwards',
         }}
       >
-        <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.15em' }}>OVERALL</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.15em' }}>OVERALL</span>
         <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, letterSpacing: '0.04em' }}>92 / 100</span>
       </div>
     </div>
@@ -727,22 +727,22 @@ export function FeaturePracticeAnim() {
     <div style={{ ...base, background: '#0D1117', padding: '10px 12px', fontFamily: MONO, display: 'flex', flexDirection: 'column', gap: 0 }}>
       {/* Header row: problem name + difficulty */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, opacity: 0, animation: 'card-fade-up 0.3s ease-out 0.1s forwards' }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>Two Sum</span>
-        <span style={{ fontSize: 8, fontWeight: 800, padding: '1px 6px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>EASY</span>
-        <span style={{ marginLeft: 'auto', fontSize: 8, color: 'rgba(255,255,255,0.3)' }}>#1</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>Two Sum</span>
+        <span style={{ fontSize: 12, fontWeight: 800, padding: '1px 6px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>EASY</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>#1</span>
       </div>
 
       {/* Animated code lines */}
       {codeLines.map((l, i) => (
-        <div key={i} style={{ fontSize: 8.5, color: i === 0 ? '#79c0ff' : i === 1 ? '#e3b341' : 'rgba(255,255,255,0.62)', marginBottom: 2, opacity: 0, animation: `card-fade-up 0.28s ease-out ${l.delay}s forwards`, whiteSpace: 'pre' }}>
+        <div key={i} style={{ fontSize: 12, color: i === 0 ? '#79c0ff' : i === 1 ? '#e3b341' : 'rgba(255,255,255,0.62)', marginBottom: 2, opacity: 0, animation: `card-fade-up 0.28s ease-out ${l.delay}s forwards`, whiteSpace: 'pre' }}>
           {l.text}
         </div>
       ))}
 
       {/* Accepted badge */}
       <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 5, opacity: 0, animation: 'card-fade-up 0.35s ease-out 2.9s forwards' }}>
-        <span style={{ fontSize: 8, fontWeight: 800, color: '#22c55e', letterSpacing: '0.14em' }}>✓ ACCEPTED</span>
-        <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.3)' }}>· Runtime 98%</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: '#22c55e', letterSpacing: '0.14em' }}>✓ ACCEPTED</span>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>· Runtime 98%</span>
       </div>
     </div>
   );
@@ -790,10 +790,10 @@ export function FeaturePlaygroundAnim() {
           }}
         >
           {l.prompt && (
-            <span style={{ fontSize: 9, fontWeight: 700, color: '#3FB950', flexShrink: 0 }}>{l.prompt}</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#3FB950', flexShrink: 0 }}>{l.prompt}</span>
           )}
           {l.cursor ? (
-            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.82)', letterSpacing: '0.02em' }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.82)', letterSpacing: '0.02em' }}>
               root@c3f8a2:/#&nbsp;
               <span
                 style={{
@@ -807,7 +807,7 @@ export function FeaturePlaygroundAnim() {
               />
             </span>
           ) : (
-            <span style={{ fontSize: 9, color: l.muted ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.82)', letterSpacing: '0.02em' }}>
+            <span style={{ fontSize: 12, color: l.muted ? 'rgba(255,255,255,0.38)' : 'rgba(255,255,255,0.82)', letterSpacing: '0.02em' }}>
               {l.cmd}
             </span>
           )}

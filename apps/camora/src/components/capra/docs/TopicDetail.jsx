@@ -34,7 +34,7 @@ import Chip from '@/components/shared/ui/Chip';
 
 /**
  * NumberChip — gold-leaf numbered capsule used for ordered lists across
- * every prepare topic surface. Replaces the tiny `text-[10px]` raw mono
+ * every prepare topic surface. Replaces the tiny sub-floor raw mono
  * labels that were previously scattered through Key Principles, Common
  * Mistakes, Practice Questions, numbered list items inside answer
  * bodies, etc. Single source so they all read with the same chrome.
@@ -42,7 +42,7 @@ import Chip from '@/components/shared/ui/Chip';
 function NumberChip({ n, mt = '' }) {
   return (
     <span
-      className={`inline-flex items-center justify-center min-w-[28px] h-[22px] px-1.5 text-[11px] font-bold landing-mono tabular-nums flex-shrink-0 ${mt}`}
+      className={`inline-flex items-center justify-center min-w-[28px] h-[22px] px-1.5 text-[12px] font-bold landing-mono tabular-nums flex-shrink-0 ${mt}`}
       style={{
         background: 'var(--cam-gold-leaf-50)',
         color: 'var(--cam-gold-leaf-text)',
@@ -221,7 +221,7 @@ function EraserDiagramSection({ topicId, count }) {
           onClick={() => setExpanded(true)}
           className="ml-auto chip"
           data-tip="View full size"
-          style={{ fontSize: 11 }}
+          style={{ fontSize: 12 }}
         >
           ⤢ Expand
         </button>
@@ -239,7 +239,7 @@ function EraserDiagramSection({ topicId, count }) {
             className="block max-w-full h-auto mx-auto"
             onError={() => setFailed(true)}
           />
-          <span className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[10px] rounded px-2 py-0.5 pointer-events-none">
+          <span className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[12px] rounded px-2 py-0.5 pointer-events-none">
             click to expand
           </span>
         </div>
@@ -415,15 +415,15 @@ function DataModelSection({ schema, examples, diagramSrc }) {
               <div className="px-3 py-2 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center gap-2">
                 <Icon name="database" size={12} className="text-[var(--text-muted)]" />
                 <span className="text-sm font-bold text-[var(--text-primary)] landing-mono">{table.name}</span>
-                <span className="text-[10px] text-[var(--text-muted)] landing-mono ml-auto">{table.fields.length} fields</span>
+                <span className="text-[12px] text-[var(--text-muted)] landing-mono ml-auto">{table.fields.length} fields</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-[var(--bg-elevated)]/50">
-                      <th className="text-left px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-display border-b border-[var(--border)]">Field</th>
-                      <th className="text-left px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-display border-b border-[var(--border)]">Type</th>
-                      <th className="text-left px-3 py-1.5 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-display border-b border-[var(--border)]">Notes</th>
+                      <th className="text-left px-3 py-1.5 text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-display border-b border-[var(--border)]">Field</th>
+                      <th className="text-left px-3 py-1.5 text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-display border-b border-[var(--border)]">Type</th>
+                      <th className="text-left px-3 py-1.5 text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-display border-b border-[var(--border)]">Notes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -431,14 +431,14 @@ function DataModelSection({ schema, examples, diagramSrc }) {
                       <tr key={fi} className="hover:bg-[var(--bg-elevated)]/30 transition-colors border-b border-[var(--border)] last:border-b-0">
                         <td className="px-3 py-2 font-medium text-[var(--text-primary)] landing-mono text-xs">{field.name}</td>
                         <td className="px-3 py-2">
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded landing-mono ${typeColor(field.type)}`}>{field.type}</span>
+                          <span className={`text-[12px] font-semibold px-1.5 py-0.5 rounded landing-mono ${typeColor(field.type)}`}>{field.type}</span>
                         </td>
                         <td className="px-3 py-2 text-xs text-[var(--text-muted)] landing-body">
                           {field.notes && (
                             <>
-                              {field.notes.match(/PK|PRIMARY/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] mr-1 landing-mono">PK</span>}
-                              {field.notes.match(/FK|FOREIGN|REFERENCES/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] mr-1 landing-mono">FK</span>}
-                              {field.notes.match(/NOT NULL/i) && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] mr-1 landing-mono">NOT NULL</span>}
+                              {field.notes.match(/PK|PRIMARY/i) && <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] mr-1 landing-mono">PK</span>}
+                              {field.notes.match(/FK|FOREIGN|REFERENCES/i) && <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] mr-1 landing-mono">FK</span>}
+                              {field.notes.match(/NOT NULL/i) && <span className="text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)] mr-1 landing-mono">NOT NULL</span>}
                               <span>{field.notes.replace(/(PK|PRIMARY KEY|FK|FOREIGN KEY|NOT NULL|REFERENCES\s+\w+)/gi, '').replace(/,/g, '').trim()}</span>
                             </>
                           )}
@@ -459,10 +459,10 @@ function DataModelSection({ schema, examples, diagramSrc }) {
               {examples.map((ex, i) => (
                 <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
                   <div className="px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold text-[var(--accent)] landing-mono">{ex.table}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] landing-body">— {ex.label}</span>
+                    <span className="text-[12px] font-bold text-[var(--accent)] landing-mono">{ex.table}</span>
+                    <span className="text-[12px] text-[var(--text-muted)] landing-body">— {ex.label}</span>
                   </div>
-                  <pre className="p-2.5 text-[11px] leading-relaxed landing-mono text-[var(--text-secondary)] overflow-x-auto" style={{ background: 'var(--bg-surface)' }}>{ex.json}</pre>
+                  <pre className="p-2.5 text-[14px] leading-relaxed landing-mono text-[var(--text-secondary)] overflow-x-auto" style={{ background: 'var(--bg-surface)' }}>{ex.json}</pre>
                 </div>
               ))}
             </div>
@@ -482,7 +482,7 @@ function DataModelSection({ schema, examples, diagramSrc }) {
         <div className="overflow-x-auto rounded border border-[var(--border)] flex-1 min-w-0">
           <table className="w-full text-xs">
             <thead><tr className="bg-[var(--bg-elevated)] border-b border-[var(--border)]">
-              {head.map((h, j) => <th key={j} className="px-3 py-2 text-left text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-mono whitespace-nowrap">{h}</th>)}
+              {head.map((h, j) => <th key={j} className="px-3 py-2 text-left text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-wider landing-mono whitespace-nowrap">{h}</th>)}
             </tr></thead>
             <tbody>{body.map((row, ri) => (
               <tr key={ri} className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--bg-elevated)]/30">
@@ -500,7 +500,7 @@ function DataModelSection({ schema, examples, diagramSrc }) {
         <div className="p-4 space-y-4">
           {asciiBlocks.map((block, bi) => {
             if (block.type === 'heading') return (
-              <h4 key={bi} className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-widest landing-mono border-b border-[var(--border)] pb-2 pt-2 first:pt-0">{block.text}</h4>
+              <h4 key={bi} className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-widest landing-mono border-b border-[var(--border)] pb-2 pt-2 first:pt-0">{block.text}</h4>
             );
             if (block.type === 'prose') return (
               <p key={bi} className="text-sm text-[var(--text-secondary)] landing-body">{block.text}</p>
@@ -534,7 +534,7 @@ function DataModelSection({ schema, examples, diagramSrc }) {
         </div>
         <button
           onClick={handleCopy}
-          className="text-[11px] font-medium px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1.5"
+          className="text-[12px] font-medium px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--bg-surface)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1.5"
         >
           {copied ? (
             <><svg className="w-3 h-3 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> Copied</>
@@ -548,7 +548,7 @@ function DataModelSection({ schema, examples, diagramSrc }) {
           <tbody>
             {schemaLines.map((line, i) => (
               <tr key={i} className="hover:bg-[var(--bg-elevated)]/30">
-                <td className="text-right pr-3 pl-3 py-0 select-none text-[10px] text-[var(--text-muted)] landing-mono" style={{ minWidth: '2.5rem', lineHeight: '1.375rem' }}>{i + 1}</td>
+                <td className="text-right pr-3 pl-3 py-0 select-none text-[12px] text-[var(--text-muted)] landing-mono" style={{ minWidth: '2.5rem', lineHeight: '1.375rem' }}>{i + 1}</td>
                 <td className="pr-4 py-0 landing-mono text-xs whitespace-pre" style={{ lineHeight: '1.375rem' }}>
                   {(() => {
                     // Simple syntax coloring
@@ -887,7 +887,7 @@ export default function TopicDetail({
             <span className="text-[var(--text-primary)] font-semibold truncate" aria-current="page" data-tip={topicDetails.title}>{topicDetails.title}</span>
           </nav>
           <div className="flex items-center gap-1 shrink-0">
-            {currentIndex >= 0 && filteredTopics && <span className="text-[var(--text-muted)] text-[10px] mr-2" style={{ fontFamily: 'var(--font-mono)' }}>{currentIndex + 1}/{filteredTopics.length}</span>}
+            {currentIndex >= 0 && filteredTopics && <span className="text-[var(--text-muted)] text-[12px] mr-2" style={{ fontFamily: 'var(--font-mono)' }}>{currentIndex + 1}/{filteredTopics.length}</span>}
             <button onClick={() => prevTopic && setSelectedTopic(prevTopic.id)} disabled={!prevTopic} className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] disabled:opacity-30 transition-colors"><Icon name="chevronLeft" size={16} /></button>
             <button onClick={() => nextTopic && setSelectedTopic(nextTopic.id)} disabled={!nextTopic} className="p-1 rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] disabled:opacity-30 transition-colors"><Icon name="chevronRight" size={16} /></button>
           </div>
@@ -937,7 +937,7 @@ export default function TopicDetail({
               {topicDetails.subtitle && !topicDetails.difficulty && (
                 <p className="text-[12px] mt-1 landing-body" style={{ color: 'var(--cam-strip-text-muted)' }}>{fmtCloud(topicDetails.subtitle)}</p>
               )}
-              <div className="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-[10px] uppercase tracking-[0.12em] landing-mono" style={{ color: 'var(--cam-strip-text-muted)' }}>
+              <div className="flex items-center gap-x-3 gap-y-1 mt-2 flex-wrap text-[12px] uppercase tracking-[0.12em] landing-mono" style={{ color: 'var(--cam-strip-text-muted)' }}>
                 {pageConfig?.title && <span>{pageConfig.title}</span>}
                 <span>ID · {selectedTopic}</span>
                 {(activePage === 'behavioral' || activePage === 'low-level' || isSDStyle) && (
@@ -1019,8 +1019,8 @@ export default function TopicDetail({
                 />
               </svg>
               <div className="flex flex-col leading-none gap-px">
-                <span className="text-[9px] font-bold uppercase tracking-widest landing-mono" style={{ color: 'var(--text-muted)' }}>Section</span>
-                <span className="text-[11px] font-bold landing-mono" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-[12px] font-bold uppercase tracking-widest landing-mono" style={{ color: 'var(--text-muted)' }}>Section</span>
+                <span className="text-[12px] font-bold landing-mono" style={{ color: 'var(--text-primary)' }}>
                   {progressInfo.completed}<span style={{ color: 'var(--text-muted)' }}>/{progressInfo.total} done</span>
                 </span>
               </div>
@@ -1095,7 +1095,7 @@ export default function TopicDetail({
                   {previewQuestions.map((qa, i) => (
                     <div key={i} className="px-3 py-2.5">
                       <div className="flex items-start gap-2">
-                        <span className="w-5 h-5 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-[var(--text-secondary)]">{i + 1}</span>
+                        <span className="w-5 h-5 rounded-md bg-[var(--bg-elevated)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 mt-0.5 text-[12px] font-bold text-[var(--text-secondary)]">{i + 1}</span>
                         <span className="text-[16px] font-semibold text-[var(--text-primary)]">{qa.question}</span>
                       </div>
                       {i === 0 && qa.answer && (
@@ -1251,7 +1251,7 @@ export default function TopicDetail({
                     rel="noopener noreferrer"
                     className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--bg-elevated)]/80 transition-colors group"
                   >
-                    <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold landing-mono bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]">
+                    <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 mt-0.5 text-[12px] font-bold landing-mono bg-[var(--bg-elevated)] text-[var(--text-muted)] border border-[var(--border)]">
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">
@@ -1328,7 +1328,7 @@ export default function TopicDetail({
                 <div className="flex items-center gap-1 min-w-max">
                   {topicDetails.phases.map((phase, i) => (
                     <div key={i} className="flex items-center gap-1">
-                      <a href={`#phase-${i}`} className="px-3 py-1.5 rounded text-[11px] font-bold text-white whitespace-nowrap landing-display hover:opacity-90 transition-opacity" style={{ background: phase.color }}>
+                      <a href={`#phase-${i}`} className="px-3 py-1.5 rounded text-[12px] font-bold text-white whitespace-nowrap landing-display hover:opacity-90 transition-opacity" style={{ background: phase.color }}>
                         {phase.title}
                       </a>
                       {i < topicDetails.phases.length - 1 && (
@@ -1350,7 +1350,7 @@ export default function TopicDetail({
                         {phaseIdx + 1}
                       </div>
                       <h4 className="text-sm font-bold text-[var(--text-primary)] landing-display flex-1">{phase.title}</h4>
-                      <span className="text-[10px] landing-mono text-[var(--text-muted)]">{phase.topics.length} topics</span>
+                      <span className="text-[12px] landing-mono text-[var(--text-muted)]">{phase.topics.length} topics</span>
                     </div>
                     <div className="px-4 py-3 bg-[var(--bg-elevated)] flex flex-wrap gap-2">
                       {phase.topics.map((topic, tIdx) => (
@@ -1584,7 +1584,7 @@ export default function TopicDetail({
                         <div key={vi} className={`rounded border border-[var(--border)] overflow-hidden${useGrid && viz.isWide ? ' md:col-span-2' : ''}`}>
                           <div className="px-3 py-2 border-b border-[var(--border)] bg-[var(--bg-elevated)]/50">
                             <h4 className="text-xs font-semibold text-[var(--text-secondary)] landing-display">{viz.title}</h4>
-                            {viz.description && <p className="text-[11px] text-[var(--text-muted)] mt-0.5 landing-body">{fmtCloud(viz.description)}</p>}
+                            {viz.description && <p className="text-[14px] text-[var(--text-muted)] mt-0.5 landing-body">{fmtCloud(viz.description)}</p>}
                           </div>
                           <div className="bg-[var(--bg-surface)]" dangerouslySetInnerHTML={{ __html: svgHtml }} />
                         </div>
@@ -1607,7 +1607,7 @@ export default function TopicDetail({
                       {i < topicDetails.approach.length - 1 && (
                         <div className="absolute left-[11px] top-6 w-0.5 bg-[var(--accent)]/30" style={{ height: 'calc(100% - 4px)' }} />
                       )}
-                      <div className="w-6 h-6 rounded-full bg-[var(--accent)]/100 text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
+                      <div className="w-6 h-6 rounded-full bg-[var(--accent)]/100 text-white flex items-center justify-center text-[12px] font-bold flex-shrink-0 z-10 landing-mono">{i + 1}</div>
                       <div className="text-sm text-[var(--text-secondary)] leading-relaxed pb-4 landing-body"><FormattedContent content={step} inline /></div>
                     </div>
                   ))}
@@ -1627,7 +1627,7 @@ export default function TopicDetail({
                       <Icon name="clock" size={16} className="text-[var(--accent)]" />
                     </div>
                     <div>
-                      <div className="text-[10px] font-bold text-[var(--accent)] landing-mono tracking-widest uppercase mb-1">Time</div>
+                      <div className="text-[12px] font-bold text-[var(--accent)] landing-mono tracking-widest uppercase mb-1">Time</div>
                       <div className="text-[16px] font-bold text-[var(--text-primary)] font-mono landing-mono">{topicDetails.timeComplexity}</div>
                     </div>
                   </div>
@@ -1641,7 +1641,7 @@ export default function TopicDetail({
                       <Icon name="layers" size={16} className="text-[var(--text-secondary)]" />
                     </div>
                     <div>
-                      <div className="text-[10px] font-bold text-[var(--text-secondary)] landing-mono tracking-widest uppercase mb-1">Space</div>
+                      <div className="text-[12px] font-bold text-[var(--text-secondary)] landing-mono tracking-widest uppercase mb-1">Space</div>
                       <div className="text-[16px] font-bold text-[var(--text-primary)] font-mono landing-mono">{topicDetails.spaceComplexity}</div>
                     </div>
                   </div>
@@ -1685,17 +1685,17 @@ export default function TopicDetail({
                               const c = langColors[lang] || 'gray';
                               return (
                                 <button key={lang} onClick={() => setCodeLanguage(lang)}
-                                  className={`text-[10px] landing-mono px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${isActive ? `text-${c}-300 bg-${c}-900/50 border-${c}-700/50` : 'text-[var(--text-muted)] bg-transparent border-[var(--border)] hover:text-[var(--text-muted)]'}`}
+                                  className={`text-[12px] landing-mono px-2 py-0.5 rounded-full border transition-colors cursor-pointer ${isActive ? `text-${c}-300 bg-${c}-900/50 border-${c}-700/50` : 'text-[var(--text-muted)] bg-transparent border-[var(--border)] hover:text-[var(--text-muted)]'}`}
                                   style={isActive ? { color: c === 'yellow' ? '#FFFFFF' : undefined, background: c === 'yellow' ? 'rgba(122,92,10,0.3)' : undefined } : {}}
                                 >{lang.charAt(0).toUpperCase() + lang.slice(1)}</button>
                               );
                             })}
                           </div>
                         ) : (
-                          <span className="text-[10px] landing-mono text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded uppercase tracking-[0.12em] ml-1 flex-shrink-0">{activeEx.language || 'Python'}</span>
+                          <span className="text-[12px] landing-mono text-[#94a3b8] bg-[#1e293b] border border-[#334155] px-1.5 py-0.5 rounded uppercase tracking-[0.12em] ml-1 flex-shrink-0">{activeEx.language || 'Python'}</span>
                         )}
                         <button
-                          className="ml-auto text-[10px] landing-mono text-[var(--text-muted)] hover:text-white transition-colors flex items-center gap-1 flex-shrink-0"
+                          className="ml-auto text-[12px] landing-mono text-[var(--text-muted)] hover:text-white transition-colors flex items-center gap-1 flex-shrink-0"
                           onClick={() => { navigator.clipboard.writeText(activeEx.code); setCopiedCodeIdx(activeEx._idx); setTimeout(() => setCopiedCodeIdx(null), 2000); }}
                         >
                           <Icon name={copiedCodeIdx === activeEx._idx ? 'check' : 'copy'} size={12} className={copiedCodeIdx === activeEx._idx ? 'text-[var(--accent)]' : ''} />
@@ -1736,7 +1736,7 @@ export default function TopicDetail({
               <ContentHeading title="Practice Problems" actions={<GlassPill>{topicDetails.commonProblems.length}</GlassPill>} />
               <div className="overflow-hidden">
                 {/* Table header */}
-                <div className="grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] text-[10px] font-bold text-[var(--text-muted)] landing-mono uppercase tracking-wider">
+                <div className="grid grid-cols-[32px_1fr_64px_72px] items-center px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--border)] text-[12px] font-bold text-[var(--text-muted)] landing-mono uppercase tracking-wider">
                   <span>#</span>
                   <span>Problem</span>
                   <span className="text-center">Diff.</span>
@@ -1783,7 +1783,7 @@ export default function TopicDetail({
                       <span className="flex justify-center">
                         {solvable
                           ? <Chip variant="default">Solve</Chip>
-                          : <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] landing-mono">Study</span>}
+                          : <span className="text-[12px] uppercase tracking-wider text-[var(--text-muted)] landing-mono">Study</span>}
                       </span>
                     </>
                   );
@@ -1810,7 +1810,7 @@ export default function TopicDetail({
                 pills={[topicDetails.theoryQuestions.length]}
                 actions={
                   <button
-                    className="text-[10px] landing-mono text-white/85 hover:text-white transition-colors font-medium"
+                    className="text-[12px] landing-mono text-white/85 hover:text-white transition-colors font-medium"
                     onClick={() => {
                       const newVal = !codingAllQsExpanded;
                       setCodingAllQsExpanded(newVal);
@@ -1835,7 +1835,7 @@ export default function TopicDetail({
                           onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !prev[questionKey] }))}
                           className="w-full flex items-center gap-2 p-3 hover:bg-[var(--bg-elevated)] transition-colors text-left"
                         >
-                          <span className="w-6 h-6 rounded-md flex items-center justify-center text-[11px] landing-mono bg-[var(--bg-elevated)] text-[var(--text-secondary)] font-bold flex-shrink-0">{i + 1}</span>
+                          <span className="w-6 h-6 rounded-md flex items-center justify-center text-[12px] landing-mono bg-[var(--bg-elevated)] text-[var(--text-secondary)] font-bold flex-shrink-0">{i + 1}</span>
                           <span className="text-[var(--text-primary)] text-sm font-medium flex-1 landing-body">{q.question}</span>
                           {q.difficulty && (
                             <Chip variant={
@@ -1909,7 +1909,7 @@ export default function TopicDetail({
                             {topicDetails.productMeta.stats.map((stat, i) => (
                               <div key={i} className="text-center">
                                 <div className="text-lg font-bold landing-mono text-[var(--text-primary)]">{stat.value}</div>
-                                <div className="text-[10px] uppercase tracking-wider text-[var(--text-muted)] landing-mono">{stat.label}</div>
+                                <div className="text-[12px] uppercase tracking-wider text-[var(--text-muted)] landing-mono">{stat.label}</div>
                               </div>
                             ))}
                           </div>
@@ -2110,14 +2110,14 @@ export default function TopicDetail({
                     alt="Layered Design"
                     className="mb-3"
                   />
-                  <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 mt-1 landing-mono uppercase tracking-widest">Layer Breakdown</p>
+                  <p className="text-[12px] font-bold text-[var(--text-muted)] mb-2 mt-1 landing-mono uppercase tracking-widest">Layer Breakdown</p>
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                     {effectiveLayeredDesign.map((layer, i) => (
                       <div key={i}>
                         {i > 0 && <div style={{ height: 1, background: 'var(--border)' }} />}
                         <div className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--bg-elevated)] transition-colors">
                           <span
-                            className="flex-shrink-0 flex items-center justify-center text-[10px] font-bold mt-0.5"
+                            className="flex-shrink-0 flex items-center justify-center text-[12px] font-bold mt-0.5"
                             style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--bg-elevated)', color: 'var(--cam-gold-leaf)', border: '1px solid var(--border)' }}
                           >
                             {i + 1}
@@ -2167,7 +2167,7 @@ export default function TopicDetail({
                     <div className="space-y-8 mt-4">
                       {gen.tradeoffs.map(t => (
                         <div key={t.id}>
-                          <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 landing-mono uppercase tracking-widest">{t.title}</p>
+                          <p className="text-[12px] font-bold text-[var(--text-muted)] mb-2 landing-mono uppercase tracking-widest">{t.title}</p>
                           <TopicDiagram
                             topicId={topicDetails.id || selectedTopic}
                             kind={`tradeoff-${t.id}`}
@@ -2209,7 +2209,7 @@ export default function TopicDetail({
                         )}
                         {topicDetails.basicImplementation.problems && (
                           <div>
-                            <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-2 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues with this approach</h4>
+                            <h4 className="text-[var(--text-muted)] text-[12px] font-bold mb-2 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues with this approach</h4>
                             <div className="grid grid-cols-1 gap-1">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
                                 <div key={i} className="flex items-start gap-2.5 px-2 py-1.5 rounded text-sm landing-body" style={{ background: 'color-mix(in oklab, var(--warning, #f59e0b) 6%, transparent)', border: '1px solid color-mix(in oklab, var(--warning, #f59e0b) 18%, transparent)' }}>
@@ -2248,7 +2248,7 @@ export default function TopicDetail({
                         )}
                         {topicDetails.advancedImplementation.keyPoints && (
                           <div className="mb-3">
-                            <h4 className="text-[var(--text-muted)] text-[10px] font-bold mb-2 landing-mono uppercase tracking-[0.16em]">Key architectural decisions</h4>
+                            <h4 className="text-[var(--text-muted)] text-[12px] font-bold mb-2 landing-mono uppercase tracking-[0.16em]">Key architectural decisions</h4>
                             <div className="grid grid-cols-1 gap-1">
                               {topicDetails.advancedImplementation.keyPoints.map((point, i) => (
                                 <div key={i} className="flex items-start gap-2.5 px-2 py-1.5 rounded text-sm landing-body" style={{ background: 'color-mix(in oklab, var(--accent) 6%, transparent)', border: '1px solid color-mix(in oklab, var(--accent) 18%, transparent)' }}>
@@ -2288,7 +2288,7 @@ export default function TopicDetail({
                           <ol className="space-y-1">
                             {topicDetails.createFlow.steps.map((step, i) => (
                               <li key={i} className="flex items-start gap-2 py-1">
-                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
+                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
                                 <span className="text-[var(--text-secondary)] text-sm landing-body"><FormattedContent content={step} inline /></span>
                               </li>
                             ))}
@@ -2317,7 +2317,7 @@ export default function TopicDetail({
                           <ol className="space-y-1">
                             {topicDetails.redirectFlow.steps.map((step, i) => (
                               <li key={i} className="flex items-start gap-2 py-1">
-                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
+                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 bg-[var(--accent)]/10 text-[var(--accent)] landing-mono mt-0.5">{i + 1}</span>
                                 <span className="text-[var(--text-secondary)] text-sm landing-body"><FormattedContent content={step} inline /></span>
                               </li>
                             ))}
@@ -2352,7 +2352,7 @@ export default function TopicDetail({
                           {topicDetails.apiDesign.endpoints.map((endpoint, i) => (
                             <div key={i} className="rounded p-3.5 border border-[var(--border)] hover:border-[var(--border-hover,var(--border))]  transition-colors">
                               <div className="flex items-center gap-2.5 mb-2">
-                                <span className={`text-[10px] landing-mono px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] uppercase tracking-[0.14em] ${
+                                <span className={`text-[12px] landing-mono px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--bg-surface)] uppercase tracking-[0.14em] ${
                                   endpoint.method === 'GET' ? 'font-medium text-[var(--text-muted)]' :
                                   endpoint.method === 'POST' || endpoint.method === 'INSERT' ? 'font-semibold text-[var(--text-primary)]' :
                                   endpoint.method === 'PUT' || endpoint.method === 'UPDATE' ? 'font-semibold text-[var(--text-primary)]' :
@@ -2457,7 +2457,7 @@ export default function TopicDetail({
                           {topicDetails.keyDecisions.map((decision, i) => (
                             <div key={i} className="p-3 rounded border border-[var(--border)] hover:border-[var(--accent)]/20 transition-colors">
                               <div className="flex items-center gap-2 mb-1.5">
-                                <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 bg-[var(--accent)] text-white landing-mono">
+                                <span className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 bg-[var(--accent)] text-white landing-mono">
                                   {i + 1}
                                 </span>
                               </div>
@@ -2539,11 +2539,11 @@ export default function TopicDetail({
                           </div>
                           <div className="ml-8 grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div className="px-3 py-2 rounded bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-                              <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Pros</span>
+                              <span className="text-[12px] font-bold text-[var(--accent)] uppercase tracking-wider landing-mono">Pros</span>
                               <p className="text-[var(--accent)] text-xs leading-relaxed mt-0.5 landing-body">{t.pros}</p>
                             </div>
                             <div className="px-3 py-2 rounded bg-[var(--bg-elevated)] border border-[var(--border)]">
-                              <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Cons</span>
+                              <span className="text-[12px] font-bold text-[var(--text-secondary)] uppercase tracking-wider landing-mono">Cons</span>
                               <p className="text-[var(--text-primary)] text-xs leading-relaxed mt-0.5 landing-body">{t.cons}</p>
                             </div>
                           </div>
@@ -2572,13 +2572,13 @@ export default function TopicDetail({
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-1.5">
                             <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--border)]">
-                              <span className="text-[10px] font-bold text-[var(--text-muted)] landing-mono">{i + 1}</span>
+                              <span className="text-[12px] font-bold text-[var(--text-muted)] landing-mono">{i + 1}</span>
                             </span>
                             <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{ec.scenario}</h4>
                           </div>
                           <p className="text-[var(--text-secondary)] text-xs leading-relaxed ml-8 landing-body">{fmtCloud(ec.impact)}</p>
                           <div className="ml-8 mt-2 pl-3 py-1 border-l-2 border-[var(--accent)]">
-                            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-[0.14em] landing-mono">Mitigation</span>
+                            <span className="text-[12px] font-bold text-[var(--text-muted)] uppercase tracking-[0.14em] landing-mono">Mitigation</span>
                             <p className="text-[var(--text-secondary)] text-xs leading-relaxed mt-0.5 landing-body">{ec.mitigation}</p>
                           </div>
                         </div>
@@ -2626,7 +2626,7 @@ export default function TopicDetail({
                             {hasMore && (
                               <button
                                 onClick={() => setSdExpandedDPs(prev => ({ ...prev, [i]: !prev[i] }))}
-                                className="ml-8 mt-2 text-[11px] font-medium text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1"
+                                className="ml-8 mt-2 text-[12px] font-medium text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors landing-mono flex items-center gap-1"
                               >
                                 {isExpanded ? 'Show less' : `Show ${point.points.length - 2} more`}
                                 <svg className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
@@ -2729,7 +2729,7 @@ export default function TopicDetail({
                           }
                           setSdAllQsExpanded(!sdAllQsExpanded);
                         }}
-                        className="text-[11px] font-medium text-white/85 hover:text-white transition-colors landing-mono flex items-center gap-1"
+                        className="text-[12px] font-medium text-white/85 hover:text-white transition-colors landing-mono flex items-center gap-1"
                       >
                         {sdAllQsExpanded ? 'Collapse all' : 'Expand all'}
                         <svg className={`w-3 h-3 transition-transform ${sdAllQsExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
@@ -2922,7 +2922,7 @@ export default function TopicDetail({
         const SlideEyebrow = ({ id }) => (
           <div className="flex items-center gap-3 mb-2">
             <span
-              className="text-[11px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded"
+              className="text-[12px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded"
               style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
@@ -2931,7 +2931,7 @@ export default function TopicDetail({
             >
               {slideNum(id)} / {String(agenda.length).padStart(2, '0')}
             </span>
-            <span className="text-[10px] uppercase tracking-[0.18em] landing-mono text-[var(--text-muted)]">
+            <span className="text-[12px] uppercase tracking-[0.18em] landing-mono text-[var(--text-muted)]">
               {agenda.find(a => a.id === id)?.label}
             </span>
           </div>
@@ -2979,7 +2979,7 @@ export default function TopicDetail({
                   <div key={i} className="rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-elevated)]">
                     <div className="px-5 py-3 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-3">
                       <span
-                        className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
+                        className="text-[12px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded flex-shrink-0"
                         style={{ color: 'var(--cam-gold-leaf, #c9a55d)', background: 'rgba(201,165,93,0.08)', border: '1px solid rgba(201,165,93,0.3)' }}
                       >
                         {String(i + 1).padStart(2, '0')}
@@ -3088,7 +3088,7 @@ export default function TopicDetail({
                     >
                       <div className="px-4 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elevated)]/40 flex items-center gap-2.5">
                         <span
-                          className="text-[10px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded"
+                          className="text-[12px] font-bold landing-mono tabular-nums px-1.5 py-0.5 rounded"
                           style={{
                             color: 'var(--cam-gold-leaf, #c9a55d)',
                             background: 'rgba(201, 165, 93, 0.08)',
@@ -3185,7 +3185,7 @@ export default function TopicDetail({
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [questionKey]: !isExpanded }))}
                         className="w-full py-2 flex items-baseline gap-3 hover:opacity-80 transition-opacity text-left"
                       >
-                        <span className="text-[11px] font-bold landing-mono tabular-nums flex-shrink-0" style={{ color: 'var(--cam-gold-leaf, #c9a55d)' }}>
+                        <span className="text-[12px] font-bold landing-mono tabular-nums flex-shrink-0" style={{ color: 'var(--cam-gold-leaf, #c9a55d)' }}>
                           Q{String(index + 1).padStart(2, '0')}
                         </span>
                         <h4 className="text-[var(--text-primary)] font-semibold text-[17px] leading-snug landing-display flex-1">{item.question || item.q}</h4>
@@ -3222,7 +3222,7 @@ export default function TopicDetail({
                 </div>
               </div>
               {topicDetails.video.courtesy && (
-                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>
                   {'Courtesy: '}
                   <a href={topicDetails.video.courtesyUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
                     {topicDetails.video.courtesy}
@@ -3246,7 +3246,7 @@ export default function TopicDetail({
                         onClick={() => setExpandedTheoryQuestions(prev => ({ ...prev, [qKey]: !isExpanded }))}
                         className="w-full py-2 flex items-baseline gap-3 hover:opacity-80 transition-opacity text-left"
                       >
-                        <span className="text-[11px] font-bold landing-mono tabular-nums flex-shrink-0" style={{ color: 'var(--cam-gold-leaf, #c9a55d)' }}>
+                        <span className="text-[12px] font-bold landing-mono tabular-nums flex-shrink-0" style={{ color: 'var(--cam-gold-leaf, #c9a55d)' }}>
                           Q{String(index + 1).padStart(2, '0')}
                         </span>
                         <h4 className="text-[var(--text-primary)] font-semibold text-[17px] leading-snug landing-display flex-1">{item.q}</h4>
@@ -3283,7 +3283,7 @@ export default function TopicDetail({
                           rel="noopener noreferrer"
                           className="flex items-start gap-2.5 px-2 py-1.5 -mx-2 rounded hover:bg-[var(--bg-elevated)] transition-colors landing-body group"
                         >
-                          <span className="text-[10px] font-bold landing-mono tabular-nums mt-1 flex-shrink-0 text-[var(--text-muted)]">[{String(i + 1).padStart(2, '0')}]</span>
+                          <span className="text-[12px] font-bold landing-mono tabular-nums mt-1 flex-shrink-0 text-[var(--text-muted)]">[{String(i + 1).padStart(2, '0')}]</span>
                           <Icon name="externalLink" size={11} className="text-[var(--text-muted)] mt-1 flex-shrink-0" />
                           <span className="text-[13px] text-[var(--text-secondary)] group-hover:text-[var(--accent)] group-hover:underline break-all landing-mono">{url}</span>
                         </a>
@@ -3317,7 +3317,7 @@ export default function TopicDetail({
                 <div className="pt-3 space-y-6">
                   {gen.tradeoffs.map(t => (
                     <div key={t.id}>
-                      <p className="text-[11px] font-bold text-[var(--text-muted)] mb-2 landing-mono uppercase tracking-widest">{t.title}</p>
+                      <p className="text-[12px] font-bold text-[var(--text-muted)] mb-2 landing-mono uppercase tracking-widest">{t.title}</p>
                       <TopicDiagram
                         topicId={topicDetails.id || selectedTopic}
                         kind={`tradeoff-${t.id}`}
@@ -3402,7 +3402,7 @@ export default function TopicDetail({
                       />
                       <div className="flex items-center gap-2 mb-1">
                         <span
-                          className="text-[10px] font-semibold tracking-wider px-2 py-0.5 landing-mono tabular-nums"
+                          className="text-[12px] font-semibold tracking-wider px-2 py-0.5 landing-mono tabular-nums"
                           style={{
                             background: 'var(--bg-elevated)',
                             border: '1px solid var(--border)',
@@ -3441,7 +3441,7 @@ export default function TopicDetail({
                     </div>
                   ))}
                 </div>
-                <div className="mt-5 pt-3 border-t border-[var(--border)] flex items-center gap-5 text-[10px] uppercase tracking-[0.12em] text-[var(--text-muted)] landing-mono">
+                <div className="mt-5 pt-3 border-t border-[var(--border)] flex items-center gap-5 text-[12px] uppercase tracking-[0.12em] text-[var(--text-muted)] landing-mono">
                   <span className="flex items-center gap-1.5">
                     <Icon name="clock" size={11} />
                     <span>~{Math.ceil(topicDetails.exampleResponse.split(' ').length / 150)} min speaking</span>
@@ -3598,7 +3598,7 @@ export default function TopicDetail({
             </div>
           </div>
           {topicDetails.lastUpdated && (
-            <span className="text-[11px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+            <span className="text-[12px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
               Last updated {topicDetails.lastUpdated}
             </span>
           )}
@@ -3644,7 +3644,7 @@ export default function TopicDetail({
                 />
                 <div className="text-[13px] font-semibold" style={{ color: 'var(--text-primary)' }}>Sudhakar Chundu</div>
               </div>
-              <div className="text-[9px] uppercase tracking-[0.1em] landing-mono leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              <div className="text-[12px] uppercase tracking-[0.1em] landing-mono leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 18+ yrs · GPU Compute · SRE · Platform · FinOps
               </div>
             </div>
@@ -3668,7 +3668,7 @@ export default function TopicDetail({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Architecture Diagram</h3>
-                  <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{topicDetails?.title}</p>
+                  <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{topicDetails?.title}</p>
                 </div>
               </div>
               <button onClick={() => setDiagramPanelOpen(false)} className="p-2 rounded hover:bg-[var(--bg-elevated)] transition-colors" style={{ color: 'var(--text-muted)' }}>
@@ -3700,9 +3700,9 @@ export default function TopicDetail({
               {/* Admin regen */}
               {isAdmin && (
                 <div className="flex items-center gap-2 ml-auto">
-                  <button onClick={() => handleAdminRegen('python')} className="px-2 py-1 text-[10px] font-mono font-bold rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>Python</button>
-                  <button onClick={() => handleAdminRegen('eraser')} className="px-2 py-1 text-[10px] font-mono font-bold rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>Eraser</button>
-                  {adminRegenStatus && <span className="text-[10px] font-mono" style={{ color: adminRegenStatus.includes('done') ? 'var(--success)' : 'var(--text-primary)' }}>{adminRegenStatus}</span>}
+                  <button onClick={() => handleAdminRegen('python')} className="px-2 py-1 text-[12px] font-mono font-bold rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>Python</button>
+                  <button onClick={() => handleAdminRegen('eraser')} className="px-2 py-1 text-[12px] font-mono font-bold rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>Eraser</button>
+                  {adminRegenStatus && <span className="text-[12px] font-mono" style={{ color: adminRegenStatus.includes('done') ? 'var(--success)' : 'var(--text-primary)' }}>{adminRegenStatus}</span>}
                 </div>
               )}
             </div>

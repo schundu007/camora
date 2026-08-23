@@ -42,7 +42,7 @@ export default function CloudProviderSelector({ variant = 'header', className = 
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
-      <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>
+      <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-muted)' }}>
         Cloud
       </span>
       <div

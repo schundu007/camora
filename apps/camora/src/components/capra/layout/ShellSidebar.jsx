@@ -122,7 +122,7 @@ export default function ShellSidebar() {
         )}
 
         {/* Prepare */}
-        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Prepare</div>}
+        {!isCollapsed && <div className="text-[12px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Prepare</div>}
         {PREPARE_ITEMS.map((item) => {
           const isActive = isOnPrepare && activeSection === item.id;
           return (
@@ -148,7 +148,7 @@ export default function ShellSidebar() {
         <div className={`h-px bg-[var(--bg-elevated)] my-3 ${isCollapsed ? 'mx-1' : 'mx-4'}`} />
 
         {/* Practice */}
-        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Practice</div>}
+        {!isCollapsed && <div className="text-[12px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Practice</div>}
         {PRACTICE_ITEMS.map((item) => {
           const isActive = isPracticeActive(item.href);
           return (
@@ -174,7 +174,7 @@ export default function ShellSidebar() {
         <div className={`h-px bg-[var(--bg-elevated)] my-3 ${isCollapsed ? 'mx-1' : 'mx-4'}`} />
 
         {/* Learn */}
-        {!isCollapsed && <div className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Learn</div>}
+        {!isCollapsed && <div className="text-[12px] font-semibold text-[var(--text-muted)] tracking-widest uppercase px-3 mb-2">Learn</div>}
         {LEARN_ITEMS.map((item) => {
           const isActive = isPracticeActive(item.href);
           return (
@@ -201,8 +201,8 @@ export default function ShellSidebar() {
       {!isCollapsed && (
         <div className="mx-3 mb-2 p-3 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border)]">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold text-[var(--text-muted)] tracking-widest uppercase">Progress</span>
-            <span className="text-[11px] font-bold text-[var(--accent)]">{(() => {
+            <span className="text-[12px] font-semibold text-[var(--text-muted)] tracking-widest uppercase">Progress</span>
+            <span className="text-[12px] font-bold text-[var(--accent)]">{(() => {
               try {
                 const stored = localStorage.getItem('camora_completed_topics');
                 const completed = stored ? Object.keys(JSON.parse(stored)).length : 0;

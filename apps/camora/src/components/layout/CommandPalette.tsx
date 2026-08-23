@@ -123,7 +123,7 @@ function CategoryIcon({ name, color }: { name: string; color?: string }) {
 function Badge({ label }: { label: string }) {
   return (
     <span
-      className="text-[10px] px-1.5 py-0.5 rounded-md font-medium flex-shrink-0"
+      className="text-[12px] px-1.5 py-0.5 rounded-md font-medium flex-shrink-0"
       style={{
         background: 'var(--accent-subtle)',
         color: 'var(--accent)',
@@ -284,7 +284,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
             spellCheck={false}
           />
           <kbd
-            className="text-[10px] px-1.5 py-0.5 rounded"
+            className="text-[12px] px-1.5 py-0.5 rounded"
             style={{
               background: 'var(--bg-elevated)',
               border: '1px solid var(--border)',
@@ -316,7 +316,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
               <div key={category}>
                 {/* Category header */}
                 <div
-                  className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider"
+                  className="px-4 pt-2 pb-1 text-[12px] font-semibold uppercase tracking-wider"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   {category}
@@ -354,7 +354,7 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
 
         {/* Footer */}
         <div
-          className="flex items-center gap-4 px-4 py-2 text-[10px]"
+          className="flex items-center gap-4 px-4 py-2 text-[12px]"
           style={{
             borderTop: '1px solid var(--border)',
             color: 'var(--text-muted)',

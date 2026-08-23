@@ -114,7 +114,7 @@ export function TooltipLayer() {
     <div
       ref={tipElRef}
       role="tooltip"
-      className="fixed pointer-events-none rounded-md px-2 py-1 text-[11px] font-semibold leading-snug"
+      className="fixed pointer-events-none rounded-md px-2 py-1 text-[12px] font-semibold leading-snug"
       style={{
         top: tip.top,
         left: tip.left,

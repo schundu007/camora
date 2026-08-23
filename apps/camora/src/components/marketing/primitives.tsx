@@ -67,7 +67,7 @@ export function Eyebrow({ className, tone = 'muted', ...props }: EyebrowProps) {
   return (
     <span
       className={cn(
-        'font-mono text-[11px] font-bold uppercase tracking-[0.22em]',
+        'font-mono text-[12px] font-bold uppercase tracking-[0.22em]',
         tone === 'muted' && 'text-[var(--text-muted)]',
         tone === 'accent' && 'text-[var(--cam-primary)]',
         tone === 'inverse' && 'text-white/60',
