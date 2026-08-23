@@ -446,7 +446,7 @@
     --light-bg-faint:      #EAF2FB;
 
     /* ── Fluent education light theme ── */
-    --cam-hero-strip: #0078d4;
+    --cam-hero-strip: #005a9e;
     --cam-hero-bg:            linear-gradient(160deg, #ffffff 0%, #f4f9fe 40%, #e8f2fb 100%);
     --cam-gold-leaf:          var(--accent);
     --cam-gold-leaf-lt:       #42b4ff;
@@ -460,8 +460,8 @@
     /* Strip-header tokens — white text on Fluent blue chrome */
     --cam-section-label-text: #ffffff;
     --cam-strip-heading:      #ffffff;
-    --cam-strip-text:         rgba(255,255,255,0.86);
-    --cam-strip-text-muted:   rgba(255,255,255,0.68);
+    --cam-strip-text:         #ffffff;
+    --cam-strip-text-muted:   #ffffff;
     --cam-strip-icon-bg:      rgba(255,255,255,0.12);
     --cam-strip-icon-border:  rgba(255,255,255,0.28);
 
