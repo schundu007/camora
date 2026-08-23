@@ -18,7 +18,7 @@
  * cache-key tests on purpose — no network, no model.
  */
 import { describe, it, expect } from 'vitest';
-import { buildSessionContextBlock } from '../src/services/claude.js';
+import { buildGeneralPrompt, buildSessionContextBlock } from '../src/services/claude.js';
 import { buildAnswerCacheKey } from '../src/services/answerCache.js';
 
 const LIVE_BLOCK = [
@@ -60,6 +60,15 @@ describe('buildSessionContextBlock', () => {
     expect(block.length).toBeLessThan(oversized.length);
     expect(block).toContain('CURRENT CODING SESSION');
     expect(block).toContain('def merge_sort(nums): ...');
+  });
+});
+
+describe('general answer completeness contract', () => {
+  it('allows complete coverage for explanatory document questions', () => {
+    const prompt = buildGeneralPrompt('No resume available.', 'Kubernetes fundamentals.');
+    expect(prompt).toMatch(/pasted-document questions/i);
+    expect(prompt).toMatch(/cover every cause, distinction, and example/i);
+    expect(prompt).toMatch(/never stop mid-sentence/i);
   });
 });
 
