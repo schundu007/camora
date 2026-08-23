@@ -488,7 +488,7 @@ function renderMd(text) {
       return (
         <div key={bi} style={{ margin: '10px 0', borderRadius: 8, overflow: 'hidden', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
           <div style={{ padding: '4px 12px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
-            <span style={{ fontFamily: 'monospace', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>{block.lang}</span>
+            <span style={{ fontFamily: 'monospace', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>{block.lang}</span>
           </div>
           <pre style={{ margin: 0, padding: '12px', fontFamily: 'monospace', fontSize: 12, color: 'var(--text-primary)', overflowX: 'auto', lineHeight: 1.6 }}>
             <code>{block.content}</code>
@@ -702,7 +702,7 @@ function RadarChart({ values, labels, size = 200 }) {
       {labels.map((label, i) => {
         const [x, y] = point(i, 1.18);
         return (
-          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 600, fill: 'var(--text-muted)', fontFamily: "var(--font-sans)" }}>
+          <text key={i} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600, fill: 'var(--text-muted)', fontFamily: "var(--font-sans)" }}>
             {label}
           </text>
         );
@@ -711,7 +711,7 @@ function RadarChart({ values, labels, size = 200 }) {
       <text x={cx} y={cy - 6} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 22, fontWeight: 800, fill: 'var(--text-primary)', fontFamily: "var(--font-sans)" }}>
         {avg}%
       </text>
-      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 500, fill: 'var(--text-muted)', fontFamily: "var(--font-sans)" }}>
+      <text x={cx} y={cy + 12} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 500, fill: 'var(--text-muted)', fontFamily: "var(--font-sans)" }}>
         readiness
       </text>
     </svg>
@@ -766,7 +766,7 @@ function DimensionBars({ dimensions, compact = false }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 6 : 8 }}>
       {Object.entries(dimensions).map(([key, val]) => (
         <div key={key}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 3 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 3 }}>
             <span>{labels[key] || key}</span>
             <span style={{ color: scoreColor(val) }}>{val}%</span>
           </div>
@@ -1209,7 +1209,7 @@ export default function PracticePage() {
             <Link
               to="/playground?tab=code"
               className="chip"
-              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--accent)', fontSize: 11, fontWeight: 600, background: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 35%, transparent)' }}
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--accent)', fontSize: 12, fontWeight: 600, background: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 35%, transparent)' }}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
@@ -1219,7 +1219,7 @@ export default function PracticePage() {
             <Link
               to="/playground?tab=sql"
               className="chip"
-              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--accent)', fontSize: 11, fontWeight: 600, background: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 35%, transparent)' }}
+              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, color: 'var(--accent)', fontSize: 12, fontWeight: 600, background: 'color-mix(in srgb, var(--accent) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 35%, transparent)' }}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
@@ -1274,7 +1274,7 @@ export default function PracticePage() {
               <div className="relative mb-8 rounded-xl overflow-hidden" style={{ background: 'var(--cam-hero-bg)' }}>
                 <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                 <div className="relative p-6 md:p-8">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>PRACTICE</p>
+                  <p className="text-[12px] font-bold uppercase tracking-[0.18em] mb-3" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>PRACTICE</p>
                   <h1 className="font-bold tracking-tight text-3xl md:text-5xl mb-3" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.05, color: 'var(--cam-strip-heading)' }}>
                     {user?.name
                       ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</>
@@ -1319,7 +1319,7 @@ export default function PracticePage() {
                 ].map(s => (
                   <div key={s.label} style={{ textAlign: 'center' }}>
                     <div className="practice-mono" style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)' }}>{s.value}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</div>
                   </div>
                 ))}
                 <div style={{ width: 1, height: 30, background: 'var(--border)' }} />
@@ -1329,7 +1329,7 @@ export default function PracticePage() {
                   const colors = { coding: 'var(--accent)', 'system-design': 'var(--info)', behavioral: 'var(--warning)' };
                   return (
                     <div key={cat} style={{ flex: 1, minWidth: 80 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 3 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
                         <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{catLabel(cat)}</span>
                         <span className="practice-mono" style={{ fontWeight: 700, color: s >= 70 ? 'var(--success)' : 'var(--text-dimmed)' }}>{s}%</span>
                       </div>
@@ -1346,7 +1346,7 @@ export default function PracticePage() {
                 <SectionCard title="Start a Challenge" bodyClassName="p-3">
                   {/* Mode cards */}
                   <div style={{ marginBottom: 14 }}>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, display: 'block' }}>Mode</label>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, display: 'block' }}>Mode</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8 }}>
                       {MODES.map(m => (
                         <button key={m.id} onClick={() => setMode(m.id)} style={{ padding: '10px 12px', borderRadius: 10, border: mode === m.id ? '2px solid var(--accent)' : '1px solid var(--border)', background: mode === m.id ? 'var(--accent-subtle)' : 'var(--bg-surface)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
@@ -1360,7 +1360,7 @@ export default function PracticePage() {
                             <span style={{ fontSize: 14, fontWeight: 700, color: mode === m.id ? 'var(--accent)' : 'var(--text-primary)' }}>{m.label}</span>
                           </div>
                           <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 6px', lineHeight: 1.5 }}>{m.desc}</p>
-                          <span className="practice-mono" style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{formatTime(m.time)} / {m.questions}q</span>
+                          <span className="practice-mono" style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{formatTime(m.time)} / {m.questions}q</span>
                         </button>
                       ))}
                     </div>
@@ -1369,7 +1369,7 @@ export default function PracticePage() {
                   {/* Category + Difficulty */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                     <div>
-                      <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
+                      <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Category</label>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         {CATEGORIES.map(c => (
                           <button key={c} onClick={() => setCategory(c)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', borderRadius: 10, border: category === c ? '2px solid var(--accent)' : '1px solid var(--border)', background: category === c ? 'var(--accent-subtle)' : 'var(--bg-surface)', color: category === c ? 'var(--accent)' : 'var(--text-secondary)', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}>
@@ -1380,7 +1380,7 @@ export default function PracticePage() {
                       </div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Difficulty</label>
+                      <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10, display: 'block' }}>Difficulty</label>
                       <div style={{ display: 'flex', gap: 8 }}>
                         {DIFFICULTIES.map(d => {
                           const dc2 = diffColor(d);
@@ -1394,7 +1394,7 @@ export default function PracticePage() {
 
                   {/* Company Focus */}
                   <div style={{ marginBottom: 16 }}>
-                    <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, display: 'block' }}>Company Focus</label>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8, display: 'block' }}>Company Focus</label>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {COMPANIES.map(c => (
                         <button key={c.id} onClick={() => setCompany(c.id)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 12px', borderRadius: 10, border: company === c.id ? `2px solid ${c.color}` : '1px solid var(--border)', background: company === c.id ? `${c.color}0d` : 'var(--bg-surface)', fontSize: 13, fontWeight: 600, cursor: 'pointer', color: company === c.id ? c.color : 'var(--text-secondary)', transition: 'all 0.15s' }}>
@@ -1469,7 +1469,7 @@ export default function PracticePage() {
                                   <Chip variant="default">{companyObj.label}</Chip>
                                 )}
                               </div>
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                                 {h.date} / {MODES.find(m => m.id === h.mode)?.label || h.mode} / {formatTime(h.timeSpent || 0)}
                               </div>
                             </div>
@@ -1485,7 +1485,7 @@ export default function PracticePage() {
                                 </div>
                               ))}
                               {h.questions.some(hq => hq.feedback) && (
-                                <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                                   {h.questions.filter(hq => hq.feedback && hq.feedback !== 'Skipped').map((hq, fi) => (
                                     <p key={fi} style={{ margin: '2px 0' }}><strong>{hq.q}:</strong> {hq.feedback}</p>
                                   ))}
@@ -1522,7 +1522,7 @@ export default function PracticePage() {
                     className="text-base font-bold"
                   />
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
                   Question {currentIdx + 1} of {questions.length} / {catLabel(category)} / {MODES.find(m => m.id === mode)?.label}
                 </div>
               </div>
@@ -1560,7 +1560,7 @@ export default function PracticePage() {
                 )}
                 {questions[currentIdx].constraints?.length > 0 && (
                   <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Constraints</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Constraints</div>
                     {questions[currentIdx].constraints.map((c, ci) => (
                       <div key={ci} style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', lineHeight: 1.8 }}>• {c}</div>
                     ))}
@@ -1571,13 +1571,13 @@ export default function PracticePage() {
               {/* Language selector — coding only */}
               {!inlineEval && category === 'coding' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 2 }}>Language:</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 2 }}>Language:</span>
                   {CODING_LANGUAGES.map(lang => (
                     <button
                       key={lang.id}
                       onClick={() => setCodingLanguage(lang.id)}
                       style={{
-                        padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                        padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         border: codingLanguage === lang.id ? '1.5px solid var(--accent)' : '1px solid var(--border)',
                         background: codingLanguage === lang.id ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
                         color: codingLanguage === lang.id ? 'var(--accent)' : 'var(--text-muted)',
@@ -1635,7 +1635,7 @@ export default function PracticePage() {
                   )}
                   {generatedSolutions[currentIdx] && (
                     <div style={{ border: '1px solid var(--cam-gold-leaf, #c9a84c)', borderRadius: 10, padding: '14px 16px', background: 'rgba(201,168,76,0.04)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--cam-gold-leaf, #c9a84c)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Generated Solution</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--cam-gold-leaf, #c9a84c)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Generated Solution</div>
                       {renderMd(generatedSolutions[currentIdx])}
                     </div>
                   )}
@@ -1647,7 +1647,7 @@ export default function PracticePage() {
                 <div style={{ position: 'relative', marginBottom: 8 }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, width: 36, height: '100%', background: 'var(--bg-elevated)', borderRadius: '12px 0 0 12px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 14, pointerEvents: 'none' }}>
                     {Array.from({ length: Math.max(10, (answers[currentIdx] || '').split('\n').length) }, (_, i) => (
-                      <div key={i} style={{ fontSize: 11, color: 'var(--text-dimmed)', lineHeight: '22.1px', fontFamily: "var(--font-mono)", userSelect: 'none' }}>{i + 1}</div>
+                      <div key={i} style={{ fontSize: 12, color: 'var(--text-dimmed)', lineHeight: '22.1px', fontFamily: "var(--font-mono)", userSelect: 'none' }}>{i + 1}</div>
                     ))}
                   </div>
                   <textarea
@@ -1812,14 +1812,14 @@ export default function PracticePage() {
                               <button
                                 type="button"
                                 onClick={() => setSdTab('draw')}
-                                style={{ padding: '3px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, border: 'none', cursor: 'pointer', background: sdTab === 'draw' ? 'var(--accent-subtle)' : 'transparent', color: sdTab === 'draw' ? 'var(--accent)' : 'var(--text-muted)' }}
+                                style={{ padding: '3px 10px', fontSize: 12, fontWeight: 600, borderRadius: 6, border: 'none', cursor: 'pointer', background: sdTab === 'draw' ? 'var(--accent-subtle)' : 'transparent', color: sdTab === 'draw' ? 'var(--accent)' : 'var(--text-muted)' }}
                               >
                                 Whiteboard
                               </button>
                               <button
                                 type="button"
                                 onClick={loadRefDiagram}
-                                style={{ padding: '3px 10px', fontSize: 11, fontWeight: 600, borderRadius: 6, border: 'none', cursor: refState.status === 'loading' ? 'wait' : 'pointer', background: sdTab === 'reference' ? 'var(--accent-subtle)' : 'transparent', color: sdTab === 'reference' ? 'var(--accent)' : 'var(--text-muted)' }}
+                                style={{ padding: '3px 10px', fontSize: 12, fontWeight: 600, borderRadius: 6, border: 'none', cursor: refState.status === 'loading' ? 'wait' : 'pointer', background: sdTab === 'reference' ? 'var(--accent-subtle)' : 'transparent', color: sdTab === 'reference' ? 'var(--accent)' : 'var(--text-muted)' }}
                               >
                                 {refState.status === 'loading' ? 'Loading...' : 'Reference'}
                               </button>
@@ -1874,7 +1874,7 @@ export default function PracticePage() {
                               const val = parts[si] || '';
                               return (
                                 <div key={section.label} style={{ display: 'flex', flexDirection: 'column', minHeight: 0, ...(si === SD_SECTIONS.length - 1 ? { gridColumn: '1 / -1' } : {}) }}>
-                                  <label style={{ fontSize: 10, fontWeight: 600, color: section.color, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>
+                                  <label style={{ fontSize: 12, fontWeight: 600, color: section.color, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em', flexShrink: 0 }}>
                                     <Icon name={section.icon} size={11} style={{ color: section.color }} />
                                     {section.label}
                                   </label>
@@ -1912,7 +1912,7 @@ export default function PracticePage() {
                     const colors = { Situation: 'var(--accent)', Task: 'var(--accent)', Action: 'var(--success)', Result: 'var(--warning)' };
                     return (
                       <div key={section}>
-                        <label style={{ fontSize: 11, fontWeight: 600, color: colors[section], marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <label style={{ fontSize: 12, fontWeight: 600, color: colors[section], marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           <span style={{ width: 6, height: 6, borderRadius: 99, background: colors[section], display: 'inline-block' }} />
                           {section}
                         </label>
@@ -1954,7 +1954,7 @@ export default function PracticePage() {
                   {/* Improvement tips */}
                   {inlineEval.improvementTips && inlineEval.improvementTips.length > 0 && (
                     <div style={{ marginTop: 14, padding: 12, background: 'var(--bg-elevated)', borderRadius: 10, border: '1px solid var(--warning)' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Tips to improve</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Tips to improve</div>
                       {inlineEval.improvementTips.map((tip, ti) => (
                         <div key={ti} style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'flex', alignItems: 'flex-start', gap: 6, marginBottom: 2 }}>
                           <span style={{ color: 'var(--text-muted)', flexShrink: 0 }}>-</span>
@@ -2036,12 +2036,12 @@ export default function PracticePage() {
                     <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--text-primary)' }}>{total === 0 ? '—' : `${passed}/${total}`}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>{total === 0 ? 'No submissions' : 'Passed'}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{total === 0 ? 'No submissions' : 'Passed'}</div>
                       </div>
                       <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{catLabel(category)}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500, textTransform: 'capitalize' }}>{difficulty}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500, textTransform: 'capitalize' }}>{difficulty}</div>
                       </div>
                     </div>
                   </div>
@@ -2080,7 +2080,7 @@ export default function PracticePage() {
                     const dimColor = val >= 70 ? 'var(--success)' : val >= 50 ? 'var(--warning)' : 'var(--danger)';
                     return (
                       <div key={k} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 18px', boxShadow: 'none' }}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{DIMENSION_LABELS[i]}</div>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
                           <span style={{ fontSize: 22, fontWeight: 800, color: dimColor }}>{val}</span>
                           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>/ 100</span>
@@ -2128,7 +2128,7 @@ export default function PracticePage() {
                           <div style={{ width: 26, height: 26, borderRadius: 8, background: pass ? 'var(--accent-subtle)' : 'var(--bg-elevated)', color: pass ? 'var(--accent)' : 'var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
                           <div>
                             <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{q.q}</span>
-                            {q.difficulty && <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
+                            {q.difficulty && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginLeft: 8, textTransform: 'capitalize' }}>{q.difficulty}</span>}
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

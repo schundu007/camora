@@ -830,11 +830,11 @@ export default function JobsPage() {
 
                 {/* Supported platforms hint */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Supports:</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Supports:</span>
                   {['Workday', 'Greenhouse', 'Lever', 'Ashby', 'LinkedIn', 'Indeed'].map((p) => (
-                    <span key={p} style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '4px' }}>{p}</span>
+                    <span key={p} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '4px' }}>{p}</span>
                   ))}
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>& more</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>& more</span>
                 </div>
               </div>
             )}
@@ -877,14 +877,14 @@ export default function JobsPage() {
                 </div>
                 {locationAutoDetected && !locationFilter && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>🇺🇸 United States detected · pick a state below</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>🇺🇸 United States detected · pick a state below</span>
                   </div>
                 )}
               </div>
 
               {/* What do you want to do? — Google's primary search input */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: 'var(--accent)', marginBottom: '6px', letterSpacing: '0.02em' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--accent)', marginBottom: '6px', letterSpacing: '0.02em' }}>
                   What do you want to do?
                 </label>
                 <input
@@ -993,7 +993,7 @@ export default function JobsPage() {
                 <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span>Job category</span>
                   {roles.length > 0 && (
-                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: '999px', padding: '1px 7px', marginRight: '6px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: '999px', padding: '1px 7px', marginRight: '6px' }}>
                       {roles.length}
                     </span>
                   )}
@@ -1025,7 +1025,7 @@ export default function JobsPage() {
                 <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span>Experience</span>
                   {experienceFilter.length > 0 && experienceFilter.length < EXPERIENCE_LEVELS.length - 1 && (
-                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: '999px', padding: '1px 7px', marginRight: '6px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, background: 'var(--accent)', color: '#fff', borderRadius: '999px', padding: '1px 7px', marginRight: '6px' }}>
                       {experienceFilter.length}
                     </span>
                   )}
@@ -1076,7 +1076,7 @@ export default function JobsPage() {
                 <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: 12 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
                     H1B friendly only
-                    <span style={{ display: 'block', fontSize: 11, fontWeight: 400, color: 'var(--text-muted)', marginTop: 2 }}>
+                    <span style={{ display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginTop: 2 }}>
                       Excludes USC / Green Card / clearance required
                     </span>
                   </span>
@@ -1196,7 +1196,7 @@ export default function JobsPage() {
                   </svg>
                   {sidebarOpen ? 'Hide filters' : 'Filters'}
                   {!sidebarOpen && (roles.length > 0 || locCountry || locationFilter) && (
-                    <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: '999px', fontSize: '10px', fontWeight: 700, padding: '1px 6px' }}>
+                    <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: '999px', fontSize: '12px', fontWeight: 700, padding: '1px 6px' }}>
                       {[roles.length > 0, locCountry || locationFilter].filter(Boolean).length}
                     </span>
                   )}
@@ -1405,7 +1405,7 @@ export default function JobsPage() {
                         </span>
                       )}
                       {isStale ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#F59E0B', fontSize: 11, fontWeight: 700 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#F59E0B', fontSize: 12, fontWeight: 700 }}>
                           ⚠ {postedDaysAgo}d ago — may be filled
                         </span>
                       ) : posted && (
@@ -1419,7 +1419,7 @@ export default function JobsPage() {
                         display: 'inline-flex',
                         alignItems: 'center',
                         padding: '2px 9px',
-                        fontSize: '11px',
+                        fontSize: '12px',
                         fontWeight: 600,
                         color: expStyle.color,
                         background: expStyle.bg,

@@ -1135,7 +1135,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 }}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
                 className="w-full h-[80px] rounded-lg p-3 text-xs leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all"
-                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.01em' }}
+                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: '-0.01em' }}
               />
             )}
             {inputTab === 'url' && (
@@ -1146,7 +1146,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
                   className="flex-1 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all"
-                  style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, letterSpacing: '-0.01em' }}
+                  style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: '-0.01em' }}
                 />
                 <button
                   onClick={() => handleUrlFetch()}

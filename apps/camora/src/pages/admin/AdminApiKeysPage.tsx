@@ -148,9 +148,9 @@ export default function AdminApiKeysPage() {
   }
 
   const sourceLabel = (source: ProviderStatus['source']) => {
-    if (source === 'db') return <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#d1fae5', color: '#065f46' }}>DB Override</span>;
-    if (source === 'env') return <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#dbeafe', color: '#1e40af' }}>From Env</span>;
-    return <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#fee2e2', color: '#991b1b' }}>Not Set</span>;
+    if (source === 'db') return <span className="text-[12px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#d1fae5', color: '#065f46' }}>DB Override</span>;
+    if (source === 'env') return <span className="text-[12px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#dbeafe', color: '#1e40af' }}>From Env</span>;
+    return <span className="text-[12px] font-bold px-2 py-0.5 rounded-full" style={{ background: '#fee2e2', color: '#991b1b' }}>Not Set</span>;
   };
 
   const providerMap = Object.fromEntries(providers.map((p) => [p.provider, p])) as Record<ProviderKey, ProviderStatus | undefined>;
@@ -210,7 +210,7 @@ export default function AdminApiKeysPage() {
                     />
                     <span className="font-bold text-[15px]">{PROVIDER_LABELS[provider]}</span>
                     {provider === primaryProvider && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded ml-1" style={{ background: 'var(--accent)', color: '#fff' }}>PRIMARY</span>
+                      <span className="text-[12px] font-bold px-1.5 py-0.5 rounded ml-1" style={{ background: 'var(--accent)', color: '#fff' }}>PRIMARY</span>
                     )}
                     <span className="ml-auto">{status ? sourceLabel(status.source) : sourceLabel('none')}</span>
                   </div>

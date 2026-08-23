@@ -701,7 +701,7 @@ export default function JobPrepPage() {
                   { label: 'Behavioral focus', items: urlAnalysis.behavioral_focus },
                 ].filter(g => g.items?.length > 0).map((group) => (
                   <div key={group.label} style={{ background: 'var(--bg-elevated)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>{group.label}</p>
+                    <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>{group.label}</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {group.items.map((t: string) => (
                         <span key={t} style={{ fontSize: '12px', color: 'var(--text-primary)', background: 'var(--bg-surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)' }}>{t}</span>
@@ -712,7 +712,7 @@ export default function JobPrepPage() {
               </div>
               {urlAnalysis.key_requirements?.length > 0 && (
                 <div style={{ marginTop: '16px' }}>
-                  <p style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Key requirements</p>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>Key requirements</p>
                   <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
                     {urlAnalysis.key_requirements.map((r: string, i: number) => <li key={i}>{r}</li>)}
                   </ul>
@@ -761,7 +761,7 @@ export default function JobPrepPage() {
                     <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-primary)', flex: 1, fontFamily: 'var(--font-sans)' }}>
                       {round.title}
                     </span>
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--cam-gold-leaf, #b8902a)', background: 'rgba(184,144,42,0.12)', border: '1px solid rgba(184,144,42,0.25)', borderRadius: '20px', padding: '2px 8px', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--cam-gold-leaf, #b8902a)', background: 'rgba(184,144,42,0.12)', border: '1px solid rgba(184,144,42,0.25)', borderRadius: '20px', padding: '2px 8px', whiteSpace: 'nowrap' }}>
                       {round.estimate}
                     </span>
                   </div>
@@ -1225,7 +1225,7 @@ const S = {
   // When color is the bright gold, the text needs the darkened text-safe
   // sibling — gold-on-cream tint fails WCAG AA. Other passed colors
   // (lapis #0B5CFF / accent) already meet contrast at body weight.
-  badge: (color: string) => ({ fontSize: '11px', fontWeight: 700 as const, color: color === 'var(--warning)' ? 'var(--cam-gold-leaf-text)' : color, background: color === 'var(--danger)' ? 'var(--bg-elevated)' : color === 'var(--warning)' ? 'var(--cam-gold-leaf-50)' : 'var(--bg-elevated)', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
+  badge: (color: string) => ({ fontSize: '12px', fontWeight: 700 as const, color: color === 'var(--warning)' ? 'var(--cam-gold-leaf-text)' : color, background: color === 'var(--danger)' ? 'var(--bg-elevated)' : color === 'var(--warning)' ? 'var(--cam-gold-leaf-50)' : 'var(--bg-elevated)', padding: '2px 10px', borderRadius: '4px', textTransform: 'uppercase' as const }),
 };
 
 /* ──────────────────────────────── PrepSectionContent sub-component ──────────────────────────────── */
@@ -1398,14 +1398,14 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
               <div key={j} style={{ marginLeft: '20px', marginTop: '14px' }}>
                 <h4 style={{ ...S.h4, margin: '0 0 6px 0' }}>
                   Approach {j + 1}: {a.name}
-                  <span style={{ fontWeight: 400, fontSize: '11px', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                  <span style={{ fontWeight: 400, fontSize: '12px', color: 'var(--text-muted)', marginLeft: '8px' }}>
                     Time: O({a.timeComplexity}) · Space: O({a.spaceComplexity})
                   </span>
                 </h4>
                 {a.code && <pre style={S.code}><code>{a.code}</code></pre>}
                 {a.lineByLine && Array.isArray(a.lineByLine) && (
                   <div style={{ marginLeft: '20px' }}>
-                    <h4 style={{ ...S.h4, fontSize: '11px' }}>Line-by-Line Explanation</h4>
+                    <h4 style={{ ...S.h4, fontSize: '12px' }}>Line-by-Line Explanation</h4>
                     {a.lineByLine.map((l: any, k: number) => (
                       <p key={k} style={{ ...S.p, fontSize: '12px', margin: '0 0 3px' }}><code style={{ color: 'var(--accent)' }}>{l.line}</code> — {l.explanation}</p>
                     ))}
@@ -1562,7 +1562,7 @@ function PrepSectionContent({ sectionKey, data }: { sectionKey: string; data: an
           <div key={i} style={{ marginBottom: '24px' }}>
             <h3 style={S.h3}>
               {t.technology || t.name || t.topic || (typeof t === 'string' ? t : `Topic ${i + 1}`)}
-              {t.category && <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '10px', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
+              {t.category && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--text-muted)', marginLeft: '10px', background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: '4px' }}>{t.category}</span>}
             </h3>
             {(t.description || t.detail || t.overview) && <p style={S.p}>{t.description || t.detail || t.overview}</p>}
             {t.conceptsToKnow && Array.isArray(t.conceptsToKnow) && (

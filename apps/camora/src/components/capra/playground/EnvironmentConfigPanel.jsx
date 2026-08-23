@@ -41,7 +41,7 @@ const EnvironmentConfigPanel = ({ env }) => {
           border: '1px solid var(--border)',
           borderTop: '2px solid var(--cam-gold-leaf)',
           overflow: 'hidden', padding: '8px 12px',
-          fontFamily: '"IBM Plex Mono", monospace', fontSize: 12,
+          fontFamily: 'var(--font-mono)', fontSize: 12,
         }}>
           <div style={{ display: 'flex', gap: 5, marginBottom: 7 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
@@ -52,7 +52,7 @@ const EnvironmentConfigPanel = ({ env }) => {
             {previewCmd}
             <span style={{ display: 'inline-block', width: 7, height: 13, background: '#4ade80', marginLeft: 2, verticalAlign: 'text-bottom', animation: 'pulse 1.2s step-end infinite', opacity: 0.9 }} />
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.2)', marginTop: 4, fontSize: 11 }}>
+          <div style={{ color: 'rgba(255,255,255,0.2)', marginTop: 4, fontSize: 12 }}>
             {nodes.length} node{nodes.length !== 1 ? 's' : ''} · {env.category}
           </div>
         </div>
@@ -69,7 +69,7 @@ const EnvironmentConfigPanel = ({ env }) => {
             <span key={cat} className="chip">{cat}</span>
           ))}
           <span style={{
-            fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
+            fontSize: 12, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
             background: env.plan === 'free'
               ? 'color-mix(in oklab, var(--accent) 12%, transparent)'
               : 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
@@ -80,7 +80,7 @@ const EnvironmentConfigPanel = ({ env }) => {
           </span>
           {env.badge && (
             <span style={{
-              fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
+              fontSize: 12, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
               background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
               border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)',
               color: 'var(--cam-gold-leaf-lt)',
@@ -103,14 +103,14 @@ const EnvironmentConfigPanel = ({ env }) => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, boxShadow: '0 0 4px var(--accent)' }} />
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{node.name}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>{node.role}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{node.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>{node.role}</span>
                 </div>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: '"IBM Plex Mono", monospace' }}>{node.mem}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{node.mem}</span>
               </div>
               <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                 {node.tools.map((t) => (
-                  <span key={t} style={{ fontSize: 10, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>{t}</span>
+                  <span key={t} style={{ fontSize: 12, fontWeight: 600, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}>{t}</span>
                 ))}
               </div>
             </div>
@@ -138,18 +138,18 @@ const EnvironmentConfigPanel = ({ env }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="text-caption">Duration</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>60 min</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>60 min</span>
           </div>
           {specs.totalMem && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="text-caption">Memory</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{specs.totalMem}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{specs.totalMem}</span>
             </div>
           )}
           {specs.bootTime && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="text-caption">Boot time</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: '"IBM Plex Mono", monospace' }}>{specs.bootTime}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{specs.bootTime}</span>
             </div>
           )}
         </div>

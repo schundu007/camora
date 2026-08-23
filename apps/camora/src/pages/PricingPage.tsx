@@ -94,7 +94,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
       <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--cam-gold-leaf)', flexShrink: 0 }} aria-hidden="true" />
-      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono, whiteSpace: 'nowrap' }}>
+      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono, whiteSpace: 'nowrap' }}>
         {children}
       </span>
       <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
@@ -132,7 +132,7 @@ export default function PricingPage() {
             <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.60)' }}>Plans & Pricing</span>
           </div>
           <div style={{ padding: '24px 0 32px', textAlign: 'center' }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', fontFamily: LN.mono, marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', fontFamily: LN.mono, marginBottom: 14 }}>
               Pricing
             </div>
             <h1 style={{ fontSize: 40, fontWeight: 800, margin: '0 0 12px', letterSpacing: '-0.03em', color: '#fff', lineHeight: 1.1 }}>
@@ -184,7 +184,7 @@ export default function PricingPage() {
             <div style={{ border: `1px solid ${LN.border}`, borderRadius: 4, overflow: 'hidden' }}>
               {/* Header row */}
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: '#0B1B3F', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ padding: '12px 20px', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)', fontFamily: LN.mono }}>Feature</div>
+                <div style={{ padding: '12px 20px', fontSize: 12, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.40)', fontFamily: LN.mono }}>Feature</div>
                 {[
                   { label: 'Free',    sub: '$0 · 7 days' },
                   { label: 'Monthly', sub: '$19 / mo' },
@@ -193,7 +193,7 @@ export default function PricingPage() {
                 ].map(col => (
                   <div key={col.label} style={{ padding: '12px 16px', textAlign: 'center', background: col.accent ? 'rgba(212,160,67,0.15)' : undefined }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.85)' }}>{col.label}</div>
-                    <div style={{ fontSize: 11, color: col.accent ? 'rgba(212,160,67,0.70)' : 'rgba(255,255,255,0.38)', fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
+                    <div style={{ fontSize: 12, color: col.accent ? 'rgba(212,160,67,0.70)' : 'rgba(255,255,255,0.38)', fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
                   </div>
                 ))}
               </div>
@@ -204,7 +204,7 @@ export default function PricingPage() {
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: 'rgba(54,131,220,0.04)', borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
                     <div style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ width: 16, height: 1.5, borderRadius: 1, background: 'linear-gradient(90deg, var(--cam-gold-leaf), #3683DC)', flexShrink: 0 }} />
-                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono }}>
                         {section.title}
                       </span>
                     </div>
@@ -265,7 +265,7 @@ export default function PricingPage() {
           <section>
             <div style={{ background: '#0B1B3F', border: '1px solid var(--cam-gold-leaf)', borderRadius: 8, padding: '32px 36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 24 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', fontFamily: LN.mono, marginBottom: 10 }}>Get started</div>
+                <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf)', fontFamily: LN.mono, marginBottom: 10 }}>Get started</div>
                 <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 6, letterSpacing: '-0.02em' }}>Ready to start?</div>
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.50)' }}>Free hour, no card required. Pick a plan whenever you're ready.</div>
               </div>

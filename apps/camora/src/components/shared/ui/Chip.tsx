@@ -21,7 +21,7 @@ const variantStyles: Record<NonNullable<ChipProps['variant']>, string> = {
 export default function Chip({ children, variant = 'default', className = '', title }: ChipProps) {
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold font-mono uppercase tracking-wider leading-none ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-bold font-mono uppercase tracking-wider leading-none ${variantStyles[variant]} ${className}`}
       data-tip={title}
     >
       {children}

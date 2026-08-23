@@ -241,7 +241,7 @@ function SoloPlanTable({
       }}>
         {['Plan', 'AI Hours Included', 'Billing', 'Price'].map((col, i) => (
           <span key={col} style={{
-            fontSize: 10, fontWeight: 700, letterSpacing: '0.14em',
+            fontSize: 12, fontWeight: 700, letterSpacing: '0.14em',
             textTransform: 'uppercase', color: 'rgba(255,255,255,0.50)',
             fontFamily: LN.mono, textAlign: i === 0 ? 'left' : 'right',
           }}>{col}</span>
@@ -287,7 +287,7 @@ function SoloPlanTable({
                     <span style={{ fontSize: 14, fontWeight: 600, color: LN.text }}>{plan.name}</span>
                     {plan.badge && (
                       <span style={{
-                        fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                        fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                         padding: '2px 7px', borderRadius: 3,
                         background: isSelected ? 'linear-gradient(135deg, var(--cam-gold-leaf), #B88930)' : LN.border,
                         color: isSelected ? '#fff' : LN.muted,
@@ -316,7 +316,7 @@ function SoloPlanTable({
               <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                 <div>
                   <span style={{ fontSize: 20, fontWeight: 700, color: LN.text, fontFamily: LN.mono }}>{plan.price}</span>
-                  <span style={{ fontSize: 11, color: LN.muted }}>/{plan.periodShort}</span>
+                  <span style={{ fontSize: 12, color: LN.muted }}>/{plan.periodShort}</span>
                 </div>
                 {isSelected && (
                   <button
@@ -382,7 +382,7 @@ function TeamPlanSection({
     }}>
       <div style={{ background: LN.card, padding: '24px 28px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 6 }}>Team Size</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 6 }}>Team Size</div>
           <div style={{ fontSize: 13, color: LN.textSub, marginBottom: 14 }}>
             Choose your seat count (5–50). Price and pooled hours update automatically.
           </div>
@@ -392,7 +392,7 @@ function TeamPlanSection({
             style={{ width: '100%', accentColor: LN.blue, marginBottom: 4 }}
             aria-label="Team seats"
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: LN.mono, marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: LN.dim, fontFamily: LN.mono, marginBottom: 14 }}>
             <span>5 seats</span><span>50 seats</span>
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -408,7 +408,7 @@ function TeamPlanSection({
           </div>
         </div>
         <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 10 }}>Included</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 10 }}>Included</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
             {['Pooled AI hours across team', 'Per-member usage breakdown', 'Single invoice, multiple seats', 'Pooled top-ups never expire', 'Live session AI co-pilot', 'Playground — Docker & Kubernetes for every seat', 'All Camora features unlocked'].map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -420,7 +420,7 @@ function TeamPlanSection({
       </div>
 
       <div style={{ background: LN.bg, padding: '24px 22px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${LN.divider}` }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 16 }}>Summary</div>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 16 }}>Summary</div>
         <div style={{ marginBottom: 16 }}>
           {[['Seats', `${seats}`], ['AI Hours / mo', `${hours} hrs`], ['Billing', 'Monthly']].map(([k, v], i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -434,7 +434,7 @@ function TeamPlanSection({
             <span style={{ fontSize: 13, fontWeight: 600, color: LN.text }}>Total</span>
             <div style={{ textAlign: 'right' }}>
               <span style={{ fontSize: 26, fontWeight: 700, color: LN.text, fontFamily: LN.mono, lineHeight: 1 }}>${monthly}</span>
-              <div style={{ fontSize: 11, color: LN.muted }}>/month</div>
+              <div style={{ fontSize: 12, color: LN.muted }}>/month</div>
             </div>
           </div>
         </div>
@@ -445,7 +445,7 @@ function TeamPlanSection({
         >
           {isLoading ? 'Processing…' : 'Start Team Plan'}
         </button>
-        <p style={{ fontSize: 11, color: LN.muted, textAlign: 'center', marginTop: 8 }}>Cancel any time · Invite team after checkout</p>
+        <p style={{ fontSize: 12, color: LN.muted, textAlign: 'center', marginTop: 8 }}>Cancel any time · Invite team after checkout</p>
       </div>
     </div>
   );
@@ -482,11 +482,11 @@ function HoursSection({
     }}>
       <div style={{ background: LN.card, padding: '24px 28px' }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 6 }}>Quantity</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 6 }}>Quantity</div>
           <div style={{ fontSize: 13, color: LN.textSub, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <span>Add hours to your subscription. <span style={{ color: LN.muted }}>$15/hr · hours never expire.</span></span>
             {!hasBulkDiscount && (
-              <span style={{ fontSize: 11, color: LN.muted, background: LN.bg, border: `1px solid ${LN.border}`, borderRadius: 3, padding: '2px 8px', fontFamily: LN.mono }}>
+              <span style={{ fontSize: 12, color: LN.muted, background: LN.bg, border: `1px solid ${LN.border}`, borderRadius: 3, padding: '2px 8px', fontFamily: LN.mono }}>
                 Buy 10+ hrs → <strong style={{ color: LN.blue }}>30% off</strong>
               </span>
             )}
@@ -497,7 +497,7 @@ function HoursSection({
             style={{ width: '100%', accentColor: LN.blue, marginBottom: 4 }}
             aria-label="Hours quantity"
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: LN.dim, fontFamily: LN.mono, marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: LN.dim, fontFamily: LN.mono, marginBottom: 14 }}>
             <span>1 hr</span><span>50 hrs</span>
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -519,7 +519,7 @@ function HoursSection({
           </div>
         </div>
         <div style={{ borderTop: `1px solid ${LN.divider}`, paddingTop: 16 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 10 }}>Details</div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 10 }}>Details</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 20px' }}>
             {['One-time charge, no auto-renew', 'Hours never expire', 'Stack on any subscription', 'Available to subscribers only'].map((f, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -531,7 +531,7 @@ function HoursSection({
       </div>
 
       <div style={{ background: LN.bg, padding: '24px 22px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${LN.divider}` }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 16 }}>Summary</div>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: LN.muted, fontFamily: LN.mono, marginBottom: 16 }}>Summary</div>
         {hasBulkDiscount && (
           <div style={{
             marginBottom: 14, padding: '8px 12px', borderRadius: 4,
@@ -571,7 +571,7 @@ function HoursSection({
                 <div style={{ fontSize: 13, color: LN.dim, fontFamily: LN.mono, textDecoration: 'line-through', marginBottom: 2 }}>${fullTotal}</div>
               )}
               <span style={{ fontSize: 26, fontWeight: 700, color: hasBulkDiscount ? LN.blue : LN.text, fontFamily: LN.mono, lineHeight: 1 }}>${total}</span>
-              <div style={{ fontSize: 11, color: LN.muted }}>one-time{hasBulkDiscount ? ` · save $${fullTotal - total}` : ''}</div>
+              <div style={{ fontSize: 12, color: LN.muted }}>one-time{hasBulkDiscount ? ` · save $${fullTotal - total}` : ''}</div>
             </div>
           </div>
         </div>
@@ -582,7 +582,7 @@ function HoursSection({
         >
           {isLoading ? 'Processing…' : `Buy ${qty} ${qty === 1 ? 'Hour' : 'Hours'}`}
         </button>
-        <p style={{ fontSize: 11, color: LN.muted, textAlign: 'center', marginTop: 8 }}>Subscribers only · No auto-renew</p>
+        <p style={{ fontSize: 12, color: LN.muted, textAlign: 'center', marginTop: 8 }}>Subscribers only · No auto-renew</p>
       </div>
     </div>
   );
@@ -612,7 +612,7 @@ export default function PricingCards({
         display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16,
         fontFamily: LN.font,
       }}>
-        <span style={{ padding: '3px 10px', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 2, background: LN.blueFade, color: LN.blue, border: `1px solid ${LN.blueBorder}`, fontFamily: LN.mono }}>
+        <span style={{ padding: '3px 10px', fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', borderRadius: 2, background: LN.blueFade, color: LN.blue, border: `1px solid ${LN.blueBorder}`, fontFamily: LN.mono }}>
           Owner
         </span>
         <h3 style={{ fontSize: 18, fontWeight: 700, color: LN.text, margin: 0 }}>All features unlocked</h3>

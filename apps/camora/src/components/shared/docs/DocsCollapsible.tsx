@@ -32,7 +32,7 @@ export default function DocsCollapsible({
       >
         <div className="min-w-0 flex-1">
           {eyebrow && (
-            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] mb-0.5">
+            <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--text-muted)] mb-0.5">
               {eyebrow}
             </div>
           )}

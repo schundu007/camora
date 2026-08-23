@@ -2,7 +2,8 @@
    CAMORA v6 DESIGN SYSTEM — Navy Atlas (enterprise palette)
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Satoshi — loaded via Fontshare in index.html (single source) ── */
+/* ── Open Sans — loaded via Google Fonts in index.html (single source).
+   AWS Cloudscape's UI face; see the --font-sans token below. ── */
 
 /* ── JetBrains Mono — Bunny.net CDN (canonical source for mono) ── */
 @import url('https://fonts.bunny.net/css?family=jetbrains-mono:400,500,700&display=swap');
@@ -79,21 +80,50 @@
     --cat-primary:    #2563EB;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
-    /* Fonts — Plus Jakarta Sans (display/headings) + Inter (body) + JetBrains Mono (code) */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-display: 'Plus Jakarta Sans', 'Satoshi', sans-serif;
+    /* ── Fonts — AWS Cloudscape parity ───────────────────────────
+       One UI face, Open Sans, matching `font-family-base` /
+       `-display` / `-heading` in @cloudscape-design/design-tokens.
+       AWS collapses all three to the same family; so do we. The app
+       previously declared three competing display faces (Inter,
+       Plus Jakarta Sans, Satoshi), so headings rendered differently
+       depending on which var a component happened to reach for.
+       JetBrains Mono is kept over AWS's Monaco/Menlo stack — it is a
+       real webfont we already load and is strictly better for code. */
+    --font-sans: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Roboto, Arial, sans-serif;
+    --font-display: var(--font-sans);
+    --font-brand: var(--font-sans);
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    /* JetBrains Mono leads because it is the only mono webfont this app loads
-       (see the Bunny import at the top). IBM Plex Mono led for a long time and
-       is imported nowhere, so every code surface silently fell through to the
-       OS's generic `monospace` — the reason code read as blurry and cramped. */
     --font-code: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
-    --font-brand: 'Satoshi', sans-serif;
     --font-answer: var(--font-sans);
     --font-answer-heading: var(--font-sans);
-    --fs-answer-body: 16px;
-    --fs-answer-lead: 17px;
-    --fs-answer-heading: 18px;
+
+    /* ── Type scale — AWS Cloudscape, verbatim ───────────────────
+       These ten sizes are the ENTIRE AWS design system type scale,
+       lifted from @cloudscape-design/design-tokens (font-size-* and
+       their paired line-height-*). Every size ships with its own
+       line-height; never pair one of these with an ad-hoc leading.
+
+       HARD RULE: 12px is the floor. AWS has nothing below it, and
+       neither do we. Camora had ~900 instances of 8-11px text, which
+       is the single biggest reason the app read as a trading terminal
+       instead of somewhere you can study. */
+    --fs-body-s:      12px;  --lh-body-s:      16px;
+    --fs-body-m:      14px;  --lh-body-m:      20px;
+    --fs-heading-xs:  14px;  --lh-heading-xs:  18px;
+    --fs-heading-s:   16px;  --lh-heading-s:   20px;
+    --fs-heading-m:   18px;  --lh-heading-m:   22px;
+    --fs-heading-l:   20px;  --lh-heading-l:   24px;
+    --fs-heading-xl:  24px;  --lh-heading-xl:  30px;
+    --fs-display-l:   42px;  --lh-display-l:   48px;
+    --fs-display-xl:  64px;  --lh-display-xl:  72px;
+    --fs-tabs:        16px;  --lh-tabs:        20px;
+
+    /* Answer column — mapped onto the AWS scale rather than the old
+       16/17/18 trio, so the reading surface uses the same steps as
+       the rest of the app. */
+    --fs-answer-body: var(--fs-heading-s);
+    --fs-answer-lead: var(--fs-heading-m);
+    --fs-answer-heading: var(--fs-heading-m);
     --lh-answer: 1.7;
 
     /* Shadows — multi-layer, dark-optimized for depth on charcoal */
@@ -588,10 +618,11 @@
     height: 100%;
   }
 
-  /* Satoshi on all headings — clean developer typography */
+  /* One face on all headings. AWS sets no negative tracking anywhere in
+     Cloudscape, and Open Sans is not a tight-tracking design — the old
+     -0.012em was tuned for Satoshi and reads pinched here. */
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.012em;
   }
 
   .light-theme {
@@ -1121,8 +1152,8 @@
   font-family: var(--font-sans);
   line-height: 1.75;
 }
-/* Reading headings — Plus Jakarta Sans display face (same as "Transform your
-   future"), bold and tight, matching the job-description headings. */
+/* Reading headings — the shared Open Sans display token, bold. Was called
+   out as Plus Jakarta Sans; that face is no longer loaded. */
 .prep-content.flex-1 h1,
 .prep-content.flex-1 h2,
 .prep-content.flex-1 h3,
@@ -1308,7 +1339,7 @@
 .btn-secondary:active { transform: scale(0.97) !important; }
 
 /* Badges */
-.badge-new { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--accent-text); background: color-mix(in oklab, var(--accent) 12%, transparent); border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent); text-transform: uppercase; }
+.badge-new { font-size: var(--fs-body-s); font-weight: 700; padding: 2px 8px; border-radius: 4px; color: var(--accent-text); background: color-mix(in oklab, var(--accent) 12%, transparent); border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent); text-transform: uppercase; }
 
 /* Pills */
 .pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-secondary); cursor: pointer; transition: border-color 0.15s ease-out, color 0.15s ease-out, background-color 0.15s ease-out; }
@@ -1323,25 +1354,44 @@
   background: color-mix(in oklab, var(--accent) 6%, var(--bg-surface));
 }
 
-/* Section label — aligned with .text-label at 11px for consistent eyebrow sizing */
-.section-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; color: var(--accent-text); }
+/* ── AWS type scale utilities ─────────────────────────────────────
+   One class per step in the Cloudscape scale. Reach for these instead
+   of writing `text-[Npx]`; each already carries its paired line-height,
+   so the two can never drift apart.
+   Nothing here goes below 12px — that is the floor, and it is the rule
+   that fixes the "reads like a terminal" problem across every page. */
+.fs-body-s     { font-size: var(--fs-body-s);     line-height: var(--lh-body-s); }
+.fs-body-m     { font-size: var(--fs-body-m);     line-height: var(--lh-body-m); }
+.fs-heading-xs { font-size: var(--fs-heading-xs); line-height: var(--lh-heading-xs); font-weight: 700; }
+.fs-heading-s  { font-size: var(--fs-heading-s);  line-height: var(--lh-heading-s);  font-weight: 700; }
+.fs-heading-m  { font-size: var(--fs-heading-m);  line-height: var(--lh-heading-m);  font-weight: 700; }
+.fs-heading-l  { font-size: var(--fs-heading-l);  line-height: var(--lh-heading-l);  font-weight: 700; }
+.fs-heading-xl { font-size: var(--fs-heading-xl); line-height: var(--lh-heading-xl); font-weight: 700; }
+.fs-display-l  { font-size: var(--fs-display-l);  line-height: var(--lh-display-l);  font-weight: 700; }
+.fs-display-xl { font-size: var(--fs-display-xl); line-height: var(--lh-display-xl); font-weight: 400; }
+
+/* Section label — was 11px, below the AWS floor. Now body-s (12/16). */
+.section-label { font-family: var(--font-mono); font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 700; text-transform: uppercase; letter-spacing: 0.10em; color: var(--accent-text); }
 [data-theme="light"] .section-label {
   color: var(--accent-text);
 }
 
-/* Typography */
-.heading-1 { font-size: 40px; font-weight: 700; letter-spacing: -0.026em; color: var(--text-primary); line-height: 1.08; }
-.heading-2 { font-size: 24px; font-weight: 700; letter-spacing: -0.018em; color: var(--text-primary); line-height: 1.24; }
-/* heading-3: 18px gives a clean 1.33 ratio vs heading-2 (24px) and a clear
-   step above 16px body. At 17px the gap was barely perceptible. */
-.heading-3 { font-size: 18px; font-weight: 600; letter-spacing: -0.008em; color: var(--text-primary); line-height: 1.38; }
-.heading-4 { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); line-height: 1.5; font-family: var(--font-sans); }
-/* text-body: raised to 16px floor (DESIGN.md §3 rule). max-width caps line
-   length at ~72ch — comfortable measure for sustained reading. */
-.text-body { font-size: 16px; color: var(--text-secondary); line-height: 1.65; }
-/* text-body-lg retains the same size. Full width — no reading-measure cap. */
-.text-body-lg { font-size: 16px; color: var(--text-secondary); line-height: 1.75; }
-.text-small { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+/* Typography — remapped onto the AWS steps.
+   heading-1 was 40px and heading-2 24px, both off-scale or coincidental;
+   they now sit on display-l (42/48) and heading-xl (24/30). heading-4 was
+   11px, under the floor, and moves up to body-s. AWS uses 400/700 only,
+   so the stray 600s here become 700. Negative letter-spacing is dropped:
+   Cloudscape sets none, and Open Sans is not a tight-tracking face. */
+.heading-1 { font-size: var(--fs-display-l);  line-height: var(--lh-display-l);  font-weight: 700; color: var(--text-primary); }
+.heading-2 { font-size: var(--fs-heading-xl); line-height: var(--lh-heading-xl); font-weight: 700; color: var(--text-primary); }
+.heading-3 { font-size: var(--fs-heading-m);  line-height: var(--lh-heading-m);  font-weight: 700; color: var(--text-primary); }
+.heading-4 { font-size: var(--fs-body-s); line-height: var(--lh-body-s); font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); font-family: var(--font-sans); }
+/* Reading body sits on heading-s (16/20) rather than AWS's body-m (14px):
+   study content is read for minutes at a time, not scanned like console
+   data. Still inside the ten AWS steps — nothing invented. */
+.text-body { font-size: var(--fs-heading-s); color: var(--text-secondary); line-height: 1.65; }
+.text-body-lg { font-size: var(--fs-heading-s); color: var(--text-secondary); line-height: 1.75; }
+.text-small { font-size: var(--fs-body-s); color: var(--text-muted); line-height: var(--lh-body-s); }
 
 /* Diagrams read best CENTERED, not left-aligned — while prose now fills the
    full column width. Scoped to reading surfaces so inline icons/avatars aren't
@@ -1354,19 +1404,19 @@
 }
 
 /* ── Extended typography ────────────────────────────────────────── */
-/* Mono eyebrow — 10px, all-caps, wide tracking. Figures, labels, IDs. */
+/* Mono eyebrow — body-s (12px), all-caps, wide tracking. Figures, labels, IDs. */
 .text-eyebrow {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--fs-body-s);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--text-muted);
   line-height: 1;
 }
-/* Sans label — 11px, all-caps, moderate tracking. Status chips, section titles. */
+/* Sans label — body-s (12px), all-caps, moderate tracking. Status chips, section titles. */
 .text-label {
-  font-size: 11px;
+  font-size: var(--fs-body-s);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -1416,7 +1466,7 @@
 .tab-group-item {
   padding: 6px 16px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: var(--fs-body-s);
   font-weight: 700;
   font-family: var(--font-mono);
   text-transform: uppercase;
@@ -1510,7 +1560,7 @@
   border-color: var(--accent);
   color: var(--cam-on-accent);
 }
-.chip-sm { padding: 3px 9px !important; font-size: 11px !important; }
+.chip-sm { padding: 3px 9px !important; font-size: var(--fs-body-s) !important; }
 .chip-emerald.chip-active {
   background: var(--accent);
   border-color: var(--accent);
@@ -1536,7 +1586,7 @@
   align-items: center;
   padding: 2px 8px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--fs-body-s);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -2331,7 +2381,7 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 .status-bar {
   @apply flex items-center justify-between px-3 border-t shrink-0;
   height: 28px; border-color: var(--border); font-family: var(--font-mono);
-  font-size: 10px; color: var(--text-muted); background-color: var(--bg-elevated);
+  font-size: var(--fs-body-s); color: var(--text-muted); background-color: var(--bg-elevated);
 }
 .status-bar .status-indicator { @apply flex items-center gap-2; }
 
@@ -2845,9 +2895,9 @@ img { max-width: 100%; height: auto; }
    breaks and preserve the answer's native typography.
    ─────────────────────────────────────────────────────────────────── */
 .answer-flow {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   /* Comfortable reading defaults — the previous default leaned on the
-     parent text-sm cascade which produced ~13px Inter at 1.4 line-height,
+     parent text-sm cascade which produced ~13px at 1.4 line-height,
      too dense for an interview.
      Single column always: the prior multi-column layout split dense
      bullet lists into 3-4 narrow strips on wide monitors and made the
@@ -2887,14 +2937,14 @@ img { max-width: 100%; height: auto; }
   padding-bottom: 4px;
 }
 .answer-flow h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
-.answer-flow h4 { font-size: 11.5px; }
+.answer-flow h4 { font-size: var(--fs-body-s); }
 /* Bold inline emphasis carries the accent hue (gold in dark, blue in light)
    so a bolded keyword is findable at a glance. Body-coloured bold was
    invisible in a paragraph that is already all one weight-ish colour — the
    candidate skimming mid-sentence had nothing to land on. */
 .answer-flow strong { font-weight: 700; color: var(--cam-gold-leaf-text); }
 .answer-flow code {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.92em;
   padding: 1px 4px;
   border-radius: 4px;
@@ -3006,7 +3056,7 @@ figure:has(> .viz-caption) {
 .viz-caption-eyebrow {
   display: inline-block;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--fs-body-s);
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -3292,7 +3342,7 @@ figure:has(> .viz-caption) {
 .docs-page pre code,
 .prep-content > pre code,
 .prep-content > section > pre code {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.55;
   color: var(--text-primary);
@@ -3318,16 +3368,16 @@ figure:has(> .viz-caption) {
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 .prep-code-lang {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-s);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.35);
 }
 .prep-code-copy {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-s);
   font-weight: 500;
   color: rgba(255, 255, 255, 0.35);
   background: none;
@@ -3341,7 +3391,7 @@ figure:has(> .viz-caption) {
 }
 .prep-code-pre {
   padding: 14px 16px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.55;
   color: var(--text-primary);
@@ -3380,8 +3430,8 @@ figure:has(> .viz-caption) {
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-s);
   font-weight: 700;
   line-height: 1;
   background: var(--cam-primary);
@@ -3525,9 +3575,9 @@ figure:has(> .viz-caption) {
    Sidebar shell — same illuminated chrome
    ─────────────────────────────────────────────────────────────────── */
 
-.docs-sidebar-shell nav { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+.docs-sidebar-shell nav { font-family: var(--font-display); }
 .docs-sidebar-shell nav > div > p {
-  font-size: 10.5px;
+  font-size: var(--fs-body-s);
   letter-spacing: 0.16em;
   font-weight: 800;
   color: var(--accent-text);
@@ -3553,7 +3603,7 @@ figure:has(> .viz-caption) {
    ─────────────────────────────────────────────────────────────────── */
 
 .docs-rail-shell {
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font-display);
 }
 .docs-rail-shell > div > div:first-child > span {
   color: var(--accent-text) !important;
@@ -3614,11 +3664,11 @@ figure:has(> .viz-caption) {
   background: linear-gradient(to bottom, rgba(0,0,0,0.10) 0%, rgba(3,10,25,0.55) 40%, rgba(3,10,25,0.88) 100%);
 }
 .cat-card-title { font-size: 15px; color: #ffffff; margin: 8px 0 3px; }
-.cat-card-count-dark { display: block; font-size: 11px; color: rgba(255,255,255,0.6); }
+.cat-card-count-dark { display: block; font-size: var(--fs-body-s); color: rgba(255,255,255,0.6); }
 .cat-card-count-light { display: none; }
 .cat-card-bar { flex: 1; height: 2px; border-radius: 9999px; background: rgba(255,255,255,0.15); }
 .cat-card-bar-fill { height: 100%; border-radius: 9999px; background: var(--cam-gold-leaf); transition: width 1s; }
-.cat-card-pct { font-size: 9px; color: rgba(255,255,255,0.45); }
+.cat-card-pct { font-size: var(--fs-body-s); color: rgba(255,255,255,0.45); }
 .cat-card-pct.cat-card-pct--active { color: var(--cam-gold-leaf); }
 
 /* ── Allotment sash — navy accent for CoFix split pane ── */
@@ -3779,7 +3829,7 @@ figure:has(> .viz-caption) {
    important line in the card was the faintest thing on screen. Question leads,
    answer follows. */
 .lumora-kv-key {
-  font-family: 'Inter', var(--font-display), sans-serif;
+  font-family: var(--font-sans);
   font-size: 12.5px;
   font-weight: 700;
   line-height: 1.45;
@@ -3924,7 +3974,7 @@ figure:has(> .viz-caption) {
 
 /* Tier 3 — label (clean sans, sentence case, muted) */
 .lumora-book-label {
-  font-family: 'Inter', var(--font-display), sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -3959,8 +4009,8 @@ figure:has(> .viz-caption) {
 }
 .lumora-book-matrix table { width: 100%; border-collapse: collapse; }
 .lumora-book-matrix th {
-  font-family: 'Inter', var(--font-display), sans-serif;
-  font-size: 9.5px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-s);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -3983,15 +4033,15 @@ figure:has(> .viz-caption) {
 }
 .lumora-book-matrix-tag {
   display: block;
-  font-family: 'Inter', var(--font-display), sans-serif;
-  font-size: 10px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-s);
   color: var(--text-muted);
   margin-top: 0.1rem;
 }
 .lumora-book-pill {
   display: inline-block;
-  font-family: 'Inter', var(--font-display), sans-serif;
-  font-size: 9.5px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-s);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -4026,7 +4076,7 @@ figure:has(> .viz-caption) {
 .lumora-book .lumora-book-label,
 .lumora-book button { font-family: var(--font-mono); }
 .lumora-book .lumora-book-label,
-.lumora-book button { font-family: 'Inter', var(--font-display), sans-serif; }
+.lumora-book button { font-family: var(--font-sans); }
 
 /* ── Approach chips ──────────────────────────────────────────────────────
    The two or three solutions, laid out flat in the middle of the toolbar. This
@@ -4046,8 +4096,8 @@ figure:has(> .viz-caption) {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  font-family: 'Inter', var(--font-display), sans-serif;
-  font-size: 11.5px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-s);
   font-weight: 700;
   letter-spacing: 0.01em;
   border: 1px solid var(--border);
@@ -4072,10 +4122,10 @@ figure:has(> .viz-caption) {
 }
 
 /* The bound is a fact about the chip, not part of its name — a pill keeps it
-   legible at 10px without borrowing the name's weight. */
+   legible at body-s without borrowing the name's weight. */
 .cam-approach-chip-bound {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--fs-body-s);
   font-weight: 700;
   line-height: 1;
   padding: 3px 5px;
@@ -4090,7 +4140,7 @@ figure:has(> .viz-caption) {
 /* A caption under the comparison matrix — the one place the book admits to not
    knowing something. Muted and small: it is a disclaimer, not a finding. */
 .lumora-book-matrix-note {
-  font-size: 11px;
+  font-size: var(--fs-body-s);
   line-height: 1.45;
   color: var(--text-muted);
   margin: 0.4rem 0 0;

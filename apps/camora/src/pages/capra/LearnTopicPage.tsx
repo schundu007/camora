@@ -54,7 +54,7 @@ function renderMarkdown(text: string) {
       elements.push(
         <div key={key++} className="my-4 rounded-xl overflow-hidden" style={{ background: '#0d1117', border: '1px solid color-mix(in oklab,var(--cam-primary) 20%,transparent)' }}>
           <div className="px-4 py-2" style={{ background: 'color-mix(in oklab,var(--cam-primary) 10%,#0d1117)', borderBottom: '1px solid color-mix(in oklab,var(--cam-primary) 15%,transparent)' }}>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', opacity: 0.7 }}>{lang}</span>
+            <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', opacity: 0.7 }}>{lang}</span>
           </div>
           <pre className="px-4 py-4 overflow-x-auto text-[13px] leading-relaxed m-0" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3' }}>
             <code>{code}</code>
@@ -155,14 +155,14 @@ function renderMarkdown(text: string) {
                 {topics.map((topic, ti) => (
                   <div key={ti}>
                     <div className="flex items-start gap-2.5 mb-1.5">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 mt-0.5"
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-bold shrink-0 mt-0.5"
                         style={{ background: 'color-mix(in oklab,var(--cam-primary) 15%,var(--bg-elevated))', color: 'var(--cam-primary)' }}>
                         {ti + 1}
                       </span>
                       <span className="text-[13px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
                         {topic.title}
                         {topic.taskRange && (
-                          <span className="ml-1.5 text-[11px] font-normal" style={{ color: 'var(--text-muted)' }}>{topic.taskRange}</span>
+                          <span className="ml-1.5 text-[12px] font-normal" style={{ color: 'var(--text-muted)' }}>{topic.taskRange}</span>
                         )}
                       </span>
                     </div>
@@ -219,7 +219,7 @@ function renderMarkdown(text: string) {
                 elements.push(
                   <div key={key++} className="my-4 rounded-xl overflow-hidden" style={{ background: '#0d1117', border: '1px solid color-mix(in oklab,var(--cam-primary) 20%,transparent)' }}>
                     <div className="px-4 py-2" style={{ background: 'color-mix(in oklab,var(--cam-primary) 10%,#0d1117)', borderBottom: '1px solid color-mix(in oklab,var(--cam-primary) 15%,transparent)' }}>
-                      <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', opacity: 0.7 }}>{lang}</span>
+                      <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', opacity: 0.7 }}>{lang}</span>
                     </div>
                     <pre className="px-4 py-4 overflow-x-auto text-[13px] leading-relaxed m-0" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3' }}>
                       <code>{codeContent}</code>
@@ -470,7 +470,7 @@ export default function LearnTopicPage() {
             <Chip variant="success">cached</Chip>
           )}
           {streaming && (
-            <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
+            <span className="flex items-center gap-1.5 text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-gold-leaf)' }} />
               Generating…
             </span>

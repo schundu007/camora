@@ -449,7 +449,7 @@ export default function CompanyPrepPage() {
                       <div style={{ color: 'var(--cam-primary)', opacity: 0.7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {getSectionIcon(section.icon)}
                       </div>
-                      <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', margin: 0 }}>
+                      <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', margin: 0 }}>
                         {section.title}
                       </h2>
                     </div>
@@ -674,10 +674,10 @@ export default function CompanyPrepPage() {
                   <div style={{ color: 'var(--cam-primary)', display: 'flex', alignItems: 'center', opacity: 0.7 }}>
                     {getSectionIcon(section.icon)}
                   </div>
-                  <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', margin: 0 }}>
+                  <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)', margin: 0 }}>
                     {section.title}
                   </h2>
-                  <span className="practice-body" style={{ fontSize: 11, color: 'var(--cam-primary)', fontWeight: 600, marginLeft: 'auto', opacity: 0.7 }}>
+                  <span className="practice-body" style={{ fontSize: 12, color: 'var(--cam-primary)', fontWeight: 600, marginLeft: 'auto', opacity: 0.7 }}>
                     {section.questions.length} question{section.questions.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -703,7 +703,7 @@ export default function CompanyPrepPage() {
                         <span
                           className="practice-mono"
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 500,
                             color: 'var(--text-muted)',
                             minWidth: 24,
@@ -723,7 +723,7 @@ export default function CompanyPrepPage() {
                         <span
                           className="practice-body hidden sm:inline-block"
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 500,
                             color: 'var(--text-muted)',
                             background: 'var(--bg-elevated)',
@@ -740,7 +740,7 @@ export default function CompanyPrepPage() {
                         <span
                           className="practice-body"
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 600,
                             color: dStyle.text,
                             background: dStyle.bg,
@@ -769,7 +769,7 @@ export default function CompanyPrepPage() {
                           }}
                         >
                           Practice
-                          <span style={{ marginLeft: 4, fontSize: 10 }}>&rarr;</span>
+                          <span style={{ marginLeft: 4, fontSize: 12 }}>&rarr;</span>
                         </Link>
                       </div>
                     );

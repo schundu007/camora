@@ -83,7 +83,7 @@ export default function Leaderboard() {
     return (
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-          <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Weekly Leaderboard</h3>
+          <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Weekly Leaderboard</h3>
           <p className="text-sm text-[var(--text-muted)] mt-1">No activity this week yet. Be the first!</p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export default function Leaderboard() {
   return (
     <div className="rounded-2xl overflow-hidden space-y-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Weekly Leaderboard</h3>
+        <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Weekly Leaderboard</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">Top performers this week</p>
       </div>
       <div className="px-6 pb-5">
@@ -102,10 +102,10 @@ export default function Leaderboard() {
         <table className="w-full text-left">
           <thead>
             <tr className="text-xs font-medium uppercase tracking-wide" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))' }}>
-              <th className="px-4 py-3 w-14 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Rank</th>
-              <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Name</th>
-              <th className="px-4 py-3 text-right font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>XP</th>
-              <th className="px-4 py-3 text-right font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Solved</th>
+              <th className="px-4 py-3 w-14 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Rank</th>
+              <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Name</th>
+              <th className="px-4 py-3 text-right font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>XP</th>
+              <th className="px-4 py-3 text-right font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Solved</th>
             </tr>
           </thead>
           <tbody>
@@ -154,7 +154,7 @@ export default function Leaderboard() {
                       <span className={`text-sm font-medium ${isCurrentUser ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
                         {entry.name}
                         {isCurrentUser && (
-                          <span className="ml-1.5 text-[10px] font-bold text-[var(--accent)] uppercase">You</span>
+                          <span className="ml-1.5 text-[12px] font-bold text-[var(--accent)] uppercase">You</span>
                         )}
                       </span>
                     </div>

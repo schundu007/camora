@@ -46,7 +46,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
           animation: 'spin 0.9s linear infinite',
           marginBottom: 16,
         }} />
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0, fontFamily: '"IBM Plex Mono", monospace' }}>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0, fontFamily: 'var(--font-mono)' }}>
           Allocating container...
         </p>
       </div>
@@ -81,8 +81,8 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
             {allDone ? 'Playground Ready' : 'Booting Playground'}
           </div>
           <div style={{
-            fontSize: 10, color: allDone ? '#10b981' : '#f59e0b',
-            fontFamily: '"IBM Plex Mono", monospace', marginTop: 4, fontWeight: 600,
+            fontSize: 12, color: allDone ? '#10b981' : '#f59e0b',
+            fontFamily: 'var(--font-mono)', marginTop: 4, fontWeight: 600,
           }}>
             {allDone ? 'All systems ready' : isCustom && toolSteps.length > 0 ? 'Installing tools...' : 'Starting services...'}
           </div>
@@ -94,8 +94,8 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
         {/* System steps */}
         <div>
           <div style={{
-            fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-            color: 'rgba(255,255,255,0.25)', marginBottom: 8, fontFamily: '"IBM Plex Mono", monospace',
+            fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.25)', marginBottom: 8, fontFamily: 'var(--font-mono)',
           }}>
             System
           </div>
@@ -118,7 +118,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                     background: status === 'done' ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.02)',
                     border: `1px solid ${status === 'done' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'}`,
                   }}>
-                    {status === 'done' && <span style={{ color: '#10b981', fontSize: 10, width: 12, textAlign: 'center' }}>✓</span>}
+                    {status === 'done' && <span style={{ color: '#10b981', fontSize: 12, width: 12, textAlign: 'center' }}>✓</span>}
                     {status === 'running' && (
                       <div style={{
                         width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
@@ -128,18 +128,18 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                       }} />
                     )}
                     {status === 'pending' && (
-                      <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10, width: 12, textAlign: 'center' }}>○</span>
+                      <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 12, width: 12, textAlign: 'center' }}>○</span>
                     )}
                     <span style={{
                       flex: 1,
-                      fontSize: 11, fontFamily: '"IBM Plex Mono", monospace',
+                      fontSize: 12, fontFamily: 'var(--font-mono)',
                       color: status === 'done' ? 'rgba(255,255,255,0.5)' : status === 'running' ? '#fff' : 'rgba(255,255,255,0.18)',
                     }}>
                       {ev?.label || label}
                     </span>
                     {isEnvSetup && status === 'running' && elapsed > 0 && (
                       <span style={{
-                        fontSize: 9, fontFamily: '"IBM Plex Mono", monospace', fontWeight: 600,
+                        fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600,
                         color: elapsed > 60 ? '#f87171' : '#f59e0b',
                       }}>
                         {elapsed}s
@@ -152,8 +152,8 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                     <div style={{ paddingLeft: 30, marginTop: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {activeSubSteps.length === 0 ? (
                         <div style={{
-                          fontSize: 10, color: 'rgba(255,255,255,0.2)',
-                          fontFamily: '"IBM Plex Mono", monospace', padding: '2px 0',
+                          fontSize: 12, color: 'rgba(255,255,255,0.2)',
+                          fontFamily: 'var(--font-mono)', padding: '2px 0',
                           animation: 'pulse 1.5s ease-in-out infinite',
                         }}>
                           Usually 30–60 seconds...
@@ -162,7 +162,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                         activeSubSteps.map(sub => (
                           <div key={sub.step} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
                             {sub.status === 'done' ? (
-                              <span style={{ color: '#10b981', fontSize: 9, width: 10, flexShrink: 0 }}>✓</span>
+                              <span style={{ color: '#10b981', fontSize: 12, width: 10, flexShrink: 0 }}>✓</span>
                             ) : (
                               <div style={{
                                 width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
@@ -172,7 +172,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                               }} />
                             )}
                             <span style={{
-                              fontSize: 10, fontFamily: '"IBM Plex Mono", monospace',
+                              fontSize: 12, fontFamily: 'var(--font-mono)',
                               color: sub.status === 'done' ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.55)',
                             }}>
                               {sub.label}
@@ -192,14 +192,14 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
         {isCustom && (
           <div>
             <div style={{
-              fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+              fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
               color: setupHeader?.status === 'done' ? 'rgba(16,185,129,0.6)' : 'rgba(245,158,11,0.7)',
-              marginBottom: 8, fontFamily: '"IBM Plex Mono", monospace',
+              marginBottom: 8, fontFamily: 'var(--font-mono)',
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
               {setupHeader?.status === 'done' ? '✓ ' : ''}Setup
               {setupHeader?.status !== 'done' && toolSteps.length > 0 && (
-                <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>
                   · {toolSteps.filter(t => t.status === 'done').length}/{toolSteps.length} done
                 </span>
               )}
@@ -209,7 +209,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                 <div style={{
                   padding: '8px 10px', borderRadius: 4,
                   background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.1)',
-                  fontSize: 11, color: 'rgba(255,255,255,0.3)', fontFamily: '"IBM Plex Mono", monospace',
+                  fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono)',
                   animation: 'pulse 1.5s ease-in-out infinite',
                 }}>
                   Preparing package lists...
@@ -240,12 +240,12 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                         animation: 'spin 0.9s linear infinite',
                       }} />
                     ) : (
-                      <span style={{ color: meta.color, fontSize: 11, width: 10, textAlign: 'center', flexShrink: 0 }}>
+                      <span style={{ color: meta.color, fontSize: 12, width: 10, textAlign: 'center', flexShrink: 0 }}>
                         {meta.icon}
                       </span>
                     )}
                     <span style={{
-                      flex: 1, fontSize: 11, fontFamily: '"IBM Plex Mono", monospace',
+                      flex: 1, fontSize: 12, fontFamily: 'var(--font-mono)',
                       color: ts === 'done' ? 'rgba(255,255,255,0.5)'
                         : ts === 'skipped' ? 'rgba(255,255,255,0.2)'
                         : ts === 'error' ? '#ef4444'
@@ -254,7 +254,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                       {tool.label}
                     </span>
                     <span style={{
-                      fontSize: 9, fontWeight: 600, fontFamily: '"IBM Plex Mono", monospace',
+                      fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-mono)',
                       color: ts === 'done' ? '#10b981'
                         : ts === 'skipped' ? 'rgba(255,255,255,0.18)'
                         : ts === 'error' ? '#ef4444'

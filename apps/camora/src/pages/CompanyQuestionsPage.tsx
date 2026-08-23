@@ -93,7 +93,7 @@ export default function CompanyQuestionsPage() {
         {/* Interview Process */}
         <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Interview Process</h2>
+            <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Interview Process</h2>
           </div>
           <div className="p-5">
           <ol className="space-y-3">
@@ -112,7 +112,7 @@ export default function CompanyQuestionsPage() {
         {/* Sample Questions */}
         <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Sample Practice Questions</h2>
+            <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Sample Practice Questions</h2>
           </div>
           <div className="p-5">
           <div className="space-y-3">
@@ -150,7 +150,7 @@ export default function CompanyQuestionsPage() {
         {/* Tips */}
         <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Study Tips</h2>
+            <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Study Tips</h2>
           </div>
           <div className="p-5">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -185,7 +185,7 @@ export default function CompanyQuestionsPage() {
         {/* Related Companies */}
         <section className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
           <div className="px-5 py-2.5" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Explore Other Companies</h2>
+            <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Explore Other Companies</h2>
           </div>
           <div className="p-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -200,7 +200,7 @@ export default function CompanyQuestionsPage() {
                 >
                   <img src={rel.logo} alt={rel.name} className="w-10 h-10 rounded-lg object-contain mx-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   <p className="mt-1.5 text-sm font-semibold text-[var(--text-primary)]">{rel.name}</p>
-                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{rel.difficulty} &middot; {rel.interviewRounds} rounds</p>
+                  <p className="text-[12px] text-[var(--text-muted)] mt-0.5">{rel.difficulty} &middot; {rel.interviewRounds} rounds</p>
                 </Link>
               );
             })}

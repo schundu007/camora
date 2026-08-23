@@ -85,7 +85,7 @@ export default function GoalSetupModal({ isOpen, onClose, onSetup }: GoalSetupMo
         </button>
 
         <div className="-mx-6 -mt-6 mb-4 px-6 py-3 rounded-t-2xl" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-          <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Set Your Goal Date</h2>
+          <h2 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Set Your Goal Date</h2>
           <p className="text-sm text-[var(--text-muted)] mt-1">
             We'll build a personalized prep plan based on your timeline.
           </p>

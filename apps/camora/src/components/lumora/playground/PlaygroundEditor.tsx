@@ -90,7 +90,7 @@ export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, on
       theme={theme}
       options={{
         fontSize: 11,
-        fontFamily: '"IBM Plex Mono", "Cascadia Code", monospace',
+        fontFamily: 'var(--font-mono)',
         fontLigatures: true,
         letterSpacing: -0.3,
         lineHeight: 19,

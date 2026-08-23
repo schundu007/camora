@@ -108,7 +108,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
         {(user.image || (user as any).picture) ? (
           <img src={user.image || (user as any).picture} alt="" className={`${compact ? 'w-8 h-8' : 'w-7 h-7'} rounded-full object-cover`} style={{ boxShadow: `0 0 0 1px ${isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}` }} referrerPolicy="no-referrer" />
         ) : (
-          <div className={`${compact ? 'w-8 h-8' : 'w-7 h-7'} rounded-full flex items-center justify-center text-[11px] font-bold`} style={{ background: isDark ? 'rgba(255,255,255,0.2)' : 'var(--accent)', color: isDark ? '#fff' : '#fff' }}>
+          <div className={`${compact ? 'w-8 h-8' : 'w-7 h-7'} rounded-full flex items-center justify-center text-[12px] font-bold`} style={{ background: isDark ? 'rgba(255,255,255,0.2)' : 'var(--accent)', color: isDark ? '#fff' : '#fff' }}>
             {initials}
           </div>
         )}
@@ -145,7 +145,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
               }}
             >
               <p className="text-xs font-bold truncate" style={{ color: 'var(--cam-strip-heading)' }}>{user.name || 'User'}</p>
-              <p className="text-[10px] truncate" style={{ color: 'var(--cam-strip-text-muted)' }}>{user.email}</p>
+              <p className="text-[12px] truncate" style={{ color: 'var(--cam-strip-text-muted)' }}>{user.email}</p>
             </div>
 
             {/* Menu items */}

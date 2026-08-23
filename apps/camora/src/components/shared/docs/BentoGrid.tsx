@@ -68,7 +68,7 @@ export function BentoCell({
     >
       {eyebrow && (
         <p
-          className="text-[10px] font-bold uppercase tracking-[0.18em] mb-3"
+          className="text-[12px] font-bold uppercase tracking-[0.18em] mb-3"
           style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}
         >
           {eyebrow}

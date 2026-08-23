@@ -59,7 +59,7 @@ export default function PageHero({
                   }}
                 />
                 <p
-                  className="text-[11px] font-extrabold uppercase tracking-[0.18em]"
+                  className="text-[12px] font-extrabold uppercase tracking-[0.18em]"
                   style={{ color: '#1E4D78', fontFamily: 'var(--font-mono)' }}
                 >
                   {eyebrow}

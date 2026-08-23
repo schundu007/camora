@@ -114,7 +114,7 @@ export default function ScoreCard({
         <div className="flex items-center gap-2">
           <CamoraLogo size={32} />
         </div>
-        <span className="text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
+        <span className="text-[12px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
           Score Card
         </span>
       </div>

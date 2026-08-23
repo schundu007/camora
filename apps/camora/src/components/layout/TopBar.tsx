@@ -115,7 +115,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="px-3 py-1.5 text-[11px] font-bold font-mono uppercase tracking-wider rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
+                  className="px-3 py-1.5 text-[12px] font-bold font-mono uppercase tracking-wider rounded-full transition-[background-color,color] duration-150 active:scale-[0.98] no-underline"
                   style={{
                     color: active ? 'var(--cam-chip-active-text)' : 'var(--cam-strip-text)',
                     background: active ? 'var(--cam-chip-active-bg)' : 'transparent',
@@ -168,7 +168,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
               Search topics...
             </span>
             <kbd
-              className="hidden lg:inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded"
+              className="hidden lg:inline-flex items-center gap-0.5 text-[12px] px-1.5 py-0.5 rounded"
               style={{
                 background: 'var(--bg-surface)',
                 border: '1px solid var(--border)',
@@ -176,7 +176,7 @@ export default function TopBar({ onToggleSidebar, sidebarOpen }: TopBarProps) {
                 fontFamily: 'var(--font-sans)',
               }}
             >
-              <span className="text-[11px]">&#8984;</span>K
+              <span className="text-[12px]">&#8984;</span>K
             </kbd>
           </div>
         </div>

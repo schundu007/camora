@@ -32,7 +32,7 @@ export const LanguageTabs = ({ active, onChange }: Props) => {
               ? 'border border-[var(--cam-gold-leaf)] text-[var(--cam-gold-leaf)]'
               : 'border border-transparent text-[#94a3b8] hover:text-[var(--cam-strip-heading)]',
           ].join(' ')}
-          style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
+          style={{ fontFamily: 'var(--font-sans)' }}
         >
           {tab.label}
         </button>

@@ -365,7 +365,7 @@ export default function DownloadPage() {
                       <DownloadIcon size={18} />
                       Download for {primary.label}
                     </CTAButton>
-                    <span className="font-mono text-[11px] text-white/45">
+                    <span className="font-mono text-[12px] text-white/45">
                       v{appVersion} · {primary.fileType} · {primary.size}
                     </span>
                   </>
@@ -429,7 +429,7 @@ export default function DownloadPage() {
                     <h3 className="font-display text-[16px] font-semibold text-[var(--text-primary)]">
                       {p.label}
                     </h3>
-                    <div className="mt-2 mb-5 space-y-0.5 font-mono text-[11px] text-[var(--text-muted)]">
+                    <div className="mt-2 mb-5 space-y-0.5 font-mono text-[12px] text-[var(--text-muted)]">
                       <p>{p.arch}</p>
                       <p>{p.size} · {p.fileType}</p>
                     </div>

@@ -57,7 +57,7 @@ export default function HeroBand({
                     boxShadow: '0 0 8px rgba(217,181,67,0.55)',
                   }}
                 />
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-strip-text)' }}>
+                <span className="text-[12px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-strip-text)' }}>
                   {eyebrow}
                 </span>
               </div>

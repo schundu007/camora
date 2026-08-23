@@ -285,7 +285,7 @@ export default function DevopsChallengeDetail({ challenge, onBack }) {
                     minWidth: 24,
                     height: 24,
                     borderRadius: 6,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 700,
                     fontFamily: 'var(--font-mono, monospace)',
                     flexShrink: 0,

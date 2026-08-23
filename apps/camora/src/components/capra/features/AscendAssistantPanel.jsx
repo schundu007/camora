@@ -1263,10 +1263,10 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <div className="min-w-0">
-              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
+              <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--accent)' }}>
                 {context.mode === 'system-design' ? 'System Design' : 'Coding'} Context Loaded
               </span>
-              <p className="text-[11px] truncate" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-[12px] truncate" style={{ color: 'var(--text-secondary)' }}>
                 {context.problem.slice(0, 80)}{context.problem.length > 80 ? '...' : ''}
               </p>
             </div>
@@ -1639,7 +1639,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
         <div className="w-[40%] shrink-0 border-r border-[var(--border)]">
           <div className="h-full flex flex-col">
             <div className="px-3 py-1 flex items-center justify-between border-b border-[var(--border)]" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-              <span className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>
+              <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>
                 Questions
               </span>
               {questions.length > 0 && (

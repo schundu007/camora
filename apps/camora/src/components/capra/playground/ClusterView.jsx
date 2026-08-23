@@ -38,7 +38,7 @@ export default function ClusterView({ session, onClose }) {
                 border: `1px solid ${isActive ? 'rgba(65,158,218,0.5)' : 'rgba(255,255,255,0.08)'}`,
                 fontSize: 12, fontWeight: 600,
                 color: isActive ? '#fff' : 'rgba(255,255,255,0.45)',
-                fontFamily: '"IBM Plex Mono", monospace',
+                fontFamily: 'var(--font-mono)',
                 cursor: 'pointer', userSelect: 'none',
               }}
             >
@@ -61,7 +61,7 @@ export default function ClusterView({ session, onClose }) {
           onClick={handleReconnect}
           data-tip="Reconnect terminal"
           style={{
-            padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 600,
+            padding: '3px 8px', borderRadius: 5, fontSize: 12, fontWeight: 600,
             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
             color: 'rgba(255,255,255,0.35)', cursor: 'pointer',
           }}
@@ -72,7 +72,7 @@ export default function ClusterView({ session, onClose }) {
         {/* Cluster badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 6px' }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#419EDA', display: 'inline-block' }} />
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>
             etcd cluster · {nodes.length} nodes
           </span>
         </div>
@@ -99,8 +99,8 @@ export default function ClusterView({ session, onClose }) {
             ) : (
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                height: '100%', color: 'rgba(255,255,255,0.2)', fontSize: 11,
-                fontFamily: '"IBM Plex Mono", monospace',
+                height: '100%', color: 'rgba(255,255,255,0.2)', fontSize: 12,
+                fontFamily: 'var(--font-mono)',
               }}>
                 {node.status === 'provisioning' ? 'Node provisioning...' : 'Terminal unavailable'}
               </div>
@@ -111,7 +111,7 @@ export default function ClusterView({ session, onClose }) {
         {nodes.length === 0 && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            height: '100%', color: 'rgba(255,255,255,0.2)', fontSize: 11,
+            height: '100%', color: 'rgba(255,255,255,0.2)', fontSize: 12,
           }}>
             No cluster nodes available
           </div>

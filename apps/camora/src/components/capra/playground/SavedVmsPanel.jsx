@@ -18,19 +18,19 @@ export default function SavedVmsPanel({ saves, slotsUsed, slotsMax, onRestore, o
   return (
     <div style={{ padding: '0 24px 24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
           Saved VMs
         </span>
-        <span style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{slotsUsed}/{slotsMax} slots</span>
+        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{slotsUsed}/{slotsMax} slots</span>
       </div>
 
       {savesLoading && saves.length === 0 && (
-        <div style={{ fontSize: 11, color: 'var(--text-secondary)', padding: '8px 0' }}>Loading...</div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', padding: '8px 0' }}>Loading...</div>
       )}
 
       {!savesLoading && saves.length === 0 && (
         <div style={{
-          padding: '14px 16px', borderRadius: 8, fontSize: 11, textAlign: 'center',
+          padding: '14px 16px', borderRadius: 8, fontSize: 12, textAlign: 'center',
           background: 'var(--bg-surface)', border: '1px dashed var(--border)',
           color: 'var(--text-secondary)',
         }}>
@@ -52,12 +52,12 @@ export default function SavedVmsPanel({ saves, slotsUsed, slotsMax, onRestore, o
                 <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {save.name}
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                   {env.label} · {fmtSize(save.sizeBytes)} · {fmtDate(save.createdAt)}
                 </div>
               </div>
               <button type="button" disabled={isRestoring} onClick={() => onRestore(save.id)} style={{
-                padding: '4px 10px', borderRadius: 5, fontSize: 11, fontWeight: 700, flexShrink: 0,
+                padding: '4px 10px', borderRadius: 5, fontSize: 12, fontWeight: 700, flexShrink: 0,
                 background: isRestoring ? 'rgba(212,160,67,0.3)' : 'rgba(212,160,67,0.15)',
                 border: '1px solid rgba(212,160,67,0.4)', color: '#d4a043',
                 cursor: isRestoring ? 'not-allowed' : 'pointer',
@@ -65,7 +65,7 @@ export default function SavedVmsPanel({ saves, slotsUsed, slotsMax, onRestore, o
                 {isRestoring ? 'Restoring...' : '↩ Restore'}
               </button>
               <button type="button" onClick={() => onDelete(save.id)} disabled={isRestoring} style={{
-                padding: '4px 8px', borderRadius: 5, fontSize: 11, flexShrink: 0,
+                padding: '4px 8px', borderRadius: 5, fontSize: 12, flexShrink: 0,
                 background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
                 color: '#f87171', cursor: isRestoring ? 'not-allowed' : 'pointer',
               }} data-tip="Delete saved VM">Del</button>

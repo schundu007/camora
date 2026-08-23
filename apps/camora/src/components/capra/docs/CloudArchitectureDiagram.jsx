@@ -80,7 +80,7 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
       {/* Zoom controls */}
       <div className="flex items-center justify-end gap-1 mb-2">
         <button onClick={() => setScale(s => Math.min(s + 0.3, 5))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">+</button>
-        <span className="text-[10px] font-mono text-[var(--text-muted)] min-w-[3.5ch] text-center">{Math.round(scale * 100)}%</span>
+        <span className="text-[12px] font-mono text-[var(--text-muted)] min-w-[3.5ch] text-center">{Math.round(scale * 100)}%</span>
         <button onClick={() => setScale(s => Math.max(s - 0.3, 0.3))} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">−</button>
         <button onClick={fitToContainer} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)] ml-1">Fit</button>
         <button onClick={resetView} className="px-2 py-1 text-xs font-mono border border-[var(--border)] rounded hover:bg-[var(--bg-elevated)] text-[var(--text-muted)]">1:1</button>

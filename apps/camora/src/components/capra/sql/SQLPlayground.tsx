@@ -52,7 +52,7 @@ function DifficultyBadge({ difficulty }: { difficulty: string }) {
   const c = DIFFICULTY_COLORS[difficulty] || DIFFICULTY_COLORS.Easy;
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide border ${c.bg} ${c.text} ${c.border}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded text-[12px] font-bold uppercase tracking-wide border ${c.bg} ${c.text} ${c.border}`}
     >
       {difficulty}
     </span>
@@ -114,7 +114,7 @@ function ResultTable({
             {columns.map((col, i) => (
               <th
                 key={i}
-                className="px-2 py-1 text-left text-[10px] font-bold uppercase tracking-wider border-b"
+                className="px-2 py-1 text-left text-[12px] font-bold uppercase tracking-wider border-b"
                 style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
               >
                 {col}
@@ -146,7 +146,7 @@ function ResultTable({
         </tbody>
       </table>
       {rows.length > maxRows && (
-        <div className="px-2 py-0.5 text-[10px] border-t" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
+        <div className="px-2 py-0.5 text-[12px] border-t" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderColor: 'var(--border)' }}>
           Showing {maxRows} of {rows.length} rows
         </div>
       )}
@@ -161,7 +161,7 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
     <div className="min-w-0">
       <div className="flex items-center gap-2 mb-1">
         <span
-          className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
+          className="inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-bold uppercase tracking-wide border"
           style={{ fontFamily: 'var(--font-mono)', background: 'var(--accent-subtle)', color: 'var(--accent)', borderColor: 'var(--border)' }}
         >
           {table.name}
@@ -174,7 +174,7 @@ function SchemaTable({ table }: { table: SqlProblem['tables'][0] }) {
               {table.columns.map((col, i) => (
                 <th
                   key={i}
-                  className="px-2 py-1 text-left text-[10px] font-bold uppercase tracking-wider border-b"
+                  className="px-2 py-1 text-left text-[12px] font-bold uppercase tracking-wider border-b"
                   style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                 >
                   {col}
@@ -455,7 +455,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 : { color: 'var(--text-secondary)' }
               }>
               {cat.label}
-              <span className="text-[9px] opacity-70">{catSolved}/{catProblems.length}</span>
+              <span className="text-[12px] opacity-70">{catSolved}/{catProblems.length}</span>
             </button>
           );
         })}
@@ -465,7 +465,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
       <div className="flex items-center gap-0.5 px-2 py-1 overflow-x-auto no-scrollbar" style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)' }}>
         {categoryProblems.map((p) => (
           <button key={p.id} onClick={() => setSelectedProblemId(p.id)}
-            className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium rounded-md transition-[background-color,color,border-color] duration-150 active:scale-[0.98] whitespace-nowrap flex-shrink-0"
+            className="flex items-center gap-1 px-2 py-1 text-[12px] font-medium rounded-md transition-[background-color,color,border-color] duration-150 active:scale-[0.98] whitespace-nowrap flex-shrink-0"
             style={p.id === selectedProblemId
               ? { background: 'var(--accent-subtle)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
               : { color: 'var(--text-muted)' }
@@ -515,7 +515,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 </svg>
               </button>
               {solved.has(problem.id) && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[12px] font-bold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
@@ -575,7 +575,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                       <>
                         <div className="flex items-center gap-2 mb-1">
                           <span
-                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border"
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-[12px] font-bold uppercase tracking-wide border"
                             style={{ fontFamily: 'var(--font-mono)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                           >
                             Expected Output
@@ -605,12 +605,12 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent)' }}>
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 1.9V18h6v-1.4c0-.7.4-1.4 1-1.9A7 7 0 0 0 12 2z" />
                   </svg>
-                  <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Approach</span>
+                  <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Approach</span>
                 </div>
                 <ol className="px-2 py-1.5 space-y-1">
                   {problem.hints.map((hint, i) => (
                     <li key={i} className="text-[12px] flex items-start gap-1.5 font-medium" style={{ color: 'var(--text-primary)' }}>
-                      <span className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{i + 1}</span>
+                      <span className="shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full text-[12px] font-bold" style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>{i + 1}</span>
                       <span className="leading-snug">{hint}</span>
                     </li>
                   ))}
@@ -625,7 +625,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                       <polyline points="16 18 22 12 16 6" />
                       <polyline points="8 6 2 12 8 18" />
                     </svg>
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Solution</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-primary)' }}>Solution</span>
                   </div>
                   <div className="flex items-center gap-1">
                     {showSolution && (
@@ -643,7 +643,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                           if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
                         }}
                         id="sql-copy-btn"
-                        className="px-1.5 py-0 rounded text-[10px] font-bold transition-colors"
+                        className="px-1.5 py-0 rounded text-[12px] font-bold transition-colors"
                         style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                       >
                         Copy
@@ -651,7 +651,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                     )}
                     <button
                       onClick={() => setShowSolution(!showSolution)}
-                      className="px-1.5 py-0 rounded text-[10px] font-bold transition-colors"
+                      className="px-1.5 py-0 rounded text-[12px] font-bold transition-colors"
                       style={{ background: showSolution ? 'var(--bg-surface)' : 'var(--accent-subtle)', color: showSolution ? 'var(--text-secondary)' : 'var(--accent)', border: '1px solid var(--border)' }}
                     >
                       {showSolution ? 'Hide' : 'Reveal'}
@@ -666,7 +666,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                     {problem.solution}
                   </pre>
                 ) : (
-                  <div className="px-2 py-1 text-[11px] italic" style={{ color: 'var(--text-muted)' }}>
+                  <div className="px-2 py-1 text-[12px] italic" style={{ color: 'var(--text-muted)' }}>
                     Try the problem first, then reveal to compare.
                   </div>
                 )}
@@ -689,8 +689,8 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
             }}
           >
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>SQL Editor</span>
-              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>SQL Editor</span>
+              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                 Ctrl+Enter to run
               </span>
             </div>
@@ -702,7 +702,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                   setError(null);
                   setSubmitResult(null);
                 }}
-                className="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors"
+                className="px-2.5 py-1 rounded text-[12px] font-semibold transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
                 data-tip="Reset to starter code"
               >
@@ -711,7 +711,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
               {dbError && (
                 <button
                   onClick={() => initDb()}
-                  className="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors flex items-center gap-1"
+                  className="px-2.5 py-1 rounded text-[12px] font-semibold transition-colors flex items-center gap-1"
                   style={{ background: '#7f1d1d', color: '#fca5a5', border: '1px solid #b91c1c' }}
                   data-tip="SQL engine failed to load"
                 >
@@ -719,14 +719,14 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 </button>
               )}
               {!dbReady && !dbError && (
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
                   <div className="w-3 h-3 border border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
                   Loading engine…
                 </div>
               )}
               <button
                 onClick={runQuery}
-                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5"
+                className="px-3 py-1 rounded text-[12px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-1.5"
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <polygon points="5 3 19 12 5 21 5 3" />
@@ -735,7 +735,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
               </button>
               <button
                 onClick={submitQuery}
-                className="px-3 py-1 rounded text-[11px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors"
+                className="px-3 py-1 rounded text-[12px] font-bold text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] transition-colors"
               >
                 Submit
               </button>
@@ -775,7 +775,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
           <div className="flex items-center gap-1 px-4 py-2" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
             <button
               onClick={() => setOutputTab('output')}
-              className="px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wide transition-colors"
+              className="px-3 py-1 rounded text-[12px] font-bold uppercase tracking-wide transition-colors"
               style={outputTab === 'output'
                 ? { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
                 : { color: 'var(--text-muted)', border: '1px solid transparent' }
@@ -785,7 +785,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
             </button>
             <button
               onClick={() => setOutputTab('expected')}
-              className="px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wide transition-colors"
+              className="px-3 py-1 rounded text-[12px] font-bold uppercase tracking-wide transition-colors"
               style={outputTab === 'expected'
                 ? { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }
                 : { color: 'var(--text-muted)', border: '1px solid transparent' }
@@ -852,23 +852,23 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                   <div className="flex items-center justify-center gap-6 mb-5">
                     <div className="text-center">
                       <div className="text-xl font-bold" style={{ color: 'var(--accent)' }}>{totalSolved}</div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Solved</div>
+                      <div className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Solved</div>
                     </div>
                     <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
                     <div className="text-center">
                       <div className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{totalProblems - totalSolved}</div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Remaining</div>
+                      <div className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Remaining</div>
                     </div>
                     <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
                     <div className="text-center">
                       <div className="text-xl font-bold" style={{ color: 'var(--success)' }}>{catSolved}/{catProblems.length}</div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Category</div>
+                      <div className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Category</div>
                     </div>
                   </div>
 
                   {/* Progress bar */}
                   <div className="mb-6">
-                    <div className="flex justify-between text-[11px] mb-1">
+                    <div className="flex justify-between text-[12px] mb-1">
                       <span style={{ color: 'var(--text-muted)' }}>Overall Progress</span>
                       <span className="font-bold" style={{ color: 'var(--accent)' }}>{Math.round((totalSolved / totalProblems) * 100)}%</span>
                     </div>
@@ -939,7 +939,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 )}
                 {error && (
                   <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-red-400 mb-1">Error</div>
+                    <div className="text-[12px] font-bold uppercase tracking-wider text-red-400 mb-1">Error</div>
                     <pre
                       className="text-sm text-red-700 whitespace-pre-wrap"
                       style={{ fontFamily: 'var(--font-mono)' }}

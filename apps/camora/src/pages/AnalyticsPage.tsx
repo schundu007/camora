@@ -369,12 +369,12 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
               <>
                 <div className="flex gap-6 mb-10">
                   <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5 flex flex-col items-center justify-center text-center">
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-70 mb-2">Total Page Views</p>
+                    <p className="font-mono text-[12px] font-bold uppercase tracking-widest text-[var(--cam-primary)] opacity-70 mb-2">Total Page Views</p>
                     <p className="text-4xl font-bold text-[var(--text-primary)] tabular-nums">{stats.total_views.toLocaleString()}</p>
                   </div>
                   <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl px-6 py-5 flex flex-col items-center justify-center text-center"
                     style={{ borderColor: 'color-mix(in oklab, var(--cam-gold-leaf) 40%, var(--border))' }}>
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[var(--cam-gold-leaf)] opacity-80 mb-2">Unique Visitors</p>
+                    <p className="font-mono text-[12px] font-bold uppercase tracking-widest text-[var(--cam-gold-leaf)] opacity-80 mb-2">Unique Visitors</p>
                     <p className="text-4xl font-bold tabular-nums" style={{ color: 'var(--cam-gold-leaf)' }}>{stats.unique_visitors.toLocaleString()}</p>
                   </div>
                 </div>
@@ -385,18 +385,18 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                 {/* ── By Page ── */}
                 <div className="flex-1 min-w-0 flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Page</p>
-                  <span className="font-mono text-[10px] text-[var(--text-muted)]">{stats.by_path.length} routes</span>
+                  <p className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Page</p>
+                  <span className="font-mono text-[12px] text-[var(--text-muted)]">{stats.by_path.length} routes</span>
                 </div>
                 <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
                       <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 18%, var(--border))' }}>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest w-10" style={{ color: 'var(--cam-primary)', opacity: 0.5 }}>#</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Path</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Views</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest w-32" style={{ color: 'var(--cam-primary)' }}>Share</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Unique</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest w-10" style={{ color: 'var(--cam-primary)', opacity: 0.5 }}>#</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Path</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Views</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest w-32" style={{ color: 'var(--cam-primary)' }}>Share</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Unique</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -412,7 +412,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                             <tr key={row.path} style={{ background: rowBg, borderBottom: '1px solid color-mix(in oklab, var(--border) 60%, transparent)' }}
                               onMouseEnter={e => (e.currentTarget.style.background = 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-elevated))')}
                               onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
-                              <td className="px-4 py-3 font-mono text-[11px] font-bold text-center" style={{ color: 'var(--cam-primary)', opacity: 0.45 }}>{i + 1}</td>
+                              <td className="px-4 py-3 font-mono text-[12px] font-bold text-center" style={{ color: 'var(--cam-primary)', opacity: 0.45 }}>{i + 1}</td>
                               <td className="px-4 py-3 font-mono text-[12px] max-w-[320px] truncate" style={{ color: 'var(--cam-primary)' }}>{row.path}</td>
                               <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--text-primary)]">{views.toLocaleString()}</td>
                               <td className="px-4 py-3">
@@ -420,7 +420,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                                   <div className="flex-1 h-[6px] rounded-full" style={{ background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab, var(--border) 50%, transparent)' }}>
                                     <div className="h-full rounded-full transition-[width]" style={{ width: `${barPct}%`, background: i === 0 ? 'var(--cam-gold-leaf)' : 'var(--cam-primary)' }} />
                                   </div>
-                                  <span className="font-mono text-[10px] w-10 text-right shrink-0" style={{ color: 'var(--text-muted)' }}>{pct}%</span>
+                                  <span className="font-mono text-[12px] w-10 text-right shrink-0" style={{ color: 'var(--text-muted)' }}>{pct}%</span>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-right font-mono text-[13px] tabular-nums text-[var(--text-secondary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
@@ -439,18 +439,18 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                 {/* ── By Day ── */}
                 <div className="flex-1 min-w-0 flex flex-col">
                 <div className="flex items-center gap-3 mb-3">
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Day</p>
-                  <span className="font-mono text-[10px] text-[var(--text-muted)]">{stats.by_day.length} days</span>
+                  <p className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>By Day</p>
+                  <span className="font-mono text-[12px] text-[var(--text-muted)]">{stats.by_day.length} days</span>
                 </div>
                 <div className="w-full bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl overflow-hidden">
                   <table className="w-full text-left">
                     <thead>
                       <tr style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 18%, var(--border))' }}>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Date</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right" style={{ color: 'var(--cam-primary)' }}>Views</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Unique</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest w-48" style={{ color: 'var(--cam-primary)' }}>Volume</th>
-                        <th className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>∆ Day</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Date</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest text-right" style={{ color: 'var(--cam-primary)' }}>Views</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>Unique</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest w-48" style={{ color: 'var(--cam-primary)' }}>Volume</th>
+                        <th className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest text-right whitespace-nowrap" style={{ color: 'var(--cam-primary)' }}>∆ Day</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -470,8 +470,8 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                               onMouseLeave={e => (e.currentTarget.style.background = rowBg)}>
                               <td className="px-4 py-3 whitespace-nowrap">
                                 <span className="font-semibold text-[13px] text-[var(--text-primary)]">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
-                                <span className="font-mono text-[11px] text-[var(--text-muted)] ml-2">{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                {isPeak && <span className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, var(--bg-elevated))', color: 'var(--cam-gold-leaf-dk)' }}>peak</span>}
+                                <span className="font-mono text-[12px] text-[var(--text-muted)] ml-2">{d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                {isPeak && <span className="ml-2 px-1.5 py-0.5 rounded text-[12px] font-bold uppercase tracking-wide" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, var(--bg-elevated))', color: 'var(--cam-gold-leaf-dk)' }}>peak</span>}
                               </td>
                               <td className="px-4 py-3 text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--text-primary)]">{views.toLocaleString()}</td>
                               <td className="px-4 py-3 text-right font-mono text-[13px] tabular-nums text-[var(--text-secondary)]">{parseInt(row.unique_visitors).toLocaleString()}</td>
@@ -483,14 +483,14 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                               </td>
                               <td className="px-4 py-3 text-right">
                                 {delta != null ? (
-                                  <span className="font-mono text-[11px] font-semibold px-1.5 py-0.5 rounded"
+                                  <span className="font-mono text-[12px] font-semibold px-1.5 py-0.5 rounded"
                                     style={{
                                       background: delta > 0 ? 'color-mix(in oklab, #22c55e 12%, var(--bg-elevated))' : delta < 0 ? 'color-mix(in oklab, #ef4444 12%, var(--bg-elevated))' : 'var(--bg-elevated)',
                                       color: delta > 0 ? '#16a34a' : delta < 0 ? '#dc2626' : 'var(--text-muted)',
                                     }}>
                                     {delta > 0 ? '+' : ''}{delta}%
                                   </span>
-                                ) : <span className="text-[var(--text-muted)] text-[11px]">—</span>}
+                                ) : <span className="text-[var(--text-muted)] text-[12px]">—</span>}
                               </td>
                             </tr>
                           );
@@ -508,8 +508,8 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                 {/* ── Unique Visitors ── */}
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <p className="font-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Unique Visitors</p>
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 12%, var(--bg-elevated))', color: 'var(--cam-gold-leaf-dk)' }}>{stats.unique_visitors} IPs</span>
+                    <p className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Unique Visitors</p>
+                    <span className="font-mono text-[12px] px-2 py-0.5 rounded" style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 12%, var(--bg-elevated))', color: 'var(--cam-gold-leaf-dk)' }}>{stats.unique_visitors} IPs</span>
                   </div>
                   {!visitorsLoaded && (
                     <button onClick={fetchVisitors} disabled={visitorsLoading}
@@ -531,7 +531,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                       <thead>
                         <tr style={{ background: 'color-mix(in oklab, var(--cam-gold-leaf) 7%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 20%, var(--border))' }}>
                           {['Location', 'IP', 'Browser', 'OS', 'Views', 'Top Page', 'Referrer', 'Last Seen'].map(h => (
-                            <th key={h} className="px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{h}</th>
+                            <th key={h} className="px-4 py-3 font-mono text-[12px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -570,12 +570,12 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                               </td>
                               <td className="px-4 py-2.5">
                                 <span className="font-mono text-[12px] font-bold tabular-nums text-[var(--text-primary)]">{v.views}</span>
-                                <span className="font-mono text-[10px] text-[var(--text-muted)] ml-1">/ {v.pages_count}p</span>
+                                <span className="font-mono text-[12px] text-[var(--text-muted)] ml-1">/ {v.pages_count}p</span>
                               </td>
-                              <td className="px-4 py-2.5 font-mono text-[11px] whitespace-nowrap" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{topPage}</td>
-                              <td className="px-4 py-2.5 text-[11px] text-[var(--text-muted)] whitespace-nowrap">{referrer}</td>
+                              <td className="px-4 py-2.5 font-mono text-[12px] whitespace-nowrap" style={{ color: 'var(--cam-gold-leaf-dk)' }}>{topPage}</td>
+                              <td className="px-4 py-2.5 text-[12px] text-[var(--text-muted)] whitespace-nowrap">{referrer}</td>
                               <td className="px-4 py-2.5 whitespace-nowrap">
-                                <span className="font-mono text-[11px] text-[var(--text-muted)]">{relTime}</span>
+                                <span className="font-mono text-[12px] text-[var(--text-muted)]">{relTime}</span>
                               </td>
                             </tr>
                           );
@@ -614,7 +614,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                         : 'border-[var(--border)] hover:border-[var(--cam-primary)]/30'
                     }`}>
                     <span className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: c.accent }} />
-                    <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-3">{c.label}</p>
+                    <p className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-[var(--text-muted)] mb-3">{c.label}</p>
                     <p className="text-[2rem] font-bold leading-none tabular-nums" style={{ color: c.numColor }}>{c.value}</p>
                   </button>
                 ))}
@@ -634,7 +634,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                   className="w-full pl-9 pr-4 py-2.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--cam-primary)] focus:ring-1 focus:ring-[var(--cam-primary)]/20 transition-[border-color,box-shadow]" />
               </div>
               {usersLoaded && (
-                <span className="font-mono text-[11px] text-[var(--text-muted)] whitespace-nowrap tabular-nums">{filteredUsers.length} / {users.length}</span>
+                <span className="font-mono text-[12px] text-[var(--text-muted)] whitespace-nowrap tabular-nums">{filteredUsers.length} / {users.length}</span>
               )}
               <RefreshBtn onClick={() => { setUsersLoaded(false); fetchUsers(); }} loading={usersLoading} />
             </div>
@@ -664,7 +664,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                     <tr className="border-b border-[var(--border)]"
                       style={{ background: 'color-mix(in oklab, var(--cam-primary) 7%, var(--bg-surface))' }}>
                       {['User', 'Email', 'Plan', 'Location', 'Target', 'Last Login', 'Joined', 'Actions'].map(h => (
-                        <th key={h} className="px-3 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] whitespace-nowrap"
+                        <th key={h} className="px-3 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em] whitespace-nowrap"
                           style={{ color: 'var(--cam-primary)', opacity: 0.85 }}>{h}</th>
                       ))}
                     </tr>
@@ -687,14 +687,14 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                                   style={{ boxShadow: '0 0 0 2px color-mix(in oklab, var(--cam-primary) 30%, transparent)' }}
                                   referrerPolicy="no-referrer" />
                               ) : (
-                                <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[11px] font-bold"
+                                <div className="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[12px] font-bold"
                                   style={{ background: 'color-mix(in oklab, var(--cam-primary) 18%, var(--bg-elevated))', color: 'var(--cam-primary)' }}>
                                   {(u.name || u.email)[0].toUpperCase()}
                                 </div>
                               )}
                               <div className="min-w-0">
                                 <p className="font-semibold text-[var(--text-primary)] truncate leading-snug">{u.name || '—'}</p>
-                                {u.username && <p className="font-mono text-[10px] text-[var(--text-muted)] truncate">@{u.username}</p>}
+                                {u.username && <p className="font-mono text-[12px] text-[var(--text-muted)] truncate">@{u.username}</p>}
                               </div>
                             </div>
                           </td>
@@ -713,11 +713,11 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                                 : { background: 'var(--bg-elevated)', color: 'var(--text-muted)' };
                               return (
                                 <div className="flex items-center gap-1.5">
-                                  <span className="inline-block px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wide" style={badgeStyle}>
+                                  <span className="inline-block px-2 py-0.5 rounded font-mono text-[12px] font-bold uppercase tracking-wide" style={badgeStyle}>
                                     {cat === 'paid' ? (u.sub_plan || 'paid').replace(/_/g, ' ') : cat}
                                   </span>
                                   {cat === 'trial' && u.trial_ends_at && (
-                                    <span className="font-mono text-[10px]" style={{ color: 'var(--cam-primary)', opacity: 0.5 }}>
+                                    <span className="font-mono text-[12px]" style={{ color: 'var(--cam-primary)', opacity: 0.5 }}>
                                       · {new Date(u.trial_ends_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                     </span>
                                   )}
@@ -759,7 +759,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                                   <button key={d}
                                     onClick={() => grantTrial(u.id, d)}
                                     disabled={granting === u.id}
-                                    className="px-2.5 py-[3px] font-mono text-[11px] font-bold disabled:opacity-50 active:scale-95 transition-colors duration-75"
+                                    className="px-2.5 py-[3px] font-mono text-[12px] font-bold disabled:opacity-50 active:scale-95 transition-colors duration-75"
                                     style={{
                                       color: 'var(--cam-primary)',
                                       background: 'color-mix(in oklab, var(--cam-primary) 6%, var(--bg-surface))',
@@ -776,7 +776,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                               <button
                                 onClick={() => toggleAdmin(u.id, !u.is_admin)}
                                 disabled={togglingAdmin === u.id}
-                                className="px-2.5 py-[3px] rounded font-mono text-[11px] font-bold disabled:opacity-50 active:scale-95 transition-colors duration-75"
+                                className="px-2.5 py-[3px] rounded font-mono text-[12px] font-bold disabled:opacity-50 active:scale-95 transition-colors duration-75"
                                 style={u.is_admin ? {
                                   background: 'color-mix(in oklab, var(--cam-gold-leaf) 16%, var(--bg-surface))',
                                   color: 'var(--cam-gold-leaf)',
@@ -852,7 +852,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                       <tr className="border-b border-[var(--border)]"
                         style={{ background: 'color-mix(in oklab, var(--cam-primary) 7%, var(--bg-surface))' }}>
                         {['To', 'Subject', 'Status', 'Sent'].map(h => (
-                          <th key={h} className="px-4 py-2.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em]"
+                          <th key={h} className="px-4 py-2.5 font-mono text-[12px] font-bold uppercase tracking-[0.16em]"
                             style={{ color: 'var(--cam-primary)', opacity: 0.85 }}>{h}</th>
                         ))}
                       </tr>
@@ -870,7 +870,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                             <td className="px-4 py-2.5 text-xs text-[var(--text-secondary)] max-w-[200px] truncate">{e.to.join(', ')}</td>
                             <td className="px-4 py-2.5 text-[var(--text-primary)] font-medium max-w-[300px] truncate">{e.subject}</td>
                             <td className="px-4 py-2.5">
-                              <span className="inline-block px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wide" style={
+                              <span className="inline-block px-2 py-0.5 rounded font-mono text-[12px] font-bold uppercase tracking-wide" style={
                                 e.last_event === 'delivered' ? { background: 'color-mix(in oklab, var(--success) 14%, var(--bg-surface))', color: 'var(--success)' }
                                 : e.last_event === 'opened' || e.last_event === 'clicked' ? { background: 'color-mix(in oklab, var(--cam-primary) 11%, var(--bg-surface))', color: 'var(--cam-primary)' }
                                 : e.last_event === 'bounced' ? { background: 'color-mix(in oklab, var(--danger) 12%, var(--bg-surface))', color: 'var(--danger)' }

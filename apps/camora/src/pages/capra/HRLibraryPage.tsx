@@ -163,7 +163,7 @@ function FilterDropdown({
           <span style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 17, height: 17, borderRadius: '50%',
-            background: 'var(--cam-gold-leaf)', color: '#000', fontSize: 10, fontWeight: 700,
+            background: 'var(--cam-gold-leaf)', color: '#000', fontSize: 12, fontWeight: 700,
           }}>{count}</span>
         )}
         <svg width="9" height="9" viewBox="0 0 10 10" fill="none"
@@ -339,7 +339,7 @@ const DSA_GRID = '52px 1fr 210px 84px 64px';
 
 function DsaTableHeader() {
   const cell: React.CSSProperties = {
-    fontSize: 10, fontWeight: 700, color: 'var(--text-muted)',
+    fontSize: 12, fontWeight: 700, color: 'var(--text-muted)',
     letterSpacing: '0.07em', textTransform: 'uppercase',
   };
   return (
@@ -372,7 +372,7 @@ function DsaProblemRow({ problem, onClick }: { problem: LcProblem; onClick: () =
         transition: 'background 0.1s',
       }}
     >
-      <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
         {problem.lc_id ?? '—'}
       </span>
       <span style={{
@@ -391,7 +391,7 @@ function DsaProblemRow({ problem, onClick }: { problem: LcProblem; onClick: () =
           <Chip key={tag.slug}>{tag.name}</Chip>
         ))}
         {problem.topic_tags.length > 2 && (
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', flexShrink: 0 }}>
             +{problem.topic_tags.length - 2}
           </span>
         )}
@@ -402,7 +402,7 @@ function DsaProblemRow({ problem, onClick }: { problem: LcProblem; onClick: () =
       }}>
         {problem.difficulty}
       </span>
-      <span style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'right', fontFamily: 'var(--font-mono)' }}>
         {problem.acceptance_rate != null ? `${(problem.acceptance_rate * 100).toFixed(0)}%` : '—'}
       </span>
     </div>
@@ -843,7 +843,7 @@ export default function HRLibraryPage() {
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{
-                  fontSize: 11, fontWeight: 700, color: 'var(--cam-gold-leaf)',
+                  fontSize: 12, fontWeight: 700, color: 'var(--cam-gold-leaf)',
                   textTransform: 'uppercase', letterSpacing: '0.08em',
                 }}>
                   LeetCode
@@ -855,7 +855,7 @@ export default function HRLibraryPage() {
                   style={{
                     background: 'var(--bg-surface)', color: 'var(--text-secondary)',
                     border: '1px solid var(--border)', borderRadius: 6,
-                    padding: '3px 8px', fontSize: 11, cursor: 'pointer', outline: 'none',
+                    padding: '3px 8px', fontSize: 12, cursor: 'pointer', outline: 'none',
                   }}
                 >
                   <option value="">All Topics</option>
@@ -864,11 +864,11 @@ export default function HRLibraryPage() {
                 {dsaTag && (
                   <button onClick={() => { setDsaTag(''); setDsaPage(1); }} style={{
                     background: 'none', border: 'none', cursor: 'pointer',
-                    fontSize: 11, color: 'var(--text-muted)', padding: '2px 4px',
+                    fontSize: 12, color: 'var(--text-muted)', padding: '2px 4px',
                   }}>✕ clear</button>
                 )}
               </div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 {dsaTotal.toLocaleString()} problems
               </span>
             </div>
@@ -902,7 +902,7 @@ export default function HRLibraryPage() {
                     cursor: dsaPage <= 1 ? 'not-allowed' : 'pointer',
                   }}
                 >← Prev</button>
-                <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center', padding: '0 8px' }}>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center', padding: '0 8px' }}>
                   {dsaPage} / {dsaPages}
                 </span>
                 <button

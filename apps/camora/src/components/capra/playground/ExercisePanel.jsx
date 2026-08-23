@@ -51,10 +51,10 @@ export default function ExercisePanel({ sessionId, exercises, onProgressUpdate }
       {/* Header */}
       <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ fontSize: 13 }}>⎈</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           Exercises
         </span>
-        <span style={{ fontSize: 10, color: totalDone === exercises.length ? '#10b981' : 'rgba(255,255,255,0.35)', fontWeight: 700 }}>
+        <span style={{ fontSize: 12, color: totalDone === exercises.length ? '#10b981' : 'rgba(255,255,255,0.35)', fontWeight: 700 }}>
           {totalDone}/{exercises.length}
         </span>
       </div>
@@ -69,7 +69,7 @@ export default function ExercisePanel({ sessionId, exercises, onProgressUpdate }
               type="button"
               onClick={() => { setActiveIdx(i); setResult(null); }}
               style={{
-                width: 24, height: 24, borderRadius: 5, fontSize: 10, fontWeight: 700,
+                width: 24, height: 24, borderRadius: 5, fontSize: 12, fontWeight: 700,
                 border: `1px solid ${activeIdx === i ? '#0047AB' : done ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`,
                 background: activeIdx === i ? 'rgba(0,71,171,0.25)' : done ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)',
                 color: done ? '#10b981' : activeIdx === i ? '#7ab3ff' : 'rgba(255,255,255,0.4)',
@@ -85,15 +85,15 @@ export default function ExercisePanel({ sessionId, exercises, onProgressUpdate }
       {/* Active exercise */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px 0' }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: '#fff', marginBottom: 6 }}>{ex.title}</div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55, marginBottom: 10 }}>{ex.prompt}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.55, marginBottom: 10 }}>{ex.prompt}</div>
         {ex.hint && (
-          <div style={{ fontSize: 10, color: 'rgba(0,171,255,0.7)', fontFamily: '"IBM Plex Mono",monospace', marginBottom: 10, padding: '6px 8px', borderRadius: 5, background: 'rgba(0,71,171,0.1)', border: '1px solid rgba(0,71,171,0.2)' }}>
+          <div style={{ fontSize: 12, color: 'rgba(0,171,255,0.7)', fontFamily: 'var(--font-mono)', marginBottom: 10, padding: '6px 8px', borderRadius: 5, background: 'rgba(0,71,171,0.1)', border: '1px solid rgba(0,71,171,0.2)' }}>
             {ex.hint}
           </div>
         )}
         {result && (
           <div style={{
-            fontSize: 11, padding: '7px 10px', borderRadius: 6, marginBottom: 10,
+            fontSize: 12, padding: '7px 10px', borderRadius: 6, marginBottom: 10,
             background: result.pass ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.1)',
             border: `1px solid ${result.pass ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
             color: result.pass ? '#10b981' : '#fca5a5',

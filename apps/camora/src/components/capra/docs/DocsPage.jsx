@@ -1133,14 +1133,14 @@ export default function DocsPage({ onBack }) {
                         <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,255,255,0.08), transparent 70%)' }} />
                         <div className="relative p-4 md:p-5">
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
+                            <p className="text-[12px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}>
                               PREPARE
                             </p>
                             <h1 className="font-bold tracking-tight text-xl md:text-2xl mb-1" style={{ fontFamily: 'var(--font-display)', lineHeight: 1.1, color: 'var(--cam-strip-heading)' }}>
                               {user?.name ? <>Welcome back, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>{user.name.split(' ')[0]}</span>.</> : <>Your prep, <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>organized.</span></>}
                             </h1>
                           </div>
-                          <div className="flex items-center gap-2 mt-2 flex-wrap" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
                             <span style={{ color: 'var(--cam-gold-leaf-lt)', fontWeight: 700 }}>{overviewTotalCompleted}</span>
                             <span>of {overviewTotalTopics} topics completed</span>
                             <span style={{ color: 'rgba(255,255,255,0.2)' }}>·</span>
@@ -1254,7 +1254,7 @@ export default function DocsPage({ onBack }) {
                         const daily = dailyPool[seed % dailyPool.length];
                         return (
                           <div className="mb-8">
-                            <p className="text-[10px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>START HERE</p>
+                            <p className="text-[12px] font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>START HERE</p>
                             <h2 className="text-base font-bold tracking-tight mb-2" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Pick up where you left off</h2>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                               {/* Continue learning */}
@@ -1264,7 +1264,7 @@ export default function DocsPage({ onBack }) {
                                   className="card-lift rounded-lg p-3 flex flex-col"
                                   style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                                 >
-                                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>CONTINUE</span>
+                                  <span className="text-[12px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>CONTINUE</span>
                                   <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{lastTitle}</h3>
                                   <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Resume the topic you were on last.</p>
                                 </Link>
@@ -1274,7 +1274,7 @@ export default function DocsPage({ onBack }) {
                                   className="card-lift rounded-lg p-3 flex flex-col"
                                   style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                                 >
-                                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>NEW HERE</span>
+                                  <span className="text-[12px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>NEW HERE</span>
                                   <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Start with DSA</h3>
                                   <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>The most-studied category.</p>
                                 </Link>
@@ -1285,7 +1285,7 @@ export default function DocsPage({ onBack }) {
                                 className="card-lift rounded-lg p-3 flex flex-col"
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
-                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--warning-text)', fontFamily: 'var(--font-mono)' }}>TODAY'S PICK</span>
+                                <span className="text-[12px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--warning-text)', fontFamily: 'var(--font-mono)' }}>TODAY'S PICK</span>
                                 <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{daily?.title || 'A new topic each day'}</h3>
                                 <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Daily rotation — fresh topic to revisit each morning.</p>
                               </Link>
@@ -1295,7 +1295,7 @@ export default function DocsPage({ onBack }) {
                                 className="card-lift rounded-lg p-3 flex flex-col"
                                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                               >
-                                <span className="text-[10px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>PRACTICE</span>
+                                <span className="text-[12px] font-bold uppercase tracking-[0.18em] mb-2" style={{ color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>PRACTICE</span>
                                 <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>Run a timed mock</h3>
                                 <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>AI-scored practice session with instant feedback.</p>
                               </Link>
@@ -1319,7 +1319,7 @@ export default function DocsPage({ onBack }) {
                                 <div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 80% at 0% 50%, rgba(0,71,171,0.18), transparent 70%)' }} />
                                 <div className="relative flex items-center justify-between flex-wrap gap-4">
                                   <div>
-                                    <div className="text-[10px] font-bold tracking-[0.18em] uppercase landing-mono mb-1" style={{ color: 'var(--cam-gold-leaf)' }}>Interview Playbook</div>
+                                    <div className="text-[12px] font-bold tracking-[0.18em] uppercase landing-mono mb-1" style={{ color: 'var(--cam-gold-leaf)' }}>Interview Playbook</div>
                                     <h3 className="text-xl font-extrabold landing-display" style={{ color: 'var(--cam-strip-heading)' }}>Your end-to-end interview checklist</h3>
                                     <p className="text-[12px] mt-1 landing-body" style={{ color: 'var(--cam-strip-text-muted)' }}>{interviewCheatsheet.before.length + interviewCheatsheet.during.length + interviewCheatsheet.after.length} steps across 3 phases · tick off as you go</p>
                                   </div>
@@ -1327,8 +1327,8 @@ export default function DocsPage({ onBack }) {
                                   <div className="flex items-center gap-2 flex-wrap">
                                     {phases.map((ph, i) => (
                                       <div key={ph.step} className="flex items-center gap-1.5">
-                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold landing-mono" style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-strip-heading)' }}>
-                                          <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-extrabold" style={{ background: ph.color, color: '#fff' }}>{ph.step}</span>
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold landing-mono" style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-strip-heading)' }}>
+                                          <span className="w-4 h-4 rounded-full flex items-center justify-center text-[12px] font-extrabold" style={{ background: ph.color, color: '#fff' }}>{ph.step}</span>
                                           {ph.label}
                                         </span>
                                         {i < phases.length - 1 && <Icon name="chevronRight" size={10} style={{ color: 'var(--cam-strip-text-muted)' }} />}
@@ -1343,18 +1343,18 @@ export default function DocsPage({ onBack }) {
                                   <div key={ph.step} style={{ borderRight: ci < 2 ? '1px solid var(--border)' : 'none', background: ci === 1 ? 'var(--cam-gold-leaf-50)' : 'transparent' }}>
                                     {/* Column header */}
                                     <div className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: '1px solid var(--border)', background: 'var(--cam-strip-icon-bg)' }}>
-                                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold flex-shrink-0" style={{ background: ph.color, color: '#fff' }}>{ph.step}</span>
+                                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-extrabold flex-shrink-0" style={{ background: ph.color, color: '#fff' }}>{ph.step}</span>
                                       <div>
                                         <div className="text-[13px] font-bold leading-tight" style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-display)' }}>{ph.label}</div>
-                                        <div className="text-[10px] leading-tight" style={{ color: 'var(--cam-strip-text-muted)' }}>{ph.sub}</div>
+                                        <div className="text-[12px] leading-tight" style={{ color: 'var(--cam-strip-text-muted)' }}>{ph.sub}</div>
                                       </div>
-                                      <span className="ml-auto text-[10px] font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text-muted)' }}>{ph.items.length}</span>
+                                      <span className="ml-auto text-[12px] font-bold landing-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text-muted)' }}>{ph.items.length}</span>
                                     </div>
                                     {/* Steps */}
                                     <div className="flex flex-col px-4 py-3 gap-2.5">
                                       {ph.items.map((item, i) => (
                                         <label key={i} className="flex items-start gap-2.5 cursor-pointer group">
-                                          <span className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[9px] font-extrabold mt-0.5 transition-colors group-hover:border-[var(--cam-gold-leaf)]" style={{ borderColor: 'var(--border)', color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                                          <span className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[12px] font-extrabold mt-0.5 transition-colors group-hover:border-[var(--cam-gold-leaf)]" style={{ borderColor: 'var(--border)', color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
                                           <span className="text-[11.5px] leading-snug landing-body transition-colors" style={{ color: 'var(--cam-strip-text)' }}>{item}</span>
                                         </label>
                                       ))}
@@ -1888,12 +1888,12 @@ export default function DocsPage({ onBack }) {
                             return (
                               <div className="col-span-full px-3 py-2 flex items-center gap-3 rounded" style={{ background: 'transparent' }}>
                                 <Icon name={category.icon} size={12} style={{ color: 'var(--accent)' }} />
-                                <span className="landing-mono text-[10px] text-[var(--text-muted)] uppercase tracking-widest font-semibold">{category.name}</span>
-                                <span className="landing-mono text-[10px] text-[var(--text-muted)]">{completedCount}/{catTopics.length}</span>
+                                <span className="landing-mono text-[12px] text-[var(--text-muted)] uppercase tracking-widest font-semibold">{category.name}</span>
+                                <span className="landing-mono text-[12px] text-[var(--text-muted)]">{completedCount}/{catTopics.length}</span>
                                 <div className="flex-1 h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden max-w-[120px]">
                                   <div className="h-full bg-[var(--accent)] rounded-full transition-colors duration-500" style={{ width: `${progressPct}%` }} />
                                 </div>
-                                {progressPct === 100 && <span className="text-[10px] text-[var(--accent)] font-semibold">Done</span>}
+                                {progressPct === 100 && <span className="text-[12px] text-[var(--accent)] font-semibold">Done</span>}
                               </div>
                             );
                           })()}
@@ -2450,7 +2450,7 @@ export default function DocsPage({ onBack }) {
                           <span className="landing-mono text-2xl font-black transition-colors" style={{ color: 'var(--accent)' }}>
                             {phase.num}
                           </span>
-                          <div className="landing-mono text-[10px] text-[var(--accent)] font-semibold mt-1.5 mb-1">{phase.time}</div>
+                          <div className="landing-mono text-[12px] text-[var(--accent)] font-semibold mt-1.5 mb-1">{phase.time}</div>
                           <div className="text-[var(--text-primary)] font-semibold text-sm landing-display mb-0.5">{phase.step}</div>
                           <div className="text-[var(--text-muted)] text-xs leading-relaxed landing-body">{phase.desc}</div>
                         </div>
@@ -2615,12 +2615,12 @@ export default function DocsPage({ onBack }) {
                         <div className="px-5 py-4">
                           <div className="flex items-center justify-between mb-4">
                             <div>
-                              <span className="landing-mono text-[10px] text-[var(--accent)] tracking-widest uppercase">Your Progress</span>
+                              <span className="landing-mono text-[12px] text-[var(--accent)] tracking-widest uppercase">Your Progress</span>
                               <h2 className="landing-display font-bold text-lg tracking-tight text-[var(--text-primary)]">Readiness</h2>
                             </div>
                             <div className="text-right">
                               <span className="landing-mono text-2xl font-black text-[var(--accent)]">{readinessPercent}%</span>
-                              <span className="block text-[10px] landing-mono text-[var(--text-muted)] mt-0.5">{readinessLabel}</span>
+                              <span className="block text-[12px] landing-mono text-[var(--text-muted)] mt-0.5">{readinessLabel}</span>
                             </div>
                           </div>
                           {/* Progress bar */}
@@ -2642,7 +2642,7 @@ export default function DocsPage({ onBack }) {
                                 <div className="landing-mono text-lg font-bold" style={{ color: 'var(--accent)' }}>
                                   {stat.value}{stat.total !== null && <span className="text-[var(--text-muted)] text-sm">/{stat.total}</span>}
                                 </div>
-                                <div className="text-[10px] landing-mono text-[var(--text-muted)] mt-0.5">{stat.label}</div>
+                                <div className="text-[12px] landing-mono text-[var(--text-muted)] mt-0.5">{stat.label}</div>
                               </div>
                             ))}
                           </div>
@@ -2676,7 +2676,7 @@ export default function DocsPage({ onBack }) {
                                 <span className="text-xs font-bold landing-display" style={{ color: 'var(--accent)' }}>{step.title}</span>
                                 <Chip>{step.timing}</Chip>
                               </div>
-                              <p className="text-[11px] text-[var(--text-muted)] landing-body leading-tight truncate">{step.desc}</p>
+                              <p className="text-[14px] text-[var(--text-muted)] landing-body leading-tight truncate">{step.desc}</p>
                             </div>
                           </div>
                         ))}
@@ -2684,7 +2684,7 @@ export default function DocsPage({ onBack }) {
 
                       <div className="mt-2 px-3 py-1.5 rounded-md flex items-center gap-2" style={{ background: 'transparent', border: '1px solid var(--border)' }}>
                         <Icon name="lightbulb" size={11} className="text-[var(--accent)] flex-shrink-0" />
-                        <p className="text-[11px] text-[var(--text-muted)] landing-body"><span className="font-semibold text-[var(--accent)] landing-mono">Tip:</span> Spend 60% on <strong>Action</strong>, always quantify <strong>Result</strong>.</p>
+                        <p className="text-[14px] text-[var(--text-muted)] landing-body"><span className="font-semibold text-[var(--accent)] landing-mono">Tip:</span> Spend 60% on <strong>Action</strong>, always quantify <strong>Result</strong>.</p>
                       </div>
                     </div>
                   </div>
@@ -3023,7 +3023,7 @@ export default function DocsPage({ onBack }) {
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <Chip variant={topic.difficulty === 'beginner' ? 'easy' : topic.difficulty === 'intermediate' ? 'medium' : 'hard'}>{topic.difficulty}</Chip>
-                                        <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.estimatedTime}</span>
+                                        <span className="text-[12px] landing-mono text-[var(--text-muted)]">{topic.estimatedTime}</span>
                                         {topic.techStack?.slice(0, 3).map(tech => (
                                           <Chip key={tech}>{tech}</Chip>
                                         ))}
@@ -3097,7 +3097,7 @@ export default function DocsPage({ onBack }) {
                                       <p className="text-xs text-[var(--text-muted)] line-clamp-2 mb-2">{topic.description}</p>
                                       <div className="flex items-center gap-2">
                                         <Chip>{topic.phases?.length || 0} phases</Chip>
-                                        <span className="text-[10px] landing-mono text-[var(--text-muted)]">
+                                        <span className="text-[12px] landing-mono text-[var(--text-muted)]">
                                           {topic.phases?.reduce((acc, p) => acc + p.topics.length, 0) || 0} topics
                                         </span>
                                       </div>
@@ -3205,7 +3205,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2">
                                         <Chip>{topic.articles?.length || topic.questions} articles</Chip>
                                         {topic.blogUrl && (
-                                          <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[10px] landing-mono text-[var(--accent)] hover:underline">
+                                          <a href={topic.blogUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-[12px] landing-mono text-[var(--accent)] hover:underline">
                                             blog
                                           </a>
                                         )}
@@ -3277,7 +3277,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
-                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">
+                                          <span className="text-[12px] landing-mono text-[var(--text-muted)]">
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
                                           </span>
                                         )}
@@ -3344,7 +3344,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
-                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>
+                                          <span className="text-[12px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>
                                         )}
                                       </div>
                                     </div>
@@ -3411,7 +3411,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
-                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">
+                                          <span className="text-[12px] landing-mono text-[var(--text-muted)]">
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
                                           </span>
                                         )}
@@ -3463,7 +3463,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
-                                        {topic.visualizations?.length > 0 && <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>}
+                                        {topic.visualizations?.length > 0 && <span className="text-[12px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>}
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
@@ -3512,7 +3512,7 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
-                                        {topic.visualizations?.length > 0 && <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>}
+                                        {topic.visualizations?.length > 0 && <span className="text-[12px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>}
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0 mt-1">
@@ -3578,7 +3578,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
-                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">
+                                          <span className="text-[12px] landing-mono text-[var(--text-muted)]">
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
                                           </span>
                                         )}
@@ -3636,7 +3636,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
-                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>
+                                          <span className="text-[12px] landing-mono text-[var(--text-muted)]">{topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}</span>
                                         )}
                                       </div>
                                     </div>
@@ -3757,9 +3757,9 @@ export default function DocsPage({ onBack }) {
                                       </div>
                                       <div className="flex items-center gap-1.5 flex-wrap">
                                         <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{topic.questions} questions</span>
-                                        {isCompleted && <span className="badge-success text-[10px]">C</span>}
-                                        {isStarred && <span className="badge-warning text-[10px]">★</span>}
-                                        {isLocked && <span className="badge-warning text-[10px]">PRO</span>}
+                                        {isCompleted && <span className="badge-success text-[12px]">C</span>}
+                                        {isStarred && <span className="badge-warning text-[12px]">★</span>}
+                                        {isLocked && <span className="badge-warning text-[12px]">PRO</span>}
                                       </div>
                                     </div>
                                   </div>
@@ -3885,7 +3885,7 @@ export default function DocsPage({ onBack }) {
                                       <div className="flex items-center gap-2 mt-1.5">
                                         <Chip>{topic.questions} questions</Chip>
                                         {topic.visualizations?.length > 0 && (
-                                          <span className="text-[10px] landing-mono text-[var(--text-muted)]">
+                                          <span className="text-[12px] landing-mono text-[var(--text-muted)]">
                                             {topic.visualizations.length} diagram{topic.visualizations.length > 1 ? 's' : ''}
                                           </span>
                                         )}
@@ -3917,7 +3917,7 @@ export default function DocsPage({ onBack }) {
           <div className="w-48 flex-shrink-0 h-screen sticky top-0 hidden xl:flex flex-col py-6 px-3 overflow-y-auto bg-[var(--bg-surface)] border-l border-[var(--border)]">
             {/* Starred Topics */}
             <div>
-              <div className="landing-mono text-[10px] text-[var(--accent)] tracking-widest uppercase mb-3">Favorites</div>
+              <div className="landing-mono text-[12px] text-[var(--accent)] tracking-widest uppercase mb-3">Favorites</div>
               <div className="space-y-1">
                 {Object.keys(starredTopics).filter(k => starredTopics[k]).map((topicId) => {
                   const t = [...codingTopics, ...systemDesignTopics, ...systemDesignExtraTopics, ...systemDesigns, ...behavioralTopics, ...systemDesignPatterns, ...microservicesPatterns, ...systemDesignTradeoffs, ...scalableSystemsTopics, ...databaseTopics, ...sqlTopics, ...concurrencyTopics, ...lldTopics, ...lldProblems, ...companyPrep].find(x => x.id === topicId);

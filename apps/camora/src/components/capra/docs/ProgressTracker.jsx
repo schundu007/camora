@@ -46,7 +46,7 @@ export default function ProgressTracker() {
             style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-[10px] font-bold text-[var(--text-primary)]">{pct}%</span>
+          <span className="text-[12px] font-bold text-[var(--text-primary)]">{pct}%</span>
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export default function ProgressTracker() {
         {stats.map(s => (
           <div key={s.label} className="shrink-0">
             <div className="text-lg font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{s.value}</div>
-            <div className="text-[10px] text-[var(--text-muted)] font-medium">{s.label}</div>
+            <div className="text-[12px] text-[var(--text-muted)] font-medium">{s.label}</div>
           </div>
         ))}
       </div>

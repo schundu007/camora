@@ -205,11 +205,11 @@ function PreferencesTab() {
     <div className="px-5 py-3 flex items-center justify-between"
       style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
       <div className="flex items-center gap-3">
-        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>{title}</h3>
+        <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>{title}</h3>
         {badge}
       </div>
-      {saving && <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Saving…</span>}
-      {!saving && saved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+      {saving && <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Saving…</span>}
+      {!saving && saved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
     </div>
   );
 
@@ -253,7 +253,7 @@ function PreferencesTab() {
                       ? { background: 'var(--cam-primary)', color: '#fff', borderColor: 'var(--cam-primary)' }
                       : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
                   }>
-                  {isPrimary && <span style={{ fontSize: '10px' }}>★</span>}
+                  {isPrimary && <span style={{ fontSize: '12px' }}>★</span>}
                   {role}
                 </button>
               );
@@ -263,7 +263,7 @@ function PreferencesTab() {
           {/* Primary role picker — only shown when 2+ roles selected */}
           {selectedRoles.length > 1 && (
             <div className="p-3 rounded-xl" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-              <p className="text-[11px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--text-muted)' }}>Primary Role</p>
+              <p className="text-[12px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--text-muted)' }}>Primary Role</p>
               <div className="flex flex-wrap gap-2">
                 {selectedRoles.map(r => (
                   <button
@@ -274,12 +274,12 @@ function PreferencesTab() {
                       ? { background: 'var(--cam-gold-leaf)', color: '#020617', borderColor: 'var(--cam-gold-leaf)' }
                       : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', borderColor: 'var(--border)' }
                     }>
-                    {r === primaryRole && <span style={{ fontSize: '10px' }}>★</span>}
+                    {r === primaryRole && <span style={{ fontSize: '12px' }}>★</span>}
                     {r}
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] mt-2" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-[12px] mt-2" style={{ color: 'var(--text-muted)' }}>
                 Primary role auto-selects job categories and tailors AI coaching.
               </p>
             </div>
@@ -297,19 +297,19 @@ function PreferencesTab() {
         <div className="px-5 py-3 flex items-center justify-between"
           style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
           <div className="flex items-center gap-3">
-            <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Resumes</h3>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border" style={
+            <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Resumes</h3>
+            <span className="text-[12px] font-bold px-2 py-0.5 rounded-full border" style={
               resumes.length === 0
                 ? { background: 'rgba(217,119,6,0.08)', color: '#d97706', borderColor: 'rgba(217,119,6,0.3)' }
                 : { background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }
             }>{resumes.length} / {MAX_RESUMES}</span>
           </div>
           <div className="flex items-center gap-3">
-            {resumeSaved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+            {resumeSaved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
             {!atMax && (
               <button
                 onClick={() => setShowAddResume(v => !v)}
-                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors"
+                className="text-[12px] font-semibold px-2.5 py-1 rounded-lg border transition-colors"
                 style={{ color: 'var(--cam-primary)', borderColor: 'color-mix(in oklab, var(--cam-primary) 40%, transparent)', background: 'color-mix(in oklab, var(--cam-primary) 6%, transparent)' }}
               >
                 {showAddResume ? 'Cancel' : '+ Add Resume'}
@@ -338,12 +338,12 @@ function PreferencesTab() {
                   </svg>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium truncate" style={{ color: 'var(--text-primary)' }}>{resume.filename}</p>
-                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                       {new Date(resume.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   </div>
                   {resume.is_active ? (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0"
+                    <span className="text-[12px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0"
                       style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>
                       Active
                     </span>
@@ -351,7 +351,7 @@ function PreferencesTab() {
                     <button
                       onClick={() => handleActivateResume(resume.id)}
                       disabled={activatingId === resume.id}
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 flex-shrink-0"
+                      className="text-[12px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 flex-shrink-0"
                       style={{ color: 'var(--cam-primary)', borderColor: 'color-mix(in oklab, var(--cam-primary) 40%, transparent)', background: 'transparent' }}
                     >
                       {activatingId === resume.id ? '…' : 'Set Active'}
@@ -360,7 +360,7 @@ function PreferencesTab() {
                   <button
                     onClick={() => handleDeleteResume(resume.id)}
                     disabled={deletingId === resume.id}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 flex-shrink-0"
+                    className="text-[12px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 flex-shrink-0"
                     style={{ color: 'var(--danger, #ef4444)', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)' }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.14)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
@@ -384,7 +384,7 @@ function PreferencesTab() {
               <div className="flex gap-1">
                 {(['upload', 'text'] as const).map(t => (
                   <button key={t} onClick={() => setResumeTab(t)}
-                    className="px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wide transition-colors"
+                    className="px-3 py-1 rounded text-[12px] font-bold uppercase tracking-wide transition-colors"
                     style={resumeTab === t
                       ? { background: 'var(--cam-primary)', color: '#fff' }
                       : { background: 'var(--bg-surface)', color: 'var(--text-muted)' }
@@ -433,7 +433,7 @@ function PreferencesTab() {
                     className="w-full p-3 rounded-lg text-[13px] resize-none outline-none"
                     style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{resumeText.length > 0 ? `${resumeText.length.toLocaleString()} characters` : 'Paste plain text or copy from a doc'}</span>
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{resumeText.length > 0 ? `${resumeText.length.toLocaleString()} characters` : 'Paste plain text or copy from a doc'}</span>
                     <button onClick={handleSaveResumeText} disabled={savingText || !resumeText.trim()}
                       className="px-4 py-2 rounded-lg text-[13px] font-bold text-white disabled:opacity-50 transition-opacity"
                       style={{ background: 'var(--cam-primary)' }}>
@@ -541,7 +541,7 @@ function ActivityHeatmap() {
             {/* Day labels */}
             <div className="flex flex-col gap-[2px] pr-2" style={{ paddingTop: '18px' }}>
               {DAY_LABELS.map((d, i) => (
-                <div key={i} style={{ height: '11px', fontSize: '9px', color: 'var(--text-muted)', lineHeight: '11px' }}>{d}</div>
+                <div key={i} style={{ height: '11px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '11px' }}>{d}</div>
               ))}
             </div>
             {/* Grid */}
@@ -552,7 +552,7 @@ function ActivityHeatmap() {
                   <div key={`${month}-${col}`} style={{
                     position: 'absolute',
                     left: `${(col / 53) * 100}%`,
-                    fontSize: '9px',
+                    fontSize: '12px',
                     color: 'var(--text-muted)',
                     whiteSpace: 'nowrap',
                   }}>{month}</div>
@@ -583,7 +583,7 @@ function ActivityHeatmap() {
         </div>
       )}
       <div className="flex items-center justify-between mt-3">
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
           Practice sessions, quizzes &amp; challenges
         </div>
         <div className="flex items-center gap-4" style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
@@ -638,7 +638,7 @@ function SubscriptionCard() {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Subscription</h3>
+        <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Subscription</h3>
         {endDate && sub?.status === 'active' && sub?.cancel_at_period_end && (
           <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ color: 'var(--warning-text)', background: 'var(--bg-elevated)', border: '1px solid var(--warning)' }}>
             Your access to premium content will end on {endDate}
@@ -681,8 +681,8 @@ function ProfileSettings() {
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Profile settings</h3>
-        {langSaved && <span className="text-[11px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+        <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Profile settings</h3>
+        {langSaved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
       </div>
       <div className="divide-y divide-[var(--border)]">
         <div className="px-5 py-4 flex items-center justify-between">
@@ -750,7 +750,7 @@ function ContributionsTab() {
     <div className="space-y-6">
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
         <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-          <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Problem Contributions</h3>
+          <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Problem Contributions</h3>
         </div>
         <div className="px-5 py-4">
           <div className="flex items-center justify-between mb-6">
@@ -763,7 +763,7 @@ function ContributionsTab() {
           </div>
           {/* Table */}
           <div className="rounded-xl overflow-hidden border border-[var(--border)]">
-            <div className="grid grid-cols-5 gap-0 text-[10px] font-bold uppercase tracking-widest font-mono" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', color: 'var(--cam-primary)', opacity: 0.9 }}>
+            <div className="grid grid-cols-5 gap-0 text-[12px] font-bold uppercase tracking-widest font-mono" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', color: 'var(--cam-primary)', opacity: 0.9 }}>
               <div className="px-4 py-2.5">Company</div>
               <div className="px-4 py-2.5">Role Level</div>
               <div className="px-4 py-2.5">Round Type</div>
@@ -842,7 +842,7 @@ export default function ProfilePage() {
             {/* Account Info */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-                <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Account Information</h3>
+                <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Account Information</h3>
               </div>
               <div className="px-5 py-4 flex items-center justify-between">
                 <span className="text-sm text-[var(--text-primary)]">Email</span>
@@ -875,7 +875,7 @@ export default function ProfilePage() {
             {/* Invite section */}
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-                <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Invite Friends to Get Free Access</h3>
+                <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Invite Friends to Get Free Access</h3>
               </div>
               <div className="px-5 py-4">
                 <p className="text-sm text-[var(--text-secondary)] mb-4">

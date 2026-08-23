@@ -46,7 +46,7 @@ const TerminalPane = forwardRef(function TerminalPane({ wsUrl, onOutput, onExit,
 
       const term = new Terminal({
         theme: { background: '#0a0a0a', foreground: '#e4e4e4', cursor: '#10b981', selectionBackground: 'rgba(16,185,129,0.3)' },
-        fontFamily: '"IBM Plex Mono","Cascadia Code","Fira Mono",monospace',
+        fontFamily: 'var(--font-mono)',
         fontSize: initialFontSize,
         lineHeight: 1.4,
         cursorBlink: true,

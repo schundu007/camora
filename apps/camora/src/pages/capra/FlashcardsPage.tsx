@@ -108,7 +108,7 @@ export default function FlashcardsPage() {
       >
         <div className="max-w-3xl mx-auto">
           <div
-            className="text-[10px] font-bold uppercase tracking-[0.22em] mb-1"
+            className="text-[12px] font-bold uppercase tracking-[0.22em] mb-1"
             style={{ color: 'var(--cam-gold-leaf-lt, var(--cam-gold-leaf))', fontFamily: 'var(--font-mono)' }}
           >
             Active Recall
@@ -150,21 +150,21 @@ export default function FlashcardsPage() {
           >
             <div className="flex items-center gap-2 px-5 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
               {deckMeta && (
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: `${deckMeta.accent}1a`, color: deckMeta.accent }}>
+                <span className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: `${deckMeta.accent}1a`, color: deckMeta.accent }}>
                   {deckMeta.title}
                 </span>
               )}
               <span className="flex-1" />
-              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{queue.length} in queue</span>
+              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{queue.length} in queue</span>
             </div>
 
             <div className="px-6 py-8 min-h-[220px] flex flex-col">
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Prompt</div>
+              <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Prompt</div>
               <p className="text-lg leading-relaxed font-semibold" style={{ color: 'var(--text-primary)' }}>{current.front}</p>
 
               {revealed ? (
                 <div className="mt-5 pt-5" style={{ borderTop: '1px dashed var(--border)' }}>
-                  <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>Answer</div>
+                  <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>Answer</div>
                   <p className="text-[15px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{current.back}</p>
                 </div>
               ) : (
@@ -193,7 +193,7 @@ export default function FlashcardsPage() {
                     data-tip={`${r.label} — press ${i + 1}`}
                   >
                     <span className="text-sm font-bold" style={{ color: r.hue }}>{r.label}</span>
-                    <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{r.hint} · {i + 1}</span>
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{r.hint} · {i + 1}</span>
                   </button>
                 ))}
               </div>
@@ -215,7 +215,7 @@ export default function FlashcardsPage() {
           </div>
         )}
 
-        <p className="text-[11px] mt-4 text-center" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-[12px] mt-4 text-center" style={{ color: 'var(--text-muted)' }}>
           Tip: try to answer out loud before revealing. <strong style={{ color: 'var(--text-secondary)' }}>Space</strong> reveals · <strong style={{ color: 'var(--text-secondary)' }}>1–4</strong> rate.
         </p>
       </div>
@@ -238,7 +238,7 @@ function DeckChip({ id, title, accent, active, onClick }: { id: string; title: s
   return (
     <button
       onClick={onClick}
-      className="text-[11px] font-bold px-3 py-1.5 rounded-full transition-colors"
+      className="text-[12px] font-bold px-3 py-1.5 rounded-full transition-colors"
       style={{
         background: active ? 'var(--cam-gold-leaf)' : 'var(--bg-elevated)',
         color: active ? 'var(--cam-primary-dk, #082F49)' : 'var(--text-secondary)',

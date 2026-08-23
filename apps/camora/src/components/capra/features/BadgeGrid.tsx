@@ -218,7 +218,7 @@ export default function BadgeGrid() {
   return (
     <div className="rounded-2xl overflow-hidden space-y-5" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
-        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Badges</h3>
+        <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Badges</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">
           {badges.filter((b) => b.earned).length} of {badges.length} earned
         </p>
@@ -262,13 +262,13 @@ export default function BadgeGrid() {
             </p>
 
             {/* Description */}
-            <p className="text-[11px] mt-1 leading-tight text-[var(--text-muted)]">
+            <p className="text-[12px] mt-1 leading-tight text-[var(--text-muted)]">
               {badge.desc}
             </p>
 
             {/* Earned date */}
             {badge.earned && badge.earned_at && (
-              <p className="text-[10px] text-[var(--accent)] font-semibold mt-2">
+              <p className="text-[12px] text-[var(--accent)] font-semibold mt-2">
                 {new Date(badge.earned_at).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',

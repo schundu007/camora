@@ -86,7 +86,7 @@ export default function ReferralDashboard() {
         className="-mx-6 -mt-6 mb-0 px-6 py-3 rounded-t-2xl"
         style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}
       >
-        <h3 className="font-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Refer Friends, Earn Credits</h3>
+        <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Refer Friends, Earn Credits</h3>
         <p className="text-sm text-[var(--text-muted)] mt-1">Share your link and earn credits when friends sign up.</p>
       </div>
 
@@ -125,7 +125,7 @@ export default function ReferralDashboard() {
       {/* Referral List */}
       {data.referrals.length > 0 && (
         <div>
-          <h4 className="font-mono text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--cam-primary)' }}>Your Referrals</h4>
+          <h4 className="font-mono text-[12px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--cam-primary)' }}>Your Referrals</h4>
           <div className="space-y-2">
             {data.referrals.map((ref, i) => (
               <div key={i} className="flex items-center gap-3 py-2.5 px-3 bg-[var(--bg-elevated)] rounded-lg">

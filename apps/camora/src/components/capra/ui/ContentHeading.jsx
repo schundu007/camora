@@ -38,7 +38,7 @@ export default function ContentHeading({
       )}
       {eyebrow && (
         <span
-          className="content-heading-eyebrow text-[10px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded flex-shrink-0"
+          className="content-heading-eyebrow text-[12px] font-bold landing-mono tabular-nums tracking-[0.18em] px-2 py-0.5 rounded flex-shrink-0"
         >
           {eyebrow}
         </span>
@@ -51,7 +51,7 @@ export default function ContentHeading({
           {pills.map((p, i) => (
             <span
               key={i}
-              className="text-[10px] font-semibold tracking-wider px-2 py-0.5"
+              className="text-[12px] font-semibold tracking-wider px-2 py-0.5"
               style={{
                 background: 'var(--cam-strip-icon-bg)',
                 border: '1px solid var(--cam-strip-icon-border)',

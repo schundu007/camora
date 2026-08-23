@@ -59,7 +59,7 @@ export default function K8sPathPage() {
 
       {Object.entries(byModule).map(([mod, list]) => (
         <div key={mod} style={{ marginBottom: 32 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: 'color-mix(in oklab, var(--cam-primary) 70%, transparent)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'color-mix(in oklab, var(--cam-primary) 70%, transparent)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 10 }}>
             Module {mod}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -82,17 +82,17 @@ export default function K8sPathPage() {
                     <span style={{ fontSize: 18, lineHeight: 1 }}>{done ? '✅' : '⬜'}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{topic.title}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topic.summary}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topic.summary}</div>
                     </div>
                     <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: done ? '#10b981' : 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: done ? '#10b981' : 'var(--text-secondary)' }}>
                         {topic.completed_count}/{topic.exercise_count}
                       </div>
                       <div style={{ width: 60, height: 4, borderRadius: 2, background: 'var(--border)', marginTop: 4 }}>
                         <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: done ? '#10b981' : 'var(--cam-primary)', transition: 'width 0.3s' }} />
                       </div>
                     </div>
-                    <span style={{ fontSize: 11, color: 'var(--text-secondary)', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
                   </button>
 
                   {open && (
@@ -110,7 +110,7 @@ export default function K8sPathPage() {
                             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{ex.title}</div>
                             <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>{ex.prompt}</div>
                             {ex.hint && (
-                              <div style={{ fontSize: 11, color: 'color-mix(in oklab, var(--cam-primary) 80%, transparent)', marginTop: 4, fontFamily: '"IBM Plex Mono",monospace' }}>
+                              <div style={{ fontSize: 12, color: 'color-mix(in oklab, var(--cam-primary) 80%, transparent)', marginTop: 4, fontFamily: 'var(--font-mono)' }}>
                                 Hint: {ex.hint}
                               </div>
                             )}

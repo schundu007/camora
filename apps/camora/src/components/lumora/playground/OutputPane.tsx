@@ -20,12 +20,12 @@ interface Props {
 }
 
 const monoStyle: React.CSSProperties = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: "var(--font-mono)",
   letterSpacing: '-0.02em',
   WebkitFontSmoothing: 'antialiased',
 };
 
-const sans: React.CSSProperties = { fontFamily: 'Plus Jakarta Sans, sans-serif' };
+const sans: React.CSSProperties = { fontFamily: 'var(--font-sans)' };
 
 function formatTime(d: Date): string {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });

@@ -115,18 +115,18 @@ export default function CapabilityDeck() {
         }}
       >
         <span className="w-1.5 h-1.5 rounded-full" style={{ background: DANGER, animation: 'cd-pulse 1.1s ease-in-out infinite' }} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.2em' }}>LIVE</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.2em' }}>LIVE</span>
         <div className="w-px h-4" style={{ background: tx('var(--border)', 'var(--cam-primary-dk)') }} />
-        <span style={{ fontSize: 10, fontWeight: 800, color: tx('var(--text-muted)', 'var(--text-dimmed)'), fontFamily: MONO, letterSpacing: '0.2em' }}>CAMORA · AI COPILOT</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: tx('var(--text-muted)', 'var(--text-dimmed)'), fontFamily: MONO, letterSpacing: '0.2em' }}>CAMORA · AI COPILOT</span>
         <div className="flex-1" />
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO }}>
           latency&nbsp;<span style={{ color: ACCENT, fontWeight: 700 }}>0.4s</span>
         </span>
       </div>
 
       {/* Scene title */}
       <div className="relative px-6 pt-6 pb-3">
-        <div key={`eyebrow-${pulse}`} style={{ fontSize: 10, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.22em', textTransform: 'uppercase', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
+        <div key={`eyebrow-${pulse}`} style={{ fontSize: 12, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.22em', textTransform: 'uppercase', opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
           {meta.eyebrow}
         </div>
         <h3 key={`title-${pulse}`} style={{ marginTop: 6, fontSize: 24, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1.15, opacity: 0, animation: 'cd-fade-up 0.5s ease-out 0.08s forwards' }}>
@@ -175,7 +175,7 @@ export default function CapabilityDeck() {
             </button>
           ))}
         </div>
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.15em' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.15em' }}>
           {String(sceneIdx + 1).padStart(2, '0')} / {String(SCENES.length).padStart(2, '0')}
         </span>
         {!reduced && (
@@ -195,7 +195,7 @@ export default function CapabilityDeck() {
           </button>
         )}
         <div className="flex-1" />
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.14em' }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.14em' }}>
           APPLY · PREPARE · PRACTICE · ATTEND
         </span>
       </div>
@@ -219,7 +219,7 @@ function SceneLive({ lt }: { lt: boolean }) {
       <div style={{ background: tx('var(--bg-surface)', 'rgba(15,23,42,0.5)'), border: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), borderRadius: 10, padding: 14 }}>
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: DANGER, animation: 'cd-pulse 1.1s ease-in-out infinite' }} />
-          <span style={{ fontSize: 9, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.18em' }}>TRANSCRIBING</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: DANGER, fontFamily: MONO, letterSpacing: '0.18em' }}>TRANSCRIBING</span>
           <div className="ml-auto flex items-center gap-[2px] h-3">
             {Array.from({ length: 14 }).map((_, i) => (
               <span key={i} style={{ display: 'block', width: 2, height: '100%', borderRadius: 1, background: DANGER, transformOrigin: 'center', animation: `cd-wave ${0.8 + (i % 5) * 0.12}s ease-in-out ${(i % 6) * 0.06}s infinite` }} />
@@ -236,17 +236,17 @@ function SceneLive({ lt }: { lt: boolean }) {
         <span aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 40, background: 'linear-gradient(180deg, transparent, color-mix(in oklab, var(--cam-primary) 15%, transparent), transparent)', animation: 'cd-scan 2.6s ease-in-out 0.8s infinite', pointerEvents: 'none' }} />
         <div className="flex items-center gap-2 mb-3">
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: ACCENT }} />
-          <span style={{ fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>AI · RESPONSE</span>
-          <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-muted)', fontFamily: MONO }}>streaming…</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>AI · RESPONSE</span>
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO }}>streaming…</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {chips.map((c, i) => (
-            <span key={c} style={{ fontSize: 11, fontWeight: 700, color: ACCENT, background: 'color-mix(in oklab, var(--cam-primary) 7%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-primary) 20%, transparent)', padding: '4px 10px', borderRadius: 999, fontFamily: MONO, opacity: 0, animation: `cd-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) ${1.2 + i * 0.24}s forwards` }}>
+            <span key={c} style={{ fontSize: 12, fontWeight: 700, color: ACCENT, background: 'color-mix(in oklab, var(--cam-primary) 7%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-primary) 20%, transparent)', padding: '4px 10px', borderRadius: 999, fontFamily: MONO, opacity: 0, animation: `cd-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) ${1.2 + i * 0.24}s forwards` }}>
               {c}
             </span>
           ))}
         </div>
-        <div style={{ marginTop: 14, fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.6, opacity: 0, animation: 'cd-fade-up 0.45s ease-out 2.4s forwards' }}>
+        <div style={{ marginTop: 14, fontSize: 12, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.6, opacity: 0, animation: 'cd-fade-up 0.45s ease-out 2.4s forwards' }}>
           Use a <span style={{ color: ACCENT, fontWeight: 700 }}>sliding-window counter</span> in Redis for bursty traffic; fall back to token bucket at gateway for baseline limits.
         </div>
       </div>
@@ -288,7 +288,7 @@ function SceneCompany({ lt }: { lt: boolean }) {
       <div className="flex items-center gap-1.5 mb-3 flex-wrap">
         {COS.map((c, i) => (
           <span key={c} style={{
-            fontSize: 9, fontWeight: 800,
+            fontSize: 12, fontWeight: 800,
             color: i === coIdx ? GOLD_DK : 'var(--text-muted)',
             background: i === coIdx ? GOLD : 'transparent',
             border: `1px solid ${i === coIdx ? GOLD : 'color-mix(in oklab, var(--cam-gold-leaf) 25%, transparent)'}`,
@@ -300,8 +300,8 @@ function SceneCompany({ lt }: { lt: boolean }) {
         ))}
       </div>
 
-      <div key={co} style={{ fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, marginBottom: 10, opacity: 0, animation: 'cd-fade-up 0.35s ease-out 0.05s forwards' }}>
-        <span style={{ color: GOLD, fontWeight: 700, letterSpacing: '0.1em', fontFamily: MONO, fontSize: 10 }}>{co} LOOP · </span>
+      <div key={co} style={{ fontSize: 12, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, marginBottom: 10, opacity: 0, animation: 'cd-fade-up 0.35s ease-out 0.05s forwards' }}>
+        <span style={{ color: GOLD, fontWeight: 700, letterSpacing: '0.1em', fontFamily: MONO, fontSize: 12 }}>{co} LOOP · </span>
         {FLAVOR[co]}
       </div>
 
@@ -313,19 +313,19 @@ function SceneCompany({ lt }: { lt: boolean }) {
             opacity: 0, animation: `cd-fade-up 0.35s ease-out ${0.15 + i * 0.12}s forwards`,
           }}>
             <span style={{
-              fontSize: 9, fontWeight: 800, color: GOLD, fontFamily: MONO,
+              fontSize: 12, fontWeight: 800, color: GOLD, fontFamily: MONO,
               background: 'color-mix(in oklab, var(--cam-gold-leaf) 8%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 30%, transparent)',
               padding: '3px 6px', borderRadius: 4, letterSpacing: '0.14em',
             }}>
               {s.n}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: MONO, letterSpacing: '0.16em', minWidth: 130 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: MONO, letterSpacing: '0.16em', minWidth: 130 }}>
               {s.label}
             </span>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.08em', minWidth: 54 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.08em', minWidth: 54 }}>
               {s.dur}
             </span>
-            <span style={{ fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.4, flex: 1 }}>
+            <span style={{ fontSize: 12, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.4, flex: 1 }}>
               {s.detail}
             </span>
           </div>
@@ -376,7 +376,7 @@ function SceneCode({ lt }: { lt: boolean }) {
       <div className="flex items-center gap-1.5 mb-3 flex-wrap">
         {APPROACHES.map((a, i) => (
           <span key={a.label} style={{
-            fontSize: 10, fontWeight: 700,
+            fontSize: 12, fontWeight: 700,
             color: i === tab ? ACCENT : 'var(--text-muted)',
             background: i === tab ? 'color-mix(in oklab, var(--cam-primary) 8%, transparent)' : 'transparent',
             border: `1px solid ${i === tab ? 'color-mix(in oklab, var(--cam-primary) 33%, transparent)' : 'var(--cam-primary-dk)'}`,
@@ -393,8 +393,8 @@ function SceneCode({ lt }: { lt: boolean }) {
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-dimmed)' }} />
-          <span style={{ marginLeft: 8, fontSize: 10, color: 'var(--text-muted)' }}>two_sum.py</span>
-          <span style={{ marginLeft: 'auto', fontSize: 10, color: ACCENT, fontWeight: 700 }}>● {active.label}</span>
+          <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-muted)' }}>two_sum.py</span>
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: ACCENT, fontWeight: 700 }}>● {active.label}</span>
         </div>
         <div className="p-3" style={{ fontSize: 12, lineHeight: 1.7, minHeight: 132 }}>
           {active.lines.map((l, i) => (
@@ -410,7 +410,7 @@ function SceneCode({ lt }: { lt: boolean }) {
 
       <div style={{ marginTop: 10, opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.9s forwards' }}>
         <div className="flex items-start gap-2">
-          <span style={{ fontSize: 9, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.16em', marginTop: 2 }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.16em', marginTop: 2 }}>
             FOLLOW-UP
           </span>
           <p style={{ fontSize: 12, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, lineHeight: 1.55, flex: 1 }}>
@@ -469,7 +469,7 @@ function SceneDesign({ lt }: { lt: boolean }) {
       <div className="relative flex items-center gap-1.5 mb-3">
         {PROVIDERS.map((p, i) => (
           <span key={p} style={{
-            fontSize: 10, fontWeight: 800,
+            fontSize: 12, fontWeight: 800,
             color: i === provIdx ? '#FFFFFF' : tx('var(--text-secondary)', 'var(--text-dimmed)'),
             background: i === provIdx ? ACCENT : 'transparent',
             border: `1px solid ${i === provIdx ? ACCENT : tx('var(--border)', 'var(--cam-primary-dk)')}`,
@@ -479,7 +479,7 @@ function SceneDesign({ lt }: { lt: boolean }) {
             {p}
           </span>
         ))}
-        <span style={{ marginLeft: 'auto', fontSize: 10, color: ACCENT, fontWeight: 700, fontFamily: MONO, letterSpacing: '0.12em' }}>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: ACCENT, fontWeight: 700, fontFamily: MONO, letterSpacing: '0.12em' }}>
           re-rendered in 1.1s
         </span>
       </div>
@@ -522,18 +522,18 @@ function ScenePrep({ lt }: { lt: boolean }) {
     <div style={{ marginTop: 8 }}>
       <div style={{ background: tx('var(--bg-surface)', 'rgba(15,23,42,0.35)'), border: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), borderRadius: 10, padding: 14 }}>
         <div className="flex items-baseline gap-3 pb-3 mb-4" style={{ borderBottom: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0s forwards' }}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>SYSTEM DESIGN</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.18em' }}>SYSTEM DESIGN</span>
           <span style={{ fontSize: 14, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: DISPLAY, letterSpacing: '-0.01em' }}>
             Design a URL Shortener
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--text-muted)', fontFamily: MONO }}>Medium · 14 sections</span>
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO }}>Medium · 14 sections</span>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.15s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>FUNCTIONAL REQS</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>FUNCTIONAL REQS</div>
             {['Shorten long URL', 'Redirect 301/302', 'Custom aliases', 'Analytics'].map((r, i) => (
-              <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.3 + i * 0.09}s forwards` }}>
+              <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', fontSize: 12, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: DISPLAY, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.3 + i * 0.09}s forwards` }}>
                 <span style={{ width: 4, height: 4, borderRadius: '50%', background: ACCENT }} />
                 {r}
               </div>
@@ -541,14 +541,14 @@ function ScenePrep({ lt }: { lt: boolean }) {
           </div>
 
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.25s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>CAPACITY PLANNING</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>CAPACITY PLANNING</div>
             {[
               { k: 'DAU',        v: '100M' },
               { k: 'Writes/s',   v: '1.2K' },
               { k: 'Reads/s',    v: '120K' },
               { k: 'Storage',    v: '5 TB / yr' },
             ].map((m, i) => (
-              <div key={m.k} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '3px 0', fontSize: 11, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.45 + i * 0.09}s forwards` }}>
+              <div key={m.k} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '3px 0', fontSize: 12, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.45 + i * 0.09}s forwards` }}>
                 <span style={{ color: 'var(--text-muted)' }}>{m.k}</span>
                 <span style={{ color: tx('var(--text-primary)', '#FFFFFF'), fontWeight: 700 }}>{m.v}</span>
               </div>
@@ -556,30 +556,30 @@ function ScenePrep({ lt }: { lt: boolean }) {
           </div>
 
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.45s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>API DESIGN</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>API DESIGN</div>
             {[
               { m: 'POST', p: '/shorten' },
               { m: 'GET',  p: '/{code}' },
               { m: 'GET',  p: '/{code}/stats' },
             ].map((e, i) => (
               <div key={e.p} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.6 + i * 0.1}s forwards` }}>
-                <span style={{ fontSize: 9, fontWeight: 800, color: e.m === 'POST' ? ACCENT : 'var(--text-muted)', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'color-mix(in oklab, var(--cam-primary) 33%, transparent)' : 'var(--border)'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: e.m === 'POST' ? ACCENT : 'var(--text-muted)', fontFamily: MONO, padding: '1px 5px', border: `1px solid ${e.m === 'POST' ? 'color-mix(in oklab, var(--cam-primary) 33%, transparent)' : 'var(--border)'}`, borderRadius: 3, letterSpacing: '0.1em' }}>
                   {e.m}
                 </span>
-                <code style={{ fontSize: 11, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: MONO }}>{e.p}</code>
+                <code style={{ fontSize: 12, color: tx('var(--text-secondary)', 'var(--text-dimmed)'), fontFamily: MONO }}>{e.p}</code>
               </div>
             ))}
           </div>
 
           <div style={{ opacity: 0, animation: 'cd-fade-up 0.4s ease-out 0.55s forwards' }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>DATA MODEL · urls</div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.16em', marginBottom: 6 }}>DATA MODEL · urls</div>
             {[
               { f: 'id',         t: 'BIGINT PK' },
               { f: 'short_code', t: 'VARCHAR(8)' },
               { f: 'long_url',   t: 'TEXT' },
               { f: 'created_at', t: 'TIMESTAMP' },
             ].map((f, i) => (
-              <div key={f.f} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '2.5px 0', fontSize: 11, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.7 + i * 0.09}s forwards` }}>
+              <div key={f.f} style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '2.5px 0', fontSize: 12, fontFamily: MONO, opacity: 0, animation: `cd-fade-up 0.3s ease-out ${0.7 + i * 0.09}s forwards` }}>
                 <span style={{ color: tx('var(--text-secondary)', 'var(--text-dimmed)') }}>{f.f}</span>
                 <span style={{ color: 'var(--text-muted)' }}>{f.t}</span>
               </div>
@@ -588,10 +588,10 @@ function ScenePrep({ lt }: { lt: boolean }) {
         </div>
 
         <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.2s forwards' }}>
-          <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.1em' }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.1em' }}>
             Requirements · Capacity · Architecture · API · Data · Trade-offs · Edge Cases · Follow-ups
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: 10, color: ACCENT, fontWeight: 700, fontFamily: MONO }}>14 / 14 ✓</span>
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: ACCENT, fontWeight: 700, fontFamily: MONO }}>14 / 14 ✓</span>
         </div>
       </div>
     </div>
@@ -627,7 +627,7 @@ function SceneScore({ lt }: { lt: boolean }) {
                     {g.score}
                   </text>
                 </svg>
-                <span style={{ marginTop: 8, fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.15em', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${g.delay + 0.4}s forwards` }}>
+                <span style={{ marginTop: 8, fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.15em', opacity: 0, animation: `cd-fade-up 0.3s ease-out ${g.delay + 0.4}s forwards` }}>
                   {g.label}
                 </span>
               </div>
@@ -636,12 +636,12 @@ function SceneScore({ lt }: { lt: boolean }) {
         </div>
         <div className="flex items-center justify-between mt-5 pt-4" style={{ borderTop: tx('1px solid var(--border)', '1px solid var(--cam-primary-dk)'), opacity: 0, animation: 'cd-fade-up 0.4s ease-out 1.7s forwards' }}>
           <div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.18em' }}>OVERALL</div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: MONO, letterSpacing: '0.18em' }}>OVERALL</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: tx('var(--text-primary)', '#FFFFFF'), fontFamily: DISPLAY, letterSpacing: '-0.015em', lineHeight: 1, marginTop: 4 }}>
               92<span style={{ color: 'var(--text-muted)', fontSize: 18, fontWeight: 700 }}>&nbsp;/&nbsp;100</span>
             </div>
           </div>
-          <div style={{ padding: '8px 16px', borderRadius: 999, background: 'color-mix(in oklab, var(--cam-primary) 8%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-primary) 33%, transparent)', fontSize: 11, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.14em', animation: 'cd-glow-ring 1.6s ease-out 2s infinite' }}>
+          <div style={{ padding: '8px 16px', borderRadius: 999, background: 'color-mix(in oklab, var(--cam-primary) 8%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-primary) 33%, transparent)', fontSize: 12, fontWeight: 800, color: ACCENT, fontFamily: MONO, letterSpacing: '0.14em', animation: 'cd-glow-ring 1.6s ease-out 2s infinite' }}>
             READY FOR FAANG
           </div>
         </div>

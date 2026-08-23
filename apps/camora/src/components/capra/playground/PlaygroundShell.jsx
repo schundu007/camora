@@ -161,8 +161,8 @@ export default function PlaygroundShell() {
             borderBottom: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 30%, var(--border))',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: 3 }}>⌨</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>Camora Playground</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: '#fff', background: 'rgba(255,255,255,0.08)', padding: '1px 5px', borderRadius: 3 }}>⌨</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>Camora Playground</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <div style={{
@@ -171,7 +171,7 @@ export default function PlaygroundShell() {
                 borderTopColor: 'rgba(255,255,255,0.6)',
                 animation: 'spin 1s linear infinite',
               }} />
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
                 {isCreating ? 'Provisioning...' : 'Starting environment...'}
               </span>
             </div>
@@ -194,7 +194,7 @@ export default function PlaygroundShell() {
             borderBottom: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 30%, var(--border))',
           }}>
             {/* Env label */}
-            <span style={{ fontSize: 10, fontFamily: '"IBM Plex Mono", monospace', color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap', flexShrink: 0 }}>
               {activeEnv.label}
             </span>
             <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
@@ -231,7 +231,7 @@ export default function PlaygroundShell() {
             <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 4px #10b981', flexShrink: 0 }} />
             <span style={{
-              fontFamily: '"IBM Plex Mono", monospace', fontSize: 11, fontWeight: 700, color: timerColor, flexShrink: 0,
+              fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: timerColor, flexShrink: 0,
               animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
             }}>{timerStr}</span>
             <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
@@ -296,7 +296,7 @@ export default function PlaygroundShell() {
                         { label: 'Last Active', value: stats.lastActive ? new Date(stats.lastActive).toLocaleDateString() : '—' },
                       ].map(({ label, value }) => (
                         <div key={label} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
                           <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>{String(value)}</span>
                         </div>
                       ))}
@@ -313,7 +313,7 @@ export default function PlaygroundShell() {
             <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
               <div style={{ width: 360, background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 24 }}>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4 }}>Save VM Snapshot</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
                   Saves your container state to cloud storage. Takes 1–3 minutes. Restore any time to continue where you left off.
                 </div>
                 <input
@@ -322,7 +322,7 @@ export default function PlaygroundShell() {
                   onKeyDown={e => { if (e.key === 'Enter') handleSaveVm(); if (e.key === 'Escape') setSaveDialogOpen(false); }}
                   style={{ width: '100%', padding: '8px 10px', borderRadius: 6, fontSize: 13, boxSizing: 'border-box', marginBottom: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none' }}
                 />
-                {saveError && <div style={{ fontSize: 11, color: '#fca5a5', marginBottom: 8 }}>{saveError}</div>}
+                {saveError && <div style={{ fontSize: 12, color: '#fca5a5', marginBottom: 8 }}>{saveError}</div>}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                   <button type="button" onClick={() => { setSaveDialogOpen(false); setSaveName(''); setSaveError(null); }} style={iconBtn}>Cancel</button>
                   <button type="button" disabled={saving || !saveName.trim()} onClick={handleSaveVm} style={{ padding: '4px 14px', borderRadius: 5, fontSize: 12, fontWeight: 700, background: saving ? 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)' : 'var(--cam-gold-leaf)', color: 'var(--cam-hero-strip)', border: 'none', cursor: saving ? 'not-allowed' : 'pointer' }}>
@@ -372,7 +372,7 @@ export default function PlaygroundShell() {
                 </div>
                 <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>Playground</span>
                 <span style={{
-                  fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
+                  fontSize: 12, fontWeight: 700, padding: '2px 6px', borderRadius: 4,
                   background: 'color-mix(in oklab, var(--cam-gold-leaf) 15%, transparent)',
                   border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)',
                   color: 'var(--cam-gold-leaf-lt)', letterSpacing: '0.05em',
@@ -395,8 +395,8 @@ export default function PlaygroundShell() {
                 borderBottom: '1px solid rgba(16,185,129,0.2)',
               }}>
                 <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 5px #10b981', flexShrink: 0 }} />
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', flex: 1 }}>
-                  Session still running — <span style={{ fontFamily: '"IBM Plex Mono", monospace', color: timerColor, fontWeight: 700 }}>{timerStr}</span> remaining
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', flex: 1 }}>
+                  Session still running — <span style={{ fontFamily: 'var(--font-mono)', color: timerColor, fontWeight: 700 }}>{timerStr}</span> remaining
                 </span>
                 <button
                   type="button"
@@ -422,7 +422,7 @@ export default function PlaygroundShell() {
             />
             <div style={{ padding: '8px 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
               {status === 'error' && error && (
-                <div style={{ width: '100%', maxWidth: 380, padding: '8px 12px', borderRadius: 6, fontSize: 11, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
+                <div style={{ width: '100%', maxWidth: 380, padding: '8px 12px', borderRadius: 6, fontSize: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
                   {error}
                 </div>
               )}
@@ -466,7 +466,7 @@ function TabButton({ active, onClick, label, icon, mono, onReconnect }) {
           background: active ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
           border: `1px solid ${active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'}`,
           fontSize: 12, fontWeight: 600, color: active ? '#fff' : 'rgba(255,255,255,0.45)',
-          fontFamily: mono ? '"IBM Plex Mono", monospace' : 'inherit',
+          fontFamily: mono ? 'var(--font-mono)' : 'inherit',
           cursor: 'pointer', userSelect: 'none',
         }}
       >
@@ -486,7 +486,7 @@ function TabButton({ active, onClick, label, icon, mono, onReconnect }) {
             background: active ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
             border: `1px solid ${active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
             borderLeft: 'none',
-            color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 11,
+            color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 12,
           }}
         >↻</button>
       )}

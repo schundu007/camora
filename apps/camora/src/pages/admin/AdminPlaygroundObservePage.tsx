@@ -23,9 +23,9 @@ interface Metrics {
 
 const StatCard = ({ label, value, sub }: { label: string; value: string | number; sub?: string }) => (
   <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '16px 20px', minWidth: 140, flex: 1 }}>
-    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>{label}</p>
+    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>{label}</p>
     <p style={{ fontSize: 24, fontWeight: 700, color: '#fff', margin: 0 }}>{value}</p>
-    {sub && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>{sub}</p>}
+    {sub && <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>{sub}</p>}
   </div>
 );
 
@@ -118,8 +118,8 @@ export default function AdminPlaygroundObservePage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} tickLine={false} />
-                    <YAxis tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} tickLine={false} />
+                    <YAxis tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={{ background: '#1a2035', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12 }} />
                     <Area type="monotone" dataKey="count" stroke="#3b82f6" fill="url(#volGrad)" strokeWidth={2} />
                   </AreaChart>
@@ -130,8 +130,8 @@ export default function AdminPlaygroundObservePage() {
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={latencyData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} />
-                    <YAxis tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} />
+                    <YAxis tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={{ background: '#1a2035', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12 }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="P50" fill="#10b981" radius={[3, 3, 0, 0]} />
@@ -170,8 +170,8 @@ export default function AdminPlaygroundObservePage() {
                     <ResponsiveContainer width="100%" height={200}>
                       <BarChart data={errorBarData} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                        <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} />
-                        <YAxis type="category" dataKey="name" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} width={100} />
+                        <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} />
+                        <YAxis type="category" dataKey="name" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} width={100} />
                         <Tooltip contentStyle={{ background: '#1a2035', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12 }} />
                         <Bar dataKey="value" fill="#ef4444" radius={[0, 3, 3, 0]} />
                       </BarChart>

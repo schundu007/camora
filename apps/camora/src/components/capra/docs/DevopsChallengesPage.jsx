@@ -119,7 +119,7 @@ function FilterDropdown({ label, options, activeSet, onToggle, renderOption }) {
               borderRadius: '50%',
               background: 'var(--cam-gold-leaf)',
               color: '#fff',
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 700,
               lineHeight: 1,
             }}

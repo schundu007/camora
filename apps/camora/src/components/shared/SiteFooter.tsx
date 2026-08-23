@@ -45,7 +45,7 @@ export default function SiteFooter({ variant = 'dark' }: { variant?: 'light' | '
       {/* Legal strip */}
       <div className="border-t" style={{ borderTopColor: 'var(--border)' }}>
         <div className="mx-auto flex max-w-7xl flex-col-reverse items-center justify-between gap-3 px-5 py-4 sm:px-6 lg:px-8 md:flex-row">
-          <p className="font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+          <p className="font-mono text-[12px]" style={{ color: 'var(--text-secondary)' }}>
             &copy; {year} Cariara, Inc. All rights reserved.
           </p>
           <div className="flex items-center gap-5 text-[12px]" style={{ color: 'var(--text-secondary)' }}>

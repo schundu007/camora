@@ -96,10 +96,10 @@ export function HourMeterChip({ variant = 'light' }: { variant?: 'light' | 'dark
       aria-label={`${formatHours(budget.remaining_hours)} AI hours remaining`}
     >
       <span className="w-1.5 h-1.5 rounded-full" style={{ background: dotColor }} aria-hidden="true" />
-      <span className="text-[11px] font-semibold tabular-nums" style={{ color: textColor }}>
+      <span className="text-[12px] font-semibold tabular-nums" style={{ color: textColor }}>
         {formatHours(budget.remaining_hours)}
       </span>
-      <span className="text-[10px] tabular-nums" style={{ color: mutedColor }}>left</span>
+      <span className="text-[12px] tabular-nums" style={{ color: mutedColor }}>left</span>
     </Link>
   );
 }
