@@ -99,7 +99,7 @@ export function ReadinessChip({ blocking, degrading, onDismiss, actions }: Readi
           style={i > 0 ? { borderTop: '1px solid var(--border)' } : undefined}
         >
           <div className="flex items-center gap-2 text-[12.5px] font-semibold" style={{ color: 'var(--text-primary)' }}>
-            <span aria-hidden="true" className="text-[10px]" style={{ color: c.severity === 'blocking' ? 'var(--danger)' : 'var(--warning)' }}>▲</span>
+            <span aria-hidden="true" className="text-[12px]" style={{ color: c.severity === 'blocking' ? 'var(--danger)' : 'var(--warning)' }}>▲</span>
             {c.label}
           </div>
           <p className="mt-1.5 ml-[18px] text-[12px] leading-[1.5]" style={{ color: 'var(--text-secondary)' }}>
@@ -111,7 +111,7 @@ export function ReadinessChip({ blocking, degrading, onDismiss, actions }: Readi
                 key={a.label}
                 type="button"
                 onClick={() => { a.onClick(); setOpen(false); }}
-                className="h-6 px-2 rounded text-[10px] font-bold tracking-[0.06em]"
+                className="h-6 px-2 rounded text-[12px] font-bold tracking-[0.06em]"
                 style={{
                   border: `1px solid ${a.primary ? 'var(--cam-primary)' : 'var(--border)'}`,
                   color: a.primary ? 'var(--cam-primary)' : 'var(--text-secondary)',
@@ -125,7 +125,7 @@ export function ReadinessChip({ blocking, degrading, onDismiss, actions }: Readi
               <button
                 type="button"
                 onClick={() => onDismiss(c.id)}
-                className="h-6 px-2 rounded text-[10px] font-bold tracking-[0.06em]"
+                className="h-6 px-2 rounded text-[12px] font-bold tracking-[0.06em]"
                 style={{ border: '1px solid var(--border)', color: 'var(--text-muted)', background: 'transparent' }}
               >
                 Ignore this session
@@ -144,7 +144,7 @@ export function ReadinessChip({ blocking, degrading, onDismiss, actions }: Readi
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="h-6 px-2.5 rounded text-[11px] font-bold tracking-[0.04em] inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
+        className="h-6 px-2.5 rounded text-[12px] font-bold tracking-[0.04em] inline-flex items-center gap-1.5 transition-opacity hover:opacity-90"
         style={{ border: `1px solid ${tone.border}`, color: tone.color, background: tone.bg }}
       >
         <span aria-hidden="true">▲</span>

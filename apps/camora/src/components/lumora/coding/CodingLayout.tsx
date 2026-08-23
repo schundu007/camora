@@ -2641,14 +2641,14 @@ ${solCode}
     const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\b(?:CRITICAL|HIGH|MEDIUM|LOW)\b)/g);
     return parts.map((p, i) => {
       if (p.startsWith('`') && p.endsWith('`') && p.length > 2)
-        return <code key={i} style={{ background: 'rgba(38,97,156,0.15)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid rgba(38,97,156,0.35)', borderRadius: 3, padding: '1px 5px', fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: 0 }}>{p.slice(1, -1)}</code>;
+        return <code key={i} style={{ background: 'rgba(38,97,156,0.15)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid rgba(38,97,156,0.35)', borderRadius: 3, padding: '1px 5px', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: 0 }}>{p.slice(1, -1)}</code>;
       if (p.startsWith('**') && p.endsWith('**') && p.length > 4)
         return <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.slice(2, -2)}</strong>;
       if (p.startsWith('*') && p.endsWith('*') && p.length > 2)
         return <em key={i} style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>{p.slice(1, -1)}</em>;
       if (SEV_COLORS[p]) {
         const s = SEV_COLORS[p];
-        return <span key={i} style={{ display: 'inline-flex', alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, color: s.text, borderRadius: 4, padding: '0 6px', fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', lineHeight: '18px', verticalAlign: 'middle' }}>{p}</span>;
+        return <span key={i} style={{ display: 'inline-flex', alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, color: s.text, borderRadius: 4, padding: '0 6px', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', lineHeight: '18px', verticalAlign: 'middle' }}>{p}</span>;
       }
       return p;
     });
@@ -2694,7 +2694,7 @@ ${solCode}
             return (
               <div key={si} style={{ borderRadius: 8, overflow: 'hidden', margin: '6px 0', border: '1px solid rgba(38,97,156,0.4)', boxShadow: '0 2px 8px rgba(3,19,46,0.3)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', padding: '3px 10px' }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--cam-gold-leaf-lt)' }}>{lang || 'code'}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--cam-gold-leaf-lt)' }}>{lang || 'code'}</span>
                 </div>
                 <pre style={{ padding: '10px 12px', fontSize: 12.5, fontFamily: 'var(--font-code)', color: '#CBD5E1', background: '#03132E', whiteSpace: 'pre' as const, overflowX: 'auto' as const, margin: 0, lineHeight: 1.6 }}>{codeText}</pre>
               </div>
@@ -2715,7 +2715,7 @@ ${solCode}
                 if (bracketLabel)
                   return (
                     <div key={li} style={{ display: 'inline-flex', marginTop: 10, marginBottom: 4 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)', borderRadius: 5, padding: '2px 10px', fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: 'var(--cam-gold-leaf-lt)' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--cam-hero-strip)', border: '1px solid var(--cam-gold-leaf)', borderRadius: 5, padding: '2px 10px', fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: 'var(--cam-gold-leaf-lt)' }}>
                         <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--cam-gold-leaf)', flexShrink: 0 }} />
                         {bracketLabel[1]}
                       </span>
@@ -2725,7 +2725,7 @@ ${solCode}
                 // ### H3
                 const h3 = trimmed.match(/^###\s+(.*)/);
                 if (h3)
-                  return <div key={li} style={{ fontWeight: 600, fontSize: 11.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 8, marginBottom: 2 }}>{renderInline(h3[1])}</div>;
+                  return <div key={li} style={{ fontWeight: 600, fontSize: 14, color: 'var(--cam-gold-leaf-lt)', marginTop: 8, marginBottom: 2 }}>{renderInline(h3[1])}</div>;
 
                 // ## H2
                 const h2 = trimmed.match(/^##\s+(.*)/);
@@ -2743,7 +2743,7 @@ ${solCode}
                   questionCounter++;
                   return (
                     <div key={li} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 14, marginBottom: 4 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20, height: 20, borderRadius: '50%', background: 'var(--cam-primary-dk)', color: '#fff', fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{qMatch[1]}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 20, height: 20, borderRadius: '50%', background: 'var(--cam-primary-dk)', color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{qMatch[1]}</span>
                       <span style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', lineHeight: 1.4, flex: 1 }}>{renderInline(qMatch[2])}</span>
                     </div>
                   );
@@ -2754,7 +2754,7 @@ ${solCode}
                 if (answerMatch)
                   return (
                     <div key={li} style={{ marginLeft: 28, marginTop: 2, paddingLeft: 10, paddingTop: 3, paddingBottom: 3, borderRadius: 4, background: 'rgba(38,97,156,0.08)' }}>
-                      {answerMatch[1] ? <span style={{ color: 'var(--text-primary)', fontSize: 11.5 }}>{renderInline(answerMatch[1])}</span> : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--cam-primary)', letterSpacing: '0.06em' }}>Answer</span>}
+                      {answerMatch[1] ? <span style={{ color: 'var(--text-primary)', fontSize: 14 }}>{renderInline(answerMatch[1])}</span> : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--cam-primary)', letterSpacing: '0.06em' }}>Answer</span>}
                     </div>
                   );
 
@@ -2765,8 +2765,8 @@ ${solCode}
                   const s = SEV_COLORS[key];
                   return s ? (
                     <div key={li} style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '4px 0 2px', paddingLeft: 4 }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Severity</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, color: s.text, borderRadius: 4, padding: '0 7px', fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', lineHeight: '18px' }}>{key}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase' as const, letterSpacing: '0.06em' }}>Severity</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', background: s.bg, border: `1px solid ${s.border}`, color: s.text, borderRadius: 4, padding: '0 7px', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', lineHeight: '18px' }}>{key}</span>
                     </div>
                   ) : <div key={li} style={{ margin: '2px 0' }}>{renderInline(line)}</div>;
                 }
@@ -2777,7 +2777,7 @@ ${solCode}
                   return (
                     <div key={li} style={{ display: 'flex', gap: 8, margin: '3px 0', paddingLeft: 6 }}>
                       <span style={{ color: 'var(--cam-primary)', flexShrink: 0, marginTop: 3, width: 5, height: 5, borderRadius: '50%', background: 'var(--cam-primary)', display: 'inline-block' }} />
-                      <span style={{ fontSize: 11.5, lineHeight: 1.55, color: 'var(--text-primary)' }}>{renderInline(bl[1])}</span>
+                      <span style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-primary)' }}>{renderInline(bl[1])}</span>
                     </div>
                   );
 
@@ -2786,8 +2786,8 @@ ${solCode}
                 if (nl)
                   return (
                     <div key={li} style={{ display: 'flex', gap: 8, margin: '3px 0', paddingLeft: 6 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 4, background: 'rgba(38,97,156,0.2)', border: '1px solid rgba(38,97,156,0.4)', color: 'var(--cam-primary-lt)', fontSize: 9.5, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{nl[1]}</span>
-                      <span style={{ fontSize: 11.5, lineHeight: 1.55, color: 'var(--text-primary)' }}>{renderInline(nl[2])}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 4, background: 'rgba(38,97,156,0.2)', border: '1px solid rgba(38,97,156,0.4)', color: 'var(--cam-primary-lt)', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{nl[1]}</span>
+                      <span style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-primary)' }}>{renderInline(nl[2])}</span>
                     </div>
                   );
 
@@ -2796,13 +2796,13 @@ ${solCode}
                 if (fieldMatch)
                   return (
                     <div key={li} style={{ display: 'flex', gap: 6, margin: '2px 0', paddingLeft: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--cam-primary)', flexShrink: 0, paddingTop: 1, minWidth: 52 }}>{fieldMatch[1]}</span>
-                      <span style={{ fontSize: 11.5, lineHeight: 1.5, color: 'var(--text-primary)' }}>{renderInline(fieldMatch[2])}</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--cam-primary)', flexShrink: 0, paddingTop: 1, minWidth: 52 }}>{fieldMatch[1]}</span>
+                      <span style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text-primary)' }}>{renderInline(fieldMatch[2])}</span>
                     </div>
                   );
 
                 if (!trimmed) return <div key={li} style={{ height: 5 }} />;
-                return <div key={li} style={{ margin: '2px 0', fontSize: 11.5, lineHeight: 1.6, color: 'var(--text-primary)' }}>{renderInline(line)}</div>;
+                return <div key={li} style={{ margin: '2px 0', fontSize: 14, lineHeight: 1.6, color: 'var(--text-primary)' }}>{renderInline(line)}</div>;
               })}
             </div>
           );
@@ -2885,7 +2885,7 @@ ${solCode}
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
+                  className="px-1.5 py-0.5 text-[12px] font-mono opacity-75 hover:opacity-100 hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
                   data-tip={`${m} min timer`}>
                   {m}m
                 </button>
@@ -2909,7 +2909,7 @@ ${solCode}
                   animation: 'coding-pulse-ring 1.4s ease-out infinite',
                 }}
               />
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-strip-heading)' }}>Generating</span>
+              <span className="text-[12px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-strip-heading)' }}>Generating</span>
             </div>
           )}
 
@@ -3051,8 +3051,8 @@ ${solCode}
                 {codingPlatform && codingPlatform !== 'none' && screenPermStatus && screenPermStatus !== 'granted' && (
                   <div className="flex items-center gap-2 px-3 py-2 min-w-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <span className="text-[11px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
-                    <button onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')} className="px-2 py-0.5 rounded text-[10px] font-bold shrink-0 transition-colors hover:opacity-80" style={{ background: '#f59e0b', color: '#000' }}>Fix in Settings</button>
+                    <span className="text-[12px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
+                    <button onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')} className="px-2 py-0.5 rounded text-[12px] font-bold shrink-0 transition-colors hover:opacity-80" style={{ background: '#f59e0b', color: '#000' }}>Fix in Settings</button>
                   </div>
                 )}
 
@@ -3152,11 +3152,11 @@ ${solCode}
                             </button>
                           </div>
                           {urlDetectNote && (
-                            <p className="text-[11px] leading-snug whitespace-pre-wrap break-all" style={{ color: 'var(--text-dimmed)' }}>
+                            <p className="text-[14px] leading-snug whitespace-pre-wrap break-all" style={{ color: 'var(--text-dimmed)' }}>
                               {urlDetectNote}
                             </p>
                           )}
-                          <p className="text-center text-[10px] font-mono py-0.5 select-text" style={{ color: 'var(--text-dimmed)' }}>
+                          <p className="text-center text-[12px] font-mono py-0.5 select-text" style={{ color: 'var(--text-dimmed)' }}>
                             build {__BUILD_ID__} · <RenderScale />
                           </p>
                         </div>
@@ -3203,15 +3203,15 @@ ${solCode}
                                   <div key={i} className="relative group w-20 h-14 rounded overflow-hidden flex-shrink-0"
                                     style={{ border: '1px solid var(--border)' }}>
                                     <img src={url} alt={`Page ${i+1}`} className="w-full h-full object-cover" />
-                                    <span className="absolute top-0.5 left-0.5 text-[9px] font-bold px-1 rounded leading-4"
+                                    <span className="absolute top-0.5 left-0.5 text-[12px] font-bold px-1 rounded leading-4"
                                       style={{ background: 'var(--accent)', color: '#fff' }}>{i + 1}</span>
                                     <button type="button" onClick={() => removeSnapImage(i)}
-                                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-white text-[11px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
+                                      className="absolute top-0.5 right-0.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-white text-[12px] font-bold opacity-0 group-hover:opacity-100 transition-opacity"
                                       style={{ background: 'var(--danger)' }}>×</button>
                                   </div>
                                 ))}
                               </div>
-                              <p className="text-[11px]" style={{ color: t.textDim }}>
+                              <p className="text-[12px]" style={{ color: t.textDim }}>
                                 {snapImageUrls.length} screenshot{snapImageUrls.length > 1 ? 's' : ''} — click <strong>Coding</strong> when all pages are captured
                               </p>
                             </div>
@@ -3414,11 +3414,11 @@ ${solCode}
                       </svg>
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-semibold mb-0.5" style={{ color: 'var(--danger)' }}>Couldn't generate solution</div>
-                        <div className="text-[11px] leading-relaxed" style={{ color: t.textMuted }}>{streamError}</div>
+                        <div className="text-[14px] leading-relaxed" style={{ color: t.textMuted }}>{streamError}</div>
                         <button
                           onClick={() => { setStreamError(null); handleGenerateSolution(); }}
                           disabled={!problemText.trim() || isLoading}
-                          className="mt-2 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors disabled:opacity-50"
+                          className="mt-2 px-2.5 py-1 text-[12px] font-semibold rounded-md transition-colors disabled:opacity-50"
                           style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}
                         >
                           Retry
@@ -3446,7 +3446,7 @@ ${solCode}
                       </div>
                       {liveCode && liveCode.length > 0 ? (
                         <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-                          <div className="h-8 px-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider" style={{ background: t.headerBg, color: t.headerText, borderBottom: `1px solid ${t.cardBorder}` }}>
+                          <div className="h-8 px-3 flex items-center gap-2 text-[12px] font-bold uppercase tracking-wider" style={{ background: t.headerBg, color: t.headerText, borderBottom: `1px solid ${t.cardBorder}` }}>
                             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
                             Live · Solution
                           </div>
@@ -3477,14 +3477,14 @@ ${solCode}
                     {/* Answer banner */}
                     <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid var(--cam-primary)` }}>
                       <div className="flex items-center gap-2 px-3 py-2.5 flex-wrap" style={{ background: 'var(--cam-hero-strip)', borderBottom: `1px solid var(--cam-primary)` }}>
-                        <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+                        <span className="text-[12px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
                           {mcq.multiSelect ? 'Correct answers' : 'Correct answer'}
                         </span>
                         <span className="text-sm font-bold rounded-md px-2 py-0.5" style={{ color: '#FFFFFF', background: 'var(--cam-primary)' }}>
                           {Array.isArray(mcq.answer) ? mcq.answer.join(', ') : String(mcq.answer ?? '')}
                         </span>
                         {mcq.confidence && (
-                          <span className="ml-auto text-[9px] font-mono uppercase tracking-wider rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>
+                          <span className="ml-auto text-[12px] font-mono uppercase tracking-wider rounded-full px-1.5 py-0.5" style={{ color: t.badgeText, background: t.badgeBg, border: `1px solid ${t.cardBorder}` }}>
                             {mcq.confidence} confidence
                           </span>
                         )}
@@ -3499,17 +3499,17 @@ ${solCode}
                                 style={opt.correct
                                   ? { background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)' }
                                   : { background: t.sectionBg, border: `1px solid ${t.cardBorder}` }}>
-                                <span className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold mt-0.5"
+                                <span className="shrink-0 w-5 h-5 rounded-md flex items-center justify-center text-[12px] font-bold mt-0.5"
                                   style={opt.correct
                                     ? { background: 'var(--cam-primary-dk)', color: '#fff' }
                                     : { background: t.badgeBg, color: t.badgeText }}>
                                   {opt.correct ? '✓' : (opt.key ?? String.fromCharCode(65 + i))}
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                  <span className="text-[11px] md:text-xs leading-relaxed" style={{ color: opt.correct ? t.text : t.textMuted }}>
+                                  <span className="text-[14px] leading-relaxed" style={{ color: opt.correct ? t.text : t.textMuted }}>
                                     <span className="font-bold">{opt.key ?? String.fromCharCode(65 + i)})</span> {opt.text}
                                   </span>
-                                  {opt.reason && <span className="block text-[10px] leading-snug mt-0.5" style={{ color: t.textDim }}>{opt.reason}</span>}
+                                  {opt.reason && <span className="block text-[14px] leading-snug mt-0.5" style={{ color: t.textDim }}>{opt.reason}</span>}
                                 </div>
                               </div>
                             ))}
@@ -3522,9 +3522,9 @@ ${solCode}
                     {mcq.explanation && (
                       <div className="rounded-xl overflow-hidden" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
                         <div className="flex items-center gap-1.5 px-3 py-2" style={{ background: t.headerBg, borderBottom: `1px solid ${t.cardBorder}` }}>
-                          <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: t.headerText }}>Why</span>
+                          <span className="text-[12px] font-bold uppercase tracking-[0.1em]" style={{ color: t.headerText }}>Why</span>
                         </div>
-                        <p className="px-3 py-2.5 text-[11px] md:text-xs leading-relaxed" style={{ color: t.textMuted }}>{mcq.explanation}</p>
+                        <p className="px-3 py-2.5 text-[14px] leading-relaxed" style={{ color: t.textMuted }}>{mcq.explanation}</p>
                       </div>
                     )}
 
@@ -3538,10 +3538,10 @@ ${solCode}
                               <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                               <line x1="12" y1="19" x2="12" y2="22" />
                             </svg>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)' }}>Say this out loud</span>
+                            <span className="text-[12px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-primary-dk)' }}>Say this out loud</span>
                           </div>
                           <button onClick={() => navigator.clipboard.writeText(mcq.narration)}
-                            className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5" style={{ color: 'var(--cam-primary-dk)' }}>
+                            className="text-[12px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded hover:bg-black/5" style={{ color: 'var(--cam-primary-dk)' }}>
                             Copy
                           </button>
                         </div>
@@ -3617,13 +3617,13 @@ ${solCode}
                 onChange={handleLanguageChange}
               />
               {isTranslating && (
-                <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: 'var(--cam-primary)' }}>
+                <span className="flex items-center gap-1 text-[12px] font-semibold" style={{ color: 'var(--cam-primary)' }}>
                   <div className="w-3 h-3 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--cam-primary)] rounded-full animate-spin" />
                   Translating…
                 </span>
               )}
               <button onClick={handleRun} disabled={isRunning}
-                className="flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-bold rounded disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}
+                className="flex items-center gap-1 px-2.5 py-0.5 text-[12px] font-bold rounded disabled:opacity-50 transition-colors shadow-sm" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}
                 data-tip="Run (Ctrl+Enter)">
                 {isRunning ? (
                   <><div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />Running...</>
@@ -3644,7 +3644,7 @@ ${solCode}
               {onSendToCofix && (
                 <button
                   onClick={() => onSendToCofix(code, language)}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded text-[12px] font-bold uppercase tracking-wider transition-colors"
                   style={{ color: 'var(--cam-gold-leaf-lt)', background: 'color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent)', border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 28%, transparent)' }}
                   data-tip="Send solution to CoFix"
                 >
@@ -3747,18 +3747,18 @@ ${solCode}
             <div className="flex items-center justify-between px-3 py-1 border-b shrink-0" style={{ background: t.sectionBg, borderColor: t.cardBorder }}>
               <div className="flex items-center gap-1">
                 <button onClick={() => { setOutputTab('testcases'); setIsOutputCollapsed(false); }}
-                  className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors ${
+                  className={`px-2.5 py-1 text-[12px] md:text-xs font-semibold rounded-md transition-colors ${
                     outputTab === 'testcases' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                   }`}
                   style={!(outputTab === 'testcases' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>Test Cases</button>
                 <button onClick={() => { setOutputTab('output'); setIsOutputCollapsed(false); }}
-                  className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 text-[12px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                     outputTab === 'output' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                   }`}
                   style={!(outputTab === 'output' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
                   Output
                   {totalTests > 0 && (
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                    <span className="text-[12px] font-mono px-1.5 py-0.5 rounded-full"
                       style={passedCount === totalTests
                         ? { background: t.passedBg, color: t.passedText }
                         : { background: t.failedBg, color: t.failedText }
@@ -3767,23 +3767,23 @@ ${solCode}
                 </button>
                 {qaCount > 0 && (
                   <button onClick={() => { setOutputTab('qa'); setIsOutputCollapsed(false); }}
-                    className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1 text-[12px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                       outputTab === 'qa' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                     }`}
                     style={!(outputTab === 'qa' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
                     Interviewer asks
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                    <span className="text-[12px] font-mono px-1.5 py-0.5 rounded-full"
                       style={{ background: t.badgeBg, color: t.badgeText }}>{qaCount}</span>
                   </button>
                 )}
                 {traceCount > 0 && (
                   <button onClick={() => { setOutputTab('trace'); setIsOutputCollapsed(false); }}
-                    className={`px-2.5 py-1 text-[10px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                    className={`px-2.5 py-1 text-[12px] md:text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
                       outputTab === 'trace' && !isOutputCollapsed ? 'bg-[var(--accent)] text-white' : ''
                     }`}
                     style={!(outputTab === 'trace' && !isOutputCollapsed) ? { color: t.tabText } : undefined}>
                     Dry-run trace
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full"
+                    <span className="text-[12px] font-mono px-1.5 py-0.5 rounded-full"
                       style={{ background: t.badgeBg, color: t.badgeText }}>{traceCount}</span>
                   </button>
                 )}
@@ -3792,7 +3792,7 @@ ${solCode}
                 {outputLog.length > 0 && (
                   <button
                     onClick={() => { setOutputLog([]); setOutput(''); }}
-                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded transition-opacity opacity-50 hover:opacity-90"
+                    className="text-[12px] font-semibold px-1.5 py-0.5 rounded transition-opacity opacity-50 hover:opacity-90"
                     style={{ color: t.textMuted }}
                   >Clear</button>
                 )}
@@ -3813,21 +3813,21 @@ ${solCode}
                     {testCases.map((tc, i) => (
                       <div key={i} className="rounded-lg p-2" style={{ border: `1px solid ${t.cardBorder}`, background: t.sectionBg }}>
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: t.textMuted }}>Case {i + 1}</span>
+                          <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: t.textMuted }}>Case {i + 1}</span>
                           {testCases.length > 1 && (
-                            <button onClick={() => removeTestCase(i)} className="text-[10px] transition-colors" style={{ color: t.textDim }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--danger)')} onMouseLeave={(e) => (e.currentTarget.style.color = t.textDim)}>Remove</button>
+                            <button onClick={() => removeTestCase(i)} className="text-[12px] transition-colors" style={{ color: t.textDim }} onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--danger)')} onMouseLeave={(e) => (e.currentTarget.style.color = t.textDim)}>Remove</button>
                           )}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           <div>
-                            <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Input</label>
+                            <label className="block text-[12px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Input</label>
                             <textarea value={tc.input} onChange={(e) => updateTestCase(i, 'input', e.target.value)}
                               placeholder="nums = [2,7], target = 9"
                               className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
                               style={{ background: t.inputBg, borderWidth: 1, borderStyle: 'solid', borderColor: t.inputBorder, color: t.inputText }} />
                           </div>
                           <div>
-                            <label className="block text-[9px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Expected</label>
+                            <label className="block text-[12px] font-medium mb-0.5 uppercase" style={{ color: t.textDim }}>Expected</label>
                             <textarea value={tc.expected} onChange={(e) => updateTestCase(i, 'expected', e.target.value)}
                               placeholder="[0, 1]"
                               className="w-full h-10 rounded-md p-1.5 text-xs placeholder:text-[var(--text-dimmed)] resize-none focus:border-[var(--accent)] focus:outline-none font-mono"
@@ -3838,7 +3838,7 @@ ${solCode}
                     ))}
                     {testCases.length < MAX_TEST_CASES && (
                       <button onClick={addTestCase}
-                        className="w-full py-1.5 border border-dashed text-[10px] font-semibold rounded-lg hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
+                        className="w-full py-1.5 border border-dashed text-[12px] font-semibold rounded-lg hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
                         style={{ borderColor: t.inputBorder, color: t.textDim }}>
                         + Add Test Case ({testCases.length}/{MAX_TEST_CASES})
                       </button>
@@ -3898,7 +3898,7 @@ ${solCode}
                                 with no spaces), which nothing will break on its own —
                                 anywhere lets them wrap inside the card instead of
                                 overlapping its edge. */}
-                            <div className="space-y-0.5 font-mono text-[10px] [overflow-wrap:anywhere] whitespace-pre-wrap">
+                            <div className="space-y-0.5 font-mono text-[12px] [overflow-wrap:anywhere] whitespace-pre-wrap">
                               <div><span style={{ color: t.textDim }}>In:</span> <span style={{ color: t.text }}>{r.input}</span></div>
                               <div><span style={{ color: t.textDim }}>Exp:</span> <span style={{ color: t.text }}>{r.expected}</span></div>
                               <div><span style={{ color: t.textDim }}>Out:</span> <span style={{ color: r.passed ? t.passedText : t.failedText }}>{r.output}</span></div>
@@ -3920,7 +3920,7 @@ ${solCode}
                         return (
                           <div key={i}>
                             <div className="flex items-center gap-2 py-1">
-                              <span className="font-mono text-[9px] tabular-nums shrink-0" style={{ color: t.textDim }}>
+                              <span className="font-mono text-[12px] tabular-nums shrink-0" style={{ color: t.textDim }}>
                                 {entry.ts.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
                               </span>
                               <div className="flex-1 h-px" style={{ background: t.cardBorder }} />

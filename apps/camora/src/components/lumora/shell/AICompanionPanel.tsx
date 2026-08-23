@@ -1172,7 +1172,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         </span>
         {messages.length > 0 && (
           <span
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[9px] font-bold flex items-center justify-center"
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[12px] font-bold flex items-center justify-center"
             style={{
               background: 'var(--cam-accent-fill)',
               color: 'var(--cam-accent-fill-text)',
@@ -1224,7 +1224,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 <img src={src} alt="attached screenshot" className="h-12 w-12 object-cover rounded-md" style={{ border: '1px solid var(--cam-gold-leaf)' }} />
                 <button
                   onClick={() => setPendingImages(prev => prev.filter((_, k) => k !== i))}
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                  className="absolute -top-1 -right-1 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[12px] font-bold"
                   style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   aria-label="Remove screenshot"
                   data-tip="Remove this screenshot"
@@ -1369,10 +1369,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             mode is unmistakable on a navy strip. */}
         <div className="flex-1 flex items-center justify-center gap-2 min-w-0">
           <SonaAvatar size={18} />
-          <span className="text-[11px] font-bold tracking-wide" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
+          <span className="text-[12px] font-bold tracking-wide" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
           {activeAssistant && (
             <span
-              className="hidden sm:inline items-center gap-0.5 text-[8px] font-semibold px-1.5 py-0.5 rounded"
+              className="hidden sm:inline items-center gap-0.5 text-[12px] font-semibold px-1.5 py-0.5 rounded"
               style={{ background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-gold-leaf-lt)', display: 'inline-flex', maxWidth: 140 }}
             >
               <span className="truncate">{activeAssistant.company || activeAssistant.role || 'Custom'}</span>
@@ -1437,7 +1437,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 touch users have an obvious dismiss. The scrim handles taps
                 outside, but a visible X is the discoverable affordance. */}
             <div className="md:hidden shrink-0 flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-primary)' }}>Menu</span>
+              <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-primary)' }}>Menu</span>
               <button
                 onClick={() => setMobileRailOpen(false)}
                 className="p-2 rounded-md"
@@ -1455,12 +1455,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 merely hidden. Enrollment keeps its home in the toolbar's voice
                 chip; auto-answer keeps its stored setting. */}
             <div className="flex-1 min-h-0 overflow-auto p-3 space-y-1.5">
-              <p className="text-[9px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: 'var(--text-muted)' }}>Questions</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: 'var(--text-muted)' }}>Questions</p>
               {/* An empty column reads as broken rather than ready — one line
                   says which of the two it is. */}
               {!streaming && !liveTranscript && detectedQuestions.length === 0 &&
                 messages.filter(m => m.role === 'user').length === 0 && (
-                <p className="text-[10px] px-1 py-2" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-[12px] px-1 py-2" style={{ color: 'var(--text-muted)' }}>
                   Questions land here — ask one below, or let Sona pick them up from the call.
                 </p>
               )}
@@ -1468,11 +1468,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                   arrives, before the accumulation flush fires. Clears
                   automatically when the question is sent. */}
               {liveTranscript && (
-                <div className="px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] font-medium flex items-start gap-2 animate-pulse"
+                <div className="px-3 py-2.5 md:py-2 rounded-lg text-[14px] font-medium flex items-start gap-2 animate-pulse"
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', color: 'var(--text-secondary)', opacity: 0.85 }}>
                   <div className="flex-1 min-w-0">
                     <p className="break-words">{liveTranscript}</p>
-                    <span className="text-[8px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
+                    <span className="text-[12px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
                   </div>
                 </div>
               )}
@@ -1483,13 +1483,13 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               {embedded && heardLog.length > 0 && (
                 <div className="flex flex-col gap-1 mt-1">
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Heard</span>
-                    <button onClick={() => setHeardLog([])} className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear this list">Clear</button>
+                    <span className="text-[12px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Heard</span>
+                    <button onClick={() => setHeardLog([])} className="text-[12px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear this list">Clear</button>
                   </div>
                   {heardLog.map(h => (
                     <div key={h.id} className="px-2 py-1 rounded-md" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                      <p className="text-[9px] leading-snug break-words" style={{ color: 'var(--text-secondary)' }}>{h.text}</p>
-                      <span className="text-[8px] font-bold uppercase tracking-wide" style={{ color: h.outcome === 'answering' ? 'var(--cam-gold-leaf)' : 'var(--text-muted)' }}>
+                      <p className="text-[12px] leading-snug break-words" style={{ color: 'var(--text-secondary)' }}>{h.text}</p>
+                      <span className="text-[12px] font-bold uppercase tracking-wide" style={{ color: h.outcome === 'answering' ? 'var(--cam-gold-leaf)' : 'var(--text-muted)' }}>
                         {h.outcome} · {h.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -1503,8 +1503,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               {embedded && detectedQuestions.length > 0 && (
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between px-1">
-                    <span className="text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>Tap to answer</span>
-                    <button onClick={() => setDetectedQuestions([])} className="text-[9px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear all detected questions">Clear</button>
+                    <span className="text-[12px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>Tap to answer</span>
+                    <button onClick={() => setDetectedQuestions([])} className="text-[12px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear all detected questions">Clear</button>
                   </div>
                   {[...detectedQuestions].reverse().map(q => (
                     <div
@@ -1517,8 +1517,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       data-tip="Answer this with Sona"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="break-words text-[13px] md:text-[11px] font-medium">{q.text}</p>
-                        <span className="text-[8px] mt-1 block font-bold uppercase tracking-wide" style={{ color: 'var(--cam-gold-leaf)' }}>tap to answer · {q.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <p className="break-words text-[13px] md:text-[12px] font-medium">{q.text}</p>
+                        <span className="text-[12px] mt-1 block font-bold uppercase tracking-wide" style={{ color: 'var(--cam-gold-leaf)' }}>tap to answer · {q.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); setDetectedQuestions(prev => prev.filter(x => x.id !== q.id)); }}
@@ -1555,7 +1555,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     }
                     setMobileRailOpen(false);
                   }}
-                  className="group px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] font-medium flex items-start gap-2 cursor-pointer transition-colors"
+                  className="group px-3 py-2.5 md:py-2 rounded-lg text-[14px] font-medium flex items-start gap-2 cursor-pointer transition-colors"
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--cam-primary)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}
@@ -1568,7 +1568,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                           before the user clears history. */}
                       {typeof msg.text === 'string' && msg.text.trim() ? msg.text : '(empty question — deleted via clear)'}
                     </p>
-                    <span className="text-[8px] mt-1 block" style={{ color: 'var(--text-muted)' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="text-[12px] mt-1 block" style={{ color: 'var(--text-muted)' }}>{msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <button
                     onClick={async (e) => {
@@ -1647,7 +1647,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       }}
                     >
                       <SonaAvatar size={16} />
-                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
+                      <span className="font-display text-[12px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
                       <span className="ml-auto flex items-center gap-1">
                         <button
                           onClick={() => navigator.clipboard.writeText(msg.text)}
@@ -1698,7 +1698,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       }}
                     >
                       <SonaAvatar size={16} active />
-                      <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>
+                      <span className="font-display text-[12px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>
                         Sona is answering…
                       </span>
                     </div>
@@ -1725,13 +1725,13 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           {messages.length === 0 && !streaming ? (
             <div className="flex flex-col items-center justify-center h-full py-6">
               <div className="mb-4 opacity-40"><SonaAvatar size={32} /></div>
-              <p className="text-[9px] mb-3 text-center" style={{ color: C.muted }}>
+              <p className="text-[12px] mb-3 text-center" style={{ color: C.muted }}>
                 {answerMode === 'short' ? 'Short mode — concise bullet points' : 'Detailed mode — comprehensive explanations'}
               </p>
               <div className="grid grid-cols-2 gap-1.5 w-full">
                 {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (
                   <button key={s} onClick={() => ask(s)} className="text-left px-2.5 py-2 rounded-lg transition-[background-color,border-color,color] active:scale-[0.98]"
-                    style={{ border: '1px solid var(--border)', fontSize: '10px', color: 'var(--text-muted)' }}
+                    style={{ border: '1px solid var(--border)', fontSize: '12px', color: 'var(--text-muted)' }}
                     onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
                     onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent'; }}>
                     {s}
@@ -1744,7 +1744,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               {messages.map((msg, i) => msg.role === 'user' ? (
                 <div key={i} className="flex flex-col items-end">
                   <div className="rounded-xl px-2.5 py-1.5 max-w-[90%]" style={{ background: C.accentBg }}>
-                    <p style={{ fontSize: '10px', color: C.text }}>{msg.text}</p>
+                    <p style={{ fontSize: '14px', color: C.text }}>{msg.text}</p>
                   </div>
                 </div>
               ) : (
@@ -1765,7 +1765,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     }}
                   >
                     <SonaAvatar size={14} />
-                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
+                    <span className="font-display text-[12px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
                   </div>
                   <div className="p-3 min-w-0">
                     <AnswerView text={msg.text} />
@@ -1792,13 +1792,13 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     }}
                   >
                     <SonaAvatar size={14} active />
-                    <span className="font-display text-[9px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona is answering…</span>
+                    <span className="font-display text-[12px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona is answering…</span>
                     {/* Skip — always visible while streaming, never hover-only:
                         the moment you need it is the moment you cannot hunt for
                         it. Esc does the same thing. */}
                     <button
                       onClick={skipCurrent}
-                      className="ml-auto px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide shrink-0"
+                      className="ml-auto px-2 py-0.5 rounded-md text-[12px] font-bold uppercase tracking-wide shrink-0"
                       style={{ color: 'var(--cam-strip-heading)', border: '1px solid var(--cam-gold-leaf)' }}
                       data-tip="Skip this question — stops the answer and clears anything queued behind it (Esc)"
                       aria-label="Skip this question"
@@ -1808,7 +1808,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                   </div>
                   <div className="p-3">
                     {streamText ? <><AnswerView text={cleanTags(streamText)} streaming /><span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} /></>
-                      : <span className="animate-pulse" style={{ fontSize: '10px', color: C.muted }}>Thinking...</span>}
+                      : <span className="animate-pulse" style={{ fontSize: '12px', color: C.muted }}>Thinking...</span>}
                   </div>
                 </div>
               )}

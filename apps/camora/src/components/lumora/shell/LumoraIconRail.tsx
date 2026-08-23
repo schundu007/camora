@@ -214,7 +214,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
       {/* Interview — the live surfaces (highest daily-use priority). */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
+        {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
         {/* Claude tab embeds claude.ai in a webview, which only works in the
             Electron desktop app — hide it in the web build. */}
         {TOOL_ITEMS
@@ -243,7 +243,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
         <>
           <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
           <div className="px-1.5">
-            {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Setup</p>}
+            {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Setup</p>}
             {onOpenContext && (
               <button
                 type="button"
@@ -301,7 +301,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
         {/* Prep — study before interviews (Prep Kit + Practice + Prepare). */}
         <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
         <div className="px-1.5">
-          {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Prep</p>}
+          {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Prep</p>}
           {PREP_ITEMS.map(item => {
             const active = isActive(item.id);
             return (
@@ -322,7 +322,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
         {/* Library — history + assistants (lower priority). */}
         <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
         <div className="px-1.5">
-          {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Library</p>}
+          {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Library</p>}
           {LIBRARY_ITEMS.map(item => {
             const active = isActive(item.id);
             return (
@@ -347,7 +347,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
 
       {/* More section */}
       <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>More</p>}
+        {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>More</p>}
         {/* Account dropdown */}
         <button
           onClick={() => setAccountOpen(!accountOpen)}
@@ -403,7 +403,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
                 <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: isStealthActive ? '#34d399' : 'var(--text-muted)', boxShadow: '0 0 0 1.5px var(--bg-surface)' }} />
               )}
             </span>
-            {expanded && <span className="whitespace-nowrap flex items-center gap-2">Stealth<span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isStealthActive ? 'inherit' : 'var(--text-muted)' }}>{isStealthActive ? 'On' : 'Off'}</span></span>}
+            {expanded && <span className="whitespace-nowrap flex items-center gap-2">Stealth<span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: isStealthActive ? 'inherit' : 'var(--text-muted)' }}>{isStealthActive ? 'On' : 'Off'}</span></span>}
           </button>
         )}
         {[

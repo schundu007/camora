@@ -22,9 +22,9 @@ const CodeBlock = ({ lang, code }: { lang: string; code: string }) => {
   return (
     <div className="lumora-book-breakout my-2.5 rounded-lg overflow-hidden border border-[var(--border)] bg-[var(--bg-elevated)]">
       <div className="flex items-center justify-between px-2.5 py-1 border-b border-[var(--border)] bg-[var(--bg-surface)]">
-        <span className="font-mono text-[11px] uppercase tracking-wider text-[var(--accent-text)]">{lang}</span>
+        <span className="font-mono text-[12px] uppercase tracking-wider text-[var(--accent-text)]">{lang}</span>
         <button
-          className="font-mono text-[11px] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+          className="font-mono text-[12px] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           onClick={() => navigator.clipboard.writeText(code)}
         >
           Copy
@@ -216,7 +216,7 @@ const Block = ({ block, onLineHover, onLineClick }: { block: BookBlock } & Omit<
               {(r.line != null || r.code) && (
                 <div className="flex items-center gap-1.5 mb-0.5">
                   {r.line != null && (
-                    <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent-text)] shrink-0">
+                    <span className="font-mono text-[12px] font-bold px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent-text)] shrink-0">
                       L{r.line}
                     </span>
                   )}

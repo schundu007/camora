@@ -273,7 +273,7 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger,
                 />
               ))}
             </div>
-            <span className="text-[10px]" style={{ color: hasSpeech ? 'var(--cam-primary)' : 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>
+            <span className="text-[12px]" style={{ color: hasSpeech ? 'var(--cam-primary)' : 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>
               {hasSpeech ? 'Speaking…' : 'Listening…'}
             </span>
           </>
@@ -284,12 +284,12 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger,
                 <span key={i} className="w-1 h-1 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)', animation: reducedMotion ? undefined : `sona-mic-dot-pulse 1.2s ease-in-out ${i * 0.18}s infinite`, opacity: reducedMotion ? 0.6 : undefined }} />
               ))}
             </span>
-            <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>Transcribing…</span>
+            <span className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>Transcribing…</span>
           </>
         ) : (
-          <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>Ready</span>
+          <span className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>Ready</span>
         )}
-        {error && <span className="text-[10px]" style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>{error}</span>}
+        {error && <span className="text-[12px]" style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>{error}</span>}
         <style>{`
           @keyframes sona-mic-dot-pulse {
             0%, 100% { opacity: 0.3; transform: scale(0.85); }
@@ -335,14 +335,14 @@ export const SonaMicButton = ({ onText, onDone, disabled = false, toggleTrigger,
         </button>
 
         {isRecording && (
-          <span className="text-[10px] tabular-nums select-none" style={{ fontFamily: 'var(--font-mono)', color: aboutToTimeout ? 'var(--danger)' : 'var(--text-muted)', transition: 'color 0.15s ease-out' }} aria-live="polite">
+          <span className="text-[12px] tabular-nums select-none" style={{ fontFamily: 'var(--font-mono)', color: aboutToTimeout ? 'var(--danger)' : 'var(--text-muted)', transition: 'color 0.15s ease-out' }} aria-live="polite">
             {elapsedLabel}
           </span>
         )}
       </div>
 
       {error && (
-        <p id={errorId} role="alert" className="text-[10px] leading-tight" style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>
+        <p id={errorId} role="alert" className="text-[12px] leading-tight" style={{ color: 'var(--danger)', fontFamily: 'var(--font-mono)' }}>
           {error}
         </p>
       )}

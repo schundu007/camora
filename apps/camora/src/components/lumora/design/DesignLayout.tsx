@@ -949,7 +949,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           <div className="h-4 w-px" style={{ background: 'var(--cam-strip-icon-border)' }} />
           <div className="flex items-center gap-1.5">
             <div className="w-5 h-5 md:w-6 md:h-6 rounded flex items-center justify-center" style={{ background: 'var(--cam-gold-leaf)' }}>
-              <span className="text-[10px] md:text-xs font-extrabold" style={{ color: 'var(--cam-primary-dk)' }}>L</span>
+              <span className="text-[12px] md:text-xs font-extrabold" style={{ color: 'var(--cam-primary-dk)' }}>L</span>
             </div>
             <span className="font-extrabold text-xs md:text-sm" style={{ fontFamily: "var(--font-sans)", color: 'var(--cam-strip-heading)' }}>System Design</span>
           </div>
@@ -958,12 +958,12 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           <div className="hidden md:flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}>
             <button
               onClick={() => setDetailLevel('basic')}
-              className="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98]"
+              className="px-2.5 py-1 text-[12px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98]"
               style={detailLevel === 'basic' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text)' }}
              >Basic</button>
              <button
                onClick={() => setDetailLevel('full')}
-               className="px-2.5 py-1 text-[10px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98]"
+               className="px-2.5 py-1 text-[12px] md:text-xs font-bold rounded-md transition-[background-color,color,transform] active:scale-[0.98]"
               style={detailLevel === 'full' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text)' }}
             >Full</button>
           </div>
@@ -995,7 +995,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div className="flex items-center">
               {[15, 30, 45, 60].map(m => (
                 <button key={m} onClick={() => startTimer(m)}
-                  className="px-1.5 py-0.5 text-[10px] font-mono opacity-75 hover:opacity-100 hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
+                  className="px-1.5 py-0.5 text-[12px] font-mono opacity-75 hover:opacity-100 hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] rounded transition-colors" style={{ color: 'var(--cam-strip-text)' }}
                   data-tip={`${m} min timer`}>
                   {m}m
                 </button>
@@ -1019,7 +1019,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   animation: 'design-pulse-ring 1.4s ease-out infinite',
                 }}
               />
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-strip-heading)' }}>Generating</span>
+              <span className="text-[12px] md:text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--cam-strip-heading)' }}>Generating</span>
             </div>
           )}
 
@@ -1028,7 +1028,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span className="text-[10px] font-bold uppercase tracking-wider">Reset</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider">Reset</span>
           </button>
 
           {/* Voice Input — no more hacky getElementById */}
@@ -1063,7 +1063,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div className="flex flex-wrap items-center gap-1.5 px-3 py-1.5">
               {!isLoading && (
                 <>
-                  <span className="text-[9px] font-semibold uppercase tracking-wider shrink-0 select-none"
+                  <span className="text-[12px] font-semibold uppercase tracking-wider shrink-0 select-none"
                     style={{ color: snapChipCode ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-lt)' }}>
                     {snapChipCode ? 'Snap:' : 'Quick ask:'}
                   </span>
@@ -1090,7 +1090,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               {(result || question) && (
                 <button
                   onClick={handleReset}
-                  className="shrink-0 flex items-center gap-1 px-2 py-0.5 mr-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] opacity-70 hover:opacity-100"
+                  className="shrink-0 flex items-center gap-1 px-2 py-0.5 mr-1.5 rounded text-[12px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] opacity-70 hover:opacity-100"
                   style={{ color: 'var(--cam-strip-text)' }}
                   data-tip="Reset — clear problem and solution"
                 >
@@ -1135,7 +1135,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 }}
                 placeholder="Describe your system design problem...&#10;&#10;Example: Design a URL shortener like bit.ly that handles 100M links/month"
                 className="w-full h-[80px] rounded-lg p-3 text-xs leading-relaxed resize-none focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all"
-                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: '-0.01em' }}
+                style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "var(--font-mono)", fontSize: 14, letterSpacing: '-0.01em' }}
               />
             )}
             {inputTab === 'url' && (
@@ -1146,7 +1146,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   onChange={(e) => setUrlInput(e.target.value)}
                   placeholder="https://leetcode.com/problems/..."
                   className="flex-1 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-[var(--accent)]/30 focus:outline-none transition-all"
-                  style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: '-0.01em' }}
+                  style={{ background: t.inputBg, border: `1px solid ${t.inputBorder}`, color: t.inputText, fontFamily: "var(--font-mono)", fontSize: 14, letterSpacing: '-0.01em' }}
                 />
                 <button
                   onClick={() => handleUrlFetch()}
@@ -1249,7 +1249,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
-                <h4 className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Architecture</h4>
+                <h4 className="text-[12px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">Architecture</h4>
               </div>
               {/* Services legend removed — the full-width "Services Used" body
                   card below is the single source (this duplicated it on desktop). */}
@@ -1261,7 +1261,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   leadingControls={(['python', 'graphviz', 'eraser'] as const).map(tab => (
                     <button key={tab}
                       onClick={() => tab === 'graphviz' ? handleGraphviz() : tab === 'eraser' ? handleEraser() : setDiagramTab('python')}
-                      className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
+                      className="px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
                       style={diagramTab === tab
                         ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
                         : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
@@ -1277,7 +1277,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     {(['python', 'graphviz', 'eraser'] as const).map(tab => (
                       <button key={tab}
                         onClick={() => tab === 'graphviz' ? handleGraphviz() : tab === 'eraser' ? handleEraser() : setDiagramTab('python')}
-                        className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
+                        className="px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
                         style={diagramTab === tab
                           ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
                           : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
@@ -1287,7 +1287,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     ))}
                   </div>
                   {gvLoading && (
-                    <div className="flex items-center gap-2 py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    <div className="flex items-center gap-2 py-4 text-[12px]" style={{ color: 'var(--text-muted)' }}>
                       <div className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
                       Generating Graphviz diagram…
                     </div>
@@ -1307,7 +1307,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     </div>
                   )}
                   {!gvLoading && !gvImgUrl && (
-                    <div className="py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    <div className="py-4 text-[12px]" style={{ color: 'var(--text-muted)' }}>
                       Click <strong>Graphviz</strong> tab again to generate.
                     </div>
                   )}
@@ -1319,7 +1319,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     {(['python', 'graphviz', 'eraser'] as const).map(tab => (
                       <button key={tab}
                         onClick={() => tab === 'graphviz' ? handleGraphviz() : tab === 'eraser' ? handleEraser() : setDiagramTab('python')}
-                        className="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
+                        className="px-2.5 py-0.5 text-[12px] font-bold uppercase tracking-[0.10em] rounded transition-[background-color,color,opacity] hover:opacity-90"
                         style={diagramTab === tab
                           ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }
                           : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
@@ -1329,7 +1329,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     ))}
                   </div>
                   {eraserLoading && (
-                    <div className="flex items-center gap-2 py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    <div className="flex items-center gap-2 py-4 text-[12px]" style={{ color: 'var(--text-muted)' }}>
                       <div className="w-3.5 h-3.5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
                       Generating Eraser diagram…
                     </div>
@@ -1338,15 +1338,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <img src={eraserImgUrl} alt="Eraser architecture diagram" className="w-full rounded-lg" />
                   )}
                   {!eraserLoading && !eraserImgUrl && eraserError && (
-                    <div className="py-3 px-3 rounded-lg text-[11px]" style={{ border: '1px solid var(--warning)', background: 'var(--bg-elevated)' }}>
+                    <div className="py-3 px-3 rounded-lg text-[12px]" style={{ border: '1px solid var(--warning)', background: 'var(--bg-elevated)' }}>
                       <p className="mb-2" style={{ color: 'var(--warning-text)' }}>{eraserError}</p>
-                      <button onClick={handleEraser} className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}>
+                      <button onClick={handleEraser} className="text-[12px] font-bold uppercase tracking-wide px-2.5 py-1 rounded" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}>
                         Retry
                       </button>
                     </div>
                   )}
                   {!eraserLoading && !eraserImgUrl && !eraserError && (
-                    <div className="py-4 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                    <div className="py-4 text-[12px]" style={{ color: 'var(--text-muted)' }}>
                       Click <strong>Eraser</strong> tab again to generate.
                     </div>
                   )}
@@ -1406,7 +1406,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   {streamingText ? 'Streaming architecture…' : 'Analyzing and designing system architecture…'}
                 </span>
                 {streamingText && (
-                  <span className="ml-auto text-[10px] font-mono" style={{ color: t.textDim }}>
+                  <span className="ml-auto text-[12px] font-mono" style={{ color: t.textDim }}>
                     {streamingText.length.toLocaleString()} chars
                   </span>
                 )}
@@ -1456,10 +1456,10 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                         </>
                       )}
                     </svg>
-                    <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: lastFromCache ? 'var(--cam-primary-dk)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                       {lastFromCache ? 'Loaded from cache' : 'Fresh design'}
                     </span>
-                    <span className="hidden md:inline text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
+                    <span className="hidden md:inline text-[12px] truncate" style={{ color: 'var(--text-muted)' }}>
                       {lastFromCache
                         ? '· Identical problem — served instantly. Click Regenerate for a fresh take.'
                         : '· Now cached — repeat solves on this exact problem hit the cache.'}
@@ -1468,7 +1468,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                   <button
                     onClick={handleRegenerate}
                     disabled={isLoading}
-                    className="shrink-0 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="shrink-0 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.14em] px-2.5 py-1 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', border: '1px solid var(--cam-primary-dk)', fontFamily: 'var(--font-mono)' }}
                     data-tip="Force a fresh design, ignoring the cache."
                   >
@@ -1590,15 +1590,15 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                             <table key={ci} className="w-full text-left font-mono" style={{ borderCollapse: 'collapse' }}>
                               <thead>
                                 <tr style={{ borderBottom: `1px solid ${t.cardBorder}` }}>
-                                  <th className="text-[9px] font-bold uppercase tracking-wider py-1.5 pr-3" style={{ color: t.textMuted }}>Metric</th>
-                                  <th className="text-[9px] font-bold uppercase tracking-wider py-1.5" style={{ color: t.textMuted }}>Estimate</th>
+                                  <th className="text-[12px] font-bold uppercase tracking-wider py-1.5 pr-3" style={{ color: t.textMuted }}>Metric</th>
+                                  <th className="text-[12px] font-bold uppercase tracking-wider py-1.5" style={{ color: t.textMuted }}>Estimate</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {col.map(([key, val]) => (
                                   <tr key={key} style={{ borderBottom: `1px solid var(--border)` }}>
-                                    <td className="text-[11px] font-bold py-1.5 pr-3 whitespace-nowrap" style={{ color: t.text }}>{key}</td>
-                                    <td className="text-[11px] py-1.5" style={{ color: t.text }}>{val}</td>
+                                    <td className="text-[12px] font-bold py-1.5 pr-3 whitespace-nowrap" style={{ color: t.text }}>{key}</td>
+                                    <td className="text-[12px] py-1.5" style={{ color: t.text }}>{val}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -1620,7 +1620,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                     <div className="ml-auto"><SectionCopyBtn getText={() => (sd.techJustifications || []).map(tier => `${tier.tech}\n${tier.details.map(d => `  - ${d}`).join('\n')}`).join('\n\n')} title="Copy scalability tiers" /></div>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-[10px] mb-2" style={{ color: t.textMuted }}>Click a tier to re-stream a focused LLD drill-down for that component.</p>
+                    <p className="text-[12px] mb-2" style={{ color: t.textMuted }}>Click a tier to re-stream a focused LLD drill-down for that component.</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
                       {sd.techJustifications.map((tier, i) => (
                           <button
@@ -1667,7 +1667,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                       {sd.apiDesign.map((ep, i) => (
                         <div key={i} className="flex items-start gap-2 px-1 py-1.5 border-b last:border-b-0" style={{ borderColor: t.cardBorder }}>
                           {ep.method && (
-                            <span className="text-[10px] font-black font-mono shrink-0 mt-0.5 px-1.5 py-0.5 rounded" style={{ background: 'var(--accent)', color: '#fff' }}>{ep.method}</span>
+                            <span className="text-[12px] font-black font-mono shrink-0 mt-0.5 px-1.5 py-0.5 rounded" style={{ background: 'var(--accent)', color: '#fff' }}>{ep.method}</span>
                           )}
                           <span className="text-xs font-mono font-semibold shrink-0" style={{ color: t.dotColor }}>{ep.path}</span>
                           <span className="text-xs leading-snug" style={{ color: t.textMuted }}>{ep.description}</span>
@@ -1693,7 +1693,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                           <div className="text-xs font-bold mb-1.5" style={{ color: t.dotColor }}>{entity.entity}</div>
                           <div className="flex flex-wrap gap-1">
                             {entity.fields.map((field, j) => (
-                              <span key={j} className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}>{field}</span>
+                              <span key={j} className="text-[12px] font-mono px-1.5 py-0.5 rounded" style={{ background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' }}>{field}</span>
                             ))}
                           </div>
                         </div>
@@ -1859,21 +1859,21 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
       <div className="hidden sm:flex items-center justify-between h-7 px-3 bg-[var(--bg-elevated)] border-t border-[var(--border)] shrink-0">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-[var(--accent)] animate-pulse' : 'bg-[var(--accent)]'}`} />
-          <span className="text-[10px] font-mono text-[var(--text-muted)]">
+          <span className="text-[12px] font-mono text-[var(--text-muted)]">
             {isLoading ? 'Generating...' : 'Ready'}
           </span>
           {question && (
-            <span className="text-[10px] font-mono text-[var(--text-muted)] border-l border-[var(--border)] pl-2 truncate max-w-[200px]">
+            <span className="text-[12px] font-mono text-[var(--text-muted)] border-l border-[var(--border)] pl-2 truncate max-w-[200px]">
               {question}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 text-[10px] font-mono text-[var(--text-muted)]">
+        <div className="flex items-center gap-3 text-[12px] font-mono text-[var(--text-muted)]">
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)] text-[9px]">⌘↵</kbd> submit
+            <kbd className="px-1 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)] text-[12px]">⌘↵</kbd> submit
           </span>
           <span>
-            <kbd className="px-1 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)] text-[9px]">Esc</kbd> clear
+            <kbd className="px-1 py-0.5 rounded border border-[var(--border)] text-[var(--text-muted)] text-[12px]">Esc</kbd> clear
           </span>
         </div>
       </div>

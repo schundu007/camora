@@ -86,7 +86,7 @@ const CompanyContextPicker = () => {
         type="button"
         onClick={() => setOpen(true)}
         data-tip={activeName ? `Active workspace: ${activeName}` : 'Switch which Prep Kit workspace Sona uses for context'}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold uppercase tracking-[0.1em] transition-colors min-w-0"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-extrabold uppercase tracking-[0.1em] transition-colors min-w-0"
         style={{
           background: 'var(--cam-hero-strip)',
           border: '1px solid color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)',
@@ -150,7 +150,7 @@ const CompanyContextPicker = () => {
               />
               <div className="pl-3">
                 <span
-                  className="inline-flex items-center px-2.5 py-0.5 mb-2 rounded-full text-[10px] font-extrabold uppercase tracking-[0.16em]"
+                  className="inline-flex items-center px-2.5 py-0.5 mb-2 rounded-full text-[12px] font-extrabold uppercase tracking-[0.16em]"
                   style={{
                     background: 'var(--bg-elevated)',
                     border: '1px solid var(--cam-gold-leaf)',
@@ -237,14 +237,14 @@ const CompanyContextPicker = () => {
                             </span>
                             {stats.length > 0 ? (
                               <span
-                                className="block text-[11px] mt-0.5"
+                                className="block text-[12px] mt-0.5"
                                 style={{ color: 'var(--text-muted)' }}
                               >
                                 {stats.join(' · ')}
                               </span>
                             ) : (
                               <span
-                                className="block text-[11px] mt-0.5 italic"
+                                className="block text-[12px] mt-0.5 italic"
                                 style={{ color: 'var(--text-muted)' }}
                               >
                                 Empty workspace — add JD or resume in Prep Kit first.
@@ -253,7 +253,7 @@ const CompanyContextPicker = () => {
                           </span>
                           {isActive && (
                             <span
-                              className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full"
+                              className="text-[12px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full"
                               style={{
                                 background: 'var(--accent)',
                                 color: 'var(--cam-on-accent)',

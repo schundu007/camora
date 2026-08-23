@@ -29,7 +29,7 @@ const CATEGORY_LABEL: Record<QuestionCategory, string> = {
 const CategoryPill = ({ category }: { category: QuestionCategory }) => {
   return (
     <span
-      className="font-mono text-[9px] font-bold tracking-[0.18em] px-2 py-0.5 rounded shrink-0 uppercase"
+      className="font-mono text-[12px] font-bold tracking-[0.18em] px-2 py-0.5 rounded shrink-0 uppercase"
       style={{
         background: 'var(--accent-subtle)',
         color: 'var(--accent)',
@@ -44,7 +44,7 @@ const CategoryPill = ({ category }: { category: QuestionCategory }) => {
 const QNumber = ({ n }: { n: number }) => {
   return (
     <span
-      className="font-mono text-[11px] font-bold tabular-nums shrink-0"
+      className="font-mono text-[12px] font-bold tabular-nums shrink-0"
       style={{ color: 'var(--accent)' }}
       aria-hidden="true"
     >
@@ -143,7 +143,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
             >
               <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
                 <span
-                  className="flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold"
+                  className="flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold"
                   style={{
                     background: 'var(--cam-accent-fill)',
                     color: 'var(--cam-accent-fill-text)',
@@ -159,7 +159,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
                 {question}
               </span>
               <CategoryPill category={activeCategory} />
-              <span className="text-[10px] shrink-0 animate-pulse font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-code)', color: 'var(--cam-primary)' }}>
+              <span className="text-[12px] shrink-0 animate-pulse font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-code)', color: 'var(--cam-primary)' }}>
                 Generating
               </span>
             </div>
@@ -199,7 +199,7 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
                 <div className="flex justify-end px-1 mt-0.5 mb-2">
                   <button
                     onClick={onRetry}
-                    className="text-[10px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                    className="text-[12px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
                     style={{
                       fontFamily: 'var(--font-code)',
                       color: 'var(--text-muted)',

@@ -485,7 +485,7 @@ export const LumoraShellPage = () => {
           <button
             type="button"
             onClick={() => { if (window.history.length > 1) navigate(-1); else navigate('/'); }}
-            className="md:hidden flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
+            className="md:hidden flex items-center gap-1 px-2 py-1 rounded text-[12px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
             style={{
               background: 'var(--lumora-chrome-bg)',
               border: '1px solid var(--lumora-chrome-border)',
@@ -799,7 +799,7 @@ export const LumoraShellPage = () => {
                         const ok = await dialogConfirm({ title: 'Clear all sessions?', message: 'This will permanently remove every saved session.', confirmLabel: 'Clear all', tone: 'danger' });
                         if (ok) clearHistory();
                       }}
-                      className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-colors"
+                      className="text-[12px] font-semibold px-3 py-1.5 rounded-md transition-colors"
                       style={{ color: 'var(--danger)', border: '1px solid var(--danger)', background: 'var(--bg-surface)' }}
                     >Clear all</button>
                   </div>
@@ -848,7 +848,7 @@ export const LumoraShellPage = () => {
                           }}
                         >
                           <span
-                            className="session-badge-num flex items-center justify-center w-8 h-8 rounded-lg text-[11px] font-bold shrink-0"
+                            className="session-badge-num flex items-center justify-center w-8 h-8 rounded-lg text-[12px] font-bold shrink-0"
                             style={{
                               background:
                                 'linear-gradient(135deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)',
@@ -861,12 +861,12 @@ export const LumoraShellPage = () => {
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="text-[13px] font-bold truncate" style={{ color: 'var(--text-primary)' }}>{entry.question}</p>
-                            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{new Date(entry.timestamp).toLocaleString()}</p>
+                            <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{new Date(entry.timestamp).toLocaleString()}</p>
                           </div>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setFocusedEntry(realIdx); navigate('/lumora'); }}
-                            className="text-[11px] font-semibold px-3 py-1.5 rounded-md transition-[background-color,color] active:scale-[0.98] shrink-0"
+                            className="text-[12px] font-semibold px-3 py-1.5 rounded-md transition-[background-color,color] active:scale-[0.98] shrink-0"
                             style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}
                           >View answer</button>
                           <button
@@ -921,17 +921,17 @@ export const LumoraShellPage = () => {
                 <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-xl" style={{ border: '1px solid var(--border)', background: 'rgba(38,97,156,0.04)' }}>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{history.length}</span>
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>sessions</span>
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>sessions</span>
                   </div>
                   <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{history.filter((e: any) => e.question).length}</span>
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>questions answered</span>
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>questions answered</span>
                   </div>
                   <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: 'var(--border)' }} />
                   <div className="flex items-center gap-1.5 sm:ml-auto">
                     <Chip variant="success">Active</Chip>
-                    <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>subscription</span>
+                    <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>subscription</span>
                   </div>
                 </div>
                 <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)' }}>
@@ -1020,7 +1020,7 @@ export const LumoraShellPage = () => {
               }}
             >
               {tab.icon}
-              <span className="text-[10px] font-bold">{tab.label}</span>
+              <span className="text-[12px] font-bold">{tab.label}</span>
               {isActive && (
                 <span
                   aria-hidden="true"

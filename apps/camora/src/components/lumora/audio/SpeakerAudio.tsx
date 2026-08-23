@@ -297,7 +297,7 @@ export const SpeakerAudioPill = () => {
   if (state === 'unsupported') {
     return (
       <span
-        className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold px-2 py-1 rounded-lg shrink-0"
+        className="hidden sm:inline-flex items-center gap-1.5 text-[12px] font-bold px-2 py-1 rounded-lg shrink-0"
         style={{ color: palette.fg, background: palette.bg }}
         data-tip={tooltip}
       >
@@ -311,7 +311,7 @@ export const SpeakerAudioPill = () => {
     <button
       onClick={onClick}
       disabled={state === 'connecting'}
-      className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[11px] font-bold rounded-lg transition-[background-color,color,border-color,opacity] duration-150 active:scale-[0.98] shrink-0 disabled:cursor-wait"
+      className="hidden sm:flex items-center gap-1.5 px-2 py-1 text-[12px] font-bold rounded-lg transition-[background-color,color,border-color,opacity] duration-150 active:scale-[0.98] shrink-0 disabled:cursor-wait"
       style={{ background: palette.bg, color: palette.fg, border: `1px solid ${palette.border}` }}
       data-tip={tooltip}
       aria-pressed={state === 'live'}

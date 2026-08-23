@@ -602,7 +602,7 @@ export const AudioSetupWizard = ({
                     <button
                       type="button"
                       onClick={() => { (window as any).camo?.relaunch?.(); }}
-                      className="px-3 py-1 text-[11px] font-bold rounded-md"
+                      className="px-3 py-1 text-[12px] font-bold rounded-md"
                       style={{ background: 'var(--accent)', color: '#fff' }}
                     >
                       Restart Camora
@@ -611,7 +611,7 @@ export const AudioSetupWizard = ({
                     <button
                       type="button"
                       onClick={() => { void enumerate(); }}
-                      className="px-3 py-1 text-[11px] font-bold rounded-md"
+                      className="px-3 py-1 text-[12px] font-bold rounded-md"
                       style={{ background: 'var(--accent)', color: '#fff' }}
                     >
                       Grant microphone access
@@ -637,14 +637,14 @@ export const AudioSetupWizard = ({
               <button
                 type="button"
                 onClick={() => { void enumerate(); }}
-                className="px-3 py-2 text-[11px] font-bold rounded-lg"
+                className="px-3 py-2 text-[12px] font-bold rounded-lg"
                 style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                 data-tip="Re-enumerate devices (after plugging in a new mic, or granting permission)"
               >
                 Refresh
               </button>
             </div>
-            <div className="text-[10px] mt-1" style={{ color: 'var(--text-dimmed)' }}>
+            <div className="text-[12px] mt-1" style={{ color: 'var(--text-dimmed)' }}>
               {inputs.length} microphone{inputs.length === 1 ? '' : 's'} detected
             </div>
             <LevelMeter level={micLevel} label="Speak now to test" active={micLevel > 0.012} />
@@ -719,7 +719,7 @@ export const AudioSetupWizard = ({
             <button
               type="button"
               onClick={() => setShowAdvancedMethods((v) => !v)}
-              className="mt-2 flex items-center gap-1.5 text-[11px] font-bold"
+              className="mt-2 flex items-center gap-1.5 text-[12px] font-bold"
               style={{ color: 'var(--text-secondary)' }}
               aria-expanded={showAdvancedMethods}
             >
@@ -755,7 +755,7 @@ export const AudioSetupWizard = ({
 
             {prefs.captureMethod === 'virtual-mic' && (
               <div className="mt-3">
-                <label className="text-[11px] uppercase font-bold tracking-wider block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                <label className="text-[12px] uppercase font-bold tracking-wider block mb-1" style={{ color: 'var(--text-secondary)' }}>
                   Virtual loopback device
                 </label>
                 <select
@@ -772,7 +772,7 @@ export const AudioSetupWizard = ({
                   ))}
                 </select>
                 {!detectedVirtualMic && (
-                  <div className="text-[11px] mt-1.5" style={{ color: 'var(--warning-text, #f59e0b)' }}>
+                  <div className="text-[12px] mt-1.5" style={{ color: 'var(--warning-text, #f59e0b)' }}>
                     No common loopback driver detected. Install BlackHole (macOS), VoiceMeeter (Windows), or Loopback, route your call into it, then refresh this list.
                   </div>
                 )}
@@ -856,7 +856,7 @@ export const AudioSetupWizard = ({
                       <button
                         type="button"
                         onClick={() => { (window as any).camo?.openSystemPrivacy?.('ScreenCapture'); }}
-                        className="px-3 py-1 text-[11px] font-bold rounded-md"
+                        className="px-3 py-1 text-[12px] font-bold rounded-md"
                         style={{ background: 'var(--accent)', color: '#fff' }}
                       >
                         Open System Settings
@@ -864,7 +864,7 @@ export const AudioSetupWizard = ({
                       <button
                         type="button"
                         onClick={() => { (window as any).camo?.relaunch?.(); }}
-                        className="px-3 py-1 text-[11px] font-bold rounded-md"
+                        className="px-3 py-1 text-[12px] font-bold rounded-md"
                         style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
                       >
                         Restart Camora
@@ -895,7 +895,7 @@ export const AudioSetupWizard = ({
                     Stop and reconnect
                   </button>
                 )}
-                <span className="text-[11px] font-mono" style={{ color: speakerReady ? 'var(--accent)' : 'var(--text-dimmed)' }}>
+                <span className="text-[12px] font-mono" style={{ color: speakerReady ? 'var(--accent)' : 'var(--text-dimmed)' }}>
                   {speakerReady
                     ? speaker.level > 0.012 ? 'voice detected ✓' : 'connected, waiting…'
                     : 'not connected'}
@@ -955,7 +955,7 @@ const Section = ({
     <div>
       <div className="flex items-baseline gap-2 mb-1.5">
         <span
-          className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
+          className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[12px] font-bold"
           style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}
         >
           {num}
@@ -1002,16 +1002,16 @@ const MethodCard = ({
         </span>
         {badge && (
           <span
-            className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+            className="text-[12px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
             style={{ background: 'var(--bg-app)', color: 'var(--text-secondary)' }}
           >
             {badge}
           </span>
         )}
       </div>
-      <div className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>{desc}</div>
+      <div className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>{desc}</div>
       {disabledNote && disabled && (
-        <div className="text-[10px] mt-1" style={{ color: 'var(--warning-text, #f59e0b)' }}>{disabledNote}</div>
+        <div className="text-[12px] mt-1" style={{ color: 'var(--warning-text, #f59e0b)' }}>{disabledNote}</div>
       )}
     </button>
   );
@@ -1021,7 +1021,7 @@ const LevelMeter = ({ level, label, active }: { level: number; label: string; ac
   return (
     <div className="mt-2">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+        <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
       </div>
       <div className="flex items-end gap-0.5 h-5">
         {Array.from({ length: 28 }).map((_, i) => {

@@ -96,7 +96,7 @@ export function ChipSelect({ value, options, onChange, label, disabled, title }:
             role="option"
             aria-selected={active}
             onClick={() => { onChange(o.value); setOpen(false); }}
-            className="w-full text-left px-2.5 py-1.5 rounded text-[11px] font-bold truncate"
+            className="w-full text-left px-2.5 py-1.5 rounded text-[12px] font-bold truncate"
             style={{
               background: active ? 'var(--cam-chip-active-bg)' : 'transparent',
               color: active ? 'var(--cam-chip-active-text)' : 'var(--text-secondary)',
@@ -121,7 +121,7 @@ export function ChipSelect({ value, options, onChange, label, disabled, title }:
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="h-[26px] px-2.5 rounded text-[11px] font-bold inline-flex items-center gap-1.5 transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="h-[26px] px-2.5 rounded text-[12px] font-bold inline-flex items-center gap-1.5 transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
           border: '1px solid var(--cam-gold-leaf-dk)',
           color: 'var(--cam-gold-leaf)',
@@ -129,10 +129,10 @@ export function ChipSelect({ value, options, onChange, label, disabled, title }:
         }}
       >
         {label && (
-          <span className="text-[10px] font-bold tracking-wider uppercase opacity-70">{label}</span>
+          <span className="text-[12px] font-bold tracking-wider uppercase opacity-70">{label}</span>
         )}
         <span className="truncate max-w-[140px]">{current?.label ?? value}</span>
-        <span aria-hidden="true" className="text-[9px] opacity-70">▾</span>
+        <span aria-hidden="true" className="text-[12px] opacity-70">▾</span>
       </button>
       {menu}
     </div>

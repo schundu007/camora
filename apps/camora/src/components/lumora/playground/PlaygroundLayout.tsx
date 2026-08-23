@@ -36,7 +36,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
   return (
     <div className="flex flex-col h-full bg-[#0a0d12] overflow-auto">
       <div className="px-4 py-2 border-b border-[#1e293b] sticky top-0 bg-[#0a0d12] flex items-center gap-2 lumora-winctl-safe">
-        <span className="text-[9px] uppercase tracking-widest text-[#6B7A90] font-medium" style={sans}>Line {line}</span>
+        <span className="text-[12px] uppercase tracking-widest text-[#6B7A90] font-medium" style={sans}>Line {line}</span>
         {loading && (
           <span className="w-2.5 h-2.5 border-2 border-t-transparent rounded-full animate-spin"
             style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
@@ -47,13 +47,13 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
         {error ? (
           <p className="text-[#f87171] text-[12px] leading-relaxed" style={sans}>{error}</p>
         ) : loading ? (
-          <p className="text-[#7C8AA0] text-[11px] italic" style={sans}>Analysing…</p>
+          <p className="text-[#7C8AA0] text-[12px] italic" style={sans}>Analysing…</p>
         ) : rich ? (
           <>
             {/* What it does */}
             {(rich.what || rich.explanation) && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#3b82f6', ...sans }}>What it does</div>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#3b82f6', ...sans }}>What it does</div>
                 <p className="text-[13px] leading-relaxed" style={{ color: '#cbd5e1', ...sans }}>{rich.what || rich.explanation}</p>
               </div>
             )}
@@ -61,15 +61,15 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* How it works */}
             {rich.how && rich.how.length > 0 && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: '#3b82f6', ...sans }}>How it works</div>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-2" style={{ color: '#3b82f6', ...sans }}>How it works</div>
                 <div className="rounded-lg overflow-hidden border border-[#1e293b]">
                   {rich.how.map((step, i) => (
                     <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid #1e293b' : 'none' }}>
                       <div className="px-3 py-2.5" style={{ background: '#0d1117', borderRight: '1px solid #1e293b' }}>
-                        <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
+                        <pre className="text-[14px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
                       </div>
                       <div className="px-3 py-2.5 flex items-start gap-2">
-                        <span className="shrink-0 mt-0.5 text-[9px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                        <span className="shrink-0 mt-0.5 text-[12px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
                         <span className="text-[12px] leading-relaxed" style={{ color: '#94a3b8', ...sans }}>{step.text}</span>
                       </div>
                     </div>
@@ -81,9 +81,9 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* State trace */}
             {rich.trace && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#d97706', ...sans }}>State trace</div>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#d97706', ...sans }}>State trace</div>
                 <div className="rounded-lg px-3 py-2.5" style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)' }}>
-                  <pre className="text-[11px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#fcd34d', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{rich.trace}</pre>
+                  <pre className="text-[14px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#fcd34d', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{rich.trace}</pre>
                 </div>
               </div>
             )}
@@ -91,7 +91,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* Analogy */}
             {rich.analogy && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#a78bfa', ...sans }}>Think of it as…</div>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#a78bfa', ...sans }}>Think of it as…</div>
                 <div className="rounded-lg px-3 py-2.5" style={{ background: 'rgba(167,139,250,0.07)', border: '1px solid rgba(167,139,250,0.2)' }}>
                   <p className="text-[12px] leading-relaxed" style={{ color: '#c4b5fd', ...sans }}>{rich.analogy}</p>
                 </div>
@@ -101,17 +101,17 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* Concepts */}
             {rich.concepts && rich.concepts.length > 0 && (
               <div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#6B7A90', ...sans }}>Concepts used</div>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#6B7A90', ...sans }}>Concepts used</div>
                 <div className="flex flex-wrap gap-1.5">
                   {rich.concepts.map((c, i) => (
-                    <span key={i} className="px-2 py-0.5 rounded text-[10px] font-medium" style={{ background: 'rgba(51,65,85,0.6)', color: '#94a3b8', ...sans }}>{c}</span>
+                    <span key={i} className="px-2 py-0.5 rounded text-[12px] font-medium" style={{ background: 'rgba(51,65,85,0.6)', color: '#94a3b8', ...sans }}>{c}</span>
                   ))}
                 </div>
               </div>
             )}
           </>
         ) : (
-          <p className="text-[#7C8AA0] text-[11px] italic" style={sans}>No explanation yet</p>
+          <p className="text-[#7C8AA0] text-[12px] italic" style={sans}>No explanation yet</p>
         )}
       </div>
     </div>
@@ -235,7 +235,7 @@ export const PlaygroundLayout = () => {
   const tabBtn = (label: string, tab: 'output' | 'explain') => (
     <button
       onClick={() => setRightTab(tab)}
-      className="px-4 py-2 text-[10px] uppercase tracking-widest font-medium border-b-2 transition-colors"
+      className="px-4 py-2 text-[12px] uppercase tracking-widest font-medium border-b-2 transition-colors"
       style={{
         ...sans,
         borderColor: rightTab === tab ? 'var(--cam-gold-leaf)' : 'transparent',
@@ -253,7 +253,7 @@ export const PlaygroundLayout = () => {
       {/* Toolbar */}
       <div className="flex items-center px-4 py-2 bg-[#0a0e1a] border-b border-[var(--cam-gold-leaf-dk)]">
         <div className="flex-1">
-          <span className="text-[10px] text-[var(--cam-gold-leaf-dk)] uppercase tracking-widest font-medium" style={sans}>
+          <span className="text-[12px] text-[var(--cam-gold-leaf-dk)] uppercase tracking-widest font-medium" style={sans}>
             {activeTab === 'python3' ? 'main.py' : activeTab === 'bash' ? 'script.sh' : activeTab === 'docker' ? 'Dockerfile' : 'main.tf'}
           </span>
         </div>
@@ -262,7 +262,7 @@ export const PlaygroundLayout = () => {
             <button
               onClick={handleFormat}
               disabled={formatting}
-              className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
+              className="text-[12px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90 disabled:opacity-40"
               style={{
                 ...sans,
                 background: 'linear-gradient(135deg, rgba(0,47,120,0.55) 0%, rgba(10,14,26,0.85) 100%)',
@@ -275,7 +275,7 @@ export const PlaygroundLayout = () => {
           )}
           <button
             onClick={handleCopy}
-            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-all hover:opacity-90"
+            className="text-[12px] font-semibold px-3 py-1 rounded-md transition-all hover:opacity-90"
             style={copied ? {
               ...sans,
               background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
@@ -292,7 +292,7 @@ export const PlaygroundLayout = () => {
           </button>
           <button
             onClick={handleToggleExplain}
-            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
+            className="text-[12px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
             style={explainMode ? {
               ...sans,
               background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)',
@@ -309,7 +309,7 @@ export const PlaygroundLayout = () => {
           </button>
           <button
             onClick={handleClear}
-            className="text-[11px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
+            className="text-[12px] font-semibold px-3 py-1 rounded-md transition-opacity hover:opacity-90"
             style={{
               ...sans,
               background: 'linear-gradient(135deg, rgba(0,47,120,0.35) 0%, rgba(10,14,26,0.75) 100%)',
@@ -322,7 +322,7 @@ export const PlaygroundLayout = () => {
           <button
             onClick={handleRun}
             disabled={running}
-            className="text-[11px] font-bold px-5 py-1.5 rounded-md transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="text-[12px] font-bold px-5 py-1.5 rounded-md transition-opacity hover:opacity-90 disabled:opacity-50"
             style={{
               ...sans,
               background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)',
@@ -333,7 +333,7 @@ export const PlaygroundLayout = () => {
           </button>
         </div>
         <div className="flex-1 flex items-center justify-end">
-          <span className="text-[10px] text-[var(--cam-gold-leaf-dk)] hidden md:block" style={sans}>⌘↵ · ⌘L · ⌘D</span>
+          <span className="text-[12px] text-[var(--cam-gold-leaf-dk)] hidden md:block" style={sans}>⌘↵ · ⌘L · ⌘D</span>
         </div>
       </div>
 

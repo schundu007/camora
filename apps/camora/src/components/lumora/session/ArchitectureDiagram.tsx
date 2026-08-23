@@ -316,7 +316,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
           >
             <span className="text-xs font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--cam-strip-heading)' }}>Architecture Diagram</span>
             <div className="flex items-center gap-1 text-[var(--text-muted)]">
-              <span className="text-[10px] font-mono mr-2 opacity-60">Click outside to close</span>
+              <span className="text-[12px] font-mono mr-2 opacity-60">Click outside to close</span>
               <button
                 onClick={() => setIsFullscreen(false)}
                 className="w-7 h-7 flex items-center justify-center rounded transition-colors"
