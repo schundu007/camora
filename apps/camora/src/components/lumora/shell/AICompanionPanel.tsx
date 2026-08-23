@@ -1204,6 +1204,86 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     );
   }
 
+  // The composer. In embedded mode it is rendered INSIDE the answers column
+  // (below the answer cards, capped to the same 880px measure) instead of as a
+  // full-width bar under both columns — a question box that starts under the
+  // questions rail reads as belonging to the rail, and its text ran a whole
+  // column wider than the answers it produces.
+  //
+  // Mobile note: when embedded, the LumoraShell bottom nav (fixed, 56px +
+  // safe-area-inset-bottom) sits over the bottom of the panel. Without bottom
+  // padding the mic + send row hides behind it. The wrapper class ladders
+  // padding by breakpoint; the inline style replicates it so safe-area is
+  // included on mobile-Safari notch devices.
+  const composer = (
+    <div
+      className="px-3 pt-2 shrink-0 flex flex-col items-center gap-2 lumora-companion-input-row w-full mx-auto"
+      data-embedded={embedded ? 'true' : 'false'}
+      style={embedded ? { maxWidth: 880 } : undefined}
+    >
+        {/* Voice enrollment / filter status lives in the ScreenshotStrip top
+            toolbar for behavioral (the single <VoiceEnrollment> instance,
+            backed by session-store). The old duplicate banner that used to
+            render here ("Not enrolled · Enroll My Voice") was removed — it
+            shared the same store state, so the toolbar chip is authoritative. */}
+        {/* Staged screenshots — thumbnails sit ABOVE the input so the row of
+            controls keeps its fixed height and nothing reflows mid-interview. */}
+        {pendingImages.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 w-full">
+            {pendingImages.map((src, i) => (
+              <div key={i} className="relative">
+                <img src={src} alt="attached screenshot" className="h-12 w-12 object-cover rounded-md" style={{ border: '1px solid var(--cam-gold-leaf)' }} />
+                <button
+                  onClick={() => setPendingImages(prev => prev.filter((_, k) => k !== i))}
+                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                  style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                  aria-label="Remove screenshot"
+                  data-tip="Remove this screenshot"
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        {/* Text input — visible in both floating and embedded behavioral mode */}
+        {/* Double height: the composer is where the whole panel gets driven
+            from, and a 36px strip at the bottom of a full-screen window read as
+            a status bar rather than the thing you type into. */}
+        <div className="flex items-center gap-2 px-3 h-24 md:h-[72px] rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+          <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && (input.trim() || pendingImages.length > 0)) handleSubmit(); }}
+            onPaste={onComposerPaste}
+            placeholder="Type a question..."
+            className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[13px]"
+            style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
+          {/* Screenshot — ask Sona about whatever is on screen. */}
+          <button
+            onClick={snapIntoComposer}
+            disabled={snapping || streaming || pendingImages.length >= MAX_IMAGES}
+            className="w-9 h-9 md:w-8 md:h-8 rounded-full flex items-center justify-center shrink-0 disabled:opacity-40"
+            style={{ border: '1px solid var(--border)' }}
+            aria-label="Add a screenshot"
+            data-tip={pendingImages.length >= MAX_IMAGES
+              ? `Up to ${MAX_IMAGES} screenshots per question`
+              : 'Screenshot — drag to select any area and ask about it. Pasting an image works too.'}
+          >
+            {snapping ? (
+              <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" style={{ color: 'var(--text-muted)' }} />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-4 md:h-4">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            )}
+          </button>
+          {(input.trim() || pendingImages.length > 0) && !streaming && (
+            <button onClick={handleSubmit} className="w-9 h-9 md:w-8 md:h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </button>
+          )}
+        </div>
+    </div>
+  );
+
   return (
     <div
       className={embedded ? "flex flex-col h-full w-full" : "fixed z-50 flex flex-col"}
@@ -1358,7 +1438,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               Mobile: rendered as a slide-over drawer (≤md) keyed off
               mobileRailOpen; on md+ it stays a fixed 280px column. */}
           <div
-            className={`shrink-0 overflow-auto border-r transition-transform md:translate-x-0
+            className={`shrink-0 flex flex-col overflow-hidden border-r transition-transform md:translate-x-0
               ${mobileRailOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
               md:relative md:w-[280px] md:max-w-none
               absolute md:static inset-y-0 left-0 z-40 w-[82vw] max-w-[320px]`}
@@ -1367,7 +1447,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             {/* Mobile-only header inside the drawer with a close button so
                 touch users have an obvious dismiss. The scrim handles taps
                 outside, but a visible X is the discoverable affordance. */}
-            <div className="md:hidden flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
+            <div className="md:hidden shrink-0 flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
               <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-primary)' }}>Menu</span>
               <button
                 onClick={() => setMobileRailOpen(false)}
@@ -1378,19 +1458,30 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
             </div>
-            <StoryBankPanel
-              stories={activeAssistant?.stories}
-              activeArchetype={(() => {
-                const lastAi = [...messages].reverse().find(m => m.role === 'ai');
-                if (!lastAi && streamText) return getArchetype(streamText);
-                return lastAi ? getArchetype(lastAi.text) : null;
-              })()}
-            />
-            <div className="p-3 space-y-1.5">
+            {/* Capped at a third of the rail and scrolling inside itself: the
+                story bank has no bound of its own, and as a fixed block in a
+                flex column a long resume would push the questions list off the
+                bottom — the exact failure this layout exists to prevent. */}
+            <div className="shrink-0 max-h-[33%] overflow-auto">
+              <StoryBankPanel
+                stories={activeAssistant?.stories}
+                activeArchetype={(() => {
+                  const lastAi = [...messages].reverse().find(m => m.role === 'ai');
+                  if (!lastAi && streamText) return getArchetype(streamText);
+                  return lastAi ? getArchetype(lastAi.text) : null;
+                })()}
+              />
+            </div>
+            {/* The questions list owns every pixel between the story bank and
+                the footer. It used to share the column with the enrollment
+                nudge and the auto-answer switch, which pushed questions below
+                the fold while the bottom half of the rail sat empty — those two
+                now live in the pinned footer below. */}
+            <div className="flex-1 min-h-0 overflow-auto p-3 space-y-1.5">
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: 'var(--text-muted)' }}>Questions</p>
               {messages.filter(m => m.role === 'user').length === 0 && !streaming && (
-                <div className="py-4">
-                  <p className="text-[10px] mb-3" style={{ color: 'var(--text-muted)' }}>Ask a question to get started</p>
+                <div className="py-2">
+                  <p className="text-[10px] mb-2" style={{ color: 'var(--text-muted)' }}>Ask a question to get started</p>
                   <div className="space-y-1.5">
                     {['Tell me about yourself', 'Describe a conflict at work', 'Why should we hire you?', 'Your biggest weakness?'].map(s => (
                       <button key={s} onClick={() => { ask(s); setMobileRailOpen(false); }} className="w-full text-left px-3 py-2.5 md:py-2 rounded-lg text-[13px] md:text-[11px] transition-[background-color,border-color,color] active:scale-[0.98]" style={{ border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
@@ -1411,96 +1502,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     <span className="text-[8px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
                   </div>
                 </div>
-              )}
-              {/* Voice-enrollment prompt. Shown only when it changes what Sona
-                  does: unenrolled, it cannot separate the candidate from the
-                  interviewer, so their own answers return as questions. */}
-              {embedded && !voiceEnrolled && !enrollNudgeHidden && (
-                <div
-                  className="px-2.5 py-2 rounded-lg"
-                  style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-gold-leaf)' }}
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>
-                    {isEnrolling ? 'Listening — speak for 5s' : 'Sona hears you too'}
-                  </p>
-                  <p className="text-[9px] leading-snug mt-1" style={{ color: 'var(--text-muted)' }}>
-                    {isEnrolling
-                      ? 'Say anything for five seconds so Sona learns your voice.'
-                      : 'Without a sample of your voice, your own answers can come back as questions. Takes five seconds.'}
-                  </p>
-                  {!isEnrolling && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('lumora:start-voice-enrollment'));
-                          // The listener lives in VoiceEnrollment, mounted by the
-                          // behavioral toolbar. If that toolbar isn't there, the
-                          // event lands nowhere and the button would look dead —
-                          // so say what happened instead of failing silently.
-                          setTimeout(() => {
-                            if (!useSessionStore.getState().isEnrolling) {
-                              dialogAlert({
-                                title: 'Enrollment unavailable here',
-                                message: 'Use the voice chip in the toolbar above, or Settings → Voice, to record your 5-second sample.',
-                              });
-                            }
-                          }, 2000);
-                        }}
-                        className="px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide"
-                        style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-accent-fill-text, #0a0e1a)' }}
-                        data-tip="Record a 5-second sample so Sona can tell your voice from the interviewer's"
-                      >
-                        Enroll my voice
-                      </button>
-                      <button
-                        onClick={() => setEnrollNudgeHidden(true)}
-                        className="text-[9px] font-bold uppercase tracking-wide"
-                        style={{ color: 'var(--text-muted)' }}
-                        data-tip="Hide for now — the voice chip in the toolbar always does this"
-                      >
-                        Not now
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* Auto-answer switch. Always mounted in embedded mode (not gated
-                  on detectedQuestions.length) so the user can find and flip it
-                  BEFORE the interview starts, and so the current mode is legible
-                  at a glance instead of being inferred from Sona's behavior. */}
-              {embedded && (
-                <button
-                  onClick={() => setAutoAnswer(v => !v)}
-                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg w-full text-left transition-colors"
-                  style={{
-                    background: autoAnswer ? 'var(--accent-subtle)' : 'var(--bg-surface)',
-                    border: `1px solid ${autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
-                  }}
-                  role="switch"
-                  aria-checked={autoAnswer}
-                  data-tip={autoAnswer
-                    ? 'Every question Sona hears is answered automatically. Turn off to tap each one instead.'
-                    : 'Nothing is answered automatically — every question Sona hears waits for a tap.'}
-                >
-                  <span
-                    className="shrink-0 inline-flex items-center rounded-full transition-colors"
-                    style={{
-                      width: 26, height: 15, padding: 2,
-                      background: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)',
-                      justifyContent: autoAnswer ? 'flex-end' : 'flex-start',
-                    }}
-                  >
-                    <span className="block rounded-full" style={{ width: 11, height: 11, background: '#fff' }} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                      Auto-answer {autoAnswer ? 'on' : 'off'}
-                    </span>
-                    <span className="block text-[9px] leading-snug mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      {autoAnswer ? 'Every question answered hands-free' : 'Every question waits for a tap'}
-                    </span>
-                  </span>
-                </button>
               )}
               {/* What Sona heard and what it did with it. Every one of these
                   outcomes used to be a silent return, which made "never heard
@@ -1633,6 +1634,88 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 </div>
               ))}
             </div>
+            {/* Rail footer — the enrollment nudge and the auto-answer switch,
+                pinned under the list and collapsed to one line each. Both are
+                status you glance at, not text you read twice; as full cards in
+                the middle of the list they cost four question slots between
+                them. The tooltips still carry the long explanation. */}
+            {embedded && (
+              <div className="shrink-0 border-t px-2 py-1.5 flex flex-col gap-1" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
+                {!voiceEnrolled && !enrollNudgeHidden && (
+                  <div
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-md"
+                    style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-gold-leaf)' }}
+                    data-tip="Without a sample of your voice, your own answers can come back as questions. Takes five seconds."
+                  >
+                    <span className="min-w-0 flex-1 text-[9px] font-bold uppercase tracking-[0.12em] truncate" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>
+                      {isEnrolling ? 'Listening — 5s' : 'Sona hears you too'}
+                    </span>
+                    {!isEnrolling && (
+                      <>
+                        <button
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('lumora:start-voice-enrollment'));
+                            // The listener lives in VoiceEnrollment, mounted by the
+                            // behavioral toolbar. If that toolbar isn't there, the
+                            // event lands nowhere and the button would look dead —
+                            // so say what happened instead of failing silently.
+                            setTimeout(() => {
+                              if (!useSessionStore.getState().isEnrolling) {
+                                dialogAlert({
+                                  title: 'Enrollment unavailable here',
+                                  message: 'Use the voice chip in the toolbar above, or Settings → Voice, to record your 5-second sample.',
+                                });
+                              }
+                            }, 2000);
+                          }}
+                          className="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide"
+                          style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-accent-fill-text, #0a0e1a)' }}
+                          data-tip="Record a 5-second sample so Sona can tell your voice from the interviewer's"
+                        >
+                          Enroll
+                        </button>
+                        <button
+                          onClick={() => setEnrollNudgeHidden(true)}
+                          className="shrink-0 p-0.5 rounded"
+                          style={{ color: 'var(--text-muted)' }}
+                          data-tip="Hide for now — the voice chip in the toolbar always does this"
+                          aria-label="Hide enrollment prompt"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+                <button
+                  onClick={() => setAutoAnswer(v => !v)}
+                  className="flex items-center gap-2 px-2 py-1 rounded-md w-full text-left transition-colors"
+                  style={{
+                    background: autoAnswer ? 'var(--accent-subtle)' : 'var(--bg-surface)',
+                    border: `1px solid ${autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)'}`,
+                  }}
+                  role="switch"
+                  aria-checked={autoAnswer}
+                  data-tip={autoAnswer
+                    ? 'Every question Sona hears is answered automatically. Turn off to tap each one instead.'
+                    : 'Nothing is answered automatically — every question Sona hears waits for a tap.'}
+                >
+                  <span
+                    className="shrink-0 inline-flex items-center rounded-full transition-colors"
+                    style={{
+                      width: 24, height: 14, padding: 2,
+                      background: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--border)',
+                      justifyContent: autoAnswer ? 'flex-end' : 'flex-start',
+                    }}
+                  >
+                    <span className="block rounded-full" style={{ width: 10, height: 10, background: '#fff' }} />
+                  </span>
+                  <span className="min-w-0 flex-1 text-[9px] font-bold uppercase tracking-[0.12em] truncate" style={{ color: autoAnswer ? 'var(--cam-gold-leaf)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                    Auto-answer {autoAnswer ? 'on' : 'off'}
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
           {/* Right: answers. Cards are width-capped at 880px (≈80-char
               line length, the typographic sweet spot for sustained
@@ -1641,7 +1724,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               (~1700px on a 16:10 monitor) and the eye couldn't track
               from line to line — that was the actual readability
               failure, not a color choice. */}
-          <div ref={scrollRef} className="flex-1 overflow-auto p-3 sm:p-4 md:p-5 min-w-0">
+          <div className="flex-1 flex flex-col min-w-0">
+          <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto p-3 sm:p-4 md:p-5 min-w-0">
             {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
               <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
                 <p className="text-sm md:text-xs px-4 text-center">Tap the menu to pick a starter question, or use the mic below.</p>
@@ -1742,6 +1826,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               </div>
             )}
           </div>
+          {composer}
+          </div>
         </div>
       ) : (
         <div ref={scrollRef} className="flex-1 overflow-auto px-3 py-3">
@@ -1840,73 +1926,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         </div>
       )}
 
-      {/* Input — on mobile (when embedded) the LumoraShell bottom nav
-          (fixed, 56px + safe-area-inset-bottom) sits over the bottom of
-          the panel. Without bottom padding the mic + send row hides
-          behind it. The wrapper class ladders padding by breakpoint;
-          the inline style replicates it so safe-area is included on
-          mobile-Safari notch devices. */}
-      <div className="px-3 pt-2 shrink-0 flex flex-col items-center gap-2 lumora-companion-input-row"
-        data-embedded={embedded ? 'true' : 'false'}
-      >
-        {/* Voice enrollment / filter status lives in the ScreenshotStrip top
-            toolbar for behavioral (the single <VoiceEnrollment> instance,
-            backed by session-store). The old duplicate banner that used to
-            render here ("Not enrolled · Enroll My Voice") was removed — it
-            shared the same store state, so the toolbar chip is authoritative. */}
-        {/* Staged screenshots — thumbnails sit ABOVE the input so the row of
-            controls keeps its fixed height and nothing reflows mid-interview. */}
-        {pendingImages.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 w-full">
-            {pendingImages.map((src, i) => (
-              <div key={i} className="relative">
-                <img src={src} alt="attached screenshot" className="h-12 w-12 object-cover rounded-md" style={{ border: '1px solid var(--cam-gold-leaf)' }} />
-                <button
-                  onClick={() => setPendingImages(prev => prev.filter((_, k) => k !== i))}
-                  className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
-                  style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                  aria-label="Remove screenshot"
-                  data-tip="Remove this screenshot"
-                >×</button>
-              </div>
-            ))}
-          </div>
-        )}
-        {/* Text input — visible in both floating and embedded behavioral mode */}
-        <div className="flex items-center gap-2 px-3 h-12 md:h-9 rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && (input.trim() || pendingImages.length > 0)) handleSubmit(); }}
-            onPaste={onComposerPaste}
-            placeholder="Type a question..."
-            className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[10px]"
-            style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
-          {/* Screenshot — ask Sona about whatever is on screen. */}
-          <button
-            onClick={snapIntoComposer}
-            disabled={snapping || streaming || pendingImages.length >= MAX_IMAGES}
-            className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0 disabled:opacity-40"
-            style={{ border: '1px solid var(--border)' }}
-            aria-label="Add a screenshot"
-            data-tip={pendingImages.length >= MAX_IMAGES
-              ? `Up to ${MAX_IMAGES} screenshots per question`
-              : 'Screenshot — drag to select any area and ask about it. Pasting an image works too.'}
-          >
-            {snapping ? (
-              <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" style={{ color: 'var(--text-muted)' }} />
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-3 md:h-3">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            )}
-          </button>
-          {(input.trim() || pendingImages.length > 0) && !streaming && (
-            <button onClick={handleSubmit} className="w-9 h-9 md:w-6 md:h-6 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4 md:w-3 md:h-3"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-            </button>
-          )}
-        </div>
-      </div>
+      {!embedded && composer}
     </div>
   );
 }
