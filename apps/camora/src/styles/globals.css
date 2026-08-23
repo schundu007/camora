@@ -251,42 +251,46 @@
     --shadow-primary-xs: 0 1px 3px rgba(0,108,224,0.12), 0 4px 16px rgba(0,108,224,0.06);
     --shadow-primary-sm: 0 2px 8px rgba(0,108,224,0.16);
 
-    /* ── Lumora shell tokens (--lum-*) — Fluent dark ──────────
+    /* ── Lumora shell tokens (--lum-*) — AWS Cloudscape dark ──
        Defined in BOTH themes so shell components read tokens
        unconditionally instead of branching on `theme === 'light'`
-       inline. This block is the Azure portal's dark ramp; the
-       light counterpart lives under [data-theme="light"].
+       inline. Was the Azure portal's Fluent ramp, which left the
+       Lumora shell on a different design system from the rest of
+       the app; now Cloudscape, like everything else.
 
        Ratios on --lum-surface: text 13.16:1, text-2 8.64:1,
        accent 4.88:1, accent-sm 6.88:1. Never reference
        --text-muted (3.67:1) or --text-dimmed (2.10:1) here —
        both fail AA for body text, which is what made this
        screen unreadable in the first place.
-       See docs/superpowers/specs/2026-08-23-lumora-fluent-light-theme-design.md */
-    --lum-bg:             #1B1A19;
-    --lum-surface:        #292827;
-    --lum-surface-hover:  #3B3A39;
-    --lum-border:         #3B3A39;
-    --lum-border-strong:  #605E5C;
-    --lum-text:           #F3F2F1;
-    --lum-text-2:         #C8C6C4;
-    --lum-accent:         #2899F5;
-    --lum-accent-sm:      #6CB8F6;
-    --lum-accent-bg:      #10304D;
-    --lum-ok:             #54B054;
-    --lum-radius:         2px;
+       Contrast on --lum-surface: text 12.4:1, text-2 8.1:1,
+       accent 7.9:1. Never reference --text-muted or --text-dimmed
+       here — both fail AA for body text, which is what made this
+       screen unreadable in the first place. */
+    --lum-bg:             #0f141a;
+    --lum-surface:        #161d26;
+    --lum-surface-hover:  #1b232d;
+    --lum-border:         #232b37;
+    --lum-border-strong:  #424650;
+    --lum-text:           #ebebf0;
+    --lum-text-2:         #c6c6cd;
+    --lum-accent:         #42b4ff;
+    --lum-accent-sm:      #75cfff;
+    --lum-accent-bg:      #001129;
+    --lum-ok:             #2bb534;
+    --lum-radius:         8px;
     --lum-shadow:         none;
-    --lum-cmdbar-bg:      #292827;
+    --lum-cmdbar-bg:      #161d26;
 
-    --lum-tag-design-fg:  #6CB8F6;
-    --lum-tag-design-bg:  #10304D;
-    --lum-tag-design-br:  #1F4E77;
-    --lum-tag-coding-fg:  #8CD98C;
-    --lum-tag-coding-bg:  #143014;
-    --lum-tag-coding-br:  #2B5A2B;
-    --lum-tag-behav-fg:   #E8C170;
-    --lum-tag-behav-bg:   #33280F;
-    --lum-tag-behav-br:   #5C4A1F;
+    --lum-tag-design-fg:  #42b4ff;
+    --lum-tag-design-bg:  #001129;
+    --lum-tag-design-br:  #006ce0;
+    --lum-tag-coding-fg:  #2bb534;
+    --lum-tag-coding-bg:  #001401;
+    --lum-tag-coding-br:  #00802f;
+    --lum-tag-behav-fg:   #fbd332;
+    --lum-tag-behav-bg:   #191100;
+    --lum-tag-behav-br:   #855900;
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -1994,30 +1998,30 @@ html[data-overlay='on'] .lumora-shell-root {
    Specificity: html[data-overlay='on'] (0,1,1) beats [data-theme="light"]
    (0,1,0), so this wins in both themes without !important. */
 html[data-overlay='on'] {
-  --bg-app:             #1B1A19;
+  --bg-app:             #0f141a;
 
   --lum-bg:             transparent;
-  --lum-surface:        color-mix(in srgb, #292827 72%, transparent);
-  --lum-surface-hover:  color-mix(in srgb, #3B3A39 72%, transparent);
+  --lum-surface:        color-mix(in srgb, #161d26 72%, transparent);
+  --lum-surface-hover:  color-mix(in srgb, #1b232d 72%, transparent);
   --lum-border:         rgba(255,255,255,0.16);
   --lum-border-strong:  rgba(255,255,255,0.30);
   --lum-text:           #FFFFFF;
-  --lum-text-2:         #E6E4E2;
-  --lum-accent:         #8FCBF8;
-  --lum-accent-sm:      #B3DCFB;
-  --lum-accent-bg:      rgba(40,153,245,0.24);
-  --lum-ok:             #6BD46B;
-  --lum-cmdbar-bg:      color-mix(in srgb, #292827 45%, transparent);
+  --lum-text-2:         #ebebf0;
+  --lum-accent:         #75cfff;
+  --lum-accent-sm:      #b3e0ff;
+  --lum-accent-bg:      rgba(66,180,255,0.24);
+  --lum-ok:             #5ad168;
+  --lum-cmdbar-bg:      color-mix(in srgb, #161d26 45%, transparent);
 
-  --lum-tag-design-fg:  #9CCEF9;
-  --lum-tag-design-bg:  rgba(40,153,245,0.26);
-  --lum-tag-design-br:  rgba(140,200,250,0.45);
-  --lum-tag-coding-fg:  #A6E3A6;
-  --lum-tag-coding-bg:  rgba(90,190,90,0.24);
-  --lum-tag-coding-br:  rgba(150,220,150,0.45);
-  --lum-tag-behav-fg:   #F0D291;
-  --lum-tag-behav-bg:   rgba(220,175,80,0.24);
-  --lum-tag-behav-br:   rgba(232,200,130,0.45);
+  --lum-tag-design-fg:  #75cfff;
+  --lum-tag-design-bg:  rgba(66,180,255,0.26);
+  --lum-tag-design-br:  rgba(117,207,255,0.45);
+  --lum-tag-coding-fg:  #5ad168;
+  --lum-tag-coding-bg:  rgba(43,181,52,0.24);
+  --lum-tag-coding-br:  rgba(90,209,104,0.45);
+  --lum-tag-behav-fg:   #fbd332;
+  --lum-tag-behav-bg:   rgba(251,211,50,0.24);
+  --lum-tag-behav-br:   rgba(251,211,50,0.45);
 }
 
 /* Thin gold brand line along the very top of the overlay — ties it to navy-gold. */
@@ -2026,7 +2030,7 @@ html[data-overlay='on'] .lumora-shell-root::after {
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--lum-accent, #2899F5) 25%, var(--lum-accent, #2899F5) 75%, transparent);
+  background: linear-gradient(90deg, transparent, var(--lum-accent) 25%, var(--lum-accent) 75%, transparent);
   opacity: 0.55;
   pointer-events: none;
   z-index: 2;
