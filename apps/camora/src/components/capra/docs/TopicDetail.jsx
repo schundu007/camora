@@ -907,7 +907,7 @@ export default function TopicDetail({
                 className="w-9 h-9 rounded flex items-center justify-center flex-shrink-0"
                 style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
               >
-                <Icon name={topicDetails.icon} size={18} style={{ color: '#FFFFFF' }} />
+                <Icon name={topicDetails.icon} size={18} style={{ color: theme === 'light' ? 'var(--accent)' : '#FFFFFF' }} />
               </div>
             )}
             <div className="flex-1 min-w-0">
@@ -923,8 +923,8 @@ export default function TopicDetail({
                 {isSDStyle && (
                   <Link
                     to={`/capra/design?problem=${encodeURIComponent(`Design ${topicDetails.title}. ${topicDetails.description || topicDetails.subtitle || ''}`)}&autosolve=true`}
-                    className="ml-auto px-3 py-1.5 rounded text-sm font-semibold bg-white hover:bg-[var(--lum-surface-hover)] transition-colors flex items-center gap-2 flex-shrink-0 landing-body"
-                    style={{ color: 'var(--cam-primary-dk)' }}
+                    className="ml-auto px-3 py-1.5 rounded text-sm font-medium bg-[var(--cam-gold-leaf)] hover:opacity-90 transition-opacity flex items-center gap-2 flex-shrink-0 landing-body"
+                    style={{ color: '#1A0C00' }}
                   >
                     <Icon name="zap" size={14} />
                     Design
