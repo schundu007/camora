@@ -1,11 +1,11 @@
 {
   "framework": "vite",
-  "buildCommand": "npx vite build",
+  "buildCommand": "rm -rf dist && npx vite build",
   "outputDirectory": "dist",
   "installCommand": "cd ../.. && pnpm install",
   "rewrites": [
     { "source": "/.well-known/(.*)", "destination": "/.well-known/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
