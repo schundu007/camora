@@ -478,6 +478,7 @@ async function runMigrations() {
     logger.info('Database migrations complete');
   } catch (err) {
     logger.error({ err: err.message }, 'Migration error');
+    throw err;
   }
 }
 
@@ -611,15 +612,10 @@ process.on('uncaughtException', (err) => {
 // Start
 const PORT = config.port;
 
-// Bind the HTTP listener BEFORE awaiting migrations so Railway's
-// /health probe can succeed within the 2-minute deadline. Each
-// `query()` blocks up to 10s on connect; with ~50 migrations a slow
-// or unreachable DB would push first-listen past 8 minutes and the
-// service would fail healthcheck → restart loop → never come up.
-//
-// Migrations now run in the background. They're idempotent
-// (CREATE TABLE IF NOT EXISTS) so retrying on the next deploy is
-// safe; a runtime failure surfaces in logs but doesn't block boot.
+// Bind the HTTP listener before migrations so Railway's health probe can
+// establish a process quickly. API startup still fails closed if migrations
+// cannot complete; serving requests against a partially initialized schema
+// is more dangerous than letting the platform restart the service.
 // Fail fast on missing critical env vars — better a clear boot error
 // than a cryptic API failure on the first live request.
 const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'AI_SERVICES_API_KEY'];
@@ -641,7 +637,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 runMigrations()
   .then(() => loadAdminConfig())
   .catch((err) => {
-    logger.error({ err: err?.message }, 'Background migrations or admin config load failed');
+    logger.fatal({ err: err?.message }, 'Migrations or admin config load failed; stopping');
+    process.exit(1);
   });
 
 // Graceful shutdown — stop accepting connections, drain, close the DB pool,

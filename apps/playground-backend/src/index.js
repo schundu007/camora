@@ -107,6 +107,11 @@ app.use('/pg-ide', async (req, res) => {
   if (userId !== -1 && session.user_id !== userId) return res.status(403).end('Forbidden');
   if (!session.code_server_port) return res.status(503).end('IDE not ready');
 
+  // The token is accepted only for this bootstrap request. Prevent the
+  // URL from being cached or forwarded as a referrer, then rely on pg_ide
+  // for subsequent HTTP and WebSocket requests.
+  res.set('Cache-Control', 'no-store');
+  res.set('Referrer-Policy', 'no-referrer');
   res.cookie('pg_ide', sessionId, { httpOnly: true, maxAge: 3600, path: '/pg-ide', sameSite: 'none', secure: true });
 
   const FRAME_ORIGINS = [
@@ -211,12 +216,16 @@ async function runMigrations() {
     await query('CREATE INDEX IF NOT EXISTS idx_saved_vms_user ON playground_saved_vms(user_id)');
     console.log('[Migrations] playground tables ensured');
   } catch (e) {
-    console.warn('[Migrations] failed:', e.message);
+    console.error('[Migrations] failed:', e.message);
+    throw e;
   }
 }
 
 initRedis();
-runMigrations();
+runMigrations().catch((err) => {
+  console.error('[Migrations] failed; stopping:', err.message);
+  process.exit(1);
+});
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`[Playground] server started on port ${PORT}`);
@@ -302,12 +311,6 @@ server.on('upgrade', (req, socket, head) => {
         const m = req.headers.cookie.match(/(?:^|;\s*)cariara_sso=([^;]+)/);
         if (m) token = decodeURIComponent(m[1]);
       }
-      if (!token) {
-        const urlObj = new URL(req.url, 'http://localhost');
-        const qToken = urlObj.searchParams.get('token');
-        if (qToken) token = qToken;
-      }
-
       if (!token) { ws.close(4401, 'Unauthorized'); return; }
 
       let payload;

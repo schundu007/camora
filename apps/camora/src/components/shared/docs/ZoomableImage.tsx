@@ -136,7 +136,7 @@ export default function ZoomableImage({
         {!hideExpandHint && (
           <span
             aria-hidden="true"
-            className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-extrabold uppercase tracking-[0.14em] opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+            className="absolute bottom-2.5 right-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-extrabold uppercase tracking-[0.14em] opacity-0 group-hover:opacity-100 transition-opacity duration-150"
             style={{
               background: 'var(--bg-elevated)',
               border: '1px solid var(--cam-gold-leaf)',

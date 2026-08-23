@@ -103,7 +103,7 @@ export default function DocsPageLayout({
 
                     {/* Glassy pill capsule — eyebrow */}
                     <span
-                      className="inline-flex items-center px-3 py-1 mb-3 rounded-full text-[10.5px] font-extrabold uppercase tracking-[0.18em]"
+                      className="inline-flex items-center px-3 py-1 mb-3 rounded-full text-[12px] font-extrabold uppercase tracking-[0.18em]"
                       style={{
                         background: 'var(--bg-elevated)',
                         border: '1px solid var(--cam-gold-leaf)',

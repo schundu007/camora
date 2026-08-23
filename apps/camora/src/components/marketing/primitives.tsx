@@ -246,7 +246,7 @@ export function Pill({ className, tone = 'neutral', withDot = false, children, .
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] px-2.5 py-1',
+        'inline-flex items-center gap-1.5 rounded-full font-mono text-[12px] font-bold uppercase tracking-[0.18em] px-2.5 py-1',
         tone === 'neutral' && 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]',
         tone === 'accent' && 'bg-[var(--accent-subtle)] text-[var(--cam-primary-dk)] border border-[var(--cam-primary)]/20',
         tone === 'gold' && 'bg-[rgba(201,162,39,0.12)] text-[var(--cam-gold-leaf-text)] border border-[var(--cam-gold-leaf)]/30',

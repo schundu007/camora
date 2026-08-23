@@ -1355,7 +1355,7 @@ export default function DocsPage({ onBack }) {
                                       {ph.items.map((item, i) => (
                                         <label key={i} className="flex items-start gap-2.5 cursor-pointer group">
                                           <span className="flex-shrink-0 w-5 h-5 rounded-full border flex items-center justify-center text-[12px] font-extrabold mt-0.5 transition-colors group-hover:border-[var(--cam-gold-leaf)]" style={{ borderColor: 'var(--border)', color: 'var(--cam-strip-text-muted)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
-                                          <span className="text-[11.5px] leading-snug landing-body transition-colors" style={{ color: 'var(--cam-strip-text)' }}>{item}</span>
+                                          <span className="text-[14px] leading-snug landing-body transition-colors" style={{ color: 'var(--cam-strip-text)' }}>{item}</span>
                                         </label>
                                       ))}
                                     </div>

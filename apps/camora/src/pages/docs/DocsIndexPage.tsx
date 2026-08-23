@@ -66,7 +66,7 @@ function DocCardLink({ card }: { card: DocCard }) {
               (e.currentTarget as HTMLElement).click();
             }
           }}
-          className="shrink-0 inline-flex items-center text-[10.5px] font-mono px-2 py-0.5 rounded-md transition-colors hover:bg-black/10"
+          className="shrink-0 inline-flex items-center text-[12px] font-mono px-2 py-0.5 rounded-md transition-colors hover:bg-black/10"
           style={{
             color: 'var(--text-muted)',
             background: 'var(--bg-elevated)',

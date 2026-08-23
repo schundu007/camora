@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { which } from './utils/which.js';
+import { executionEnv, MAX_OUTPUT_BYTES } from './security.js';
 
 const TIMEOUT_MS = 10_000;
 const COMPILE_TIMEOUT_MS = 15_000;
@@ -117,10 +118,10 @@ function runCommand(cmd, args = [], opts = {}) {
     const child = execFile(cmd, args, {
       timeout: opts.timeout || TIMEOUT_MS,
       cwd: opts.cwd || tmpdir(),
-      maxBuffer: 1024 * 1024,
-      env: { ...process.env, PATH: process.env.PATH },
+      maxBuffer: MAX_OUTPUT_BYTES,
+      env: executionEnv(opts.cwd || tmpdir()),
     }, (error, stdout, stderr) => {
-      if (error?.killed) {
+      if (error?.killed || error?.signal === 'SIGTERM') {
         resolve({ stdout: '', stderr: 'Execution timed out (10s limit)', exitCode: 1 });
       } else {
         resolve({
@@ -158,7 +159,7 @@ async function directExecute(code, runtime) {
     try {
       const bin = await which(cmd);
       if (!bin) throw new Error(`Runtime '${cmd}' not found on server`);
-      const { stdout, stderr, exitCode } = await runCommand(cmd, [srcPath]);
+      const { stdout, stderr, exitCode } = await runCommand(cmd, [srcPath], { cwd: tmpdir() });
       if (exitCode !== 0) {
         const err = stderr || '';
         if (err.includes('EOFError') || err.includes('NoSuchElementException') || err.includes('End of input')) {

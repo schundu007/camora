@@ -803,13 +803,17 @@ async function runMigrations() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`);
   } catch (err) {
-    console.warn('[Migrations] Failed to run lumora migrations:', err.message);
+    console.error('[Migrations] Failed to run migrations:', err.message);
+    throw err;
   }
 }
 runMigrations()
   .then(() => loadAdminConfig())
   .then(() => seedK8sCurriculum())
-  .catch(err => console.warn('[Startup] seed/config failed:', err.message));
+  .catch(err => {
+    console.error('[Startup] migrations or seed/config failed; stopping:', err.message);
+    process.exit(1);
+  });
 
 const app = express();
 const PORT = config.PORT;

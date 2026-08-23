@@ -692,7 +692,7 @@ const ApproachCard = ({ approach, index }: { approach: any; index: number }) => 
               {approach.lineByLine.filter((l: any) => l && typeof l === 'object').map((l: any, i: number) => (
                 <div key={i} className="grid gap-2 text-xs" style={{ gridTemplateColumns: 'minmax(0, 0.55fr) minmax(0, 1fr)' }}>
                   <code
-                    className="font-mono px-2 py-1 rounded text-[11.5px]"
+                    className="font-mono px-2 py-1 rounded text-[12px]"
                     style={{ background: LC.codeBg, color: LC.codeFg, border: `1px solid ${LC.codeHdr}` }}
                   >
                     {l.line}
@@ -1557,7 +1557,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                   )}
                 </div>
                 {experience && !isShortExperience && (
-                  <p className="text-[11.5px] leading-snug mb-1.5" style={{ color: LC.gold }}>
+                  <p className="text-[14px] leading-snug mb-1.5" style={{ color: LC.gold }}>
                     {experience}
                   </p>
                 )}

@@ -189,7 +189,7 @@ function SidebarGroups({ groups, pathname }: { groups: DocsSidebarGroup[]; pathn
       {groups.map((group) => (
         <div key={group.label}>
           <p
-            className="text-[10.5px] font-extrabold uppercase tracking-[0.14em] mb-2 px-2"
+            className="text-[12px] font-extrabold uppercase tracking-[0.14em] mb-2 px-2"
             style={{ color: 'var(--text-muted)' }}
           >
             {group.label}

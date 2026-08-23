@@ -3975,7 +3975,9 @@ figure:has(> .viz-caption) {
 /* Tier 3 — label (clean sans, sentence case, muted) */
 .lumora-book-label {
   font-family: var(--font-sans);
-  font-size: 0.6875rem;
+  /* Was 0.6875rem (11px) — under the AWS floor, and the one size the
+     px-based sweep could not see. */
+  font-size: var(--fs-body-s);
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: none;

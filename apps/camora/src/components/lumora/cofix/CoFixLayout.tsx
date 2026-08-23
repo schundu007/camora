@@ -1473,7 +1473,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                             : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>}
                           {refineSnapping ? 'Reading…' : 'Snap'}
                         </button>
-                        <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>⌘↵ to submit</span>
+                        <span className="text-[12px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>⌘↵ to submit</span>
                         <button
                           onClick={() => setShowRefinePopup(false)}
                           className="text-[12px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
@@ -1812,7 +1812,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                                 </span>
                               )}
                             </div>
-                            <pre className="text-[10.5px] whitespace-pre-wrap m-0" style={{ color: tc.isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: 1.6 }}
+                            <pre className="text-[12px] whitespace-pre-wrap m-0" style={{ color: tc.isErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', lineHeight: 1.6 }}
                               dangerouslySetInnerHTML={{ __html: ansiHtml(tc.result ?? '') }}
                             />
                           </div>
