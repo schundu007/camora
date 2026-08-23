@@ -44,8 +44,8 @@ export default function ClusterView({ session, onClose }) {
             >
               <span style={{
                 width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                background: isReady ? '#10b981' : 'rgba(255,255,255,0.2)',
-                boxShadow: isReady ? '0 0 4px #10b981' : 'none',
+                background: isReady ? 'var(--success)' : 'rgba(255,255,255,0.2)',
+                boxShadow: isReady ? '0 0 4px var(--success)' : 'none',
                 display: 'inline-block',
               }} />
               <span>{node.nodeName}</span>

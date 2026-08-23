@@ -577,7 +577,7 @@ function StaticCloudDiagram({ topicId, provider, staticSrc, diagramData, generat
     return (
       <div className="flex items-center justify-center py-12 rounded bg-[var(--bg-surface)]">
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-[color-mix(in_oklab,var(--accent)_30%,transparent)] border-t-[var(--accent)] rounded-full animate-spin" />
           <span className="text-sm text-[var(--text-secondary)] font-medium">Generating {provider.toUpperCase()} architecture diagram...</span>
         </div>
       </div>
@@ -987,7 +987,7 @@ export default function TopicDetail({
             }}
             className="flex items-center gap-2 px-3 py-2 rounded text-sm font-semibold transition-all landing-body"
             style={completedTopics[selectedTopic]
-              ? { background: 'rgba(22,163,74,0.12)', color: '#16a34a', border: '1px solid rgba(22,163,74,0.3)' }
+              ? { background: 'rgba(22,163,74,0.12)', color: 'var(--success)', border: '1px solid rgba(22,163,74,0.3)' }
               : { background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)' }}
           >
             <Icon name={completedTopics[selectedTopic] ? 'checkCircle' : 'check'} size={15} />
@@ -2212,8 +2212,8 @@ export default function TopicDetail({
                             <h4 className="text-[var(--text-muted)] text-[12px] font-bold mb-2 flex items-center gap-2 landing-mono uppercase tracking-[0.16em]">Issues with this approach</h4>
                             <div className="grid grid-cols-1 gap-1">
                               {topicDetails.basicImplementation.problems.map((problem, i) => (
-                                <div key={i} className="flex items-start gap-2.5 px-2 py-1.5 rounded text-sm landing-body" style={{ background: 'color-mix(in oklab, var(--warning, #f59e0b) 6%, transparent)', border: '1px solid color-mix(in oklab, var(--warning, #f59e0b) 18%, transparent)' }}>
-                                  <span className="text-[var(--warning, #f59e0b)] mt-0.5 flex-shrink-0 font-bold">!</span>
+                                <div key={i} className="flex items-start gap-2.5 px-2 py-1.5 rounded text-sm landing-body" style={{ background: 'color-mix(in oklab, var(--warning, var(--warning)) 6%, transparent)', border: '1px solid color-mix(in oklab, var(--warning, var(--warning)) 18%, transparent)' }}>
+                                  <span className="text-[var(--warning, var(--warning))] mt-0.5 flex-shrink-0 font-bold">!</span>
                                   <span className="text-[var(--text-secondary)]"><FormattedContent content={problem} inline /></span>
                                 </div>
                               ))}
@@ -2532,7 +2532,7 @@ export default function TopicDetail({
                       <div key={i} className="rounded border border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[var(--border)] transition-colors overflow-hidden">
                         <div className="px-4 py-3">
                           <div className="flex items-center gap-2.5 mb-2">
-                            <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-amber-500/20">
+                            <span className="w-6 h-6 rounded flex items-center justify-center flex-shrink-0 bg-[var(--bg-elevated)] border border-[var(--warning)]/20">
                               <Icon name="gitBranch" size={12} className="text-[var(--text-secondary)]" />
                             </span>
                             <h4 className="text-[var(--text-primary)] font-semibold text-sm landing-display">{t.decision}</h4>
@@ -2647,7 +2647,7 @@ export default function TopicDetail({
                   <div className="p-3 grid grid-cols-1 gap-2">
                     {topicDetails.interviewFollowups.map((item, i) => (
                       <div key={i} className="rounded border border-[var(--border)] overflow-hidden">
-                        <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(201,162,39,0.04)] border-b border-[rgba(201,162,39,0.2)]">
+                        <div className="flex items-start gap-2 px-3 py-2 bg-[rgba(255,153,0,0.04)] border-b border-[rgba(255,153,0,0.2)]">
                           <span className="text-xs font-bold text-[var(--warning-text)] landing-mono flex-shrink-0">Q{i + 1}</span>
                           <span className="text-[16px] font-semibold text-[var(--text-primary)] landing-display">{item.question}</span>
                         </div>
@@ -3151,9 +3151,9 @@ export default function TopicDetail({
               <ContentHeading title="Common Pitfalls" />
               <div className="pt-3 grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {topicDetails.pitfalls.map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-3 rounded-lg landing-body" style={{ background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                    <span className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(239, 68, 68, 0.18)' }}>
-                      <Icon name="alertTriangle" size={11} style={{ color: '#ef4444' }} />
+                  <div key={i} className="flex items-start gap-2.5 p-3 rounded-lg landing-body" style={{ background: 'rgba(219,0,0, 0.06)', border: '1px solid rgba(219,0,0, 0.2)' }}>
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(219,0,0, 0.18)' }}>
+                      <Icon name="alertTriangle" size={11} style={{ color: 'var(--danger)' }} />
                     </span>
                     <span className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                       {typeof item === 'string' ? (
@@ -3681,7 +3681,7 @@ export default function TopicDetail({
               {[
                 { id: 'aws', label: 'AWS', color: '#ff9900' },
                 { id: 'gcp', label: 'GCP', color: '#4285f4' },
-                { id: 'azure', label: 'Azure', color: '#0078d4' },
+                { id: 'azure', label: 'Azure', color: 'var(--accent)' },
               ].map(p => (
                 <button
                   key={p.id}

@@ -309,7 +309,7 @@ export function PatternCardGrid({ patterns, title = 'Design Patterns' }) {
 // ── Cloud Provider Tabs ─────────────────────────────────────────────────────
 const CLOUD_PROVIDERS = [
   { id: 'aws', label: 'AWS', color: '#ff9900' },
-  { id: 'azure', label: 'Azure', color: '#0078d4' },
+  { id: 'azure', label: 'Azure', color: 'var(--accent)' },
   { id: 'gcp', label: 'GCP', color: '#4285f4' },
 ];
 

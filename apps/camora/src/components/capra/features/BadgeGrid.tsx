@@ -210,7 +210,7 @@ export default function BadgeGrid() {
   if (error) {
     return (
       <div className="rounded-2xl p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <p className="text-sm text-red-500">{error}</p>
+        <p className="text-sm text-[var(--danger)]">{error}</p>
       </div>
     );
   }
@@ -235,7 +235,7 @@ export default function BadgeGrid() {
                 : 'border'
             }`}
             style={badge.earned
-              ? { background: 'var(--bg-surface)', borderColor: 'rgba(38,97,156,0.35)', boxShadow: '0 2px 8px rgba(38,97,156,0.1)' }
+              ? { background: 'var(--bg-surface)', borderColor: 'rgba(0,108,224,0.35)', boxShadow: '0 2px 8px rgba(0,108,224,0.1)' }
               : { background: 'var(--bg-elevated)', borderColor: 'var(--border)' }
             }
           >

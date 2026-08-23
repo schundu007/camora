@@ -52,9 +52,9 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const DIFF_COLOR: Record<string, string> = {
-  Easy:   '#22c55e',
-  Medium: '#f59e0b',
-  Hard:   '#ef4444',
+  Easy:   'var(--success)',
+  Medium: 'var(--warning)',
+  Hard:   'var(--danger)',
 };
 
 const PAGE_LIMIT = 50;
@@ -334,7 +334,7 @@ function ProblemCard({ problem, onClick }: { problem: Problem; onClick: () => vo
 
 // ─── LeetCode enterprise table ─────────────────────────────────────────────────
 
-const DIFF_COLORS: Record<string, string> = { Easy: '#22c55e', Medium: '#f59e0b', Hard: '#ef4444' };
+const DIFF_COLORS: Record<string, string> = { Easy: 'var(--success)', Medium: 'var(--warning)', Hard: 'var(--danger)' };
 const DSA_GRID = '52px 1fr 210px 84px 64px';
 
 function DsaTableHeader() {
@@ -696,7 +696,7 @@ export default function HRLibraryPage() {
         <div style={{
           display: 'flex', gap: 2, padding: 3,
           background: 'rgba(3,19,46,0.88)',
-          border: '1px solid rgba(201,162,39,0.50)',
+          border: '1px solid rgba(255,153,0,0.50)',
           borderRadius: 10, marginBottom: 14,
         }}>
           {(['all', 'mcq', 'coding', 'design'] as const).map(tab => (
@@ -795,7 +795,7 @@ export default function HRLibraryPage() {
                   marginLeft: 4,
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '5px 14px', borderRadius: 6,
-                  background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
+                  background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))', color: '#000',
                   border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   letterSpacing: '0.01em', whiteSpace: 'nowrap',
                 }}
@@ -838,7 +838,7 @@ export default function HRLibraryPage() {
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '10px 28px',
               background: 'rgba(0,0,0,0.18)',
-              borderTop: problems.length > 0 ? '2px solid rgba(201,162,39,0.3)' : undefined,
+              borderTop: problems.length > 0 ? '2px solid rgba(255,153,0,0.3)' : undefined,
               borderBottom: '1px solid var(--border)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

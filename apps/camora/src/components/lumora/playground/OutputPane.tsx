@@ -42,14 +42,14 @@ const RunResult = ({ entry, language }: { entry: RunEntry; language: PlaygroundL
   return (
     <div>
       <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-[12px] font-semibold" style={{ ...sans, color: exitCode === 0 ? '#10b981' : 'var(--danger)' }}>
+        <span className="text-[12px] font-semibold" style={{ ...sans, color: exitCode === 0 ? 'var(--success)' : 'var(--danger)' }}>
           exit {exitCode} · {duration}ms
         </span>
       </div>
       {stdout && (
         <pre
           className="text-[12px] whitespace-pre-wrap break-words leading-relaxed"
-          style={{ ...monoStyle, color: '#10b981' }}
+          style={{ ...monoStyle, color: 'var(--success)' }}
           dangerouslySetInnerHTML={{ __html: toHtml(stdout) }}
         />
       )}

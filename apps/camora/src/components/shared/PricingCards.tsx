@@ -14,9 +14,9 @@ const LN = {
   cardHover:  'var(--bg-elevated)',
   border:     'var(--border)',
   divider:    'var(--border)',
-  blue:       '#3683DC',
-  blueFade:   'rgba(54,131,220,0.10)',
-  blueBorder: 'rgba(54,131,220,0.30)',
+  blue:       'var(--accent)',
+  blueFade:   'rgba(0,108,224,0.10)',
+  blueBorder: 'rgba(0,108,224,0.30)',
   blueDk:     '#2265BF',
   text:       'var(--text-primary)',
   textSub:    'var(--text-secondary)',
@@ -265,7 +265,7 @@ function SoloPlanTable({
                 display: 'grid', gridTemplateColumns: '1fr 180px 120px 200px',
                 padding: '14px 16px',
                 cursor: 'pointer',
-                background: isSelected ? 'rgba(212,160,67,0.07)' : hoveredId === plan.id ? LN.cardHover : LN.card,
+                background: isSelected ? 'rgba(255,153,0,0.07)' : hoveredId === plan.id ? LN.cardHover : LN.card,
                 borderBottom: idx < SOLO_PLANS.length - 1 ? `1px solid ${LN.divider}` : 'none',
                 transition: 'background 0.1s',
                 alignItems: 'center',
@@ -292,7 +292,7 @@ function SoloPlanTable({
                         background: isSelected ? 'linear-gradient(135deg, var(--cam-gold-leaf), #B88930)' : LN.border,
                         color: isSelected ? '#fff' : LN.muted,
                         fontFamily: LN.mono, transition: 'all 0.15s',
-                        boxShadow: isSelected ? '0 2px 8px rgba(212,160,67,0.32)' : 'none',
+                        boxShadow: isSelected ? '0 2px 8px rgba(255,153,0,0.32)' : 'none',
                       }}>{plan.badge}</span>
                     )}
                   </div>
@@ -535,7 +535,7 @@ function HoursSection({
         {hasBulkDiscount && (
           <div style={{
             marginBottom: 14, padding: '8px 12px', borderRadius: 4,
-            background: 'rgba(37,99,235,0.12)', border: `1px solid ${LN.blue}`,
+            background: 'rgba(0,108,224,0.12)', border: `1px solid ${LN.blue}`,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: LN.blue }}>Bulk discount applied</span>
@@ -638,7 +638,7 @@ export default function PricingCards({
               color: isActive ? '#fff' : LN.muted,
               background: isActive ? 'var(--cam-primary)' : 'transparent', border: 'none',
               borderRadius: 7,
-              boxShadow: isActive ? '0 1px 6px rgba(54,131,220,0.35)' : 'none',
+              boxShadow: isActive ? '0 1px 6px rgba(0,108,224,0.35)' : 'none',
               cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
               fontFamily: LN.font,
             }}>{tab}</button>

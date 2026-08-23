@@ -601,7 +601,7 @@ export default function OnboardingPage() {
 
                 {/* Error message */}
                 {error && (
-                  <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-600 text-sm">
+                  <div className="mb-4 p-3 rounded-lg bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[var(--danger)] text-sm">
                     {error}
                   </div>
                 )}

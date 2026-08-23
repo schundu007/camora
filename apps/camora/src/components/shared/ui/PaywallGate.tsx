@@ -137,7 +137,7 @@ export function PaywallGate({ children, requiredPlan: _requiredPlan = 'any_paid'
           </Link>
         </div>
         {pollCount > 15 && isCheckoutReturn && (
-          <p className="mt-4 text-xs text-amber-500">Payment received but activation is delayed. Please refresh in a moment.</p>
+          <p className="mt-4 text-xs text-[var(--warning)]">Payment received but activation is delayed. Please refresh in a moment.</p>
         )}
       </div>
     </div>

@@ -7,7 +7,7 @@
  * Usage:
  *   import { Icon, DevOpsIcon, BrainIcon } from './Icons';
  *   <Icon name="devops" className="w-6 h-6" />
- *   <BrainIcon className="w-6 h-6 text-blue-500" />
+ *   <BrainIcon className="w-6 h-6 text-[var(--accent)]" />
  */
 
 import React from 'react';

@@ -177,7 +177,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
 
       <div className="p-4 space-y-3">
         {error && (
-          <p className="text-[12px] px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--danger, #ef4444)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <p className="text-[12px] px-3 py-2 rounded-lg" style={{ background: 'rgba(219,0,0,0.08)', color: 'var(--danger, var(--danger))', border: '1px solid rgba(219,0,0,0.2)' }}>
             {error}
           </p>
         )}
@@ -213,7 +213,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
                 ) : (
                   <span
                     className="text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                    style={{ background: 'rgba(212,160,67,0.12)', color: 'var(--cam-gold-leaf-text, #b8891a)', border: '1px solid rgba(212,160,67,0.3)' }}
+                    style={{ background: 'rgba(255,153,0,0.12)', color: 'var(--cam-gold-leaf-text, #b8891a)', border: '1px solid rgba(255,153,0,0.3)' }}
                   >
                     pending
                   </span>
@@ -224,7 +224,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
                   aria-label={`Remove ${doc.filename}`}
                   className="shrink-0 w-6 h-6 rounded flex items-center justify-center"
                   style={{ color: 'var(--text-muted)' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--danger, #ef4444)')}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--danger, var(--danger))')}
                   onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -55,7 +55,7 @@ export function UsageEstimateBadge({ surface, className = '' }: { surface: strin
   const isWarn = usePct >= 0.5 && !data.would_exceed;
   const isExceed = data.would_exceed;
 
-  const dotColor = isExceed ? '#dc2626' : isWarn ? '#d97706' : 'var(--accent)';
+  const dotColor = isExceed ? 'var(--danger)' : isWarn ? 'var(--warning)' : 'var(--accent)';
   const message = isExceed
     ? `~${formatDuration(data.estimate_seconds)} needed · only ${formatDuration(data.remaining_seconds)} left in pool`
     : `Will use about ${formatDuration(data.estimate_seconds)} of your AI hours`;

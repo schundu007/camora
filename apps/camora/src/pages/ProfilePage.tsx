@@ -209,7 +209,7 @@ function PreferencesTab() {
         {badge}
       </div>
       {saving && <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Saving…</span>}
-      {!saving && saved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+      {!saving && saved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, var(--success))' }}>Saved ✓</span>}
     </div>
   );
 
@@ -300,12 +300,12 @@ function PreferencesTab() {
             <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Resumes</h3>
             <span className="text-[12px] font-bold px-2 py-0.5 rounded-full border" style={
               resumes.length === 0
-                ? { background: 'rgba(217,119,6,0.08)', color: '#d97706', borderColor: 'rgba(217,119,6,0.3)' }
-                : { background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }
+                ? { background: 'rgba(251,211,50,0.08)', color: 'var(--warning)', borderColor: 'rgba(251,211,50,0.3)' }
+                : { background: 'rgba(22,163,74,0.08)', color: 'var(--success)', borderColor: 'rgba(22,163,74,0.3)' }
             }>{resumes.length} / {MAX_RESUMES}</span>
           </div>
           <div className="flex items-center gap-3">
-            {resumeSaved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+            {resumeSaved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, var(--success))' }}>Saved ✓</span>}
             {!atMax && (
               <button
                 onClick={() => setShowAddResume(v => !v)}
@@ -344,7 +344,7 @@ function PreferencesTab() {
                   </div>
                   {resume.is_active ? (
                     <span className="text-[12px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0"
-                      style={{ background: 'rgba(22,163,74,0.08)', color: '#16a34a', borderColor: 'rgba(22,163,74,0.3)' }}>
+                      style={{ background: 'rgba(22,163,74,0.08)', color: 'var(--success)', borderColor: 'rgba(22,163,74,0.3)' }}>
                       Active
                     </span>
                   ) : (
@@ -361,9 +361,9 @@ function PreferencesTab() {
                     onClick={() => handleDeleteResume(resume.id)}
                     disabled={deletingId === resume.id}
                     className="text-[12px] font-semibold px-2.5 py-1 rounded-lg border transition-colors disabled:opacity-50 flex-shrink-0"
-                    style={{ color: 'var(--danger, #ef4444)', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.14)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.06)')}
+                    style={{ color: 'var(--danger, var(--danger))', borderColor: 'rgba(219,0,0,0.3)', background: 'rgba(219,0,0,0.06)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(219,0,0,0.14)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(219,0,0,0.06)')}
                   >
                     {deletingId === resume.id ? 'Deleting…' : 'Delete'}
                   </button>
@@ -682,7 +682,7 @@ function ProfileSettings() {
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
       <div className="px-5 py-3 flex items-center justify-between" style={{ background: 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))' }}>
         <h3 className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-primary)' }}>Profile settings</h3>
-        {langSaved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, #16a34a)' }}>Saved ✓</span>}
+        {langSaved && <span className="text-[12px] font-bold" style={{ color: 'var(--success, var(--success))' }}>Saved ✓</span>}
       </div>
       <div className="divide-y divide-[var(--border)]">
         <div className="px-5 py-4 flex items-center justify-between">

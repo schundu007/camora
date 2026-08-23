@@ -14,20 +14,20 @@ interface ScoreCardProps {
 
 function scoreColor(score: number): string {
   if (score >= 70) return 'text-[var(--accent)]';
-  if (score >= 40) return 'text-amber-500';
-  return 'text-red-500';
+  if (score >= 40) return 'text-[var(--warning)]';
+  return 'text-[var(--danger)]';
 }
 
 function scoreBgColor(score: number): string {
   if (score >= 70) return 'bg-[var(--accent)]/10';
-  if (score >= 40) return 'bg-amber-500/10';
-  return 'bg-red-500/10';
+  if (score >= 40) return 'bg-[var(--warning)]/10';
+  return 'bg-[var(--danger)]/10';
 }
 
 function scoreRingColor(score: number): string {
   if (score >= 70) return 'var(--accent)';
   if (score >= 40) return 'var(--text-muted)';
-  return '#ef4444';
+  return 'var(--danger)';
 }
 
 function typeLabel(type: string): string {

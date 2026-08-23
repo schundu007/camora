@@ -1309,7 +1309,7 @@ export default function DocsPage({ onBack }) {
                         {(() => {
                           const phases = [
                             { label: 'Before',  sub: 'Prep & Research',      step: '01', icon: 'clipboard', color: 'var(--cam-primary)',    border: 'rgba(0,71,171,0.35)',  items: interviewCheatsheet.before },
-                            { label: 'During',  sub: 'Execute & Communicate', step: '02', icon: 'play',      color: 'var(--cam-gold-leaf)',  border: 'rgba(212,160,67,0.35)', items: interviewCheatsheet.during },
+                            { label: 'During',  sub: 'Execute & Communicate', step: '02', icon: 'play',      color: 'var(--cam-gold-leaf)',  border: 'rgba(255,153,0,0.35)', items: interviewCheatsheet.during },
                             { label: 'After',   sub: 'Reflect & Follow Up',   step: '03', icon: 'check',     color: 'var(--cam-primary-dk)', border: 'rgba(0,36,90,0.35)',   items: interviewCheatsheet.after  },
                           ];
                           return (
@@ -1479,12 +1479,12 @@ export default function DocsPage({ onBack }) {
                           onClick={clearJobFilter}
                           className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full flex-shrink-0 landing-body"
                           style={{
-                            background: 'linear-gradient(90deg, #f59e0b, #ef4444, #f59e0b)',
+                            background: 'linear-gradient(90deg, var(--warning), var(--danger), var(--warning))',
                             backgroundSize: '200% 100%',
                             animation: 'filterChipPulse 2s ease-in-out infinite',
                             color: '#fff',
                             border: 'none',
-                            boxShadow: '0 0 0 2px rgba(245,158,11,0.4), 0 2px 8px rgba(239,68,68,0.35)',
+                            boxShadow: '0 0 0 2px rgba(251,211,50,0.4), 0 2px 8px rgba(219,0,0,0.35)',
                           }}
                         >
                           <Icon name="x" size={12} />
@@ -1492,9 +1492,9 @@ export default function DocsPage({ onBack }) {
                         </button>
                         <style>{`
                           @keyframes filterChipPulse {
-                            0%   { background-position: 0% 50%;   box-shadow: 0 0 0 2px rgba(245,158,11,0.4), 0 2px 8px rgba(239,68,68,0.35); }
-                            50%  { background-position: 100% 50%; box-shadow: 0 0 0 4px rgba(239,68,68,0.5), 0 4px 16px rgba(239,68,68,0.45); }
-                            100% { background-position: 0% 50%;   box-shadow: 0 0 0 2px rgba(245,158,11,0.4), 0 2px 8px rgba(239,68,68,0.35); }
+                            0%   { background-position: 0% 50%;   box-shadow: 0 0 0 2px rgba(251,211,50,0.4), 0 2px 8px rgba(219,0,0,0.35); }
+                            50%  { background-position: 100% 50%; box-shadow: 0 0 0 4px rgba(219,0,0,0.5), 0 4px 16px rgba(219,0,0,0.45); }
+                            100% { background-position: 0% 50%;   box-shadow: 0 0 0 2px rgba(251,211,50,0.4), 0 2px 8px rgba(219,0,0,0.35); }
                           }
                         `}</style>
                       </div>
@@ -1904,7 +1904,7 @@ export default function DocsPage({ onBack }) {
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: codingLocked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
-                                {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                {codingLocked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success)' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                               </div>
                               <span className={`text-[14px] landing-body font-medium transition-colors ${codingLocked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'}`}>{topic.title}</span>
                             </div>
@@ -2037,7 +2037,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success)' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
@@ -2493,7 +2493,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success)' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
@@ -2721,7 +2721,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
-                                    {completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                    {completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success)' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
@@ -2852,7 +2852,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
-                                    {completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                    {completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success)' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className="text-sm landing-body font-medium text-[var(--text-primary)] group-hover:text-[var(--accent-hover)] transition-colors">{topic.title}</span>
@@ -2902,7 +2902,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success)' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>
@@ -2947,7 +2947,7 @@ export default function DocsPage({ onBack }) {
                               >
                                 <div className="flex items-center gap-2.5">
                                   <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: locked ? 'rgba(0,0,0,0.04)' : completedTopics[topic.id] ? 'rgba(22,163,74,0.12)' : visitedTopics[topic.id] ? 'rgba(234,179,8,0.1)' : 'var(--accent-subtle)' }}>
-                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: '#16a34a' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
+                                    {locked ? <Icon name="lock" size={12} className="text-[var(--text-muted)]" /> : completedTopics[topic.id] ? <span data-tip="Completed" style={{ fontSize: '12px', fontWeight: 800, color: 'var(--success)' }}>C</span> : visitedTopics[topic.id] ? <span data-tip="In Progress" style={{ fontSize: '12px', fontWeight: 800, color: '#b45309' }}>I</span> : <Icon name={topic.icon} size={12} style={{ color: 'var(--accent)' }} />}
                                   </div>
                                   <div className="flex items-center gap-1.5 flex-shrink-0">
                                     <span className={`text-sm landing-body font-medium ${locked ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] group-hover:text-[var(--accent-hover)]'} transition-colors`}>{topic.title}</span>

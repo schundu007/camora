@@ -54,9 +54,9 @@ const LANG_TO_APP: Record<string, string> = {
 };
 
 const DIFF_COLOR: Record<string, string> = {
-  Easy:   'var(--success, #10b981)',
+  Easy:   'var(--success, var(--success))',
   Medium: '#eab308',
-  Hard:   '#ef4444',
+  Hard:   'var(--danger)',
 };
 
 function Section({ title, children, right }: { title: string; children: React.ReactNode; right?: React.ReactNode }) {

@@ -179,12 +179,12 @@ const LoginPage = () => {
 
         <style>{`
           @keyframes statCardGlow {
-            from { box-shadow: 0 0 0 1px rgba(54,131,220,0.12), 0 2px 8px rgba(0,0,0,0.12); }
-            to   { box-shadow: 0 0 0 1px rgba(212,160,67,0.28), 0 4px 20px rgba(54,131,220,0.18), 0 0 30px rgba(212,160,67,0.08); }
+            from { box-shadow: 0 0 0 1px rgba(0,108,224,0.12), 0 2px 8px rgba(0,0,0,0.12); }
+            to   { box-shadow: 0 0 0 1px rgba(255,153,0,0.28), 0 4px 20px rgba(0,108,224,0.18), 0 0 30px rgba(255,153,0,0.08); }
           }
           @keyframes badgePulse {
-            from { box-shadow: 0 2px 6px rgba(54,131,220,0.25); }
-            to   { box-shadow: 0 2px 12px rgba(212,160,67,0.45), 0 0 20px rgba(54,131,220,0.20); }
+            from { box-shadow: 0 2px 6px rgba(0,108,224,0.25); }
+            to   { box-shadow: 0 2px 12px rgba(255,153,0,0.45), 0 0 20px rgba(0,108,224,0.20); }
           }
           @keyframes goldShimmer {
             0%   { background-position: -200% center; }
@@ -210,8 +210,8 @@ const LoginPage = () => {
           <div className="mt-8 grid grid-cols-2 gap-3 w-full">
             {STATS.map((s, si) => (
               <div key={s.label} className="rounded-xl px-4 py-3 text-center" style={{
-                background: 'linear-gradient(135deg, rgba(54,131,220,0.10) 0%, rgba(255,255,255,0.03) 50%, rgba(212,160,67,0.07) 100%)',
-                border: '1px solid rgba(54,131,220,0.15)',
+                background: 'linear-gradient(135deg, rgba(0,108,224,0.10) 0%, rgba(255,255,255,0.03) 50%, rgba(255,153,0,0.07) 100%)',
+                border: '1px solid rgba(0,108,224,0.15)',
                 animation: `statCardGlow ${2.5 + si * 0.4}s ease-in-out ${si * 0.3}s infinite alternate`,
               }}>
                 <p className="text-[22px] font-bold" style={{
@@ -257,7 +257,7 @@ const LoginPage = () => {
       >
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center">
-            <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(37,99,235,0.4)' }}>
+            <div className="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center" style={{ background: 'var(--accent)', boxShadow: '0 4px 20px rgba(0,108,224,0.4)' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>

@@ -45,7 +45,7 @@ const TerminalPane = forwardRef(function TerminalPane({ wsUrl, onOutput, onExit,
       const { WebLinksAddon } = await import('xterm-addon-web-links');
 
       const term = new Terminal({
-        theme: { background: '#0a0a0a', foreground: '#e4e4e4', cursor: '#10b981', selectionBackground: 'rgba(16,185,129,0.3)' },
+        theme: { background: '#0a0a0a', foreground: '#e4e4e4', cursor: '#2bb534', selectionBackground: 'rgba(43,181,52,0.3)' },
         fontFamily: 'var(--font-mono)',
         fontSize: initialFontSize,
         lineHeight: 1.4,

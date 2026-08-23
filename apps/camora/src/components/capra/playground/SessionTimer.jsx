@@ -22,13 +22,13 @@ export default function SessionTimer({ timeRemaining, extendAvailable, onExtend,
       <div
         className="text-center font-mono text-2xl font-bold tracking-widest px-3 py-2 rounded-lg"
         style={{
-          color: isRed ? '#ef4444' : isAmber ? '#f59e0b' : 'var(--text-primary)',
+          color: isRed ? 'var(--danger)' : isAmber ? 'var(--warning)' : 'var(--text-primary)',
           background: isRed
-            ? 'rgba(239,68,68,0.1)'
+            ? 'rgba(219,0,0,0.1)'
             : isAmber
-            ? 'rgba(245,158,11,0.1)'
+            ? 'rgba(251,211,50,0.1)'
             : 'var(--bg-elevated)',
-          border: `1px solid ${isRed ? 'rgba(239,68,68,0.3)' : isAmber ? 'rgba(245,158,11,0.3)' : 'var(--border)'}`,
+          border: `1px solid ${isRed ? 'rgba(219,0,0,0.3)' : isAmber ? 'rgba(251,211,50,0.3)' : 'var(--border)'}`,
           animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
         }}
       >

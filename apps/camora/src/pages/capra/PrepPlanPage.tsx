@@ -168,7 +168,7 @@ export default function PrepPlanPage() {
     return (
       <div className="min-h-screen">
         <div className="pt-20 pb-12 px-4 lg:max-w-[85%] mx-auto text-center">
-          <p className="text-sm text-red-500 mt-8">{error}</p>
+          <p className="text-sm text-[var(--danger)] mt-8">{error}</p>
           <Link to="/capra/prepare" className="text-sm text-[var(--accent)] hover:underline mt-4 inline-block">
             Back to dashboard
           </Link>
@@ -264,17 +264,17 @@ export default function PrepPlanPage() {
                     className="px-5 py-3 flex items-center justify-between"
                     style={{
                       background: allDone
-                        ? 'color-mix(in oklab, #22c55e 8%, var(--bg-surface))'
+                        ? 'color-mix(in oklab, var(--success) 8%, var(--bg-surface))'
                         : 'color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))',
                       borderBottom: allDone
-                        ? '1px solid color-mix(in oklab, #22c55e 20%, var(--border))'
+                        ? '1px solid color-mix(in oklab, var(--success) 20%, var(--border))'
                         : '1px solid color-mix(in oklab, var(--cam-primary) 20%, var(--border))',
                     }}
                   >
                     <div className="flex items-center gap-2">
                       <span
                         className="font-mono text-[12px] font-bold uppercase tracking-widest"
-                        style={{ color: allDone ? '#22c55e' : 'var(--cam-primary)' }}
+                        style={{ color: allDone ? 'var(--success)' : 'var(--cam-primary)' }}
                       >
                         Day {day.day}
                       </span>

@@ -2645,8 +2645,8 @@ export default function DiagramSVG({ template, className = '' }) {
 
   if (!diagram) {
     return (
-      <div className={`p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 ${className}`}>
-        <p className="text-yellow-400 text-sm">Diagram template "{template}" not found</p>
+      <div className={`p-4 rounded-lg bg-[var(--warning)]/10 border border-[var(--warning)]/20 ${className}`}>
+        <p className="text-[var(--warning)] text-sm">Diagram template "{template}" not found</p>
       </div>
     );
   }

@@ -29,7 +29,7 @@ const AudioWaveform = ({ active }: { active: boolean }) => {
             style={{
               height: active ? `${activeH}px` : `${baseH}px`,
               background: active
-                ? `rgba(38,97,156,${0.4 + barOpacities[i] * 0.6})`
+                ? `rgba(0,108,224,${0.4 + barOpacities[i] * 0.6})`
                 : 'rgba(15,23,42,0.1)',
               transitionDelay: `${i * 15}ms`,
             }}

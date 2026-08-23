@@ -487,8 +487,8 @@ export default function TeamSettingsPage() {
             email. Auto-topup has already been disabled server-side; nudge the user to
             update their card and re-enable. Dismissable via the X. */}
         {autoTopupFailed && (
-          <div className="rounded-xl p-4 mb-6 flex items-start gap-3" style={{ background: 'rgba(220, 38, 38, 0.08)', border: '1px solid rgba(220, 38, 38, 0.3)' }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth={2} className="shrink-0 mt-0.5">
+          <div className="rounded-xl p-4 mb-6 flex items-start gap-3" style={{ background: 'rgba(219,0,0, 0.08)', border: '1px solid rgba(219,0,0, 0.3)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth={2} className="shrink-0 mt-0.5">
               <circle cx="12" cy="12" r="10" />
               <path d="M12 8v4M12 16h.01" strokeLinecap="round" />
             </svg>
@@ -501,7 +501,7 @@ export default function TeamSettingsPage() {
                 <strong>To restore it:</strong> buy any pack (or upgrade) — the checkout flow updates your default card — then re-enable auto top-up below.
               </p>
               <div className="flex gap-2 mt-3">
-                <Link to="/pricing" className="px-3 py-1.5 text-[12px] font-bold rounded-md text-white" style={{ background: '#dc2626' }}>Update card via top-up</Link>
+                <Link to="/pricing" className="px-3 py-1.5 text-[12px] font-bold rounded-md text-white" style={{ background: 'var(--danger)' }}>Update card via top-up</Link>
                 <button
                   onClick={() => { searchParams.delete('auto_topup_failed'); setSearchParams(searchParams, { replace: true }); }}
                   className="px-3 py-1.5 text-[12px] font-semibold rounded-md"
@@ -541,13 +541,13 @@ export default function TeamSettingsPage() {
                   className="h-full transition-all"
                   style={{
                     width: `${Math.min(100, Math.max(0, (budget.used_hours / budget.pool_hours) * 100))}%`,
-                    background: budget.exhausted ? '#dc2626' : (budget.remaining_hours / budget.pool_hours < 0.2 ? 'var(--cam-gold-leaf-lt)' : 'var(--accent)'),
+                    background: budget.exhausted ? 'var(--danger)' : (budget.remaining_hours / budget.pool_hours < 0.2 ? 'var(--cam-gold-leaf-lt)' : 'var(--accent)'),
                   }}
                 />
               </div>
             )}
             {budget.exhausted && (
-              <p className="mt-3 text-[12px]" style={{ color: '#dc2626' }}>
+              <p className="mt-3 text-[12px]" style={{ color: 'var(--danger)' }}>
                 You've used all of your AI hours for this period. Buy a top-up pack to keep going, or wait for your plan's reset.
               </p>
             )}
@@ -678,7 +678,7 @@ export default function TeamSettingsPage() {
                         </div>
                         <div className="shrink-0">
                           {refundStatus === 'pending' && (
-                            <span className="px-2.5 py-1 text-[12px] font-semibold rounded-md" style={{ background: 'rgba(217, 119, 6, 0.1)', color: '#b45309', border: '1px solid rgba(217, 119, 6, 0.3)' }}>
+                            <span className="px-2.5 py-1 text-[12px] font-semibold rounded-md" style={{ background: 'rgba(251,211,50, 0.1)', color: '#b45309', border: '1px solid rgba(251,211,50, 0.3)' }}>
                               Refund pending review
                             </span>
                           )}

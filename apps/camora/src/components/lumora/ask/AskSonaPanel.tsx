@@ -52,7 +52,7 @@ export const AskSonaPanel = () => {
   return (
     <div className="flex-1 min-h-0 overflow-hidden">
       <div className="flex-1 flex flex-col items-center justify-center h-full text-center px-6 py-16" style={{ background: 'var(--bg-surface)' }}>
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(201,162,39,0.12)', border: '1px solid rgba(201,162,39,0.25)' }}>
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(255,153,0,0.12)', border: '1px solid rgba(255,153,0,0.25)' }}>
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf-lt)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
           </svg>

@@ -305,8 +305,8 @@ export default function DownloadPage() {
           style={{
             background:
               'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.10), transparent 60%),' +
-              'radial-gradient(ellipse 55% 60% at 12% 30%, rgba(201,162,39,0.18), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 88% 70%, rgba(38,97,156,0.30), transparent 60%),' +
+              'radial-gradient(ellipse 55% 60% at 12% 30%, rgba(255,153,0,0.18), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 88% 70%, rgba(0,108,224,0.30), transparent 60%),' +
               'linear-gradient(135deg, #07112A 0%, #0B1A3D 50%, #0A1228 100%)',
           }}
         />
@@ -325,7 +325,7 @@ export default function DownloadPage() {
           <div className="mx-auto max-w-3xl text-center">
             <FadeInSection>
               <div className="mb-7 flex justify-center">
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--cam-primary-lt)] to-[var(--cam-primary-dk)] shadow-[0_8px_32px_-8px_rgba(38,97,156,0.7)]">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--cam-primary-lt)] to-[var(--cam-primary-dk)] shadow-[0_8px_32px_-8px_rgba(0,108,224,0.7)]">
                   <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
                     <path d="M19 10v2a7 7 0 0 1-14 0v-2" />

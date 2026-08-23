@@ -599,7 +599,7 @@ export const AskLayout = () => {
             </span>
             <div className="flex items-center gap-1">
               {history.length > 0 && (
-                <button onClick={clearAllHistory} className="text-[12px] px-2 py-1 rounded transition-colors hover:bg-red-900/30" style={{ color: '#f87171', ...sans }}>
+                <button onClick={clearAllHistory} className="text-[12px] px-2 py-1 rounded transition-colors hover:bg-[var(--danger)]/30" style={{ color: 'var(--danger)', ...sans }}>
                   Clear
                 </button>
               )}
@@ -617,7 +617,7 @@ export const AskLayout = () => {
                   <span className="truncate w-full">{c.title}</span>
                   <span className="text-[12px] px-1.5 py-0.5 rounded self-start" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>{c.provider}</span>
                 </button>
-                <button onClick={e => deleteConversation(c.id, e)} className="shrink-0 mr-2 p-1 rounded hover:bg-red-900/40 transition-colors" data-tip="Delete conversation" style={{ color: '#f87171' }}>
+                <button onClick={e => deleteConversation(c.id, e)} className="shrink-0 mr-2 p-1 rounded hover:bg-[var(--danger)]/40 transition-colors" data-tip="Delete conversation" style={{ color: 'var(--danger)' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
                 </button>
               </div>

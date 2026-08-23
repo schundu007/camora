@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 
 const API = import.meta.env.VITE_CAPRA_API_URL || 'http://localhost:3009';
-const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4'];
+const PIE_COLORS = ['var(--accent)', 'var(--success)', 'var(--warning)', 'var(--accent)', 'var(--danger)', 'var(--accent)'];
 
 interface DayVolume { date: string; count: number }
 interface Metrics {
@@ -82,7 +82,7 @@ export default function AdminPlaygroundObservePage() {
                 style={{
                   padding: '5px 14px', fontSize: 12, fontWeight: 600, borderRadius: 4,
                   border: 'none', cursor: 'pointer',
-                  background: win === w ? '#3b82f6' : 'transparent',
+                  background: win === w ? 'var(--accent)' : 'transparent',
                   color: win === w ? '#fff' : 'rgba(255,255,255,0.5)',
                 }}
               >
@@ -93,7 +93,7 @@ export default function AdminPlaygroundObservePage() {
         </div>
 
         {loading && <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Loading metrics…</p>}
-        {error && <p style={{ color: '#ef4444', fontSize: 14 }}>Error: {error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 14 }}>Error: {error}</p>}
 
         {metrics && !loading && (
           <>
@@ -113,15 +113,15 @@ export default function AdminPlaygroundObservePage() {
                   <AreaChart data={metrics.dailyVolume}>
                     <defs>
                       <linearGradient id="volGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} tickLine={false} />
                     <YAxis tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={{ background: '#1a2035', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12 }} />
-                    <Area type="monotone" dataKey="count" stroke="#3b82f6" fill="url(#volGrad)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="count" stroke="var(--accent)" fill="url(#volGrad)" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartPanel>
@@ -134,8 +134,8 @@ export default function AdminPlaygroundObservePage() {
                     <YAxis tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={{ background: '#1a2035', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12 }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="P50" fill="#10b981" radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="P95" fill="#f59e0b" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="P50" fill="var(--success)" radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="P95" fill="var(--warning)" radius={[3, 3, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartPanel>
@@ -173,7 +173,7 @@ export default function AdminPlaygroundObservePage() {
                         <XAxis type="number" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} />
                         <YAxis type="category" dataKey="name" tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 12 }} width={100} />
                         <Tooltip contentStyle={{ background: '#1a2035', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, fontSize: 12 }} />
-                        <Bar dataKey="value" fill="#ef4444" radius={[0, 3, 3, 0]} />
+                        <Bar dataKey="value" fill="var(--danger)" radius={[0, 3, 3, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   )

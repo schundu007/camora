@@ -137,7 +137,7 @@ const CompanyContextPicker = () => {
               style={{
                 borderColor: 'var(--cam-gold-leaf)',
                 background:
-                  'linear-gradient(135deg, rgba(38,97,156,0.05) 0%, rgba(201,162,39,0.06) 100%)',
+                  'linear-gradient(135deg, rgba(0,108,224,0.05) 0%, rgba(255,153,0,0.06) 100%)',
               }}
             >
               <span

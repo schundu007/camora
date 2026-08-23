@@ -17,7 +17,7 @@ function renderMarkdown(text) {
     str = str.replace(/__(.+?)__/g, '<strong style="color: #f1f5f9; font-weight: 600;">$1</strong>');
     str = str.replace(/\*(.+?)\*/g, '<em>$1</em>');
     str = str.replace(/_(.+?)_/g, '<em>$1</em>');
-    str = str.replace(/`([^`]+)`/g, '<code style="padding: 0 3px; background: rgba(16, 185, 129, 0.15); border-radius: 2px; color: var(--accent); font-family: var(--font-mono); font-size: 12px;">$1</code>');
+    str = str.replace(/`([^`]+)`/g, '<code style="padding: 0 3px; background: rgba(43,181,52, 0.15); border-radius: 2px; color: var(--accent); font-family: var(--font-mono); font-size: 12px;">$1</code>');
     return str;
   };
 
@@ -1212,7 +1212,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
       >
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-full flex items-center justify-center" style={{
-            background: isSpeaking ? 'var(--accent)' : isRecording ? '#ef4444' : 'var(--accent)'
+            background: isSpeaking ? 'var(--accent)' : isRecording ? 'var(--danger)' : 'var(--accent)'
           }}>
             <svg className="w-2.5 h-2.5" style={{ color: '#0c1322' }} fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
@@ -1336,21 +1336,21 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
 
       {/* BlackHole Setup Required */}
       {error === 'BLACKHOLE_SETUP_NEEDED' && !showHistory && (
-        <div className="px-4 py-3 bg-amber-500/10 border-b border-amber-500/30">
+        <div className="px-4 py-3 bg-[var(--warning)]/10 border-b border-[var(--warning)]/30">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[var(--warning)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span className="text-sm font-medium text-amber-400">BlackHole Required for Speaker Audio</span>
+                <span className="text-sm font-medium text-[var(--warning)]">BlackHole Required for Speaker Audio</span>
               </div>
               <p className="text-xs text-[var(--text-primary)] mb-3">
                 To capture audio from Google Meet/Zoom, you need to install BlackHole (a free virtual audio driver) and configure it.
               </p>
               <button
                 onClick={() => setShowBlackholeSetup(true)}
-                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-[var(--text-primary)] text-xs font-medium rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-[var(--warning)] hover:bg-[var(--warning)] text-[var(--text-primary)] text-xs font-medium rounded-lg transition-colors"
               >
                 View Setup Guide
               </button>
@@ -1548,9 +1548,9 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               onClick={startRecording}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
               style={{
-                background: 'linear-gradient(135deg, #ef4444 0%, #1E4D78 100%)',
+                background: 'linear-gradient(135deg, var(--danger) 0%, #1E4D78 100%)',
                 color: '#ffffff',
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
+                boxShadow: '0 4px 12px rgba(219,0,0, 0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
               }}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

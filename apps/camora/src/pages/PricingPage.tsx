@@ -13,9 +13,9 @@ const LN = {
   card:       'var(--bg-surface)',
   border:     'var(--border)',
   divider:    'var(--border)',
-  blue:       '#3683DC',
-  blueFade:   'rgba(54,131,220,0.10)',
-  blueBorder: 'rgba(54,131,220,0.30)',
+  blue:       'var(--accent)',
+  blueFade:   'rgba(0,108,224,0.10)',
+  blueBorder: 'rgba(0,108,224,0.30)',
   text:       'var(--text-primary)',
   textSub:    'var(--text-secondary)',
   muted:      'var(--text-muted)',
@@ -76,9 +76,9 @@ function CellValue({ value, isTeam }: { value: string; isTeam?: boolean }) {
       <span style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 22, height: 22, borderRadius: '50%',
-        background: isTeam ? 'linear-gradient(135deg, var(--cam-gold-leaf), #B88930)' : 'rgba(54,131,220,0.10)',
-        boxShadow: isTeam ? '0 0 10px rgba(212,160,67,0.35), 0 0 4px rgba(54,131,220,0.40)' : 'none',
-        border: isTeam ? 'none' : '1px solid rgba(54,131,220,0.22)',
+        background: isTeam ? 'linear-gradient(135deg, var(--cam-gold-leaf), #B88930)' : 'rgba(0,108,224,0.10)',
+        boxShadow: isTeam ? '0 0 10px rgba(255,153,0,0.35), 0 0 4px rgba(0,108,224,0.40)' : 'none',
+        border: isTeam ? 'none' : '1px solid rgba(0,108,224,0.22)',
       }}>
         <svg width={11} height={11} viewBox="0 0 16 16" fill="none" stroke={isTeam ? '#fff' : LN.blue} strokeWidth={2.5} aria-hidden="true">
           <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
@@ -159,9 +159,9 @@ export default function PricingPage() {
           <section>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px',
-              background: 'rgba(212,160,67,0.06)', border: '1px solid rgba(212,160,67,0.28)', borderRadius: 4,
+              background: 'rgba(255,153,0,0.06)', border: '1px solid rgba(255,153,0,0.28)', borderRadius: 4,
             }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(212,160,67,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(255,153,0,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth={2.5} aria-hidden="true">
                   <path d="M13 4 L6 11 L3 8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -191,9 +191,9 @@ export default function PricingPage() {
                   { label: 'Yearly',  sub: '$99 / yr' },
                   { label: 'Team',    sub: '5–50 seats', accent: true },
                 ].map(col => (
-                  <div key={col.label} style={{ padding: '12px 16px', textAlign: 'center', background: col.accent ? 'rgba(212,160,67,0.15)' : undefined }}>
+                  <div key={col.label} style={{ padding: '12px 16px', textAlign: 'center', background: col.accent ? 'rgba(255,153,0,0.15)' : undefined }}>
                     <div style={{ fontSize: 13, fontWeight: 600, color: col.accent ? 'var(--cam-gold-leaf)' : 'rgba(255,255,255,0.85)' }}>{col.label}</div>
-                    <div style={{ fontSize: 12, color: col.accent ? 'rgba(212,160,67,0.70)' : 'rgba(255,255,255,0.38)', fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
+                    <div style={{ fontSize: 12, color: col.accent ? 'rgba(255,153,0,0.70)' : 'rgba(255,255,255,0.38)', fontFamily: LN.mono, marginTop: 2 }}>{col.sub}</div>
                   </div>
                 ))}
               </div>
@@ -201,15 +201,15 @@ export default function PricingPage() {
               {/* Data rows */}
               {COMPARE_SECTIONS.map((section, si) => (
                 <Fragment key={si}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: 'rgba(54,131,220,0.04)', borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', background: 'rgba(0,108,224,0.04)', borderTop: si > 0 ? `1px solid ${LN.border}` : undefined }}>
                     <div style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 16, height: 1.5, borderRadius: 1, background: 'linear-gradient(90deg, var(--cam-gold-leaf), #3683DC)', flexShrink: 0 }} />
+                      <div style={{ width: 16, height: 1.5, borderRadius: 1, background: 'linear-gradient(90deg, var(--cam-gold-leaf), var(--accent))', flexShrink: 0 }} />
                       <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--cam-gold-leaf-text)', fontFamily: LN.mono }}>
                         {section.title}
                       </span>
                     </div>
                     <div /><div /><div />
-                    <div style={{ background: 'rgba(212,160,67,0.06)' }} />
+                    <div style={{ background: 'rgba(255,153,0,0.06)' }} />
                   </div>
                   {section.rows.map((row, ri) => (
                     <div key={`${si}-${ri}`} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', borderTop: `1px solid ${LN.border}`, background: ri % 2 === 0 ? LN.card : LN.bg }}>
@@ -270,7 +270,7 @@ export default function PricingPage() {
                 <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.50)' }}>Free hour, no card required. Pick a plan whenever you're ready.</div>
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
-                <Link to={ctaHref} style={{ padding: '12px 28px', fontSize: 14, fontWeight: 700, borderRadius: 4, background: 'var(--cam-gold-leaf)', color: '#0B1B3F', textDecoration: 'none', display: 'inline-block', boxShadow: '0 2px 12px rgba(212,160,67,0.35)' }}>
+                <Link to={ctaHref} style={{ padding: '12px 28px', fontSize: 14, fontWeight: 700, borderRadius: 4, background: 'var(--cam-gold-leaf)', color: '#0B1B3F', textDecoration: 'none', display: 'inline-block', boxShadow: '0 2px 12px rgba(255,153,0,0.35)' }}>
                   {isAuthenticated ? 'Open Camora' : 'Create account — free'}
                 </Link>
               </div>

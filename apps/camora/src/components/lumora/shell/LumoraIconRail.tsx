@@ -400,7 +400,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
                 : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><line x1="4.5" y1="4.5" x2="19.5" y2="19.5" /></svg>}
               {/* Live state dot on the collapsed icon so status reads at a glance. */}
               {!expanded && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: isStealthActive ? '#34d399' : 'var(--text-muted)', boxShadow: '0 0 0 1.5px var(--bg-surface)' }} />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full" style={{ background: isStealthActive ? 'var(--success)' : 'var(--text-muted)', boxShadow: '0 0 0 1.5px var(--bg-surface)' }} />
               )}
             </span>
             {expanded && <span className="whitespace-nowrap flex items-center gap-2">Stealth<span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: isStealthActive ? 'inherit' : 'var(--text-muted)' }}>{isStealthActive ? 'On' : 'Off'}</span></span>}

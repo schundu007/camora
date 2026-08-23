@@ -109,7 +109,7 @@ export default function PublicProfilePage() {
       <div className="min-h-screen bg-[var(--bg-app)]">
         <SiteNav variant="light" />
         <div className="flex items-center justify-center min-h-screen">
-          <div className="w-12 h-12 border-4 border-[rgba(38,97,156,0.20)] border-t-[var(--accent)] rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[rgba(0,108,224,0.20)] border-t-[var(--accent)] rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -191,7 +191,7 @@ export default function PublicProfilePage() {
           </div>
           <div className="bg-[var(--bg-app)] border-0 rounded-xl px-4 py-3 text-center">
             <div className="flex items-center justify-center gap-1">
-              <svg className="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-[var(--warning)]" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clipRule="evenodd" />
               </svg>
               <p className="text-2xl font-bold text-[var(--text-primary)]">{profile.current_streak}</p>
@@ -261,8 +261,8 @@ export default function PublicProfilePage() {
                   className="flex items-start gap-3 bg-[var(--bg-app)] border-0 rounded-xl px-5 py-4 transition-shadow"
                 >
                   {/* Certificate icon */}
-                  <div className="shrink-0 w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                  <div className="shrink-0 w-10 h-10 rounded-lg bg-[color-mix(in_oklab,var(--warning)_10%,transparent)] flex items-center justify-center">
+                    <svg className="w-5 h-5 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 00-.491 6.347A48.62 48.62 0 0112 20.904a48.62 48.62 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.636 50.636 0 00-2.658-.813A59.906 59.906 0 0112 3.493a59.903 59.903 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
                     </svg>
                   </div>
@@ -283,7 +283,7 @@ export default function PublicProfilePage() {
 
         {/* CTA */}
         <div className="border-t border-[var(--border)] pt-10 text-center">
-          <Chip variant="default" className="bg-[rgba(38,97,156,0.08)] text-[var(--accent)]">
+          <Chip variant="default" className="bg-[rgba(0,108,224,0.08)] text-[var(--accent)]">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.37 2.448c-.784.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.063 9.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
             </svg>

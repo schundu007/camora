@@ -34,8 +34,8 @@ export default function ReferralLandingPage() {
           style={{
             background:
               'radial-gradient(ellipse 70% 55% at 50% 0%, rgba(255,255,255,0.10), transparent 60%),' +
-              'radial-gradient(ellipse 55% 60% at 12% 30%, rgba(201,162,39,0.18), transparent 60%),' +
-              'radial-gradient(ellipse 50% 60% at 88% 70%, rgba(38,97,156,0.30), transparent 60%)',
+              'radial-gradient(ellipse 55% 60% at 12% 30%, rgba(255,153,0,0.18), transparent 60%),' +
+              'radial-gradient(ellipse 50% 60% at 88% 70%, rgba(0,108,224,0.30), transparent 60%)',
           }}
         />
         <div

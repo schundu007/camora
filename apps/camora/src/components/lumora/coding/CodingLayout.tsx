@@ -2641,7 +2641,7 @@ ${solCode}
     const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\b(?:CRITICAL|HIGH|MEDIUM|LOW)\b)/g);
     return parts.map((p, i) => {
       if (p.startsWith('`') && p.endsWith('`') && p.length > 2)
-        return <code key={i} style={{ background: 'rgba(38,97,156,0.15)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid rgba(38,97,156,0.35)', borderRadius: 3, padding: '1px 5px', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: 0 }}>{p.slice(1, -1)}</code>;
+        return <code key={i} style={{ background: 'rgba(0,108,224,0.15)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid rgba(0,108,224,0.35)', borderRadius: 3, padding: '1px 5px', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: 0 }}>{p.slice(1, -1)}</code>;
       if (p.startsWith('**') && p.endsWith('**') && p.length > 4)
         return <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{p.slice(2, -2)}</strong>;
       if (p.startsWith('*') && p.endsWith('*') && p.length > 2)
@@ -2692,7 +2692,7 @@ ${solCode}
             const codeText = cm[2].replace(/\n$/, '');
             if (!codeText.trim()) return null; // skip empty blocks from pattern B mismatch
             return (
-              <div key={si} style={{ borderRadius: 8, overflow: 'hidden', margin: '6px 0', border: '1px solid rgba(38,97,156,0.4)', boxShadow: '0 2px 8px rgba(3,19,46,0.3)' }}>
+              <div key={si} style={{ borderRadius: 8, overflow: 'hidden', margin: '6px 0', border: '1px solid rgba(0,108,224,0.4)', boxShadow: '0 2px 8px rgba(3,19,46,0.3)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)', padding: '3px 10px' }}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--cam-gold-leaf-lt)' }}>{lang || 'code'}</span>
                 </div>
@@ -2730,12 +2730,12 @@ ${solCode}
                 // ## H2
                 const h2 = trimmed.match(/^##\s+(.*)/);
                 if (h2)
-                  return <div key={li} style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 12, marginBottom: 3, paddingBottom: 3, borderBottom: '1px solid rgba(201,162,39,0.30)' }}>{renderInline(h2[1])}</div>;
+                  return <div key={li} style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 12, marginBottom: 3, paddingBottom: 3, borderBottom: '1px solid rgba(255,153,0,0.30)' }}>{renderInline(h2[1])}</div>;
 
                 // # H1
                 const h1 = trimmed.match(/^#\s+(.*)/);
                 if (h1)
-                  return <div key={li} style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 14, marginBottom: 4, paddingBottom: 4, borderBottom: '1px solid rgba(201,162,39,0.45)' }}>{renderInline(h1[1])}</div>;
+                  return <div key={li} style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--cam-gold-leaf-lt)', marginTop: 14, marginBottom: 4, paddingBottom: 4, borderBottom: '1px solid rgba(255,153,0,0.45)' }}>{renderInline(h1[1])}</div>;
 
                 // Question N: ... pattern
                 const qMatch = trimmed.match(/^Question\s+(\d+)[:.]\s*(.*)/i);
@@ -2753,7 +2753,7 @@ ${solCode}
                 const answerMatch = trimmed.match(/^Answer[:.]\s*(.*)/i);
                 if (answerMatch)
                   return (
-                    <div key={li} style={{ marginLeft: 28, marginTop: 2, paddingLeft: 10, paddingTop: 3, paddingBottom: 3, borderRadius: 4, background: 'rgba(38,97,156,0.08)' }}>
+                    <div key={li} style={{ marginLeft: 28, marginTop: 2, paddingLeft: 10, paddingTop: 3, paddingBottom: 3, borderRadius: 4, background: 'rgba(0,108,224,0.08)' }}>
                       {answerMatch[1] ? <span style={{ color: 'var(--text-primary)', fontSize: 14 }}>{renderInline(answerMatch[1])}</span> : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--cam-primary)', letterSpacing: '0.06em' }}>Answer</span>}
                     </div>
                   );
@@ -2786,7 +2786,7 @@ ${solCode}
                 if (nl)
                   return (
                     <div key={li} style={{ display: 'flex', gap: 8, margin: '3px 0', paddingLeft: 6 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 4, background: 'rgba(38,97,156,0.2)', border: '1px solid rgba(38,97,156,0.4)', color: 'var(--cam-primary-lt)', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{nl[1]}</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 4, background: 'rgba(0,108,224,0.2)', border: '1px solid rgba(0,108,224,0.4)', color: 'var(--cam-primary-lt)', fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 1 }}>{nl[1]}</span>
                       <span style={{ fontSize: 14, lineHeight: 1.55, color: 'var(--text-primary)' }}>{renderInline(nl[2])}</span>
                     </div>
                   );
@@ -2823,17 +2823,17 @@ ${solCode}
               // navy spotlight at top-left + cyan wash at bottom-right,
               // doesn't compete with the editor or answer surfaces.
               background:
-                'radial-gradient(ellipse 50% 40% at 15% 0%, rgba(38,97,156,0.08), transparent 70%),' +
-                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(38,97,156,0.10), transparent 70%)',
+                'radial-gradient(ellipse 50% 40% at 15% 0%, rgba(0,108,224,0.08), transparent 70%),' +
+                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(0,108,224,0.10), transparent 70%)',
             }
           : undefined
       }
     >
       <style>{`
         @keyframes coding-pulse-ring {
-          0%   { box-shadow: 0 0 0 0 rgba(38,97,156,0.45); }
-          70%  { box-shadow: 0 0 0 10px rgba(38,97,156,0); }
-          100% { box-shadow: 0 0 0 0 rgba(38,97,156,0); }
+          0%   { box-shadow: 0 0 0 0 rgba(0,108,224,0.45); }
+          70%  { box-shadow: 0 0 0 10px rgba(0,108,224,0); }
+          100% { box-shadow: 0 0 0 0 rgba(0,108,224,0); }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
@@ -2863,9 +2863,9 @@ ${solCode}
           {/* Timer */}
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
-              timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
+              timerUrgent ? 'bg-[var(--danger)]/15 border-[var(--danger)]/30 text-[var(--danger)]' :
               timerSeconds === 0 ? 'opacity-70' :
-              'bg-[rgba(38,97,156,0.15)] border-[rgba(38,97,156,0.3)] text-[var(--accent-text)]'
+              'bg-[rgba(0,108,224,0.15)] border-[rgba(0,108,224,0.3)] text-[var(--accent-text)]'
             }`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -2875,7 +2875,7 @@ ${solCode}
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-red-400 transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Stop timer">
+              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-[var(--danger)] transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -2897,9 +2897,9 @@ ${solCode}
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
               style={{
-                background: 'linear-gradient(110deg, rgba(38,97,156,0.18) 0%, rgba(38,97,156,0.28) 100%)',
-                border: '1px solid rgba(38,97,156,0.42)',
-                boxShadow: '0 0 18px rgba(38,97,156,0.32), inset 0 1px 0 rgba(255,255,255,0.08)',
+                background: 'linear-gradient(110deg, rgba(0,108,224,0.18) 0%, rgba(0,108,224,0.28) 100%)',
+                border: '1px solid rgba(0,108,224,0.42)',
+                boxShadow: '0 0 18px rgba(0,108,224,0.32), inset 0 1px 0 rgba(255,255,255,0.08)',
               }}
             >
               <span
@@ -3050,9 +3050,9 @@ ${solCode}
                 {/* Screen permission warning — autopilot mode, desktop only */}
                 {codingPlatform && codingPlatform !== 'none' && screenPermStatus && screenPermStatus !== 'granted' && (
                   <div className="flex items-center gap-2 px-3 py-2 min-w-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <span className="text-[12px] font-semibold truncate" style={{ color: '#f59e0b' }}>Screen Recording not granted — auto-detect paused</span>
-                    <button onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')} className="px-2 py-0.5 rounded text-[12px] font-bold shrink-0 transition-colors hover:opacity-80" style={{ background: '#f59e0b', color: '#000' }}>Fix in Settings</button>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" strokeWidth="2.5" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span className="text-[12px] font-semibold truncate" style={{ color: 'var(--warning)' }}>Screen Recording not granted — auto-detect paused</span>
+                    <button onClick={() => (window as any).camo?.openSystemPrivacy?.('screen')} className="px-2 py-0.5 rounded text-[12px] font-bold shrink-0 transition-colors hover:opacity-80" style={{ background: 'var(--warning)', color: '#000' }}>Fix in Settings</button>
                   </div>
                 )}
 
@@ -3530,7 +3530,7 @@ ${solCode}
 
                     {/* Say this out loud */}
                     {mcq.narration && (
-                      <div className="rounded-lg" style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(38,97,156,0.35)' }}>
+                      <div className="rounded-lg" style={{ background: 'var(--accent-subtle)', border: '1px solid rgba(0,108,224,0.35)' }}>
                         <div className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: '1px solid var(--border)' }}>
                           <div className="flex items-center gap-1.5">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--cam-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3593,7 +3593,7 @@ ${solCode}
 
         {/* ── Horizontal Resize Handle (desktop only) ── */}
         <div onMouseDown={() => { userSizedSplitRef.current = true; setIsResizingH(true); }}
-          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(38,97,156,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
+          className="hidden md:flex w-1.5 bg-[var(--bg-elevated)] hover:bg-[rgba(0,108,224,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0">
           <div className="w-0.5 h-8 bg-[var(--border)] group-hover:bg-[var(--accent)] rounded-full transition-colors" />
         </div>
 
@@ -3618,7 +3618,7 @@ ${solCode}
               />
               {isTranslating && (
                 <span className="flex items-center gap-1 text-[12px] font-semibold" style={{ color: 'var(--cam-primary)' }}>
-                  <div className="w-3 h-3 border-2 border-[rgba(38,97,156,0.3)] border-t-[var(--cam-primary)] rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-[rgba(0,108,224,0.3)] border-t-[var(--cam-primary)] rounded-full animate-spin" />
                   Translating…
                 </span>
               )}
@@ -3633,7 +3633,7 @@ ${solCode}
               </button>
               {showFixPrompt && (
                 <button onClick={() => handleAutoFix(false)}
-                  className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 text-[#1B1D22] text-xs font-bold rounded-md hover:bg-amber-600 transition-colors shadow-sm"
+                  className="flex items-center gap-1.5 px-3 py-1 bg-[var(--warning)] text-[#1B1D22] text-xs font-bold rounded-md hover:bg-[var(--warning)] transition-colors shadow-sm"
                   data-tip="Auto-fix failed tests">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   Auto-Fix
@@ -3724,7 +3724,7 @@ ${solCode}
           {/* ── Vertical Resize Handle ── */}
           {!isOutputCollapsed && (
             <div onMouseDown={(e) => { vResizeRef.current = { startY: e.clientY, startH: outputPanelHeight ?? (outputPanelRef.current?.offsetHeight ?? 180) }; setIsResizingV(true); }}
-              className="h-1.5 hover:bg-[rgba(38,97,156,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
+              className="h-1.5 hover:bg-[rgba(0,108,224,0.1)] cursor-row-resize transition-colors flex justify-center items-center group"
               style={{ background: t.sectionBg }}>
               <div className="w-8 h-0.5 group-hover:bg-[var(--accent)] rounded-full transition-colors" style={{ background: t.textDim }} />
             </div>

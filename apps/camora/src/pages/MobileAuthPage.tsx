@@ -75,7 +75,7 @@ export default function MobileAuthPage() {
       <div style={{ maxWidth: 360, textAlign: 'center' }}>
         <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>Camora</div>
         {error ? (
-          <p style={{ color: '#DC2626' }}>{error}</p>
+          <p style={{ color: 'var(--danger)' }}>{error}</p>
         ) : (
           <p style={{ color: '#A1A8B3' }}>
             {isLoading ? 'Signing you in…' : token ? 'Returning to app…' : 'Redirecting to Google…'}

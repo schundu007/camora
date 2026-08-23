@@ -117,7 +117,7 @@ function ExampleBlock({ example, index }) {
         </div>
         <div>
           <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Output</span>
-          <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
+          <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-[var(--warning)] font-mono text-sm overflow-x-auto">
             {example.output}
           </pre>
         </div>
@@ -686,7 +686,7 @@ export default function ProblemPage({ slug, onBack }) {
                                 </div>
                                 <div>
                                   <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Expected Output</span>
-                                  <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
+                                  <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-[var(--warning)] font-mono text-sm overflow-x-auto">
                                     {problem.examples[activeTestCase].output}
                                   </pre>
                                 </div>
@@ -734,14 +734,14 @@ export default function ProblemPage({ slug, onBack }) {
                                   <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">
                                     {output.success ? 'Output' : 'Error'}
                                   </span>
-                                  <pre className={`mt-1.5 bg-[#0d1117] rounded p-3 font-mono text-sm overflow-x-auto ${output.success ? 'text-[var(--text-muted)]' : 'text-red-400'}`}>
+                                  <pre className={`mt-1.5 bg-[#0d1117] rounded p-3 font-mono text-sm overflow-x-auto ${output.success ? 'text-[var(--text-muted)]' : 'text-[var(--danger)]'}`}>
                                     {output.output}
                                   </pre>
                                 </div>
                                 {output.expected && (
                                   <div>
                                     <span className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-wide">Expected</span>
-                                    <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-yellow-400 font-mono text-sm overflow-x-auto">
+                                    <pre className="mt-1.5 bg-[#0d1117] rounded p-3 text-[var(--warning)] font-mono text-sm overflow-x-auto">
                                       {output.expected}
                                     </pre>
                                   </div>

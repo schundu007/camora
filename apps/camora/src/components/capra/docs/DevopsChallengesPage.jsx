@@ -26,9 +26,9 @@ const SKILL_COLORS = {
 };
 
 const DIFFICULTY_STYLES = {
-  Easy:   { color: '#22c55e', bg: 'rgba(34,197,94,0.12)',   border: 'rgba(34,197,94,0.25)' },
-  Medium: { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
-  Hard:   { color: '#ef4444', bg: 'rgba(239,68,68,0.12)',  border: 'rgba(239,68,68,0.25)' },
+  Easy:   { color: 'var(--success)', bg: 'rgba(43,181,52,0.12)',   border: 'rgba(43,181,52,0.25)' },
+  Medium: { color: 'var(--warning)', bg: 'rgba(251,211,50,0.12)', border: 'rgba(251,211,50,0.25)' },
+  Hard:   { color: 'var(--danger)', bg: 'rgba(219,0,0,0.12)',  border: 'rgba(219,0,0,0.25)' },
 };
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
@@ -394,7 +394,7 @@ export default function DevopsChallengesPage({ challenges = [] }) {
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '7px 16px', borderRadius: 6, fontSize: 13, fontWeight: 600,
               cursor: 'pointer', whiteSpace: 'nowrap',
-              background: 'var(--cam-gold-leaf, #d4af37)',
+              background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))',
               border: 'none', color: '#000',
             }}
           >

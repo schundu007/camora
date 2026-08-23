@@ -79,14 +79,14 @@ export function SessionTimer({
     percent > 50
       ? 'text-[var(--accent)]'
       : percent > 20
-        ? 'text-amber-500'
+        ? 'text-[var(--warning)]'
         : 'text-[var(--danger)]';
   const bgClass =
     percent > 50
       ? 'bg-[var(--accent-subtle)] border-[var(--accent)]/30'
       : percent > 20
-        ? 'bg-amber-50 border-amber-200'
-        : 'bg-red-50 border-red-200';
+        ? 'bg-[color-mix(in_oklab,var(--warning)_10%,transparent)] border-[color-mix(in_oklab,var(--warning)_30%,transparent)]'
+        : 'bg-[color-mix(in_oklab,var(--danger)_10%,transparent)] border-[color-mix(in_oklab,var(--danger)_30%,transparent)]';
   const ringStroke =
     percent > 50 ? 'var(--accent)' : percent > 20 ? 'var(--text-muted)' : 'var(--danger)';
 

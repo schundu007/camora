@@ -80,7 +80,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
         {/* Header */}
         <div
           className="relative px-5 py-4 border-b shrink-0"
-          style={{ borderColor: 'var(--cam-gold-leaf)', background: 'linear-gradient(135deg, rgba(38,97,156,0.05) 0%, rgba(201,162,39,0.06) 100%)' }}
+          style={{ borderColor: 'var(--cam-gold-leaf)', background: 'linear-gradient(135deg, rgba(0,108,224,0.05) 0%, rgba(255,153,0,0.06) 100%)' }}
         >
           <span aria-hidden className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full" style={{ background: 'linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)' }} />
           <div className="pl-3 flex items-start justify-between gap-3">
@@ -142,7 +142,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                     >
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: isActive ? 'var(--cam-primary)' : item.ready ? '#22c55e' : 'var(--border)' }}
+                        style={{ background: isActive ? 'var(--cam-primary)' : item.ready ? 'var(--success)' : 'var(--border)' }}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">

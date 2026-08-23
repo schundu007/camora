@@ -45,7 +45,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
 
       <div className="px-4 py-4 flex-1 space-y-5">
         {error ? (
-          <p className="text-[#f87171] text-[12px] leading-relaxed" style={sans}>{error}</p>
+          <p className="text-[var(--danger)] text-[12px] leading-relaxed" style={sans}>{error}</p>
         ) : loading ? (
           <p className="text-[#7C8AA0] text-[12px] italic" style={sans}>Analysing…</p>
         ) : rich ? (
@@ -53,7 +53,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* What it does */}
             {(rich.what || rich.explanation) && (
               <div>
-                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#3b82f6', ...sans }}>What it does</div>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--accent)', ...sans }}>What it does</div>
                 <p className="text-[13px] leading-relaxed" style={{ color: '#cbd5e1', ...sans }}>{rich.what || rich.explanation}</p>
               </div>
             )}
@@ -61,7 +61,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* How it works */}
             {rich.how && rich.how.length > 0 && (
               <div>
-                <div className="text-[12px] font-bold uppercase tracking-widest mb-2" style={{ color: '#3b82f6', ...sans }}>How it works</div>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)', ...sans }}>How it works</div>
                 <div className="rounded-lg overflow-hidden border border-[#1e293b]">
                   {rich.how.map((step, i) => (
                     <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1.4fr', borderTop: i > 0 ? '1px solid #1e293b' : 'none' }}>
@@ -69,7 +69,7 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
                         <pre className="text-[14px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{step.code}</pre>
                       </div>
                       <div className="px-3 py-2.5 flex items-start gap-2">
-                        <span className="shrink-0 mt-0.5 text-[12px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: '#3b82f6', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                        <span className="shrink-0 mt-0.5 text-[12px] font-bold w-4 h-4 rounded flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
                         <span className="text-[12px] leading-relaxed" style={{ color: '#94a3b8', ...sans }}>{step.text}</span>
                       </div>
                     </div>
@@ -81,8 +81,8 @@ const ExplainPane = ({ rich, loading, line, error }: ExplainState) => {
             {/* State trace */}
             {rich.trace && (
               <div>
-                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: '#d97706', ...sans }}>State trace</div>
-                <div className="rounded-lg px-3 py-2.5" style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.25)' }}>
+                <div className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--warning)', ...sans }}>State trace</div>
+                <div className="rounded-lg px-3 py-2.5" style={{ background: 'rgba(251,211,50,0.08)', border: '1px solid rgba(251,211,50,0.25)' }}>
                   <pre className="text-[14px] leading-relaxed" style={{ fontFamily: 'var(--font-mono)', color: '#fcd34d', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{rich.trace}</pre>
                 </div>
               </div>

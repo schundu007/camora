@@ -85,10 +85,10 @@ export default function DocsPageLayout({
                     className="mb-10 relative rounded-2xl pl-7 pr-6 py-6 overflow-hidden"
                     style={{
                       background:
-                        'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(201,162,39,0.05) 100%)',
+                        'linear-gradient(135deg, rgba(0,108,224,0.04) 0%, rgba(255,153,0,0.05) 100%)',
                       border: '1px solid var(--cam-gold-leaf)',
                       boxShadow:
-                        '0 1px 0 rgba(201,162,39,0.18), 0 8px 24px -16px rgba(38,97,156,0.18), inset 0 1px 0 rgba(255,255,255,0.35)',
+                        '0 1px 0 rgba(255,153,0,0.18), 0 8px 24px -16px rgba(0,108,224,0.18), inset 0 1px 0 rgba(255,255,255,0.35)',
                     }}
                   >
                     {/* Navy strip — sits on the left edge, slightly inset top/bottom */}

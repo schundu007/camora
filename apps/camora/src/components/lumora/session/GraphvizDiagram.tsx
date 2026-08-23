@@ -108,7 +108,7 @@ export const GraphvizDiagram = ({ content, engine = 'dot', className = '' }: Gra
   if (error) {
     return (
       <div className={`p-4 ${className}`}>
-        <p className="text-xs text-red-500 mb-2 font-medium">Diagram render failed: {error}</p>
+        <p className="text-xs text-[var(--danger)] mb-2 font-medium">Diagram render failed: {error}</p>
         <pre
           className="text-xs font-mono rounded-lg p-3 overflow-x-auto whitespace-pre-wrap max-h-[300px] overflow-y-auto"
           style={{

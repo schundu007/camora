@@ -1602,7 +1602,7 @@ export default function PracticePage() {
                         <button
                           onClick={() => !allShown && setHintCounts(prev => ({ ...prev, [currentIdx]: Math.min((prev[currentIdx] || 0) + 1, total) }))}
                           disabled={allShown}
-                          style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #d97706', background: allShown ? 'rgba(217,119,6,0.08)' : 'rgba(217,119,6,0.12)', color: allShown ? '#92400e' : '#b45309', fontSize: 12, fontWeight: 600, cursor: allShown ? 'default' : 'pointer' }}
+                          style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid var(--warning)', background: allShown ? 'rgba(251,211,50,0.08)' : 'rgba(251,211,50,0.12)', color: allShown ? '#92400e' : '#b45309', fontSize: 12, fontWeight: 600, cursor: allShown ? 'default' : 'pointer' }}
                         >
                           {allShown ? 'All Hints Shown' : shown === 0 ? 'Hint' : `Hint ${shown + 1}/${total}`}
                         </button>
@@ -1627,7 +1627,7 @@ export default function PracticePage() {
                   {(hintCounts[currentIdx] || 0) > 0 && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
                       {questions[currentIdx].hints.slice(0, hintCounts[currentIdx]).map((hint, hi) => (
-                        <div key={hi} style={{ background: 'rgba(217,119,6,0.06)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--text-secondary)' }}>
+                        <div key={hi} style={{ background: 'rgba(251,211,50,0.06)', border: '1px solid rgba(251,211,50,0.2)', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: 'var(--text-secondary)' }}>
                           <span style={{ fontWeight: 600, color: '#b45309', marginRight: 6 }}>Hint {hi + 1}:</span>{hint}
                         </div>
                       ))}
@@ -2020,7 +2020,7 @@ export default function PracticePage() {
             return (
             <div>
               {/* ── Hero Result Card ── */}
-              <div style={{ background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-surface))', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(38,97,156,0.15)' }}>
+              <div style={{ background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-surface))', borderRadius: 20, padding: '40px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,108,224,0.15)' }}>
                 {/* Decorative grid */}
                 <div style={{ position: 'absolute', inset: 0, opacity: 0.35, backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>

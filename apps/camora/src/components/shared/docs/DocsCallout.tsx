@@ -17,7 +17,7 @@ const VARIANTS: Record<
 > = {
   tip:     { label: 'Tip',     color: '#00B8A3', iconName: 'lightbulb'     },
   note:    { label: 'Note',    color: '#2B6394', iconName: 'info'          },
-  warning: { label: 'Warning', color: '#F59E0B', iconName: 'alertTriangle' },
+  warning: { label: 'Warning', color: 'var(--warning)', iconName: 'alertTriangle' },
   caution: { label: 'Caution', color: '#FF375F', iconName: 'alertCircle'   },
 };
 

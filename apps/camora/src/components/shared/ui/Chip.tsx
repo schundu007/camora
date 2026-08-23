@@ -10,11 +10,11 @@ export interface ChipProps {
 const variantStyles: Record<NonNullable<ChipProps['variant']>, string> = {
   default: 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]',
   easy: 'bg-[#1E4D78] text-white',
-  medium: 'bg-[#D4A043] text-white',
-  hard: 'bg-[#DC2626] text-white',
+  medium: 'bg-[var(--cam-gold-leaf)] text-white',
+  hard: 'bg-[var(--danger)] text-white',
   success: 'bg-[#1E4D78] text-white',
-  warning: 'bg-[#D4A043] text-white',
-  danger: 'bg-[#DC2626] text-white',
+  warning: 'bg-[var(--cam-gold-leaf)] text-white',
+  danger: 'bg-[var(--danger)] text-white',
   gold: 'bg-[var(--accent-subtle)] text-[var(--accent-text)] border border-[var(--accent)]/20',
 };
 

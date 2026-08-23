@@ -442,31 +442,31 @@ const Prose = ({ value, className, style }: { value: any; className?: string; st
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Camora palette — navy primary with gold caution.
- *  Navy (#1E4D78) = structural/informational. Gold (#D4A043) = caution/highlight.
+ *  Navy (#1E4D78) = structural/informational. Gold (var(--cam-gold-leaf)) = caution/highlight.
  *  No rainbow. Section type is communicated by label, not hue. */
 const LC = {
   // Difficulty pills — semantic meaning, kept intentional
   easy:   { fg: '#3B82B9', bg: 'rgba(59,130,185,0.08)',  border: 'rgba(59,130,185,0.22)' },
-  medium: { fg: '#D4A043', bg: 'rgba(212,160,67,0.10)',  border: 'rgba(212,160,67,0.30)' },
-  hard:   { fg: '#EF4444', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(239,68,68,0.22)' },
+  medium: { fg: 'var(--cam-gold-leaf)', bg: 'rgba(255,153,0,0.10)',  border: 'rgba(255,153,0,0.30)' },
+  hard:   { fg: 'var(--danger)', bg: 'rgba(219,0,0,0.08)',   border: 'rgba(219,0,0,0.22)' },
 
   // Brand tokens
   navy:        '#1E4D78',
-  gold:        '#D4A043',
+  gold:        'var(--cam-gold-leaf)',
 
   // All section accents → navy (informational) or gold (caution/watch-out)
   problem:      '#2B6394',
   examples:     '#2B6394',
   approach:     '#2B6394',
-  edge:         '#D4A043',  // watch-out → gold
-  mistake:      '#D4A043',  // watch-out → gold
+  edge:         'var(--cam-gold-leaf)',  // watch-out → gold
+  mistake:      'var(--cam-gold-leaf)',  // watch-out → gold
   followup:     '#2B6394',
   requirements: '#2B6394',
   capacity:     '#2B6394',
   architecture: '#2B6394',
   database:     '#2B6394',
   api:          '#2B6394',
-  tradeoffs:    '#D4A043',  // trade-off emphasis → gold
+  tradeoffs:    'var(--cam-gold-leaf)',  // trade-off emphasis → gold
   scalability:  '#2B6394',
   clarify:      '#2B6394',
 
@@ -474,7 +474,7 @@ const LC = {
   star: {
     situation: '#2B6394',
     task:      '#2B6394',
-    action:    '#D4A043',
+    action:    'var(--cam-gold-leaf)',
     result:    '#2B6394',
   },
 
@@ -2380,11 +2380,11 @@ const FormattedJD = ({ text }: { text: string }) => {
   // illuminated manuscript instead of a rainbow.
   const cardChrome: React.CSSProperties = {
     background:
-      'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(201,162,39,0.05) 100%)',
+      'linear-gradient(135deg, rgba(0,108,224,0.04) 0%, rgba(255,153,0,0.05) 100%)',
     border: '1px solid var(--cam-gold-leaf)',
     boxShadow:
       '0 1px 0 color-mix(in srgb, var(--cam-gold-leaf) 18%, transparent),' +
-      ' 0 8px 24px -16px rgba(38,97,156,0.18),' +
+      ' 0 8px 24px -16px rgba(0,108,224,0.18),' +
       ' inset 0 1px 0 rgba(255,255,255,0.35)',
   };
 
@@ -3207,7 +3207,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               style={{
                 color:
                   !token ? 'var(--cam-strip-text-muted)'
-                  : syncStatus === 'error'  ? '#FCA5A5'
+                  : syncStatus === 'error'  ? 'var(--danger)'
                   : syncStatus === 'saving' ? 'var(--cam-strip-text)'
                   : syncStatus === 'saved'  ? '#A7F3D0'
                   : 'var(--cam-strip-text-muted)',
@@ -3219,7 +3219,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 style={{
                   background:
                     !token ? 'var(--cam-strip-icon-border)'
-                    : syncStatus === 'error'  ? '#F87171'
+                    : syncStatus === 'error'  ? 'var(--danger)'
                     : syncStatus === 'saving' ? '#FCD34D'
                     : syncStatus === 'saved'  ? '#3B82B9'
                     : 'var(--cam-strip-icon-border)',
@@ -3231,7 +3231,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           {syncStatus === 'error' && syncError && (
             <p
               className="text-[12px] mt-1 leading-snug break-all"
-              style={{ color: '#FCA5A5', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+              style={{ color: 'var(--danger)', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
               data-tip={syncError}
             >
               {syncError}
@@ -3494,7 +3494,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           <button
             onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
             className="w-full py-2 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.98] hover:opacity-90"
-            style={{ color: 'color-mix(in srgb, #ef4444 70%, var(--text-secondary))', background: 'color-mix(in srgb, #ef4444 8%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, #ef4444 25%, transparent)' }}>
+            style={{ color: 'color-mix(in srgb, var(--danger) 70%, var(--text-secondary))', background: 'color-mix(in srgb, var(--danger) 8%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--danger) 25%, transparent)' }}>
             Clear All
           </button>
         </div>
@@ -3654,7 +3654,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             {/* Header — charcoal strip with gold-leaf seam, matches SiteNav */}
             <div
               className="px-5 py-3.5 flex items-center justify-between shrink-0"
-              style={{ background: '#1A1D24', borderBottom: '1px solid rgba(201,162,39,0.35)' }}
+              style={{ background: '#1A1D24', borderBottom: '1px solid rgba(255,153,0,0.35)' }}
             >
               <div className="flex items-center gap-2.5">
                 <span
@@ -3710,7 +3710,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   onClick={() => fetchJdUrl(jdUrl)}
                   disabled={!jdUrl.trim() || jdFetching}
                   className="px-4 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', boxShadow: (!jdUrl.trim() || jdFetching) ? 'none' : '0 4px 12px rgba(38,97,156,0.32)' }}
+                  style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', boxShadow: (!jdUrl.trim() || jdFetching) ? 'none' : '0 4px 12px rgba(0,108,224,0.32)' }}
                 >
                   {jdFetching ? 'Fetching…' : 'Fetch JD'}
                 </button>
@@ -3757,7 +3757,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 }}
                 disabled={!jdEditText.trim()}
                 className="px-5 py-2 rounded-md text-[12px] font-bold uppercase tracking-wider transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', boxShadow: jdEditText.trim() ? '0 4px 12px rgba(38,97,156,0.32)' : 'none' }}
+                style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF', boxShadow: jdEditText.trim() ? '0 4px 12px rgba(0,108,224,0.32)' : 'none' }}
               >
                 Save
               </button>

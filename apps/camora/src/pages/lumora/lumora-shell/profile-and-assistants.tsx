@@ -434,7 +434,7 @@ export const AssistantsPage = () => {
                 <div className="flex items-center gap-2">
                   <span className="px-2 py-0.5 rounded text-[12px] font-bold" style={{ background: (mi?.color || 'var(--cam-primary)') + '10', color: mi?.color || 'var(--cam-primary)' }}>{mi?.label || a.model}</span>
                   <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}>Launch</Link>
-                  <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: 'var(--text-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
+                  <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-[color-mix(in_oklab,var(--danger)_10%,transparent)]" style={{ color: 'var(--text-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
               </div>
               {(a.resume || a.jobDescription) && <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-3">

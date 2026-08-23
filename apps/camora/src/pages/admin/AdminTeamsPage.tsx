@@ -262,7 +262,7 @@ export default function AdminTeamsPage() {
         )}
 
         {loading && <div className="text-sm" style={{ color: 'var(--text-muted)' }}>Loading…</div>}
-        {error && <div className="text-sm rounded-lg p-3" style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>{error}</div>}
+        {error && <div className="text-sm rounded-lg p-3" style={{ background: 'rgba(219,0,0,0.08)', border: '1px solid rgba(219,0,0,0.3)', color: 'var(--danger)' }}>{error}</div>}
 
         {!loading && !error && (
           <div className="rounded-xl overflow-x-auto" style={{ border: '1px solid var(--border)' }}>
@@ -296,7 +296,7 @@ export default function AdminTeamsPage() {
                         {fmtHours(Number(t.used_seconds_period))} / {poolHours.toFixed(0)} hr
                         {poolHours > 0 && (
                           <div className="h-1 rounded-full mt-1 overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                            <div className="h-full" style={{ width: `${usePct}%`, background: usePct > 95 ? '#dc2626' : usePct > 80 ? '#d97706' : 'var(--accent)' }} />
+                            <div className="h-full" style={{ width: `${usePct}%`, background: usePct > 95 ? 'var(--danger)' : usePct > 80 ? 'var(--warning)' : 'var(--accent)' }} />
                           </div>
                         )}
                       </td>
@@ -311,7 +311,7 @@ export default function AdminTeamsPage() {
                         )}
                       </td>
                       <td className="px-3 py-2.5 align-top text-[12px]">
-                        <span style={{ color: autoCharged > 50000 ? '#dc2626' : 'var(--text-primary)' }}>
+                        <span style={{ color: autoCharged > 50000 ? 'var(--danger)' : 'var(--text-primary)' }}>
                           {fmtMoney(autoCharged)}
                         </span>
                       </td>
@@ -320,7 +320,7 @@ export default function AdminTeamsPage() {
                           <button
                             onClick={() => disableAutoTopup(t.id, t.owner_email)}
                             className="px-2.5 py-1 text-[12px] font-semibold rounded-md"
-                            style={{ background: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.3)' }}
+                            style={{ background: 'rgba(219,0,0,0.1)', color: 'var(--danger)', border: '1px solid rgba(219,0,0,0.3)' }}
                             data-tip="Force-disable auto top-up"
                           >
                             Disable auto

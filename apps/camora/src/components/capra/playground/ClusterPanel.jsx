@@ -3,13 +3,13 @@ import { useClusterState } from '@/hooks/useClusterState';
 function PodRow({ pod }) {
   const phase = pod.status?.phase ?? 'Unknown';
   const ready = pod.status?.conditions?.find(c => c.type === 'Ready')?.status === 'True';
-  const color = phase === 'Running' ? '#10b981' : phase === 'Pending' ? '#f59e0b' : '#ef4444';
+  const color = phase === 'Running' ? 'var(--success)' : phase === 'Pending' ? 'var(--warning)' : 'var(--danger)';
   return (
     <tr>
       <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{pod.metadata?.namespace ?? '-'}</span></td>
       <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{pod.metadata?.name ?? '-'}</span></td>
       <td style={td}><span style={{ color, fontWeight: 700, fontSize: 12 }}>{phase}</span></td>
-      <td style={td}><span style={{ fontSize: 12, color: ready ? '#10b981' : 'rgba(255,255,255,0.3)' }}>{ready ? 'Ready' : 'Not ready'}</span></td>
+      <td style={td}><span style={{ fontSize: 12, color: ready ? 'var(--success)' : 'rgba(255,255,255,0.3)' }}>{ready ? 'Ready' : 'Not ready'}</span></td>
       <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{pod.spec?.nodeName ?? '-'}</span></td>
     </tr>
   );
@@ -21,7 +21,7 @@ function NodeRow({ node }) {
   return (
     <tr>
       <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{node.metadata?.name ?? '-'}</span></td>
-      <td style={td}><span style={{ color: ready ? '#10b981' : '#ef4444', fontWeight: 700, fontSize: 12 }}>{ready ? 'Ready' : 'NotReady'}</span></td>
+      <td style={td}><span style={{ color: ready ? 'var(--success)' : 'var(--danger)', fontWeight: 700, fontSize: 12 }}>{ready ? 'Ready' : 'NotReady'}</span></td>
       <td style={td}><span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{version}</span></td>
     </tr>
   );
@@ -31,7 +31,7 @@ function EventRow({ event }) {
   const isWarn = event.type === 'Warning';
   return (
     <tr>
-      <td style={td}><span style={{ fontSize: 12, color: isWarn ? '#f59e0b' : 'rgba(255,255,255,0.4)' }}>{event.type}</span></td>
+      <td style={td}><span style={{ fontSize: 12, color: isWarn ? 'var(--warning)' : 'rgba(255,255,255,0.4)' }}>{event.type}</span></td>
       <td style={td}><span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.6)' }}>{event.reason ?? '-'}</span></td>
       <td style={td}><span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'rgba(255,255,255,0.4)' }}>{event.involvedObject?.name ?? '-'}</span></td>
       <td style={{ ...td, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -74,7 +74,7 @@ export default function ClusterPanel({ sessionId, enabled }) {
   if (!state && !error) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: 12 }}>
-        <div style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.15)', borderTopColor: '#10b981', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <div style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.15)', borderTopColor: 'var(--success)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>Waiting for cluster state...</span>
       </div>
     );
@@ -83,7 +83,7 @@ export default function ClusterPanel({ sessionId, enabled }) {
   if (error) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-        <span style={{ fontSize: 12, color: '#f87171' }}>Cluster not ready — run kubectl to start</span>
+        <span style={{ fontSize: 12, color: 'var(--danger)' }}>Cluster not ready — run kubectl to start</span>
       </div>
     );
   }

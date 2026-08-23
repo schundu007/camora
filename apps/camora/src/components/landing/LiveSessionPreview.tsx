@@ -41,7 +41,7 @@ function LiveSessionPreviewImpl() {
             />
             <span
               className="relative inline-block h-2 w-2 rounded-full"
-              style={{ background: '#4ade80', boxShadow: '0 0 6px rgba(74,222,128,0.55)' }}
+              style={{ background: 'var(--success)', boxShadow: '0 0 6px rgba(74,222,128,0.55)' }}
             />
           </span>
           <span
@@ -124,7 +124,7 @@ function LiveSessionPreviewImpl() {
         <span className="text-[12px] font-mono" style={{ color: 'var(--text-muted)' }}>
           Voice captured · transcribed in 0.4s
         </span>
-        <span className="text-[12px] font-mono font-semibold" style={{ color: '#4ade80' }}>
+        <span className="text-[12px] font-mono font-semibold" style={{ color: 'var(--success)' }}>
           Answer ready
         </span>
       </div>

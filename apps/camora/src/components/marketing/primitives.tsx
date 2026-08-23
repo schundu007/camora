@@ -249,7 +249,7 @@ export function Pill({ className, tone = 'neutral', withDot = false, children, .
         'inline-flex items-center gap-1.5 rounded-full font-mono text-[12px] font-bold uppercase tracking-[0.18em] px-2.5 py-1',
         tone === 'neutral' && 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border)]',
         tone === 'accent' && 'bg-[var(--accent-subtle)] text-[var(--cam-primary-dk)] border border-[var(--cam-primary)]/20',
-        tone === 'gold' && 'bg-[rgba(201,162,39,0.12)] text-[var(--cam-gold-leaf-text)] border border-[var(--cam-gold-leaf)]/30',
+        tone === 'gold' && 'bg-[rgba(255,153,0,0.12)] text-[var(--cam-gold-leaf-text)] border border-[var(--cam-gold-leaf)]/30',
         tone === 'success' && 'bg-[var(--accent-subtle)] text-[var(--accent-text)] border border-[var(--accent)]/25',
         tone === 'inverse' && 'bg-white/8 text-white/80 border border-white/15',
         className,
@@ -262,7 +262,7 @@ export function Pill({ className, tone = 'neutral', withDot = false, children, .
             'h-1.5 w-1.5 rounded-full',
             tone === 'accent' && 'bg-[var(--cam-primary)]',
             tone === 'gold' && 'bg-[var(--cam-gold-leaf)]',
-            tone === 'success' && 'bg-[#10b981]',
+            tone === 'success' && 'bg-[var(--success)]',
             tone === 'inverse' && 'bg-[var(--cam-gold-leaf-lt)]',
             tone === 'neutral' && 'bg-[var(--text-muted)]',
           )}

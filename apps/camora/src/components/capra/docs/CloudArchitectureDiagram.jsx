@@ -36,7 +36,7 @@ export default function CloudArchitectureDiagram({ imageUrl, loading = false, er
     return (
       <div className="flex items-center justify-center py-12 rounded bg-[var(--bg-surface)]">
         <div className="flex items-center gap-3">
-          <div className="w-6 h-6 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-[color-mix(in_oklab,var(--accent)_30%,transparent)] border-t-[var(--accent)] rounded-full animate-spin" />
           <div>
             <p className="text-sm text-[var(--text-secondary)] font-medium">Generating architecture diagram...</p>
             <p className="text-xs text-[var(--text-muted)] mt-1">Using {cloudProvider.toUpperCase()} cloud icons</p>

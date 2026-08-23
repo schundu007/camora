@@ -84,7 +84,7 @@ export default function SetupWizard({ onComplete }) {
               </div>
 
               {error && (
-                <div className="mt-4 px-4 py-3 rounded" style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444' }}>
+                <div className="mt-4 px-4 py-3 rounded" style={{ background: '#fef2f2', border: '1px solid #fecaca', color: 'var(--danger)' }}>
                   {error}
                 </div>
               )}

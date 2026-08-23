@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 
 const TOOL_STATUS_ICON = {
   checking:   { icon: '○', color: 'rgba(255,255,255,0.3)' },
-  installing: { icon: '◉', color: '#f59e0b', spin: true },
-  done:       { icon: '✓', color: '#10b981' },
+  installing: { icon: '◉', color: 'var(--warning)', spin: true },
+  done:       { icon: '✓', color: 'var(--success)' },
   skipped:    { icon: '–', color: 'rgba(255,255,255,0.25)' },
-  error:      { icon: '✗', color: '#ef4444' },
-  running:    { icon: '◉', color: '#f59e0b', spin: true },
+  error:      { icon: '✗', color: 'var(--danger)' },
+  running:    { icon: '◉', color: 'var(--warning)', spin: true },
 };
 
 const SYSTEM_STEPS = ['container_ready', 'env_setup', 'ide_start', 'terminal_ready'];
@@ -42,7 +42,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
         <div style={{
           width: 24, height: 24, borderRadius: '50%',
           border: '2px solid rgba(255,255,255,0.08)',
-          borderTopColor: '#f59e0b',
+          borderTopColor: 'var(--warning)',
           animation: 'spin 0.9s linear infinite',
           marginBottom: 16,
         }} />
@@ -70,18 +70,18 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
           <div style={{
             width: 14, height: 14, borderRadius: '50%', flexShrink: 0,
             border: '2px solid rgba(255,255,255,0.1)',
-            borderTopColor: '#f59e0b',
+            borderTopColor: 'var(--warning)',
             animation: 'spin 0.9s linear infinite',
           }} />
         ) : (
-          <span style={{ color: '#10b981', fontSize: 14, flexShrink: 0 }}>✓</span>
+          <span style={{ color: 'var(--success)', fontSize: 14, flexShrink: 0 }}>✓</span>
         )}
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', lineHeight: 1 }}>
             {allDone ? 'Playground Ready' : 'Booting Playground'}
           </div>
           <div style={{
-            fontSize: 12, color: allDone ? '#10b981' : '#f59e0b',
+            fontSize: 12, color: allDone ? 'var(--success)' : 'var(--warning)',
             fontFamily: 'var(--font-mono)', marginTop: 4, fontWeight: 600,
           }}>
             {allDone ? 'All systems ready' : isCustom && toolSteps.length > 0 ? 'Installing tools...' : 'Starting services...'}
@@ -115,15 +115,15 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '6px 10px', borderRadius: 4,
-                    background: status === 'done' ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${status === 'done' ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'}`,
+                    background: status === 'done' ? 'rgba(43,181,52,0.06)' : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${status === 'done' ? 'rgba(43,181,52,0.15)' : 'rgba(255,255,255,0.04)'}`,
                   }}>
-                    {status === 'done' && <span style={{ color: '#10b981', fontSize: 12, width: 12, textAlign: 'center' }}>✓</span>}
+                    {status === 'done' && <span style={{ color: 'var(--success)', fontSize: 12, width: 12, textAlign: 'center' }}>✓</span>}
                     {status === 'running' && (
                       <div style={{
                         width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-                        border: '1.5px solid rgba(245,158,11,0.2)',
-                        borderTopColor: '#f59e0b',
+                        border: '1.5px solid rgba(251,211,50,0.2)',
+                        borderTopColor: 'var(--warning)',
                         animation: 'spin 0.9s linear infinite',
                       }} />
                     )}
@@ -140,7 +140,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                     {isEnvSetup && status === 'running' && elapsed > 0 && (
                       <span style={{
                         fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600,
-                        color: elapsed > 60 ? '#f87171' : '#f59e0b',
+                        color: elapsed > 60 ? 'var(--danger)' : 'var(--warning)',
                       }}>
                         {elapsed}s
                       </span>
@@ -162,12 +162,12 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                         activeSubSteps.map(sub => (
                           <div key={sub.step} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
                             {sub.status === 'done' ? (
-                              <span style={{ color: '#10b981', fontSize: 12, width: 10, flexShrink: 0 }}>✓</span>
+                              <span style={{ color: 'var(--success)', fontSize: 12, width: 10, flexShrink: 0 }}>✓</span>
                             ) : (
                               <div style={{
                                 width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                                border: '1.5px solid rgba(245,158,11,0.15)',
-                                borderTopColor: '#f59e0b',
+                                border: '1.5px solid rgba(251,211,50,0.15)',
+                                borderTopColor: 'var(--warning)',
                                 animation: 'spin 0.9s linear infinite',
                               }} />
                             )}
@@ -193,7 +193,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
           <div>
             <div style={{
               fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-              color: setupHeader?.status === 'done' ? 'rgba(16,185,129,0.6)' : 'rgba(245,158,11,0.7)',
+              color: setupHeader?.status === 'done' ? 'rgba(43,181,52,0.6)' : 'rgba(251,211,50,0.7)',
               marginBottom: 8, fontFamily: 'var(--font-mono)',
               display: 'flex', alignItems: 'center', gap: 6,
             }}>
@@ -208,7 +208,7 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
               {toolSteps.length === 0 && setupHeader?.status === 'running' && (
                 <div style={{
                   padding: '8px 10px', borderRadius: 4,
-                  background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.1)',
+                  background: 'rgba(251,211,50,0.05)', border: '1px solid rgba(251,211,50,0.1)',
                   fontSize: 12, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-mono)',
                   animation: 'pulse 1.5s ease-in-out infinite',
                 }}>
@@ -222,20 +222,20 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                   <div key={tool.step} style={{
                     display: 'flex', alignItems: 'center', gap: 8,
                     padding: '7px 10px', borderRadius: 4,
-                    background: ts === 'done' ? 'rgba(16,185,129,0.05)'
+                    background: ts === 'done' ? 'rgba(43,181,52,0.05)'
                       : ts === 'skipped' ? 'rgba(255,255,255,0.015)'
-                      : ts === 'error' ? 'rgba(239,68,68,0.06)'
-                      : 'rgba(245,158,11,0.06)',
+                      : ts === 'error' ? 'rgba(219,0,0,0.06)'
+                      : 'rgba(251,211,50,0.06)',
                     border: `1px solid ${
-                      ts === 'done' ? 'rgba(16,185,129,0.12)'
+                      ts === 'done' ? 'rgba(43,181,52,0.12)'
                       : ts === 'skipped' ? 'rgba(255,255,255,0.04)'
-                      : ts === 'error' ? 'rgba(239,68,68,0.2)'
-                      : 'rgba(245,158,11,0.15)'}`,
+                      : ts === 'error' ? 'rgba(219,0,0,0.2)'
+                      : 'rgba(251,211,50,0.15)'}`,
                   }}>
                     {meta.spin ? (
                       <div style={{
                         width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
-                        border: '1.5px solid rgba(245,158,11,0.2)',
+                        border: '1.5px solid rgba(251,211,50,0.2)',
                         borderTopColor: meta.color,
                         animation: 'spin 0.9s linear infinite',
                       }} />
@@ -248,17 +248,17 @@ export default function BootProgress({ steps = [], totalSteps = 4, environment }
                       flex: 1, fontSize: 12, fontFamily: 'var(--font-mono)',
                       color: ts === 'done' ? 'rgba(255,255,255,0.5)'
                         : ts === 'skipped' ? 'rgba(255,255,255,0.2)'
-                        : ts === 'error' ? '#ef4444'
+                        : ts === 'error' ? 'var(--danger)'
                         : '#fff',
                     }}>
                       {tool.label}
                     </span>
                     <span style={{
                       fontSize: 12, fontWeight: 600, fontFamily: 'var(--font-mono)',
-                      color: ts === 'done' ? '#10b981'
+                      color: ts === 'done' ? 'var(--success)'
                         : ts === 'skipped' ? 'rgba(255,255,255,0.18)'
-                        : ts === 'error' ? '#ef4444'
-                        : '#f59e0b',
+                        : ts === 'error' ? 'var(--danger)'
+                        : 'var(--warning)',
                     }}>
                       {ts === 'checking' ? 'checking' : ts === 'installing' ? 'installing...' : ts}
                     </span>

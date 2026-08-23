@@ -21,7 +21,7 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div className="p-4 text-center">
-          <p className="text-red-500 mb-2">Failed to render content</p>
+          <p className="text-[var(--danger)] mb-2">Failed to render content</p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
             className="px-3 py-1 bg-[var(--accent)] text-white rounded text-sm landing-body"

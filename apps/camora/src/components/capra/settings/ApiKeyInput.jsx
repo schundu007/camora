@@ -110,7 +110,7 @@ export default function ApiKeyInput({
           </div>
 
           {validationStatus && (
-            <p className="text-xs" style={{ color: '#ef4444' }}>{validationStatus.message}</p>
+            <p className="text-xs" style={{ color: 'var(--danger)' }}>{validationStatus.message}</p>
           )}
 
           <div className="flex items-center justify-between">
@@ -161,7 +161,7 @@ export default function ApiKeyInput({
             <button
               onClick={handleDelete}
               className="text-xs font-medium"
-              style={{ color: '#ef4444' }}
+              style={{ color: 'var(--danger)' }}
             >
               Remove
             </button>
