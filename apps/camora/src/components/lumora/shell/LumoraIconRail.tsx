@@ -66,7 +66,19 @@ const TOOL_ITEMS = [
   { id: 'claude', label: 'Claude', path: '/lumora/claude', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.6 1.9 5 5.5 5.5C13.9 8 12.5 9.4 12 13c-.5-3.6-1.9-5-5.5-5.5C10.1 7 11.5 5.6 12 2zM18.5 12c.3 2.2 1.1 3 3.3 3.3-2.2.3-3 1.1-3.3 3.3-.3-2.2-1.1-3-3.3-3.3 2.2-.3 3-1.1 3.3-3.3zM6 14c.2 1.5.8 2.1 2.3 2.3C6.8 16.5 6.2 17.1 6 18.6c-.2-1.5-.8-2.1-2.3-2.3C5.2 16.1 5.8 15.5 6 14z" /></svg> },
 ];
 
+/* The subset of TOOL_ITEMS worth switching to mid-interview. CoFix and Claude
+   are not: neither is something you reach for with an interviewer waiting. */
+const LIVE_TOOL_IDS = new Set(['ask', 'behavioral', 'coding', 'design']);
+
 export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack, onOpenContext }: LumoraIconRailProps) => {
+  // Behavioral is the one surface used WHILE an interviewer is talking, and
+  // every row of navigation on it is a row the eye has to skip past. There the
+  // rail carries only what you'd switch to mid-call — Home and the live Q&A /
+  // coding / design surfaces — plus the account and utility strip at the
+  // bottom. Prep, Library, CoFix and Claude are study-and-setup destinations;
+  // they stay one click away from Home and directly by URL.
+  const leanRail = activeTab === 'behavioral';
+
   const [accountOpen, setAccountOpen] = useState(false);
   // Active interview/company key drives the context chip label (below Tools).
   const [companyKey, setCompanyKey] = useState<string | null>(() => getActiveCompanyKey());
@@ -207,7 +219,10 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
         {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
         {/* Claude tab embeds claude.ai in a webview, which only works in the
             Electron desktop app — hide it in the web build. */}
-        {TOOL_ITEMS.filter(item => item.id !== 'claude' || isElectron()).map(item => {
+        {TOOL_ITEMS
+          .filter(item => item.id !== 'claude' || isElectron())
+          .filter(item => !leanRail || LIVE_TOOL_IDS.has(item.id))
+          .map(item => {
           const active = activeTab === item.id;
           return (
             <Link
@@ -283,47 +298,51 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
         </>
       )}
 
-      {/* Prep — study before interviews (Prep Kit + Practice + Prepare). */}
-      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
-      <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Prep</p>}
-        {PREP_ITEMS.map(item => {
-          const active = isActive(item.id);
-          return (
-            <Link
-              key={item.id}
-              to={item.path}
-              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
-              style={itemStyle(active)}
-              data-tip={expanded ? undefined : item.label}
-            >
-              {item.icon}
-              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </div>
+      {!leanRail && (
+        <>
+        {/* Prep — study before interviews (Prep Kit + Practice + Prepare). */}
+        <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
+        <div className="px-1.5">
+          {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Prep</p>}
+          {PREP_ITEMS.map(item => {
+            const active = isActive(item.id);
+            return (
+              <Link
+                key={item.id}
+                to={item.path}
+                className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+                style={itemStyle(active)}
+                data-tip={expanded ? undefined : item.label}
+              >
+                {item.icon}
+                {expanded && <span className="whitespace-nowrap">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
 
-      {/* Library — history + assistants (lower priority). */}
-      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
-      <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Library</p>}
-        {LIBRARY_ITEMS.map(item => {
-          const active = isActive(item.id);
-          return (
-            <Link
-              key={item.id}
-              to={item.path}
-              className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
-              style={itemStyle(active)}
-              data-tip={expanded ? undefined : item.label}
-            >
-              {item.icon}
-              {expanded && <span className="whitespace-nowrap">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </div>
+        {/* Library — history + assistants (lower priority). */}
+        <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
+        <div className="px-1.5">
+          {expanded && <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Library</p>}
+          {LIBRARY_ITEMS.map(item => {
+            const active = isActive(item.id);
+            return (
+              <Link
+                key={item.id}
+                to={item.path}
+                className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+                style={itemStyle(active)}
+                data-tip={expanded ? undefined : item.label}
+              >
+                {item.icon}
+                {expanded && <span className="whitespace-nowrap">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </div>
+        </>
+      )}
 
       {/* Divider */}
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
