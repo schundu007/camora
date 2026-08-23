@@ -24,7 +24,9 @@ window.addEventListener('vite:preloadError', () => {
     return;
   }
   sessionStorage.setItem(RELOAD_KEY, '1');
-  window.location.reload();
+  const url = new URL(window.location.href);
+  url.searchParams.set('_camora_refresh', Date.now().toString());
+  window.location.replace(url.toString());
 });
 
 // PWA removed. Actively unregister any previously-installed service worker and
