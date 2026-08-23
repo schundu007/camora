@@ -90,7 +90,7 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
                 ? 'var(--accent-subtle)'
                 : isCode
                 ? 'rgba(30,77,120,0.12)'
-                : 'rgba(201,162,39,0.12)',
+                : 'rgba(255,153,0,0.12)',
               color: isKb
                 ? 'var(--cam-primary-dk)'
                 : isCode
@@ -100,7 +100,7 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
                 ? '1px solid rgba(0,71,171,0.18)'
                 : isCode
                 ? '1px solid rgba(30,77,120,0.28)'
-                : '1px solid rgba(201,162,39,0.28)',
+                : '1px solid rgba(255,153,0,0.28)',
             }}
           >
             {isKb ? 'KB' : isCode ? 'CODE' : 'YOURS'}

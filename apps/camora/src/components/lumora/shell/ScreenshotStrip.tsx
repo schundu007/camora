@@ -225,7 +225,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             snapArmed
               ? { background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)', border: '1px solid var(--cam-gold-leaf)' }
               : snapState === 'error'
-              ? { background: '#ef4444', color: '#fff' }
+              ? { background: 'var(--danger)', color: '#fff' }
               : { background: 'var(--cam-strip-icon-bg)', color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }
           }
         >
@@ -281,7 +281,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           <button
             onClick={() => onRemove(s.id)}
             className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex"
-            style={{ background: '#ef4444', color: '#fff' }}
+            style={{ background: 'var(--danger)', color: '#fff' }}
             data-tip="Remove screenshot"
           >
             <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>

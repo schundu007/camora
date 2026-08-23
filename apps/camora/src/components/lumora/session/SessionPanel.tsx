@@ -101,16 +101,16 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
         // answer area without competing with content. Pairs cleanly with
         // the cam-hero-bg used in the Dashboard's hero band.
         background:
-          'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(38,97,156,0.06), transparent 70%),' +
-          'radial-gradient(ellipse 70% 40% at 50% 105%, rgba(38,97,156,0.07), transparent 70%),' +
+          'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,108,224,0.06), transparent 70%),' +
+          'radial-gradient(ellipse 70% 40% at 50% 105%, rgba(0,108,224,0.07), transparent 70%),' +
           'var(--bg-surface)',
       }}
     >
       <style>{`
         @keyframes lumora-pulse-ring {
-          0%   { box-shadow: 0 0 0 0 rgba(38,97,156,0.4); }
-          70%  { box-shadow: 0 0 0 12px rgba(38,97,156,0); }
-          100% { box-shadow: 0 0 0 0 rgba(38,97,156,0); }
+          0%   { box-shadow: 0 0 0 0 rgba(0,108,224,0.4); }
+          70%  { box-shadow: 0 0 0 12px rgba(0,108,224,0); }
+          100% { box-shadow: 0 0 0 0 rgba(0,108,224,0); }
         }
         @keyframes lumora-glow-shift {
           0%, 100% { background-position: 0% 50%; }
@@ -134,10 +134,10 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
               className="relative flex items-center gap-3 px-4 py-3 rounded-xl shrink-0 overflow-hidden"
               style={{
                 background:
-                  'linear-gradient(110deg, rgba(38,97,156,0.10) 0%, rgba(38,97,156,0.16) 50%, rgba(38,97,156,0.10) 100%)',
+                  'linear-gradient(110deg, rgba(0,108,224,0.10) 0%, rgba(0,108,224,0.16) 50%, rgba(0,108,224,0.10) 100%)',
                 backgroundSize: '200% 200%',
-                border: '1px solid rgba(38,97,156,0.30)',
-                boxShadow: '0 4px 20px rgba(38,97,156,0.18), inset 0 1px 0 rgba(255,255,255,0.04)',
+                border: '1px solid rgba(0,108,224,0.30)',
+                boxShadow: '0 4px 20px rgba(0,108,224,0.18), inset 0 1px 0 rgba(255,255,255,0.04)',
                 animation: 'lumora-glow-shift 4s ease-in-out infinite',
               }}
             >

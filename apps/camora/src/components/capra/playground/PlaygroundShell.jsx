@@ -65,7 +65,7 @@ export default function PlaygroundShell() {
   const timerStr = formatTime(timeRemaining);
   const isAmber = timeRemaining > 0 && timeRemaining < 300;
   const isRed = timeRemaining > 0 && timeRemaining < 60;
-  const timerColor = isRed ? '#ef4444' : isAmber ? '#f59e0b' : 'rgba(255,255,255,0.5)';
+  const timerColor = isRed ? 'var(--danger)' : isAmber ? 'var(--warning)' : 'rgba(255,255,255,0.5)';
 
   const CLUSTER_STEP_LABELS = {
     container_ready: 'Provisioning 3 nodes...',
@@ -226,10 +226,10 @@ export default function PlaygroundShell() {
               <button key={label} type="button" onClick={fn} style={iconBtn}>{label}</button>
             ))}
             {extendAvailable && (
-              <button type="button" onClick={extendSession} style={{ ...iconBtn, color: '#d4a043' }}>+15m</button>
+              <button type="button" onClick={extendSession} style={{ ...iconBtn, color: 'var(--cam-gold-leaf)' }}>+15m</button>
             )}
             <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 4px #10b981', flexShrink: 0 }} />
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block', boxShadow: '0 0 4px var(--success)', flexShrink: 0 }} />
             <span style={{
               fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: timerColor, flexShrink: 0,
               animation: isRed ? 'pulse 1s ease-in-out infinite' : undefined,
@@ -237,9 +237,9 @@ export default function PlaygroundShell() {
             <div style={{ width: 1, height: 12, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
             <button type="button" onClick={() => setMinimized(true)} style={iconBtn} data-tip="Back to picker">‹ Exit</button>
             {slotsMax > 0 && (
-              <button type="button" onClick={() => setSaveDialogOpen(true)} style={{ ...iconBtn, color: '#d4a043' }}>Save VM</button>
+              <button type="button" onClick={() => setSaveDialogOpen(true)} style={{ ...iconBtn, color: 'var(--cam-gold-leaf)' }}>Save VM</button>
             )}
-            <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: '#ef4444', padding: '3px 8px' }} data-tip="End session">■</button>
+            <button type="button" onClick={handleEnd} style={{ ...iconBtn, color: 'var(--danger)', padding: '3px 8px' }} data-tip="End session">■</button>
           </div>
 
           {/* Content pane */}
@@ -322,7 +322,7 @@ export default function PlaygroundShell() {
                   onKeyDown={e => { if (e.key === 'Enter') handleSaveVm(); if (e.key === 'Escape') setSaveDialogOpen(false); }}
                   style={{ width: '100%', padding: '8px 10px', borderRadius: 6, fontSize: 13, boxSizing: 'border-box', marginBottom: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none' }}
                 />
-                {saveError && <div style={{ fontSize: 12, color: '#fca5a5', marginBottom: 8 }}>{saveError}</div>}
+                {saveError && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 8 }}>{saveError}</div>}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                   <button type="button" onClick={() => { setSaveDialogOpen(false); setSaveName(''); setSaveError(null); }} style={iconBtn}>Cancel</button>
                   <button type="button" disabled={saving || !saveName.trim()} onClick={handleSaveVm} style={{ padding: '4px 14px', borderRadius: 5, fontSize: 12, fontWeight: 700, background: saving ? 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)' : 'var(--cam-gold-leaf)', color: 'var(--cam-hero-strip)', border: 'none', cursor: saving ? 'not-allowed' : 'pointer' }}>
@@ -391,24 +391,24 @@ export default function PlaygroundShell() {
             {isActive && minimized && (
               <div style={{
                 flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10,
-                padding: '8px 16px', background: 'rgba(16,185,129,0.08)',
-                borderBottom: '1px solid rgba(16,185,129,0.2)',
+                padding: '8px 16px', background: 'rgba(43,181,52,0.08)',
+                borderBottom: '1px solid rgba(43,181,52,0.2)',
               }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 5px #10b981', flexShrink: 0 }} />
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', display: 'inline-block', boxShadow: '0 0 5px var(--success)', flexShrink: 0 }} />
                 <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', flex: 1 }}>
                   Session still running — <span style={{ fontFamily: 'var(--font-mono)', color: timerColor, fontWeight: 700 }}>{timerStr}</span> remaining
                 </span>
                 <button
                   type="button"
                   onClick={() => setMinimized(false)}
-                  style={{ ...iconBtn, color: '#10b981', border: '1px solid rgba(16,185,129,0.35)' }}
+                  style={{ ...iconBtn, color: 'var(--success)', border: '1px solid rgba(43,181,52,0.35)' }}
                 >
                   ↩ Resume
                 </button>
                 <button
                   type="button"
                   onClick={handleEnd}
-                  style={{ ...iconBtn, color: '#f87171' }}
+                  style={{ ...iconBtn, color: 'var(--danger)' }}
                 >
                   ⏻ End
                 </button>
@@ -422,7 +422,7 @@ export default function PlaygroundShell() {
             />
             <div style={{ padding: '8px 24px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
               {status === 'error' && error && (
-                <div style={{ width: '100%', maxWidth: 380, padding: '8px 12px', borderRadius: 6, fontSize: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5' }}>
+                <div style={{ width: '100%', maxWidth: 380, padding: '8px 12px', borderRadius: 6, fontSize: 12, background: 'rgba(219,0,0,0.1)', border: '1px solid rgba(219,0,0,0.3)', color: 'var(--danger)' }}>
                   {error}
                 </div>
               )}
@@ -441,7 +441,7 @@ export default function PlaygroundShell() {
                   background: isLoading ? 'color-mix(in oklab, var(--cam-gold-leaf) 50%, transparent)' : 'var(--cam-gold-leaf)', color: 'var(--cam-hero-strip)',
                   border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer',
                   opacity: isLoading ? 0.85 : 1, textTransform: 'uppercase',
-                  boxShadow: isLoading ? 'none' : '0 0 24px rgba(212,160,67,0.25)',
+                  boxShadow: isLoading ? 'none' : '0 0 24px rgba(255,153,0,0.25)',
                 }}
               >
                 {isActive && minimized ? '↩ Resume Session' : 'Start Playground'}
@@ -470,7 +470,7 @@ function TabButton({ active, onClick, label, icon, mono, onReconnect }) {
           cursor: 'pointer', userSelect: 'none',
         }}
       >
-        {active && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981', display: 'inline-block', flexShrink: 0 }} />}
+        {active && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--success)', display: 'inline-block', flexShrink: 0 }} />}
         <span style={{ fontSize: icon === '$' ? 11 : 12 }}>{icon}</span>
         <span>{label}</span>
       </button>

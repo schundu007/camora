@@ -270,11 +270,11 @@ export const SpeakerAudioPill = () => {
     : 'idle';
 
   const palette = {
-    unsupported: { bg: 'rgba(220,38,38,0.85)', fg: '#fff', border: 'rgba(220,38,38,0.85)', dot: '#fff' },
-    idle:        { bg: 'rgba(220,38,38,0.12)', fg: '#dc2626', border: 'rgba(220,38,38,0.45)', dot: '#dc2626' },
-    connecting:  { bg: 'rgba(245,158,11,0.14)', fg: '#b45309', border: 'rgba(245,158,11,0.55)', dot: '#f59e0b' },
+    unsupported: { bg: 'rgba(219,0,0,0.85)', fg: '#fff', border: 'rgba(219,0,0,0.85)', dot: '#fff' },
+    idle:        { bg: 'rgba(219,0,0,0.12)', fg: 'var(--danger)', border: 'rgba(219,0,0,0.45)', dot: 'var(--danger)' },
+    connecting:  { bg: 'rgba(251,211,50,0.14)', fg: '#b45309', border: 'rgba(251,211,50,0.55)', dot: 'var(--warning)' },
     live:        { bg: 'var(--accent-subtle)', fg: 'var(--accent)', border: 'var(--accent)', dot: 'var(--accent)' },
-    error:       { bg: 'rgba(220,38,38,0.16)', fg: '#dc2626', border: 'rgba(220,38,38,0.65)', dot: '#dc2626' },
+    error:       { bg: 'rgba(219,0,0,0.16)', fg: 'var(--danger)', border: 'rgba(219,0,0,0.65)', dot: 'var(--danger)' },
   }[state];
 
   const label = {

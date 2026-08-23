@@ -485,8 +485,8 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                                 {delta != null ? (
                                   <span className="font-mono text-[12px] font-semibold px-1.5 py-0.5 rounded"
                                     style={{
-                                      background: delta > 0 ? 'color-mix(in oklab, #22c55e 12%, var(--bg-elevated))' : delta < 0 ? 'color-mix(in oklab, #ef4444 12%, var(--bg-elevated))' : 'var(--bg-elevated)',
-                                      color: delta > 0 ? '#16a34a' : delta < 0 ? '#dc2626' : 'var(--text-muted)',
+                                      background: delta > 0 ? 'color-mix(in oklab, var(--success) 12%, var(--bg-elevated))' : delta < 0 ? 'color-mix(in oklab, var(--danger) 12%, var(--bg-elevated))' : 'var(--bg-elevated)',
+                                      color: delta > 0 ? 'var(--success)' : delta < 0 ? 'var(--danger)' : 'var(--text-muted)',
                                     }}>
                                     {delta > 0 ? '+' : ''}{delta}%
                                   </span>
@@ -842,7 +842,7 @@ export default function AnalyticsPage({ section = 'admin' }: { section?: 'analyt
                 <div className="w-8 h-8 border-2 border-[var(--cam-primary)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : emailsError ? (
-              <p className="text-red-400">{emailsError}</p>
+              <p className="text-[var(--danger)]">{emailsError}</p>
             ) : (
               <>
                 <p className="text-[var(--text-muted)] text-xs mb-2">{emails.length} emails sent</p>

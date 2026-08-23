@@ -357,7 +357,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                     </div>
                     <span style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--content-text)' }}>
                       {field.label}
-                      {field.required && <span style={{ color: '#ef4444', marginLeft: '2px' }}>*</span>}
+                      {field.required && <span style={{ color: 'var(--danger)', marginLeft: '2px' }}>*</span>}
                     </span>
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '2px' }}>Drop or click</span>
                   </>
@@ -424,7 +424,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                         const docs = inputs.documentation.filter((_, i) => i !== idx);
                         onChange('documentation', docs);
                       }}
-                      className="p-0.5 rounded hover:bg-red-50"
+                      className="p-0.5 rounded hover:bg-[color-mix(in_oklab,var(--danger)_10%,transparent)]"
                       style={{ color: 'var(--text-muted)' }}
                     >
                       {ICONS.x}
@@ -581,7 +581,7 @@ export default function InputPanel({ inputs, onChange, hasInputs }) {
                     Paste a URL (Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn) or paste JD text directly.
                   </div>
                   {urlError && (
-                    <div style={{ fontSize: '0.8125rem', color: '#ef4444', marginTop: '6px' }}>
+                    <div style={{ fontSize: '0.8125rem', color: 'var(--danger)', marginTop: '6px' }}>
                       {urlError}
                     </div>
                   )}

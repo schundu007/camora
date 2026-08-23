@@ -1580,7 +1580,7 @@ export default function AscendPrepModal({ isOpen, onClose, provider, model, isDe
                         </button>
                         <button
                           onClick={() => handleDeleteCustomSection(section.id)}
-                          className="p-1 mr-2 rounded opacity-0 group-hover:opacity-100 touch:opacity-100 transition-opacity hover:bg-red-500/20"
+                          className="p-1 mr-2 rounded opacity-0 group-hover:opacity-100 touch:opacity-100 transition-opacity hover:bg-[var(--danger)]/20"
                           style={{ color: 'var(--nav-text-muted)' }}
                           data-tip="Delete"
                         >

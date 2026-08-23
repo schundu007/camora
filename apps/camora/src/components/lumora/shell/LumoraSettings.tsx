@@ -305,7 +305,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                     </span>
                   )}
                   {resumeError && (
-                    <span className="text-[12px]" style={{ color: 'var(--error, #ef4444)' }}>{resumeError}</span>
+                    <span className="text-[12px]" style={{ color: 'var(--error, var(--danger))' }}>{resumeError}</span>
                   )}
                 </div>
               </div>

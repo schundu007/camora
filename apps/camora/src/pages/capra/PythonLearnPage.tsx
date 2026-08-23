@@ -132,14 +132,14 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       </div>
 
       {/* Edge Cases */}
-      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, #f59e0b 20%, var(--border))' }}>
-        <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, #f59e0b 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, #f59e0b 15%, var(--border))' }}>
-          <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: '#d97706' }}>Edge Cases to Know</span>
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, var(--warning) 20%, var(--border))' }}>
+        <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--warning) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--warning) 15%, var(--border))' }}>
+          <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--warning)' }}>Edge Cases to Know</span>
         </div>
         <ul className="divide-y divide-[var(--border)]/40">
           {topic.edgeCases.map((ec, i) => (
             <li key={i} className="flex items-start gap-3 px-6 py-3">
-              <span className="shrink-0 mt-1 text-[12px]" style={{ color: '#d97706' }}>▸</span>
+              <span className="shrink-0 mt-1 text-[12px]" style={{ color: 'var(--warning)' }}>▸</span>
               <span className="text-[13px] leading-relaxed text-[var(--text-secondary)]">{ec}</span>
             </li>
           ))}
@@ -148,9 +148,9 @@ const TopicView = ({ topic }: { topic: Topic }) => {
 
       {/* Gotcha + Tip */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, #ef4444 20%, var(--border))' }}>
-          <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, #ef4444 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, #ef4444 15%, var(--border))' }}>
-            <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: '#dc2626' }}>Common Gotcha</span>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, var(--danger) 20%, var(--border))' }}>
+          <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--danger) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--danger) 15%, var(--border))' }}>
+            <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--danger)' }}>Common Gotcha</span>
           </div>
           <p className="px-5 py-4 text-[13px] leading-relaxed text-[var(--text-secondary)]">{topic.gotcha}</p>
         </div>

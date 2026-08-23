@@ -123,7 +123,7 @@ export default function SharedDiagram({
 
       {loading && (
         <div className="flex items-center justify-center p-6 rounded-lg" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-          <div className="w-5 h-5 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-[color-mix(in_oklab,var(--accent)_30%,transparent)] border-t-[var(--accent)] rounded-full animate-spin" />
         </div>
       )}
 
@@ -131,15 +131,15 @@ export default function SharedDiagram({
         <div className="flex items-center justify-center p-6 rounded-lg" style={{ border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
           <button onClick={handleGenerate}
             className="px-5 py-2.5 text-sm font-bold text-white rounded-lg"
-            style={{ background: 'var(--accent)', boxShadow: '0 2px 12px rgba(38,97,156,0.30)' }}>
+            style={{ background: 'var(--accent)', boxShadow: '0 2px 12px rgba(0,108,224,0.30)' }}>
             Generate Diagram
           </button>
         </div>
       )}
 
       {generating && (
-        <div className="flex items-center justify-center gap-3 p-6 rounded-lg bg-[rgba(38,97,156,0.08)] border border-[rgba(38,97,156,0.25)]">
-          <div className="w-5 h-5 border-2 border-[rgba(38,97,156,0.4)] border-t-[var(--accent)] rounded-full animate-spin" />
+        <div className="flex items-center justify-center gap-3 p-6 rounded-lg bg-[rgba(0,108,224,0.08)] border border-[rgba(0,108,224,0.25)]">
+          <div className="w-5 h-5 border-2 border-[rgba(0,108,224,0.4)] border-t-[var(--accent)] rounded-full animate-spin" />
           <span className="text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>Generating...</span>
         </div>
       )}

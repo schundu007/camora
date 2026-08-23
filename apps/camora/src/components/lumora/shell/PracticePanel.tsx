@@ -176,7 +176,7 @@ export const PracticePanel = () => {
 
   const scoreMatch = useMemo(() => feedback.match(/score:\s*(\d{1,3})\s*\/\s*100/i), [feedback]);
   const score = scoreMatch ? Math.min(100, Number(scoreMatch[1])) : null;
-  const scoreHue = score == null ? 'var(--text-muted)' : score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+  const scoreHue = score == null ? 'var(--text-muted)' : score >= 75 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
 
   return (
     <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: 'var(--bg-app)' }}>
@@ -200,7 +200,7 @@ export const PracticePanel = () => {
                   {current.category.replace('-', ' ')}
                 </span>
                 {current.source === 'prep' && (
-                  <span className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'rgba(212,160,67,0.15)', color: 'var(--cam-gold-leaf)' }}>from your prep kit</span>
+                  <span className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'rgba(255,153,0,0.15)', color: 'var(--cam-gold-leaf)' }}>from your prep kit</span>
                 )}
                 <span className="flex-1" />
                 <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{idx + 1} / {questions.length}</span>

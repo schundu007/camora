@@ -74,7 +74,7 @@ export default function Leaderboard() {
   if (error) {
     return (
       <div className="rounded-2xl p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <p className="text-sm text-red-500">{error}</p>
+        <p className="text-sm text-[var(--danger)]">{error}</p>
       </div>
     );
   }

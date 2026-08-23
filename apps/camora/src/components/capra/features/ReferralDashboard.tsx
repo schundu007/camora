@@ -72,7 +72,7 @@ export default function ReferralDashboard() {
   if (error) {
     return (
       <div className="rounded-2xl p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-        <p className="text-sm text-red-500">{error}</p>
+        <p className="text-sm text-[var(--danger)]">{error}</p>
       </div>
     );
   }
@@ -150,7 +150,7 @@ export default function ReferralDashboard() {
                 <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${
                   ref.status === 'rewarded'
                     ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
-                    : 'bg-amber-100 text-amber-700'
+                    : 'bg-[color-mix(in_oklab,var(--warning)_10%,transparent)] text-[var(--warning)]'
                 }`}>
                   {ref.status === 'rewarded' ? 'Rewarded' : 'Pending'}
                 </span>

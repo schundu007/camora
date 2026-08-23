@@ -102,9 +102,9 @@ const LogIconBolt    = ({ color = G }: { color?: string }) => <svg width="12" he
 const LogIconSearch  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round"><circle cx="5" cy="5" r="3.2"/><line x1="7.5" y1="7.5" x2="10.5" y2="10.5"/></svg>;
 const LogIconScan    = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.4" strokeLinecap="round"><rect x="1.5" y="1.5" width="9" height="9" rx="1.5"/><line x1="3.5" y1="4" x2="8.5" y2="4"/><line x1="3.5" y1="6" x2="8.5" y2="6"/><line x1="3.5" y1="8" x2="6" y2="8"/></svg>;
 const LogIconSpark   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.3" strokeLinecap="round"><line x1="6" y1="1" x2="6" y2="2.5"/><line x1="6" y1="9.5" x2="6" y2="11"/><line x1="1" y1="6" x2="2.5" y2="6"/><line x1="9.5" y1="6" x2="11" y2="6"/><line x1="2.8" y1="2.8" x2="3.8" y2="3.8"/><line x1="8.2" y1="8.2" x2="9.2" y2="9.2"/><line x1="9.2" y1="2.8" x2="8.2" y2="3.8"/><line x1="3.8" y1="8.2" x2="2.8" y2="9.2"/><circle cx="6" cy="6" r="1.8" fill={G} stroke="none"/></svg>;
-const LogIconReceive = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="1.5" x2="6" y2="8"/><polyline points="3.5,5.5 6,8 8.5,5.5"/><line x1="2" y1="10.5" x2="10" y2="10.5"/></svg>;
-const LogIconError   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="4.5"/><line x1="4" y1="4" x2="8" y2="8"/><line x1="8" y1="4" x2="4" y2="8"/></svg>;
-const LogIconCheck   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="4.5"/><polyline points="3.5,6 5.5,8 8.5,4"/></svg>;
+const LogIconReceive = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="1.5" x2="6" y2="8"/><polyline points="3.5,5.5 6,8 8.5,5.5"/><line x1="2" y1="10.5" x2="10" y2="10.5"/></svg>;
+const LogIconError   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="4.5"/><line x1="4" y1="4" x2="8" y2="8"/><line x1="8" y1="4" x2="4" y2="8"/></svg>;
+const LogIconCheck   = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="var(--success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="4.5"/><polyline points="3.5,6 5.5,8 8.5,4"/></svg>;
 const LogIconGear    = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="6" r="1.8"/><path d="M6 1.5V3M6 9v1.5M1.5 6H3M9 6h1.5M2.9 2.9l1 1M8.1 8.1l1 1M9.1 2.9l-1 1M3.9 8.1l-1 1"/></svg>;
 const LogIconWrench  = () => <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke={G} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.8 1.5a2.5 2.5 0 00-2.5 3.1L2 9a1 1 0 001.4 1.4l4.4-4.3A2.5 2.5 0 008.8 1.5z"/><line x1="2.5" y1="9.5" x2="3.2" y2="8.8"/></svg>;
 
@@ -1215,11 +1215,11 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               aria-label="Copy"
               className="shrink-0 flex items-center justify-center w-7 h-7 rounded-md transition-all disabled:cursor-not-allowed"
               style={copyFeedback === 'copied' ? {
-                background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)',
-                border: '1px solid #10b981',
-                color: '#10b981',
+                background: 'linear-gradient(135deg, rgba(43,181,52,0.2) 0%, rgba(43,181,52,0.1) 100%)',
+                border: '1px solid var(--success)',
+                color: 'var(--success)',
               } : copyFeedback === 'failed' ? {
-                background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)',
+                background: 'linear-gradient(135deg, rgba(219,0,0,0.2) 0%, rgba(219,0,0,0.1) 100%)',
                 border: '1px solid var(--danger)',
                 color: 'var(--danger)',
               } : {
@@ -1375,9 +1375,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 data-tip={copyFeedback === 'copied' ? 'Copied!' : copyFeedback === 'failed' ? 'Copy failed' : 'Copy fixed code'}
                 className="shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-md text-[12px] font-bold uppercase tracking-[0.1em] transition-all disabled:cursor-default"
                 style={copyFeedback === 'copied' ? {
-                  background: 'linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(16,185,129,0.12) 100%)', border: '1px solid #10b981', color: '#10b981',
+                  background: 'linear-gradient(135deg, rgba(43,181,52,0.25) 0%, rgba(43,181,52,0.12) 100%)', border: '1px solid var(--success)', color: 'var(--success)',
                 } : copyFeedback === 'failed' ? {
-                  background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)', border: '1px solid var(--danger)', color: 'var(--danger)',
+                  background: 'linear-gradient(135deg, rgba(219,0,0,0.2) 0%, rgba(219,0,0,0.1) 100%)', border: '1px solid var(--danger)', color: 'var(--danger)',
                 } : {
                   background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a',
                 }}
@@ -1494,7 +1494,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
 
               {error && !isLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-[var(--bg-primary)]">
-                  <p className="text-[12px] text-red-400 text-center px-6">{error}</p>
+                  <p className="text-[12px] text-[var(--danger)] text-center px-6">{error}</p>
                   <button
                     onClick={() => handleFix()}
                     className="text-[12px] px-4 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] text-[var(--text-primary)] hover:border-[#0047AB] transition-colors"
@@ -1761,7 +1761,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   {customTests.map(tc => {
                     const hasPassed = tc.result !== null && !tc.isErr && (!tc.expected || tc.result.trim() === tc.expected.trim());
                     const hasFailed = tc.result !== null && !tc.isErr && tc.expected && tc.result.trim() !== tc.expected.trim();
-                    const borderColor = tc.isErr ? 'rgba(239,68,68,0.35)' : hasPassed ? 'rgba(34,197,94,0.35)' : hasFailed ? 'rgba(251,191,36,0.35)' : 'var(--border)';
+                    const borderColor = tc.isErr ? 'rgba(219,0,0,0.35)' : hasPassed ? 'rgba(43,181,52,0.35)' : hasFailed ? 'rgba(251,191,36,0.35)' : 'var(--border)';
                     return (
                       <div key={tc.id} className="rounded-lg overflow-hidden flex flex-col" style={{ border: `1px solid ${borderColor}`, background: 'var(--bg-elevated)' }}>
                         <div className="flex items-start gap-2 px-2.5 pt-2 pb-1">

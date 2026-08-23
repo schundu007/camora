@@ -1,5 +1,9 @@
 /* ══════════════════════════════════════════════════════════════
-   CAMORA v6 DESIGN SYSTEM — Navy Atlas (enterprise palette)
+   CAMORA v7 DESIGN SYSTEM — AWS Cloudscape
+   Colour and type are lifted from @cloudscape-design/design-tokens
+   (Apache-2.0), the system behind the AWS console. Token NAMES are
+   Camora's and unchanged; only their values moved, so every call
+   site kept working. Replaces Navy Atlas + gold + brand-green.
    ══════════════════════════════════════════════════════════════ */
 
 /* ── Open Sans — loaded via Google Fonts in index.html (single source).
@@ -16,68 +20,70 @@
   :root {
     /* Backgrounds — neutral charcoal (Vercel/Linear). No blue hue in base;
        blue/gold appear as accents on neutral substrate, not as the substrate. */
-    --bg-base:     #0A0A0C;
-    --bg-app:      #0E0E11;
-    --bg-surface:  #141417;
-    --bg-elevated: #1C1C22;
+    --bg-base: #0f141a;
+    --bg-app: #161d26;
+    --bg-surface: #1b232d;
+    --bg-elevated: #232b37;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.62);
 
     /* Borders — neutral slate, visible against neutral dark */
-    --border:        #26262E;
-    --border-hover:  #32323C;
-    --border-focus:  #3683DC;
+    --border: #424650;
+    --border-hover: #656871;
+    --border-focus: #42b4ff;
 
     /* Text — warm white headings, cool slate secondary */
-    --text-primary:  #F0EEE9;
-    --text-secondary:#9BAAB8;
-    --text-hero:     #F0EEE9;
-    --text-muted:    #647084;
-    --text-dimmed:   #434B5C;
+    --text-primary: #ebebf0;
+    --text-secondary: #c6c6cd;
+    --text-hero: #ebebf0;
+    --text-muted: #a4a4ad;
+    --text-dimmed: #656871;
 
     /* Primary accent — Linode/Akamai blue */
-    --accent:        #3683DC;
-    --accent-hover:  #2265BF;
-    --accent-subtle: rgba(54,131,220,0.10);
-    --accent-text:   #4D94E8;
+    --accent: #42b4ff;
+    --accent-hover: #75cfff;
+    --accent-subtle: rgba(66,180,255,0.10);
+    --accent-text: #42b4ff;
 
     /* Secondary accent — Warm Gold (signal, momentum, highlights).
        Restored from DESIGN.md: gold marks what's next, problem counts,
        agenda numerals. Never structural. */
-    --accent-secondary:        #D4A043;
-    --accent-secondary-hover:  #E0B155;
+    --accent-secondary: #FF9900;
+    --accent-secondary-hover: #FFAC31;
     --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 10%, transparent);
-    --accent-secondary-text:   #B88930;
+    --accent-secondary-text: #FF9900;
 
     /* Semantic — blue for success/info, gold for warning, red for danger */
-    --success: #2563EB;
-    --warning: #D4A043;
-    --warning-text: #E0B155;
-    --danger:  #EF4444;
-    --info:    #2563EB;
+    --success: #2bb534;
+    --warning: #fbd332;
+    --warning-text: #fbd332;
+    --danger: #ff7a7a;
+    --info: #42b4ff;
 
     /* Brand-green success + semantic aliases (DESIGN-006/009/010/013).
-       --cam-success is the approved brand green #10b981. Distinct from
-       --success (deliberately blue). --cam-warning / --color-error are
+       --cam-success now aliases --success, which is AWS's status green.
+       The old #10b981 brand green was a fourth colour system competing
+       with navy, gold and the rainbow badges; AWS has one. --cam-warning
+       / --color-error are
        aliases so token-only var() references resolve without hex fallbacks. */
-    --cam-success: #10b981;
+    --cam-success: var(--success);
     --cam-warning: var(--warning);
     --color-error: var(--danger);
 
     /* Difficulty — weight-driven, not hue-driven */
-    --easy:        #6B7280;
-    --easy-bg:     rgba(107,114,128,0.10);
-    --easy-border: rgba(107,114,128,0.25);
-    --medium:      #F0EEE9;
-    --medium-bg:   rgba(240,238,233,0.06);
-    --medium-border: rgba(240,238,233,0.15);
-    --hard:        #D4A043;
+    --easy: #656871;
+    --easy-bg: rgba(101,104,113,0.10);
+    --easy-border: rgba(101,104,113,0.25);
+    --medium: #ebebf0;
+    --medium-bg: rgba(235,235,240,0.06);
+    --medium-border: rgba(235,235,240,0.15);
+    --hard: #fbd332;
     --hard-bg:     color-mix(in oklab, var(--hard) 10%, transparent);
     --hard-border: color-mix(in oklab, var(--hard) 25%, transparent);
 
     /* Category */
-    --cat-primary:    #2563EB;
+    --cat-primary: #42b4ff;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
     /* ── Fonts — AWS Cloudscape parity ───────────────────────────
@@ -133,10 +139,10 @@
     --shadow-lg: 0 4px 8px rgba(0,0,0,0.4), 0 12px 32px rgba(0,0,0,0.5);
     --shadow-xl: 0 8px 16px rgba(0,0,0,0.45), 0 24px 56px rgba(0,0,0,0.55);
     --card-shadow: var(--shadow-sm);
-    --shadow-accent-xs: 0 1px 3px rgba(37,99,235,0.16), 0 4px 16px rgba(37,99,235,0.10);
-    --shadow-accent-sm: 0 2px 8px rgba(37,99,235,0.22), 0 8px 24px rgba(37,99,235,0.12);
-    --shadow-gold-xs: 0 1px 3px rgba(212,160,67,0.08), 0 4px 16px rgba(212,160,67,0.04);
-    --shadow-gold-sm: 0 2px 8px rgba(212,160,67,0.12);
+    --shadow-accent-xs: 0 1px 3px rgba(0,108,224,0.16), 0 4px 16px rgba(0,108,224,0.10);
+    --shadow-accent-sm: 0 2px 8px rgba(0,108,224,0.22), 0 8px 24px rgba(0,108,224,0.12);
+    --shadow-gold-xs: 0 1px 3px rgba(255,153,0,0.08), 0 4px 16px rgba(255,153,0,0.04);
+    --shadow-gold-sm: 0 2px 8px rgba(255,153,0,0.12);
 
     /* Layout */
     --sidebar-width: 56px;
@@ -148,7 +154,7 @@
 
     /* Legacy compat aliases */
     --text-dim: var(--text-muted);
-    --nav-bg: rgba(14,14,17,0.92);
+    --nav-bg: rgba(15,20,26,0.92);
     --nav-bg-secondary: var(--bg-elevated);
     --nav-border: var(--border);
     --nav-text: var(--text-primary);
@@ -167,20 +173,20 @@
        DARK default; base #26619C is too dark on the charcoal substrate
        (~2.9:1), so dark mode lifts navy to #6E96C0 (~7:1) per DESIGN.md.
        Light theme uses the base #26619C ramp (see [data-theme="light"]). */
-    --cam-primary:      #6E96C0;
-    --cam-primary-lt:   #8CB0D6;
-    --cam-primary-dk:   #4E7BA8;
-    --cam-primary-900:  #0B1B3F;
-    --cam-gold-leaf:    #D4A043;
-    --cam-gold-leaf-lt: #E0B155;
-    --cam-gold-leaf-dk: #B88930;
+    --cam-primary: #42b4ff;
+    --cam-primary-lt: #75cfff;
+    --cam-primary-dk: #006ce0;
+    --cam-primary-900: #001129;
+    --cam-gold-leaf: #FF9900;
+    --cam-gold-leaf-lt: #FFAC31;
+    --cam-gold-leaf-dk: #EC7211;
     --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 8%, transparent);
-    --cam-gold-leaf-text: #C99A2E;
+    --cam-gold-leaf-text: #FF9900;
     /* Muted white for inactive tab labels on the navy/gold tab strip. Same in
        both themes — the strip background is navy regardless of theme. */
     --cam-tab-inactive-on-navy: rgba(255, 255, 255, 0.75);
-    --cam-void:         #0A0A0C;
-    --cam-surface-lt:   #1C1C22;
+    --cam-void: #0f141a;
+    --cam-surface-lt: #1b232d;
 
     /* Strip-header semantic tokens — text/icon colors for surfaces that
        use --cam-hero-strip as their background. Overridden to dark values
@@ -195,15 +201,15 @@
     /* Hero gradients — navy + gold atmosphere.
        Warm dark base with navy and gold radial hints. */
     --cam-hero-bg:
-      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(37,99,235,0.28), transparent 60%),
-      radial-gradient(ellipse 40% 45% at 85% 75%, rgba(212,160,67,0.14), transparent 65%),
+      radial-gradient(ellipse 55% 65% at 15% 25%, rgba(0,108,224,0.28), transparent 60%),
+      radial-gradient(ellipse 40% 45% at 85% 75%, rgba(255,153,0,0.14), transparent 65%),
       radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.07), transparent 70%),
       linear-gradient(135deg, #0A0A0C 0%, #0E0E11 35%, #141417 65%, #0E0E11 100%);
     --cam-hero-strip:
-      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(37,99,235,0.28), transparent 70%),
-      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(212,160,67,0.14), transparent 70%),
+      radial-gradient(ellipse 38% 260% at 0% 50%, rgba(0,108,224,0.28), transparent 70%),
+      radial-gradient(ellipse 35% 260% at 100% 50%, rgba(255,153,0,0.14), transparent 70%),
       radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.07), transparent 75%),
-      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(37,99,235,0.12), transparent 70%),
+      radial-gradient(ellipse 60% 200% at 50% 50%, rgba(0,108,224,0.12), transparent 70%),
       linear-gradient(95deg, #0E0E11 0%, #141417 30%, #1C1C22 50%, #141417 70%, #0E0E11 100%);
 
     /* Lumora hero gradient — dark: near-black navy. Light: overridden below. */
@@ -211,7 +217,7 @@
 
     /* Lumora topbar chrome — dark immersive, blue accents */
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(37,99,235,0.30);
+    --lumora-chrome-border: rgba(0,108,224,0.30);
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
     --lumora-chrome-text:   rgba(240,238,233,0.85);
     --lumora-chrome-hover:  rgba(240,238,233,0.08);
@@ -242,8 +248,8 @@
     --bg-near-black: #080A0F;
 
     /* Blue-tinted shadows for Lumora surfaces */
-    --shadow-primary-xs: 0 1px 3px rgba(37,99,235,0.12), 0 4px 16px rgba(37,99,235,0.06);
-    --shadow-primary-sm: 0 2px 8px rgba(37,99,235,0.16);
+    --shadow-primary-xs: 0 1px 3px rgba(0,108,224,0.12), 0 4px 16px rgba(0,108,224,0.06);
+    --shadow-primary-sm: 0 2px 8px rgba(0,108,224,0.16);
 
     /* ── Lumora shell tokens (--lum-*) — Fluent dark ──────────
        Defined in BOTH themes so shell components read tokens
@@ -296,83 +302,83 @@
        Gold is absent by design: #C2963E measures 2.72:1 here and
        used to carry the category labels.
        See docs/superpowers/specs/2026-08-23-lumora-fluent-light-theme-design.md */
-    --lum-bg:             #FAF9F8;
-    --lum-surface:        #FFFFFF;
-    --lum-surface-hover:  #F3F2F1;
-    --lum-border:         #EDEBE9;
-    --lum-border-strong:  #C8C6C4;
-    --lum-text:           #323130;
-    --lum-text-2:         #605E5C;
-    --lum-accent:         #0078D4;
-    --lum-accent-sm:      #005A9E;
-    --lum-accent-bg:      #EFF6FC;
-    --lum-ok:             #107C10;
-    --lum-radius:         2px;
+    --lum-bg: #f2f3f3;
+    --lum-surface: #ffffff;
+    --lum-surface-hover: #f0fbff;
+    --lum-border: #ebebf0;
+    --lum-border-strong: #c6c6cd;
+    --lum-text: #0f141a;
+    --lum-text-2: #424650;
+    --lum-accent: #006ce0;
+    --lum-accent-sm: #002b66;
+    --lum-accent-bg: #f0fbff;
+    --lum-ok: #00802f;
+    --lum-radius: 8px;
     --lum-shadow:         0 0.3px 0.9px rgba(0,0,0,0.07), 0 1.6px 3.6px rgba(0,0,0,0.07);
-    --lum-cmdbar-bg:      #FFFFFF;
+    --lum-cmdbar-bg: #ffffff;
 
-    --lum-tag-design-fg:  #005A9E;
-    --lum-tag-design-bg:  #EFF6FC;
-    --lum-tag-design-br:  #B7D5EC;
-    --lum-tag-coding-fg:  #0E6B0E;
-    --lum-tag-coding-bg:  #EFF8EF;
-    --lum-tag-coding-br:  #B7DDB7;
-    --lum-tag-behav-fg:   #7A4E00;
-    --lum-tag-behav-bg:   #FBF6E9;
-    --lum-tag-behav-br:   #E8D5A8;
+    --lum-tag-design-fg: #006ce0;
+    --lum-tag-design-bg: #f0fbff;
+    --lum-tag-design-br: #b3e0ff;
+    --lum-tag-coding-fg: #00802f;
+    --lum-tag-coding-bg: #effff1;
+    --lum-tag-coding-br: #a3e6ae;
+    --lum-tag-behav-fg: #855900;
+    --lum-tag-behav-bg: #fffef0;
+    --lum-tag-behav-br: #f0d98a;
 
-    --bg-base:     #F3F7FC;
-    --bg-app:      #E6EEF8;
-    --bg-surface:  #EFF5FB;
-    --bg-elevated: #F5F9FD;
+    --bg-base: #f2f3f3;
+    --bg-app: #f9f9fb;
+    --bg-surface: #ffffff;
+    --bg-elevated: #ffffff;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
     /* Fluent light theme: cool blue-tinted surfaces and hairline borders. */
-    --border:        #C8D9ED;
-    --border-hover:  #BBCFE4;
-    --border-focus:  #26619C;
+    --border: #c6c6cd;
+    --border-hover: #8c8c94;
+    --border-focus: #006ce0;
 
-    --text-primary:  #12141A;
-    --text-secondary:#464B54;
-    --text-hero:     #12141A;
-    --text-muted:    #5E646B;
-    --text-dimmed:   #61676F;  /* was #6C737A (4.44:1 on surface, sub-AA) → ~4.9:1 */
+    --text-primary: #0f141a;
+    --text-secondary: #424650;
+    --text-hero: #0f141a;
+    --text-muted: #656871;
+    --text-dimmed: #656871;  /* was #6C737A (4.44:1 on surface, sub-AA) → ~4.9:1 */
 
-    --accent:        #26619C;
-    --accent-hover:  #1A4F86;
-    --accent-subtle: color-mix(in oklab, #26619C 10%, transparent);
-    --accent-text:   #1A4F86;
+    --accent: #006ce0;
+    --accent-hover: #002b66;
+    --accent-subtle: color-mix(in oklab, #006ce0 10%, transparent);
+    --accent-text: #006ce0;
 
-    --accent-secondary:        #C2963E;
-    --accent-secondary-hover:  #D4A84A;
+    --accent-secondary: #EC7211;
+    --accent-secondary-hover: #d4640f;
     --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 8%, transparent);
-    --accent-secondary-text:   #7A5C0A;
+    --accent-secondary-text: #8a4a08;
 
-    --success: #26619C;
-    --warning: #C2963E;
-    --warning-text: #7A5C0A;
-    --danger:  #DC2626;
-    --info:    #26619C;
+    --success: #00802f;
+    --warning: #855900;
+    --warning-text: #855900;
+    --danger: #db0000;
+    --info: #006ce0;
 
     /* Brand-green success + semantic aliases (DESIGN-006/009/010/013).
        Deeper green (#059669) on light for AA contrast vs the #10b981 dark value. */
-    --cam-success: #059669;
+    --cam-success: var(--success);
     --cam-warning: var(--warning);
     --color-error: var(--danger);
 
-    --easy:        #6B7280;
+    --easy: #656871;
     --easy-bg:     rgba(107,114,128,0.06);
     --easy-border: rgba(107,114,128,0.18);
-    --medium:      #12141A;
+    --medium: #0f141a;
     --medium-bg:   rgba(18,20,26,0.04);
     --medium-border: rgba(18,20,26,0.10);
-    --hard:        #C2963E;
+    --hard: #855900;
     --hard-bg:     color-mix(in oklab, var(--hard) 8%, transparent);
     --hard-border: color-mix(in oklab, var(--hard) 20%, transparent);
 
-    --cat-primary:    #26619C;
+    --cat-primary: #006ce0;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 8%, transparent);
 
     --shadow-xs: 0 1px 2px rgba(15,23,42,0.05);
@@ -383,20 +389,20 @@
     --card-shadow: var(--shadow-sm);
     --shadow-accent-xs: 0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.04);
     --shadow-accent-sm: 0 2px 6px rgba(15,23,42,0.08);
-    --shadow-gold-xs: 0 1px 3px rgba(194,150,62,0.04), 0 4px 16px rgba(194,150,62,0.02);
-    --shadow-gold-sm: 0 2px 8px rgba(194,150,62,0.06);
+    --shadow-gold-xs: 0 1px 3px rgba(255,153,0,0.04), 0 4px 16px rgba(255,153,0,0.02);
+    --shadow-gold-sm: 0 2px 8px rgba(255,153,0,0.06);
 
-    --cam-primary:      #26619C;
-    --cam-primary-lt:   #3C7AAB;
-    --cam-primary-dk:   #1A4F86;
-    --cam-primary-900:  #0B1B3F;
-    --cam-gold-leaf:    #C2963E;
-    --cam-gold-leaf-lt: #D4A84A;
-    --cam-gold-leaf-dk: #A8832E;
+    --cam-primary: #006ce0;
+    --cam-primary-lt: #42b4ff;
+    --cam-primary-dk: #002b66;
+    --cam-primary-900: #001129;
+    --cam-gold-leaf:    #EC7211;
+    --cam-gold-leaf-lt: #FF9900;
+    --cam-gold-leaf-dk: #C25708;
     --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 6%, transparent);
-    --cam-gold-leaf-text:#8A6B2A;
-    --cam-void:         #F4F3F0;
-    --cam-surface-lt:   #EEEDEA;
+    --cam-gold-leaf-text:#8a4a08;
+    --cam-void: #f2f3f3;
+    --cam-surface-lt: #ebebf0;
 
     --cam-on-accent: #ffffff;
 
@@ -436,7 +442,7 @@
     --light-bg-faint:      #EAF2FB;
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip:         #E6EEF8;
+    --cam-hero-strip: #f2f3f3;
     --cam-hero-bg:            linear-gradient(160deg, #FDFEFF 0%, #F3F7FC 40%, #E6EEF8 100%);
     --cam-gold-leaf:          var(--accent);
     --cam-gold-leaf-lt:       #4A4D54;
@@ -453,7 +459,7 @@
     --cam-strip-text:         var(--text-secondary);
     --cam-strip-text-muted:   var(--text-muted);
     --cam-strip-icon-bg:      var(--accent-subtle);
-    --cam-strip-icon-border:  rgba(54,131,220,0.20);
+    --cam-strip-icon-border:  rgba(0,108,224,0.20);
 
     /* ── POLISH: light-mode card & surface rounding uniformity ── */
     --radius-card:   12px;
@@ -466,11 +472,11 @@
     --shadow-sm: 0 1px 3px rgba(15,23,42,0.06), 0 3px 8px rgba(15,23,42,0.09);
     --shadow-md: 0 2px 6px rgba(15,23,42,0.07), 0 8px 20px rgba(15,23,42,0.11);
     --shadow-lg: 0 4px 10px rgba(15,23,42,0.08), 0 16px 36px rgba(15,23,42,0.13);
-    --shadow-accent-xs: 0 1px 4px rgba(37,99,235,0.12), 0 5px 18px rgba(37,99,235,0.07);
-    --shadow-accent-sm: 0 2px 10px rgba(37,99,235,0.18), 0 10px 28px rgba(37,99,235,0.10);
+    --shadow-accent-xs: 0 1px 4px rgba(0,108,224,0.12), 0 5px 18px rgba(0,108,224,0.07);
+    --shadow-accent-sm: 0 2px 10px rgba(0,108,224,0.18), 0 10px 28px rgba(0,108,224,0.10);
 
     /* ── DELIGHT: deliberate focus ring in light — solid blue, no frost ── */
-    --focus-ring: 0 0 0 3px rgba(37,99,235,0.22);
+    --focus-ring: 0 0 0 3px rgba(0,108,224,0.22);
 
     color-scheme: light;
   }
@@ -485,17 +491,17 @@
   /* ── Lumora: always immersive — blue chrome accents ── */
   [data-product="lumora"] {
     --lumora-chrome-bg:     var(--cam-hero-strip);
-    --lumora-chrome-border: rgba(37,99,235,0.30);
+    --lumora-chrome-border: rgba(0,108,224,0.30);
     --lumora-chrome-shadow: inset 0 -2px 0 var(--accent);
     --lumora-chrome-text:   rgba(240,238,233,0.88);
     --lumora-chrome-hover:  rgba(240,238,233,0.08);
   }
   [data-product="lumora"] .lumora-status-bar {
-    border-top-color: rgba(37,99,235,0.15);
+    border-top-color: rgba(0,108,224,0.15);
     box-shadow: 0 -1px 4px rgba(0,0,0,0.20);
   }
   [data-product="lumora"] .status-dot-listen {
-    box-shadow: 0 0 12px rgba(37,99,235,0.50);
+    box-shadow: 0 0 12px rgba(0,108,224,0.50);
   }
 
   /* ── Capra: wider content measure for reading ──────────── */
@@ -693,7 +699,7 @@
    <html>, so this must be a compound selector (no space), not a descendant combinator. */
 [data-theme="light"][data-product="lumora"] {
   --lumora-chrome-text:  rgba(18,20,26,0.75);
-  --lumora-chrome-hover: rgba(37,99,235,0.06);
+  --lumora-chrome-hover: rgba(0,108,224,0.06);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -766,15 +772,15 @@
 
 /* ─── BOLDER: btn-primary — stronger shadow lift on light ── */
 [data-theme="light"] .btn-primary {
-  box-shadow: 0 1px 3px rgba(37,99,235,0.18), 0 3px 10px rgba(37,99,235,0.12);
+  box-shadow: 0 1px 3px rgba(0,108,224,0.18), 0 3px 10px rgba(0,108,224,0.12);
 }
 [data-theme="light"] .btn-primary:hover {
-  box-shadow: 0 2px 8px rgba(37,99,235,0.28), 0 8px 22px rgba(37,99,235,0.14);
+  box-shadow: 0 2px 8px rgba(0,108,224,0.28), 0 8px 22px rgba(0,108,224,0.14);
   transform: translateY(-2px);
 }
 [data-theme="light"] .btn-primary:active {
   transform: translateY(0) scale(0.97);
-  box-shadow: 0 1px 3px rgba(37,99,235,0.14);
+  box-shadow: 0 1px 3px rgba(0,108,224,0.14);
 }
 
 /* ─── BOLDER: card — slightly more distinguished border + top-highlight ── */
@@ -935,7 +941,7 @@
   border-color: var(--accent);
   color: var(--accent);
   background: color-mix(in oklab, var(--accent) 6%, transparent);
-  box-shadow: 0 1px 4px rgba(37,99,235,0.12);
+  box-shadow: 0 1px 4px rgba(0,108,224,0.12);
 }
 
 /* Prefers-reduced-motion guard — all new light-theme transforms off */
@@ -960,15 +966,15 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(37,99,235,0.03) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(212,160,67,0.015) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(37,99,235,0.015) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0,108,224,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(255,153,0,0.015) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 80%, rgba(0,108,224,0.015) 0%, transparent 60%);
 }
 .light-theme #root::after,
 [data-theme="light"] #root::after {
   background:
     radial-gradient(ellipse 80% 60% at 20% 30%, rgba(26,72,133,0.025) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(194,150,62,0.015) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(255,153,0,0.015) 0%, transparent 60%);
 }
 
 /* ── Shepherd.js tour — dark theme ──────────────────────────── */
@@ -978,7 +984,7 @@
 .shepherd-text strong { color: var(--accent-hover) !important; font-weight: 700 !important; }
 .shepherd-footer { padding: 8px 16px 16px !important; border-top: none !important; }
 .shepherd-button { background: var(--accent) !important; color: #fff !important; border: none !important; border-radius: 8px !important; font-size: 12px !important; font-weight: 700 !important; padding: 6px 16px !important; }
-.shepherd-button:hover { box-shadow: 0 2px 12px rgba(37,99,235,0.40) !important; }
+.shepherd-button:hover { box-shadow: 0 2px 12px rgba(0,108,224,0.40) !important; }
 .shepherd-button-secondary { background: transparent !important; color: var(--text-muted) !important; border: 1px solid var(--border) !important; }
 .shepherd-button-secondary:hover { color: var(--text-primary) !important; box-shadow: none !important; }
 .shepherd-cancel-icon span { color: var(--text-muted) !important; font-size: 20px !important; }
@@ -1619,7 +1625,7 @@
 }
 .badge-gold {
   background: color-mix(in oklab, var(--cam-gold-leaf) 12%, transparent);
-  color: var(--cam-gold-leaf-text, #8A6B2A);
+  color: var(--cam-gold-leaf-text);
   border: 1px solid color-mix(in oklab, var(--cam-gold-leaf) 25%, transparent);
 }
 
@@ -1810,7 +1816,7 @@
   /* Input error state — light mode gets a warm red ring */
   [data-theme="light"] .input-error {
     border-color: var(--danger);
-    box-shadow: 0 0 0 3px rgba(220,38,38,0.12);
+    box-shadow: 0 0 0 3px rgba(219,0,0,0.12);
   }
 
   /* Shimmer */
@@ -2093,22 +2099,22 @@ html[data-overlay='on'][data-theme='light'] .lumora-shell-root {
      render invisible on the dark frost. This single remap fixes chips, badges,
      pills, tabs, buttons, labels AND the bright surface boxes in one shot.
      Dark-on-gold buttons keep their own inline colors and are unaffected. */
-  --bg-app: #14161c;
-  --bg-base: #14161c;
-  --bg-surface: #1b1e26;
-  --bg-elevated: #232733;
-  --bg-primary: #1b1e26;
-  --bg-secondary: #232733;
+  --bg-app: #161d26;
+  --bg-base: #0f141a;
+  --bg-surface: #1b232d;
+  --bg-elevated: #232b37;
+  --bg-primary: #1b232d;
+  --bg-secondary: #232b37;
   --border: rgba(255, 255, 255, 0.10);
   --border-hover: rgba(255, 255, 255, 0.16);
-  --accent: #3683DC; --accent-hover: #4D94E8; --accent-text: #6FB0F0;
-  --accent-subtle: rgba(54, 131, 220, 0.16);
-  --accent-secondary-text: #D8B24A;
-  --text-primary: #F0EEE9; --text-secondary: #C3CBD6; --text-muted: #A2ADBC; --text-dimmed: #8A93A6;
-  --cam-gold-leaf: #C2963E; --cam-gold-leaf-lt: #D4A84A; --cam-gold-leaf-dk: #A8832E; --cam-gold-leaf-text: #D8B24A;
-  --cam-chip-active-bg: #C2963E; --cam-chip-active-text: #020617;
-  --cam-primary: #3C7AAB; --cam-primary-lt: #5A93C4; --cam-primary-dk: #2C6798;
-  --cam-hero-strip: #232733;
+  --accent: #42b4ff; --accent-hover: #75cfff; --accent-text: #42b4ff;
+  --accent-subtle: rgba(66, 180, 255, 0.16);
+  --accent-secondary-text: #FF9900;
+  --text-primary: #ebebf0; --text-secondary: #c6c6cd; --text-muted: #a4a4ad; --text-dimmed: #656871;
+  --cam-gold-leaf: #FF9900; --cam-gold-leaf-lt: #FFAC31; --cam-gold-leaf-dk: #EC7211; --cam-gold-leaf-text: #FF9900;
+  --cam-chip-active-bg: #FF9900; --cam-chip-active-text: #0f141a;
+  --cam-primary: #42b4ff; --cam-primary-lt: #75cfff; --cam-primary-dk: #006ce0;
+  --cam-hero-strip: #232b37;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
     color-mix(in srgb, #14161c calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
@@ -2154,7 +2160,7 @@ html[data-overlay='on'] .claude-webview {
   width: 50px;
   height: 3px;
   cursor: pointer;
-  accent-color: var(--cam-gold-leaf, #c9a227);
+  accent-color: var(--cam-gold-leaf);
 }
 /* Reserve the top-right corner for the frameless window controls (Dock/−/✕) so the
    app's own top toolbars (COFIX button, reset/copy icons, Enroll, mic) don't sit
@@ -2186,7 +2192,7 @@ html[data-overlay='on'] .lumora-winctl-safe {
 }
 .desktop-winctl__grip svg { width: 13px; height: 10px; }
 .desktop-winctl__grip:active { cursor: grabbing; }
-.desktop-winctl__grip:hover { color: var(--cam-gold-leaf, #c9a227); }
+.desktop-winctl__grip:hover { color: var(--cam-gold-leaf); }
 /* The top drag strip must not paint a bar over the meeting in overlay mode. */
 html[data-overlay='on'] body.electron-desktop::before {
   -webkit-app-region: no-drag;
@@ -2219,7 +2225,7 @@ html[data-overlay='on'] body.electron-desktop::before {
   border-radius: 6px;
   color: #fff;
   background: var(--cam-primary, #0047ab);
-  border: 1px solid var(--cam-gold-leaf, #c9a227);
+  border: 1px solid var(--cam-gold-leaf);
   cursor: pointer;
 }
 .desktop-winctl__toggle:hover { filter: brightness(1.08); }
@@ -2247,7 +2253,7 @@ html[data-overlay='on'] body.electron-desktop::before {
   padding: 4px 6px;
   border-radius: 999px;
   background: rgba(10, 12, 20, 0.72);
-  border: 1px solid var(--cam-gold-leaf, #c9a227);
+  border: 1px solid var(--cam-gold-leaf);
   backdrop-filter: blur(8px);
 }
 
@@ -2432,9 +2438,9 @@ img { max-width: 100%; height: auto; }
   position: absolute;
   inset: -50%;
   background:
-    radial-gradient(ellipse 40% 40% at 25% 30%, rgba(37,99,235,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 35% 50% at 75% 60%, rgba(212,160,67,0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(37,99,235,0.05) 0%, transparent 60%);
+    radial-gradient(ellipse 40% 40% at 25% 30%, rgba(0,108,224,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 50% at 75% 60%, rgba(255,153,0,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 50% 80%, rgba(0,108,224,0.05) 0%, transparent 60%);
   animation: auroraShift 15s ease-in-out infinite alternate;
   pointer-events: none;
   z-index: 0;
@@ -2492,7 +2498,7 @@ img { max-width: 100%; height: auto; }
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(37,99,235,0.10), rgba(212,160,67,0.05));
+  background: linear-gradient(135deg, rgba(0,108,224,0.25), rgba(0,108,224,0.10), rgba(255,153,0,0.05));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -2505,8 +2511,8 @@ img { max-width: 100%; height: auto; }
   transition: box-shadow 0.4s ease, border-color 0.4s ease, transform 0.4s ease;
 }
 .ai-card-glow:hover {
-  box-shadow: 0 0 30px rgba(37,99,235,0.10), 0 0 60px rgba(37,99,235,0.05);
-  border-color: rgba(37,99,235,0.20) !important;
+  box-shadow: 0 0 30px rgba(0,108,224,0.10), 0 0 60px rgba(0,108,224,0.05);
+  border-color: rgba(0,108,224,0.20) !important;
   transform: translateY(-2px);
 }
 
@@ -2519,7 +2525,7 @@ img { max-width: 100%; height: auto; }
   position: absolute;
   inset: -3px;
   border-radius: 50%;
-  background: rgba(37,99,235,0.25);
+  background: rgba(0,108,224,0.25);
   animation: aiPulse 2s ease-in-out infinite;
   z-index: -1;
 }
@@ -2814,7 +2820,7 @@ img { max-width: 100%; height: auto; }
 .bg-navy-drift {
   position: relative;
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(37, 99, 235, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse at 20% 30%, rgba(0,108,224, 0.10) 0%, transparent 60%),
     radial-gradient(ellipse at 80% 70%, rgba(59, 130, 246, 0.08) 0%, transparent 65%),
     var(--bg-surface);
   background-size: 100% 100%, 100% 100%, 100% 100%;
@@ -2825,7 +2831,7 @@ img { max-width: 100%; height: auto; }
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(37, 99, 235, 0.06) 0%, transparent 55%);
+    radial-gradient(ellipse at 50% 50%, rgba(0,108,224, 0.06) 0%, transparent 55%);
   animation: navy-drift 14s ease-in-out infinite;
   z-index: 0;
 }
@@ -3632,8 +3638,8 @@ figure:has(> .viz-caption) {
 }
 
 /* ── CoFix Monaco editor line decorations ── */
-.cofix-line-fix { background-color: rgba(245, 158, 11, 0.12) !important; }
-.cofix-line-added { background-color: rgba(34, 197, 94, 0.12) !important; }
+.cofix-line-fix { background-color: rgba(251,211,50, 0.12) !important; }
+.cofix-line-added { background-color: rgba(43,181,52, 0.12) !important; }
 
 /* ── Cara command palette animations ── */
 @keyframes caraFadeIn {

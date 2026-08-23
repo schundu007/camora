@@ -224,7 +224,7 @@ export default function LandingPage() {
           className="absolute inset-0"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(54,131,220,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(54,131,220,0.11) 1px, transparent 1px)',
+              'linear-gradient(rgba(0,108,224,0.11) 1px, transparent 1px), linear-gradient(90deg, rgba(0,108,224,0.11) 1px, transparent 1px)',
             backgroundSize: '56px 56px',
           }}
         />
@@ -232,7 +232,7 @@ export default function LandingPage() {
         <div
           aria-hidden="true"
           className="absolute bottom-0 inset-x-0 h-px"
-          style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(54,131,220,0.35) 35%, rgba(201,162,39,0.22) 58%, transparent 95%)' }}
+          style={{ background: 'linear-gradient(90deg, transparent 5%, rgba(0,108,224,0.35) 35%, rgba(255,153,0,0.22) 58%, transparent 95%)' }}
         />
 
         <Container className="relative pt-12 pb-12 md:pt-16 md:pb-16">

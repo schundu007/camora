@@ -663,7 +663,7 @@ const CodeDisplay = forwardRef(function CodeDisplay({ code: initialCode, languag
             <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-elevated)]">
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full ${output.success ? 'bg-brand-400' : 'bg-error-400'}`}
-                     style={{ boxShadow: output.success ? '0 0 8px var(--accent-subtle)' : '0 0 8px rgba(239, 68, 68, 0.5)' }} />
+                     style={{ boxShadow: output.success ? '0 0 8px var(--accent-subtle)' : '0 0 8px rgba(219,0,0, 0.5)' }} />
                 <span className="text-sm font-semibold text-[var(--text-primary)]">
                   {output.success ? 'Program Output' : 'Error Output'}
                 </span>

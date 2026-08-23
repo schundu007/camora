@@ -102,7 +102,7 @@ export const SilentStreamBanner = () => {
   const silentFor = minutes >= 60
     ? `${Math.floor(minutes / 60)} hr${minutes >= 120 ? 's' : ''}`
     : `${minutes || 'several'} min`;
-  const accent = dead ? '#dc2626' : '#f59e0b';
+  const accent = dead ? 'var(--danger)' : 'var(--warning)';
 
   return (
     <div
@@ -110,8 +110,8 @@ export const SilentStreamBanner = () => {
       aria-live="assertive"
       className="fixed left-1/2 -translate-x-1/2 bottom-6 z-50 max-w-md w-[92%] rounded-xl px-4 py-3 flex items-start gap-3"
       style={{
-        background: dead ? 'rgba(220,38,38,0.16)' : 'rgba(245,158,11,0.14)',
-        border: `1px solid ${dead ? 'rgba(220,38,38,0.6)' : 'rgba(245,158,11,0.55)'}`,
+        background: dead ? 'rgba(219,0,0,0.16)' : 'rgba(251,211,50,0.14)',
+        border: `1px solid ${dead ? 'rgba(219,0,0,0.6)' : 'rgba(251,211,50,0.55)'}`,
         backdropFilter: 'blur(10px)',
         boxShadow: '0 12px 32px rgba(0,0,0,0.35)',
         color: 'var(--text-primary)',
@@ -133,7 +133,7 @@ export const SilentStreamBanner = () => {
           <button
             onClick={reconnect}
             className="px-3 py-1 text-[12px] font-bold rounded-md"
-            style={{ background: '#f59e0b', color: '#000' }}
+            style={{ background: 'var(--warning)', color: '#000' }}
           >
             Reconnect now
           </button>

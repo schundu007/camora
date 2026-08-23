@@ -44,13 +44,13 @@ const EnvironmentConfigPanel = ({ env }) => {
           fontFamily: 'var(--font-mono)', fontSize: 12,
         }}>
           <div style={{ display: 'flex', gap: 5, marginBottom: 7 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', opacity: 0.8 }} />
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', opacity: 0.8 }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger)', opacity: 0.8 }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--warning)', opacity: 0.8 }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--success)', opacity: 0.8 }} />
           </div>
-          <div style={{ color: '#4ade80', fontWeight: 500 }}>
+          <div style={{ color: 'var(--success)', fontWeight: 500 }}>
             {previewCmd}
-            <span style={{ display: 'inline-block', width: 7, height: 13, background: '#4ade80', marginLeft: 2, verticalAlign: 'text-bottom', animation: 'pulse 1.2s step-end infinite', opacity: 0.9 }} />
+            <span style={{ display: 'inline-block', width: 7, height: 13, background: 'var(--success)', marginLeft: 2, verticalAlign: 'text-bottom', animation: 'pulse 1.2s step-end infinite', opacity: 0.9 }} />
           </div>
           <div style={{ color: 'rgba(255,255,255,0.2)', marginTop: 4, fontSize: 12 }}>
             {nodes.length} node{nodes.length !== 1 ? 's' : ''} · {env.category}

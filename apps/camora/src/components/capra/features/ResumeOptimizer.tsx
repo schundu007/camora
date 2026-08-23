@@ -569,8 +569,8 @@ export default function ResumeOptimizer({
     fontWeight: 700,
     letterSpacing: '0.02em',
     cursor: 'pointer',
-    border: active ? '1px solid var(--cam-gold-leaf, #d4af37)' : '1px solid var(--border)',
-    background: active ? 'var(--cam-gold-leaf, #d4af37)' : 'transparent',
+    border: active ? '1px solid var(--cam-gold-leaf, var(--cam-gold-leaf))' : '1px solid var(--border)',
+    background: active ? 'var(--cam-gold-leaf, var(--cam-gold-leaf))' : 'transparent',
     color: active ? '#020617' : 'var(--text-muted)',
     transition: 'all 0.12s',
     lineHeight: '1',
@@ -668,7 +668,7 @@ export default function ResumeOptimizer({
         )}
 
         {jdMode === 'url' && jobDescription && (
-          <div style={{ padding: '8px 12px', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: '8px', fontSize: '12px', color: '#22c55e', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ padding: '8px 12px', background: 'rgba(43,181,52,0.07)', border: '1px solid rgba(43,181,52,0.2)', borderRadius: '8px', fontSize: '12px', color: 'var(--success)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             Job description fetched — switch to "Paste JD" to review or edit
           </div>
@@ -720,9 +720,9 @@ export default function ResumeOptimizer({
         )}
 
         {resumeMode === 'upload' && resume && (
-          <div style={{ padding: '12px 14px', background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.22)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span style={{ fontSize: '13px', color: '#22c55e', fontWeight: 500, flex: 1 }}>
+          <div style={{ padding: '12px 14px', background: 'rgba(43,181,52,0.07)', border: '1px solid rgba(43,181,52,0.22)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style={{ fontSize: '13px', color: 'var(--success)', fontWeight: 500, flex: 1 }}>
               {uploadedFileName ? `✓ ${uploadedFileName}` : `Resume loaded — ${resume.split('\n').filter(Boolean).length} lines`}
             </span>
             <button type="button" onClick={() => setResume('')} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px', borderRadius: '4px' }}>Remove</button>
@@ -838,7 +838,7 @@ export default function ResumeOptimizer({
             <div style={{ overflowY: 'auto', flex: 1, padding: '24px 28px' }}>
               {(() => {
                 const score = atsData.score ?? 0;
-                const color = score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+                const color = score >= 75 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
                 const label = score >= 75 ? 'Strong' : score >= 50 ? 'Fair' : 'Weak';
                 const r = 42, circ = 2 * Math.PI * r;
                 const dash = (score / 100) * circ;
@@ -861,8 +861,8 @@ export default function ResumeOptimizer({
               })()}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                 {[
-                  { title: 'Keywords Matched', items: atsData.keywordsMatched || [], pill: '#16a34a', pillBg: 'rgba(22,163,74,.12)' },
-                  { title: 'Keywords Missing', items: atsData.keywordsMissing || [], pill: '#dc2626', pillBg: 'rgba(220,38,38,.12)' },
+                  { title: 'Keywords Matched', items: atsData.keywordsMatched || [], pill: 'var(--success)', pillBg: 'rgba(22,163,74,.12)' },
+                  { title: 'Keywords Missing', items: atsData.keywordsMissing || [], pill: 'var(--danger)', pillBg: 'rgba(219,0,0,.12)' },
                 ].map(({ title, items, pill, pillBg }) => (
                   <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px' }}>
                     <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
@@ -877,9 +877,9 @@ export default function ResumeOptimizer({
                 ))}
               </div>
               {[
-                { title: 'Strengths', items: atsData.strengths || [], icon: '✓', iconColor: '#22c55e', iconBg: 'rgba(34,197,94,.12)' },
-                { title: 'Weaknesses', items: atsData.weaknesses || [], icon: '✗', iconColor: '#ef4444', iconBg: 'rgba(239,68,68,.12)' },
-                { title: 'Suggestions', items: atsData.suggestions || [], icon: '→', iconColor: '#3b82f6', iconBg: 'rgba(59,130,246,.12)' },
+                { title: 'Strengths', items: atsData.strengths || [], icon: '✓', iconColor: 'var(--success)', iconBg: 'rgba(43,181,52,.12)' },
+                { title: 'Weaknesses', items: atsData.weaknesses || [], icon: '✗', iconColor: 'var(--danger)', iconBg: 'rgba(219,0,0,.12)' },
+                { title: 'Suggestions', items: atsData.suggestions || [], icon: '→', iconColor: 'var(--accent)', iconBg: 'rgba(59,130,246,.12)' },
               ].map(({ title, items, icon, iconColor, iconBg }) => items.length > 0 && (
                 <div key={title} style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', marginBottom: 12 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: 'var(--text-muted)', marginBottom: 10 }}>{title}</div>
@@ -948,9 +948,9 @@ export default function ResumeOptimizer({
                   })()
                 ) : activeTab === 'atsScore' && atsData ? (
                   <div style={{ fontSize: '13px', color: '#1e293b', lineHeight: 1.7 }}>
-                    <div style={{ fontSize: '28px', fontWeight: 700, color: atsData.score && atsData.score >= 75 ? '#16a34a' : atsData.score && atsData.score >= 50 ? '#d97706' : '#dc2626', marginBottom: '8px' }}>{atsData.score}/100</div>
+                    <div style={{ fontSize: '28px', fontWeight: 700, color: atsData.score && atsData.score >= 75 ? 'var(--success)' : atsData.score && atsData.score >= 50 ? 'var(--warning)' : 'var(--danger)', marginBottom: '8px' }}>{atsData.score}/100</div>
                     <div style={{ marginBottom: '16px', color: '#64748b' }}>ATS Match Score</div>
-                    {(atsData.suggestions || []).map((s: string, i: number) => <div key={i} style={{ marginBottom: '8px', paddingLeft: '12px', borderLeft: '3px solid #3b82f6' }}>{s}</div>)}
+                    {(atsData.suggestions || []).map((s: string, i: number) => <div key={i} style={{ marginBottom: '8px', paddingLeft: '12px', borderLeft: '3px solid var(--accent)' }}>{s}</div>)}
                   </div>
                 ) : (
                   <div style={{ color: '#94a3b8', textAlign: 'center', paddingTop: '80px', fontSize: '14px' }}>No content yet — generate first.</div>

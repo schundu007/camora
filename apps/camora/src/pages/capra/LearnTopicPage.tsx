@@ -325,12 +325,12 @@ function renderMarkdown(text: string) {
 }
 
 const LEVEL_COLORS: Record<string, { bg: string; text: string }> = {
-  beginner:     { bg: 'color-mix(in oklab,#10b981 15%,var(--bg-elevated))', text: '#10b981' },
-  intermediate: { bg: 'color-mix(in oklab,#f59e0b 15%,var(--bg-elevated))', text: '#f59e0b' },
-  advanced:     { bg: 'color-mix(in oklab,#ef4444 15%,var(--bg-elevated))', text: '#ef4444' },
-  easy:         { bg: 'color-mix(in oklab,#10b981 15%,var(--bg-elevated))', text: '#10b981' },
-  medium:       { bg: 'color-mix(in oklab,#f59e0b 15%,var(--bg-elevated))', text: '#f59e0b' },
-  hard:         { bg: 'color-mix(in oklab,#ef4444 15%,var(--bg-elevated))', text: '#ef4444' },
+  beginner:     { bg: 'color-mix(in oklab,var(--success) 15%,var(--bg-elevated))', text: 'var(--success)' },
+  intermediate: { bg: 'color-mix(in oklab,var(--warning) 15%,var(--bg-elevated))', text: 'var(--warning)' },
+  advanced:     { bg: 'color-mix(in oklab,var(--danger) 15%,var(--bg-elevated))', text: 'var(--danger)' },
+  easy:         { bg: 'color-mix(in oklab,var(--success) 15%,var(--bg-elevated))', text: 'var(--success)' },
+  medium:       { bg: 'color-mix(in oklab,var(--warning) 15%,var(--bg-elevated))', text: 'var(--warning)' },
+  hard:         { bg: 'color-mix(in oklab,var(--danger) 15%,var(--bg-elevated))', text: 'var(--danger)' },
 };
 
 // ── Page ─────────────────────────────────────────────────────────────────────

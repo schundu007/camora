@@ -172,22 +172,22 @@ export default function ResumeGeneratorPage() {
             {/* Gap Analysis */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               <div className="card" style={{ padding: 20 }}>
-                <div className="text-eyebrow" style={{ marginBottom: 12, color: 'var(--cam-success, #22c55e)' }}>Strengths</div>
+                <div className="text-eyebrow" style={{ marginBottom: 12, color: 'var(--cam-success, var(--success))' }}>Strengths</div>
                 <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                   {(result.gapAnalysis.strengths || []).map((s, i) => (
                     <li key={i} style={{ fontSize: 13, marginBottom: 8, display: 'flex', gap: 8 }}>
-                      <span style={{ color: 'var(--cam-success, #22c55e)', flexShrink: 0 }}>✓</span>
+                      <span style={{ color: 'var(--cam-success, var(--success))', flexShrink: 0 }}>✓</span>
                       <span>{s}</span>
                     </li>
                   ))}
                 </ul>
               </div>
               <div className="card" style={{ padding: 20 }}>
-                <div className="text-eyebrow" style={{ marginBottom: 12, color: 'var(--color-error, #ef4444)' }}>Gaps</div>
+                <div className="text-eyebrow" style={{ marginBottom: 12, color: 'var(--color-error, var(--danger))' }}>Gaps</div>
                 <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                   {(result.gapAnalysis.gaps || []).map((g, i) => (
                     <li key={i} style={{ fontSize: 13, marginBottom: 8, display: 'flex', gap: 8 }}>
-                      <span style={{ color: 'var(--color-error, #ef4444)', flexShrink: 0 }}>✗</span>
+                      <span style={{ color: 'var(--color-error, var(--danger))', flexShrink: 0 }}>✗</span>
                       <span>{g}</span>
                     </li>
                   ))}

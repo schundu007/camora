@@ -44,8 +44,8 @@ type OutputTab = 'output' | 'expected';
 
 const DIFFICULTY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Easy: { bg: 'bg-[var(--accent-subtle)]', text: 'text-[var(--accent)]', border: 'border-[var(--accent)]' },
-  Medium: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
-  Hard: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
+  Medium: { bg: 'bg-[color-mix(in_oklab,var(--warning)_10%,transparent)]', text: 'text-[var(--warning)]', border: 'border-[color-mix(in_oklab,var(--warning)_30%,transparent)]' },
+  Hard: { bg: 'bg-[color-mix(in_oklab,var(--danger)_10%,transparent)]', text: 'text-[var(--danger)]', border: 'border-[color-mix(in_oklab,var(--danger)_30%,transparent)]' },
 };
 
 function DifficultyBadge({ difficulty }: { difficulty: string }) {
@@ -712,7 +712,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 <button
                   onClick={() => initDb()}
                   className="px-2.5 py-1 rounded text-[12px] font-semibold transition-colors flex items-center gap-1"
-                  style={{ background: '#7f1d1d', color: '#fca5a5', border: '1px solid #b91c1c' }}
+                  style={{ background: '#7f1d1d', color: 'var(--danger)', border: '1px solid #b91c1c' }}
                   data-tip="SQL engine failed to load"
                 >
                   ↺ Retry
@@ -806,7 +806,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                     Accepted
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-[color-mix(in_oklab,var(--danger)_10%,transparent)] text-[var(--danger)] border border-[color-mix(in_oklab,var(--danger)_30%,transparent)]">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <line x1="15" y1="9" x2="9" y2="15" />
@@ -834,7 +834,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
               <div className="flex-1 flex items-center justify-center p-6">
                 <div className="text-center max-w-sm">
                   {/* Celebration icon */}
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(38,97,156,0.1)' }}>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0,108,224,0.1)' }}>
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <path d="M9 12l2 2 4-4" />
@@ -889,7 +889,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
                       </button>
                     ) : (
-                      <div className="flex-1 py-2.5 text-sm font-bold rounded-xl text-center" style={{ background: 'rgba(38,97,156,0.08)', color: 'var(--accent)' }}>
+                      <div className="flex-1 py-2.5 text-sm font-bold rounded-xl text-center" style={{ background: 'rgba(0,108,224,0.08)', color: 'var(--accent)' }}>
                         All problems solved!
                       </div>
                     )}
@@ -918,7 +918,7 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                 )}
                 {dbError && (
                   <div className="flex flex-col items-center gap-3 py-8 text-center">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     <p className="text-sm font-medium text-slate-400">SQL engine failed to load.</p>
@@ -938,10 +938,10 @@ export function SQLPlayground({ onClose: _onClose }: SQLPlaygroundProps) {
                   </div>
                 )}
                 {error && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-                    <div className="text-[12px] font-bold uppercase tracking-wider text-red-400 mb-1">Error</div>
+                  <div className="rounded-lg border border-[color-mix(in_oklab,var(--danger)_30%,transparent)] bg-[color-mix(in_oklab,var(--danger)_10%,transparent)] p-3">
+                    <div className="text-[12px] font-bold uppercase tracking-wider text-[var(--danger)] mb-1">Error</div>
                     <pre
-                      className="text-sm text-red-700 whitespace-pre-wrap"
+                      className="text-sm text-[var(--danger)] whitespace-pre-wrap"
                       style={{ fontFamily: 'var(--font-mono)' }}
                     >
                       {error}

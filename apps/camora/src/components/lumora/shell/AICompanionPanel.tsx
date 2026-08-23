@@ -1143,14 +1143,14 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           // avatar reads as illuminated rather than flat.
           background:
             'radial-gradient(circle at 30% 25%, rgba(217,181,67,0.35) 0%, transparent 55%),' +
-            'radial-gradient(circle at 70% 80%, rgba(38,97,156,0.55) 0%, transparent 70%),' +
+            'radial-gradient(circle at 70% 80%, rgba(0,108,224,0.55) 0%, transparent 70%),' +
             'linear-gradient(135deg, var(--cam-primary-dk) 0%, var(--cam-primary) 50%, #03132E 100%)',
           border: '1px solid var(--cam-gold-leaf)',
           // Multi-stop shadow: outer lapis halo + outer gold halo +
           // inset top highlight + bottom inner shadow for depth.
           boxShadow:
-            '0 12px 28px -6px rgba(38,97,156,0.55),' +
-            '0 0 24px 2px rgba(201,162,39,0.30),' +
+            '0 12px 28px -6px rgba(0,108,224,0.55),' +
+            '0 0 24px 2px rgba(255,153,0,0.30),' +
             'inset 0 1px 0 rgba(255,255,255,0.20),' +
             'inset 0 -2px 6px rgba(0,0,0,0.30)',
           cursor: 'grab',
@@ -1597,7 +1597,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     }}
                     className="shrink-0 p-1 rounded-md transition-colors"
                     style={{ color: 'var(--text-muted)', border: '1px solid transparent' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger, #DC2626)'; e.currentTarget.style.borderColor = 'var(--danger, #DC2626)'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--danger, var(--danger))'; e.currentTarget.style.borderColor = 'var(--danger, var(--danger))'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'transparent'; }}
                     data-tip="Delete this Q&A"
                     aria-label="Delete this Q&A"

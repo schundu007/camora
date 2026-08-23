@@ -81,7 +81,7 @@ export function HourMeterChip({ variant = 'light' }: { variant?: 'light' | 'dark
   const isExhausted = budget.exhausted;
 
   // Dot color per state
-  const dotColor = isExhausted ? '#dc2626' : isLow ? '#d97706' : '#1E4D78';
+  const dotColor = isExhausted ? 'var(--danger)' : isLow ? 'var(--warning)' : '#1E4D78';
   const isLight = variant === 'light';
   const bgColor = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.08)';
   const textColor = isLight ? 'var(--text-primary)' : '#FFFFFF';

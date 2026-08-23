@@ -140,7 +140,7 @@ export default function GoalSetupModal({ isOpen, onClose, onSetup }: GoalSetupMo
           </div>
 
           {error && (
-            <p className="text-sm text-red-500">{error}</p>
+            <p className="text-sm text-[var(--danger)]">{error}</p>
           )}
 
           {/* Actions */}

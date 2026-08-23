@@ -4,7 +4,7 @@ const CATEGORIES = [
   {
     id: 'languages',
     label: 'Languages',
-    color: '#10b981',
+    color: 'var(--success)',
     tools: [
       { id: 'node', label: 'Node.js 20', desc: 'JavaScript runtime' },
       { id: 'go', label: 'Go 1.22', desc: 'Go language' },
@@ -17,7 +17,7 @@ const CATEGORIES = [
   {
     id: 'devops',
     label: 'DevOps',
-    color: '#2563eb',
+    color: 'var(--accent)',
     tools: [
       { id: 'kubectl', label: 'kubectl', desc: 'Kubernetes CLI' },
       { id: 'helm', label: 'Helm', desc: 'K8s package manager' },
@@ -29,7 +29,7 @@ const CATEGORIES = [
   {
     id: 'cloud',
     label: 'Cloud CLIs',
-    color: '#f59e0b',
+    color: 'var(--warning)',
     tools: [
       { id: 'aws', label: 'AWS CLI', desc: 'Amazon Web Services' },
       { id: 'azure', label: 'Azure CLI', desc: 'Microsoft Azure' },
@@ -306,16 +306,16 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
           {/* Core tools notice */}
           <div style={{
             padding: '10px 14px', borderRadius: 8, marginBottom: 20,
-            background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)',
+            background: 'rgba(43,181,52,0.07)', border: '1px solid rgba(43,181,52,0.2)',
           }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
               Core Tools — Always Included
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {['bash', 'git', 'curl', 'wget', 'vim', 'nano', 'python3', 'jq', 'tmux', 'htop', 'fzf'].map(t => (
                 <span key={t} style={{
                   fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
-                  background: 'rgba(16,185,129,0.15)', color: '#10b981',
+                  background: 'rgba(43,181,52,0.15)', color: 'var(--success)',
                 }}>{t}</span>
               ))}
             </div>
@@ -388,7 +388,7 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
                       style={{
                         fontSize: 12, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
                         border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)',
-                        color: copied ? '#10b981' : 'rgba(255,255,255,0.45)', cursor: 'pointer',
+                        color: copied ? 'var(--success)' : 'rgba(255,255,255,0.45)', cursor: 'pointer',
                       }}
                     >
                       {copied ? '✓ Copied' : 'Copy'}
@@ -437,7 +437,7 @@ export default function ToolPickerPanel({ open, onClose, onStart, disabled }) {
             onClick={handleStart}
             style={{
               padding: '8px 20px', borderRadius: 6, cursor: disabled ? 'not-allowed' : 'pointer',
-              border: 'none', background: disabled ? 'rgba(212,160,67,0.4)' : '#d4a043',
+              border: 'none', background: disabled ? 'rgba(255,153,0,0.4)' : 'var(--cam-gold-leaf)',
               color: '#1a1200', fontSize: 12, fontWeight: 800,
               textTransform: 'uppercase', letterSpacing: '0.04em',
               opacity: disabled ? 0.7 : 1,

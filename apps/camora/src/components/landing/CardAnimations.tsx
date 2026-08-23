@@ -728,7 +728,7 @@ export function FeaturePracticeAnim() {
       {/* Header row: problem name + difficulty */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, opacity: 0, animation: 'card-fade-up 0.3s ease-out 0.1s forwards' }}>
         <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.75)' }}>Two Sum</span>
-        <span style={{ fontSize: 12, fontWeight: 800, padding: '1px 6px', borderRadius: 8, background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>EASY</span>
+        <span style={{ fontSize: 12, fontWeight: 800, padding: '1px 6px', borderRadius: 8, background: 'rgba(43,181,52,0.15)', color: 'var(--success)', border: '1px solid rgba(43,181,52,0.3)' }}>EASY</span>
         <span style={{ marginLeft: 'auto', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>#1</span>
       </div>
 
@@ -741,7 +741,7 @@ export function FeaturePracticeAnim() {
 
       {/* Accepted badge */}
       <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 5, opacity: 0, animation: 'card-fade-up 0.35s ease-out 2.9s forwards' }}>
-        <span style={{ fontSize: 12, fontWeight: 800, color: '#22c55e', letterSpacing: '0.14em' }}>✓ ACCEPTED</span>
+        <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--success)', letterSpacing: '0.14em' }}>✓ ACCEPTED</span>
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>· Runtime 98%</span>
       </div>
     </div>

@@ -224,7 +224,7 @@ export const ArchitectureDiagram = ({ question, className = '', designKind = 'sy
           {canGenerate ? (
             <button onClick={handleGenerate}
               className="px-5 py-2.5 text-sm font-bold rounded-lg transition-[opacity,transform] hover:opacity-90 active:scale-[0.98]"
-              style={{ background: 'var(--accent)', color: '#FFFFFF', boxShadow: '0 2px 12px rgba(38,97,156,0.3)' }}>
+              style={{ background: 'var(--accent)', color: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,108,224,0.3)' }}>
               Generate Architecture Diagram
             </button>
           ) : (

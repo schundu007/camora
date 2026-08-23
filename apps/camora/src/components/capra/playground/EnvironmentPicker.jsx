@@ -45,7 +45,7 @@ export const ENVIRONMENTS = [
     plan: 'free',
     desc: 'Clean Ubuntu shell',
     category: 'Linux',
-    color: '#10b981',
+    color: 'var(--success)',
     nodes: [
       { name: 'ubuntu', role: 'Shell', mem: '512 MB', tools: ['Terminal', 'IDE'] },
     ],
@@ -59,7 +59,7 @@ export const ENVIRONMENTS = [
     plan: 'free',
     desc: 'Docker + Compose ready',
     category: 'Containers',
-    color: '#2563eb',
+    color: 'var(--accent)',
     nodes: [
       { name: 'docker', role: 'Host', mem: '1 GB', tools: ['Terminal', 'IDE'] },
     ],
@@ -149,7 +149,7 @@ export const ENVIRONMENTS = [
     plan: 'pro',
     desc: 'AWS · GCP · Azure · Terraform · K8s',
     category: 'Cloud',
-    color: '#f59e0b',
+    color: 'var(--warning)',
     nodes: [
       { name: 'cloud-cli', role: 'CLI Workstation', mem: '1 GB', tools: ['Terminal', 'IDE'] },
     ],
@@ -163,7 +163,7 @@ export const ENVIRONMENTS = [
     plan: 'free',
     desc: 'Pick languages, DevOps tools, cloud CLIs',
     category: 'Custom',
-    color: '#8b5cf6',
+    color: 'var(--accent)',
     nodes: [
       { name: 'custom', role: 'Custom', mem: '1 GB', tools: ['Terminal', 'IDE'] },
     ],

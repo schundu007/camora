@@ -769,8 +769,8 @@ export const LumoraShellPage = () => {
               className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0 overflow-auto"
               style={{
                 background:
-                  'radial-gradient(ellipse 50% 40% at 0% 0%, rgba(38,97,156,0.06), transparent 70%),' +
-                  'radial-gradient(ellipse 60% 40% at 100% 100%, rgba(38,97,156,0.08), transparent 70%),' +
+                  'radial-gradient(ellipse 50% 40% at 0% 0%, rgba(0,108,224,0.06), transparent 70%),' +
+                  'radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0,108,224,0.08), transparent 70%),' +
                   'var(--bg-surface)',
               }}
             >
@@ -779,7 +779,7 @@ export const LumoraShellPage = () => {
                 className="shrink-0 relative"
                 style={{
                   background:
-                    'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(38,97,156,0.18), transparent 60%),' +
+                    'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(0,108,224,0.18), transparent 60%),' +
                     'var(--cam-hero-strip)',
                   borderBottom: '1px solid var(--cam-gold-leaf)',
                 }}
@@ -811,7 +811,7 @@ export const LumoraShellPage = () => {
                       <span
                         aria-hidden="true"
                         className="absolute inset-0 rounded-full animate-ping"
-                        style={{ background: 'rgba(38,97,156,0.10)' }}
+                        style={{ background: 'rgba(0,108,224,0.10)' }}
                       />
                       <svg className="relative w-16 h-16 mx-auto mt-1 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                         <circle cx="12" cy="12" r="10" />
@@ -843,8 +843,8 @@ export const LumoraShellPage = () => {
                           className="session-row session-row-enter flex items-center gap-3 p-3.5 rounded-xl w-full text-left cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/40"
                           style={{ animationDelay: `${Math.min(revIdx * 30, 210)}ms`,
                             background:
-                              'linear-gradient(135deg, rgba(38,97,156,0.04) 0%, rgba(38,97,156,0.08) 100%)',
-                            border: '1px solid rgba(38,97,156,0.10)',
+                              'linear-gradient(135deg, rgba(0,108,224,0.04) 0%, rgba(0,108,224,0.08) 100%)',
+                            border: '1px solid rgba(0,108,224,0.10)',
                           }}
                         >
                           <span
@@ -854,7 +854,7 @@ export const LumoraShellPage = () => {
                                 'linear-gradient(135deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)',
                               color: '#FFFFFF',
                               fontFamily: 'var(--font-code)',
-                              boxShadow: '0 2px 6px rgba(38,97,156,0.32), inset 0 1px 0 rgba(255,255,255,0.16)',
+                              boxShadow: '0 2px 6px rgba(0,108,224,0.32), inset 0 1px 0 rgba(255,255,255,0.16)',
                             }}
                           >
                             {realIdx + 1}
@@ -918,7 +918,7 @@ export const LumoraShellPage = () => {
                 </div>
               </div>
               <div className="max-w-2xl mx-auto px-6 pt-5 pb-10 w-full">
-                <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-xl" style={{ border: '1px solid var(--border)', background: 'rgba(38,97,156,0.04)' }}>
+                <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-xl" style={{ border: '1px solid var(--border)', background: 'rgba(0,108,224,0.04)' }}>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold tabular-nums" style={{ color: 'var(--accent)' }}>{history.length}</span>
                     <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>sessions</span>
@@ -1016,7 +1016,7 @@ export const LumoraShellPage = () => {
               className="relative flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-xl transition-colors"
               style={{
                 color: isActive ? 'var(--cam-gold-leaf)' : 'var(--text-muted)',
-                background: isActive ? 'rgba(201,162,39,0.10)' : 'transparent',
+                background: isActive ? 'rgba(255,153,0,0.10)' : 'transparent',
               }}
             >
               {tab.icon}
@@ -1025,7 +1025,7 @@ export const LumoraShellPage = () => {
                 <span
                   aria-hidden="true"
                   className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1 rounded-b"
-                  style={{ background: 'var(--cam-gold-leaf)', boxShadow: '0 0 8px rgba(201,162,39,0.50)' }}
+                  style={{ background: 'var(--cam-gold-leaf)', boxShadow: '0 0 8px rgba(255,153,0,0.50)' }}
                 />
               )}
             </Link>

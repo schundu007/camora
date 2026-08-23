@@ -27,8 +27,8 @@ export const InterviewContextPill = ({ onOpen }: Props) => {
         ? {
             background: 'var(--cam-chip-active-bg)',
             color: 'var(--cam-chip-active-text)',
-            border: '1px solid rgba(201,162,39,0.40)',
-            boxShadow: '0 0 0 2px rgba(201,162,39,0.15)',
+            border: '1px solid rgba(255,153,0,0.40)',
+            boxShadow: '0 0 0 2px rgba(255,153,0,0.15)',
           }
         : {
             background: 'var(--lumora-chrome-bg)',

@@ -213,7 +213,7 @@ export default function SiteNav({ variant = 'dark' }: { variant?: 'light' | 'dar
                       to="/playground"
                       onClick={() => setOpen(false)}
                       className="flex items-center gap-2 py-2.5 text-[14px] font-bold no-underline"
-                      style={{ color: 'var(--cam-gold-leaf, #D4A043)' }}
+                      style={{ color: 'var(--cam-gold-leaf, var(--cam-gold-leaf))' }}
                     >
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <polyline points="4 17 10 11 4 5" />

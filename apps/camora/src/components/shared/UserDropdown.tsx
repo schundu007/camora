@@ -170,12 +170,12 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 to="/profile?tab=preferences"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors"
-                style={{ color: 'var(--warn, #d97706)' }}
+                style={{ color: 'var(--warn, var(--warning))' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-elevated)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--warning)]" />
                 </span>
                 Upload Resume
               </Link>
@@ -222,7 +222,7 @@ export default function UserDropdown({ variant = 'light', showName = true, compa
                 onClick={() => { logout(); setOpen(false); }}
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-[13px] font-medium transition-colors"
                 style={{ color: 'var(--danger)' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--danger-subtle, rgba(239,68,68,0.08))')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--danger-subtle, rgba(219,0,0,0.08))')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>

@@ -117,7 +117,7 @@ export const MermaidDiagram = ({ content, className = '' }: MermaidDiagramProps)
     return (
       <div className={`flex items-center justify-center p-8 min-h-[200px] ${className}`}>
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-blue-200 border-t-[var(--accent)] rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-[color-mix(in_oklab,var(--accent)_30%,transparent)] border-t-[var(--accent)] rounded-full animate-spin" />
           <span className="text-sm text-[var(--text-muted)]">Rendering diagram...</span>
         </div>
       </div>
@@ -127,7 +127,7 @@ export const MermaidDiagram = ({ content, className = '' }: MermaidDiagramProps)
   if (error) {
     return (
       <div className={`p-4 ${className}`}>
-        <p className="text-xs text-red-500 mb-2 font-medium">Diagram render failed: {error}</p>
+        <p className="text-xs text-[var(--danger)] mb-2 font-medium">Diagram render failed: {error}</p>
         <pre className="text-xs font-mono bg-gray-50 border border-gray-200 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap text-gray-600 max-h-[300px] overflow-y-auto">
           {cleanForMermaid(content)}
         </pre>

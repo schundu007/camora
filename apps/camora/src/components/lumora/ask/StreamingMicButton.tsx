@@ -342,7 +342,7 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
         : 'Talk instead of typing — it sends automatically when you stop.'}
       aria-label={active ? 'Stop dictation' : 'Start dictation'}
       className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
-      style={{ background: active ? 'var(--danger, #ef4444)' : 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}
+      style={{ background: active ? 'var(--danger, var(--danger))' : 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}
     >
       {busy ? (
         <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" style={{ color: 'var(--text-muted)' }} />
@@ -355,7 +355,7 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
         </svg>
       )}
       {active && (
-        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: 'var(--danger, #ef4444)' }} />
+        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: 'var(--danger, var(--danger))' }} />
       )}
     </button>
   );

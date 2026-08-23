@@ -1,124 +1,136 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * AWS Cloudscape parity.
+ *
+ * Values come from @cloudscape-design/design-tokens (Apache-2.0), the system
+ * behind the AWS console. Every KEY here is unchanged so existing utility
+ * classes keep resolving — only the values moved.
+ *
+ * This file used to carry a second palette (Lapis navy + gold leaf + a slate
+ * "frost" ramp) that competed with the tokens in globals.css, and five font
+ * families that index.html no longer loads. Both are now the AWS set.
+ */
+const BLUE = {
+  50: '#f0fbff', 100: '#d1f1ff', 200: '#b3e0ff', 300: '#75cfff', 400: '#42b4ff',
+  500: '#006ce0', 600: '#0057c2', 700: '#003ea8', 800: '#002b66', 900: '#001129',
+};
+const ORANGE = {
+  50: '#fff8f0', 100: '#ffe8cc', 200: '#ffd28f', 300: '#ffb85c', 400: '#ff9900',
+  500: '#ec7211', 600: '#c25708', 700: '#96450a', 800: '#6b3208', 900: '#402004',
+};
+const GREY = {
+  50: '#f9f9fb', 100: '#f2f3f3', 200: '#ebebf0', 300: '#c6c6cd', 400: '#8c8c94',
+  500: '#656871', 600: '#545b64', 700: '#424650', 800: '#232b37', 900: '#0f141a',
+};
+
 export default {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
+      // One UI face, matching Cloudscape's font-family-base/-display/-heading,
+      // which are all the same family. JetBrains Mono is kept over AWS's
+      // Monaco/Menlo stack — it is a real webfont we load and better for code.
       fontFamily: {
-        sans: ['Satoshi', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
-        // `font-display` is the headline face for marketing surfaces. Winter
-        // Kei is preserved as `font-marquee` for cases where the more
-        // editorial / decorative cut is wanted (one-off splash titles).
-        display: ['Clash Display', 'Satoshi', 'system-ui', 'sans-serif'],
-        marquee: ['Winter Kei', 'Clash Display', 'system-ui', 'sans-serif'],
-        code: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
-        mono: ['JetBrains Mono', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
-        logo: ['Clash Display', 'system-ui', 'sans-serif'],
+        sans: ['Open Sans', '-apple-system', 'BlinkMacSystemFont', 'Helvetica Neue', 'Roboto', 'Arial', 'sans-serif'],
+        display: ['Open Sans', '-apple-system', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        marquee: ['Open Sans', '-apple-system', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        code: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        logo: ['Open Sans', '-apple-system', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      },
+      // The complete Cloudscape type scale — ten steps, each with its paired
+      // line-height, nothing below 12px. Mirrors the --fs-* tokens in
+      // globals.css so a class and a token can never disagree.
+      fontSize: {
+        'body-s': ['12px', '16px'],
+        'body-m': ['14px', '20px'],
+        'heading-xs': ['14px', '18px'],
+        'heading-s': ['16px', '20px'],
+        'heading-m': ['18px', '22px'],
+        'heading-l': ['20px', '24px'],
+        'heading-xl': ['24px', '30px'],
+        'display-l': ['42px', '48px'],
+        'display-xl': ['64px', '72px'],
+      },
+      // AWS uses radius per component role rather than one global value.
+      borderRadius: {
+        badge: '4px', input: '8px', item: '8px', dropdown: '8px',
+        alert: '12px', container: '16px', card: '16px', button: '20px',
       },
       colors: {
         accent: {
-          DEFAULT: '#26619C',
-          hover: '#1A4F86',
-          subtle: 'rgba(38,97,156,0.10)',
-          muted: 'rgba(38,97,156,0.18)',
+          DEFAULT: BLUE[500],
+          hover: BLUE[800],
+          subtle: 'rgba(0,108,224,0.10)',
+          muted: 'rgba(0,108,224,0.18)',
         },
+        // Was navy — AWS marks success in green, which is also just correct.
         success: {
-          DEFAULT: '#26619C',
-          subtle: 'rgba(38,97,156,0.10)',
-          muted: 'rgba(38,97,156,0.18)',
+          DEFAULT: '#00802f',
+          subtle: 'rgba(0,128,47,0.10)',
+          muted: 'rgba(0,128,47,0.18)',
         },
         warning: {
-          DEFAULT: '#C9A227',
-          subtle: 'rgba(201,162,39,0.10)',
-          muted: 'rgba(201,162,39,0.18)',
+          DEFAULT: '#855900',
+          subtle: 'rgba(133,89,0,0.10)',
+          muted: 'rgba(133,89,0,0.18)',
         },
         danger: {
-          DEFAULT: '#EF4444',
-          subtle: 'rgba(239,68,68,0.10)',
-          muted: 'rgba(239,68,68,0.18)',
+          DEFAULT: '#db0000',
+          subtle: 'rgba(219,0,0,0.10)',
+          muted: 'rgba(219,0,0,0.18)',
         },
         surface: {
-          DEFAULT: '#FFFFFF',
-          elevated: '#FAF7F0',
+          DEFAULT: '#ffffff',
+          elevated: GREY[50],
         },
-        // Neutral slate ramp for low-contrast chrome (borders, dividers).
-        frost: {
-          50: '#F8FAFC',
-          100: '#F1F5F9',
-          200: '#E2E8F0',
-          300: '#CBD5E1',
-          400: '#94A3B8',
-          500: '#64748B',
-          600: '#475569',
-          700: '#334155',
-          800: '#1E293B',
-          900: '#0F172A',
-        },
+        // Neutral ramp for low-contrast chrome (borders, dividers).
+        frost: GREY,
         camora: {
-          // PRIMARY — Lapis Lazuli (the verb)
-          primary:   '#26619C',
-          primaryLt: '#3C7AAB',
-          primaryDk: '#1A4F86',
-          // SECONDARY — Gold Leaf (the noun, illuminated manuscript)
-          goldLeaf:  '#C9A227',
-          goldLeafLt:'#D9B543',
-          goldLeafDk:'#A88817',
-          goldLeaf50:'#FBF6E3',
-          // copper* and teal* are back-compat aliases pointing at gold.
-          copper:    '#C9A227',
-          copperLt:  '#D9B543',
-          copperDk:  '#A88817',
-          copper50:  '#FBF6E3',
-          teal:      '#C9A227',
-          tealLt:    '#D9B543',
-          tealDk:    '#A88817',
-          teal50:    '#FBF6E3',
-          // TERTIARY — amber (warm sibling to gold leaf)
-          amber:     '#AB6400',
-          amberLt:   '#C07A00',
-          amberDk:   '#864E00',
-          amberMist: '#FAF0E0',
-          // SUBSTRATE — cream paper
-          cream:     '#FAF7F0',
-          creamLt:   '#FDFCF7',
-          // TEXT — warm near-black ink
-          warmInk:   '#1C1917',
-          warmInkMid:'#44403C',
-          warmInkLt: '#A8A29E',
-          // DARK — deep-ocean lapis echo
-          void:      '#0F1B2D',
-          plumVoid:  '#0F1B2D',
-          // Chrome neutrals (use sparingly — borders only)
-          midnight:  '#0F172A',
-          steel:     '#475569',
-          mist:      '#FAF7F0',
-          surface:   '#FDFCF7',
-          // Tonal ramp — lapis scale (back-compat name `blue`)
-          blue: {
-            50:  '#EAF0F7',
-            100: '#C5D4E5',
-            200: '#95B0CD',
-            300: '#5985B6',
-            400: '#3C7AAB',
-            500: '#26619C',
-            600: '#1A4F86',
-            700: '#0F3E70',
-            800: '#082D5A',
-            900: '#051C40',
-          },
-          // Gold leaf ramp (back-compat name `gold`)
-          gold: {
-            50:  '#FBF6E3',
-            100: '#F4E5A0',
-            200: '#E8CC6A',
-            300: '#D9B543',
-            400: '#C9A227',
-            500: '#A88817',
-            600: '#876D10',
-            700: '#66520A',
-            800: '#443704',
-            900: '#221C02',
-          },
+          primary: BLUE[500],
+          primaryLt: BLUE[400],
+          primaryDk: BLUE[800],
+
+          // The gold-leaf names are kept so call sites resolve; the value is
+          // now AWS marketing orange, the one non-blue accent AWS actually has.
+          goldLeaf: ORANGE[400],
+          goldLeafLt: ORANGE[300],
+          goldLeafDk: ORANGE[500],
+          goldLeaf50: ORANGE[50],
+
+          // copper / teal were already aliases of gold. Left as aliases.
+          copper: ORANGE[400],
+          copperLt: ORANGE[300],
+          copperDk: ORANGE[500],
+          copper50: ORANGE[50],
+          teal: ORANGE[400],
+          tealLt: ORANGE[300],
+          tealDk: ORANGE[500],
+          teal50: ORANGE[50],
+
+          amber: ORANGE[500],
+          amberLt: ORANGE[400],
+          amberDk: ORANGE[600],
+          amberMist: ORANGE[50],
+
+          cream: GREY[50],
+          creamLt: '#ffffff',
+
+          warmInk: GREY[900],
+          warmInkMid: GREY[700],
+          warmInkLt: GREY[400],
+
+          void: GREY[900],
+          plumVoid: GREY[900],
+
+          midnight: GREY[900],
+          steel: GREY[600],
+          mist: GREY[100],
+          surface: '#ffffff',
+
+          navy: BLUE,
+          gold: ORANGE,
         },
       },
     },

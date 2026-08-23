@@ -590,9 +590,9 @@ export const AudioSetupWizard = ({
             {(permissionError || (!permissionGranted && inputs.length <= 1)) && (
               <div
                 className="mb-2 p-2.5 rounded-lg text-[12px] flex items-start gap-2"
-                style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
               >
-                <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#F59E0B' }} />
+                <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--warning)' }} />
                 <div className="flex-1">
                   <div className="font-bold mb-0.5">Microphone access needed</div>
                   <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
@@ -772,7 +772,7 @@ export const AudioSetupWizard = ({
                   ))}
                 </select>
                 {!detectedVirtualMic && (
-                  <div className="text-[12px] mt-1.5" style={{ color: 'var(--warning-text, #f59e0b)' }}>
+                  <div className="text-[12px] mt-1.5" style={{ color: 'var(--warning-text, var(--warning))' }}>
                     No common loopback driver detected. Install BlackHole (macOS), VoiceMeeter (Windows), or Loopback, route your call into it, then refresh this list.
                   </div>
                 )}
@@ -781,7 +781,7 @@ export const AudioSetupWizard = ({
 
             {prefs.captureMethod === 'room-mic' && (
               <div className="mt-3 p-3 rounded-lg text-[12px] leading-relaxed"
-                style={{ background: 'rgba(38,97,156,0.06)', border: '1px solid rgba(38,97,156,0.30)', color: 'var(--text-primary)' }}>
+                style={{ background: 'rgba(0,108,224,0.06)', border: '1px solid rgba(0,108,224,0.30)', color: 'var(--text-primary)' }}>
                 <div className="font-bold mb-1">How room mic works</div>
                 <div style={{ color: 'var(--text-secondary)' }}>
                   Your laptop mic captures everything in the room — speaker audio bleeding
@@ -789,7 +789,7 @@ export const AudioSetupWizard = ({
                   voice profile to subtract you, so only the speaker reaches Sona.
                 </div>
                 {(!voiceEnrolled || !voiceFilterEnabled) && (
-                  <div className="mt-2 font-bold" style={{ color: '#dc2626' }}>
+                  <div className="mt-2 font-bold" style={{ color: 'var(--danger)' }}>
                     ⚠ {!voiceEnrolled
                       ? 'Voice not enrolled — Sona will answer your own voice. Enroll first.'
                       : 'Voice filter is off — turn it on or Sona will answer your own voice.'}
@@ -813,7 +813,7 @@ export const AudioSetupWizard = ({
               {prefs.captureMethod === 'electron-loopback' && !isElectron() && (
                 <div
                   className="mb-2 p-2.5 rounded-lg text-[12px]"
-                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
                 >
                   <strong>Desktop loopback requires the Camora desktop app.</strong> You're in a regular browser — switch to <em>Share a browser tab</em> above, or download the desktop app.
                 </div>
@@ -821,7 +821,7 @@ export const AudioSetupWizard = ({
               {prefs.captureMethod === 'tab-share' && !supportsTabShare() && (
                 <div
                   className="mb-2 p-2.5 rounded-lg text-[12px]"
-                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
                 >
                   <strong>Tab share isn't supported in this browser.</strong> Use Chrome or Edge, the Camora desktop app, or pick <em>Virtual loopback</em> / <em>Mic-only fallback</em>.
                 </div>
@@ -829,7 +829,7 @@ export const AudioSetupWizard = ({
               {prefs.captureMethod === 'virtual-mic' && !prefs.virtualMicDeviceId && (
                 <div
                   className="mb-2 p-2.5 rounded-lg text-[12px]"
-                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
                 >
                   <strong>Pick a virtual loopback device above.</strong> Connect won't work until you select a virtual mic.
                 </div>
@@ -844,9 +844,9 @@ export const AudioSetupWizard = ({
               {prefs.captureMethod === 'electron-loopback' && isElectron() && screenRecordingStatus !== 'granted' && screenRecordingStatus !== 'unknown' && (
                 <div
                   className="mb-2 p-2.5 rounded-lg text-[12px] flex items-start gap-2"
-                  style={{ background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.40)', color: 'var(--text-primary)' }}
+                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
                 >
-                  <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: '#F59E0B' }} />
+                  <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--warning)' }} />
                   <div className="flex-1">
                     <div className="font-bold mb-0.5">Screen Recording permission needed</div>
                     <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
@@ -905,11 +905,11 @@ export const AudioSetupWizard = ({
               {speaker.error && (
                 <div
                   className="mt-2 rounded-lg p-2.5 text-xs"
-                  style={{ background: 'rgba(220,38,38,0.10)', border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}
+                  style={{ background: 'rgba(219,0,0,0.10)', border: '1px solid rgba(219,0,0,0.3)', color: 'var(--danger)' }}
                 >
                   <strong>Connect failed:</strong> {speaker.error}
                   {prefs.captureMethod === 'electron-loopback' && (
-                    <div className="mt-1.5" style={{ color: '#dc2626' }}>
+                    <div className="mt-1.5" style={{ color: 'var(--danger)' }}>
                       On macOS this usually means Screen Recording permission is denied. Open <strong>System Settings → Privacy &amp; Security → Screen Recording</strong>, enable Camora, and quit + relaunch the app.
                     </div>
                   )}
@@ -1011,7 +1011,7 @@ const MethodCard = ({
       </div>
       <div className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>{desc}</div>
       {disabledNote && disabled && (
-        <div className="text-[12px] mt-1" style={{ color: 'var(--warning-text, #f59e0b)' }}>{disabledNote}</div>
+        <div className="text-[12px] mt-1" style={{ color: 'var(--warning-text, var(--warning))' }}>{disabledNote}</div>
       )}
     </button>
   );

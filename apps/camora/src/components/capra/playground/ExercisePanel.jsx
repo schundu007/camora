@@ -54,7 +54,7 @@ export default function ExercisePanel({ sessionId, exercises, onProgressUpdate }
         <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.7)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           Exercises
         </span>
-        <span style={{ fontSize: 12, color: totalDone === exercises.length ? '#10b981' : 'rgba(255,255,255,0.35)', fontWeight: 700 }}>
+        <span style={{ fontSize: 12, color: totalDone === exercises.length ? 'var(--success)' : 'rgba(255,255,255,0.35)', fontWeight: 700 }}>
           {totalDone}/{exercises.length}
         </span>
       </div>
@@ -70,9 +70,9 @@ export default function ExercisePanel({ sessionId, exercises, onProgressUpdate }
               onClick={() => { setActiveIdx(i); setResult(null); }}
               style={{
                 width: 24, height: 24, borderRadius: 5, fontSize: 12, fontWeight: 700,
-                border: `1px solid ${activeIdx === i ? '#0047AB' : done ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                background: activeIdx === i ? 'rgba(0,71,171,0.25)' : done ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)',
-                color: done ? '#10b981' : activeIdx === i ? '#7ab3ff' : 'rgba(255,255,255,0.4)',
+                border: `1px solid ${activeIdx === i ? '#0047AB' : done ? 'rgba(43,181,52,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                background: activeIdx === i ? 'rgba(0,71,171,0.25)' : done ? 'rgba(43,181,52,0.12)' : 'rgba(255,255,255,0.04)',
+                color: done ? 'var(--success)' : activeIdx === i ? '#7ab3ff' : 'rgba(255,255,255,0.4)',
                 cursor: 'pointer',
               }}
             >
@@ -94,9 +94,9 @@ export default function ExercisePanel({ sessionId, exercises, onProgressUpdate }
         {result && (
           <div style={{
             fontSize: 12, padding: '7px 10px', borderRadius: 6, marginBottom: 10,
-            background: result.pass ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.1)',
-            border: `1px solid ${result.pass ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-            color: result.pass ? '#10b981' : '#fca5a5',
+            background: result.pass ? 'rgba(43,181,52,0.12)' : 'rgba(219,0,0,0.1)',
+            border: `1px solid ${result.pass ? 'rgba(43,181,52,0.3)' : 'rgba(219,0,0,0.3)'}`,
+            color: result.pass ? 'var(--success)' : 'var(--danger)',
           }}>
             {result.pass ? '✓ ' : '✗ '}{result.message}
           </div>
@@ -111,9 +111,9 @@ export default function ExercisePanel({ sessionId, exercises, onProgressUpdate }
           onClick={handleCheck}
           style={{
             width: '100%', padding: '7px 0', borderRadius: 6, fontSize: 12, fontWeight: 700,
-            background: isPassed ? 'rgba(16,185,129,0.2)' : checking ? 'rgba(0,71,171,0.4)' : '#0047AB',
-            color: isPassed ? '#10b981' : '#fff',
-            border: `1px solid ${isPassed ? 'rgba(16,185,129,0.4)' : 'rgba(0,71,171,0.5)'}`,
+            background: isPassed ? 'rgba(43,181,52,0.2)' : checking ? 'rgba(0,71,171,0.4)' : '#0047AB',
+            color: isPassed ? 'var(--success)' : '#fff',
+            border: `1px solid ${isPassed ? 'rgba(43,181,52,0.4)' : 'rgba(0,71,171,0.5)'}`,
             cursor: isPassed || checking ? 'default' : 'pointer',
           }}
         >

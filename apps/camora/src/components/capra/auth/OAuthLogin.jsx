@@ -49,7 +49,7 @@ export default function OAuthLogin() {
 
       {/* Hero */}
       <section className="flex flex-col items-center justify-center text-center px-6 pt-12 pb-12 md:pt-16 md:pb-16">
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 border border-[rgba(38,97,156,0.3)] bg-[rgba(38,97,156,0.08)] rounded-full mb-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 border border-[rgba(0,108,224,0.3)] bg-[rgba(0,108,224,0.08)] rounded-full mb-5 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <span className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
           <span className="text-xs landing-mono text-[var(--accent)] tracking-wide">Smart Prep</span>
         </div>
@@ -90,7 +90,7 @@ export default function OAuthLogin() {
       </section>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[rgba(38,97,156,0.4)] to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[rgba(0,108,224,0.4)] to-transparent" />
 
       {/* Journey Highlighter */}
       <section className="px-6 md:px-12 py-10">
@@ -175,9 +175,9 @@ export default function OAuthLogin() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             {[
-              { step: '01', title: 'Drop Your Problem In', desc: 'Text, screenshot, or LeetCode URL. Paste, snap, or speak it.', color: 'text-blue-200' },
-              { step: '02', title: 'AI Generates', desc: 'Code, explanations, diagrams, and edge cases in seconds.', color: 'text-emerald-200' },
-              { step: '03', title: 'Practice & Refine', desc: 'Step-by-step walkthrough with follow-up Q&A. Build confidence.', color: 'text-blue-200' },
+              { step: '01', title: 'Drop Your Problem In', desc: 'Text, screenshot, or LeetCode URL. Paste, snap, or speak it.', color: 'text-[var(--accent)]' },
+              { step: '02', title: 'AI Generates', desc: 'Code, explanations, diagrams, and edge cases in seconds.', color: 'text-[var(--success)]' },
+              { step: '03', title: 'Practice & Refine', desc: 'Step-by-step walkthrough with follow-up Q&A. Build confidence.', color: 'text-[var(--accent)]' },
             ].map((item, i) => (
               <div key={i} className="group p-4 border border-[var(--border)] rounded-lg bg-[var(--bg-surface)] text-center">
                 <span className={`landing-mono text-3xl font-black ${item.color} group-hover:text-gray-300 transition-colors`}>

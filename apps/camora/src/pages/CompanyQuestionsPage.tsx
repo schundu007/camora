@@ -99,7 +99,7 @@ export default function CompanyQuestionsPage() {
           <ol className="space-y-3">
             {company.interviewProcess.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[rgba(38,97,156,0.08)] text-[var(--accent)] text-xs font-bold flex items-center justify-center">
+                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[rgba(0,108,224,0.08)] text-[var(--accent)] text-xs font-bold flex items-center justify-center">
                   {i + 1}
                 </span>
                 <span className="text-[var(--text-secondary)] pt-0.5">{step}</span>
@@ -156,7 +156,7 @@ export default function CompanyQuestionsPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             {company.tips.map((tip, i) => (
               <div key={i} className="bg-[var(--bg-surface)] border-0 rounded-xl p-5">
-                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[rgba(38,97,156,0.08)] text-[var(--accent)] text-sm font-bold mb-3">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[rgba(0,108,224,0.08)] text-[var(--accent)] text-sm font-bold mb-3">
                   {i + 1}
                 </span>
                 <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{tip}</p>

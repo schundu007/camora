@@ -916,17 +916,17 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
               // Subtle atmospheric backdrop layered behind the panels —
               // navy spotlight at top-left + cyan wash at bottom-right.
               background:
-                'radial-gradient(ellipse 50% 40% at 15% 0%, rgba(38,97,156,0.08), transparent 70%),' +
-                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(38,97,156,0.10), transparent 70%)',
+                'radial-gradient(ellipse 50% 40% at 15% 0%, rgba(0,108,224,0.08), transparent 70%),' +
+                'radial-gradient(ellipse 60% 40% at 85% 100%, rgba(0,108,224,0.10), transparent 70%)',
             }
           : undefined
       }
     >
       <style>{`
         @keyframes design-pulse-ring {
-          0%   { box-shadow: 0 0 0 0 rgba(38,97,156,0.45); }
-          70%  { box-shadow: 0 0 0 10px rgba(38,97,156,0); }
-          100% { box-shadow: 0 0 0 0 rgba(38,97,156,0); }
+          0%   { box-shadow: 0 0 0 0 rgba(0,108,224,0.45); }
+          70%  { box-shadow: 0 0 0 10px rgba(0,108,224,0); }
+          100% { box-shadow: 0 0 0 0 rgba(0,108,224,0); }
         }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
@@ -973,9 +973,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
           {/* Timer — matching coding page */}
           {timerDuration > 0 ? (
             <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-mono font-bold transition-colors ${
-              timerUrgent ? 'bg-red-500/15 border-red-500/30 text-red-300' :
+              timerUrgent ? 'bg-[var(--danger)]/15 border-[var(--danger)]/30 text-[var(--danger)]' :
               timerSeconds === 0 ? 'opacity-70' :
-              'bg-[rgba(38,97,156,0.06)] border-[rgba(38,97,156,0.2)] text-[var(--accent)]'
+              'bg-[rgba(0,108,224,0.06)] border-[rgba(0,108,224,0.2)] text-[var(--accent)]'
             } ${timerUrgent ? 'timer-urgent' : ''}`}>
               <div className="relative w-4 h-4">
                 <svg className="w-4 h-4 -rotate-90" viewBox="0 0 20 20">
@@ -985,7 +985,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
                 </svg>
               </div>
               <span>{formatTime(timerSeconds)}</span>
-              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-red-400 transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Stop timer">
+              <button onClick={stopTimer} className="ml-1 opacity-75 hover:text-[var(--danger)] transition-colors" style={{ color: 'var(--cam-strip-text)' }} data-tip="Stop timer">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -1007,9 +1007,9 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
               style={{
-                background: 'linear-gradient(110deg, rgba(38,97,156,0.18) 0%, rgba(38,97,156,0.28) 100%)',
-                border: '1px solid rgba(38,97,156,0.42)',
-                boxShadow: '0 0 18px rgba(38,97,156,0.32), inset 0 1px 0 rgba(255,255,255,0.08)',
+                background: 'linear-gradient(110deg, rgba(0,108,224,0.18) 0%, rgba(0,108,224,0.28) 100%)',
+                border: '1px solid rgba(0,108,224,0.42)',
+                boxShadow: '0 0 18px rgba(0,108,224,0.32), inset 0 1px 0 rgba(255,255,255,0.08)',
               }}
             >
               <span
@@ -1358,7 +1358,7 @@ export function DesignLayout({ onBack, initialProblem, embedded, onVoiceProblemR
 
         {/* Resizable divider - hidden on mobile, matching coding page */}
         <div
-          className="hidden md:flex w-1.5 hover:bg-[rgba(38,97,156,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
+          className="hidden md:flex w-1.5 hover:bg-[rgba(0,108,224,0.1)] cursor-col-resize transition-colors items-center justify-center group shrink-0"
           onMouseDown={handleDividerMouseDown}
           style={{ background: t.sectionBg }}
         >

@@ -69,7 +69,7 @@ const CATEGORIES: Category[] = [
   {
     name: 'Stack',
     // Stack is the lone gold category. The rest are blues/greens/reds where
-    // the same hex works as both fill and text. Gold (#C9A227) reads at
+    // the same hex works as both fill and text. AWS orange reads at
     // ~2.6:1 on white — fails AA — so split: keep bright gold for the 4px
     // stripe / chip-fill / borders (cat.color), use the darkened text-safe
     // gold sibling for the active-tab text (cat.colorText).
@@ -1157,7 +1157,7 @@ export default function Blind75Page() {
                     border: `1px solid ${isExpanded ? 'var(--accent)' : 'var(--border)'}`,
                     borderRadius: '12px',
                     overflow: 'hidden',
-                    boxShadow: isExpanded ? '0 4px 16px rgba(16, 185, 129, 0.08)' : '0 1px 3px rgba(0,0,0,0.04)',
+                    boxShadow: isExpanded ? '0 4px 16px rgba(43,181,52, 0.08)' : '0 1px 3px rgba(0,0,0,0.04)',
                     transition: 'all 0.2s',
                   }}
                 >
@@ -1204,7 +1204,7 @@ export default function Blind75Page() {
                       borderRadius: '20px',
                       background: 'var(--accent-subtle)',
                       color: 'var(--accent)',
-                      border: '1px solid rgba(38,97,156,0.30)',
+                      border: '1px solid rgba(0,108,224,0.30)',
                       whiteSpace: 'nowrap',
                     }}>
                       {questionCount} questions
@@ -1476,7 +1476,7 @@ export default function Blind75Page() {
                       to={`/lumora?q=${encodeURIComponent(question)}`}
                       className="b75-action-btn"
                       onClick={(e) => e.stopPropagation()}
-                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(38,97,156,0.20)', background: 'var(--accent-subtle)', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      style={{ fontSize: '12px', fontWeight: 600, padding: '5px 14px', borderRadius: '8px', border: '1px solid rgba(0,108,224,0.20)', background: 'var(--accent-subtle)', color: 'var(--accent)', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                       Practice with AI
                     </Link>
@@ -1651,7 +1651,7 @@ export default function Blind75Page() {
               <div style={{
                 padding: '16px 20px',
                 background: 'var(--accent-subtle)',
-                borderBottom: '1px solid rgba(5,150,105,0.3)',
+                borderBottom: '1px solid rgba(43,181,52,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
@@ -1700,7 +1700,7 @@ export default function Blind75Page() {
               <div style={{
                 padding: '16px 20px',
                 background: 'var(--accent-subtle)',
-                borderBottom: '1px solid rgba(38,97,156,0.30)',
+                borderBottom: '1px solid rgba(0,108,224,0.30)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
@@ -1727,7 +1727,7 @@ export default function Blind75Page() {
                   >
                     <div style={{
                       width: '20px', height: '20px', borderRadius: '6px',
-                      border: '2px solid rgba(38,97,156,0.30)', background: 'var(--accent-subtle)', flexShrink: 0, marginTop: '1px',
+                      border: '2px solid rgba(0,108,224,0.30)', background: 'var(--accent-subtle)', flexShrink: 0, marginTop: '1px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                       <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 700 }}>{i + 1}</span>

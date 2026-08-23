@@ -55,7 +55,7 @@ export default function K8sPathPage() {
       </div>
 
       {loading && <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Loading curriculum…</p>}
-      {error && <p style={{ fontSize: 13, color: '#ef4444' }}>{error}</p>}
+      {error && <p style={{ fontSize: 13, color: 'var(--danger)' }}>{error}</p>}
 
       {Object.entries(byModule).map(([mod, list]) => (
         <div key={mod} style={{ marginBottom: 32 }}>
@@ -85,11 +85,11 @@ export default function K8sPathPage() {
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topic.summary}</div>
                     </div>
                     <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: done ? '#10b981' : 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: done ? 'var(--success)' : 'var(--text-secondary)' }}>
                         {topic.completed_count}/{topic.exercise_count}
                       </div>
                       <div style={{ width: 60, height: 4, borderRadius: 2, background: 'var(--border)', marginTop: 4 }}>
-                        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: done ? '#10b981' : 'var(--cam-primary)', transition: 'width 0.3s' }} />
+                        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: done ? 'var(--success)' : 'var(--cam-primary)', transition: 'width 0.3s' }} />
                       </div>
                     </div>
                     <span style={{ fontSize: 12, color: 'var(--text-secondary)', flexShrink: 0 }}>{open ? '▲' : '▼'}</span>
@@ -101,8 +101,8 @@ export default function K8sPathPage() {
                       {!detailLoading && topicDetail?.exercises?.map((ex, i) => (
                         <div key={ex.id} style={{
                           padding: '10px 12px', borderRadius: 6, marginBottom: 6,
-                          background: ex.completed ? 'rgba(16,185,129,0.08)' : 'var(--bg-base)',
-                          border: `1px solid ${ex.completed ? 'rgba(16,185,129,0.25)' : 'var(--border)'}`,
+                          background: ex.completed ? 'rgba(43,181,52,0.08)' : 'var(--bg-base)',
+                          border: `1px solid ${ex.completed ? 'rgba(43,181,52,0.25)' : 'var(--border)'}`,
                           display: 'flex', gap: 10, alignItems: 'flex-start',
                         }}>
                           <span style={{ fontSize: 14, marginTop: 1, flexShrink: 0 }}>{ex.completed ? '✅' : `${i + 1}.`}</span>

@@ -641,7 +641,7 @@ export default function JobsPage() {
             <>
               {total > 0 && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold" style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-strip-heading)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
                   {total.toLocaleString()} open roles
                 </div>
               )}
@@ -1339,7 +1339,7 @@ export default function JobsPage() {
                     className="jobs-card"
                     style={{
                       background: 'var(--bg-surface)',
-                      border: isStale ? '1px solid rgba(245,158,11,0.35)' : '1px solid var(--border)',
+                      border: isStale ? '1px solid rgba(251,211,50,0.35)' : '1px solid var(--border)',
                       borderRadius: '8px',
                       padding: '10px 14px',
                       transition: 'border-color 0.15s, background 0.15s',
@@ -1405,7 +1405,7 @@ export default function JobsPage() {
                         </span>
                       )}
                       {isStale ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#F59E0B', fontSize: 12, fontWeight: 700 }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--warning)', fontSize: 12, fontWeight: 700 }}>
                           ⚠ {postedDaysAgo}d ago — may be filled
                         </span>
                       ) : posted && (

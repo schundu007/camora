@@ -1065,7 +1065,7 @@ function Footer({ isLoading, ascendMode }) {
     <footer className="relative z-10 px-5 py-3 flex items-center justify-between text-xs border-t border-[var(--border)] bg-[var(--bg-elevated)]">
       <div className="flex items-center gap-4">
         <span className="flex items-center gap-2">
-          <span className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-[var(--cam-gold-leaf)]' : 'bg-[#22c55e]'}`} />
+          <span className={`w-2 h-2 rounded-full ${isLoading ? 'animate-pulse bg-[var(--cam-gold-leaf)]' : 'bg-[var(--success)]'}`} />
           <span className={`text-sm font-medium ${isLoading ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}>
             {isLoading ? 'Processing...' : 'Ready'}
           </span>
@@ -1091,7 +1091,7 @@ function Footer({ isLoading, ascendMode }) {
 function CopyToast() {
   return (
     <div className="fixed left-1/2 transform -translate-x-1/2 z-50 animate-scale-in" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
-      <div className="flex items-center gap-3 px-5 py-3 rounded-lg shadow-lg" style={{ background: 'var(--bg-surface)', border: '1px solid rgba(201,162,39,0.40)' }}>
+      <div className="flex items-center gap-3 px-5 py-3 rounded-lg shadow-lg" style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,153,0,0.40)' }}>
         <div className="w-7 h-7 rounded-lg bg-[var(--bg-surface)]/20 flex items-center justify-center backdrop-blur-sm">
           <svg className="w-4 h-4 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
         </div>
@@ -1208,7 +1208,7 @@ function CodingLayout({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-full">
-          <div className="w-16 h-16 rounded-2xl bg-[rgba(38,97,156,0.08)] border border-[rgba(38,97,156,0.15)] flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-[rgba(0,108,224,0.08)] border border-[rgba(0,108,224,0.15)] flex items-center justify-center mb-4">
             <svg className="w-7 h-7 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
           </div>
           <span className="landing-body text-sm font-medium text-[var(--text-muted)]">Enter a system design question</span>

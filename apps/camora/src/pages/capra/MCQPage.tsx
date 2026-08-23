@@ -182,7 +182,7 @@ export default function MCQPage() {
   }
 
   const DIFF_COLOR: Record<string, string> = {
-    Easy: '#22c55e', Medium: '#f59e0b', Hard: '#ef4444',
+    Easy: 'var(--success)', Medium: 'var(--warning)', Hard: 'var(--danger)',
   };
 
   return (
@@ -266,7 +266,7 @@ export default function MCQPage() {
                   style={{
                     display: 'flex', alignItems: 'flex-start', gap: 14,
                     padding: '14px 18px', borderRadius: 8, textAlign: 'left',
-                    border: `1.5px solid ${isSelected ? 'var(--cam-gold-leaf, #d4af37)' : 'var(--border)'}`,
+                    border: `1.5px solid ${isSelected ? 'var(--cam-gold-leaf, var(--cam-gold-leaf))' : 'var(--border)'}`,
                     background: isSelected ? 'rgba(212,175,55,0.08)' : 'var(--bg-elevated)',
                     color: 'var(--text-primary)', cursor: streaming ? 'not-allowed' : 'pointer',
                     opacity: streaming && !isSelected ? 0.6 : 1,
@@ -277,7 +277,7 @@ export default function MCQPage() {
                     flexShrink: 0, width: 26, height: 26,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     borderRadius: '50%',
-                    background: isSelected ? 'var(--cam-gold-leaf, #d4af37)' : 'var(--bg-elevated)',
+                    background: isSelected ? 'var(--cam-gold-leaf, var(--cam-gold-leaf))' : 'var(--bg-elevated)',
                     color: isSelected ? '#000' : 'var(--text-secondary)',
                     fontSize: 12, fontWeight: 700,
                   }}>
@@ -314,14 +314,14 @@ export default function MCQPage() {
               </svg>
               Explanation
               {streaming && (
-                <span style={{ fontSize: 12, color: 'var(--cam-gold-leaf, #d4af37)', fontWeight: 400 }}>
+                <span style={{ fontSize: 12, color: 'var(--cam-gold-leaf, var(--cam-gold-leaf))', fontWeight: 400 }}>
                   · generating…
                 </span>
               )}
             </div>
 
             {error ? (
-              <p style={{ color: '#ef4444', fontSize: 13 }}>{error}</p>
+              <p style={{ color: 'var(--danger)', fontSize: 13 }}>{error}</p>
             ) : (
               <div style={{
                 fontSize: 14.5, lineHeight: 1.8, color: 'var(--text-secondary)',
@@ -331,7 +331,7 @@ export default function MCQPage() {
                 {streaming && (
                   <span style={{
                     display: 'inline-block', width: 8, height: 14,
-                    background: 'var(--cam-gold-leaf, #d4af37)',
+                    background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))',
                     marginLeft: 2, borderRadius: 1,
                     animation: 'blink 0.9s step-start infinite',
                   }}/>
@@ -358,8 +358,8 @@ export default function MCQPage() {
               onClick={() => navigate('/capra/library')}
               style={{
                 padding: '8px 18px', borderRadius: 6, fontSize: 13, cursor: 'pointer',
-                border: '1px solid var(--cam-gold-leaf, #d4af37)',
-                background: 'transparent', color: 'var(--cam-gold-leaf, #d4af37)',
+                border: '1px solid var(--cam-gold-leaf, var(--cam-gold-leaf))',
+                background: 'transparent', color: 'var(--cam-gold-leaf, var(--cam-gold-leaf))',
               }}
             >
               Back to Library

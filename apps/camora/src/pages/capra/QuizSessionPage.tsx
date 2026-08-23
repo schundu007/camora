@@ -30,9 +30,9 @@ type AnswerState = 'unanswered' | 'checked';
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const DIFF_COLOR: Record<string, string> = {
-  easy:   '#22c55e',
-  medium: '#f59e0b',
-  hard:   '#ef4444',
+  easy:   'var(--success)',
+  medium: 'var(--warning)',
+  hard:   'var(--danger)',
 };
 
 const LETTERS = ['A', 'B', 'C', 'D'];
@@ -44,7 +44,7 @@ function ScoreRing({ score, total }: { score: number; total: number }) {
   const radius  = 52;
   const circ    = 2 * Math.PI * radius;
   const dash    = (pct / 100) * circ;
-  const color   = pct >= 70 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444';
+  const color   = pct >= 70 ? 'var(--success)' : pct >= 40 ? 'var(--warning)' : 'var(--danger)';
 
   return (
     <div style={{ position: 'relative', width: 140, height: 140, flexShrink: 0 }}>
@@ -274,8 +274,8 @@ export default function QuizSessionPage() {
     cursor: 'pointer', whiteSpace: 'nowrap' as const, transition: 'all 0.12s',
   };
   const chipActive: React.CSSProperties = {
-    ...chipBase, background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
-    border: '1px solid var(--cam-gold-leaf, #d4af37)',
+    ...chipBase, background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))', color: '#000',
+    border: '1px solid var(--cam-gold-leaf, var(--cam-gold-leaf))',
   };
   const chipInactive: React.CSSProperties = {
     ...chipBase, background: 'var(--bg-elevated)', color: 'var(--text-secondary)',
@@ -318,7 +318,7 @@ export default function QuizSessionPage() {
         {!showResults && !loading && !fetchError && (
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
             Question{' '}
-            <span style={{ color: 'var(--cam-gold-leaf, #d4af37)' }}>{currentIndex + 1}</span>
+            <span style={{ color: 'var(--cam-gold-leaf, var(--cam-gold-leaf))' }}>{currentIndex + 1}</span>
             {' '}of{' '}
             <span>{questions.length || countParam}</span>
           </span>
@@ -358,7 +358,7 @@ export default function QuizSessionPage() {
           }}>
             <div style={{
               height: '100%', borderRadius: 2,
-              background: 'var(--cam-gold-leaf, #d4af37)',
+              background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))',
               width: `${((currentIndex + (checked ? 1 : 0)) / questions.length) * 100}%`,
               transition: 'width 0.3s ease',
             }}/>
@@ -391,7 +391,7 @@ export default function QuizSessionPage() {
           }}>
             <div style={{
               width: 14, height: 14, borderRadius: '50%',
-              border: '2px solid var(--cam-gold-leaf, #d4af37)',
+              border: '2px solid var(--cam-gold-leaf, var(--cam-gold-leaf))',
               borderTopColor: 'transparent',
               animation: 'spin 0.7s linear infinite',
               flexShrink: 0,
@@ -417,12 +417,12 @@ export default function QuizSessionPage() {
         }}>
           <div style={{
             width: 48, height: 48, borderRadius: '50%',
-            background: 'rgba(239,68,68,0.12)',
-            border: '1px solid rgba(239,68,68,0.25)',
+            background: 'rgba(219,0,0,0.12)',
+            border: '1px solid rgba(219,0,0,0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 20px',
           }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round">
               <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
             </svg>
           </div>
@@ -436,7 +436,7 @@ export default function QuizSessionPage() {
             onClick={handleRetry}
             style={{
               padding: '9px 24px', borderRadius: 8, fontSize: 14, fontWeight: 600,
-              background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
+              background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))', color: '#000',
               border: 'none', cursor: 'pointer',
             }}
           >
@@ -495,7 +495,7 @@ export default function QuizSessionPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {Object.entries(domainScores).map(([dom, s]) => {
                   const domPct = Math.round((s.correct / s.total) * 100);
-                  const barColor = domPct >= 70 ? '#22c55e' : domPct >= 40 ? '#f59e0b' : '#ef4444';
+                  const barColor = domPct >= 70 ? 'var(--success)' : domPct >= 40 ? 'var(--warning)' : 'var(--danger)';
                   return (
                     <div key={dom}>
                       <div style={{
@@ -529,7 +529,7 @@ export default function QuizSessionPage() {
               onClick={handleRetry}
               style={{
                 flex: 1, padding: '11px 0', borderRadius: 8, fontSize: 14, fontWeight: 600,
-                background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
+                background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))', color: '#000',
                 border: 'none', cursor: 'pointer',
               }}
             >
@@ -576,10 +576,10 @@ export default function QuizSessionPage() {
                         flexShrink: 0, width: 22, height: 22,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         borderRadius: '50%',
-                        background: skipped ? 'rgba(255,255,255,0.1)' : wasRight ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-                        border: `1.5px solid ${skipped ? 'rgba(255,255,255,0.15)' : wasRight ? '#22c55e' : '#ef4444'}`,
+                        background: skipped ? 'rgba(255,255,255,0.1)' : wasRight ? 'rgba(43,181,52,0.15)' : 'rgba(219,0,0,0.15)',
+                        border: `1.5px solid ${skipped ? 'rgba(255,255,255,0.15)' : wasRight ? 'var(--success)' : 'var(--danger)'}`,
                         fontSize: 12, fontWeight: 700,
-                        color: skipped ? 'var(--text-muted)' : wasRight ? '#22c55e' : '#ef4444',
+                        color: skipped ? 'var(--text-muted)' : wasRight ? 'var(--success)' : 'var(--danger)',
                       }}>
                         {i + 1}
                       </span>
@@ -623,19 +623,19 @@ export default function QuizSessionPage() {
     let badgeColor   = 'var(--text-secondary)';
 
     if (isCorrect) {
-      borderColor = '#22c55e';
-      bgColor     = 'rgba(34,197,94,0.08)';
-      badgeBg     = 'rgba(34,197,94,0.2)';
-      badgeColor  = '#22c55e';
+      borderColor = 'var(--success)';
+      bgColor     = 'rgba(43,181,52,0.08)';
+      badgeBg     = 'rgba(43,181,52,0.2)';
+      badgeColor  = 'var(--success)';
     } else if (isWrong) {
-      borderColor = '#ef4444';
-      bgColor     = 'rgba(239,68,68,0.08)';
-      badgeBg     = 'rgba(239,68,68,0.2)';
-      badgeColor  = '#ef4444';
+      borderColor = 'var(--danger)';
+      bgColor     = 'rgba(219,0,0,0.08)';
+      badgeBg     = 'rgba(219,0,0,0.2)';
+      badgeColor  = 'var(--danger)';
     } else if (isSelected) {
-      borderColor = 'var(--cam-gold-leaf, #d4af37)';
+      borderColor = 'var(--cam-gold-leaf, var(--cam-gold-leaf))';
       bgColor     = 'rgba(212,175,55,0.08)';
-      badgeBg     = 'var(--cam-gold-leaf, #d4af37)';
+      badgeBg     = 'var(--cam-gold-leaf, var(--cam-gold-leaf))';
       badgeColor  = '#000';
     }
 
@@ -659,9 +659,9 @@ export default function QuizSessionPage() {
     let bg    = 'rgba(255,255,255,0.07)';
     let color = 'var(--text-secondary)';
 
-    if (isCorrect) { bg = 'rgba(34,197,94,0.2)';  color = '#22c55e'; }
-    else if (isWrong)    { bg = 'rgba(239,68,68,0.2)'; color = '#ef4444'; }
-    else if (isSelected) { bg = 'var(--cam-gold-leaf, #d4af37)'; color = '#000'; }
+    if (isCorrect) { bg = 'rgba(43,181,52,0.2)';  color = 'var(--success)'; }
+    else if (isWrong)    { bg = 'rgba(219,0,0,0.2)'; color = 'var(--danger)'; }
+    else if (isSelected) { bg = 'var(--cam-gold-leaf, var(--cam-gold-leaf))'; color = '#000'; }
 
     return {
       flexShrink: 0, width: 26, height: 26,
@@ -736,7 +736,7 @@ export default function QuizSessionPage() {
               disabled={!picked}
               style={{
                 padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 600,
-                background: picked ? 'var(--cam-gold-leaf, #d4af37)' : 'rgba(255,255,255,0.06)',
+                background: picked ? 'var(--cam-gold-leaf, var(--cam-gold-leaf))' : 'rgba(255,255,255,0.06)',
                 color: picked ? '#000' : 'var(--text-muted)',
                 border: 'none', cursor: picked ? 'pointer' : 'not-allowed',
                 transition: 'all 0.12s',
@@ -751,7 +751,7 @@ export default function QuizSessionPage() {
               onClick={goNext}
               style={{
                 padding: '10px 28px', borderRadius: 8, fontSize: 14, fontWeight: 600,
-                background: 'var(--cam-gold-leaf, #d4af37)', color: '#000',
+                background: 'var(--cam-gold-leaf, var(--cam-gold-leaf))', color: '#000',
                 border: 'none', cursor: 'pointer',
               }}
             >
@@ -792,8 +792,8 @@ export default function QuizSessionPage() {
               <span style={{
                 marginLeft: 4,
                 padding: '1px 8px', borderRadius: 10,
-                background: picked === q.correctLetter ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-                color: picked === q.correctLetter ? '#22c55e' : '#ef4444',
+                background: picked === q.correctLetter ? 'rgba(43,181,52,0.15)' : 'rgba(219,0,0,0.15)',
+                color: picked === q.correctLetter ? 'var(--success)' : 'var(--danger)',
                 fontSize: 12, fontWeight: 700, letterSpacing: 0,
               }}>
                 {picked === q.correctLetter ? 'Correct' : `Wrong — Answer: ${q.correctLetter}`}

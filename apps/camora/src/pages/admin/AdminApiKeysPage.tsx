@@ -206,7 +206,7 @@ export default function AdminApiKeysPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <span
                       className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ background: configured ? '#10b981' : '#ef4444' }}
+                      style={{ background: configured ? 'var(--success)' : 'var(--danger)' }}
                     />
                     <span className="font-bold text-[15px]">{PROVIDER_LABELS[provider]}</span>
                     {provider === primaryProvider && (

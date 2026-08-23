@@ -58,16 +58,16 @@ export default function SavedVmsPanel({ saves, slotsUsed, slotsMax, onRestore, o
               </div>
               <button type="button" disabled={isRestoring} onClick={() => onRestore(save.id)} style={{
                 padding: '4px 10px', borderRadius: 5, fontSize: 12, fontWeight: 700, flexShrink: 0,
-                background: isRestoring ? 'rgba(212,160,67,0.3)' : 'rgba(212,160,67,0.15)',
-                border: '1px solid rgba(212,160,67,0.4)', color: '#d4a043',
+                background: isRestoring ? 'rgba(255,153,0,0.3)' : 'rgba(255,153,0,0.15)',
+                border: '1px solid rgba(255,153,0,0.4)', color: 'var(--cam-gold-leaf)',
                 cursor: isRestoring ? 'not-allowed' : 'pointer',
               }}>
                 {isRestoring ? 'Restoring...' : '↩ Restore'}
               </button>
               <button type="button" onClick={() => onDelete(save.id)} disabled={isRestoring} style={{
                 padding: '4px 8px', borderRadius: 5, fontSize: 12, flexShrink: 0,
-                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
-                color: '#f87171', cursor: isRestoring ? 'not-allowed' : 'pointer',
+                background: 'rgba(219,0,0,0.08)', border: '1px solid rgba(219,0,0,0.2)',
+                color: 'var(--danger)', cursor: isRestoring ? 'not-allowed' : 'pointer',
               }} data-tip="Delete saved VM">Del</button>
             </div>
           );

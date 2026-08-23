@@ -537,9 +537,9 @@ export default function FormattedContent({ content, inline = false }) {
                 <code
                   className="flex-shrink-0 text-[12px] font-bold landing-mono px-2 py-0.5 rounded self-start mt-0.5 whitespace-nowrap"
                   style={{
-                    background: 'color-mix(in oklab, var(--cam-primary, #26619C) 8%, transparent)',
-                    color: 'var(--cam-primary, #26619C)',
-                    border: '1px solid color-mix(in oklab, var(--cam-primary, #26619C) 18%, transparent)',
+                    background: 'color-mix(in oklab, var(--cam-primary, var(--accent)) 8%, transparent)',
+                    color: 'var(--cam-primary, var(--accent))',
+                    border: '1px solid color-mix(in oklab, var(--cam-primary, var(--accent)) 18%, transparent)',
                     maxWidth: '260px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -699,9 +699,9 @@ export default function FormattedContent({ content, inline = false }) {
                 <span
                   className="text-[12px] font-bold landing-mono px-2 py-0.5 rounded"
                   style={{
-                    background: 'color-mix(in oklab, var(--cam-primary, #26619C) 8%, transparent)',
-                    color: 'var(--cam-primary, #26619C)',
-                    border: '1px solid color-mix(in oklab, var(--cam-primary, #26619C) 18%, transparent)',
+                    background: 'color-mix(in oklab, var(--cam-primary, var(--accent)) 8%, transparent)',
+                    color: 'var(--cam-primary, var(--accent))',
+                    border: '1px solid color-mix(in oklab, var(--cam-primary, var(--accent)) 18%, transparent)',
                   }}
                 >
                   {label}

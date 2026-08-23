@@ -287,7 +287,7 @@ const GridCard = ({
           // Richer header — inner cyan glow at top-right + the existing
           // navy strip beneath. Reads as a lit chrome bar instead of flat.
           background:
-            'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(38,97,156,0.22), transparent 60%),' +
+            'radial-gradient(ellipse 60% 100% at 100% 0%, rgba(0,108,224,0.22), transparent 60%),' +
             'var(--cam-hero-strip)',
           borderBottom: '1px solid var(--cam-gold-leaf)',
         }}
@@ -479,7 +479,7 @@ const RichTable = ({ rows }: { rows: string[][] }) => {
         )}
         <tbody>
           {dataRows.map((row, ri) => (
-            <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>
+            <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(0,108,224,0.025)' : 'transparent' }}>
               {row.map((cell, ci) => (
                 <td key={ci} className="px-3 py-1.5"
                   style={{
@@ -516,7 +516,7 @@ const RichContent = ({ content }: { content: string }) => {
             // ## Major section — navy-tinted bar with gold left border (slide section divider)
             return (
               <div key={idx} className="flex items-center gap-3 px-3 py-2 mt-4 mb-1.5 rounded-sm first:mt-0"
-                style={{ background: 'rgba(38,97,156,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
+                style={{ background: 'rgba(0,108,224,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
                 <span className="font-mono text-[12px] font-bold tracking-widest uppercase"
                   style={{ color: 'var(--text-primary)', letterSpacing: '0.12em' }}>
                   {seg.text.replace(/:$/, '')}

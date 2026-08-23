@@ -132,10 +132,10 @@ export function addCards(existing: Flashcard[], incoming: Omit<Flashcard, keyof 
 /* ── Decks + starter content ──────────────────────────────────────────── */
 
 export const DECKS: DeckMeta[] = [
-  { id: 'system-design', title: 'System Design', accent: '#3683DC', blurb: 'Scaling, storage, consistency, and the tradeoffs interviewers probe.' },
-  { id: 'behavioral', title: 'Behavioral', accent: '#D4A043', blurb: 'STAR framework, leadership, conflict, and failure stories.' },
-  { id: 'dsa', title: 'DSA Patterns', accent: '#22c55e', blurb: 'The recurring patterns behind most coding-round questions.' },
-  { id: 'cloud-devops', title: 'Cloud & DevOps', accent: '#8b5cf6', blurb: 'Kubernetes, CI/CD, IaC, and reliability fundamentals.' },
+  { id: 'system-design', title: 'System Design', accent: 'var(--accent)', blurb: 'Scaling, storage, consistency, and the tradeoffs interviewers probe.' },
+  { id: 'behavioral', title: 'Behavioral', accent: 'var(--accent)', blurb: 'STAR framework, leadership, conflict, and failure stories.' },
+  { id: 'dsa', title: 'DSA Patterns', accent: 'var(--accent)', blurb: 'The recurring patterns behind most coding-round questions.' },
+  { id: 'cloud-devops', title: 'Cloud & DevOps', accent: 'var(--accent)', blurb: 'Kubernetes, CI/CD, IaC, and reliability fundamentals.' },
 ];
 
 interface SeedCard { deck: string; front: string; back: string; tags?: string[] }

@@ -675,8 +675,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
             <div className="flex flex-col items-center justify-center h-full p-6">
               {diagramError.subscriptionRequired ? (
                 <>
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center mb-3">
-                    <svg className="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--warning)]/10 flex items-center justify-center mb-3">
+                    <svg className="w-6 h-6 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                   </div>
                   <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Free diagrams used up</p>
                   <p className="text-xs text-[var(--text-muted)] mb-4 text-center max-w-xs">Upgrade to Premium for unlimited architecture diagram generation.</p>
@@ -684,8 +684,8 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                 </>
               ) : (
                 <>
-                  <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center mb-3">
-                    <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--danger)]/10 flex items-center justify-center mb-3">
+                    <svg className="w-6 h-6 text-[var(--danger)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
                   </div>
                   <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">Diagram generation failed</p>
                   <p className="text-xs text-[var(--text-muted)] mb-3 text-center max-w-xs">{diagramError.message}</p>
@@ -826,7 +826,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                     <ul className="space-y-1.5">
                       {systemDesign.tradeoffs.slice(0, 5).map((tradeoff, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
-                          <span className="text-amber-500 mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
+                          <span className="text-[var(--warning)] mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
                           <span>{typeof tradeoff === 'string' ? stripMd(tradeoff.replace(/^Tradeoff \d+:\s*/i, '')) : tradeoff}</span>
                         </li>
                       ))}
@@ -838,7 +838,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                     <ul className="space-y-1.5">
                       {systemDesign.edgeCases.slice(0, 5).map((edge, i) => (
                         <li key={i} className="text-sm text-[var(--text-secondary)] leading-snug flex items-start gap-2">
-                          <span className="text-rose-500 mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
+                          <span className="text-[var(--danger)] mt-1.5 flex-shrink-0 w-1 h-1 rounded-full bg-current" />
                           <span>{typeof edge === 'string' ? stripMd(edge.replace(/^Edge case \d+:\s*/i, '')) : edge}</span>
                         </li>
                       ))}
@@ -926,7 +926,7 @@ export default function SystemDesignPanel({ systemDesign, eraserDiagram, autoGen
                             {model.fields?.map((field, fi) => (
                               <tr key={fi} className="border-b border-[var(--border)] last:border-0">
                                 <td className="py-0.5 font-mono text-[var(--text-primary)]">{field.name}</td>
-                                <td className="py-0.5 text-blue-600 font-mono">{field.type}</td>
+                                <td className="py-0.5 text-[var(--accent)] font-mono">{field.type}</td>
                                 <td className="py-0.5 text-[var(--text-secondary)]">{fmtCloud(field.description)}</td>
                               </tr>
                             ))}
