@@ -626,6 +626,14 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const isEnrolling = useSessionStore(s => s.isEnrolling);
   const [enrollNudgeHidden, setEnrollNudgeHidden] = useState(false);
 
+  // Live capture is running. Everything in the rail that exists to SET UP an
+  // interview — the story bank, the starter questions, the enrollment nudge,
+  // the auto-answer switch — is dead weight once one is underway: you are not
+  // enrolling a voice or picking a practice prompt while an interviewer is
+  // talking. During live the rail is what Sona heard and what it's answering,
+  // and nothing else.
+  const isRecording = useSessionStore(s => s.isRecording);
+
   /**
    * What Sona heard, and what it DID with it.
    *
@@ -1462,16 +1470,18 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 story bank has no bound of its own, and as a fixed block in a
                 flex column a long resume would push the questions list off the
                 bottom — the exact failure this layout exists to prevent. */}
-            <div className="shrink-0 max-h-[33%] overflow-auto">
-              <StoryBankPanel
-                stories={activeAssistant?.stories}
-                activeArchetype={(() => {
-                  const lastAi = [...messages].reverse().find(m => m.role === 'ai');
-                  if (!lastAi && streamText) return getArchetype(streamText);
-                  return lastAi ? getArchetype(lastAi.text) : null;
-                })()}
-              />
-            </div>
+            {!isRecording && (
+              <div className="shrink-0 max-h-[33%] overflow-auto">
+                <StoryBankPanel
+                  stories={activeAssistant?.stories}
+                  activeArchetype={(() => {
+                    const lastAi = [...messages].reverse().find(m => m.role === 'ai');
+                    if (!lastAi && streamText) return getArchetype(streamText);
+                    return lastAi ? getArchetype(lastAi.text) : null;
+                  })()}
+                />
+              </div>
+            )}
             {/* The questions list owns every pixel between the story bank and
                 the footer. It used to share the column with the enrollment
                 nudge and the auto-answer switch, which pushed questions below
@@ -1479,7 +1489,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 now live in the pinned footer below. */}
             <div className="flex-1 min-h-0 overflow-auto p-3 space-y-1.5">
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] px-1" style={{ color: 'var(--text-muted)' }}>Questions</p>
-              {messages.filter(m => m.role === 'user').length === 0 && !streaming && (
+              {messages.filter(m => m.role === 'user').length === 0 && !streaming && !isRecording && (
                 <div className="py-2">
                   <p className="text-[10px] mb-2" style={{ color: 'var(--text-muted)' }}>Ask a question to get started</p>
                   <div className="space-y-1.5">
@@ -1490,6 +1500,15 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     ))}
                   </div>
                 </div>
+              )}
+              {/* With the setup blocks gone, a live rail with nothing heard yet
+                  would be an empty column — which reads as broken, not as
+                  ready. One line says which of the two it is. */}
+              {isRecording && !streaming && !liveTranscript && detectedQuestions.length === 0 &&
+                messages.filter(m => m.role === 'user').length === 0 && (
+                <p className="text-[10px] px-1 py-2" style={{ color: 'var(--text-muted)' }}>
+                  Listening — questions Sona hears land here.
+                </p>
               )}
               {/* Live preview — shows each Whisper chunk immediately as it
                   arrives, before the accumulation flush fires. Clears
@@ -1638,8 +1657,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                 pinned under the list and collapsed to one line each. Both are
                 status you glance at, not text you read twice; as full cards in
                 the middle of the list they cost four question slots between
-                them. The tooltips still carry the long explanation. */}
-            {embedded && (
+                them. The tooltips still carry the long explanation.
+
+                Gone entirely once capture starts — both are pre-interview
+                setup. Enrollment stays reachable from the toolbar's voice chip;
+                auto-answer is a decision you make before the call. */}
+            {embedded && !isRecording && (
               <div className="shrink-0 border-t px-2 py-1.5 flex flex-col gap-1" style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}>
                 {!voiceEnrolled && !enrollNudgeHidden && (
                   <div
