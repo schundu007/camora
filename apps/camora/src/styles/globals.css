@@ -214,6 +214,38 @@
     /* Blue-tinted shadows for Lumora surfaces */
     --shadow-primary-xs: 0 1px 3px rgba(37,99,235,0.12), 0 4px 16px rgba(37,99,235,0.06);
     --shadow-primary-sm: 0 2px 8px rgba(37,99,235,0.16);
+
+    /* ── Lumora shell tokens (--lum-*) ────────────────────────
+       Defined in BOTH themes so shell components read tokens
+       unconditionally instead of branching on `theme === 'light'`
+       inline. Light resolves to the Fluent ramp (see
+       [data-theme="light"]); this block keeps dark looking as it
+       does today. Never reference --text-muted here: it measures
+       3.7:1 on --bg-surface and fails AA for body text. */
+    --lum-bg:             var(--bg-surface);
+    --lum-surface:        var(--bg-elevated);
+    --lum-surface-hover:  #23232B;
+    --lum-border:         var(--border);
+    --lum-border-strong:  var(--border-hover);
+    --lum-text:           var(--text-primary);
+    --lum-text-2:         var(--text-secondary);
+    --lum-accent:         var(--accent);
+    --lum-accent-sm:      var(--accent-text);
+    --lum-accent-bg:      rgba(54,131,220,0.12);
+    --lum-ok:             #4ADE80;
+    --lum-radius:         12px;
+    --lum-shadow:         none;
+    --lum-cmdbar-bg:      var(--bg-elevated);
+
+    --lum-tag-design-fg:  #5B9BD5;
+    --lum-tag-design-bg:  rgba(91,155,213,0.12);
+    --lum-tag-design-br:  rgba(91,155,213,0.32);
+    --lum-tag-coding-fg:  #4D94E8;
+    --lum-tag-coding-bg:  rgba(54,131,220,0.12);
+    --lum-tag-coding-br:  rgba(54,131,220,0.32);
+    --lum-tag-behav-fg:   #E0B155;
+    --lum-tag-behav-bg:   rgba(212,160,67,0.12);
+    --lum-tag-behav-br:   rgba(212,160,67,0.32);
   }
 
   /* ──────────────────────────────────────────────────────────
@@ -222,6 +254,38 @@
      Every contrast pair below ≥ 4.5:1 (WCAG AA).
      ────────────────────────────────────────────────────────── */
   [data-theme="light"] {
+    /* ── Lumora shell, Fluent ramp ────────────────────────────
+       Microsoft Fluent — the system behind the Azure portal.
+       Ratios against #FFFFFF: text 12.98:1, text-2 6.46:1,
+       accent 4.53:1 (links/actions ≥14px only), accent-sm 7.10:1.
+       Gold is absent by design: #C2963E measures 2.72:1 here and
+       used to carry the category labels.
+       See docs/superpowers/specs/2026-08-23-lumora-fluent-light-theme-design.md */
+    --lum-bg:             #FAF9F8;
+    --lum-surface:        #FFFFFF;
+    --lum-surface-hover:  #F3F2F1;
+    --lum-border:         #EDEBE9;
+    --lum-border-strong:  #C8C6C4;
+    --lum-text:           #323130;
+    --lum-text-2:         #605E5C;
+    --lum-accent:         #0078D4;
+    --lum-accent-sm:      #005A9E;
+    --lum-accent-bg:      #EFF6FC;
+    --lum-ok:             #107C10;
+    --lum-radius:         2px;
+    --lum-shadow:         0 0.3px 0.9px rgba(0,0,0,0.07), 0 1.6px 3.6px rgba(0,0,0,0.07);
+    --lum-cmdbar-bg:      #FFFFFF;
+
+    --lum-tag-design-fg:  #005A9E;
+    --lum-tag-design-bg:  #EFF6FC;
+    --lum-tag-design-br:  #B7D5EC;
+    --lum-tag-coding-fg:  #0E6B0E;
+    --lum-tag-coding-bg:  #EFF8EF;
+    --lum-tag-coding-br:  #B7DDB7;
+    --lum-tag-behav-fg:   #7A4E00;
+    --lum-tag-behav-bg:   #FBF6E9;
+    --lum-tag-behav-br:   #E8D5A8;
+
     --bg-base:     #F4F6FA;
     --bg-app:      #F4F6FA;
     --bg-surface:  #F4F6FA;

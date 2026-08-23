@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionStore } from '@/stores/session-store';
-import { useTheme } from '@/hooks/useTheme';
 import { StreamingAnswer } from './StreamingAnswer';
 import { AnswerBlocks } from './AnswerBlocks';
 import { Citations } from '@/components/lumora/Citations';
@@ -245,6 +244,27 @@ export const SessionPanel = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign
 }
 
 /* ─── Lumora Dashboard ─────────────────────────────── */
+/* Shared shell styling for the home screen. Every value resolves through
+   --lum-* tokens, which are defined in BOTH themes (globals.css), so this
+   component never branches on `theme === 'light'`. */
+const SECTION_H: CSSProperties = {
+  fontSize: 14, fontWeight: 600, margin: 0, paddingBottom: 8,
+  borderBottom: '1px solid var(--lum-border)', color: 'var(--lum-text)',
+};
+const SECTION_HINT: CSSProperties = {
+  fontSize: 12, color: 'var(--lum-text-2)', margin: '8px 0 12px',
+};
+const TAG_BASE: CSSProperties = {
+  display: 'inline-block', fontSize: 12, fontWeight: 600, padding: '1px 8px',
+  borderRadius: 'var(--lum-radius)', border: '1px solid', textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+};
+const TAG_TONE: Record<string, CSSProperties> = {
+  design:     { color: 'var(--lum-tag-design-fg)', background: 'var(--lum-tag-design-bg)', borderColor: 'var(--lum-tag-design-br)' },
+  coding:     { color: 'var(--lum-tag-coding-fg)', background: 'var(--lum-tag-coding-bg)', borderColor: 'var(--lum-tag-coding-br)' },
+  behavioral: { color: 'var(--lum-tag-behav-fg)',  background: 'var(--lum-tag-behav-bg)',  borderColor: 'var(--lum-tag-behav-br)'  },
+};
+
 const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitchToCofix }: {
   onAskQuestion?: (question: string) => void;
   onSwitchToCoding?: (problem?: string) => void;
@@ -252,8 +272,6 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
   onSwitchToCofix?: () => void;
 }) => {
   const { user } = useAuth();
-  const { theme } = useTheme();
-  const behavioralAccent = theme === 'light' ? '#3683DC' : '#C9A227';
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -270,25 +288,21 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
     {
       name: 'Coding', desc: 'Multi-approach solutions with complexity analysis.',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
-      accent: '#3683DC',
       onClick: () => onSwitchToCoding?.(),
     },
     {
       name: 'System Design', desc: 'Architecture diagrams generated in real-time.',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg>,
-      accent: '#5B9BD5',
       onClick: () => onSwitchToDesign?.(),
     },
     {
       name: 'CoFix', desc: 'Fix & debug your code with inline annotations.',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z" /></svg>,
-      accent: '#C9A227',
       onClick: () => onSwitchToCofix?.(),
     },
     {
       name: 'Behavioral', desc: 'STAR answers drawn from your resume and past experience.',
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg>,
-      accent: behavioralAccent,
       onClick: () => onAskQuestion?.('Tell me about yourself and your experience'),
     },
   ];
@@ -301,7 +315,6 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
     { text: 'Reverse a linked list iteratively and recursively', type: 'coding' as const },
     { text: 'Describe a time you failed and what you learned', type: 'behavioral' as const },
   ];
-  const PROMPT_ACCENT: Record<string, string> = { design: '#5B9BD5', coding: '#3683DC', behavioral: behavioralAccent };
 
   const handlePromptClick = (prompt: typeof QUICK_PROMPTS[number]) => {
     if (prompt.type === 'coding') onSwitchToCoding?.(prompt.text);
@@ -310,164 +323,100 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
   };
 
   return (
-    <div className="flex-1 overflow-auto flex flex-col" style={{ background: 'var(--bg-surface)' }}>
+    <div className="flex-1 overflow-auto flex flex-col" style={{ background: 'var(--lum-bg)', color: 'var(--lum-text)' }}>
       <style>{`
-        @keyframes sona-ready {
-          0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(74,222,128,.55)}
-          50%{opacity:.75;box-shadow:0 0 0 6px rgba(74,222,128,0)}
-        }
+        @keyframes sona-ready { 0%,100%{opacity:1} 50%{opacity:.55} }
+        .lum-card { transition: border-color .12s ease; }
+        .lum-card:hover { border-color: var(--lum-border-strong); }
+        .lum-card:focus-visible { outline: 2px solid var(--lum-accent); outline-offset: 1px; }
+        .lum-row { transition: background .1s ease; }
+        .lum-row:hover { background: var(--lum-surface-hover); }
+        .lum-row:focus-visible { outline: 2px solid var(--lum-accent); outline-offset: -2px; }
+        @media (prefers-reduced-motion: reduce) { .lum-card, .lum-row { transition: none; } }
       `}</style>
 
-      {/* ── Hero — compact, clean command-center ── */}
-      <div className="relative overflow-hidden" style={{
-        background: theme === 'light' ? 'var(--bg-elevated)' : 'var(--lumora-hero-gradient)',
-        borderBottom: theme === 'light' ? '1px solid var(--border)' : 'none',
-        minHeight: 160,
-      }}>
-        {theme !== 'light' && (
-          <div aria-hidden="true" style={{ position:'absolute', inset:0, overflow:'hidden', pointerEvents:'none' }}>
-            <div style={{ position:'absolute', width:340, height:340, borderRadius:'50%', top:'-100px', left:'-60px', background:'radial-gradient(circle,rgba(54,131,220,.13) 0%,transparent 65%)' }} />
-            <div style={{ position:'absolute', width:220, height:220, borderRadius:'50%', top:'0', right:'-30px', background:'radial-gradient(circle,rgba(201,162,39,.07) 0%,transparent 65%)' }} />
-          </div>
-        )}
-        {theme !== 'light' && (
-          <div aria-hidden="true" style={{ position:'absolute', bottom:0, left:0, right:0, height:48, background:'linear-gradient(to bottom,transparent,var(--bg-surface))', pointerEvents:'none' }} />
-        )}
+      {/* Context bar. Carries state, not verbs: the actions the mockup
+          showed here (mic, blank screen) have no handler on this screen,
+          and shipping them would be dead controls. */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, height:44, padding:'0 20px', flexShrink:0,
+                    background:'var(--lum-cmdbar-bg)', borderBottom:'1px solid var(--lum-border)' }}>
+        <span style={{ fontSize:12, color:'var(--lum-text-2)' }}>Lumora</span>
+        <span style={{ fontSize:12, color:'var(--lum-text-2)' }} aria-hidden="true">&rsaquo;</span>
+        <span style={{ fontSize:12, fontWeight:600, color:'var(--lum-text)' }}>Home</span>
+        <span style={{ marginLeft:'auto', display:'inline-flex', alignItems:'center', gap:7, fontSize:12, color:'var(--lum-text-2)' }}>
+          <span aria-hidden="true" style={{ width:8, height:8, borderRadius:'50%', background:'var(--lum-ok)', animation:'sona-ready 2s ease-in-out infinite' }} />
+          Sona ready
+        </span>
+      </div>
 
-        <div className="relative px-4 md:px-6 pt-7 pb-10 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5"
-            style={{
-              background: theme === 'light' ? 'var(--accent-subtle)' : 'rgba(255,255,255,.05)',
-              border: theme === 'light' ? '1px solid var(--border-focus)' : '1px solid rgba(255,255,255,.10)',
-            }}>
-            <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', flexShrink:0, animation:'sona-ready 2s ease-in-out infinite' }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', color: theme === 'light' ? 'var(--accent)' : 'rgba(255,255,255,.72)', textTransform:'uppercase' }}>Sona · Ready</span>
-          </div>
-          <h2 style={{ fontFamily:'var(--font-display)', fontSize:22, fontWeight:700, color: theme === 'light' ? 'var(--text-primary)' : '#fff', margin:0, lineHeight:1.2 }}>
-            {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}.
-          </h2>
-          <div className="flex items-center justify-center gap-3 mt-2">
-            <span style={{ fontFamily:'var(--font-code)', fontSize:13, fontWeight:600, color: theme === 'light' ? 'var(--text-secondary)' : 'rgba(255,255,255,.5)', letterSpacing:'0.06em' }}>
-              {hh12}:{mm} <span style={{ color:'var(--accent)' }}>{ampm}</span>
-            </span>
-            <span style={{ display:'inline-block', width:1, height:12, background: theme === 'light' ? 'var(--border)' : 'rgba(255,255,255,.18)' }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:11, color: theme === 'light' ? 'var(--text-muted)' : 'rgba(255,255,255,.35)', letterSpacing:'0.06em' }}>{dateStr}</span>
-          </div>
+      <div style={{ padding:'18px 20px 16px' }}>
+        <h2 style={{ fontSize:24, fontWeight:600, margin:0, letterSpacing:'-0.01em', color:'var(--lum-text)' }}>
+          {greeting}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+        </h2>
+        <div style={{ fontSize:13, color:'var(--lum-text-2)', marginTop:2 }}>
+          {dateStr} &middot; {hh12}:{mm} {ampm} &middot; No session running
         </div>
       </div>
 
-      {/* ── Body ── */}
-      <div className="px-4 md:px-6 pt-4 pb-8 max-w-2xl mx-auto w-full flex flex-col gap-6">
+      <div style={{ padding:'0 20px 24px', display:'flex', flexDirection:'column', gap:22 }}>
 
-        {/* Session cards */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span style={{ display:'inline-block', width:2, height:14, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', textTransform:'uppercase', color:'var(--text-muted)' }}>Start a session</span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <section>
+          <h3 style={SECTION_H}>Start a session</h3>
+          <p style={SECTION_HINT}>Pick the copilot that matches the interview you&rsquo;re about to take.</p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(215px, 1fr))', gap:12 }}>
             {COPILOTS.map(cp => (
-              <button
-                key={cp.name}
-                onClick={cp.onClick}
-                className="group text-left rounded-2xl p-4 relative overflow-hidden flex flex-col gap-3 min-w-0"
-                style={{
-                  background: 'var(--bg-elevated)',
-                  border: '1px solid var(--border)',
-                  borderTop: `3px solid ${cp.accent}`,
-                  minHeight: 132,
-                  transition: 'box-shadow .18s, transform .18s',
-                }}
-                onMouseEnter={e => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.boxShadow = `0 8px 32px ${cp.accent}1E, 0 2px 8px rgba(0,0,0,.10)`;
-                  el.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={e => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.boxShadow = 'none';
-                  el.style.transform = 'none';
-                }}
-              >
-                <div style={{ width:38, height:38, borderRadius:10, background:`${cp.accent}18`, border:`1px solid ${cp.accent}30`, display:'flex', alignItems:'center', justifyContent:'center', color:cp.accent, flexShrink:0 }}>
-                  {cp.icon}
-                </div>
-                <div style={{ fontFamily:'var(--font-display)', fontSize:14, fontWeight:700, lineHeight:1.25, color:'var(--text-primary)', overflowWrap:'anywhere', flex:1 }}>
-                  {cp.name}
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:10, fontWeight:700, fontFamily:'var(--font-code)', color:cp.accent, letterSpacing:'0.06em', textTransform:'uppercase' }}>
-                  Launch
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
-                    <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </div>
+              <button key={cp.name} onClick={cp.onClick} className="lum-card"
+                style={{ textAlign:'left', cursor:'pointer', display:'flex', flexDirection:'column', gap:8, padding:14,
+                         background:'var(--lum-surface)', border:'1px solid var(--lum-border)',
+                         borderRadius:'var(--lum-radius)', boxShadow:'var(--lum-shadow)' }}>
+                <span style={{ display:'flex', alignItems:'center', gap:9 }}>
+                  <span aria-hidden="true" style={{ width:28, height:28, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+                               borderRadius:'var(--lum-radius)', background:'var(--lum-accent-bg)', color:'var(--lum-accent)' }}>
+                    {cp.icon}
+                  </span>
+                  <span style={{ fontSize:14, fontWeight:600, color:'var(--lum-text)' }}>{cp.name}</span>
+                </span>
+                <span style={{ fontSize:12, lineHeight:1.5, color:'var(--lum-text-2)' }}>{cp.desc}</span>
+                <span style={{ fontSize:13, fontWeight:600, color:'var(--lum-accent-sm)', marginTop:'auto', paddingTop:4 }}>Launch &rarr;</span>
               </button>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Suggested prompts */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span style={{ display:'inline-block', width:2, height:14, borderRadius:2, background:'var(--accent)', flexShrink:0 }} />
-            <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', textTransform:'uppercase', color:'var(--text-muted)' }}>Suggested prompts</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-            {QUICK_PROMPTS.map(p => {
-              const accent = PROMPT_ACCENT[p.type];
-              return (
-                <button
-                  key={p.text}
-                  onClick={() => handlePromptClick(p)}
-                  className="group text-left rounded-xl px-4 py-3.5 flex flex-col gap-1.5"
-                  style={{
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border)',
-                    borderTop: `2px solid ${accent}`,
-                    minHeight: 80,
-                    transition: 'box-shadow .15s, transform .15s',
-                  }}
-                  onMouseEnter={e => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.boxShadow = `0 4px 16px ${accent}18`;
-                    el.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={e => {
-                    const el = e.currentTarget as HTMLButtonElement;
-                    el.style.boxShadow = 'none';
-                    el.style.transform = 'none';
-                  }}
-                >
-                  <span style={{ fontFamily:'var(--font-code)', fontSize:10, fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:accent }}>
-                    {p.type}
-                  </span>
-                  <span style={{ fontFamily:'var(--font-sans)', fontSize:13, lineHeight:1.55, color:'var(--text-secondary)', fontWeight:450 }}>
-                    {p.text}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Keyboard hints */}
-        <div className="hidden md:flex items-center justify-between pt-3" style={{ borderTop:'1px solid var(--border)' }}>
-          <div className="flex items-center gap-4" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--text-muted)' }}>
-            {([['⌘K','focus'],['⌘M','mic'],['⌘B','blank screen']] as const).map(([k,v]) => (
-              <span key={k} className="flex items-center gap-1.5">
-                <kbd style={{ padding:'2px 6px', borderRadius:4, border:'1px solid var(--border)', background:'var(--bg-surface)', fontSize:10 }}>{k}</kbd>
-                {v}
-              </span>
+        <section>
+          <h3 style={SECTION_H}>Suggested prompts</h3>
+          <p style={SECTION_HINT}>Common starters. Select one to begin immediately.</p>
+          <div style={{ border:'1px solid var(--lum-border)', borderRadius:'var(--lum-radius)',
+                        background:'var(--lum-surface)', overflow:'hidden' }}>
+            {QUICK_PROMPTS.map((p, i) => (
+              <button key={p.text} onClick={() => handlePromptClick(p)} className="lum-row"
+                style={{ width:'100%', textAlign:'left', cursor:'pointer', display:'grid',
+                         gridTemplateColumns:'104px 1fr auto', alignItems:'center', gap:14, padding:'10px 14px',
+                         background:'transparent', border:'none',
+                         borderBottom: i < QUICK_PROMPTS.length - 1 ? '1px solid var(--lum-border)' : 'none' }}>
+                <span>
+                  <span style={{ ...TAG_BASE, ...TAG_TONE[p.type] }}>{p.type}</span>
+                </span>
+                <span style={{ fontSize:13, color:'var(--lum-text)' }}>{p.text}</span>
+                <span aria-hidden="true" style={{ fontSize:13, color:'var(--lum-text-2)' }}>&rarr;</span>
+              </button>
             ))}
           </div>
-          <div className="flex items-center gap-1.5" style={{ fontFamily:'var(--font-code)', fontSize:10, color:'var(--text-muted)' }}>
-            <span style={{ width:6, height:6, borderRadius:'50%', background:'#4ADE80', display:'inline-block', animation:'sona-ready 2s ease-in-out infinite' }} />
-            Sona ready
-          </div>
+        </section>
+
+        {/* Only shortcuts LumoraShellPage actually binds. The previous
+            footer advertised Cmd+K / Cmd+M / Cmd+B, none of which exist. */}
+        <div style={{ display:'flex', gap:16, alignItems:'center', fontSize:12, color:'var(--lum-text-2)', paddingTop:4 }}>
+          {([['⌘S','Search'],['⌘⌫','Clear history']] as const).map(([k, v]) => (
+            <span key={k} style={{ display:'inline-flex', alignItems:'center', gap:6 }}>
+              <kbd style={{ padding:'1px 6px', fontSize:12, fontFamily:'inherit', color:'var(--lum-text)',
+                            background:'var(--lum-surface)', border:'1px solid var(--lum-border-strong)',
+                            borderBottomWidth:2, borderRadius:'var(--lum-radius)' }}>{k}</kbd>
+              {v}
+            </span>
+          ))}
         </div>
       </div>
-
-      <div style={{ borderTop:'1px solid var(--border)', flexShrink:0 }} />
     </div>
   );
 }

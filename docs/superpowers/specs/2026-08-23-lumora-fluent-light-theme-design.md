@@ -117,7 +117,10 @@ use. Phase 2 is not specified here.
   the accent pair must respect the 14px rule.
 - Grep `SessionPanel.tsx` for `theme === 'light'` and for six-digit hex literals;
   both must return nothing.
-- Grep the file for font sizes below 12px; must return nothing.
+- Grep the `EmptyState` component for font sizes below 12px; must return nothing.
+  The streaming Q&A view in the same file keeps its 9px and 10px text: it is a
+  different screen, it was not part of the reviewed mockup, and it belongs to
+  Phase 2.
 - `pnpm lint`, `tsc --noEmit`, and `pnpm build` must stay clean.
 - Compare the rendered screen against the mockup.
 
