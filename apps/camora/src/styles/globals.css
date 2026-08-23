@@ -20,46 +20,46 @@
   :root {
     /* Backgrounds — neutral charcoal (Vercel/Linear). No blue hue in base;
        blue/gold appear as accents on neutral substrate, not as the substrate. */
-    --bg-base: #0f141a;
-    --bg-app: #161d26;
-    --bg-surface: #1b232d;
-    --bg-elevated: #232b37;
+    --bg-base: #141312;
+    --bg-app: #1B1A19;
+    --bg-surface: #292827;
+    --bg-elevated: #3B3A39;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.62);
 
     /* Borders — neutral slate, visible against neutral dark */
-    --border: #424650;
-    --border-hover: #656871;
-    --border-focus: #42b4ff;
+    --border: #3B3A39;
+    --border-hover: #605E5C;
+    --border-focus: #2899F5;
 
     /* Text — warm white headings, cool slate secondary */
-    --text-primary: #ebebf0;
-    --text-secondary: #c6c6cd;
-    --text-hero: #ebebf0;
-    --text-muted: #a4a4ad;
-    --text-dimmed: #656871;
+    --text-primary: #F3F2F1;
+    --text-secondary: #C8C6C4;
+    --text-hero: #F3F2F1;
+    --text-muted: #A19F9D;
+    --text-dimmed: #797775;
 
     /* Primary accent — Linode/Akamai blue */
-    --accent: #42b4ff;
-    --accent-hover: #75cfff;
-    --accent-subtle: rgba(66,180,255,0.10);
-    --accent-text: #42b4ff;
+    --accent: #2899F5;
+    --accent-hover: #6CB8F6;
+    --accent-subtle: rgba(40,153,245,0.10);
+    --accent-text: #6CB8F6;
 
     /* Secondary accent — Warm Gold (signal, momentum, highlights).
        Restored from DESIGN.md: gold marks what's next, problem counts,
        agenda numerals. Never structural. */
-    --accent-secondary: #FF9900;
-    --accent-secondary-hover: #FFAC31;
+    --accent-secondary: #FFB900;
+    --accent-secondary-hover: #FFD335;
     --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 10%, transparent);
-    --accent-secondary-text: #FF9900;
+    --accent-secondary-text: #FFB900;
 
     /* Semantic — blue for success/info, gold for warning, red for danger */
-    --success: #2bb534;
-    --warning: #fbd332;
-    --warning-text: #fbd332;
-    --danger: #ff7a7a;
-    --info: #42b4ff;
+    --success: #54B054;
+    --warning: #FFB900;
+    --warning-text: #FFB900;
+    --danger: #F1707B;
+    --info: #2899F5;
 
     /* Brand-green success + semantic aliases (DESIGN-006/009/010/013).
        --cam-success now aliases --success, which is AWS's status green.
@@ -72,18 +72,18 @@
     --color-error: var(--danger);
 
     /* Difficulty — weight-driven, not hue-driven */
-    --easy: #656871;
-    --easy-bg: rgba(101,104,113,0.10);
-    --easy-border: rgba(101,104,113,0.25);
-    --medium: #ebebf0;
-    --medium-bg: rgba(235,235,240,0.06);
-    --medium-border: rgba(235,235,240,0.15);
-    --hard: #fbd332;
+    --easy: #A19F9D;
+    --easy-bg: rgba(161,159,157,0.10);
+    --easy-border: rgba(161,159,157,0.25);
+    --medium: #F3F2F1;
+    --medium-bg: rgba(243,242,241,0.06);
+    --medium-border: rgba(243,242,241,0.15);
+    --hard: #FFB900;
     --hard-bg:     color-mix(in oklab, var(--hard) 10%, transparent);
     --hard-border: color-mix(in oklab, var(--hard) 25%, transparent);
 
     /* Category */
-    --cat-primary: #42b4ff;
+    --cat-primary: #2899F5;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 10%, transparent);
 
     /* ── Fonts — AWS Cloudscape parity ───────────────────────────
@@ -95,7 +95,11 @@
        depending on which var a component happened to reach for.
        JetBrains Mono is kept over AWS's Monaco/Menlo stack — it is a
        real webfont we already load and is strictly better for code. */
-    --font-sans: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Roboto, Arial, sans-serif;
+    /* Capra/Ascend = Microsoft Fluent, whose face is Segoe UI. It is a system
+       font on Windows and falls back to the platform UI face elsewhere, which
+       is what Fluent itself does off-Windows — so nothing extra is loaded.
+       Lumora overrides this to Open Sans inside .lumora-shell-root. */
+    --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Roboto, Arial, sans-serif;
     --font-display: var(--font-sans);
     --font-brand: var(--font-sans);
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -154,7 +158,7 @@
 
     /* Legacy compat aliases */
     --text-dim: var(--text-muted);
-    --nav-bg: rgba(15,20,26,0.92);
+    --nav-bg: rgba(27,26,25,0.92);
     --nav-bg-secondary: var(--bg-elevated);
     --nav-border: var(--border);
     --nav-text: var(--text-primary);
@@ -173,20 +177,20 @@
        DARK default; base #26619C is too dark on the charcoal substrate
        (~2.9:1), so dark mode lifts navy to #6E96C0 (~7:1) per DESIGN.md.
        Light theme uses the base #26619C ramp (see [data-theme="light"]). */
-    --cam-primary: #42b4ff;
-    --cam-primary-lt: #75cfff;
-    --cam-primary-dk: #006ce0;
-    --cam-primary-900: #001129;
-    --cam-gold-leaf: #FF9900;
-    --cam-gold-leaf-lt: #FFAC31;
-    --cam-gold-leaf-dk: #EC7211;
+    --cam-primary: #2899F5;
+    --cam-primary-lt: #6CB8F6;
+    --cam-primary-dk: #0078D4;
+    --cam-primary-900: #10304D;
+    --cam-gold-leaf: #FFB900;
+    --cam-gold-leaf-lt: #FFD335;
+    --cam-gold-leaf-dk: #D69B00;
     --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 8%, transparent);
-    --cam-gold-leaf-text: #FF9900;
+    --cam-gold-leaf-text: #FFB900;
     /* Muted white for inactive tab labels on the navy/gold tab strip. Same in
        both themes — the strip background is navy regardless of theme. */
     --cam-tab-inactive-on-navy: rgba(255, 255, 255, 0.75);
-    --cam-void: #0f141a;
-    --cam-surface-lt: #1b232d;
+    --cam-void: #141312;
+    --cam-surface-lt: #292827;
 
     /* Strip-header semantic tokens — text/icon colors for surfaces that
        use --cam-hero-strip as their background. Overridden to dark values
@@ -331,40 +335,40 @@
     --lum-tag-behav-bg: #fffef0;
     --lum-tag-behav-br: #f0d98a;
 
-    --bg-base: #f2f3f3;
-    --bg-app: #f9f9fb;
-    --bg-surface: #ffffff;
-    --bg-elevated: #ffffff;
+    --bg-base: #FAF9F8;
+    --bg-app: #FFFFFF;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #F3F2F1;
     --bg-primary: var(--bg-surface);
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
     /* Fluent light theme: cool blue-tinted surfaces and hairline borders. */
-    --border: #c6c6cd;
-    --border-hover: #8c8c94;
-    --border-focus: #006ce0;
+    --border: #EDEBE9;
+    --border-hover: #C8C6C4;
+    --border-focus: #0078D4;
 
-    --text-primary: #0f141a;
-    --text-secondary: #424650;
-    --text-hero: #0f141a;
-    --text-muted: #656871;
-    --text-dimmed: #656871;  /* was #6C737A (4.44:1 on surface, sub-AA) → ~4.9:1 */
+    --text-primary: #323130;
+    --text-secondary: #605E5C;
+    --text-hero: #323130;
+    --text-muted: #605E5C;
+    --text-dimmed: #797775;  /* was #6C737A (4.44:1 on surface, sub-AA) → ~4.9:1 */
 
-    --accent: #006ce0;
-    --accent-hover: #002b66;
-    --accent-subtle: color-mix(in oklab, #006ce0 10%, transparent);
-    --accent-text: #006ce0;
+    --accent: #0078D4;
+    --accent-hover: #005A9E;
+    --accent-subtle: color-mix(in oklab, #0078D4 10%, transparent);
+    --accent-text: #005A9E;
 
-    --accent-secondary: #EC7211;
-    --accent-secondary-hover: #d4640f;
+    --accent-secondary: #D83B01;
+    --accent-secondary-hover: #B33000;
     --accent-secondary-subtle: color-mix(in oklab, var(--accent-secondary) 8%, transparent);
-    --accent-secondary-text: #8a4a08;
+    --accent-secondary-text: #8A2800;
 
-    --success: #00802f;
-    --warning: #855900;
-    --warning-text: #855900;
-    --danger: #db0000;
-    --info: #006ce0;
+    --success: #107C10;
+    --warning: #8A6B00;
+    --warning-text: #8A6B00;
+    --danger: #A4262C;
+    --info: #0078D4;
 
     /* Brand-green success + semantic aliases (DESIGN-006/009/010/013).
        Deeper green (#059669) on light for AA contrast vs the #10b981 dark value. */
@@ -372,17 +376,17 @@
     --cam-warning: var(--warning);
     --color-error: var(--danger);
 
-    --easy: #656871;
+    --easy: #797775;
     --easy-bg:     rgba(107,114,128,0.06);
     --easy-border: rgba(107,114,128,0.18);
-    --medium: #0f141a;
+    --medium: #323130;
     --medium-bg:   rgba(18,20,26,0.04);
     --medium-border: rgba(18,20,26,0.10);
-    --hard: #855900;
+    --hard: #8A6B00;
     --hard-bg:     color-mix(in oklab, var(--hard) 8%, transparent);
     --hard-border: color-mix(in oklab, var(--hard) 20%, transparent);
 
-    --cat-primary: #006ce0;
+    --cat-primary: #0078D4;
     --cat-primary-bg: color-mix(in oklab, var(--cat-primary) 8%, transparent);
 
     --shadow-xs: 0 1px 2px rgba(15,23,42,0.05);
@@ -396,17 +400,17 @@
     --shadow-gold-xs: 0 1px 3px rgba(255,153,0,0.04), 0 4px 16px rgba(255,153,0,0.02);
     --shadow-gold-sm: 0 2px 8px rgba(255,153,0,0.06);
 
-    --cam-primary: #006ce0;
-    --cam-primary-lt: #42b4ff;
-    --cam-primary-dk: #002b66;
-    --cam-primary-900: #001129;
+    --cam-primary: #0078D4;
+    --cam-primary-lt: #2899F5;
+    --cam-primary-dk: #005A9E;
+    --cam-primary-900: #10304D;
     --cam-gold-leaf:    #EC7211;
     --cam-gold-leaf-lt: #FF9900;
     --cam-gold-leaf-dk: #C25708;
     --cam-gold-leaf-50: color-mix(in oklab, var(--cam-gold-leaf) 6%, transparent);
     --cam-gold-leaf-text:#8a4a08;
-    --cam-void: #f2f3f3;
-    --cam-surface-lt: #ebebf0;
+    --cam-void: #FAF9F8;
+    --cam-surface-lt: #EDEBE9;
 
     --cam-on-accent: #ffffff;
 
@@ -1932,15 +1936,68 @@ html[data-overlay='on'] #root {
    them file by file would be a very large diff and would keep drifting, so
    they are remapped once here instead, onto --lum-*.
 
-   Scoped to .lumora-shell-root (LumoraShellPage.tsx:421, `fixed inset-0`),
-   which contains the icon rail, the topbar and every tool panel. Capra and
-   the marketing pages sit outside it and keep Navy Atlas untouched.
+   ─────────────────────────────────────────────────────────────────────────
+   PRODUCT SPLIT (2026-08-23, Chundu): Capra/Ascend runs Microsoft Fluent;
+   Lumora runs AWS Cloudscape. The global :root and [data-theme="light"]
+   blocks are Fluent and belong to Capra. Everything below re-points the
+   SHARED tokens at the AWS ramp, scoped to .lumora-shell-root
+   (LumoraShellPage.tsx:421, `fixed inset-0`) which wraps the icon rail, the
+   topbar and every tool panel. Capra and the marketing pages sit outside it
+   and keep Fluent untouched.
+
+   The --lum-* tokens are already the AWS ramp and are already theme-aware,
+   so pointing the shared tokens at them buys light/dark for free. Only the
+   semantic trio needs explicit values per theme, below.
 
    --cam-primary is deliberately NOT remapped: it is already a blue, several
    call sites use it as a fill under white --cam-on-accent text, and pointing
    it at a lighter accent would drop those pairs below AA. Gold and the navy
    strips are what actually read as dated. */
 .lumora-shell-root {
+  /* AWS Cloudscape's UI face; Capra keeps Segoe UI. */
+  --font-sans:      'Open Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Roboto, Arial, sans-serif;
+  --font-display:   var(--font-sans);
+  --font-brand:     var(--font-sans);
+  --font-answer:    var(--font-sans);
+  --font-answer-heading: var(--font-sans);
+
+  /* Base surfaces / text / borders — AWS via --lum-*. */
+  --bg-base:        var(--lum-bg);
+  --bg-app:         var(--lum-bg);
+  --bg-surface:     var(--lum-surface);
+  --bg-elevated:    var(--lum-surface-hover);
+  --bg-primary:     var(--lum-surface);
+  --bg-secondary:   var(--lum-surface-hover);
+
+  --border:         var(--lum-border);
+  --border-hover:   var(--lum-border-strong);
+  --border-focus:   var(--lum-accent);
+
+  --text-primary:   var(--lum-text);
+  --text-hero:      var(--lum-text);
+  --text-secondary: var(--lum-text-2);
+  --text-muted:     var(--lum-text-2);
+  --text-dimmed:    var(--lum-border-strong);
+
+  --accent:         var(--lum-accent);
+  --accent-hover:   var(--lum-accent-sm);
+  --accent-text:    var(--lum-accent);
+  --accent-subtle:  var(--lum-accent-bg);
+  --cat-primary:    var(--lum-accent);
+
+  /* AWS Cloudscape status colours, dark. The light overrides follow. */
+  --success:        #2bb534;
+  --warning:        #fbd332;
+  --warning-text:   #fbd332;
+  --danger:         #ff7a7a;
+  --info:           var(--lum-accent);
+  --cam-success:    var(--success);
+  --hard:           #fbd332;
+
+  --cam-primary:    var(--lum-accent);
+  --cam-primary-lt: var(--lum-accent-sm);
+  --cam-primary-dk: #006ce0;
+
   --cam-gold-leaf:          var(--lum-accent);
   --cam-gold-leaf-lt:       var(--lum-accent-sm);
   --cam-gold-leaf-dk:       var(--lum-border);
@@ -1966,6 +2023,16 @@ html[data-overlay='on'] #root {
   --lumora-topbar-border-color: var(--lum-border);
   --lumora-tab-active-bg:   var(--lum-accent-bg);
   --lumora-tab-active-text: var(--lum-accent-sm);
+}
+
+/* Lumora, light theme — AWS Cloudscape light status colours. */
+[data-theme="light"] .lumora-shell-root {
+  --success:      #00802f;
+  --warning:      #855900;
+  --warning-text: #855900;
+  --danger:       #db0000;
+  --hard:         #855900;
+  --cam-primary-dk: #002b66;
 }
 
 /* GRAPHITE GLASS overlay scheme (modeled on macOS Control Center / Raycast / Cluely):

@@ -69,13 +69,19 @@ export const CodingProctoredPage = () => {
   }, []);
 
   return (
-    <PaywallGate feature="Coding Solutions">
-      <ErrorBoundary>
-        <Suspense>
-          <CodingPageContent />
-        </Suspense>
-      </ErrorBoundary>
-    </PaywallGate>
+    // lumora-shell-root is the scope that swaps the shared design tokens from
+    // Capra's Fluent ramp to Lumora's AWS one. Every other /lumora/* route
+    // renders through LumoraShellPage, which carries the class; this page does
+    // not, so without it the proctored view would render in Fluent colours.
+    <div className="lumora-shell-root contents">
+      <PaywallGate feature="Coding Solutions">
+        <ErrorBoundary>
+          <Suspense>
+            <CodingPageContent />
+          </Suspense>
+        </ErrorBoundary>
+      </PaywallGate>
+    </div>
   );
 }
 
