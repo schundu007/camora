@@ -68,7 +68,10 @@ async function jwtAuth(req, res, next) {
       [userId]
     );
     plan_type = r.rows[0]?.plan_type ?? null;
-  } catch {}
+  } catch (err) {
+    console.error('[Auth] subscription lookup failed:', err.message);
+    return res.status(503).json({ error: 'Authentication service unavailable' });
+  }
 
   req.user = { id: userId, email: payload.email, name: payload.name, picture: payload.picture, plan_type };
   next();
@@ -113,6 +116,12 @@ app.use('/pg-ide', async (req, res) => {
   res.set('Cache-Control', 'no-store');
   res.set('Referrer-Policy', 'no-referrer');
   res.cookie('pg_ide', sessionId, { httpOnly: true, maxAge: 3600, path: '/pg-ide', sameSite: 'none', secure: true });
+  if (qt && userId !== -1) {
+    const cleanUrl = new URL(req.url, 'http://localhost');
+    cleanUrl.searchParams.delete('_t');
+    cleanUrl.searchParams.delete('token');
+    return res.redirect(303, `${cleanUrl.pathname}${cleanUrl.search}`);
+  }
 
   const FRAME_ORIGINS = [
     "'self'",
@@ -168,7 +177,10 @@ app.use('/pg-ide', async (req, res) => {
 });
 
 async function runMigrations() {
+  let lockAcquired = false;
   try {
+    await query('SELECT pg_advisory_lock(hashtext($1))', ['camora:playground-migrations']);
+    lockAcquired = true;
     await query(`CREATE TABLE IF NOT EXISTS playground_sessions (
       id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id       INTEGER NOT NULL REFERENCES users(id),
@@ -215,8 +227,13 @@ async function runMigrations() {
 )`);
     await query('CREATE INDEX IF NOT EXISTS idx_saved_vms_user ON playground_saved_vms(user_id)');
     console.log('[Migrations] playground tables ensured');
+    await query('SELECT pg_advisory_unlock(hashtext($1))', ['camora:playground-migrations']);
+    lockAcquired = false;
   } catch (e) {
     console.error('[Migrations] failed:', e.message);
+    if (lockAcquired) {
+      await query('SELECT pg_advisory_unlock(hashtext($1))', ['camora:playground-migrations']).catch(() => {});
+    }
     throw e;
   }
 }
