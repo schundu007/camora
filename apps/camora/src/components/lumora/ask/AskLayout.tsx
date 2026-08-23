@@ -630,16 +630,16 @@ export const AskLayout = () => {
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
 
       {/* Top bar — navy strip with gold-leaf border */}
-      <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--lum-surface)', borderBottom: '2px solid var(--lum-accent)' }}>
+      <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--lum-accent)', borderBottom: '1px solid var(--lum-accent-sm)' }}>
         <div className="flex items-center gap-2">
           {hasMessages && (
-            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-accent)', border: '1px solid var(--lum-border)', ...sans }}>
+            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-white/20" style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.45)', ...sans }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New
             </button>
           )}
         </div>
-        <span className="text-[12px] uppercase tracking-widest font-bold" style={{ color: 'var(--lum-accent)', ...sans }}>Ask Sona</span>
+        <span className="text-[12px] uppercase tracking-widest font-bold" style={{ color: '#FFFFFF', ...sans }}>Ask Sona</span>
         {/* Single-click chip: opens the left History sidebar (collapse lives
             inside the sidebar). Hidden while the sidebar is open so there's one
             unambiguous control at a time. */}
@@ -648,7 +648,7 @@ export const AskLayout = () => {
             onClick={() => setShowHistory(true)}
             data-tip="Show conversation history"
             className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-medium transition-colors"
-            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}
+            style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.45)', ...sans }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
             History ({history.length})
