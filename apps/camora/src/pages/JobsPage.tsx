@@ -1708,7 +1708,7 @@ export default function JobsPage() {
         /* Filter form controls */
         .jobs-filter-label {
           display: block;
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 700;
           color: var(--text-muted);
           text-transform: uppercase;
