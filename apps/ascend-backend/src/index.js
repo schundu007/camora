@@ -14,6 +14,7 @@ import { isStripeConfigured } from './config/stripe.js';
 import { initRedis } from './services/redis.js';
 import { seedK8sCurriculum } from './services/k8s/curriculum.js';
 import { sendTrialEmail } from './services/emailService.js';
+import { loadAdminConfig } from './services/adminConfig.js';
 
 // Route imports
 import authRouter from './routes/auth.js';
@@ -99,7 +100,10 @@ initRedis();
 // Run database migrations on startup (safe with IF NOT EXISTS)
 async function runMigrations() {
   if (!process.env.DATABASE_URL) return;
+  let lockAcquired = false;
   try {
+    await query('SELECT pg_advisory_lock(hashtext($1))', ['camora:ascend-migrations']);
+    lockAcquired = true;
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS job_roles JSONB DEFAULT NULL');
     await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_text TEXT DEFAULT NULL');
@@ -430,8 +434,10 @@ async function runMigrations() {
     // Drop and recreate the partial indexes so NULL expires_at counts as active.
     await query('DROP INDEX IF EXISTS idx_topups_user');
     await query('DROP INDEX IF EXISTS idx_topups_team');
-    await query('CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL AND (expires_at IS NULL OR expires_at > NOW())');
-    await query('CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL AND (expires_at IS NULL OR expires_at > NOW())');
+    // PostgreSQL forbids volatile functions such as NOW() in index predicates.
+    // Keep these indexes stable and apply the expiry predicate in queries.
+    await query('CREATE INDEX IF NOT EXISTS idx_topups_user ON ai_hour_topups(user_id) WHERE team_id IS NULL');
+    await query('CREATE INDEX IF NOT EXISTS idx_topups_team ON ai_hour_topups(team_id) WHERE team_id IS NOT NULL');
     // Belt-and-suspenders idempotency: even if the webhook event-dedup
     // (ascend_stripe_events) is bypassed somehow (manual replay), the same
     // checkout session can't credit twice.
@@ -802,8 +808,13 @@ async function runMigrations() {
       value TEXT NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`);
+    await query('SELECT pg_advisory_unlock(hashtext($1))', ['camora:ascend-migrations']);
+    lockAcquired = false;
   } catch (err) {
     console.error('[Migrations] Failed to run migrations:', err.message);
+    if (lockAcquired) {
+      await query('SELECT pg_advisory_unlock(hashtext($1))', ['camora:ascend-migrations']).catch(() => {});
+    }
     throw err;
   }
 }

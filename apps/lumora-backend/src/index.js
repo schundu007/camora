@@ -45,7 +45,10 @@ app.get('/health', (req, res) => {
 
 // Run migrations on startup
 async function runMigrations() {
+  let lockAcquired = false;
   try {
+    await query('SELECT pg_advisory_lock(hashtext($1))', ['camora:lumora-migrations']);
+    lockAcquired = true;
     // Ensure lumora tables exist
     const migrations = [
       `CREATE TABLE IF NOT EXISTS lumora_conversations (
@@ -476,8 +479,13 @@ async function runMigrations() {
     await ensureUsageTable();
 
     logger.info('Database migrations complete');
+    await query('SELECT pg_advisory_unlock(hashtext($1))', ['camora:lumora-migrations']);
+    lockAcquired = false;
   } catch (err) {
     logger.error({ err: err.message }, 'Migration error');
+    if (lockAcquired) {
+      await query('SELECT pg_advisory_unlock(hashtext($1))', ['camora:lumora-migrations']).catch(() => {});
+    }
     throw err;
   }
 }
