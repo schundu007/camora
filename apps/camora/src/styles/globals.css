@@ -1884,14 +1884,54 @@ html[data-overlay='on'] .lumora-shell-root {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.055), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
+/* ── Lumora shell on glass ─────────────────────────────────────────────────
+   Overlay mode is a translucent panel over the meeting: the shell-root tint
+   is color-mix(--bg-app, transparent) at the slider alpha, and every
+   descendant background is stripped by the rule further down. A light theme
+   cannot survive that — near-white surfaces vanish and thin borders read as
+   noise. So whenever the overlay is on, the Lumora shell runs the Fluent DARK
+   ramp regardless of [data-theme], and its surfaces become translucent fills
+   rather than opaque blocks so the meeting still shows through.
+
+   --bg-app is forced here too: it feeds the shell-root tint, and in light
+   theme it would tint the glass near-white and make white text unreadable.
+   Specificity: html[data-overlay='on'] (0,1,1) beats [data-theme="light"]
+   (0,1,0), so this wins in both themes without !important. */
+html[data-overlay='on'] {
+  --bg-app:             #1B1A19;
+
+  --lum-bg:             transparent;
+  --lum-surface:        color-mix(in srgb, #292827 72%, transparent);
+  --lum-surface-hover:  color-mix(in srgb, #3B3A39 72%, transparent);
+  --lum-border:         rgba(255,255,255,0.16);
+  --lum-border-strong:  rgba(255,255,255,0.30);
+  --lum-text:           #FFFFFF;
+  --lum-text-2:         #E6E4E2;
+  --lum-accent:         #8FCBF8;
+  --lum-accent-sm:      #B3DCFB;
+  --lum-accent-bg:      rgba(40,153,245,0.24);
+  --lum-ok:             #6BD46B;
+  --lum-cmdbar-bg:      color-mix(in srgb, #292827 45%, transparent);
+
+  --lum-tag-design-fg:  #9CCEF9;
+  --lum-tag-design-bg:  rgba(40,153,245,0.26);
+  --lum-tag-design-br:  rgba(140,200,250,0.45);
+  --lum-tag-coding-fg:  #A6E3A6;
+  --lum-tag-coding-bg:  rgba(90,190,90,0.24);
+  --lum-tag-coding-br:  rgba(150,220,150,0.45);
+  --lum-tag-behav-fg:   #F0D291;
+  --lum-tag-behav-bg:   rgba(220,175,80,0.24);
+  --lum-tag-behav-br:   rgba(232,200,130,0.45);
+}
+
 /* Thin gold brand line along the very top of the overlay — ties it to navy-gold. */
 html[data-overlay='on'] .lumora-shell-root::after {
   content: '';
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--cam-gold-leaf, #c9a227) 25%, var(--cam-gold-leaf, #c9a227) 75%, transparent);
-  opacity: 0.6;
+  background: linear-gradient(90deg, transparent, var(--lum-accent, #2899F5) 25%, var(--lum-accent, #2899F5) 75%, transparent);
+  opacity: 0.55;
   pointer-events: none;
   z-index: 2;
 }

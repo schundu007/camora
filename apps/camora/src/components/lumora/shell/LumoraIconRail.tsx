@@ -106,13 +106,11 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
   // borders/hover so the rail reads as neutral chrome with navy + gold
   // reserved for accents (matches the global Charcoal + Navy Accent rule).
   const itemStyle = (active: boolean): React.CSSProperties => ({
-    color: active ? 'var(--cam-chip-active-text)' : 'var(--text-secondary)',
-    background: active ? 'var(--cam-chip-active-bg)' : 'transparent',
-    border: active ? '1px solid var(--cam-chip-active-bg)' : '1px solid transparent',
-    borderRadius: 999,
-    boxShadow: active
-      ? '0 0 0 1px rgba(217,181,67,0.55), 0 4px 14px rgba(217,181,67,0.32), inset 0 1px 0 rgba(255,255,255,0.18)'
-      : 'none',
+    color: active ? 'var(--lum-accent-sm)' : 'var(--lum-text-2)',
+    background: active ? 'var(--lum-accent-bg)' : 'transparent',
+    border: '1px solid transparent',
+    borderRadius: 'var(--lum-radius)',
+    boxShadow: 'none',
     fontWeight: active ? 700 : 500,
     transition: 'background-color 200ms, color 200ms, box-shadow 200ms, transform 150ms',
   });
@@ -141,9 +139,9 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
         // (the wordmark band below + the gold-leaf right rail). The body
         // of the sidebar inherits the neutral surface so it doesn't read
         // as a lapis column next to the charcoal app shell.
-        background: 'var(--bg-surface)',
-        borderRight: '1px solid var(--cam-gold-leaf)',
-        boxShadow: 'inset -8px 0 32px rgba(217,181,67,0.04), 4px 0 24px rgba(0,0,0,0.18)',
+        background: 'var(--lum-surface)',
+        borderRight: '1px solid var(--lum-border)',
+        boxShadow: 'none',
         paddingTop: 0,
         // No bottom padding — the right column's bottom audio bar sits flush
         // against the viewport, so leaving 12px of empty bg below the
@@ -159,7 +157,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
       }}
     >
       {/* Wordmark — sole navy strip on the rail, same chrome grammar as
-          every other Camora header (cam-hero-strip + 2px gold-leaf bottom
+          every other Lumora surface (--lum-surface + a --lum-border bottom
           border). Height locked to h-12 to match the LumoraShell topbar
           immediately to the right so the two strips read as one continuous
           band of chrome instead of staggered boxes. */}
@@ -167,8 +165,8 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
         to="/"
         className={`h-11 flex items-center ${expanded ? 'gap-2.5 px-4' : 'justify-center px-1'} mb-4 shrink-0`}
         style={{
-          background: 'var(--cam-hero-strip)',
-          borderBottom: '1px solid var(--cam-gold-leaf)',
+          background: 'var(--lum-surface)',
+          borderBottom: '1px solid var(--lum-border)',
         }}
         data-tip="Camora home"
       >
@@ -254,8 +252,8 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
                 aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
                 className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 mb-0.5 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
                 style={companyKey
-                  ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)', border: '1px solid rgba(201,162,39,0.40)' }
-                  : { background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                  ? { background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-border-strong)' }
+                  : { background: 'var(--lum-surface)', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
                 {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
@@ -432,15 +430,15 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
 
       {/* User — navy-strip + gold-leaf chrome, mirrors the wordmark band
           at the top of the rail so the column is bookended by two strips
-          of the same grammar (cam-hero-strip + 2px gold-leaf border,
+          of the same grammar (--lum-surface + a --lum-border edge,
           h-12 fixed). UserDropdown forced to `dark` variant so the
           trigger glass-pill reads on the navy strip regardless of the
           page theme. */}
       <div
         className={`h-11 flex items-center shrink-0 ${expanded ? 'px-2' : 'justify-center px-1'}`}
         style={{
-          background: 'var(--cam-hero-strip)',
-          borderTop: '1px solid var(--cam-gold-leaf)',
+          background: 'var(--lum-surface)',
+          borderTop: '1px solid var(--lum-border)',
         }}
       >
         <UserDropdown variant={theme === 'dark' ? 'dark' : 'light'} showName={expanded} compact={!expanded} position="above-left" />
