@@ -13,8 +13,8 @@ function renderMarkdown(text) {
   const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const processInline = (str) => {
     str = escapeHtml(str);
-    str = str.replace(/\*\*(.+?)\*\*/g, '<strong style="color: #f1f5f9; font-weight: 600;">$1</strong>');
-    str = str.replace(/__(.+?)__/g, '<strong style="color: #f1f5f9; font-weight: 600;">$1</strong>');
+    str = str.replace(/\*\*(.+?)\*\*/g, '<strong style="color: var(--text-primary); font-weight: 600;">$1</strong>');
+    str = str.replace(/__(.+?)__/g, '<strong style="color: var(--text-primary); font-weight: 600;">$1</strong>');
     str = str.replace(/\*(.+?)\*/g, '<em>$1</em>');
     str = str.replace(/_(.+?)_/g, '<em>$1</em>');
     str = str.replace(/`([^`]+)`/g, '<code style="padding: 0 3px; background: rgba(43,181,52, 0.15); border-radius: 2px; color: var(--accent); font-family: var(--font-mono); font-size: 12px;">$1</code>');
@@ -126,7 +126,7 @@ function renderMarkdown(text) {
       flushTables();
       const card = cards[parseInt(cardMatch[1])];
       elements.push(
-        <div key={elementKey++} className="mb-2 px-3 py-2 rounded-lg bg-gradient-to-r from-brand-500/20 to-brand-400/5 border border-brand-400/40">
+        <div key={elementKey++} className="mb-2 px-3 py-2 rounded-lg bg-[var(--accent-subtle)] border border-[var(--border-focus)]">
           <div className="flex items-center gap-2">
             <span className="text-brand-400 text-xs">💬</span>
             <span className="text-xs font-semibold text-brand-400 uppercase">{card.title}</span>
@@ -1350,7 +1350,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               </p>
               <button
                 onClick={() => setShowBlackholeSetup(true)}
-                className="px-3 py-1.5 bg-[var(--warning)] hover:bg-[var(--warning)] text-[var(--text-primary)] text-xs font-medium rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-[var(--warning)] hover:bg-[var(--warning)] text-[var(--cam-on-accent)] text-xs font-medium rounded-lg transition-colors"
               >
                 View Setup Guide
               </button>
@@ -1462,7 +1462,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               disabled={isRecording}
               className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all disabled:opacity-50 ${
                 audioSource === 'system'
-                  ? 'bg-brand-400 text-[var(--text-primary)]'
+                  ? 'bg-brand-400 text-[var(--cam-on-accent)]'
                   : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
               }`}
             >
@@ -1473,7 +1473,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
               disabled={isRecording}
               className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all disabled:opacity-50 ${
                 audioSource === 'mic'
-                  ? 'bg-brand-400 text-[var(--text-primary)]'
+                  ? 'bg-brand-400 text-[var(--cam-on-accent)]'
                   : 'bg-[var(--bg-elevated)] text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
               }`}
             >
@@ -1521,7 +1521,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                 data-tip="OpenAI Whisper API"
                 className={`flex-1 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
                   transcriptionProvider === 'openai'
-                    ? 'bg-brand-400 text-[var(--text-primary)]'
+                    ? 'bg-brand-400 text-[var(--cam-on-accent)]'
                     : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
                 }`}
               >
@@ -1533,7 +1533,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                 data-tip="Deepgram Nova-2 API"
                 className={`flex-1 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${
                   transcriptionProvider === 'deepgram'
-                    ? 'bg-brand-400 text-[var(--text-primary)]'
+                    ? 'bg-brand-400 text-[var(--cam-on-accent)]'
                     : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
                 }`}
               >
@@ -1589,7 +1589,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                 <button
                   onClick={togglePause}
                   className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                    isPaused ? 'bg-brand-400 text-[var(--text-primary)]' : 'bg-warning-500 text-[var(--text-primary)]'
+                    isPaused ? 'bg-brand-400 text-[var(--cam-on-accent)]' : 'bg-warning-500 text-[var(--cam-on-accent)]'
                   }`}
                 >
                   {isPaused ? (
@@ -1815,7 +1815,7 @@ export default function AscendAssistantPanel({ onClose, provider, model, isDedic
                   setShowBlackholeSetup(false);
                   setError(null);
                 }}
-                className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-[var(--text-primary)] font-medium rounded-lg transition-colors"
+                className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-[var(--cam-on-accent)] font-medium rounded-lg transition-colors"
               >
                 Got it
               </button>
