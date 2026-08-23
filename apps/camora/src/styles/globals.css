@@ -204,16 +204,16 @@
       radial-gradient(ellipse 55% 65% at 15% 25%, rgba(0,108,224,0.28), transparent 60%),
       radial-gradient(ellipse 40% 45% at 85% 75%, rgba(255,153,0,0.14), transparent 65%),
       radial-gradient(ellipse 90% 50% at 50% 0%, rgba(255,255,255,0.07), transparent 70%),
-      linear-gradient(135deg, #0A0A0C 0%, #0E0E11 35%, #141417 65%, #0E0E11 100%);
+      linear-gradient(135deg, #0f141a 0%, #161d26 35%, #1b232d 65%, #161d26 100%);
     --cam-hero-strip:
       radial-gradient(ellipse 38% 260% at 0% 50%, rgba(0,108,224,0.28), transparent 70%),
       radial-gradient(ellipse 35% 260% at 100% 50%, rgba(255,153,0,0.14), transparent 70%),
       radial-gradient(ellipse 80% 140% at 50% 0%, rgba(255,255,255,0.07), transparent 75%),
       radial-gradient(ellipse 60% 200% at 50% 50%, rgba(0,108,224,0.12), transparent 70%),
-      linear-gradient(95deg, #0E0E11 0%, #141417 30%, #1C1C22 50%, #141417 70%, #0E0E11 100%);
+      linear-gradient(95deg, #161d26 0%, #1b232d 30%, #232b37 50%, #1b232d 70%, #161d26 100%);
 
     /* Lumora hero gradient — dark: near-black navy. Light: overridden below. */
-    --lumora-hero-gradient: linear-gradient(160deg, #050f22 0%, #091829 55%, #0d1f3c 100%);
+    --lumora-hero-gradient: linear-gradient(160deg, #0f141a 0%, #161d26 55%, #1b232d 100%);
 
     /* Lumora topbar chrome — dark immersive, blue accents */
     --lumora-chrome-bg:     var(--cam-hero-strip);
@@ -242,10 +242,10 @@
 
     /* Chip selected state — gold fill + near-black text in dark mode */
     --cam-chip-active-bg:   var(--cam-gold-leaf);
-    --cam-chip-active-text: #020617;
+    --cam-chip-active-text: #0f141a;
 
     /* Near-black for immersive surfaces */
-    --bg-near-black: #080A0F;
+    --bg-near-black: #0f141a;
 
     /* Blue-tinted shadows for Lumora surfaces */
     --shadow-primary-xs: 0 1px 3px rgba(0,108,224,0.12), 0 4px 16px rgba(0,108,224,0.06);
@@ -306,16 +306,16 @@
        Gold is absent by design: #C2963E measures 2.72:1 here and
        used to carry the category labels.
        See docs/superpowers/specs/2026-08-23-lumora-fluent-light-theme-design.md */
-    --lum-bg: #eef5fc;
+    --lum-bg: #f2f3f3;
     --lum-surface: #ffffff;
     --lum-surface-hover: #e8f2fb;
     --lum-border: #c8d9ed;
     --lum-border-strong: #9eb9d6;
     --lum-text: #0f141a;
     --lum-text-2: #424650;
-    --lum-accent: #0078d4;
-    --lum-accent-sm: #005a9e;
-    --lum-accent-bg: #eff6fc;
+    --lum-accent: #006ce0;
+    --lum-accent-sm: #002b66;
+    --lum-accent-bg: #f0fbff;
     --lum-ok: #00802f;
     --lum-radius: 8px;
     --lum-shadow:         0 0.3px 0.9px rgba(0,0,0,0.07), 0 1.6px 3.6px rgba(0,0,0,0.07);
@@ -410,7 +410,7 @@
 
     --cam-on-accent: #ffffff;
 
-    --lumora-hero-gradient: linear-gradient(160deg, #E6EEF8 0%, #F3F7FC 55%, #F5F9FD 100%);
+    --lumora-hero-gradient: linear-gradient(160deg, #ebebf0 0%, #f2f3f3 55%, #f9f9fb 100%);
     --lumora-chrome-bg:     var(--cam-hero-strip);
     --lumora-chrome-border: var(--border);
     --lumora-chrome-shadow: 0 1px 0 var(--border);
@@ -439,24 +439,24 @@
     /* Light-mode contrast guard tokens — used by the Tailwind class remaps below.
        These replace bare hex values (#111318, #495057, #6C757D) so the remap
        block is token-driven and consistent with the rest of the design system. */
-    --light-text-strong:   #16263D;
-    --light-text-mid:      #40536B;
-    --light-text-soft:     #5E7188;
-    --light-bg-white:      #FDFEFF;
+    --light-text-strong:   #0f141a;
+    --light-text-mid:      #424650;
+    --light-text-soft:     #656871;
+    --light-bg-white:      #ffffff;
     --light-bg-faint:      #EAF2FB;
 
     /* ── Linode/iximiuz education light theme ── */
-    --cam-hero-strip: #eef5fc;
-    --cam-hero-bg:            linear-gradient(160deg, #FDFEFF 0%, #F3F7FC 40%, #E6EEF8 100%);
+    --cam-hero-strip: #f2f3f3;
+    --cam-hero-bg:            linear-gradient(160deg, #ffffff 0%, #f9f9fb 40%, #f2f3f3 100%);
     --cam-gold-leaf:          var(--accent);
-    --cam-gold-leaf-lt:       #005a9e;
-    --cam-gold-leaf-dk:       #26619c;
+    --cam-gold-leaf-lt:       #42b4ff;
+    --cam-gold-leaf-dk:       #006ce0;
     --cam-gold-leaf-text:     var(--accent-text);
     --cam-gold-leaf-50:       var(--accent-subtle);
-    --bg-base:                #F3F7FC;
-    --bg-app:                 #E6EEF8;
+    --bg-base:                #f2f3f3;
+    --bg-app:                 #f9f9fb;
     --bg-surface:             #EFF5FB;
-    --bg-elevated:            #F5F9FD;
+    --bg-elevated:            #ffffff;
     /* Strip-header tokens — dark text on light bg */
     --cam-section-label-text: var(--text-primary);
     --cam-strip-heading:      var(--text-primary);
@@ -1976,7 +1976,7 @@ html[data-overlay='on'] #root {
 html[data-overlay='on'] .lumora-shell-root {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
-    color-mix(in srgb, var(--bg-app, #14161c) calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
+    color-mix(in srgb, var(--bg-app, #0f141a) calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
   /* CSS frost (replaces native vibrancy, which rendered milky/opaque). The window is
      genuinely transparent now — the meeting shows through the tint, blurred here. */
   backdrop-filter: blur(14px) saturate(1.4) !important;
@@ -2046,8 +2046,8 @@ html[data-overlay='on'] .lumora-shell-root *:not([data-overlay-keep]):not(button
    background-color), so it was invisible. Restore a solid, high-contrast caret
    (no glow) so the blinking cursor is easy to locate on the frosted glass. */
 html[data-overlay='on'] .lumora-shell-root .monaco-editor .cursor {
-  background: #FFC53D !important;
-  border-color: #FFC53D !important;
+  background: #ff9900 !important;
+  border-color: #ff9900 !important;
 }
 /* Monaco's current-line highlight draws a 2px #282828 border. On a solid dark
    editor bg it blends in, but the overlay strips the editor bg to transparent,
@@ -2121,7 +2121,7 @@ html[data-overlay='on'][data-theme='light'] .lumora-shell-root {
   --cam-hero-strip: #232b37;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 120px),
-    color-mix(in srgb, #14161c calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
+    color-mix(in srgb, #0f141a calc(var(--overlay-opacity, 0.9) * 100%), transparent) !important;
 }
 html[data-overlay='on'][data-theme='light'] .lumora-shell-root h1,
 html[data-overlay='on'][data-theme='light'] .lumora-shell-root h2,
@@ -2139,7 +2139,7 @@ html[data-overlay='on'][data-theme='light'] .lumora-shell-root [class*='eyebrow'
 }
 /* --text-dimmed is dark even in dark theme (#434B5C) — as button/icon text it's
    lost on the frost. Brighten it inside the overlay (both themes). */
-html[data-overlay='on'] .lumora-shell-root { --text-dimmed: #8A93A6; }
+html[data-overlay='on'] .lumora-shell-root { --text-dimmed: #a4a4ad; }
 /* Eyebrows / micro-labels are excluded from the force-white rule and keep a muted
    token that's mid-gray on the frost (borderline in dark, invisible in light).
    Force them light in overlay, both themes. Headings keep their brand colour. */
@@ -2191,7 +2191,7 @@ html[data-overlay='on'] .lumora-winctl-safe {
   display: flex;
   align-items: center;
   padding: 0 3px;
-  color: var(--text-secondary, #9aa4b2);
+  color: var(--text-secondary, #c6c6cd);
   cursor: grab;
 }
 .desktop-winctl__grip svg { width: 13px; height: 10px; }
@@ -2228,7 +2228,7 @@ html[data-overlay='on'] body.electron-desktop::before {
   justify-content: center;
   border-radius: 6px;
   color: #fff;
-  background: var(--cam-primary, #0047ab);
+  background: var(--cam-primary, #006ce0);
   border: 1px solid var(--cam-gold-leaf);
   cursor: pointer;
 }
@@ -2240,7 +2240,7 @@ html[data-overlay='on'] body.electron-desktop::before {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  color: var(--text-secondary, #9aa4b2);
+  color: var(--text-secondary, #c6c6cd);
   background: var(--surface-2, rgba(255, 255, 255, 0.06));
   border: 1px solid var(--card-border, rgba(255, 255, 255, 0.12));
   cursor: pointer;
@@ -2358,7 +2358,7 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
 /* Light panel inside Lumora — for solution/description panels that need light bg */
 .lumora-light-panel {
   background: #ffffff !important;
-  color: #111827 !important;
+  color: #0f141a !important;
 }
 /* DO NOT override Monaco editor colors — let vs-dark theme work */
 .lumora-light-panel .monaco-editor,
@@ -2374,11 +2374,11 @@ main, [role="main"] { animation: fadeUp 0.15s ease-out; }
   background-color: revert !important;
   background: revert !important;
 }
-.lumora-light-panel .text-gray-900 { color: #111827 !important; }
-.lumora-light-panel .text-gray-800 { color: #1f2937 !important; }
-.lumora-light-panel .text-gray-700 { color: #374151 !important; }
-.lumora-light-panel .text-gray-600 { color: #4b5563 !important; }
-.lumora-light-panel .text-gray-500 { color: #6b7280 !important; }
+.lumora-light-panel .text-gray-900 { color: #0f141a !important; }
+.lumora-light-panel .text-gray-800 { color: #232b37 !important; }
+.lumora-light-panel .text-gray-700 { color: #424650 !important; }
+.lumora-light-panel .text-gray-600 { color: #545b64 !important; }
+.lumora-light-panel .text-gray-500 { color: #656871 !important; }
 .lumora-light-panel .bg-white { background-color: #ffffff !important; }
 .lumora-light-panel .bg-gray-50 { background-color: #f9fafb !important; }
 .lumora-light-panel .bg-gray-100 { background-color: #f3f4f6 !important; }
