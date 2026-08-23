@@ -30,12 +30,7 @@ export default function CloudProviderSelector({ variant = 'header', className = 
       <select
         value={provider}
         onChange={(e) => setProvider(e.target.value as CloudProvider)}
-        className={`text-xs font-mono rounded px-2 py-1 cursor-pointer ${className}`}
-        style={{
-          color: 'var(--cam-primary-dk)',
-          background: 'rgba(255,255,255,0.94)',
-          border: '1px solid rgba(255,255,255,0.72)',
-        }}
+        className={`text-xs font-mono bg-transparent border border-[var(--border)] rounded px-2 py-1 text-[var(--text-secondary)] cursor-pointer ${className}`}
         aria-label="Cloud provider"
       >
         {OPTIONS.map((p) => (
