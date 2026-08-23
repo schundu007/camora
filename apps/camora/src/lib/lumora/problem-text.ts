@@ -25,10 +25,10 @@ export function normalizeProblemText(raw: string): string {
     .replace(/\r\n?/g, '\n')
     // Non-breaking and figure spaces render as spaces but do not behave like
     // them — they survive trims and break word wrapping.
-    .replace(/[   ]/g, ' ')
+    .replace(/[\u00a0\u2007\u202f]/g, ' ')
     // Zero-width characters: invisible, and they defeat every whitespace rule
     // below by sitting between the things those rules try to collapse.
-    .replace(/[​-‍﻿]/g, '')
+    .replace(/[\u200b-\u200d\ufeff]/g, '')
     .split('\n')
     .map((line) => {
       const indent = /^[ \t]*/.exec(line)?.[0] ?? '';
