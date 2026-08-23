@@ -36,7 +36,7 @@ export const FormatTextPreview = ({ text, label }: { text: string; label: string
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
       <div className="px-4 py-2 flex items-center justify-between" style={{ background: 'var(--bg-elevated)', borderBottom: '1px solid var(--border)' }}>
-        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+        <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
         <Chip>{lines.length} lines</Chip>
       </div>
       <div className="px-4 py-3 max-h-[500px] overflow-auto text-[13px] leading-[1.8]" style={{ color: 'var(--text-secondary)' }}>
@@ -82,12 +82,12 @@ export const TextFieldWithPreview = ({ value, onChange, placeholder, label }: { 
   const iS: React.CSSProperties = { border: '1px solid var(--border)', outline: 'none', background: 'var(--bg-surface)' };
   return previewing && value ? (
     <div>
-      <button onClick={() => setPreviewing(false)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>Edit</button>
+      <button onClick={() => setPreviewing(false)} className="text-[12px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>Edit</button>
       <FormatTextPreview text={value} label={label} />
     </div>
   ) : (
     <div>
-      {value && <button onClick={() => setPreviewing(true)} className="text-[9px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>Preview</button>}
+      {value && <button onClick={() => setPreviewing(true)} className="text-[12px] font-semibold mb-1 px-2 py-0.5 rounded" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>Preview</button>}
       <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={4} className="w-full px-3 py-2 rounded-lg text-sm" style={{ ...iS, resize: 'vertical' as const }} />
     </div>
   );
@@ -155,7 +155,7 @@ export const LumoraProfilePage = () => {
       <div className="space-y-4">
         {/* Account */}
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Account</div>
+          <div className="px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Account</div>
           <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between px-4 py-3">
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Email</span>
@@ -178,12 +178,12 @@ export const LumoraProfilePage = () => {
 
         {/* Preferences */}
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Preferences</div>
+          <div className="px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Preferences</div>
           <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center justify-between px-4 py-3">
               <div>
                 <span className="text-xs font-medium block" style={{ color: 'var(--text-primary)' }}>AI Model</span>
-                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Model used for real-time answers</span>
+                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Model used for real-time answers</span>
               </div>
               <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
                 <option>Auto (Recommended)</option>
@@ -195,7 +195,7 @@ export const LumoraProfilePage = () => {
             <div className="flex items-center justify-between px-4 py-3">
               <div>
                 <span className="text-xs font-medium block" style={{ color: 'var(--text-primary)' }}>Answer Mode</span>
-                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Short for live sessions, detailed for practice</span>
+                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Short for live sessions, detailed for practice</span>
               </div>
               <select className="text-xs px-3 py-1.5 rounded-lg" style={{ border: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
                 <option>Short</option>
@@ -207,7 +207,7 @@ export const LumoraProfilePage = () => {
 
         {/* Quick links */}
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-          <div className="px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Quick Links</div>
+          <div className="px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>Quick Links</div>
           <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
             <Link to="/pricing" className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors">
               <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Manage Subscription</span>
@@ -352,15 +352,15 @@ export const AssistantsPage = () => {
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Name (auto)" className="px-3 py-2 rounded-lg text-sm" style={iS} />
           </div>
           <div className="mb-3">
-            <label className="text-[10px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-muted)' }}>AI Model</label>
+            <label className="text-[12px] font-bold uppercase tracking-wider mb-1.5 block" style={{ color: 'var(--text-muted)' }}>AI Model</label>
             <div className="flex gap-2">{AI_MODELS.map(m => (
-              <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-[background-color,border-color,color] duration-150 active:scale-[0.98]" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid var(--border)', color: form.model === m.value ? m.color : 'var(--text-muted)', background: form.model === m.value ? m.color + '14' : 'var(--bg-surface)' }}>{m.label}</button>
+              <button key={m.value} onClick={() => setForm(f => ({ ...f, model: m.value }))} className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-[background-color,border-color,color] duration-150 active:scale-[0.98]" style={{ border: form.model === m.value ? '2px solid ' + m.color : '1px solid var(--border)', color: form.model === m.value ? m.color : 'var(--text-muted)', background: form.model === m.value ? m.color + '14' : 'var(--bg-surface)' }}>{m.label}</button>
             ))}</div>
           </div>
           <div className="mb-3">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your Resume</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
+              <label className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Your Resume</label>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[12px] font-semibold cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -377,8 +377,8 @@ export const AssistantsPage = () => {
           </div>
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Job Description</label>
-              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
+              <label className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Job Description</label>
+              <label className="flex items-center gap-1 px-2 py-1 rounded-md text-[12px] font-semibold cursor-pointer transition-colors hover:bg-[var(--bg-elevated)]" style={{ color: 'var(--cam-primary)', border: '1px solid var(--border)' }}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" /></svg>
                 Upload
                 <input type="file" accept=".txt,.pdf,.docx" className="hidden" onChange={async (e) => {
@@ -396,8 +396,8 @@ export const AssistantsPage = () => {
             {/* Pinned intro — returned VERBATIM, no model involved. "Tell me
                 about yourself" is the one answer nobody wants improvised. */}
             <div className="mt-4">
-              <label className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Pinned intro — spoken word-for-word</label>
-              <p className="text-[11px] mt-1 mb-2" style={{ color: 'var(--text-muted)' }}>
+              <label className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Pinned intro — spoken word-for-word</label>
+              <p className="text-[12px] mt-1 mb-2" style={{ color: 'var(--text-muted)' }}>
                 Sona returns this exactly as written for “tell me about yourself”, “introduce yourself”, “walk me through your background”. No rewriting, and it appears instantly. Leave empty to have it generated from the resume each time.
               </p>
               <TextFieldWithPreview value={form.pinnedIntro} onChange={v => setForm(f => ({ ...f, pinnedIntro: v }))} placeholder="Paste the exact intro you want to say, in your own words." label="Pinned Intro Preview" />
@@ -428,11 +428,11 @@ export const AssistantsPage = () => {
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{a.name}</p>
-                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{a.company}{a.company && a.role ? ' · ' : ''}{a.role}</p>
+                    <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{a.company}{a.company && a.role ? ' · ' : ''}{a.role}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[9px] font-bold" style={{ background: (mi?.color || 'var(--cam-primary)') + '10', color: mi?.color || 'var(--cam-primary)' }}>{mi?.label || a.model}</span>
+                  <span className="px-2 py-0.5 rounded text-[12px] font-bold" style={{ background: (mi?.color || 'var(--cam-primary)') + '10', color: mi?.color || 'var(--cam-primary)' }}>{mi?.label || a.model}</span>
                   <Link to="/lumora" className="px-3 py-1.5 text-xs font-semibold rounded-lg text-white" style={{ background: 'var(--accent)', color: 'var(--cam-on-accent)' }}>Launch</Link>
                   <button onClick={() => remove(a.id)} className="p-1.5 rounded-lg hover:bg-red-50" style={{ color: 'var(--text-muted)' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg></button>
                 </div>
@@ -449,43 +449,43 @@ export const AssistantsPage = () => {
                       <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                     </svg>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
+                    <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
                     {a.storyParseStatus === 'parsing' && (
-                      <span className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                      <span className="flex items-center gap-1 text-[12px]" style={{ color: 'var(--text-muted)' }}>
                         <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-primary)' }} />
                         Parsing resume…
                       </span>
                     )}
                     {a.storyParseStatus === 'failed' && (
-                      <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: 'var(--danger)' }}>
+                      <button onClick={() => parseStories(a.id, a.resume)} className="text-[12px] font-semibold underline" style={{ color: 'var(--danger)' }}>
                         Parse failed — retry
                       </button>
                     )}
                     {a.storyParseStatus === 'done' && a.stories && (
-                      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>· {a.stories.length} stories extracted</span>
+                      <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>· {a.stories.length} stories extracted</span>
                     )}
                   </div>
                   {a.stories && a.stories.length > 0 && (
                     <div className="flex flex-col gap-1.5">
                       {a.stories.map(s => (
-                        <div key={s.id} className="flex items-start gap-2 text-[11px]">
+                        <div key={s.id} className="flex items-start gap-2 text-[12px]">
                           <div className="flex flex-wrap gap-0.5 shrink-0 pt-0.5">
                             {s.archetypes.map(t => (
-                              <span key={t} className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
+                              <span key={t} className="text-[12px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
                                 {t}
                               </span>
                             ))}
                           </div>
                           <div className="min-w-0">
                             <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{s.title}</p>
-                            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{s.summary}{s.impact ? <span style={{ color: 'var(--cam-primary-dk)' }}> · {s.impact}</span> : null}</p>
+                            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{s.summary}{s.impact ? <span style={{ color: 'var(--cam-primary-dk)' }}> · {s.impact}</span> : null}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
                   {a.storyParseStatus !== 'parsing' && (!a.stories || a.stories.length === 0) && a.storyParseStatus !== 'failed' && (
-                    <button onClick={() => parseStories(a.id, a.resume)} className="text-[10px] font-semibold underline" style={{ color: 'var(--cam-primary)' }}>
+                    <button onClick={() => parseStories(a.id, a.resume)} className="text-[12px] font-semibold underline" style={{ color: 'var(--cam-primary)' }}>
                       Extract stories from resume
                     </button>
                   )}

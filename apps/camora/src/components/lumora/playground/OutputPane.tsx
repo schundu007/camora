@@ -33,7 +33,7 @@ function formatTime(d: Date): string {
 
 const RunResult = ({ entry, language }: { entry: RunEntry; language: PlaygroundLanguage }) => {
   if (entry.error) {
-    return <pre className="text-[11px] whitespace-pre-wrap break-words" style={{ ...monoStyle, color: 'var(--danger)' }}>{entry.error}</pre>;
+    return <pre className="text-[12px] whitespace-pre-wrap break-words" style={{ ...monoStyle, color: 'var(--danger)' }}>{entry.error}</pre>;
   }
 
   const { stdout, stderr, exitCode, duration } = entry.result!;
@@ -42,37 +42,37 @@ const RunResult = ({ entry, language }: { entry: RunEntry; language: PlaygroundL
   return (
     <div>
       <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-[9px] font-semibold" style={{ ...sans, color: exitCode === 0 ? '#10b981' : 'var(--danger)' }}>
+        <span className="text-[12px] font-semibold" style={{ ...sans, color: exitCode === 0 ? '#10b981' : 'var(--danger)' }}>
           exit {exitCode} · {duration}ms
         </span>
       </div>
       {stdout && (
         <pre
-          className="text-[11px] whitespace-pre-wrap break-words leading-relaxed"
+          className="text-[12px] whitespace-pre-wrap break-words leading-relaxed"
           style={{ ...monoStyle, color: '#10b981' }}
           dangerouslySetInnerHTML={{ __html: toHtml(stdout) }}
         />
       )}
       {stderr && (
         <pre
-          className="mt-1 text-[11px] whitespace-pre-wrap break-words leading-relaxed"
+          className="mt-1 text-[12px] whitespace-pre-wrap break-words leading-relaxed"
           style={{ ...monoStyle, color: 'var(--danger)' }}
           dangerouslySetInnerHTML={{ __html: toHtml(stderr) }}
         />
       )}
       {decoded && (
         <div className="mt-2 p-3 rounded-md" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-          <span className="text-[9px] uppercase tracking-widest font-semibold block mb-1" style={{ ...sans, color: 'var(--warning)' }}>
+          <span className="text-[12px] uppercase tracking-widest font-semibold block mb-1" style={{ ...sans, color: 'var(--warning)' }}>
             What went wrong
           </span>
           <p className="text-[12px] leading-relaxed m-0" style={{ ...sans, color: 'var(--warning-text)' }}>{decoded}</p>
         </div>
       )}
       {!stdout && !stderr && exitCode === 0 && (
-        <span className="text-[11px] italic" style={{ ...sans, color: 'var(--text-muted)' }}>(no output)</span>
+        <span className="text-[12px] italic" style={{ ...sans, color: 'var(--text-muted)' }}>(no output)</span>
       )}
       {!stdout && !stderr && exitCode !== 0 && (
-        <pre className="text-[11px] whitespace-pre-wrap" style={{ ...monoStyle, color: 'var(--danger)' }}>
+        <pre className="text-[12px] whitespace-pre-wrap" style={{ ...monoStyle, color: 'var(--danger)' }}>
           Process exited with code {exitCode} (no output captured)
         </pre>
       )}
@@ -92,7 +92,7 @@ export const OutputPane = ({ runs, language, onClear }: Props) => {
   return (
     <div className="flex flex-col h-full overflow-hidden" style={{ background: 'var(--bg-app)' }}>
       <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: 'var(--bg-app)', borderBottom: '1px solid var(--border)' }}>
-        <span className="text-[9px] uppercase tracking-widest font-medium" style={{ ...sans, color: 'var(--text-muted)' }}>Output</span>
+        <span className="text-[12px] uppercase tracking-widest font-medium" style={{ ...sans, color: 'var(--text-muted)' }}>Output</span>
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
@@ -124,7 +124,7 @@ export const OutputPane = ({ runs, language, onClear }: Props) => {
         {runs.map((entry, i) => (
           <div key={i}>
             <div className="flex items-center gap-3 px-4 py-1.5">
-              <span className="text-[10px] tabular-nums shrink-0" style={{ ...sans, color: 'var(--text-muted)' }}>
+              <span className="text-[12px] tabular-nums shrink-0" style={{ ...sans, color: 'var(--text-muted)' }}>
                 {formatTime(entry.ts)}
               </span>
               <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />

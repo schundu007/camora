@@ -123,17 +123,17 @@ const LcStripHeader = ({ icon, label, hint, count, right }: {
       {icon ?? (
         <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
       )}
-      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
+      <span className="font-display text-[12px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
         {label}
       </span>
       {hint && (
-        <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
+        <span className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
           · {hint}
         </span>
       )}
       <span className="ml-auto flex items-center gap-2">
         {count !== undefined && (
-          <span className="text-[10px] font-bold tabular-nums" style={{ color: 'var(--cam-strip-text)' }}>
+          <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--cam-strip-text)' }}>
             {count}
           </span>
         )}
@@ -289,7 +289,7 @@ const StarAnswer = ({ sections, streaming }: { sections: { label: StarLabel; bod
           <LcStripHeader
             icon={
               <span
-                className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold tabular-nums"
+                className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[12px] font-bold tabular-nums"
                 style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)', fontFamily: FONT_ANSWER }}
               >
                 {s.label[0]}
@@ -300,7 +300,7 @@ const StarAnswer = ({ sections, streaming }: { sections: { label: StarLabel; bod
             right={
               <button
                 onClick={() => navigator.clipboard.writeText(s.body)}
-                className="text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]"
+                className="text-[12px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]"
                 style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
@@ -315,7 +315,7 @@ const StarAnswer = ({ sections, streaming }: { sections: { label: StarLabel; bod
         </div>
       ))}
       {streaming && sections.length < 4 && (
-        <div className="text-[11px] px-2 py-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+        <div className="text-[12px] px-2 py-1 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-gold-leaf)' }} />
           Generating remaining STAR sections…
         </div>
@@ -342,10 +342,10 @@ const ArchetypeBadge = ({ archetype }: { archetype: Archetype }) => {
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
       </span>
-      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
+      <span className="font-display text-[12px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
         {archetype}
       </span>
-      <span className="text-[10px]" style={{ color: 'var(--cam-strip-text-muted)' }}>· {ARCHETYPE_HINT[archetype]}</span>
+      <span className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>· {ARCHETYPE_HINT[archetype]}</span>
     </div>
   );
 }
@@ -436,7 +436,7 @@ const LearningNote = ({ text }: { text: string | null }) => {
       style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}
     >
       <span
-        className="text-[9px] font-bold uppercase tracking-[0.14em] shrink-0 mt-[2px]"
+        className="text-[12px] font-bold uppercase tracking-[0.14em] shrink-0 mt-[2px]"
         style={{ color: 'var(--cam-gold-leaf-lt)', fontFamily: 'var(--font-mono)' }}
       >
         Takeaway
@@ -472,7 +472,7 @@ const RebuttalsPanel = ({ items }: { items: Rebuttal[] }) => {
         {items.map((r, i) => (
           <div key={i} className="flex gap-2.5 items-start">
             <span
-              className="inline-flex items-center justify-center w-6 h-6 rounded-md shrink-0 text-[10px] font-bold tabular-nums"
+              className="inline-flex items-center justify-center w-6 h-6 rounded-md shrink-0 text-[12px] font-bold tabular-nums"
               style={{
                 background: 'var(--accent-subtle)',
                 color: 'var(--cam-primary-dk)',
@@ -514,8 +514,8 @@ export const StoryBankPanel = ({ stories, activeArchetype }: { stories?: LumoraS
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
         </svg>
-        <span className="text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
-        <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{stories.length}</span>
+        <span className="text-[12px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-primary-dk)' }}>Story Bank</span>
+        <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{stories.length}</span>
       </div>
       <div className="px-2 pb-2 space-y-1">
         {sorted.map(s => {
@@ -539,10 +539,10 @@ export const StoryBankPanel = ({ stories, activeArchetype }: { stories?: LumoraS
                   ))}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold truncate" style={{ color: TEXT_PRIMARY, fontFamily: "var(--font-sans)" }}>
+                  <p className="text-[12px] font-bold truncate" style={{ color: TEXT_PRIMARY, fontFamily: "var(--font-sans)" }}>
                     {s.title}
                   </p>
-                  {s.impact && <p className="text-[9px] truncate" style={{ color: 'var(--cam-primary-dk)' }}>{s.impact}</p>}
+                  {s.impact && <p className="text-[12px] truncate" style={{ color: 'var(--cam-primary-dk)' }}>{s.impact}</p>}
                 </div>
               </div>
             </div>
@@ -585,8 +585,8 @@ export const RichText = ({ text }: { text: string }) => {
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(201,162,39,0.85)' }} />
           <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(217,181,67,0.85)' }} />
         </span>
-        <span className="font-mono text-[10px] font-bold tracking-[0.16em] uppercase text-[var(--cam-strip-heading)]">{lang || 'code'}</span>
-        <button onClick={() => navigator.clipboard.writeText(content)} className="ml-auto text-[10px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]" style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>Copy</button>
+        <span className="font-mono text-[12px] font-bold tracking-[0.16em] uppercase text-[var(--cam-strip-heading)]">{lang || 'code'}</span>
+        <button onClick={() => navigator.clipboard.writeText(content)} className="ml-auto text-[12px] font-bold uppercase tracking-[0.12em] px-2 py-0.5 rounded transition-[background-color,color,transform] active:scale-[0.98]" style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cam-strip-icon-bg)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>Copy</button>
       </div>
       {/* Highlighted, not a single-colour <pre>. Sona's answers are mostly code
           and it was rendering as one flat white block — harder to read than the
@@ -669,11 +669,11 @@ export const RichText = ({ text }: { text: string }) => {
 
   const renderSeg = (seg: Seg, key: string, isLead = false): React.ReactNode => {
     switch (seg.s) {
-      case 'h1': return <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)' }}><span className="font-mono text-[11px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
-      case 'h2': return <div key={key} className="flex items-center gap-3 px-3 py-2 mt-3 mb-1.5 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)', opacity: 0.85 }}><span className="font-mono text-[10px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
+      case 'h1': return <div key={key} className="flex items-center gap-3 px-3 py-2.5 mt-4 mb-2 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)' }}><span className="font-mono text-[12px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
+      case 'h2': return <div key={key} className="flex items-center gap-3 px-3 py-2 mt-3 mb-1.5 rounded-sm first:mt-0" style={{ background: 'var(--cam-accent-fill)', borderLeft: '3px solid var(--accent)', opacity: 0.85 }}><span className="font-mono text-[12px] font-bold tracking-widest uppercase" style={{ color: TEXT_PRIMARY }}>{seg.text}</span></div>;
       case 'h3': return (
         <div key={key} className="flex items-center gap-2 mt-2.5 mb-1" style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
-          {seg.num && <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.num}</span>}
+          {seg.num && <span className="flex items-center justify-center w-5 h-5 rounded text-[12px] font-bold font-mono shrink-0" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.num}</span>}
           <span className="text-[12.5px] font-semibold" style={{ color: TEXT_PRIMARY, fontFamily: FONT_ANSWER }}>{seg.text}</span>
         </div>
       );
@@ -684,16 +684,16 @@ export const RichText = ({ text }: { text: string }) => {
         return (
           <div key={key} className="overflow-x-auto rounded-md border my-2" style={{ borderColor: 'var(--border)' }}>
             <table className="w-full text-left" style={{ borderCollapse: 'collapse' }}>
-              <thead><tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>{hdr.map((c, ci) => <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-[var(--cam-strip-heading)] whitespace-nowrap">{c}</th>)}</tr></thead>
+              <thead><tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>{hdr.map((c, ci) => <th key={ci} className="font-mono text-[12px] font-bold tracking-wider uppercase px-3 py-2 text-[var(--cam-strip-heading)] whitespace-nowrap">{c}</th>)}</tr></thead>
               <tbody>{body.map((row, ri) => <tr key={ri} className="border-t" style={{ borderColor: 'var(--border)', background: ri % 2 ? 'rgba(38,97,156,0.025)' : 'transparent' }}>{row.map((c, ci) => <td key={ci} className="px-3 py-1.5" style={{ fontSize: FS_SMALL, lineHeight: '1.5', color: ci === 0 ? TEXT_PRIMARY : TEXT_SECONDARY, fontWeight: ci === 0 ? 600 : 400, fontFamily: ci === 0 ? 'var(--font-mono)' : FONT_ANSWER }}>{inline(c)}</td>)}</tr>)}</tbody>
             </table>
           </div>
         );
       }
       case 'bullet': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 mt-[8px] w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} /><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(seg.text)}</span></div>;
-      case 'num': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-[10px] font-bold tabular-nums mt-[1px]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)', fontFamily: FONT_ANSWER }}>{seg.n}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(seg.text)}</span></div>;
-      case 'label': return <div key={key} className="mt-2 flex gap-2.5 items-baseline"><span className="shrink-0 font-mono font-bold text-[10px] tracking-[0.14em] uppercase px-2 py-0.5 rounded" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{seg.label}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
-      case 'step': return <div key={key} className="mt-1.5 flex gap-2 items-baseline"><span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.12em]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.step}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
+      case 'num': return <div key={key} className="flex gap-2.5 items-start mt-1"><span className="shrink-0 inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-[12px] font-bold tabular-nums mt-[1px]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)', fontFamily: FONT_ANSWER }}>{seg.n}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{withLead(seg.text)}</span></div>;
+      case 'label': return <div key={key} className="mt-2 flex gap-2.5 items-baseline"><span className="shrink-0 font-mono font-bold text-[12px] tracking-[0.14em] uppercase px-2 py-0.5 rounded" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{seg.label}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
+      case 'step': return <div key={key} className="mt-1.5 flex gap-2 items-baseline"><span className="shrink-0 inline-flex items-center justify-center px-2 py-0.5 rounded text-[12px] font-bold uppercase tracking-[0.12em]" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)', border: '1px solid var(--border)' }}>{seg.step}</span><span style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>{inline(seg.body)}</span></div>;
       case 'para': {
         if (/^(Input|Output)[:\s]/i.test(seg.text)) {
           return <div key={key} className="mt-1.5 px-3 py-1.5 rounded-md" style={{ background: '#0F1B2D', color: '#E6F4FF', fontFamily: 'var(--font-mono)', fontSize: FS_SMALL, lineHeight: LH_BODY }}>{seg.text}</div>;

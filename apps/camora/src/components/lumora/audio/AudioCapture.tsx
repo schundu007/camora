@@ -1419,7 +1419,7 @@ const UnifiedMicButton = ({
             must say which control it is and what state it's in. LIVE is the
             behavioral interviewer stream; AUTO is coding/design continuous mode. */}
         <span
-          className="text-[10px] font-bold uppercase tracking-[0.14em] leading-none"
+          className="text-[12px] font-bold uppercase tracking-[0.14em] leading-none"
           style={{
             color: listenOn ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
             fontFamily: 'var(--font-mono)',
@@ -1442,7 +1442,7 @@ const UnifiedMicButton = ({
           data-tip={isAsking
             ? 'Recording your question — it sends to Sona automatically when you pause (or press ` / click to send now).'
             : 'Ask in your own voice — press ` (or click), speak, and it sends to Sona when you pause.'}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-[0.14em] transition-colors shrink-0"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold uppercase tracking-[0.14em] transition-colors shrink-0"
           style={{
             color: isAsking ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
             background: isAsking ? 'var(--cam-accent-fill)' : 'transparent',
@@ -1464,7 +1464,7 @@ const UnifiedMicButton = ({
               {/* Key hint on the control itself — a shortcut nobody can see is a
                   shortcut nobody uses, and this one exists precisely so you
                   don't have to look down mid-answer to find the button. */}
-              <span aria-hidden="true" className="opacity-60" style={{ fontSize: 11, lineHeight: 1 }}>`</span>
+              <span aria-hidden="true" className="opacity-60" style={{ fontSize: 12, lineHeight: 1 }}>`</span>
             </>
           )}
         </button>

@@ -68,7 +68,7 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
     >
       {/* Index number */}
       <span
-        className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold tabular-nums mt-0.5"
+        className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full text-[12px] font-bold tabular-nums mt-0.5"
         style={{
           background: 'var(--accent-subtle)',
           color: 'var(--cam-primary-dk)',
@@ -84,7 +84,7 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
         {/* Tier badge + primary label */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span
-            className="text-[9px] font-bold uppercase tracking-[0.14em] px-1.5 py-0.5 rounded"
+            className="text-[12px] font-bold uppercase tracking-[0.14em] px-1.5 py-0.5 rounded"
             style={{
               background: isKb
                 ? 'var(--accent-subtle)'
@@ -129,7 +129,7 @@ const CitationRow = ({ c, index }: { c: Citation; index: number }) => {
         {/* Secondary line */}
         {secondary && (
           <p
-            className="mt-0.5 text-[11px] leading-snug truncate"
+            className="mt-0.5 text-[12px] leading-snug truncate"
             style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
           >
             {secondary}
@@ -176,7 +176,7 @@ export const Citations = ({ citations }: CitationsProps) => {
       >
         {/* "Sources" word label — no generic SVG, per project rules */}
         <span
-          className="font-display text-[11px] font-bold tracking-[0.12em] uppercase"
+          className="font-display text-[12px] font-bold tracking-[0.12em] uppercase"
           style={{ color: 'var(--cam-primary-dk)' }}
         >
           Sources
@@ -184,7 +184,7 @@ export const Citations = ({ citations }: CitationsProps) => {
 
         {/* Count badge */}
         <span
-          className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded"
+          className="text-[12px] font-bold tabular-nums px-1.5 py-0.5 rounded"
           style={{
             background: 'var(--accent-subtle)',
             color: 'var(--cam-primary)',

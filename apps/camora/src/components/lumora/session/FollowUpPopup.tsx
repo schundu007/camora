@@ -60,7 +60,7 @@ const SayThisCard = ({ text }: { text: string | null }) => {
           <svg className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
           </svg>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>SAY THIS</span>
+          <span className="text-[12px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--text-primary)' }}>SAY THIS</span>
         </div>
         {text && (
           <button
@@ -272,7 +272,7 @@ export const FollowUpPopup = () => {
           </div>
           <div className="flex items-center gap-2">
             {/* LIVE badge */}
-            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider"
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[12px] font-mono font-bold tracking-wider"
               style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
               LIVE
@@ -298,7 +298,7 @@ export const FollowUpPopup = () => {
         {/* ── Interviewer question ──────────────────────── */}
         {question && (
           <div className="mx-3 mb-2 px-3 py-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)' }}>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Question:</span>
+            <span className="text-[12px] font-mono font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Question:</span>
             <p className="text-[13px] leading-snug mt-0.5 italic" style={{ color: 'var(--text-primary)' }}>
               &ldquo;{question.length > 150 ? question.slice(0, 150) + '...' : question}&rdquo;
             </p>
@@ -311,7 +311,7 @@ export const FollowUpPopup = () => {
             <svg className="w-3 h-3" style={{ color: 'var(--accent)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25" />
             </svg>
-            <span className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>AI Answer Stream</span>
+            <span className="text-[12px] font-mono font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>AI Answer Stream</span>
             {isStreaming && (
               <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
             )}

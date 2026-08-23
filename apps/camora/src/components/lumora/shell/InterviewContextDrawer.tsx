@@ -86,7 +86,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
           <div className="pl-3 flex items-start justify-between gap-3">
             <div>
               <span
-                className="inline-flex items-center px-2.5 py-0.5 mb-2 rounded-full text-[10px] font-extrabold uppercase tracking-[0.16em]"
+                className="inline-flex items-center px-2.5 py-0.5 mb-2 rounded-full text-[12px] font-extrabold uppercase tracking-[0.16em]"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf-text)', boxShadow: '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)' }}
               >
                 Interview Context
@@ -150,12 +150,12 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                             {item.key}
                           </span>
                           {isActive && (
-                            <span className="text-[10px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}>
+                            <span className="text-[12px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}>
                               Active
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
                           {badges.length ? badges.join(' · ') : 'No materials yet — add JD or resume in Documents'}
                         </p>
                       </div>
@@ -164,7 +164,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                           <button
                             type="button"
                             onClick={handleDeactivate}
-                            className="text-[11px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                            className="text-[12px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
                             style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
                           >
                             Deactivate
@@ -173,7 +173,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
                           <button
                             type="button"
                             onClick={() => handleActivate(item.key)}
-                            className="text-[11px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
+                            className="text-[12px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
                             style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
                           >
                             Activate
@@ -190,7 +190,7 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t" style={{ borderColor: 'var(--border)' }}>
-          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
             Manage workspaces in the <strong>Documents</strong> sidebar
           </p>
           <button

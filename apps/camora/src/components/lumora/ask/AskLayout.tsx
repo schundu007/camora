@@ -83,10 +83,10 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
   return (
     <div className="ask-code my-3 rounded-lg overflow-hidden" data-overlay-keep style={{ border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
       <div className="flex items-center justify-between px-3 py-1.5" style={{ background: '#1e222a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <span className="text-[10px] font-mono font-semibold uppercase tracking-widest" style={{ color: '#61afef' }}>{lang || 'code'}</span>
+        <span className="text-[12px] font-mono font-semibold uppercase tracking-widest" style={{ color: '#61afef' }}>{lang || 'code'}</span>
         <button
           onClick={handleCopy}
-          className="text-[10px] font-medium px-2 py-0.5 rounded transition-all"
+          className="text-[12px] font-medium px-2 py-0.5 rounded transition-all"
           style={{
             color: copied ? '#98c379' : '#abb2bf',
             background: copied ? 'rgba(152,195,121,0.12)' : 'rgba(255,255,255,0.06)',
@@ -99,7 +99,7 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
       <SyntaxHighlighter
         language={normalizedLang}
         style={atomOneDark}
-        customStyle={{ margin: 0, padding: '14px 16px', fontSize: '11px', lineHeight: '1.65', fontFamily: "var(--font-mono)", letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', background: '#282c34', borderRadius: 0 }}
+        customStyle={{ margin: 0, padding: '14px 16px', fontSize: '14px', lineHeight: '1.65', fontFamily: "var(--font-mono)", letterSpacing: '-0.02em', WebkitFontSmoothing: 'antialiased', background: '#282c34', borderRadius: 0 }}
         showLineNumbers={false}
         wrapLongLines={false}
       >
@@ -119,7 +119,7 @@ const inlineMarkdown = (raw: string): React.ReactNode[] => {
     if (m[1] !== undefined) {
       nodes.push(<strong key={m.index} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
     } else {
-      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(30,77,120,0.12)', borderRadius: 4, color: '#1e4d78', fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: '-0.02em' }}>{m[2]}</code>);
+      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(30,77,120,0.12)', borderRadius: 4, color: '#1e4d78', fontFamily: "var(--font-mono)", fontSize: 14, letterSpacing: '-0.02em' }}>{m[2]}</code>);
     }
     last = m.index + m[0].length;
   }
@@ -144,7 +144,7 @@ const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
           {head.map((h, i) => (
             <th
               key={i}
-              className="text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+              className="text-left px-3 py-2 text-[12px] font-bold uppercase tracking-widest whitespace-nowrap"
               style={{ color: 'var(--cam-gold-leaf-dk)', background: 'rgba(30,77,120,0.10)' }}
             >
               {inlineMarkdown(h)}
@@ -257,7 +257,7 @@ export const AskResponse = ({ content }: { content: string }) => {
         const body = nl > -1 ? sec.slice(nl + 1) : '';
         return (
           <div key={i}>
-            <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}>
+            <p className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}>
               {title}
             </p>
             <div>{renderContent(body)}</div>
@@ -594,12 +594,12 @@ export const AskLayout = () => {
       {showHistory && (
         <aside className="shrink-0 w-[260px] h-full flex flex-col border-r" style={{ borderColor: 'var(--cam-gold-leaf-dk)', background: 'var(--cam-hero-strip)' }}>
           <div className="flex items-center justify-between px-3 h-12 shrink-0 border-b" style={{ borderColor: 'var(--cam-gold-leaf-dk)' }}>
-            <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
+            <span className="text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>
               History ({history.length})
             </span>
             <div className="flex items-center gap-1">
               {history.length > 0 && (
-                <button onClick={clearAllHistory} className="text-[11px] px-2 py-1 rounded transition-colors hover:bg-red-900/30" style={{ color: '#f87171', ...sans }}>
+                <button onClick={clearAllHistory} className="text-[12px] px-2 py-1 rounded transition-colors hover:bg-red-900/30" style={{ color: '#f87171', ...sans }}>
                   Clear
                 </button>
               )}
@@ -615,7 +615,7 @@ export const AskLayout = () => {
               <div key={c.id} className="flex items-center gap-2 border-b hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)] transition-colors" style={{ borderColor: 'rgba(217,181,67,0.15)' }}>
                 <button onClick={() => loadConversation(c.id)} className="flex-1 text-left px-3 py-2.5 text-[13px] flex flex-col gap-1 min-w-0" style={{ color: 'var(--cam-strip-text)', ...sans }}>
                   <span className="truncate w-full">{c.title}</span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded self-start" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>{c.provider}</span>
+                  <span className="text-[12px] px-1.5 py-0.5 rounded self-start" style={{ background: 'rgba(217,181,67,0.15)', color: 'var(--cam-gold-leaf)' }}>{c.provider}</span>
                 </button>
                 <button onClick={e => deleteConversation(c.id, e)} className="shrink-0 mr-2 p-1 rounded hover:bg-red-900/40 transition-colors" data-tip="Delete conversation" style={{ color: '#f87171' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>
@@ -633,13 +633,13 @@ export const AskLayout = () => {
       <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
         <div className="flex items-center gap-2">
           {hasMessages && (
-            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-gold-leaf)', border: '1px solid rgba(217,181,67,0.35)', ...sans }}>
+            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--cam-gold-leaf)', border: '1px solid rgba(217,181,67,0.35)', ...sans }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New
             </button>
           )}
         </div>
-        <span className="text-[11px] uppercase tracking-widest font-bold" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>Ask Sona</span>
+        <span className="text-[12px] uppercase tracking-widest font-bold" style={{ color: 'var(--cam-gold-leaf)', ...sans }}>Ask Sona</span>
         {/* Single-click chip: opens the left History sidebar (collapse lives
             inside the sidebar). Hidden while the sidebar is open so there's one
             unambiguous control at a time. */}
@@ -647,7 +647,7 @@ export const AskLayout = () => {
           <button
             onClick={() => setShowHistory(true)}
             data-tip="Show conversation history"
-            className="flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-colors"
+            className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-medium transition-colors"
             style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)', ...sans }}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
@@ -753,7 +753,7 @@ export const AskLayout = () => {
                     <img src={p.dataUrl} alt="pending attachment" className="h-16 w-16 object-cover rounded-lg" style={{ border: '1px solid var(--cam-gold-leaf-dk)' }} />
                     <button
                       onClick={() => setPending(prev => prev.filter(x => x.id !== p.id))}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold"
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-bold"
                       style={{ background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--text-primary)' }}
                       aria-label="Remove image"
                     >×</button>

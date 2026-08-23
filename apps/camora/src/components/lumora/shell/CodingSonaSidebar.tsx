@@ -376,7 +376,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
             {/* Title must never wrap — the header is a fixed h-10, so a wrapped
                 label spills over the overlay window controls sitting on top of
                 it. Nowrap + truncate clips instead of overflowing. */}
-            <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase whitespace-nowrap truncate shrink" style={{ color: 'var(--cam-strip-heading)' }}>
+            <span className="font-display text-[12px] font-bold tracking-[0.14em] uppercase whitespace-nowrap truncate shrink" style={{ color: 'var(--cam-strip-heading)' }}>
               Sona
             </span>
             {/* Scope, as an icon chip rather than a text chip — the words
@@ -425,7 +425,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
               tiny pill so the user knows Sona has the right context. */}
           {liveSolveContext && (
             <div
-              className="flex items-center gap-2 px-3 py-1.5 text-[10px]"
+              className="flex items-center gap-2 px-3 py-1.5 text-[12px]"
               style={{ background: 'var(--accent-subtle)', borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}
             >
               <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary)' }} />
@@ -469,7 +469,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
                       className="flex items-center gap-2 px-3 py-1.5"
                       style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                     >
-                      <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
+                      <span className="font-display text-[12px] font-bold tracking-[0.14em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
                       {m.fromCache && (
                         <Chip variant="gold">cached</Chip>
                       )}
@@ -494,7 +494,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
                   className="flex items-center gap-2 px-3 py-1.5"
                   style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}
                 >
-                  <span className="font-display text-[10px] font-bold tracking-[0.14em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona is answering…</span>
+                  <span className="font-display text-[12px] font-bold tracking-[0.14em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona is answering…</span>
                   <span className="ml-auto w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
                 </div>
                 <div className="p-3 text-[12px] leading-relaxed" style={{ color: 'var(--text-primary)' }}>
@@ -507,7 +507,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
 
             {error && !streaming && (
               <div
-                className="rounded-lg px-3 py-2 text-[11px]"
+                className="rounded-lg px-3 py-2 text-[12px]"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--danger)', color: 'var(--danger)' }}
               >
                 {error}
@@ -556,7 +556,7 @@ export const CodingSonaSidebar = ({ surface, open, onClose }: CodingSonaSidebarP
                   ? 'Hands-free is on — the mic listens, sends on a pause, and re-arms. Click to go back to press-to-talk.'
                   : 'Hands-free — let the mic listen continuously and send each question on a pause.'}
                 aria-label={handsFree ? 'Turn off hands-free mic' : 'Turn on hands-free mic'}
-                className="flex items-center justify-center h-8 px-2 rounded-md text-[10px] font-bold uppercase tracking-wider shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/30"
+                className="flex items-center justify-center h-8 px-2 rounded-md text-[12px] font-bold uppercase tracking-wider shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--cam-primary)]/30"
                 style={handsFree
                   ? { background: 'var(--cam-hero-strip)', color: 'var(--cam-gold-leaf-lt)', border: '1px solid var(--cam-gold-leaf)' }
                   : { background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}

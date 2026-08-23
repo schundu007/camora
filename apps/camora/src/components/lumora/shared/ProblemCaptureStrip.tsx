@@ -120,7 +120,7 @@ export function ProblemCaptureStrip({ kind, onProblemBuilt }: Props) {
             >
               <img src={url} alt={`Page ${i + 1}`} className="w-full h-full object-cover" />
               <span
-                className="absolute top-0.5 left-0.5 text-[9px] font-bold px-1 rounded leading-4"
+                className="absolute top-0.5 left-0.5 text-[12px] font-bold px-1 rounded leading-4"
                 style={{ background: 'var(--cam-primary-dk)', color: 'white' }}
               >
                 {i + 1}

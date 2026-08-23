@@ -158,7 +158,7 @@ interface CoFixLayoutProps {
   isTabActive?: boolean;
 }
 
-const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,opacity] active:scale-[0.97]';
+const pillBase = 'flex items-center gap-1 px-2.5 py-1 rounded text-[12px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,opacity] active:scale-[0.97]';
 
 export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshots = [], onSnapped, onRemove, onTranscription, isTabActive }: CoFixLayoutProps) => {
   const { token } = useAuth();
@@ -1167,7 +1167,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         <button
           onClick={() => handleFix()}
           disabled={inputCode.trim().length < 5 || isLoading}
-          className="h-6 px-3 rounded text-[10px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90 shrink-0"
+          className="h-6 px-3 rounded text-[12px] font-bold uppercase tracking-[0.1em] disabled:opacity-40 disabled:cursor-not-allowed transition-opacity hover:opacity-90 shrink-0"
           style={
             degrading.length > 0
               ? { background: 'transparent', border: '1px solid var(--warning)', color: 'var(--warning-text)' }
@@ -1299,7 +1299,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
         <Allotment.Pane minSize={220}>
         <div className="flex flex-col h-full border-r border-[var(--border)]">
           {lineCount > 500 && (
-            <div className="px-4 py-1.5 border-b text-[11px]" style={{ background: 'color-mix(in oklab, var(--warning) 10%, transparent)', borderColor: 'color-mix(in oklab, var(--warning) 20%, transparent)', color: 'var(--warning-text)' }}>
+            <div className="px-4 py-1.5 border-b text-[12px]" style={{ background: 'color-mix(in oklab, var(--warning) 10%, transparent)', borderColor: 'color-mix(in oklab, var(--warning) 20%, transparent)', color: 'var(--warning-text)' }}>
               Large paste — CoFix works best on focused snippets.
             </div>
           )}
@@ -1338,7 +1338,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               {/* "FIXED CODE" identity marker — makes the corrected solution
                   instantly pickable at a glance during a live interview, and
                   clearly separates it from the refine chips that follow. */}
-              <span className="shrink-0 flex items-center gap-1.5 pr-2.5 mr-0.5 border-r border-[color-mix(in_oklab,var(--cam-gold-leaf)_35%,transparent)] text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)' }}>
+              <span className="shrink-0 flex items-center gap-1.5 pr-2.5 mr-0.5 border-r border-[color-mix(in_oklab,var(--cam-gold-leaf)_35%,transparent)] text-[12px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)' }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 Fixed Code
               </span>
@@ -1373,7 +1373,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                 onClick={handleCopy}
                 disabled={copyFeedback !== 'idle'}
                 data-tip={copyFeedback === 'copied' ? 'Copied!' : copyFeedback === 'failed' ? 'Copy failed' : 'Copy fixed code'}
-                className="shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-md text-[10px] font-bold uppercase tracking-[0.1em] transition-all disabled:cursor-default"
+                className="shrink-0 flex items-center gap-1.5 h-7 px-3 rounded-md text-[12px] font-bold uppercase tracking-[0.1em] transition-all disabled:cursor-default"
                 style={copyFeedback === 'copied' ? {
                   background: 'linear-gradient(135deg, rgba(16,185,129,0.25) 0%, rgba(16,185,129,0.12) 100%)', border: '1px solid #10b981', color: '#10b981',
                 } : copyFeedback === 'failed' ? {
@@ -1403,29 +1403,29 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   {/* Title bar */}
                   <div className="flex items-center gap-2 px-3 py-1.5 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)' }}>
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: isLoading ? 'var(--cam-gold-leaf)' : 'var(--accent-text)', boxShadow: isLoading ? '0 0 6px var(--cam-gold-leaf)' : '0 0 6px var(--accent-text)' }} />
-                    <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>CoFix Log</span>
+                    <span className="flex-1 text-[12px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>CoFix Log</span>
                     {!isLoading && (
-                      <button onClick={() => setShowLogPopup(false)} className="text-[11px] opacity-50 hover:opacity-100 transition-opacity" style={{ color: 'var(--cam-gold-leaf-dk)' }}>✕</button>
+                      <button onClick={() => setShowLogPopup(false)} className="text-[12px] opacity-50 hover:opacity-100 transition-opacity" style={{ color: 'var(--cam-gold-leaf-dk)' }}>✕</button>
                     )}
                   </div>
                   {/* Log body */}
                   <div ref={logScrollRef} className="flex flex-col gap-0.5 px-3 py-2 max-h-48 overflow-y-auto">
                     {/* An empty log box looks identical to a hang — never render one. */}
                     {logLines.length === 0 && (
-                      <span className="text-[10px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                      <span className="text-[12px]" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                         Waiting for the capture…
                       </span>
                     )}
                     {logLines.map((line, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <span className="text-[9px] shrink-0 tabular-nums" style={{ color: 'color-mix(in oklab, var(--accent) 45%, transparent)', fontFamily: 'var(--font-mono)' }}>{line.elapsed}</span>
+                        <span className="text-[12px] shrink-0 tabular-nums" style={{ color: 'color-mix(in oklab, var(--accent) 45%, transparent)', fontFamily: 'var(--font-mono)' }}>{line.elapsed}</span>
                         <span className="shrink-0 flex items-center">{line.icon}</span>
-                        <span className="text-[10px] leading-relaxed" style={{ color: line.status === 'error' ? 'var(--danger)' : line.status === 'success' ? 'var(--accent-text)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{line.msg}</span>
+                        <span className="text-[14px] leading-relaxed" style={{ color: line.status === 'error' ? 'var(--danger)' : line.status === 'success' ? 'var(--accent-text)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{line.msg}</span>
                       </div>
                     ))}
                     {isLoading && (
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[9px] tabular-nums" style={{ color: 'color-mix(in oklab, var(--accent) 45%, transparent)', fontFamily: 'var(--font-mono)' }}>…</span>
+                        <span className="text-[12px] tabular-nums" style={{ color: 'color-mix(in oklab, var(--accent) 45%, transparent)', fontFamily: 'var(--font-mono)' }}>…</span>
                         <span className="w-3 h-px flex-1 overflow-hidden relative" style={{ background: 'color-mix(in oklab, var(--accent) 15%, transparent)' }}>
                           <span className="absolute inset-y-0 left-0 w-1/3 animate-[shimmer_1s_ease-in-out_infinite]" style={{ background: 'var(--cam-gold-leaf)', animation: 'pulse 1s ease-in-out infinite' }} />
                         </span>
@@ -1444,7 +1444,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   >
                     <div className="flex items-center gap-2 px-3 py-2 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab, var(--accent) 30%, transparent)' }}>
                       <LogIconSpark />
-                      <span className="flex-1 text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>
+                      <span className="flex-1 text-[12px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>
                         Refine Fixed Code
                       </span>
                       <button onClick={() => setShowRefinePopup(false)} className="text-[13px] opacity-50 hover:opacity-100 transition-opacity" style={{ color: 'var(--cam-gold-leaf-dk)' }}>✕</button>
@@ -1457,7 +1457,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                         onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); handleRefine(); } }}
                         placeholder={`Describe how to change the fixed code…\nExamples:\n  • Always try to reduce the no of code lines\n  • Replace recursion with iteration\n  • Rename variables to be more descriptive`}
                         rows={5}
-                        className="w-full resize-none rounded-lg px-3 py-2.5 text-[11px] leading-relaxed focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--cam-gold-leaf)]"
+                        className="w-full resize-none rounded-lg px-3 py-2.5 text-[14px] leading-relaxed focus:outline-none focus-visible:ring-1 focus-visible:ring-[var(--cam-gold-leaf)]"
                         style={{ fontFamily: 'var(--font-mono)', background: 'var(--bg-elevated)', border: '1px solid color-mix(in oklab, var(--accent) 35%, transparent)', color: 'var(--text-primary)' }}
                       />
                       <div className="flex items-center gap-2 justify-end">
@@ -1465,7 +1465,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                           onClick={handleRefineSnap}
                           disabled={refineSnapping || isLoading}
                           data-tip="Screenshot an error, failing case, or extra context and add it to the refinement"
-                          className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5"
+                          className="text-[12px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 flex items-center gap-1.5"
                           style={{ background: 'linear-gradient(135deg, color-mix(in oklab, var(--accent) 12%, transparent) 0%, var(--bg-elevated) 100%)', border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)' }}
                         >
                           {refineSnapping
@@ -1476,13 +1476,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                         <span className="text-[9.5px] opacity-40 mr-auto" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>⌘↵ to submit</span>
                         <button
                           onClick={() => setShowRefinePopup(false)}
-                          className="text-[10px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                          className="text-[12px] font-bold uppercase tracking-[0.1em] px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
                           style={{ border: '1px solid var(--border)', color: 'var(--text-muted)' }}
                         >Cancel</button>
                         <button
                           onClick={() => handleRefine()}
                           disabled={!refinePrompt.trim() || isLoading}
-                          className="text-[10px] font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="text-[12px] font-bold uppercase tracking-[0.1em] px-4 py-1.5 rounded-lg transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                           style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 60%, var(--cam-gold-leaf-dk) 100%)', color: '#0a0e1a' }}
                         >Apply</button>
                       </div>
@@ -1513,7 +1513,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   readOnly: true,
                   minimap: { enabled: false },
                   lineNumbers: 'on',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontFamily: 'var(--font-mono)',
                   fontLigatures: false,
                   letterSpacing: 0,
@@ -1556,7 +1556,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           {/* Complexity strip — Big-O plus a WHY for each (not just the answer). */}
           {complexity && (
             <div ref={complexityRef} className="flex flex-col gap-2 px-4 py-2.5 border-t border-[var(--border)] bg-[var(--bg-secondary)] shrink-0">
-              <div className="flex items-center gap-4 text-[11px] flex-wrap">
+              <div className="flex items-center gap-4 text-[12px] flex-wrap">
                 <span className="text-[var(--text-muted)]">
                   Time: <span className="text-[var(--text-primary)] font-mono">{complexity.time}</span>
                 </span>
@@ -1572,13 +1572,13 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               {(complexity.timeWhy || complexity.spaceWhy) && (
                 <div className="flex flex-col gap-1.5">
                   {complexity.timeWhy && (
-                    <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">
+                    <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
                       <span className="font-semibold text-[var(--text-primary)]">Why {complexity.time} time — </span>
                       {complexity.timeWhy}
                     </p>
                   )}
                   {complexity.spaceWhy && (
-                    <p className="text-[11px] leading-relaxed text-[var(--text-secondary)]">
+                    <p className="text-[14px] leading-relaxed text-[var(--text-secondary)]">
                       <span className="font-semibold text-[var(--text-primary)]">Why {complexity.space} space — </span>
                       {complexity.spaceWhy}
                     </p>
@@ -1616,7 +1616,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               style={{ background: 'var(--cam-hero-strip)' }}
               data-tip="Expand analysis"
             >
-              <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
+              <span className="text-[12px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
                 Problem · Tests · Output
               </span>
               <div className="flex-1" />
@@ -1637,14 +1637,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
           <div className="flex items-center shrink-0" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
             {(['problem', 'learn', 'tests', 'output'] as const).map(tab => (
               <button key={tab} onClick={() => setPanelTab(tab)}
-                className="h-full px-4 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors"
+                className="h-full px-4 text-[12px] font-bold uppercase tracking-[0.1em] transition-colors"
                 style={{ color: panelTab === tab ? 'var(--cam-gold-leaf)' : 'var(--cam-gold-leaf-dk)', borderBottom: panelTab === tab ? '2px solid var(--cam-gold-leaf)' : '2px solid transparent', background: 'none' }}>
                 {tab === 'problem' ? 'Problem' : tab === 'learn' ? 'Learn' : tab === 'tests' ? 'Tests' : 'Output'}
               </button>
             ))}
             <div className="flex-1" />
             {analysisLoading && (
-              <span className="flex items-center gap-1.5 text-[11px] px-3" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
+              <span className="flex items-center gap-1.5 text-[12px] px-3" style={{ color: 'var(--cam-gold-leaf-dk)' }}>
                 <span className="w-2.5 h-2.5 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf-dk)', borderTopColor: 'transparent' }} />
                 Analyzing…
               </span>
@@ -1671,7 +1671,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   <div className="flex flex-col items-center justify-center h-full gap-3">
                     <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Could not generate analysis</span>
                     <button onClick={retryAnalyze} disabled={!fixedCode}
-                      className="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
+                      className="text-[12px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
                       style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}>
                       ↺ Retry
                     </button>
@@ -1709,7 +1709,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   <div className="flex flex-col items-center justify-center h-full gap-3">
                     <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Could not generate analysis</span>
                     <button onClick={retryAnalyze} disabled={!fixedCode}
-                      className="text-[11px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
+                      className="text-[12px] font-bold px-4 py-1.5 rounded-lg transition-opacity disabled:opacity-40 hover:opacity-80"
                       style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}>
                       ↺ Retry
                     </button>
@@ -1734,9 +1734,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             {panelTab === 'tests' && (
               <div className="flex flex-col h-full">
                 <div className="flex items-center shrink-0 gap-2 px-3" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
+                  <span className="text-[12px] font-bold uppercase tracking-[0.1em]" style={{ color: 'var(--cam-gold-leaf)' }}>
                     Tests
-                    <span className="ml-1.5 normal-case font-normal text-[10px] opacity-60">
+                    <span className="ml-1.5 normal-case font-normal text-[12px] opacity-60">
                       {customTests.filter(t => String(t.input ?? '').trim()).length} case{customTests.filter(t => String(t.input ?? '').trim()).length !== 1 ? 's' : ''}
                       {analysisLoading && ' · generating…'}
                     </span>
@@ -1745,18 +1745,18 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   <button
                     onClick={runAllCustomTests}
                     disabled={!fixedCode || customTests.every(t => !String(t.input ?? '').trim())}
-                    className="text-[10px] font-bold px-2 py-0.5 rounded transition-opacity disabled:opacity-40 hover:opacity-80"
+                    className="text-[12px] font-bold px-2 py-0.5 rounded transition-opacity disabled:opacity-40 hover:opacity-80"
                     style={{ border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf)', background: 'transparent' }}
                   >▶ All</button>
                   <button
                     onClick={() => setCustomTests(prev => [...prev, mkTest()])}
-                    className="text-[10px] font-bold px-2 py-0.5 rounded transition-opacity hover:opacity-80"
+                    className="text-[12px] font-bold px-2 py-0.5 rounded transition-opacity hover:opacity-80"
                     style={{ border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--cam-gold-leaf-dk)', background: 'transparent' }}
                   >+ Add</button>
                 </div>
                 <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
                   {!fixedCode && (
-                    <p className="text-[11px] text-center pt-4" style={{ color: 'var(--text-muted)' }}>Run CoFix first</p>
+                    <p className="text-[12px] text-center pt-4" style={{ color: 'var(--text-muted)' }}>Run CoFix first</p>
                   )}
                   {customTests.map(tc => {
                     const hasPassed = tc.result !== null && !tc.isErr && (!tc.expected || tc.result.trim() === tc.expected.trim());
@@ -1765,49 +1765,49 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                     return (
                       <div key={tc.id} className="rounded-lg overflow-hidden flex flex-col" style={{ border: `1px solid ${borderColor}`, background: 'var(--bg-elevated)' }}>
                         <div className="flex items-start gap-2 px-2.5 pt-2 pb-1">
-                          <span className="text-[9px] font-bold uppercase tracking-wider mt-2 w-8 shrink-0" style={{ color: 'var(--text-muted)' }}>In</span>
+                          <span className="text-[12px] font-bold uppercase tracking-wider mt-2 w-8 shrink-0" style={{ color: 'var(--text-muted)' }}>In</span>
                           <textarea
                             value={tc.input}
                             onChange={e => setCustomTests(prev => prev.map(t => t.id === tc.id ? { ...t, input: e.target.value, result: null } : t))}
                             placeholder="print(my_function(arg1, arg2))"
                             rows={2}
                             className="flex-1 resize-none bg-transparent focus:outline-none placeholder:opacity-30"
-                            style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-primary)', lineHeight: 1.6 }}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6 }}
                           />
                           <div className="flex flex-col gap-1 shrink-0 pt-0.5">
                             <button
                               onClick={() => runCustomTest(tc.id)}
                               disabled={tc.running || !fixedCode || !String(tc.input ?? '').trim()}
-                              className="flex items-center justify-center text-[10px] font-bold w-7 h-6 rounded transition-opacity disabled:opacity-40"
+                              className="flex items-center justify-center text-[12px] font-bold w-7 h-6 rounded transition-opacity disabled:opacity-40"
                               style={{ background: 'linear-gradient(135deg, var(--cam-gold-leaf-lt) 0%, var(--cam-gold-leaf) 100%)', color: '#0a0e1a' }}
                             >
                               {tc.running ? <span className="w-2 h-2 border border-[#0a0e1a]/30 border-t-[#0a0e1a] rounded-full animate-spin" /> : '▶'}
                             </button>
                             <button
                               onClick={() => setCustomTests(prev => prev.length > 1 ? prev.filter(t => t.id !== tc.id) : [mkTest()])}
-                              className="flex items-center justify-center w-7 h-6 rounded transition-opacity hover:opacity-70 text-[11px]"
+                              className="flex items-center justify-center w-7 h-6 rounded transition-opacity hover:opacity-70 text-[12px]"
                               style={{ color: 'var(--text-muted)', background: 'transparent' }}
                             >✕</button>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 px-2.5 pb-1.5">
-                          <span className="text-[9px] font-bold uppercase tracking-wider w-8 shrink-0" style={{ color: 'var(--text-muted)' }}>Exp</span>
+                          <span className="text-[12px] font-bold uppercase tracking-wider w-8 shrink-0" style={{ color: 'var(--text-muted)' }}>Exp</span>
                           <input
                             value={tc.expected}
                             onChange={e => setCustomTests(prev => prev.map(t => t.id === tc.id ? { ...t, expected: e.target.value } : t))}
                             placeholder="expected (optional)"
                             className="flex-1 bg-transparent focus:outline-none placeholder:opacity-25"
-                            style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--cam-gold-leaf-dk)' }}
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--cam-gold-leaf-dk)' }}
                           />
                         </div>
                         {tc.result !== null && (
                           <div className="px-2.5 pb-2 pt-1.5" style={{ borderTop: '1px solid var(--border)' }}>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: tc.isErr ? 'var(--danger)' : hasFailed ? 'var(--warning-text)' : 'var(--accent-text)' }}>
+                              <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: tc.isErr ? 'var(--danger)' : hasFailed ? 'var(--warning-text)' : 'var(--accent-text)' }}>
                                 {tc.isErr ? '✕ Error' : hasFailed ? '≠ Mismatch' : '✓ Output'}
                               </span>
                               {tc.expected && !tc.isErr && (
-                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ color: hasPassed ? 'var(--accent-text)' : 'var(--warning-text)', background: hasPassed ? 'color-mix(in oklab, var(--accent) 12%, transparent)' : 'color-mix(in oklab, var(--warning) 12%, transparent)' }}>
+                                <span className="text-[12px] font-bold px-1.5 py-0.5 rounded" style={{ color: hasPassed ? 'var(--accent-text)' : 'var(--warning-text)', background: hasPassed ? 'color-mix(in oklab, var(--accent) 12%, transparent)' : 'color-mix(in oklab, var(--warning) 12%, transparent)' }}>
                                   {hasPassed ? 'PASS' : 'FAIL'}
                                 </span>
                               )}
@@ -1828,7 +1828,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
             {panelTab === 'output' && (
               <div className="flex flex-col h-full">
                 <div className="flex items-center shrink-0 px-4 gap-2" style={{ height: 34, background: 'var(--cam-hero-strip)', borderBottom: '1px solid color-mix(in oklab,var(--cam-gold-leaf) 30%,transparent)' }}>
-                  <span className="text-[11px] font-bold uppercase tracking-[0.1em] flex-1"
+                  <span className="text-[12px] font-bold uppercase tracking-[0.1em] flex-1"
                     style={{ color: isErr ? 'var(--danger)' : runOutputLog.length > 0 ? 'var(--accent-text)' : 'var(--cam-gold-leaf-dk)' }}>
                     {isErr ? '✕ Runtime Error' : runOutputLog.length > 0 ? '✓ Output' : 'Output'}
                   </span>
@@ -1838,7 +1838,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   {runOutputLog.length > 0 && !isRunning && (
                     <button
                       onClick={() => setRunOutputLog([])}
-                      className="text-[10px] font-semibold shrink-0 opacity-50 hover:opacity-90 transition-opacity"
+                      className="text-[12px] font-semibold shrink-0 opacity-50 hover:opacity-90 transition-opacity"
                       style={{ color: 'var(--cam-gold-leaf-dk)', fontFamily: 'var(--font-sans)' }}
                     >Clear</button>
                   )}
@@ -1857,14 +1857,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                         return (
                           <div key={i}>
                             <div className="flex items-center gap-2 px-4 py-1.5">
-                              <span className="text-[9px] tabular-nums shrink-0" style={{ color: 'color-mix(in oklab, var(--text-muted) 60%, transparent)', fontFamily: 'var(--font-mono)' }}>
+                              <span className="text-[12px] tabular-nums shrink-0" style={{ color: 'color-mix(in oklab, var(--text-muted) 60%, transparent)', fontFamily: 'var(--font-mono)' }}>
                                 {entry.ts.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
                               </span>
                               <div className="flex-1 h-px" style={{ background: 'color-mix(in oklab, var(--accent) 12%, transparent)' }} />
                             </div>
                             <pre
                               className="px-4 pb-3 whitespace-pre-wrap"
-                              style={{ color: entryIsErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.65, letterSpacing: '-0.02em' }}
+                              style={{ color: entryIsErr ? 'var(--danger)' : 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 12, lineHeight: 1.65, letterSpacing: '-0.02em' }}
                               dangerouslySetInnerHTML={{ __html: ansiHtml(entry.text) }}
                             />
                           </div>
@@ -1873,7 +1873,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                       {isRunning && (
                         <div className="flex items-center gap-2 px-4 py-2">
                           <span className="w-2 h-2 rounded-full border-2 border-t-transparent animate-spin shrink-0" style={{ borderColor: 'var(--cam-gold-leaf)', borderTopColor: 'transparent' }} />
-                          <span className="text-[11px] italic" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Executing…</span>
+                          <span className="text-[12px] italic" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Executing…</span>
                         </div>
                       )}
                     </>
@@ -1937,7 +1937,7 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
                   onClick={() => { setTaskMode(m.id); handleFix(undefined, { mode: m.id }); }}
                   disabled={isLoading}
                   data-tip={m.tip}
-                  className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] font-mono transition-colors"
+                  className="px-2 py-0.5 text-[12px] font-bold uppercase tracking-[0.1em] font-mono transition-colors"
                   style={taskMode === m.id
                     ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)', borderRadius: 999 }
                     : { color: 'var(--text-muted)', borderRadius: 999 }
@@ -1957,14 +1957,14 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               "why a hash map?" down the solve path. */}
           {inputCode.trim().length >= 5 && (
             <div className="flex items-center gap-0.5 px-0.5 py-0.5 shrink-0" style={{ background: 'var(--bg-elevated)', border: '1px dashed var(--border)', borderRadius: 999 }}>
-              <span className="px-1.5 text-[9px] font-bold uppercase tracking-[0.12em] font-mono select-none" style={{ color: 'var(--text-dimmed)' }}>Asked</span>
+              <span className="px-1.5 text-[12px] font-bold uppercase tracking-[0.12em] font-mono select-none" style={{ color: 'var(--text-dimmed)' }}>Asked</span>
               {ASK_MODES.map(m => (
                 <button
                   key={m.id}
                   onClick={() => { setTaskMode(m.id); handleFix(undefined, { mode: m.id }); }}
                   disabled={isLoading}
                   data-tip={m.tip}
-                  className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.1em] font-mono transition-colors whitespace-nowrap"
+                  className="px-2 py-0.5 text-[12px] font-bold uppercase tracking-[0.1em] font-mono transition-colors whitespace-nowrap"
                   style={taskMode === m.id
                     ? { background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)', borderRadius: 999 }
                     : { color: 'var(--text-muted)', borderRadius: 999 }
@@ -1991,9 +1991,9 @@ export const CoFixLayout = ({ onScreenshotAppendRef, onInjectCodeRef, screenshot
               {s.dataUrl ? (
                 <img src={s.dataUrl} alt={`Screenshot ${i + 1}`} className="h-7 w-10 object-cover rounded" style={{ border: '1px solid var(--border-hover)' }} />
               ) : (
-                <div className="h-7 w-10 rounded flex items-center justify-center text-[8px] font-bold uppercase tracking-[0.08em] font-mono" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-hover)', color: 'var(--text-secondary)' }}>TEXT</div>
+                <div className="h-7 w-10 rounded flex items-center justify-center text-[12px] font-bold uppercase tracking-[0.08em] font-mono" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-hover)', color: 'var(--text-secondary)' }}>TEXT</div>
               )}
-              <span className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{i + 1}</span>
+              <span className="absolute -top-1 -left-1 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[12px] font-bold" style={{ background: 'var(--cam-accent-fill)', color: 'var(--cam-accent-fill-text)' }}>{i + 1}</span>
               {onRemove && (
                 <button onClick={() => onRemove(s.id)} className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full items-center justify-center hidden group-hover:flex" style={{ background: 'var(--danger)', color: '#ffffff' }} data-tip="Remove">
                   <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>

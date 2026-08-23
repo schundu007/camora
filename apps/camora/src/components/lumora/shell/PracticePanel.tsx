@@ -182,7 +182,7 @@ export const PracticePanel = () => {
     <div className="flex-1 flex flex-col min-h-0 absolute inset-0" style={{ background: 'var(--bg-app)' }}>
       {/* Hero */}
       <div className="px-6 py-4 shrink-0" style={{ background: 'var(--cam-hero-strip)', borderBottom: '3px solid var(--cam-gold-leaf)' }}>
-        <div className="text-[10px] font-bold uppercase tracking-[0.22em] mb-0.5" style={{ color: 'var(--cam-gold-leaf-lt, var(--cam-gold-leaf))', fontFamily: 'var(--font-mono)' }}>
+        <div className="text-[12px] font-bold uppercase tracking-[0.22em] mb-0.5" style={{ color: 'var(--cam-gold-leaf-lt, var(--cam-gold-leaf))', fontFamily: 'var(--font-mono)' }}>
           Practice · Sona quizzes you
         </div>
         <h1 className="text-xl font-bold" style={{ color: 'var(--cam-strip-heading, #fff)' }}>Mock Practice</h1>
@@ -196,14 +196,14 @@ export const PracticePanel = () => {
           {current ? (
             <>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'var(--accent-subtle, rgba(0,71,171,0.12))', color: 'var(--accent, var(--cam-primary))' }}>
+                <span className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'var(--accent-subtle, rgba(0,71,171,0.12))', color: 'var(--accent, var(--cam-primary))' }}>
                   {current.category.replace('-', ' ')}
                 </span>
                 {current.source === 'prep' && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'rgba(212,160,67,0.15)', color: 'var(--cam-gold-leaf)' }}>from your prep kit</span>
+                  <span className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={{ background: 'rgba(212,160,67,0.15)', color: 'var(--cam-gold-leaf)' }}>from your prep kit</span>
                 )}
                 <span className="flex-1" />
-                <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{idx + 1} / {questions.length}</span>
+                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{idx + 1} / {questions.length}</span>
               </div>
 
               {/* Question */}
@@ -245,7 +245,7 @@ export const PracticePanel = () => {
               {/* Feedback */}
               {feedback && (
                 <div className="rounded-xl px-5 py-4 mt-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                  <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>Coach feedback</div>
+                  <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-gold-leaf)' }}>Coach feedback</div>
                   <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{feedback}</p>
                 </div>
               )}

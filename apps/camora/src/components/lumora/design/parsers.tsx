@@ -364,7 +364,7 @@ export function extractReadableProse(raw: string): React.ReactNode[] {
     tagBlocks.forEach((b, i) => {
       lines.push(
         <div key={`tag-${i}`} className="mt-3 first:mt-0">
-          <div className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{b.name.replace(/_/g, ' ')}</div>
+          <div className="text-[12px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{b.name.replace(/_/g, ' ')}</div>
           <div className="mt-1 whitespace-pre-wrap">{b.body}</div>
         </div>
       );
@@ -391,7 +391,7 @@ export function extractReadableProse(raw: string): React.ReactNode[] {
           .replace(/^./, (c) => c.toUpperCase());
         lines.push(
           <div key={`k-${i}`} className="mt-3 first:mt-0">
-            <div className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{label}</div>
+            <div className="text-[12px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{label}</div>
             <div className="mt-1 whitespace-pre-wrap">{p.value}</div>
           </div>
         );
@@ -404,7 +404,7 @@ export function extractReadableProse(raw: string): React.ReactNode[] {
           .replace(/^./, (c) => c.toUpperCase());
         lines.push(
           <div key="tail" className="mt-3">
-            <div className="text-[10px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{tailLabel}</div>
+            <div className="text-[12px] font-bold uppercase tracking-[0.16em] opacity-60 font-mono">{tailLabel}</div>
             <div className="mt-1 whitespace-pre-wrap">{tail[2]}</div>
           </div>
         );

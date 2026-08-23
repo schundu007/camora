@@ -325,7 +325,7 @@ const ValueRenderer = ({ val, depth = 0 }: { val: any; depth?: number }): JSX.El
           if (isComplex) {
             return (
               <div key={k}>
-                <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}</div>
+                <div className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>{fmtKey(k)}</div>
                 <ValueRenderer val={v} depth={depth + 1} />
               </div>
             );
@@ -348,7 +348,7 @@ const ValueRenderer = ({ val, depth = 0 }: { val: any; depth?: number }): JSX.El
 const GenericField = ({ label, val }: { label: string; val: any }) => {
   return (
     <div className="rounded-lg p-4" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-      <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>{fmtKey(label)}</div>
+      <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--cam-primary)' }}>{fmtKey(label)}</div>
       <ValueRenderer val={val} />
     </div>
   );
@@ -392,7 +392,7 @@ const SchemaTables = ({ schema, accent }: { schema: any[]; accent: string }) => 
                 <thead>
                   <tr>
                     {['Column', 'Type', 'Constraint'].map((h) => (
-                      <th key={h} className="text-left px-3 py-1 text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: `1px solid ${accent}22` }}>{h}</th>
+                      <th key={h} className="text-left px-3 py-1 text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)', borderBottom: `1px solid ${accent}22` }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -401,7 +401,7 @@ const SchemaTables = ({ schema, accent }: { schema: any[]; accent: string }) => 
                     <tr key={ci} style={{ borderBottom: ci < cols.length - 1 ? '1px solid var(--border)' : 'none' }}>
                       <td className="px-3 py-1 font-mono text-[12px]" style={{ color: 'var(--text-primary)' }}>{safeText(c.name)}</td>
                       <td className="px-3 py-1 font-mono text-[12px]" style={{ color: 'var(--text-secondary)' }}>{safeText(c.type)}</td>
-                      <td className="px-3 py-1 font-mono text-[11px]" style={{ color: c.constraint ? accent : 'var(--text-muted)' }}>{c.constraint ? safeText(c.constraint) : '—'}</td>
+                      <td className="px-3 py-1 font-mono text-[12px]" style={{ color: c.constraint ? accent : 'var(--text-muted)' }}>{c.constraint ? safeText(c.constraint) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -516,10 +516,10 @@ const TagChip = ({ label }: { label: string }) => {
 const ComplexityBadge = ({ kind, value }: { kind: 'time' | 'space'; value: string }) => {
   return (
     <span
-      className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded"
+      className="inline-flex items-center gap-1 text-[12px] font-mono px-2 py-0.5 rounded"
       style={{ background: LC.codeBg, color: LC.codeFg, border: `1px solid ${LC.codeHdr}` }}
     >
-      <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
+      <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
         {kind === 'time' ? 'TIME' : 'SPACE'}
       </span>
       <span style={{ color: '#FFFFFF' }}>{value}</span>
@@ -592,10 +592,10 @@ const CodeBlock = ({ code, language = 'code', maxLines = 10 }: { code: string; l
         className="px-3 py-2 flex items-center justify-between"
         style={{ background: LC.codeHdr, borderBottom: `1px solid var(--cam-strip-icon-border)` }}
       >
-        <span className="text-[10px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
+        <span className="text-[12px] font-mono font-bold uppercase tracking-wider" style={{ color: LC.codeMuted }}>
           {label}
         </span>
-        <span className="text-[10px] font-mono" style={{ color: LC.codeMuted }}>{totalLines} LOC</span>
+        <span className="text-[12px] font-mono" style={{ color: LC.codeMuted }}>{totalLines} LOC</span>
       </div>
       <pre
         className="px-4 py-3 text-[12.5px] leading-relaxed overflow-x-auto"
@@ -608,7 +608,7 @@ const CodeBlock = ({ code, language = 'code', maxLines = 10 }: { code: string; l
       {shouldTruncate && (
         <button
           onClick={() => setExpanded(e => !e)}
-          className="w-full py-1.5 flex items-center justify-center gap-1 text-[10px] font-medium transition-opacity hover:opacity-80"
+          className="w-full py-1.5 flex items-center justify-center gap-1 text-[12px] font-medium transition-opacity hover:opacity-80"
           style={{ background: LC.codeHdr, color: LC.codeMuted, borderTop: `1px solid var(--cam-strip-icon-border)` }}
         >
           {expanded ? (
@@ -634,26 +634,26 @@ const ExampleBlock = ({ example, index }: { example: any; index: number }) => {
         className="px-3 py-1.5"
         style={{ background: `${LC.examples}14`, borderBottom: `1px solid ${LC.examples}33` }}
       >
-        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: LC.examples }}>
+        <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: LC.examples }}>
           Example {index + 1}
         </span>
       </div>
       <div className="px-3 py-2.5 space-y-1.5 text-xs font-mono">
         {example.input && (
           <div className="leading-relaxed">
-            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Input:</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Input:</span>
             <span style={{ color: 'var(--text-primary)' }}>{example.input}</span>
           </div>
         )}
         {example.output && (
           <div className="leading-relaxed">
-            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Output:</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Output:</span>
             <span style={{ color: 'var(--text-primary)' }}>{example.output}</span>
           </div>
         )}
         {example.explanation && (
           <p className="text-xs mt-1.5 leading-relaxed font-sans" style={{ color: 'var(--text-secondary)' }}>
-            <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Explanation:</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.examples }}>Explanation:</span>
             {safeText(example.explanation)}
           </p>
         )}
@@ -687,7 +687,7 @@ const ApproachCard = ({ approach, index }: { approach: any; index: number }) => 
         {approach.code && <CodeBlock code={approach.code} language={approach.language || 'python'} />}
         {Array.isArray(approach.lineByLine) && approach.lineByLine.length > 0 && (
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.approach }}>Line-by-Line</div>
+            <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.approach }}>Line-by-Line</div>
             <div className="space-y-1">
               {approach.lineByLine.filter((l: any) => l && typeof l === 'object').map((l: any, i: number) => (
                 <div key={i} className="grid gap-2 text-xs" style={{ gridTemplateColumns: 'minmax(0, 0.55fr) minmax(0, 1fr)' }}>
@@ -824,7 +824,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                 ))}
                 {s.title && !s.bullets?.length && <>{safeText(s.title)}</>}
               </p>
-              {s.duration && <span className="inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{s.duration}</span>}
+              {s.duration && <span className="inline-block mt-1.5 text-[12px] px-2 py-0.5 rounded" style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)' }}>{s.duration}</span>}
             </div>
           </div>
         ))}
@@ -842,25 +842,25 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
         <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           {cc.interviewFormat && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Interview Format</div>
+              <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Interview Format</div>
               <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}><Prose value={cc.interviewFormat} /></div>
             </div>
           )}
           {cc.whatTheyLookFor && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>What They Look For</div>
+              <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>What They Look For</div>
               <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}><Prose value={cc.whatTheyLookFor} /></div>
             </div>
           )}
           {cc.culturalFit && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Cultural Fit</div>
+              <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Cultural Fit</div>
               <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}><Prose value={cc.culturalFit} /></div>
             </div>
           )}
           {cc.knownQuestions && (
             <div className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
-              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Known Questions</div>
+              <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>Known Questions</div>
               <div className="text-[13px]" style={{ color: 'var(--text-primary)' }}>{Array.isArray(cc.knownQuestions) ? cc.knownQuestions.map(safeText).filter(Boolean).join(' · ') : safeText(cc.knownQuestions)}</div>
             </div>
           )}
@@ -884,7 +884,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
           <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
             {Object.entries(ci).map(([k, v]) => (
               <div key={k} className="rounded-md p-2.5" style={{ background: 'rgba(255,184,0,0.05)', border: 'rgba(255,184,0,0.15) 1px solid' }}>
-                <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>{fmtKey(k)}</div>
+                <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.medium.fg }}>{fmtKey(k)}</div>
                 <div><ValueRenderer val={v} /></div>
               </div>
             ))}
@@ -1013,25 +1013,25 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                   <div className="mt-3 pl-10 space-y-1">
                     {q.whyTheyAsk && (qRendered.add('whyTheyAsk'),
                       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Why asked:</span>
+                        <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Why asked:</span>
                         {q.whyTheyAsk}
                       </p>
                     )}
                     {q.whyThisCompanyAsks && (qRendered.add('whyThisCompanyAsks'),
                       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Why asked:</span>
+                        <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>Why asked:</span>
                         {q.whyThisCompanyAsks}
                       </p>
                     )}
                     {q.whatTheyTest && (qRendered.add('whatTheyTest'),
                       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>What they test:</span>
+                        <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--warning-text)' }}>What they test:</span>
                         {q.whatTheyTest}
                       </p>
                     )}
                     {q.companyConnection && (qRendered.add('companyConnection'),
                       <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                        <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--cam-primary)' }}>Connect to:</span>
+                        <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: 'var(--cam-primary)' }}>Connect to:</span>
                         {q.companyConnection}
                       </p>
                     )}
@@ -1084,7 +1084,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       <div className="space-y-2">
                         {stars.map((s) => q[s.key] && (
                           <div key={s.key} className="rounded-lg p-3 flex gap-3" style={{ background: `${s.accent}10`, border: `1px solid ${s.accent}40` }}>
-                            <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider" style={{ color: s.accent, minWidth: 64 }}>{s.label}</span>
+                            <span className="flex-shrink-0 text-[12px] font-bold uppercase tracking-wider" style={{ color: s.accent, minWidth: 64 }}>{s.label}</span>
                             <div className="flex-1 text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><Prose value={Array.isArray(q[s.key]) ? q[s.key].join('\n') : q[s.key]} /></div>
                           </div>
                         ))}
@@ -1141,7 +1141,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       <div className="space-y-2">
                         {fields.filter((f) => sa[f]).map((f) => (
                           <div key={f} className="rounded-lg p-3" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cam-primary)' }}>{fmtKey(f)}</div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--cam-primary)' }}>{fmtKey(f)}</div>
                             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{sa[f]}</p>
                           </div>
                         ))}
@@ -1212,7 +1212,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                 {/* Tips */}
                 {q.tips && (qRendered.add('tips'),
                   <div className="rounded-lg p-3 text-xs leading-relaxed" style={paperCard(LC.gold)}>
-                    <span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.gold }}>Tip:</span>
+                    <span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.gold }}>Tip:</span>
                     <span style={{ color: 'var(--text-primary)' }}>{Array.isArray(q.tips) ? q.tips.map(safeText).filter(Boolean).join(' ') : safeText(q.tips)}</span>
                   </div>
                 )}
@@ -1250,7 +1250,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
                         {fn.length > 0 && (
                           <div className="rounded-lg p-3" style={paperCard(LC.requirements)}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.requirements }}>Functional</div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.requirements }}>Functional</div>
                             <ul className="space-y-1.5">
                               {fn.map((f: any, fi: number) => (
                                 <li key={fi} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
@@ -1262,7 +1262,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                         )}
                         {nfn.length > 0 && (
                           <div className="rounded-lg p-3" style={paperCard(LC.scalability)}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.scalability }}>Non-Functional</div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: LC.scalability }}>Non-Functional</div>
                             <ul className="space-y-1.5">
                               {nfn.map((f: any, fi: number) => (
                                 <li key={fi} className="text-sm leading-relaxed flex gap-2" style={{ color: 'var(--text-primary)' }}>
@@ -1289,7 +1289,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       <div className="rounded-lg overflow-hidden" style={paperCard(LC.capacity)}>
                         {assumptions.length > 0 && (
                           <div className="px-3 py-2.5 border-b" style={{ borderColor: `${LC.capacity}25` }}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.capacity }}>Assumptions</div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.capacity }}>Assumptions</div>
                             <ul className="space-y-1">
                               {assumptions.map((a: any, ai: number) => (
                                 <li key={ai} className="text-sm flex gap-2" style={{ color: 'var(--text-primary)' }}>
@@ -1301,18 +1301,18 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                         )}
                         {calculations.length > 0 && (
                           <div className="px-3 py-2.5">
-                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.capacity }}>Calculations</div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.capacity }}>Calculations</div>
                             <table className="w-full text-xs">
                               <thead><tr style={{ color: LC.capacity }}>
-                                <th className="text-left font-bold uppercase text-[9px] tracking-wider pb-1">Metric</th>
-                                <th className="text-left font-bold uppercase text-[9px] tracking-wider pb-1">Formula</th>
-                                <th className="text-right font-bold uppercase text-[9px] tracking-wider pb-1">Result</th>
+                                <th className="text-left font-bold uppercase text-[12px] tracking-wider pb-1">Metric</th>
+                                <th className="text-left font-bold uppercase text-[12px] tracking-wider pb-1">Formula</th>
+                                <th className="text-right font-bold uppercase text-[12px] tracking-wider pb-1">Result</th>
                               </tr></thead>
                               <tbody>
                                 {calculations.filter((cl: any) => cl && typeof cl === 'object').map((cl: any, ci: number) => (
                                   <tr key={ci} style={{ borderTop: `1px solid ${LC.capacity}15` }}>
                                     <td className="py-1.5 pr-2 font-medium" style={{ color: 'var(--text-primary)' }}>{safeText(cl.metric)}</td>
-                                    <td className="py-1.5 pr-2 font-mono text-[11px]" style={{ color: 'var(--text-secondary)' }}>{safeText(cl.calculation)}</td>
+                                    <td className="py-1.5 pr-2 font-mono text-[12px]" style={{ color: 'var(--text-secondary)' }}>{safeText(cl.calculation)}</td>
                                     <td className="py-1.5 font-mono font-bold text-right" style={{ color: LC.capacity }}>{safeText(cl.result)}</td>
                                   </tr>
                                 ))}
@@ -1363,7 +1363,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       <SectionHeading label="Architecture" color={LC.architecture} />
                       {a.diagramDescription && (
                         <div className="rounded-lg p-3 mb-2" style={paperCard(LC.architecture)}>
-                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.architecture }}>Overview</div>
+                          <div className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.architecture }}>Overview</div>
                           <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{safeText(a.diagramDescription)}</p>
                         </div>
                       )}
@@ -1373,7 +1373,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                             <div key={ci} className="rounded-lg p-3" style={paperCard(LC.architecture)}>
                               <div className="flex items-baseline justify-between gap-2 mb-1">
                                 <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{safeText(c.name)}</span>
-                                {c.technology && <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ background: `${LC.architecture}15`, color: LC.architecture }}>{safeText(c.technology)}</span>}
+                                {c.technology && <span className="text-[12px] font-mono px-1.5 py-0.5 rounded" style={{ background: `${LC.architecture}15`, color: LC.architecture }}>{safeText(c.technology)}</span>}
                               </div>
                               {c.responsibility && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{safeText(c.responsibility)}</p>}
                               {c.whyThisChoice && <p className="text-xs leading-relaxed mt-1.5 italic" style={{ color: 'var(--text-muted)' }}>{safeText(c.whyThisChoice)}</p>}
@@ -1407,7 +1407,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                         <div className="rounded-lg p-3 mt-2 space-y-2" style={paperCard(LC.database)}>
                           {rest.map(([k, v]) => (
                             <div key={k}>
-                              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.database }}>{fmtKey(k)}</div>
+                              <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.database }}>{fmtKey(k)}</div>
                               <ValueRenderer val={v} />
                             </div>
                           ))}
@@ -1434,7 +1434,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                             <div className="px-3 py-2 space-y-1.5 text-xs">
                               {e.request !== undefined && e.request !== null && (
                                 <div>
-                                  <div className="text-[10px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Request</div>
+                                  <div className="text-[12px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Request</div>
                                   {typeof e.request === 'object' ? (
                                     <div className="p-2 rounded" style={{ background: `${LC.api}08`, border: `1px solid ${LC.api}20` }}><KeyValueRows obj={e.request} accent={LC.api} /></div>
                                   ) : (
@@ -1444,7 +1444,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                               )}
                               {e.response !== undefined && e.response !== null && (
                                 <div>
-                                  <div className="text-[10px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Response</div>
+                                  <div className="text-[12px] font-sans font-bold uppercase tracking-wider mb-0.5" style={{ color: LC.api }}>Response</div>
                                   {typeof e.response === 'object' ? (
                                     <div className="p-2 rounded" style={{ background: `${LC.api}08`, border: `1px solid ${LC.api}20` }}><KeyValueRows obj={e.response} accent={LC.api} /></div>
                                   ) : (
@@ -1471,9 +1471,9 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                         {q.tradeOffs.filter((t: any) => t && typeof t === 'object').map((t: any, ti: number) => (
                           <div key={ti} className="rounded-lg p-3" style={paperCard(LC.tradeoffs)}>
                             {t.decision && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{safeText(t.decision)}</div>}
-                            {t.chose && <p className="text-sm" style={{ color: 'var(--text-primary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Chose:</span>{safeText(t.chose)}</p>}
-                            {t.reason && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Reason:</span>{safeText(t.reason)}</p>}
-                            {t.alternative && <p className="text-xs leading-relaxed mt-1 italic" style={{ color: 'var(--text-muted)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5 not-italic" style={{ color: LC.tradeoffs }}>Alt:</span>{safeText(t.alternative)}</p>}
+                            {t.chose && <p className="text-sm" style={{ color: 'var(--text-primary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Chose:</span>{safeText(t.chose)}</p>}
+                            {t.reason && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.tradeoffs }}>Reason:</span>{safeText(t.reason)}</p>}
+                            {t.alternative && <p className="text-xs leading-relaxed mt-1 italic" style={{ color: 'var(--text-muted)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5 not-italic" style={{ color: LC.tradeoffs }}>Alt:</span>{safeText(t.alternative)}</p>}
                           </div>
                         ))}
                       </div>
@@ -1491,7 +1491,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                         {q.scalabilityConsiderations.filter((s: any) => s && typeof s === 'object').map((s: any, si: number) => (
                           <div key={si} className="rounded-lg p-3" style={paperCard(LC.scalability)}>
                             {s.challenge && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>⚠ {safeText(s.challenge)}</div>}
-                            {s.solution && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.scalability }}>Solution:</span>{safeText(s.solution)}</p>}
+                            {s.solution && <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.scalability }}>Solution:</span>{safeText(s.solution)}</p>}
                           </div>
                         ))}
                       </div>
@@ -1542,14 +1542,14 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       {safeText(t.technology || t.name)}
                     </div>
                     {t.category && (
-                      <div className="text-[10px] font-bold uppercase tracking-wider mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+                      <div className="text-[12px] font-bold uppercase tracking-wider mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
                         {safeText(t.category)}
                       </div>
                     )}
                   </div>
                   {isShortExperience && (
                     <span
-                      className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      className="flex-shrink-0 text-[12px] font-bold px-2 py-0.5 rounded-full"
                       style={{ background: `${LC.gold}15`, color: LC.gold, border: `1px solid ${LC.gold}40` }}
                     >
                       {experience}
@@ -1651,7 +1651,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                           {q.codeExample && <CodeBlock code={String(q.codeExample)} language="code" />}
                           {Array.isArray(q.followUps) && q.followUps.length > 0 && (
                             <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.followup }}>Follow-ups</div>
+                              <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.followup }}>Follow-ups</div>
                               <ul className="space-y-0.5">
                                 {q.followUps.map((f: any, fi: number) => (
                                   <li key={fi} className="text-xs flex gap-2" style={{ color: 'var(--text-secondary)' }}>
@@ -1663,7 +1663,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                           )}
                           {Array.isArray(q.commonMistakes) && q.commonMistakes.length > 0 && (
                             <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.mistake }}>Common Mistakes</div>
+                              <div className="text-[12px] font-bold uppercase tracking-wider mb-1" style={{ color: LC.mistake }}>Common Mistakes</div>
                               <ul className="space-y-0.5">
                                 {q.commonMistakes.map((m: any, mi: number) => (
                                   <li key={mi} className="text-xs flex gap-2" style={{ color: 'var(--text-secondary)' }}>
@@ -1697,17 +1697,17 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                       cards.map((c, idx) =>
                         c.type === 'bp' ? (
                           <div key={`bp-${idx}`} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.api), breakInside: 'avoid' }}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.api }}>Best Practice</div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.api }}>Best Practice</div>
                             {c.item.practice && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✓ {safeText(c.item.practice)}</div>}
-                            {c.item.when && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>When:</span>{safeText(c.item.when)}</p>}
+                            {c.item.when && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>When:</span>{safeText(c.item.when)}</p>}
                             {c.item.codeExample && <div className="mt-2"><CodeBlock code={String(c.item.codeExample)} language="code" /></div>}
                           </div>
                         ) : (
                           <div key={`ap-${idx}`} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.edge), breakInside: 'avoid' }}>
-                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.edge }}>Anti-Pattern</div>
+                            <div className="text-[12px] font-bold uppercase tracking-wider mb-1.5" style={{ color: LC.edge }}>Anti-Pattern</div>
                             {c.item.pattern && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✗ {safeText(c.item.pattern)}</div>}
-                            {c.item.problem && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.edge }}>Problem:</span>{safeText(c.item.problem)}</p>}
-                            {c.item.solution && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Fix:</span>{safeText(c.item.solution)}</p>}
+                            {c.item.problem && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.edge }}>Problem:</span>{safeText(c.item.problem)}</p>}
+                            {c.item.solution && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Fix:</span>{safeText(c.item.solution)}</p>}
                           </div>
                         )
                       )
@@ -1716,15 +1716,15 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
                         {bps.map((bp: any, bi: number) => (
                           <div key={bi} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.api), breakInside: 'avoid' }}>
                             {bp.practice && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✓ {safeText(bp.practice)}</div>}
-                            {bp.when && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>When:</span>{safeText(bp.when)}</p>}
+                            {bp.when && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>When:</span>{safeText(bp.when)}</p>}
                             {bp.codeExample && <div className="mt-2"><CodeBlock code={String(bp.codeExample)} language="code" /></div>}
                           </div>
                         ))}
                         {aps.map((ap: any, ai: number) => (
                           <div key={ai} className="rounded-lg p-3 mb-2" style={{ ...paperCard(LC.edge), breakInside: 'avoid' }}>
                             {ap.pattern && <div className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>✗ {safeText(ap.pattern)}</div>}
-                            {ap.problem && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.edge }}>Problem:</span>{safeText(ap.problem)}</p>}
-                            {ap.solution && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[10px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Fix:</span>{safeText(ap.solution)}</p>}
+                            {ap.problem && <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.edge }}>Problem:</span>{safeText(ap.problem)}</p>}
+                            {ap.solution && <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--text-secondary)' }}><span className="text-[12px] font-bold uppercase tracking-wider mr-1.5" style={{ color: LC.api }}>Fix:</span>{safeText(ap.solution)}</p>}
                           </div>
                         ))}
                       </>
@@ -1786,7 +1786,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     if (formatted.length === 0) continue;
     els.push(
       <div key={f.key}>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: f.color }}>{f.label}</div>
+        <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: f.color }}>{f.label}</div>
         {f.pill ? (
           <div className="flex flex-wrap gap-1.5">
             {formatted.map((it: { label: string; sub?: string }, i: number) => (
@@ -1825,7 +1825,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     const val = data[f.key];
     els.push(
       <div key={f.key} className="rounded-lg p-3" style={{ background: f.bg, border: `1px solid ${f.border}` }}>
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: f.color }}>{f.label}</div>
+        <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: f.color }}>{f.label}</div>
         {Array.isArray(val) ? (
           <ul className="space-y-1">{val.map((t: string, i: number) => <li key={i} className="text-sm" style={{ color: 'var(--text-secondary)' }}>• {safeText(t)}</li>)}</ul>
         ) : typeof val === 'string' ? (
@@ -1844,7 +1844,7 @@ const PrepContentRenderer = ({ content }: { content: any }) => {
     mark('abbreviations');
     els.push(
       <div key="abbr">
-        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Abbreviations</div>
+        <div className="text-[12px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--text-muted)' }}>Abbreviations</div>
         <div className="flex flex-wrap gap-1.5">{data.abbreviations.map((a: any, i: number) => (
           <Chip key={i} variant="default"><strong>{a.term || a.abbr || a.name}</strong>: {a.definition || a.full || a.meaning}</Chip>
         ))}</div>
@@ -1924,7 +1924,7 @@ const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPa
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
           </div>
           <span className="text-xs font-semibold w-full px-2 truncate text-center" style={{ color: 'var(--cam-primary)' }} data-tip={fileName}>{fileName || 'Content added'}</span>
-          <span className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>{value.length.toLocaleString()} characters</span>
+          <span className="text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>{value.length.toLocaleString()} characters</span>
         </>
       ) : (
         <>
@@ -1934,7 +1934,7 @@ const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPa
           <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
             {label}{required && <span style={{ color: 'var(--danger)' }}>*</span>}
           </span>
-          <span className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
             {onClickOverride ? 'Paste URL, text, or upload' : 'Drop or click'}
           </span>
         </>
@@ -1993,14 +1993,14 @@ const GitHubRepoFetcher = ({ onDocs }: { onDocs: (docs: StudyDoc[]) => void }) =
         <button
           onClick={handleFetch}
           disabled={!url.trim() || status === 'loading'}
-          className="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wide shrink-0 disabled:opacity-40 transition-opacity"
+          className="px-2.5 py-1 rounded text-[12px] font-bold uppercase tracking-wide shrink-0 disabled:opacity-40 transition-opacity"
           style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
         >
           {status === 'loading' ? '…' : 'Fetch'}
         </button>
       </div>
       {msg && (
-        <div className="px-3 py-1.5 text-[10px]" style={{ color: status === 'error' ? 'var(--danger)' : '#00ea64', background: 'var(--bg-surface)' }}>
+        <div className="px-3 py-1.5 text-[12px]" style={{ color: status === 'error' ? 'var(--danger)' : '#00ea64', background: 'var(--bg-surface)' }}>
           {msg}
         </div>
       )}
@@ -2053,7 +2053,7 @@ const MultiUploadZone = ({ docs, onAdd, onRemove }: {
         <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
           {docs.length ? 'Add more documents' : 'Drop files or click — multiple OK'}
         </span>
-        <span className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <span className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
           PDF, DOCX, TXT, MD — Sona will read every file
         </span>
       </div>
@@ -2062,14 +2062,14 @@ const MultiUploadZone = ({ docs, onAdd, onRemove }: {
           {docs.map((d, i) => (
             <div
               key={`${d.name}-${i}`}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px]"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px]"
               style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)', color: 'var(--cam-primary)' }}
             >
               <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <span className="font-semibold truncate max-w-[200px]" data-tip={d.name}>{d.name}</span>
-              <span className="text-[9px] opacity-70">{d.content.length.toLocaleString()} ch</span>
+              <span className="text-[12px] opacity-70">{d.content.length.toLocaleString()} ch</span>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onRemove(i); }}
@@ -2445,7 +2445,7 @@ const FormattedJD = ({ text }: { text: string }) => {
               </span>
               <div className="flex flex-col gap-0.5 min-w-0">
                 <span
-                  className="text-[10px] font-extrabold uppercase tracking-[0.14em]"
+                  className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
                   style={{ color: 'var(--cam-gold-leaf-text)' }}
                 >
                   {m.label.replace(/^[a-z]/, (ch) => ch.toUpperCase())}
@@ -2481,12 +2481,12 @@ const FormattedJD = ({ text }: { text: string }) => {
                 }}
               >
                 <Chip variant="gold" className="gap-2">
-                  <span aria-hidden style={{ fontSize: 11 }}>{icon}</span>
+                  <span aria-hidden style={{ fontSize: 12 }}>{icon}</span>
                   {sec.title.replace(/^[a-z]/, (c) => c.toUpperCase())}
                 </Chip>
                 <span className="flex-1" />
                 <span
-                  className="text-[10px] font-mono font-bold"
+                  className="text-[12px] font-mono font-bold"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   {String(sec.items.length).padStart(2, '0')}
@@ -3154,10 +3154,10 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           aria-label="Open prep sections"
         >
           <span className="flex items-center gap-2 min-w-0">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--cam-strip-text-muted)] shrink-0">Section</span>
+            <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--cam-strip-text-muted)] shrink-0">Section</span>
             <span className="text-[12px] font-bold text-[var(--cam-strip-heading)] truncate">{activeSectionLabel}</span>
           </span>
-          <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--cam-strip-text)] shrink-0">
+          <span className="flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wider text-[var(--cam-strip-text)] shrink-0">
             Sections
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M6 9l6 6 6-6" />
@@ -3175,7 +3175,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[10px] font-bold uppercase tracking-wider text-[var(--cam-strip-heading)]" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
+            <h2 className="text-[12px] font-bold uppercase tracking-wider text-[var(--cam-strip-heading)]" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
             {/* Mobile-only collapse button so users can dismiss the
                 sidebar without picking a different section. Hidden on
                 ≥sm where the sidebar is permanent chrome. */}
@@ -3196,7 +3196,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 companies have landed in Postgres and will be available
                 on the webapp / any other device after sign-in. */}
             <span
-              className="text-[9px] font-bold uppercase tracking-wider flex items-center gap-1"
+              className="text-[12px] font-bold uppercase tracking-wider flex items-center gap-1"
               data-tip={
                 !token ? 'Not signed in — changes are local-only and will not appear on the webapp.'
                   : syncStatus === 'saving' ? 'Writing to lumora_prep_state…'
@@ -3230,7 +3230,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           </div>
           {syncStatus === 'error' && syncError && (
             <p
-              className="text-[9px] mt-1 leading-snug break-all"
+              className="text-[12px] mt-1 leading-snug break-all"
               style={{ color: '#FCA5A5', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
               data-tip={syncError}
             >
@@ -3249,8 +3249,8 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 placeholder="e.g. Nvidia Devops" className="w-full px-2.5 py-1.5 rounded-lg text-xs focus:outline-none"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }} />
               <div className="flex gap-1.5">
-                <button onClick={addCompany} className="flex-1 py-1 text-[10px] font-bold rounded" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>Create</button>
-                <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[10px] rounded" style={{ color: 'var(--text-muted)' }}>Cancel</button>
+                <button onClick={addCompany} className="flex-1 py-1 text-[12px] font-bold rounded" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>Create</button>
+                <button onClick={() => setShowNewCompany(false)} className="px-2 py-1 text-[12px] rounded" style={{ color: 'var(--text-muted)' }}>Cancel</button>
               </div>
             </div>
           ) : prepData.activeCompany ? (
@@ -3293,7 +3293,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                     {(prepData.archivedCompanies || []).length > 0 && (
                       <div style={{ borderTop: '1px solid color-mix(in srgb, var(--border) 60%, transparent)' }}>
                         <button onClick={(e) => { e.stopPropagation(); setShowArchived(v => !v); }}
-                          className="w-full px-3 py-1.5 text-[10px] text-left flex items-center gap-1 opacity-60 hover:opacity-100"
+                          className="w-full px-3 py-1.5 text-[12px] text-left flex items-center gap-1 opacity-60 hover:opacity-100"
                           style={{ color: 'var(--text-muted)' }}>
                           <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8" /></svg>
                           Archived ({(prepData.archivedCompanies || []).length})
@@ -3301,10 +3301,10 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                         </button>
                         {showArchived && (prepData.archivedCompanies || []).map(c => (
                           <button key={c} onClick={(e) => { e.stopPropagation(); unarchiveCompany(c); }}
-                            className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] text-left hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)]"
+                            className="w-full flex items-center justify-between px-3 py-1.5 text-[12px] text-left hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)]"
                             style={{ color: 'var(--text-muted)' }} data-tip="Click to restore">
                             <span className="truncate italic">{c}</span>
-                            <span className="text-[9px] opacity-60">Restore</span>
+                            <span className="text-[12px] opacity-60">Restore</span>
                           </button>
                         ))}
                       </div>
@@ -3361,7 +3361,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 )}
                 <span className="flex-1">{s.label}</span>
                 {sectionStatus[s.id] === 'pending' && generating && (
-                  <Chip variant="default" className="text-[8px]">queued</Chip>
+                  <Chip variant="default" className="text-[12px]">queued</Chip>
                 )}
                 {GENERATE_SECTIONS.includes(s.id) && !generating && (() => {
                   const checked = selectedSections.includes(s.id);
@@ -3430,8 +3430,8 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
             return (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[9px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
-                <span className="text-[9px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
+                <span className="text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
+                <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
                   {done}/{total}
                 </span>
               </div>
@@ -3464,7 +3464,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               : `Generate ${selectedSections.length > 0 ? `(${selectedSections.length})` : ''}`}
           </button>
           {!hasRequiredDocs && (
-            <p className="text-[9px] text-center -mt-1" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>
+            <p className="text-[12px] text-center -mt-1" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>
           )}
 
           {/* Download — export the generated sections (was fully built but had no UI) */}
@@ -3474,26 +3474,26 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                 <button
                   onClick={() => handleDownload('pdf')}
                   disabled={!!downloading}
-                  className="flex-1 py-2 text-[11px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
+                  className="flex-1 py-2 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
                   style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
                   {downloading === 'pdf' ? 'Saving…' : 'Download PDF'}
                 </button>
                 <button
                   onClick={() => handleDownload('docx')}
                   disabled={!!downloading}
-                  className="flex-1 py-2 text-[11px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
+                  className="flex-1 py-2 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
                   style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
                   {downloading === 'docx' ? 'Saving…' : 'Download DOCX'}
                 </button>
               </div>
-              {downloadMsg && <p className="text-[9px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</p>}
+              {downloadMsg && <p className="text-[12px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</p>}
             </div>
           )}
 
           {/* Clear */}
           <button
             onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
-            className="w-full py-2 text-[11px] font-semibold rounded-lg transition-all active:scale-[0.98] hover:opacity-90"
+            className="w-full py-2 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.98] hover:opacity-90"
             style={{ color: 'color-mix(in srgb, #ef4444 70%, var(--text-secondary))', background: 'color-mix(in srgb, #ef4444 8%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, #ef4444 25%, transparent)' }}>
             Clear All
           </button>
@@ -3533,7 +3533,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Study Materials</span>
-                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
                   {state.studyDocs.length === 0 ? 'Add as many as you want — Sona reads them all' : `${state.studyDocs.length} document${state.studyDocs.length === 1 ? '' : 's'} loaded`}
                 </span>
               </div>
@@ -3578,7 +3578,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           <div className="flex-1 flex flex-col">
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
-              <button onClick={() => setActiveSection('input')} className="text-[10px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)' }}>Edit</button>
+              <button onClick={() => setActiveSection('input')} className="text-[12px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)' }}>Edit</button>
             </div>
             <div className="flex-1 overflow-auto p-6 select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
               <FormattedJD text={state.jd} />
@@ -3599,7 +3599,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   <button
                     onClick={() => regenerateSection(activeSection)}
                     disabled={sectionStatus[activeSection] === 'generating'}
-                    className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold rounded-lg transition-colors disabled:opacity-40"
+                    className="flex items-center gap-1 px-2.5 py-1 text-[12px] font-semibold rounded-lg transition-colors disabled:opacity-40"
                     style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
                     {sectionStatus[activeSection] === 'generating' ? (
                       <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -3667,7 +3667,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => jdFileInputRef.current?.click()}
-                  className="px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition-colors"
+                  className="px-3 py-1.5 rounded-md text-[12px] font-bold uppercase tracking-wider transition-colors"
                   style={{ background: 'rgba(255,255,255,0.08)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.18)' }}
                 >
                   Upload File
@@ -3685,7 +3685,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
 
             {/* Body */}
             <div className="px-5 py-5 overflow-y-auto">
-              <label className="block text-[10px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--text-muted)' }}>Paste job posting URL</label>
+              <label className="block text-[12px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--text-muted)' }}>Paste job posting URL</label>
               <div className="flex items-center gap-2">
                 <input
                   type="url"
@@ -3715,10 +3715,10 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
                   {jdFetching ? 'Fetching…' : 'Fetch JD'}
                 </button>
               </div>
-              <p className="text-[11px] mt-2" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-[12px] mt-2" style={{ color: 'var(--text-muted)' }}>
                 Supports Workday, Greenhouse, Lever, Ashby, SmartRecruiters, LinkedIn, and most career pages.
               </p>
-              {jdUrlError && <p className="text-[11px] mt-2 font-semibold" style={{ color: 'var(--danger)' }}>{jdUrlError}</p>}
+              {jdUrlError && <p className="text-[12px] mt-2 font-semibold" style={{ color: 'var(--danger)' }}>{jdUrlError}</p>}
 
               <textarea
                 value={jdEditText}

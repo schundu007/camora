@@ -136,7 +136,7 @@ const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
             <div className="-m-4 group">
               <div className="flex items-center justify-end px-3 py-1.5" style={{ borderBottom: '1px solid var(--border)' }}>
                 <button
-                  className="text-[10px] font-mono px-2 py-0.5 border rounded transition-[background-color,border-color,color,opacity] opacity-0 group-hover:opacity-100 active:scale-[0.98]"
+                  className="text-[12px] font-mono px-2 py-0.5 border rounded transition-[background-color,border-color,color,opacity] opacity-0 group-hover:opacity-100 active:scale-[0.98]"
                   style={{ color: 'var(--text-secondary)', borderColor: 'var(--border)' }}
                   onClick={() => navigator.clipboard.writeText(block.content)}
                 >
@@ -164,7 +164,7 @@ const Block = ({ block, delay }: { block: ParsedBlock; delay: number }) => {
                 <div key={i} className="py-3 first:pt-0 last:pb-0">
                   <div className="flex items-start gap-2 mb-2">
                     <span
-                      className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 font-mono"
+                      className="flex items-center justify-center w-5 h-5 rounded-md text-[12px] font-bold shrink-0 font-mono"
                       style={{ background: 'var(--accent-subtle)', color: 'var(--warning-text)' }}
                     >
                       Q{i + 1}
@@ -312,7 +312,7 @@ const GridCard = ({
             className={`relative inline-block w-1.5 h-1.5 rounded-full ${titleColor.startsWith('text-') ? `bg-current ${titleColor}` : ''}`}
             style={{ filter: 'drop-shadow(0 0 4px currentColor)' }}
           />
-          <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
+          <span className="font-mono text-[12px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
             {title}
           </span>
         </span>
@@ -342,7 +342,7 @@ const ArchitectureCard = ({ question }: { question: string }) => {
         }}
       >
         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--cam-gold-leaf-lt)]" />
-        <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
+        <span className="font-mono text-[12px] font-bold tracking-widest uppercase text-[var(--cam-strip-heading)]">
           Architecture
         </span>
       </div>
@@ -361,7 +361,7 @@ const EmptyBlock = () => {
       <svg className="w-4 h-4 shrink-0 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span className="font-mono text-[11px]">Not included in this response</span>
+      <span className="font-mono text-[12px]">Not included in this response</span>
     </div>
   );
 }
@@ -470,7 +470,7 @@ const RichTable = ({ rows }: { rows: string[][] }) => {
           <thead>
             <tr style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
               {header.map((cell, ci) => (
-                <th key={ci} className="font-mono text-[9px] font-bold tracking-wider uppercase px-3 py-2 text-[var(--cam-strip-heading)] whitespace-nowrap">
+                <th key={ci} className="font-mono text-[12px] font-bold tracking-wider uppercase px-3 py-2 text-[var(--cam-strip-heading)] whitespace-nowrap">
                   {cell}
                 </th>
               ))}
@@ -517,7 +517,7 @@ const RichContent = ({ content }: { content: string }) => {
             return (
               <div key={idx} className="flex items-center gap-3 px-3 py-2 mt-4 mb-1.5 rounded-sm first:mt-0"
                 style={{ background: 'rgba(38,97,156,0.08)', borderLeft: '3px solid var(--cam-gold-leaf)' }}>
-                <span className="font-mono text-[10px] font-bold tracking-widest uppercase"
+                <span className="font-mono text-[12px] font-bold tracking-widest uppercase"
                   style={{ color: 'var(--text-primary)', letterSpacing: '0.12em' }}>
                   {seg.text.replace(/:$/, '')}
                 </span>
@@ -532,7 +532,7 @@ const RichContent = ({ content }: { content: string }) => {
             <div key={idx} className="flex items-center gap-2 mt-3 mb-1"
               style={{ borderLeft: '2px solid var(--accent)', paddingLeft: '8px' }}>
               {num && (
-                <span className="flex items-center justify-center w-5 h-5 rounded text-[9px] font-bold font-mono shrink-0"
+                <span className="flex items-center justify-center w-5 h-5 rounded text-[12px] font-bold font-mono shrink-0"
                   style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
                   {num}
                 </span>
@@ -546,7 +546,7 @@ const RichContent = ({ content }: { content: string }) => {
         }
         if (seg.kind === 'subheading') {
           return (
-            <div key={idx} className="font-mono text-[9px] font-bold tracking-widest uppercase mt-2 mb-0.5"
+            <div key={idx} className="font-mono text-[12px] font-bold tracking-widest uppercase mt-2 mb-0.5"
               style={{ color: 'var(--text-muted)' }}>
               {seg.text}
             </div>
@@ -559,7 +559,7 @@ const RichContent = ({ content }: { content: string }) => {
           const n = bulletMap.get(idx) ?? 1;
           return (
             <div key={idx} className="flex items-start gap-3">
-              <span className="flex items-center justify-center w-5 h-5 rounded-md text-[10px] font-bold shrink-0 mt-0.5 font-mono"
+              <span className="flex items-center justify-center w-5 h-5 rounded-md text-[12px] font-bold shrink-0 mt-0.5 font-mono"
                 style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}>
                 {n}
               </span>

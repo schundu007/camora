@@ -30,12 +30,12 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
           {/* View toggle */}
           <div className="flex items-center gap-0.5 p-0.5 rounded-lg" style={{ background: 'var(--cam-strip-icon-bg)' }}>
             <button onClick={() => setView('week')}
-              className="px-2 py-1 text-[10px] font-bold rounded transition-[background-color,color,transform] active:scale-[0.98]"
+              className="px-2 py-1 text-[12px] font-bold rounded transition-[background-color,color,transform] active:scale-[0.98]"
               style={view === 'week' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text-muted)' }}>
               Week
             </button>
             <button onClick={() => setView('month')}
-              className="px-2 py-1 text-[10px] font-bold rounded transition-[background-color,color,transform] active:scale-[0.98]"
+              className="px-2 py-1 text-[12px] font-bold rounded transition-[background-color,color,transform] active:scale-[0.98]"
               style={view === 'month' ? { background: 'var(--cam-chip-active-bg)', color: 'var(--cam-chip-active-text)' } : { color: 'var(--cam-strip-text-muted)' }}>
               Month
             </button>
@@ -43,7 +43,7 @@ export const LumoraCalendar = ({ onClose }: { onClose: () => void }) => {
         </div>
         <div className="flex items-center gap-2">
           <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer"
-            className="text-[11px] font-medium transition-colors" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+            className="text-[12px] font-medium transition-colors" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
             Open in Google Calendar →
           </a>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]" style={{ color: 'var(--lumora-chrome-text)' }}>

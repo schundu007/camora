@@ -218,7 +218,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
             background: isRecording ? 'var(--danger)' : 'var(--cam-primary-dk)',
             border: '1px solid var(--border)',
           } : {
-            fontSize: '11px',
+            fontSize: '12px',
             color: isRecording ? 'var(--accent)' : 'var(--text-muted)',
             background: isRecording ? 'var(--accent-subtle)' : 'transparent',
             border: '1px solid var(--border)',
@@ -267,7 +267,7 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
           background: voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--bg-elevated)',
           border: `1px solid ${voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
         } : {
-          fontSize: '11px',
+          fontSize: '12px',
           padding: '4px 8px',
           color: voiceFilterEnabled ? 'var(--accent)' : 'var(--text-muted)',
           background: voiceFilterEnabled ? 'var(--accent-subtle)' : 'transparent',

@@ -50,7 +50,7 @@ const modeIcon = (m: string) => {
 };
 
 /** Shared pill chrome — matches the LumoraShellPage tab nav exactly. */
-const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.1em] font-mono transition-[background-color,color,opacity] active:scale-[0.97]';
+const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[12px] font-bold uppercase tracking-[0.1em] font-mono transition-[background-color,color,opacity] active:scale-[0.97]';
 
 export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform, inline }: ScreenshotStripProps) => {
   const { token } = useAuth();
@@ -204,7 +204,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             </svg>
           )}
           {!['hackerrank', 'leetcode', 'coderpad', 'codesignal', 'glider'].includes(codingPlatform) && (
-            <span className="text-[11px] font-semibold" style={{ color: '#00ea64' }}>{codingPlatform}</span>
+            <span className="text-[12px] font-semibold" style={{ color: '#00ea64' }}>{codingPlatform}</span>
           )}
         </div>
       )}
@@ -266,14 +266,14 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
             />
           ) : (
             <div
-              className="h-7 w-10 rounded flex items-center justify-center text-[8px] font-bold uppercase tracking-[0.08em] font-mono"
+              className="h-7 w-10 rounded flex items-center justify-center text-[12px] font-bold uppercase tracking-[0.08em] font-mono"
               style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)', color: 'var(--cam-strip-text)' }}
             >
               {s.starterCode ? 'CODE' : 'TEXT'}
             </div>
           )}
           <span
-            className="absolute -top-1 -left-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold"
+            className="absolute -top-1 -left-1 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[12px] font-bold"
             style={{ background: 'var(--cam-gold-leaf)', color: 'var(--cam-primary-dk)' }}
           >
             {i + 1}
@@ -291,7 +291,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
       {/* Screenshot count label when >0 */}
       {showSnap && screenshots.length > 0 && (
-        <span className="text-[10px] font-semibold shrink-0" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
+        <span className="text-[12px] font-semibold shrink-0" style={{ color: 'var(--cam-gold-leaf-lt)' }}>
           {screenshots.length} page{screenshots.length > 1 ? 's' : ''}
         </span>
       )}

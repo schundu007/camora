@@ -158,7 +158,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
         </span>
 
         <span
-          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+          className="text-[12px] font-bold px-2 py-0.5 rounded-full"
           style={{
             background: docs.length > 0 ? 'rgba(0,71,171,0.15)' : 'var(--bg-elevated)',
             color: docs.length > 0 ? 'var(--cam-primary)' : 'var(--text-muted)',
@@ -169,7 +169,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
         </span>
 
         {mostRecentIndexed && (
-          <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
             Synced {relTime(mostRecentIndexed.indexed_at!)}
           </span>
         )}
@@ -177,7 +177,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
 
       <div className="p-4 space-y-3">
         {error && (
-          <p className="text-[11px] px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--danger, #ef4444)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          <p className="text-[12px] px-3 py-2 rounded-lg" style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--danger, #ef4444)', border: '1px solid rgba(239,68,68,0.2)' }}>
             {error}
           </p>
         )}
@@ -200,19 +200,19 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
                 >
                   {doc.filename}
                 </span>
-                <span className="text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-[12px] shrink-0" style={{ color: 'var(--text-muted)' }}>
                   {fmtBytes(doc.size_bytes)}
                 </span>
                 {doc.indexed_at ? (
                   <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                    className="text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
                     style={{ background: 'rgba(0,71,171,0.12)', color: 'var(--cam-primary)', border: '1px solid rgba(0,71,171,0.2)' }}
                   >
                     indexed
                   </span>
                 ) : (
                   <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                    className="text-[12px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
                     style={{ background: 'rgba(212,160,67,0.12)', color: 'var(--cam-gold-leaf-text, #b8891a)', border: '1px solid rgba(212,160,67,0.3)' }}
                   >
                     pending
@@ -252,7 +252,7 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold uppercase tracking-wide transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
             >
               {uploading ? (
@@ -269,14 +269,14 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
                 </>
               )}
             </button>
-            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
               10 MB max · PDF, DOCX, TXT
             </span>
           </div>
         )}
 
         {atCap && (
-          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
             {UI_CAP} documents uploaded. Remove one to add more.
           </p>
         )}

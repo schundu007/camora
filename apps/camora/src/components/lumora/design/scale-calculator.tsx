@@ -56,14 +56,14 @@ export function ScaleCalculator({ baseline, themeTokens }: {
             <path d="M3 3v18h18" />
             <polyline points="7 14 12 9 16 13 21 8" />
           </svg>
-          <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: t.headerText }}>Interactive Calculator</span>
-          <span className="ml-auto text-[10px]" style={{ color: t.textMuted }}>Drag sliders — numbers recompute live</span>
+          <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: t.headerText }}>Interactive Calculator</span>
+          <span className="ml-auto text-[12px]" style={{ color: t.textMuted }}>Drag sliders — numbers recompute live</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2.5">
           {sliders.map(s => (
             <div key={s.key}>
-              <div className="flex items-center justify-between text-[11px] mb-0.5">
+              <div className="flex items-center justify-between text-[12px] mb-0.5">
                 <span style={{ color: t.textMuted }}>{s.label}</span>
                 <span className="font-mono font-bold" style={{ color: t.text }}>{s.display(inputs[s.key])}</span>
               </div>
@@ -84,7 +84,7 @@ export function ScaleCalculator({ baseline, themeTokens }: {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-1" style={{ borderTop: `1px solid ${t.cardBorder}` }}>
           {derived.map(d => (
             <div key={d.label} className="rounded-lg px-2.5 py-1.5" style={{ background: t.cardBg, border: `1px solid ${t.cardBorder}` }}>
-              <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: t.textDim }}>{d.label}</p>
+              <p className="text-[12px] font-bold uppercase tracking-wider" style={{ color: t.textDim }}>{d.label}</p>
               <p className="text-[13px] font-mono font-bold" style={{ color: t.headerText }}>{d.value}</p>
             </div>
           ))}

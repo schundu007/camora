@@ -38,7 +38,7 @@ export const CalibrationButton = ({ deviceId, disabled, variant = 'dark' }: Cali
           background: isCalibrating ? 'var(--text-primary)' : 'var(--cam-primary)',
           border: '1px solid var(--border)',
         } : {
-          fontSize: '11px',
+          fontSize: '12px',
           padding: '4px 8px',
           color: 'var(--cam-strip-text-muted)',
           border: '1px solid var(--cam-strip-icon-border)',

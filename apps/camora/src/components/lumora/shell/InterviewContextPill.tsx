@@ -22,7 +22,7 @@ export const InterviewContextPill = ({ onOpen }: Props) => {
     <button
       type="button"
       onClick={onOpen}
-      className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
+      className="flex items-center gap-1 px-2 py-1 rounded text-[12px] font-bold uppercase tracking-wider transition-[background-color,opacity] hover:opacity-80 active:scale-[0.97] shrink-0"
       style={activeKey
         ? {
             background: 'var(--cam-chip-active-bg)',

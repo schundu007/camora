@@ -168,7 +168,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                   <div className="mt-3 flex items-center gap-3">
                     <CalibrationButton deviceId={selectedDeviceId} disabled={false} variant="light" />
                     {typeof vadThreshold === 'number' && vadThreshold > 0 && (
-                      <span className="text-[11px] tabular-nums" style={{ fontFamily: 'var(--font-code)', color: 'var(--text-muted)' }}>
+                      <span className="text-[12px] tabular-nums" style={{ fontFamily: 'var(--font-code)', color: 'var(--text-muted)' }}>
                         Floor: {(vadThreshold * 100).toFixed(1)}%
                       </span>
                     )}
@@ -219,7 +219,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
-                    <p className="text-[10px] mt-2" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-[12px] mt-2" style={{ color: 'var(--text-muted)' }}>
                       Once enrolled, your voice will be filtered out during recording. Toggle filter on/off anytime from the header.
                     </p>
                   </div>
@@ -230,7 +230,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Enroll your voice (5-second sample)</span>
                     </div>
                     <VoiceEnrollment disabled={false} variant="light" />
-                    <p className="text-[10px] mt-2" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-[12px] mt-2" style={{ color: 'var(--text-muted)' }}>
                       Once enrolled, your voice is filtered out during recording. Only the speaker's questions are transcribed and answered by AI.
                     </p>
                   </div>
@@ -257,7 +257,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={resumeSaving}
-                      className="text-[11px] px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
+                      className="text-[12px] px-2.5 py-1 rounded-lg transition-colors disabled:opacity-50"
                       style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)' }}
                     >
                       {resumeSaving ? 'Parsing…' : 'Upload file'}
@@ -300,12 +300,12 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                     {resumeSaving ? 'Saving…' : resumeSaved ? '✓ Saved' : 'Save'}
                   </button>
                   {resumeText && (
-                    <span className="text-[11px] font-code" style={{ color: 'var(--text-muted)' }}>
+                    <span className="text-[12px] font-code" style={{ color: 'var(--text-muted)' }}>
                       {resumeText.length.toLocaleString()} chars
                     </span>
                   )}
                   {resumeError && (
-                    <span className="text-[11px]" style={{ color: 'var(--error, #ef4444)' }}>{resumeError}</span>
+                    <span className="text-[12px]" style={{ color: 'var(--error, #ef4444)' }}>{resumeError}</span>
                   )}
                 </div>
               </div>
@@ -340,7 +340,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                       </div>
                       <div>
                         <div className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}>{m.label}</div>
-                        <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{m.sub}</div>
+                        <div className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{m.sub}</div>
                       </div>
                     </div>
                   </button>
@@ -363,7 +363,7 @@ export const LumoraSettings = ({ isOpen, onClose }: LumoraSettingsProps) => {
                   { keys: '⌘↵', action: 'Submit' },
                 ].map(s => (
                   <div key={s.keys} className="flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-                    <kbd className="px-2 py-1 rounded text-[11px] font-bold" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontFamily: "var(--font-mono)" }}>{s.keys}</kbd>
+                    <kbd className="px-2 py-1 rounded text-[12px] font-bold" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-secondary)', fontFamily: "var(--font-mono)" }}>{s.keys}</kbd>
                     <span className="text-xs" style={{ color: 'var(--text-secondary)', fontFamily: "var(--font-sans)" }}>{s.action}</span>
                   </div>
                 ))}
@@ -409,7 +409,7 @@ const VoiceModeCard = ({ active, onClick, icon, title, description, badge, disab
       }}
     >
       {badge && (
-        <span className="absolute top-3 right-3 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+        <span className="absolute top-3 right-3 text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
           style={{ background: disabled ? 'var(--bg-elevated)' : 'var(--accent-subtle)', color: disabled ? 'var(--text-dimmed)' : 'var(--cam-primary)' }}>
           {badge}
         </span>

@@ -97,7 +97,7 @@ export const HistoryAnswerViewer = ({
       <div className="flex items-center gap-3 h-12 px-5 shrink-0" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}>
         <button
           onClick={onClose}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors hover:bg-black/5"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold transition-colors hover:bg-black/5"
           style={{ color: 'var(--text-primary)', border: '1px solid var(--border)', background: 'var(--bg-surface)' }}
           data-tip="Back to home"
         >
@@ -107,12 +107,12 @@ export const HistoryAnswerViewer = ({
           Back
         </button>
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)' }}>
+          <span className="text-[12px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded" style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary-dk)' }}>
             Past Answer
           </span>
           <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{entry.question}</span>
         </div>
-        <span className="ml-auto text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>
+        <span className="ml-auto text-[12px] shrink-0" style={{ color: 'var(--text-muted)' }}>
           {!isNaN(ts.getTime()) ? ts.toLocaleString() : ''}
         </span>
       </div>

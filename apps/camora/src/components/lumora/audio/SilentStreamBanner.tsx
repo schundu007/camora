@@ -132,14 +132,14 @@ export const SilentStreamBanner = () => {
         <div className="flex gap-2 mt-2">
           <button
             onClick={reconnect}
-            className="px-3 py-1 text-[11px] font-bold rounded-md"
+            className="px-3 py-1 text-[12px] font-bold rounded-md"
             style={{ background: '#f59e0b', color: '#000' }}
           >
             Reconnect now
           </button>
           <button
             onClick={() => setDismissed(true)}
-            className="px-3 py-1 text-[11px] font-bold rounded-md"
+            className="px-3 py-1 text-[12px] font-bold rounded-md"
             style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
           >
             Dismiss

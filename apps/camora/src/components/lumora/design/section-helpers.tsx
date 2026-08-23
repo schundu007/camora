@@ -105,7 +105,7 @@ export function SectionCopyBtn({ getText, title }: { getText: () => string; titl
         });
       }}
       data-tip={title || 'Copy section'}
-      className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-[background-color,transform] active:scale-[0.98]"
+      className="text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded transition-[background-color,transform] active:scale-[0.98]"
       style={{ color: 'var(--cam-strip-text)', border: '1px solid var(--cam-strip-icon-border)' }}>
       {copied ? 'Copied ✓' : 'Copy'}
     </button>

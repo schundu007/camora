@@ -89,7 +89,7 @@ export const PlaygroundEditor = ({ language, defaultValue, onChange, onMount, on
       beforeMount={(m) => { m.editor.setTheme(theme); }}
       theme={theme}
       options={{
-        fontSize: 11,
+        fontSize: 12,
         fontFamily: 'var(--font-mono)',
         fontLigatures: true,
         letterSpacing: -0.3,
