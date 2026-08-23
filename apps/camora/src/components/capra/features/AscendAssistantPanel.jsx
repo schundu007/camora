@@ -17,7 +17,7 @@ function renderMarkdown(text) {
     str = str.replace(/__(.+?)__/g, '<strong style="color: #f1f5f9; font-weight: 600;">$1</strong>');
     str = str.replace(/\*(.+?)\*/g, '<em>$1</em>');
     str = str.replace(/_(.+?)_/g, '<em>$1</em>');
-    str = str.replace(/`([^`]+)`/g, '<code style="padding: 0 3px; background: rgba(16, 185, 129, 0.15); border-radius: 2px; color: var(--accent); font-family: monospace; font-size: 10px;">$1</code>');
+    str = str.replace(/`([^`]+)`/g, '<code style="padding: 0 3px; background: rgba(16, 185, 129, 0.15); border-radius: 2px; color: var(--accent); font-family: var(--font-mono); font-size: 12px;">$1</code>');
     return str;
   };
 
