@@ -3,9 +3,10 @@
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
   "installCommand": "cd ../.. && pnpm install",
-  "rewrites": [
-    { "source": "/.well-known/(.*)", "destination": "/.well-known/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/assets/(.*)", "status": 404 },
+    { "src": "/(.*)", "dest": "/index.html" }
   ],
   "headers": [
     {
