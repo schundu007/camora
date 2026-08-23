@@ -36,7 +36,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       const RELOAD_KEY = 'vite_preload_reload';
       if (!sessionStorage.getItem(RELOAD_KEY)) {
         sessionStorage.setItem(RELOAD_KEY, '1');
-        window.location.reload();
+        const url = new URL(window.location.href);
+        url.searchParams.set('_camora_refresh', Date.now().toString());
+        window.location.replace(url.toString());
       }
     }
   }
