@@ -5,7 +5,7 @@
   "installCommand": "cd ../.. && pnpm install",
   "rewrites": [
     { "source": "/.well-known/(.*)", "destination": "/.well-known/$1" },
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
