@@ -612,8 +612,8 @@ export const AskLayout = () => {
             {history.length === 0 ? (
               <p className="p-4 text-[12px]" style={{ color: 'var(--lum-text-2)', ...sans }}>No history yet</p>
             ) : history.map(c => (
-              <div key={c.id} className="flex items-center gap-2 border-b hover:bg-[color-mix(in_oklab,var(--text-primary)_7%,transparent)] transition-colors" style={{ borderColor: 'rgba(217,181,67,0.15)' }}>
-                <button onClick={() => loadConversation(c.id)} className="flex-1 text-left px-3 py-2.5 text-[13px] flex flex-col gap-1 min-w-0" style={{ color: 'var(--cam-strip-text)', ...sans }}>
+              <div key={c.id} className="flex items-center gap-2 border-b hover:bg-[var(--lum-surface-hover)] transition-colors" style={{ borderColor: 'var(--lum-border)' }}>
+                <button onClick={() => loadConversation(c.id)} className="flex-1 text-left px-3 py-2.5 text-[13px] flex flex-col gap-1 min-w-0" style={{ color: 'var(--lum-text-2)', ...sans }}>
                   <span className="truncate w-full">{c.title}</span>
                   <span className="text-[12px] px-1.5 py-0.5 rounded self-start" style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent)' }}>{c.provider}</span>
                 </button>
@@ -671,7 +671,7 @@ export const AskLayout = () => {
                           src={im.url || im.dataUrl}
                           alt="attachment"
                           className="rounded-lg max-h-40 object-cover"
-                          style={{ border: '1px solid var(--cam-gold-leaf-dk)' }}
+                          style={{ border: '1px solid var(--lum-border-strong)' }}
                         />
                       ))}
                     </div>
@@ -692,12 +692,12 @@ export const AskLayout = () => {
               {streamText ? (
                 <>
                   <AskResponse content={streamText} />
-                  <span className="inline-block w-1.5 h-4 animate-pulse ml-0.5 align-middle rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} />
+                  <span className="inline-block w-1.5 h-4 animate-pulse ml-0.5 align-middle rounded-sm" style={{ background: 'var(--lum-accent)' }} />
                 </>
               ) : (
                 <div className="flex items-center gap-1.5 mt-2">
                   {[0, 150, 300].map(d => (
-                    <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: 'var(--cam-gold-leaf)', animationDelay: `${d}ms` }} />
+                    <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: 'var(--lum-accent)', animationDelay: `${d}ms` }} />
                   ))}
                 </div>
               )}
@@ -708,7 +708,7 @@ export const AskLayout = () => {
       ) : (
         <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6 overflow-y-auto">
           <h1 className="text-[26px] font-semibold mb-8 text-center" style={{ color: 'var(--text-primary)', ...sans }}>
-            Hey <span style={{ color: 'var(--cam-gold-leaf)' }}>{firstName}</span>, what's on your mind?
+            Hey <span style={{ color: 'var(--lum-accent)' }}>{firstName}</span>, what's on your mind?
           </h1>
           <div className="flex flex-col gap-2 mb-6 w-full" style={{ maxWidth: 640 }}>
             {SUGGESTIONS.map((s, i) => (
@@ -718,7 +718,7 @@ export const AskLayout = () => {
                 className="flex items-center gap-3 text-left px-4 py-3 rounded-xl transition-all hover:bg-[var(--bg-elevated)] active:scale-[0.99]"
                 style={{ color: 'var(--text-secondary)', fontSize: 13, background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', ...sans }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--cam-gold-leaf)', flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--lum-accent)', flexShrink: 0 }}>
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                 </svg>
                 {s}
@@ -750,11 +750,11 @@ export const AskLayout = () => {
               <div className="flex flex-wrap gap-2 px-4 pt-3">
                 {pending.map((p) => (
                   <div key={p.id} className="relative">
-                    <img src={p.dataUrl} alt="pending attachment" className="h-16 w-16 object-cover rounded-lg" style={{ border: '1px solid var(--cam-gold-leaf-dk)' }} />
+                    <img src={p.dataUrl} alt="pending attachment" className="h-16 w-16 object-cover rounded-lg" style={{ border: '1px solid var(--lum-border-strong)' }} />
                     <button
                       onClick={() => setPending(prev => prev.filter(x => x.id !== p.id))}
                       className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[12px] font-bold"
-                      style={{ background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)', color: 'var(--text-primary)' }}
+                      style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border-strong)', color: 'var(--lum-text)' }}
                       aria-label="Remove image"
                     >×</button>
                   </div>
@@ -792,12 +792,12 @@ export const AskLayout = () => {
                     : 'Screenshot — drag to select any area and ask about it. Pasting or dropping an image works too.'}
                   aria-label="Add a screenshot"
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
-                  style={{ background: 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}
+                  style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border-strong)' }}
                 >
                   {snapping ? (
                     <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" style={{ color: 'var(--text-muted)' }} />
                   ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--lum-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                       <circle cx="12" cy="13" r="4" />
                     </svg>
@@ -843,7 +843,7 @@ export const AskLayout = () => {
                   onClick={() => handleSubmit()}
                   disabled={(!input.trim() && pending.length === 0) || streaming}
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-30 hover:opacity-85"
-                  style={{ background: 'var(--cam-gold-leaf)' }}
+                  style={{ background: 'var(--lum-accent)' }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a0e1a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="19" x2="12" y2="5" />
