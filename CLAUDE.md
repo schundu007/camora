@@ -257,7 +257,7 @@ module a call site imports from.
 
 ## Deployment
 
-- **Frontend**: Vercel — auto-deploy from `main` is unreliable on this project; after every push run `vercel --prod` from the repo root (the `.vercel` link is at root, not `apps/camora/`, because the project's Vercel-side Root Directory is set to `apps/camora` and the CLI would otherwise double the path)
+- **Frontend**: Vercel — auto-deploys from `main`, so pushing is the deploy and no manual step is needed. `vercel --prod` from the repo root is the fallback if a deployment does not trigger; run it from the **root**, not `apps/camora/`, because the `.vercel` link lives at root and the project's Vercel-side Root Directory is already set to `apps/camora`, so the CLI would otherwise double the path
 - **Lumora Backend**: Railway (Nixpacks — `nodejs_20` + `ffmpeg`, healthcheck at `/health`)
 - **Ascend Backend**: Railway (Nixpacks — `nodejs_20` + `python3` + `graphviz` + `go` + `rustc` + `openjdk17`, healthcheck at `/health`)
 - **AI Services**: Railway (Dockerfile, `python:3.11-slim` + `graphviz` + `ffmpeg`, healthcheck at `/health`)

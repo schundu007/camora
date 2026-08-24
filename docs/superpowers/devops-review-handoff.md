@@ -160,15 +160,14 @@ contain the complete desired array, not a delta.
 
 ## Deployment
 
-Vercel auto-deploy from `main` is unreliable on this project, so after pushing
-the owner normally runs `vercel --prod` from the repo root. A cloud session will
-not have Vercel credentials — **push to `main` and state clearly in your final
-summary that `vercel --prod` still needs to be run locally.**
-
-> **Outstanding as of the batch 6–11 session:** batches 6–11 are pushed to
-> `main` but **have not been deployed**. `vercel --prod` still needs to be run
-> from the repo root for those 30 topics to appear on
-> camora.cariara.com.
+**Vercel auto-deploys from `main`.** Pushing is the deploy — no manual step is
+needed, and a cloud session without Vercel credentials is not blocked on
+anything. (An earlier version of this file said auto-deploy was unreliable and
+that `vercel --prod` had to be run from the repo root afterwards; the owner
+corrected that. `vercel --prod` remains the manual fallback if a deployment
+does not trigger, and note the `.vercel` link is at the repo root rather than
+`apps/camora/`, because the project's Vercel-side Root Directory is already set
+to `apps/camora` and the CLI would otherwise double the path.)
 
 ## Notes
 
