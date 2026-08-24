@@ -2074,6 +2074,67 @@ Prevention: use Terraform Cloud or Enterprise, which handles lock management wit
         image: '/diagrams/linkdiags/jenkins-architecture.png',
       },
     ],
+    topics: [
+      {
+        title: 'The split exists for security first, and scale second',
+        content: `The usual explanation for Jenkins' controller/agent split is scale. That is the second reason. The first is that **the controller is the trust boundary**, and anything running on it is, effectively, Jenkins itself.
+
+A process executing on the controller has the filesystem of \`$JENKINS_HOME\` in front of it: every job configuration, the credential store and its master key, the plugin directory, and the script console. A build step that runs there can read decrypted credentials for jobs it has nothing to do with, or write a Groovy init script that executes on the next restart. There is no sandbox at that layer — the sandbox applies to Pipeline Groovy, not to \`sh\`. This is why the standing recommendation is to set the controller's executor count to **zero** and let no build touch it, and why Jenkins added *Agent → Controller Access Control*, a filter on the commands an agent is permitted to ask the controller to perform, on the assumption that agents are hostile.
+
+The naming changed with that model and the old words are still everywhere. **"Master" became "controller" and "slave" became "agent"** in 2020, and in Jenkins 2.319 (late 2021) the controller's own node was renamed the **"built-in node"** with its executors defaulted to 0 on new installs. Container images followed: \`jenkins/jnlp-slave\` is now \`jenkins/inbound-agent\`. Documentation written before 2021 uses the old vocabulary throughout, which is a useful dating signal when you are evaluating a Stack Overflow answer.
+
+The division of labour is otherwise clean. The controller holds configuration, build history, credentials, plugins, the web UI and REST API, schedules work onto agents by matching a job's label expression against agent labels, and **executes the Pipeline Groovy itself**. The agent runs the steps: checkout, compile, test, image build, deploy. It owns a workspace directory and needs only a JRE and outbound reachability to the controller.
+
+That last point about Groovy is the one that surprises people. When a Jenkinsfile runs, the \`sh\` step runs on the agent but every line of Groovy around it — the loops, the string interpolation, the \`if\` — runs on the controller. A pipeline that parses a large JSON file in Groovy, or loops ten thousand times, consumes controller CPU and heap no matter which agent it is "running on". This is a common cause of a Jenkins instance that grinds to a halt with idle agents.`,
+      },
+      {
+        title: 'How agents connect, and why the word JNLP is misleading',
+        content: `There are two directions a connection can be established, and the choice is usually dictated by firewalls rather than preference.
+
+**Controller-initiated (SSH):** the controller opens an SSH connection to the agent and launches the agent JAR itself. Simple, no agent-side bootstrapping, credentials held centrally — but the controller must be able to reach every agent on port 22, which is exactly the direction most network policies forbid for a machine that also serves a web UI.
+
+**Agent-initiated (inbound):** the agent starts, dials out to the controller, and authenticates with a secret. Only outbound connectivity is required, so agents can live in a private subnet, a developer's lab, or a different cloud.
+
+Inbound agents are almost universally called "JNLP agents", and **the name is a fossil**. JNLP — Java Network Launch Protocol — described the Java Web Start \`.jnlp\` file that once launched the agent from a browser. Java Web Start was removed from the JDK, and Jenkins removed that launch path with it. What survives is a Jenkins-specific protocol confusingly named **JNLP4-connect**: TLS over a raw TCP port, conventionally 50000, which has to be opened and published separately from the HTTP port. Since Jenkins 2.217 there is a better option — \`-webSocket\`, which tunnels the agent connection over the ordinary HTTP(S) port. That means one port, TLS you already terminate, and traversal of proxies and ingress controllers that would never have passed raw 50000. For agents outside the cluster or behind corporate proxies, WebSocket is the default worth choosing; the TCP port then does not need to exist at all.
+
+An **executor** is one concurrent build slot on an agent. An agent with four executors runs four builds simultaneously, sharing its CPU, memory and Docker daemon. The sizing mistake in both directions is common: too few executors leaves machines idle behind a queue; too many turns "flaky tests" into what is really CPU starvation, and on a Docker-in-Docker agent, four concurrent image builds contending for one daemon and one layer cache is slower than two.`,
+      },
+      {
+        title: 'Ephemeral agents on Kubernetes, and the ceiling nobody mentions',
+        content: `Static agents accumulate state. A Node version installed for one job, a leftover \`node_modules\`, a Docker layer cache that is stale in a way nobody can reproduce — this is where "works on agent-03, fails on agent-07" comes from. Ephemeral agents remove the category: the Kubernetes plugin creates a **pod per build**, runs the build in it, and deletes it.
+
+    pipeline {
+      agent {
+        kubernetes {
+          yaml '''
+            spec:
+              containers:
+              - name: maven
+                image: maven:3.9-eclipse-temurin-21
+                command: ["sleep"]
+                args: ["infinity"]
+                resources:
+                  requests: {cpu: "1", memory: "2Gi"}
+                  limits:   {memory: "4Gi"}
+          '''
+        }
+      }
+      stages {
+        stage('Build') {
+          steps { container('maven') { sh 'mvn -B verify' } }
+        }
+      }
+    }
+
+The mechanics worth knowing: the plugin injects a container named **\`jnlp\`** running the inbound agent image, which is what connects back to the controller — override that container's image if you need a different JRE, but do not rename it. Every other container in the pod is a tool container, selected per step with \`container('maven')\`. They share the workspace through an \`emptyDir\` volume, so a file written in one container is visible in the next. \`idleMinutes\` keeps a pod alive briefly for reuse when builds arrive in bursts, trading a little isolation for a large reduction in startup cost — a cold pod costs image pull plus scheduling plus agent handshake, typically 20–60 seconds, which is significant for a pipeline whose actual work takes 90.
+
+Set resource requests deliberately. A pod without them lands in the \`BestEffort\` QoS class and is the first thing evicted under node pressure, and the build dies mid-run with a message that looks nothing like "out of memory". This is the single most common cause of Kubernetes-agent flakiness.
+
+Now the ceiling. It is often said that Kubernetes agents give Jenkins "infinite horizontal scaling". Agents scale; **the controller does not**. Open-source Jenkins has no active-active mode — one controller owns \`$JENKINS_HOME\`, and it is a genuine single point of failure whose recovery story is restore-from-backup, not failover. Its practical limits are heap (every running pipeline's serialized state and every job's history is on the controller) and \`$JENKINS_HOME\` disk I/O, which is why that volume must be fast local or premium block storage and never NFS. The scaling answer at large organisations is therefore **more controllers**, sharded by team or business unit, with shared libraries and configuration managed as code (JCasC) so they do not drift — or a commercial distribution that adds real HA.
+
+One controller-side tuning knob is worth knowing because it is invisible until it hurts. Pipeline Groovy runs on a **continuation-passing-style interpreter that serializes the program state to disk after every step**, so a build survives a controller restart and resumes exactly where it stopped. That durability is why Jenkins pipelines can be restarted at all, and it is also a per-step write. \`options { durabilityHint('PERFORMANCE_OPTIMIZED') }\` reduces the frequency of those writes and can markedly speed up step-heavy pipelines, at the cost that a build interrupted by an unclean controller shutdown may not resume. For short pipelines that are cheap to rerun, that is usually the right trade.`,
+      },
+    ],
     introduction: `## Overview
 Jenkins uses a Controller-Agent (formerly Master-Slave) architecture to distribute work across machines. Understanding this split is foundational to designing scalable Jenkins deployments.
 
@@ -2206,15 +2267,16 @@ Benefits: clean environment per build, no agent maintenance, parallel builds sca
       },
     ],
     quickFire: [
-      { q: 'What is the role of the Jenkins Controller?', a: 'The Controller manages the web UI, configuration, job scheduling, and build history. It delegates actual build execution to Agents -- it should not run builds itself.' },
-      { q: 'What is a Jenkins Agent and how does it connect to the Controller?', a: 'An Agent executes build steps. It connects via JNLP (Java Web Start, inbound) or SSH (outbound from Controller). Each Agent has an executor count for concurrent builds.' },
-      { q: 'What is JNLP in the Jenkins context?', a: 'Java Network Launch Protocol -- the Agent initiates an outbound TCP connection to the Controller. Useful when the Agent is behind a firewall and the Controller cannot reach it directly.' },
-      { q: 'What are dynamic agents and why are they preferred over static agents?', a: 'Dynamic agents are provisioned on demand (via the Kubernetes plugin, EC2 plugin, etc.) and destroyed after the build. They eliminate idle agent cost and provide clean build environments.' },
-      { q: 'How does the Jenkins Kubernetes plugin create dynamic agents?', a: 'The plugin calls the Kubernetes API to create a Pod per build. The Pod runs a JNLP container that connects back to the Controller, executes the pipeline, then the Pod is deleted.' },
-      { q: 'What is a Jenkins Executor?', a: 'A slot on an Agent that can run one build at a time. An Agent with 4 executors can run 4 concurrent builds. The Controller executor count should be set to 0 in production.' },
-      { q: 'Why should the Jenkins Controller executor count be 0?', a: 'Running builds on the Controller wastes Controller resources, degrades UI/API responsiveness, and is a security risk since builds have access to Controller filesystem and credentials.' },
-      { q: 'How do you label Agents for workload routing in a pipeline?', a: 'Assign labels to Agents (e.g., linux, docker, gpu). Use agent { label \'docker\' } in the Jenkinsfile to route the pipeline to a matching Agent.' },
-      { q: 'What is the Jenkins Shared Library and why is it used?', a: 'A Git repository of reusable Groovy pipeline code (steps, utilities). Referenced with @Library in Jenkinsfiles to avoid duplicating pipeline logic across hundreds of jobs.' },
+      { q: 'What is the role of the Jenkins Controller?', a: 'It stores all configuration, job definitions and build history, holds the credential store, loads plugins, serves the UI and REST API, schedules work by matching job label expressions against agent labels, and — the part people forget — **executes the Pipeline Groovy itself**. Only the steps inside (`sh`, `checkout`, `docker build`) run on the agent, so heavy Groovy logic burns controller CPU and heap regardless of which agent the job is nominally on.' },
+      { q: 'What is a Jenkins Agent and how does it connect?', a: 'A JVM process on a separate machine, container or pod that executes build steps in its own workspace, tagged with labels describing its capabilities. Two connection directions: **SSH**, where the controller reaches out and launches the agent (simple, but requires inbound access to every agent); and **inbound**, where the agent dials the controller and authenticates with a secret (only outbound connectivity needed, so agents can sit in private networks). Inbound is the more common choice.' },
+      { q: 'What is "JNLP" in the Jenkins context, and is the term still accurate?', a: 'It is a fossil. JNLP was Java Web Start\'s launch descriptor, which is how inbound agents were once started from a browser; Java Web Start was removed from the JDK and Jenkins removed that path. What remains is a Jenkins protocol called **JNLP4-connect** — TLS over a raw TCP port, conventionally 50000 — plus the legacy naming in images like `jenkins/inbound-agent` (formerly `jenkins/jnlp-slave`). Since Jenkins 2.217 the better option is `-webSocket`, which tunnels the agent connection over the normal HTTP(S) port, so no extra port has to be exposed and proxies and ingress controllers pass it happily.' },
+      { q: 'Why should the Jenkins Controller\'s executor count be 0?', a: 'Because a build running on the controller *is* Jenkins. It has direct filesystem access to `$JENKINS_HOME` — every job\'s credentials and the master key that decrypts them, plugin code, and the ability to drop a Groovy init script that runs at next boot. The Pipeline Groovy sandbox does not apply to a shell step. Modern Jenkins defaults the built-in node to 0 executors on new installs, and *Agent → Controller Access Control* exists to restrict what agents may ask the controller to do, on the assumption that agents are untrusted.' },
+      { q: 'What is a Jenkins Executor?', a: 'One concurrent build slot on an agent — an agent with four executors runs four builds at once, sharing that machine\'s CPU, memory and Docker daemon. Too few and machines idle behind a queue; too many and CPU starvation shows up as "flaky tests", especially on a Docker-capable agent where several image builds contend for one daemon and one layer cache.' },
+      { q: 'What are dynamic agents, and why are they preferred?', a: 'Agents created for a single build and destroyed afterwards — a Kubernetes pod, a container, or a cloud VM from the EC2 plugin. They eliminate the whole class of "works on agent-03, fails on agent-07" problems caused by accumulated state: leftover caches, a tool installed by one job, a stale workspace. They also stop you paying for idle capacity. The trade-off is cold-start cost — image pull plus scheduling plus agent handshake, typically 20–60 seconds — which matters when the build itself takes 90.' },
+      { q: 'How does the Jenkins Kubernetes plugin create dynamic agents?', a: 'It creates one pod per build from a pod template (declared inline as YAML in `agent { kubernetes { yaml ... } }` or centrally in the cloud configuration), runs the build, and deletes it. The plugin injects a container named **`jnlp`** running the inbound agent image, which connects back to the controller; other containers are tool containers selected per step with `container(\'maven\')`. They share the workspace via an `emptyDir` volume. `idleMinutes` keeps a pod alive briefly for reuse during bursts. Always set resource requests — a pod without them is `BestEffort` QoS, first to be evicted under node pressure, and the build dies with an error that looks nothing like OOM.' },
+      { q: 'How do you route workloads to particular agents?', a: 'Give agents labels describing capabilities (`linux`, `docker`, `gpu`, `arm64`) and select them with a label expression in the pipeline: `agent { label \'linux && docker\' }`. Expressions support `&&`, `||` and `!`, so a job can require a combination without pinning a machine name. Pinning by node name is the anti-pattern — it turns one machine into a scheduling bottleneck and a single point of failure.' },
+      { q: 'Does adding agents scale Jenkins without limit?', a: 'No. Agents scale horizontally; the **controller does not**. Open-source Jenkins has no active-active mode — one controller owns `$JENKINS_HOME`, so it is a real single point of failure whose recovery is restore-from-backup rather than failover. The practical limits are JVM heap (running pipeline state and job history live there) and `$JENKINS_HOME` disk I/O, which is why that volume must be fast block storage and never NFS. Large organisations scale by running **multiple controllers** sharded by team, kept consistent with Configuration as Code (JCasC) and shared libraries.' },
+      { q: 'What is the Jenkins Shared Library and why is it used?', a: 'A separate Git repository of Pipeline Groovy loaded with `@Library(\'name@version\')`, holding reusable steps in `vars/`, classes in `src/`, and static files in `resources/`. It is how you stop copying the same forty lines of build-scan-push logic into two hundred Jenkinsfiles: teams call `standardJavaBuild()` and the implementation is versioned and reviewed in one place. Pin to a tag or commit rather than a branch — `@Library(\'platform@v3.2\')` — because a library referenced by branch means every pipeline in the organisation changes behaviour the moment someone merges. Note the trust model: globally configured libraries run **outside** the Groovy sandbox, so anyone who can merge to that repository can execute arbitrary code on the controller.' },
     ],
     references: [
       'https://www.jenkins.io/doc/book/architecture/',
@@ -2235,6 +2297,95 @@ Benefits: clean environment per build, no agent maintenance, parallel builds sca
         title: 'Jenkinsfile structure — declarative pipeline anatomy',
         description: 'pipeline { agent + environment } → stages block → stage("Build") { steps } + stage("Test") { steps } + stage("Deploy") { when + steps } → post { success/failure/always }. Pipeline as code lives in the repo, is version-controlled, and drives CI/CD automatically.',
         image: '/diagrams/linkdiags/jenkins-architecture.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'Declarative and Scripted are one engine with two front ends',
+        content: `The two syntaxes are usually presented as a choice between "easy" and "powerful". The more useful framing is that **Declarative is a validated schema that compiles down to Scripted**, which is why \`script { }\` exists as an escape hatch and why the two can be mixed inside one file.
+
+Declarative begins with \`pipeline { }\`, and its structure is checked *before* anything runs — a misplaced block is a parse error in seconds rather than a failure forty minutes into a build. It also enables features that require Jenkins to understand the shape of your pipeline in advance: \`post\` conditions, \`options\`, stage-level \`when\`, the visual editor, and restart-from-a-stage. Scripted begins with \`node { }\` and is free-form Groovy: everything is available, nothing is validated, and none of those structural features exist because there is no structure to reason about.
+
+The required minimum for Declarative is small — \`pipeline\`, an \`agent\`, a \`stages\` block, and at least one \`stage\` containing \`steps\`:
+
+    pipeline {
+      agent none
+      options {
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+        disableConcurrentBuilds()
+      }
+      environment { IMAGE = "registry.example.com/api" }
+      stages {
+        stage('Build & Test') {
+          agent { label 'docker' }
+          steps {
+            sh 'mvn -B verify'
+            junit 'target/surefire-reports/*.xml'
+          }
+        }
+        stage('Deploy') {
+          when { branch 'main'; beforeAgent true }
+          agent { label 'deploy' }
+          steps { sh "helm upgrade --install api ./chart --set image.tag=\${env.GIT_COMMIT}" }
+        }
+      }
+      post {
+        failure { slackSend message: "\${env.JOB_NAME} #\${env.BUILD_NUMBER} failed" }
+        cleanup { cleanWs() }
+      }
+    }
+
+Three choices in that skeleton are deliberate and often missed. \`agent none\` at the top with per-stage agents means no executor is held while the pipeline waits at an input step or between stages — with a top-level \`agent any\`, a pipeline that pauses for approval holds a build slot for the whole pause. **\`beforeAgent true\` inside \`when\`** evaluates the condition *before* allocating an agent, so a feature-branch build does not spin up a Kubernetes pod merely to discover the stage is skipped; without it, every branch pays the pod's startup cost for a stage that never runs. And tagging the image with \`env.GIT_COMMIT\` rather than \`env.BUILD_NUMBER\` makes the artifact traceable to a commit — build numbers reset when a job is recreated and say nothing about what was built.
+
+The \`post\` block runs after the stages, with conditions evaluated in a defined order: \`always\`, \`changed\`, \`fixed\`, \`regression\`, \`aborted\`, \`failure\`, \`success\`, \`unstable\`, \`unsuccessful\`, and finally \`cleanup\`, which runs last of all and is the right place for workspace cleanup because it runs even after \`always\`.`,
+      },
+      {
+        title: 'The Groovy is not Groovy: CPS, serialization, and where builds mysteriously break',
+        content: `This is the part that separates people who write Jenkinsfiles from people who debug them.
+
+Pipeline Groovy does not execute as ordinary Groovy. It is transformed into **continuation-passing style** so that the interpreter can serialize the entire program state to disk after every step, which is what lets a build survive a controller restart and resume where it stopped. That single design decision produces most of the confusing behaviour:
+
+- **Every local variable must be serializable.** Hold a \`java.io.File\`, a \`Matcher\` from a regex, or a JSON parser object across a step boundary and the build dies with \`java.io.NotSerializableException\`, often long after the line that created it.
+- **Not all Groovy constructs are CPS-transformable.** \`list.each { }\` with a closure is the classic offender; a plain \`for\` loop works where \`.each\` fails or silently misbehaves.
+- **The fix for both is \`@NonCPS\`**, which runs a method as real Groovy in one uninterruptible go. The rule that comes with it: a \`@NonCPS\` method must not call any pipeline step — no \`sh\`, no \`echo\` — because there is no continuation to suspend. Use it for pure computation (parsing, filtering, formatting) and return a simple type.
+- **The sandbox blocks arbitrary JVM access** unless an administrator approves the signature, so a snippet copied from the internet may need \`In-process Script Approval\` before it runs.
+
+And because the Groovy executes on the controller, computation in a Jenkinsfile is controller load. Parsing a 50 MB JSON file in the pipeline is a controller heap problem; parse it in a \`sh\` step with \`jq\` on the agent instead.
+
+The other trap worth committing to memory concerns secrets, because the wrong version looks identical and leaks:
+
+    // WRONG — Groovy interpolates the secret into the command string
+    withCredentials([string(credentialsId: 'api-token', variable: 'TOKEN')]) {
+      sh "curl -H 'Authorization: Bearer \${TOKEN}' https://api.example.com"
+    }
+    // RIGHT — single quotes; the shell expands the env var, Groovy never sees it
+    withCredentials([string(credentialsId: 'api-token', variable: 'TOKEN')]) {
+      sh 'curl -H "Authorization: Bearer $TOKEN" https://api.example.com'
+    }
+
+With double quotes, Groovy substitutes the secret into the script *before* it reaches the shell, so the value appears in the generated script on disk and on the process command line, visible to anything that can run \`ps\`. Jenkins now prints a warning — "A secret was passed to sh using Groovy String interpolation" — precisely because this was so widespread. Related and equally important: **log masking is best-effort**. Jenkins replaces exact occurrences of the secret in console output, so a secret that gets base64-encoded, URL-encoded, or split across lines by a tool is printed in the clear.`,
+      },
+      {
+        title: 'Composition: multibranch, shared libraries, parallelism and what not to stash',
+        content: `A **Multibranch Pipeline** is not a Pipeline job with extra settings — it is a folder that scans a repository, and creates and deletes a child job for every branch, tag or pull request containing a \`Jenkinsfile\`. The consequences are the useful part: each branch runs *its own* version of the pipeline, so a change to CI is reviewed in the same PR as the code change it supports; jobs disappear automatically when branches are deleted; and PR builds get \`env.CHANGE_ID\`, \`CHANGE_TARGET\` and \`CHANGE_BRANCH\`, which is how a pipeline distinguishes "PR into main" from "push to main". A single Pipeline job pointed at one branch has none of this and drifts from the repository immediately.
+
+**Parallelism** is a \`parallel\` block of named branches, most often used to fan out across platforms or test suites:
+
+    stage('Test') {
+      parallel {
+        stage('unit')        { agent { label 'linux' } steps { sh 'make test-unit' } }
+        stage('integration') { agent { label 'linux' } steps { sh 'make test-int' } }
+      }
+    }
+
+Add \`failFast true\` when the branches are checking the same thing and one failure makes the rest pointless; leave it off when you want the full picture from every branch in one run. Note that parallel stages with different agents each allocate their own executor — a \`parallel\` of ten branches on a fleet with eight free executors serialises, and looks like a hang.
+
+**\`stash\` / \`unstash\`** moves files between stages that run on different agents — build once, hand the artifact to a deploy stage elsewhere. The critical constraint is where the data goes: **stashes are stored on the controller**, so stashing a 2 GB build output pushes it over the network to the controller's disk and back out again, consuming exactly the resource that is the instance's bottleneck. Keep stashes to a handful of megabytes — test reports, a manifest, a small jar. Anything larger belongs in an artifact repository or object store, referenced by coordinates.
+
+**Shared libraries** are the reuse mechanism: a Git repository with \`vars/\` (each file becomes a global step), \`src/\` (Groovy classes), and \`resources/\`, loaded via \`@Library('platform@v3.2') _\`. Pin to a tag, not a branch — a library referenced as \`@Library('platform')\` means merging to that repository's default branch instantly changes the behaviour of every pipeline in the organisation, with no per-team rollout and no way to bisect. Be aware of the trust boundary too: **globally configured libraries run outside the Groovy sandbox**, so merge rights on that repository are equivalent to code execution on the controller; folder-scoped libraries can be marked untrusted and remain sandboxed.
+
+Finally, parameterisation. \`parameters { string(name: 'ENV', defaultValue: 'staging') }\` declares inputs that appear in the UI, but the declaration only takes effect **after one run** — Jenkins learns the parameters by executing the Jenkinsfile, so the first build after adding a parameter runs without it. That is not a bug report, it is the design, and it explains the mystifying first-run failure that follows every parameter addition.`,
       },
     ],
     introduction: `## Overview
@@ -2420,16 +2571,17 @@ You can mix both: Declarative pipeline with a script { ... } block inside a stag
       },
     ],
     quickFire: [
-      { q: 'What is the difference between Declarative and Scripted Pipeline?', a: 'Declarative uses a structured pipeline {} block with strict syntax -- easier to read and validate. Scripted is arbitrary Groovy inside node {} -- more flexible but harder to maintain.' },
-      { q: 'What are the mandatory sections in a Declarative Pipeline?', a: 'pipeline {}, agent {}, and at least one stage inside stages {}. The steps {} block inside each stage contains the actual commands.' },
-      { q: 'What does the post {} block do in a Declarative Pipeline?', a: 'Defines steps that run after the pipeline or stage completes. Conditions: always, success, failure, unstable, changed. Used for notifications and cleanup.' },
-      { q: 'How do you run pipeline stages in parallel?', a: 'Use the parallel directive inside a stage: stage("Test") { parallel { stage("Unit") {...} stage("Integration") {...} } }.' },
-      { q: 'What is a Shared Library in Jenkins and how do you reference it?', a: 'A Git repo of reusable Groovy code. Reference with @Library("my-lib") at the top of the Jenkinsfile and call its vars/steps by name.' },
-      { q: 'How do you access Jenkins credentials in a pipeline?', a: 'Use withCredentials([usernamePassword(credentialsId: "my-cred", ...)]) or the credentials() helper in environment {}. Never hardcode secrets in the Jenkinsfile.' },
-      { q: 'What does stash/unstash do in a Jenkins pipeline?', a: 'stash saves files from one stage; unstash retrieves them in a later stage or on a different agent. Used to pass build artifacts between stages running on different nodes.' },
-      { q: 'How do you parameterize a Jenkins pipeline?', a: 'Use the parameters {} block in Declarative Pipeline (string, booleanParam, choice). Access values with params.MY_PARAM. Parameters appear as input fields in the UI.' },
-      { q: 'What is the when {} directive used for?', a: 'Conditionally executes a stage based on branch name, environment, expression, or other criteria. Example: only deploy when branch == "main".' },
-      { q: 'What is the difference between a Multibranch Pipeline and a regular Pipeline job?', a: 'Multibranch Pipeline auto-discovers branches and PRs in a repo and creates a pipeline job for each. Regular Pipeline is a single job pointing to one branch.' },
+      { q: 'What is the difference between Declarative and Scripted Pipeline?', a: 'Declarative is a validated schema (`pipeline { }`) whose structure Jenkins checks before the build starts, which is what enables `post`, `options`, stage-level `when`, restart-from-stage and the visual editor. Scripted is free-form Groovy (`node { }`) with no validation and none of those structural features. They are not different engines — Declarative compiles down to Scripted, which is why `script { }` lets you drop into the lower layer for a few lines. Use Declarative, and reach for `script` only where you genuinely need imperative logic.' },
+      { q: 'What are the mandatory sections in a Declarative Pipeline?', a: '`pipeline`, an `agent` declaration, a `stages` block, and at least one `stage` containing `steps`. Everything else — `environment`, `options`, `parameters`, `tools`, `triggers`, `when`, `post` — is optional. `agent none` counts as an agent declaration and is often the right one at the top level, with agents declared per stage instead.' },
+      { q: 'What does the post {} block do?', a: 'Runs actions after the stages complete, selected by outcome. The conditions evaluate in a fixed order: `always`, `changed`, `fixed`, `regression`, `aborted`, `failure`, `success`, `unstable`, `unsuccessful`, then `cleanup`. `cleanup` runs last of all — after `always` — which makes it the correct place for `cleanWs()`, since workspace deletion should happen once every other post action that might need the workspace has finished.' },
+      { q: 'How do you run stages in parallel, and what limits it?', a: 'A `parallel` block containing named `stage` blocks; add `failFast true` to abort the rest as soon as one fails. The limit is executors: parallel stages with their own agents each take an executor, so ten parallel branches on a fleet with eight free slots will partly serialise and look like a stall. Use `failFast` when the branches test the same proposition and one failure makes the others moot; omit it when you want the complete picture in a single run.' },
+      { q: 'Why does a Jenkinsfile sometimes throw NotSerializableException?', a: 'Because Pipeline Groovy runs in continuation-passing style and **serializes the whole program state to disk after every step**, so a build can resume after a controller restart. Any local variable still in scope across a step boundary must therefore be serializable — a `java.io.File`, a regex `Matcher`, or a parser object is not, and the failure often surfaces well after the line that created it. Confine such objects to a `@NonCPS` method that runs as real Groovy and returns a plain type, and remember that a `@NonCPS` method must not call pipeline steps like `sh` or `echo`.' },
+      { q: 'What is @NonCPS and when do you need it?', a: 'An annotation that makes a method execute as ordinary Groovy in one uninterruptible pass, outside the CPS transform. You need it for constructs CPS cannot handle — `.each { }` with closures being the classic — and for holding non-serializable objects such as parsers and matchers. The hard rule: a `@NonCPS` method must not invoke any pipeline step, because there is no continuation available to suspend it. Use it for pure computation and return a String, List or Map.' },
+      { q: 'How do you access Jenkins credentials in a pipeline, and what is the interpolation trap?', a: '`withCredentials([...])` binds a credential to an environment variable for a block, or `environment { TOKEN = credentials(\'id\') }` binds it for the pipeline. The trap: use **single quotes** in the shell step. `sh "curl -H \'Bearer ${TOKEN}\'"` makes Groovy substitute the secret into the script before the shell sees it, so it lands in the generated script file and on the process command line where `ps` can read it — Jenkins warns about exactly this. `sh \'curl -H "Bearer $TOKEN"\'` lets the shell expand it instead. Also note that console masking is best-effort: a secret that a tool base64-encodes, URL-encodes or wraps across lines is printed in the clear.' },
+      { q: 'What do stash and unstash do, and what is the constraint?', a: 'They move files between stages running on different agents — build on one, deploy from another. The constraint is that **stashes are stored on the controller**, so a large stash pushes data over the network onto the controller\'s disk and back, hitting the exact resource that limits a Jenkins instance. Keep stashes to a few megabytes (test reports, a manifest, a small jar); anything larger belongs in an artifact repository or object store, passed on by coordinates rather than by value.' },
+      { q: 'How do you parameterize a Jenkins pipeline, and why does the first run behave oddly?', a: 'Declare a `parameters { }` block — `string`, `booleanParam`, `choice`, `password`, `file` — and read the values from `params.NAME`. The quirk: Jenkins only learns a job\'s parameters by *running* the Jenkinsfile, so the first build after adding or changing a parameter executes without it (using defaults or failing on a missing value), and the UI only offers the input from the second build onwards. That is the design, not a bug, and it accounts for the mystifying failure that follows every parameter change.' },
+      { q: 'What is the when {} directive used for, and what is beforeAgent?', a: '`when` conditionally runs a stage — by `branch`, `tag`, `changeRequest`, `environment`, `expression`, or a combination via `allOf`/`anyOf`/`not`. By default the condition is evaluated *after* the stage\'s agent has been allocated, so a skipped stage still pays for spinning up a Kubernetes pod or claiming an executor. **`beforeAgent true` evaluates the condition first**, skipping the allocation entirely — on a multibranch job where the deploy stage only runs on `main`, that removes a pod start-up from every feature-branch build.' },
+      { q: 'What is a Multibranch Pipeline and how does it differ from a regular Pipeline job?', a: 'It is a folder that scans a repository and automatically creates a child job for every branch, tag or pull request containing a `Jenkinsfile`, deleting them as branches disappear. Each branch therefore runs its *own* version of the pipeline, so CI changes are reviewed alongside the code change that needs them, and PR builds get `env.CHANGE_ID`, `CHANGE_TARGET` and `CHANGE_BRANCH` for distinguishing a PR from a push. A single Pipeline job points at one branch, needs manual creation per branch, and drifts from the repository as soon as anyone forks the workflow.' },
     ],
     references: [
       'https://www.jenkins.io/doc/book/pipeline/',
@@ -2451,6 +2603,94 @@ You can mix both: Declarative pipeline with a script { ... } block inside a stag
         title: 'DevSecOps pipeline — security gates at every stage',
         description: 'Developer → GitHub → CI pipeline: Build/Test → SAST (SonarQube) → Dependency Scan (Snyk/OWASP) → Docker Build → Image Scan (Trivy/Aqua) → Policy Check (OPA/Gatekeeper) → Container Registry → GitOps (Argo CD) → Kubernetes Cluster → Runtime Security (Falco) + Monitoring.',
         image: '/diagrams/linkdiags/devsecops-pipeline.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'The three scanner families, what each one can and cannot see',
+        content: `"Shift left" is the slogan; the substance is that four different analysis techniques see four different things, and a pipeline that runs only one of them has a blind spot the size of the others.
+
+| | Sees | Blind to | Runs at |
+| --- | --- | --- | --- |
+| **SAST** — static analysis of your source | Injection sinks, unsafe deserialization, hardcoded secrets, weak crypto, path traversal | Anything only visible at runtime; configuration; third-party code | Commit / PR |
+| **SCA** — dependency analysis | Known CVEs in the libraries you pull in, transitively; licence obligations | Bugs in your own code; whether the vulnerable path is reachable | Commit / PR |
+| **Container scanning** | CVEs in OS packages and language runtimes baked into the image | Your application logic; anything mounted at runtime | Post-build |
+| **DAST** — probing the running app | Auth and session flaws, misconfigured headers, real injection responses, business-logic gaps | Any code path it does not exercise; source-level detail | Staging / nightly |
+
+The proportions matter for where you spend effort: the overwhelming majority of a typical image's CVE count comes from **SCA and OS packages, not from application code**, so a team that installs SAST first and stops has bought the smallest slice. And the two static families answer different questions — SAST asks "did we write something dangerous", SCA asks "did we import something known-dangerous". DAST is the only one that can tell you the deployed thing is actually exploitable, which is why it belongs in the pipeline even though it is slow and needs a running environment.
+
+Where teams go wrong is the **gate policy**, not the tooling. "Fail the build on any Critical" sounds correct and is the single most common reason security scanning gets switched off six weeks later. A base image will have Critical CVEs in packages your application never invokes; many will have no fixed version available at all. The gate that survives contact with a delivery team is narrower and more honest:
+
+- Fail on **fixable** findings only — \`trivy image --severity HIGH,CRITICAL --ignore-unfixed\` — because a gate demanding an action that does not exist is just a broken build.
+- Fail on **newly introduced** findings, and track the pre-existing backlog on a timetable instead of blocking today's unrelated change.
+- Use **VEX** (Vulnerability Exploitability eXchange) documents to record, in machine-readable form, that a specific CVE is not exploitable in your context, so the next scan does not re-raise it and the reasoning is auditable rather than living in a \`.trivyignore\` comment.
+- Fail *always*, with no exceptions, on **verified secrets** — those are not risk assessments, they are incidents.
+
+That last category is worth separating out. Pre-commit hooks (gitleaks, trufflehog) and platform push protection catch most leaks, but the rule when one gets through is the part people get wrong: **a committed secret must be rotated, not just removed**. Rewriting history does not retract anything already cloned, forked, or crawled — and public repositories are scanned by adversaries within seconds of a push. Deleting the commit and moving on leaves a live credential in the wild with a false sense of resolution.`,
+      },
+      {
+        title: 'Building the image: where secrets actually leak, and what an SBOM buys you',
+        content: `The most-repeated piece of bad Docker security advice is "don't put secrets in \`ENV\`, use build args instead". **Build arguments are not secret.** \`ARG\` values are recorded in the image metadata and are visible to anyone who can pull the image:
+
+    docker history --no-trunc myimage:1.0    # shows the ARG value in the layer command
+
+The correct mechanism is BuildKit's secret mount, which exposes the value to one \`RUN\` instruction through a tmpfs and never writes it to a layer or to metadata:
+
+    # syntax=docker/dockerfile:1
+    FROM node:22-alpine AS build
+    RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \\
+        npm ci --omit=dev
+
+    FROM gcr.io/distroless/nodejs22-debian12
+    COPY --from=build /app /app
+    USER nonroot
+    CMD ["/app/server.js"]
+
+Two other things in that snippet do real work. **Multi-stage builds** mean the compiler, the package manager, the git history and the credentials used to fetch dependencies stay in the build stage and never ship — which shrinks both the image and its CVE count, because most of an image's vulnerabilities live in tooling the application does not need at runtime. A distroless or \`-slim\` base with no shell removes the attacker's most convenient primitive: a container with no \`sh\` is meaningfully harder to pivot from, and it drops the OS package CVE count dramatically. And \`USER nonroot\` matters because the default is root, which combined with a writable filesystem is what turns a code-execution bug into a container takeover.
+
+An **SBOM** — a machine-readable inventory of every component and version in the artifact, in **SPDX** or **CycloneDX** format, generated with Syft or \`trivy sbom\` and attached to the image as an attestation — is not paperwork. Its value is the question it lets you answer *after* the fact. When the next Log4Shell lands on a Friday evening, the question is "which of our 400 running services contains this component, at what version", and without stored SBOMs the answer is a week of rebuilding and scanning. With them it is a query. This is also increasingly a compliance requirement rather than a nicety: US Executive Order 14028 pushed SBOMs into federal procurement, and the EU **Cyber Resilience Act**, in force since December 2024, phases obligations in over the following three years — vulnerability reporting duties arriving before the full requirements — for products with digital elements sold in the EU.
+
+Provenance is the other half. Signing with **cosign** in keyless mode is the current default: the CI job's OIDC identity is exchanged for a short-lived certificate from Fulcio, the signature is recorded in the Rekor transparency log, and there is no private key to store or rotate anywhere.
+
+    cosign sign --yes registry.example.com/api@sha256:abc...
+    cosign attest --predicate sbom.spdx.json --type spdxjson registry...
+
+Signing only pays off if something **verifies**, and the place to verify is the cluster's admission controller — Kyverno's \`verifyImages\` rule or the Sigstore policy-controller — configured to reject any image whose signature does not chain to your CI's identity. Sign in CI, verify at admission; a signature nobody checks is a checkbox. Note also that signatures and attestations attach to a **digest**, not a tag, which is the underlying reason production deployments should reference \`@sha256:...\` rather than \`:latest\` — a tag is a mutable pointer and can be moved after the scan passed.`,
+      },
+      {
+        title: 'Runtime: policy as code, admission control, and the last line of defence',
+        content: `Every check so far happens before deployment, and all of them can be bypassed by someone with \`kubectl\`. The control that cannot be bypassed is **admission control**, because it sits in the API server's request path: nothing enters the cluster without passing it.
+
+    # Kyverno — reject unsigned images at admission
+    apiVersion: kyverno.io/v1
+    kind: ClusterPolicy
+    metadata: { name: verify-images }
+    spec:
+      validationFailureAction: Enforce
+      rules:
+        - name: check-signature
+          match: { any: [{ resources: { kinds: [Pod] } }] }
+          verifyImages:
+            - imageReferences: ["registry.example.com/*"]
+              attestors:
+                - entries:
+                    - keyless:
+                        issuer: "https://token.actions.githubusercontent.com"
+                        subject: "https://github.com/acme/*"
+
+This is what policy-as-code buys over manual review, and the difference is not speed. A human review is a **sample** taken at a point in time, and its conclusions decay the moment anything changes. An admission policy is **total** — it evaluates every object, every time, including the ones created at 3 a.m. by an autoscaler or a Helm upgrade — it is versioned and diffable, and it can be run in \`Audit\` mode first to measure how much would break before it starts blocking. Kyverno (YAML, Kubernetes-native) and OPA Gatekeeper (Rego, more expressive, steeper) are the two mainstream choices; conftest applies the same Rego to manifests in CI, so the same policy can be enforced at both ends.
+
+One thing to update in older material: **PodSecurityPolicy was removed in Kubernetes 1.25**. The built-in replacement is **Pod Security Admission**, which applies one of three profiles — \`privileged\`, \`baseline\`, \`restricted\` — per namespace via labels:
+
+    kubectl label ns payments \\
+      pod-security.kubernetes.io/enforce=restricted \\
+      pod-security.kubernetes.io/warn=restricted
+
+PSA is deliberately coarse: three fixed levels, namespace granularity, no exceptions mechanism. That is a feature for the baseline and a limitation for anything specific, which is why most clusters run PSA for the floor and Kyverno or Gatekeeper for organisation-specific rules on top.
+
+Below all of it sits **runtime detection**. Falco (a CNCF graduated project) loads an eBPF probe to observe kernel syscalls and evaluates them against rules — a shell spawned inside a container, an outbound connection from a process that should never make one, a write to \`/etc/\`, a read of a service-account token by something other than the application. It is the only control here that operates on a **zero-day**, because it describes suspicious *behaviour* rather than known-bad artifacts; every other layer depends on someone having already published a CVE or written a rule about code you shipped. The corresponding cost is that it produces alerts rather than blocks, and a Falco deployment with nobody triaging its output is a log volume bill, not a security control. Note the mechanism has modernised too: the eBPF probe is now the default driver, and the old out-of-tree kernel module is legacy.
+
+The realistic summary of the whole chain: **each layer catches what the previous one structurally cannot see**, and none of them is optional in the way the others are present. Pre-commit catches secrets before they exist publicly; SAST and SCA catch known-bad code and libraries; image scanning catches the base you inherited; signing and admission make the deployed artifact match the one that was scanned; Falco covers the case where everything above was clean and the attack was novel anyway.`,
       },
     ],
     introduction: `## Overview
@@ -2562,16 +2802,18 @@ Use all three: SAST + SCA in every PR (fast, automated). DAST in staging after d
       },
     ],
     quickFire: [
-      { q: 'What is the difference between SAST and DAST?', a: 'SAST (Static Application Security Testing) analyzes source code without running it. DAST (Dynamic Application Security Testing) attacks a running application to find runtime vulnerabilities.' },
-      { q: 'What is SCA and what does it scan?', a: 'Software Composition Analysis scans third-party dependencies for known CVEs. Tools: Snyk, Dependabot, Trivy --dependency-check. Catches Log4Shell-style supply chain issues.' },
-      { q: 'What does Trivy scan in a CI pipeline?', a: 'Container images, filesystems, and IaC files for OS package CVEs, language dependency CVEs, misconfigurations, and secrets. It is the most widely used open-source container scanner.' },
-      { q: 'What is OPA (Open Policy Agent) used for in a DevSecOps pipeline?', a: 'OPA evaluates policy-as-code rules (written in Rego) to gate deployments. Example: block any Kubernetes deployment that lacks resource limits or runs as root.' },
-      { q: 'What is secrets scanning and which tools do it?', a: 'Scanning Git history and code for accidentally committed credentials, API keys, and tokens. Tools: truffleHog, Gitleaks, GitHub secret scanning. Should run on every PR.' },
-      { q: 'What is image signing and why does it matter?', a: 'Signing a container image (with Cosign/Sigstore) proves it was built by a trusted pipeline and has not been tampered with. Admission controllers can reject unsigned images.' },
-      { q: 'What is Falco and when does it run?', a: 'Falco is a runtime threat detection tool for Kubernetes. It uses eBPF to watch syscalls and generates alerts when containers behave unexpectedly (shell spawn, sensitive file read, network connect).' },
-      { q: 'What is the shift-left security principle?', a: 'Moving security checks earlier in the SDLC -- into developer IDEs, PR checks, and CI -- rather than only at deployment time. Earlier detection is cheaper and faster to fix.' },
-      { q: 'What is a Software Bill of Materials (SBOM) and why is it required?', a: 'A machine-readable inventory of all components in a software artifact. Required by US Executive Order 14028 for federal software. Generated by Syft or Trivy --format cyclonedx.' },
-      { q: 'How does policy-as-code differ from manual security review?', a: 'Policy-as-code (OPA, Kyverno) enforces rules automatically on every commit/deploy with zero reviewer fatigue. Manual review is inconsistent, slow, and does not scale.' },
+      { q: 'What is the difference between SAST and DAST?', a: 'SAST reads source code without running it, so it sees injection sinks, unsafe deserialization, hardcoded credentials and weak crypto across every path in the codebase — including ones no test exercises — but cannot tell you whether any of it is reachable in the deployed system, and generates false positives accordingly. DAST probes the running application from outside, so its findings are demonstrably real (auth flaws, missing headers, actual injection responses) but limited to the routes it manages to exercise, and it needs a deployed environment, which is why it typically runs nightly against staging rather than on every PR.' },
+      { q: 'What is SCA and what does it scan?', a: 'Software Composition Analysis inventories your third-party dependencies — direct and transitive — and matches them against vulnerability databases, reporting CVEs with severities and fixed versions, plus licence obligations. It matters disproportionately because most of an application\'s code is dependencies: the majority of findings in a typical image come from SCA and OS packages, not from code the team wrote. Its blind spot is reachability — it tells you a vulnerable version is present, not that the vulnerable function is ever called, which is why modern tools increasingly add reachability analysis to cut the noise.' },
+      { q: 'What does Trivy scan in a CI pipeline?', a: 'More than images, which is the usual under-use. It scans container images (OS packages and language dependencies), filesystems and Git repositories, IaC misconfiguration in Terraform/CloudFormation/Kubernetes manifests/Dockerfiles, exposed secrets, and it generates SBOMs. Note that **tfsec is no longer maintained separately** — Aqua folded it into Trivy\'s misconfiguration scanner — so pipelines still invoking tfsec should migrate. In CI, run it against the built image and gate with `--severity HIGH,CRITICAL --ignore-unfixed --exit-code 1`.' },
+      { q: 'What is OPA and how does it differ from Kyverno?', a: 'Open Policy Agent is a general-purpose policy engine using the Rego language; via Gatekeeper it acts as a Kubernetes admission controller, and via conftest it evaluates the same policies against manifests and Terraform plans in CI. Kyverno is the Kubernetes-native alternative: policies are YAML resources, so there is no new language, and it can mutate and generate resources as well as validate. OPA is more expressive and portable beyond Kubernetes; Kyverno is markedly easier to adopt. Both should be run in `Audit`/`warn` mode first to measure the blast radius before enforcing.' },
+      { q: 'What is secrets scanning, which tools do it, and what must you do on a hit?', a: 'Detection of credentials in source, history, or build output — gitleaks and trufflehog are the standard tools, run as a pre-commit hook, in CI, and as a platform push-protection feature. The essential point is the response: **a committed secret must be rotated, not merely removed**. Rewriting history does not retract anything already cloned, forked or crawled, and public repositories are scanned by adversaries within seconds of a push. Treat it as an incident with a revocation step, not as a cleanup commit.' },
+      { q: 'Are Docker build args a safe way to pass secrets?', a: 'No — this is a widespread and dangerous misconception. `ARG` values are recorded in image metadata and readable by anyone who can pull the image (`docker history --no-trunc`). The correct mechanism is BuildKit\'s secret mount: `RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci`, which exposes the value to a single instruction via tmpfs and writes it to no layer and no metadata. Multi-stage builds help too, by keeping build-time credentials and tooling out of the final image entirely.' },
+      { q: 'What is image signing, and why does it only matter with verification?', a: '`cosign sign` attaches a cryptographic signature to an image digest; in keyless mode the CI job\'s OIDC identity is exchanged for a short-lived Fulcio certificate and the signature is logged in the Rekor transparency log, so there is no long-lived private key to protect. On its own that proves nothing — the value comes from **verifying at admission**, with Kyverno\'s `verifyImages` or the Sigstore policy-controller rejecting any image whose signature does not chain to your CI\'s identity. Note signatures bind to a **digest**, not a tag, which is why production should deploy `@sha256:...`: a tag is a mutable pointer that can be repointed after the scan passed.' },
+      { q: 'What is an SBOM and why is it required?', a: 'A machine-readable inventory of every component and version in an artifact, in SPDX or CycloneDX format, produced by Syft or `trivy sbom` and attached to the image as an attestation. Its purpose is retrospective: when the next widely-exploited library vulnerability lands, "which of our services contains this component, at what version" is a database query instead of a week of rebuilding and rescanning. It is also becoming a legal requirement rather than a best practice — US Executive Order 14028 drove it into federal procurement, and the EU Cyber Resilience Act, in force since December 2024, phases obligations in for products with digital elements sold in the EU.' },
+      { q: 'What is Falco and when does it run?', a: 'A CNCF graduated runtime-security tool that loads an eBPF probe to observe kernel syscalls and matches them against behavioural rules: a shell spawned in a container, an unexpected outbound connection, a write to a system path, a service-account token read by the wrong process. It runs continuously in production, after every pre-deployment control has passed. Its distinguishing property is that it can catch a **zero-day**, because it describes suspicious behaviour rather than known-bad artifacts; its cost is that it alerts rather than blocks, so without someone triaging the output it is a log bill rather than a control. The modern eBPF driver has replaced the legacy kernel module as the default.' },
+      { q: 'What is the shift-left principle, and where does it stop being true?', a: 'Move security checks earlier, where defects are cheapest to fix and the feedback reaches the person who wrote the code while they still have it in their head — pre-commit hooks, PR-time SAST and SCA, policy checks on the plan. Where it stops: some properties are only observable later. Container scanning needs the built image, DAST needs a running application, admission control is the only place that catches someone bypassing CI with `kubectl`, and runtime detection is the only thing that sees a novel attack. Shift left is an addition to the right-hand controls, not a replacement for them.' },
+      { q: 'How does policy-as-code differ from manual security review?', a: 'In coverage rather than speed. A manual review is a *sample* taken at a point in time, and its conclusions decay the moment anything changes; an admission policy is *total* — evaluated on every object, every time, including the ones created at 3 a.m. by an autoscaler or a Helm upgrade. It is also versioned, diffable and testable like any other code, and it can run in `Audit`/`warn` mode first to measure exactly what would break before it starts blocking. What it cannot do is reason about intent or design, which is what human review should be spent on instead.' },
+      { q: 'What replaced PodSecurityPolicy?', a: '**Pod Security Admission**, after PSP was removed in Kubernetes 1.25. PSA applies one of three fixed profiles — `privileged`, `baseline`, `restricted` — per namespace using labels (`pod-security.kubernetes.io/enforce=restricted`), with `warn` and `audit` modes for staged rollout. It is deliberately coarse: three levels, namespace granularity, no exceptions mechanism. Most clusters therefore use PSA for the baseline and Kyverno or OPA Gatekeeper on top for organisation-specific rules such as required labels, approved registries and signature verification.' },
     ],
     references: [
       'https://owasp.org/www-project-devsecops-guideline/',
@@ -2594,6 +2836,66 @@ Use all three: SAST + SCA in every PR (fast, automated). DAST in staging after d
         title: 'HA vs single-server architecture',
         description: 'Single Server (bad): User → One Server → One Database. One failure stops the app, no failover, limited scaling. HA Design: User Traffic → Load Balancer → App Server Zone A + Zone B + Zone C → Primary DB + Replica → Backup + Monitoring + Failover. Shared traffic, multi-zone, automatic failover via health checks.',
         image: '/diagrams/linkdiags/high-availability.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'Availability arithmetic, and why adding redundancy sometimes lowers it',
+        content: `Availability composes in two ways, and knowing which applies to a given component is most of the design work.
+
+**In series, availabilities multiply.** If a request must pass through a load balancer, an application tier, a cache and a database, the achievable availability is the product of theirs. Four components at 99.9% each give 99.6% — about **35 hours a year**, not 8.8. This is the arithmetic behind a rule people learn the hard way: *you cannot be more available than your least available hard dependency*, and every dependency you add pulls the ceiling down. Removing a synchronous dependency from the request path — making it async, caching its answer, degrading gracefully when it is absent — often improves availability more than making that dependency redundant.
+
+**In parallel, unavailabilities multiply.** Two independent instances at 99% each give 1 − 0.01² = 99.99%. This is why redundancy works, and the word carrying all the weight is **independent**. Two instances in the same rack share a top-of-rack switch and a power feed. Two AZs in one region share a regional control plane. Two replicas running the same buggy build share the bug. When failures are correlated, the parallel formula does not apply and the second copy buys much less than the arithmetic promises.
+
+The uptime table everyone quotes:
+
+| Target | Downtime/year | Downtime/month | What it implies |
+| --- | --- | --- | --- |
+| 99% | 3.65 days | 7.3 h | Single instance, business-hours ops |
+| 99.9% | 8.8 h | 43.8 min | Redundant instances, automated restart |
+| 99.95% | 4.4 h | 21.9 min | Multi-AZ, automated failover |
+| 99.99% | 52.6 min | 4.4 min | Multi-AZ + tested failover + no manual step in the recovery path |
+| 99.999% | 5.3 min | 26 s | Multi-region active-active; no human can be involved |
+
+Read the right-hand column as the constraint it is. At 99.99%, the **entire** budget is 4.4 minutes a month, which means a human being paged cannot be part of recovery — detection plus a page plus someone opening a laptop is already over budget. At five nines even deploys must be non-disruptive. In practice, the honest move is to derive the target from an **error budget** rather than picking a number of nines: state the SLO the business actually needs, and treat the remaining budget as a resource that gets spent on shipping. A team hitting 100% is over-invested in availability and under-shipping.
+
+The counterintuitive result that closes the section: **redundancy can reduce availability.** Every failover mechanism is itself software that can fail, and it fails in the worst circumstances, when the system is already degraded. A health check with a tight threshold flaps and evicts healthy instances; a cluster manager elects two primaries during a network partition; a "highly available" pair spends its time fighting over a virtual IP. The rule is to count the failover machinery as a component with its own failure rate, and to prefer the simplest mechanism that meets the target. Automatic failover that has never been tested is not a control — it is an untested code path that will execute for the first time during an incident.`,
+      },
+      {
+        title: 'Correlated failure is the real adversary, and the mechanisms that contain it',
+        content: `Multi-AZ deployment protects against exactly one class of event: an independent, localised infrastructure failure. It does nothing about the failure modes that actually cause most major outages, because those arrive **everywhere at once**:
+
+- A bad deployment rolls to all zones. So do a poisoned configuration change, a bad feature flag, a certificate that expires simultaneously on every host, and a database migration that locks a hot table.
+- A dependency's outage reaches every replica of yours at the same moment.
+- A cloud provider's *control plane* failing in a region can prevent scaling, DNS updates, and even instance replacement in every AZ of that region, while the instances themselves keep running.
+
+Containment for correlated failure is different from redundancy and mostly about **staged, reversible change and bounded blast radius**:
+
+**Progressive delivery.** Canary to one instance, then one AZ, then the fleet, with automated rollback wired to error rate and latency rather than to a person watching a dashboard. The key number is *time to detect plus time to roll back*, since that is what determines how much damage a bad change does.
+
+**Cells and shuffle sharding.** Instead of one fleet serving all customers, run several independent cells, each with its own capacity and each serving a subset. A poisoned request that kills a cell takes out that cell's tenants only. Shuffle sharding refines it: assign each tenant a random *pair* of cells from N, so two tenants rarely share the same pair, and one abusive tenant degrades a small, mostly-distinct slice rather than everyone.
+
+**Bulkheads.** Separate resource pools per dependency, so exhaustion is contained. The canonical failure without them: one slow downstream service occupies every thread or connection in a shared pool, and the service stops serving *all* traffic — including endpoints that never touch that dependency. Separate pools mean the slow dependency's callers block and everyone else keeps working.
+
+**Circuit breakers.** After a threshold of failures, stop calling a dependency and fail fast for a cooldown, then let a trial request through to test recovery (closed → open → half-open). This does two things: it returns errors in milliseconds instead of after a 30-second timeout, freeing threads; and it removes load from a struggling dependency so it can recover. Without it you get a **retry storm** — every client retrying a slow service multiplies its load exactly when it can least handle it, and the system settles into a metastable state where it stays down even after the original trigger is gone. Retries need exponential backoff **with jitter** (synchronised retries re-converge into the same thundering herd) and a global retry budget, not just a per-call limit.
+
+**Load shedding.** Above capacity, reject the excess quickly at the edge with a clear signal rather than accepting everything and timing out. Serving 80% of requests correctly beats serving 100% of them too slowly to be useful.
+
+And capacity itself has to be planned for the degraded state. Three AZs each running at 70% utilisation looks comfortable — but lose one and the survivors need 105% of their capacity. That is the arithmetic behind **N+1 and N+2**: size so that the fleet still carries peak load with one (or two) units gone. The redundancy is meaningless if the survivors fall over from the load they inherit.`,
+      },
+      {
+        title: 'The data tier, health checks, and the numbers that make it real',
+        content: `Stateless tiers are easy — add instances behind a load balancer. **State is where HA is actually decided**, because a database has one authoritative copy of the truth and someone has to decide who holds it.
+
+Replication has a fork with a hard trade-off. **Synchronous** replication acknowledges a write only when the replica has it, giving RPO = 0 at the cost of latency (every write pays a cross-AZ round trip) and availability (if the replica is unreachable, writes stall — the primary is now *less* available than it was alone). **Asynchronous** keeps writes fast and the primary independent, at the cost of a replication lag window that is lost on failover. AWS RDS Multi-AZ is synchronous to a standby in another AZ; cross-region read replicas are asynchronous, which is why a region failover has non-zero RPO.
+
+Be precise about failover time, because the commonly quoted figures are optimistic. **RDS Multi-AZ instance deployments typically fail over in 60–120 seconds** — DNS is repointed and clients must re-resolve, so applications caching DNS forever see a much longer outage than the database does. The newer **Multi-AZ DB cluster** (one writer plus two readable standbys, semi-synchronous) is faster, typically under 35 seconds. Aurora, with its shared distributed storage layer, promotes a replica in roughly 30 seconds because there is no data to copy. Whichever you use, the number that matters to users includes client-side DNS TTL and connection-pool behaviour, and that part is your responsibility, not the provider's.
+
+**Split-brain** is the failure mode that makes this genuinely hard. During a network partition, both sides may believe the other is dead and both accept writes; when the partition heals there are two divergent histories and no automatic correct merge — for a ledger, that is real money duplicated. The defences are quorum (an odd number of voting members, so only a majority partition may elect a leader — which is why etcd, Consul and ZooKeeper deployments are 3 or 5, never 4) and **fencing**: the old primary is forcibly cut off — STONITH, revoking its storage lease, or dropping its network — before the new one is promoted. A failover design with no fencing step has not solved split-brain, it has bet against it.
+
+**Health checks** are where good HA designs quietly break. Keep the load balancer's check **shallow**: does this process respond, is it serving. A *deep* health check that verifies the database, the cache and three downstream APIs seems more rigorous, and is a cascading-failure generator — when the shared database slows, every instance fails its check simultaneously, the load balancer removes the entire fleet, and a degraded dependency becomes a total outage. Report dependency health on a separate endpoint for monitoring, and let the request path degrade gracefully instead. Kubernetes encodes the same distinction: the **liveness** probe restarts the container (so a deep check there causes restart loops during a dependency blip), the **readiness** probe removes it from service endpoints, and the **startup** probe suppresses both until a slow-starting application is up. Getting liveness and readiness the wrong way round is one of the most common self-inflicted outages in Kubernetes.
+
+Finally, **RTO and RPO drive architecture, and they are per-scenario, not per-system**. RTO is how long recovery may take; RPO is how much data may be lost. RPO = 0 forces synchronous replication and its latency and availability costs; RPO of 5 minutes allows async replication and much cheaper topology; RPO of 24 hours allows nightly snapshots. RTO of minutes forces warm standby or active-active; RTO of hours allows restore-from-backup. Two disciplines make these numbers real rather than aspirational: derive them from what the business actually loses per unit of downtime or data, and **test them** — a backup that has never been restored has an unknown RTO and quite possibly an infinite one, and a failover that has never been exercised is an untested code path that runs for the first time under pressure. Game days and controlled failure injection are how the numbers stop being fiction.`,
       },
     ],
     introduction: `## Overview
@@ -2714,16 +3016,17 @@ The conversation: always ask the business for RTO and RPO before designing. Stri
       },
     ],
     quickFire: [
-      { q: 'What is the difference between Active-Active and Active-Passive HA?', a: 'Active-Active: all nodes serve traffic simultaneously -- higher throughput, instant failover. Active-Passive: standby takes over on failure -- simpler but wastes standby capacity.' },
-      { q: 'What does N+2 redundancy mean?', a: 'Provision N+2 capacity: enough nodes to handle full load with 2 nodes simultaneously failed. N+1 handles one failure; N+2 is required for maintenance windows during incidents.' },
-      { q: 'What is RTO and RPO?', a: 'RTO (Recovery Time Objective) is the maximum tolerated downtime. RPO (Recovery Point Objective) is the maximum tolerated data loss window. Both drive HA architecture decisions.' },
-      { q: 'What is split-brain in a distributed system?', a: 'When a network partition causes two nodes to both believe they are the primary and accept writes independently, leading to data divergence. Prevented by quorum-based consensus (Raft, Paxos).' },
-      { q: 'How do health checks differ from liveness probes in a load balancer context?', a: 'Load balancer health checks remove unhealthy backends from rotation. They are typically HTTP GET or TCP checks on a /health endpoint at a configurable interval.' },
-      { q: 'What is a circuit breaker pattern?', a: 'A proxy that tracks failure rates to a downstream service. When failures exceed a threshold, it opens the circuit and returns errors immediately without calling the failing service, preventing cascade failures.' },
-      { q: 'What is the difference between failover and fallback?', a: 'Failover switches traffic to a redundant replica of the same service. Fallback serves a degraded but functional response (cached data, static page) when the primary is unavailable.' },
-      { q: 'How do you achieve database HA in AWS?', a: 'RDS Multi-AZ: synchronous replication to a standby in another AZ with automatic failover in 60-120 seconds. Aurora: 6-way replication across 3 AZs with faster failover (~30s).' },
-      { q: 'What is a bulkhead pattern?', a: 'Isolating components into separate resource pools (thread pools, connection pools) so that failure or overload in one service does not exhaust resources for others.' },
-      { q: 'What metrics indicate a system needs more redundancy?', a: 'MTTR (Mean Time to Recover) exceeding SLA, single points of failure in dependency map, availability below target (e.g., 99.9% = 8.7h downtime/year), or recent incident post-mortems citing cascades.' },
+      { q: 'What is the difference between Active-Active and Active-Passive HA?', a: 'Active-Active runs all instances serving traffic simultaneously, so failover is just the load balancer removing an endpoint — near-zero RTO, and the capacity is used rather than idle. It requires the workload to tolerate concurrent writes across nodes, which for stateful systems means conflict resolution or partitioning. Active-Passive keeps a standby idle until promoted: simpler, no write-conflict problem, but you pay for capacity that does nothing and the failover path is exercised only during incidents — which is exactly when you discover it does not work. If you run Active-Passive, fail over deliberately on a schedule so the path stays proven.' },
+      { q: 'What does N+2 redundancy mean, and what is the sizing mistake?', a: 'N units are needed to carry peak load; N+2 means running two spares so the system still meets peak with two units gone. The mistake is sizing for the healthy state: three AZs each at 70% utilisation looks comfortable, but losing one leaves the survivors needing 105% of their capacity, and they fall over from the traffic they inherit. Redundancy is only real if the survivors can carry the load — which for three zones means running each at 66% or below.' },
+      { q: 'What are RTO and RPO?', a: 'Recovery Time Objective is how long restoration may take; Recovery Point Objective is how much data may be lost. They drive different mechanisms: RPO = 0 requires synchronous replication (and pays for it in write latency and in the primary stalling when the replica is unreachable); RPO of minutes allows async replication; RPO of a day allows nightly snapshots. RTO of minutes requires warm standby or active-active; RTO of hours allows restore-from-backup. Both are per-scenario — losing an instance, a zone, a region, or a table to a bad migration have different targets — and both are fiction until tested, since a backup that has never been restored has an unknown RTO.' },
+      { q: 'What is split-brain, and how is it prevented?', a: 'During a network partition both sides conclude the other is dead, both promote themselves, and both accept writes; when the partition heals there are two divergent histories with no automatic correct merge — for a ledger that means duplicated money. Two mechanisms prevent it. **Quorum**: only a partition holding a majority may elect a leader, which is why etcd, Consul and ZooKeeper clusters are 3 or 5 members, never 4 — an even number gives no majority in an even split while adding a failure domain. **Fencing**: the old primary is forcibly cut off before the new one is promoted (STONITH, revoking its storage lease, or dropping its network). A failover design without a fencing step has not solved split-brain; it has bet against it.' },
+      { q: 'How should load balancer health checks differ from Kubernetes liveness probes?', a: 'A load balancer check should be **shallow** — is this process up and serving — because a deep check that verifies the database and three downstream APIs turns a slow shared dependency into a total outage: every instance fails simultaneously and the balancer removes the entire fleet. Report dependency health on a separate monitoring endpoint instead. Kubernetes splits the roles explicitly: **liveness** restarts the container (so a deep check there causes restart loops during a dependency blip), **readiness** only removes it from service endpoints (recoverable, the right place for "can I serve right now"), and **startup** suppresses both while a slow application boots. Swapping liveness and readiness is a common self-inflicted outage.' },
+      { q: 'What is a circuit breaker, and what does it actually prevent?', a: 'A client-side state machine — closed, open, half-open — that stops calling a failing dependency after a failure threshold, fails fast for a cooldown, then lets one trial request through to test recovery. It does two things: it returns errors in milliseconds instead of after a 30-second timeout, so threads and connections are not consumed waiting; and it sheds load from a struggling dependency so it can recover. Without it you get a **retry storm**, where every client retrying multiplies load on a service at the exact moment it can least handle it, producing a metastable failure that persists after the original trigger is gone. Pair it with exponential backoff **plus jitter** — synchronised retries re-converge into the same herd — and a global retry budget.' },
+      { q: 'What is the bulkhead pattern?', a: 'Isolated resource pools per dependency or per class of work, so exhaustion in one cannot starve the others — named after a ship\'s compartments, where a breach floods one section rather than sinking the vessel. The failure it prevents is concrete: with one shared thread or connection pool, a single slow downstream service occupies every slot and the service stops answering *all* requests, including endpoints that never touch that dependency. With separate pools, calls to the slow dependency block and everything else keeps serving. Cell-based architecture is the same idea applied at fleet scale.' },
+      { q: 'Why doesn\'t multi-AZ deployment protect against most large outages?', a: 'Because it addresses independent, localised infrastructure failure, and the events that cause major outages arrive everywhere at once: a bad deploy, a poisoned config or feature flag, a certificate expiring on every host simultaneously, a migration that locks a hot table, a shared dependency going down, or a cloud provider\'s regional control plane failing so nothing can scale or be replaced in any AZ. Those are **correlated** failures, and the defences are different in kind — progressive delivery with automated rollback, cells and shuffle sharding, bulkheads, circuit breakers and load shedding.' },
+      { q: 'How do you achieve database HA on AWS, and how fast is failover really?', a: 'RDS **Multi-AZ instance** deployments replicate synchronously to a standby in another AZ and typically fail over in **60–120 seconds** — the commonly quoted "under 60 seconds" is optimistic. **Multi-AZ DB clusters** (a writer plus two readable standbys) are usually under 35 seconds, and Aurora promotes a replica in roughly 30 because its shared storage layer means there is no data to copy. Cross-region read replicas are asynchronous, so a region failover carries a non-zero RPO. Crucially, the number your users experience includes client-side DNS caching and connection-pool behaviour after the endpoint moves — that part is yours to get right, not the provider\'s.' },
+      { q: 'What is the difference between failover and fallback?', a: 'Failover switches to a redundant copy of the same capability — promote the standby, route to the other AZ — and aims to preserve full function. Fallback degrades to a *lesser* capability when the primary path is unavailable: serve stale cache, show generic recommendations instead of personalised ones, queue writes for later, accept the payment for manual settlement. Failover needs redundancy; fallback needs a designed degraded mode, and it is often the cheaper and more robust answer for a non-critical dependency. Note "failback" is a third thing: returning to the original primary once it recovers, which should be a deliberate, scheduled action rather than automatic.' },
+      { q: 'Which signals indicate a system needs more redundancy?', a: 'Concentration rather than raw error counts: any component whose failure alone produces a user-visible outage; a single instance whose CPU, memory or connection saturation has no headroom for a peer\'s traffic; utilisation high enough that losing one unit pushes survivors past 100%; a growing gap between p50 and p99 latency, which usually means one instance or shard is degraded while the average hides it; replication lag trending upward, which is RPO silently expanding; and repeated incidents whose resolution was "we restarted it". Also treat *time to detect* and *time to roll back* as first-class signals — if either exceeds your monthly error budget, more redundancy will not save the target.' },
     ],
     references: [
       'https://aws.amazon.com/architecture/well-architected/',
@@ -2745,6 +3048,69 @@ The conversation: always ask the business for RTO and RPO before designing. Stri
         title: 'Overlay vs Underlay — encapsulation flow',
         description: 'Pod A → build packet → CNI encapsulates (VXLAN outer header added) → transmitted via real IP routing over underlay (physical/cloud network) → CNI on destination node decapsulates (removes outer header) → Original packet delivered to Pod B. Think: overlay is a virtual private road built on the physical highway.',
         image: '/diagrams/linkdiags/overlay-underlay.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'Why an overlay exists at all, and what encapsulation costs',
+        content: `Kubernetes makes one demand of the network that ordinary infrastructure does not satisfy: **every pod gets an IP, and every pod can reach every other pod at that IP without NAT**. A cluster of 200 nodes running 100 pods each needs 20,000 routable addresses that appear and disappear every few seconds. Your VPC's routing tables and your data centre's switches were not built for churn at that rate, and in most environments you are not permitted to reprogram them anyway.
+
+An overlay resolves the conflict by not asking. Pods live in an address space the physical network has never heard of (say \`10.244.0.0/16\`), and pod-to-pod traffic between nodes is **wrapped in an ordinary packet addressed node-to-node**. The underlay only ever sees traffic between IPs it already knows how to route. This is the whole trick: the virtual topology changes constantly, the physical topology does not change at all.
+
+Mechanically, for VXLAN: the sending node's CNI agent takes the pod's Ethernet frame, prepends a VXLAN header carrying a 24-bit **VNI** (network identifier, allowing 16 million segments where a VLAN allows 4,094), and wraps that in UDP to destination port **4789** with the two node IPs as outer source and destination. The receiving node's **VTEP** (VXLAN Tunnel Endpoint — in Kubernetes a virtual interface such as \`flannel.1\` or \`vxlan.calico\`) strips the outer headers and delivers the original frame to the target pod's veth. Hence the two IP headers in any \`tcpdump\` on the node interface: outer node-to-node, inner pod-to-pod.
+
+The costs are real and worth quantifying before choosing it:
+
+| | Cost |
+| --- | --- |
+| Header overhead | **50 bytes** for VXLAN over IPv4 (14 outer Ethernet + 20 IP + 8 UDP + 8 VXLAN); ~50+ for Geneve, which has variable-length options; 20 for IP-in-IP; ~60 for WireGuard |
+| Throughput | Typically 5–15% loss without NIC offload; near-parity with VXLAN TSO and checksum offload, which most modern NICs support — verify with \`ethtool -k eth0\` |
+| CPU | Encapsulation per packet; noticeable at 10 Gb/s and above without offload |
+| Observability | VPC flow logs and physical taps see **node IPs only** — pod-level attribution disappears, which complicates both debugging and security forensics |
+| Security groups | Cloud security groups cannot match on pod IPs, so cloud-native segmentation stops at the node boundary and policy must be enforced by the CNI |
+
+Which is why the large clouds mostly do not use one. **AWS's VPC CNI gives each pod a real VPC IP** from a secondary address on the node's ENI — no encapsulation, full MTU, pods visible to security groups and flow logs — at the cost of a hard pod-density limit set by the instance type's ENI and IP allowances (prefix delegation, which assigns /28 blocks instead of individual IPs, exists precisely to raise that ceiling) and of consuming real VPC address space, which becomes a genuine constraint on a large cluster. GKE does the equivalent with alias IP ranges. **Calico in BGP mode** achieves the same on-premises: instead of tunnelling, it peers with the physical routers and advertises each node's pod CIDR, so the fabric routes to pods directly. Faster and far more debuggable — and it requires a network team willing to peer BGP with your cluster, which is the real reason most people are on an overlay.`,
+      },
+      {
+        title: 'MTU: the failure that looks like an application bug',
+        content: `This is the most common overlay incident, and its signature is so specific that recognising it saves hours.
+
+The arithmetic: the underlay MTU is 1500. VXLAN adds 50 bytes of headers. So a pod that emits a 1500-byte packet produces a 1550-byte packet on the wire, which the underlay cannot carry. **The pod MTU must therefore be set to 1450** (1480 for IP-in-IP, ~1440 for WireGuard, and note AWS VPCs support jumbo frames at 9001 within a region, so the correct pod MTU on EKS with an overlay is 8951, not 1450 — sizing to 1450 there silently wastes six times the per-packet efficiency).
+
+The failure mode when it is wrong is what makes this interesting. The outer packet is sent with the **Don't Fragment bit set**, so it is not fragmented — it is **dropped**, and the router returns an ICMP "fragmentation needed" message so the sender can lower its path MTU. That mechanism, Path MTU Discovery, is what should quietly fix everything. It routinely does not, because **ICMP is filtered** — by a cloud security group, a corporate firewall, or an ACL written by someone who blocked "ping". Now the sender never learns, and keeps retransmitting a packet that is silently discarded. The result is not an outage; it is worse:
+
+- The TCP handshake succeeds (SYN packets are tiny).
+- Small requests work perfectly. Health checks pass. \`curl\` on a short endpoint returns instantly.
+- Anything that fills a full packet **hangs and then times out**: a large POST body, a TLS handshake with a big certificate chain, a paginated API response, a \`git clone\`, an image layer pull.
+
+So the report is "the application is flaky on large responses", and three teams look at the application. The confirming test takes one command from inside a pod:
+
+    ping -M do -s 1422 <other-pod-ip>     # 1422 + 8 ICMP + 20 IP = 1450
+    ping -M do -s 1472 <other-pod-ip>     # 1500 — fails if the overlay eats 50 bytes
+
+\`-M do\` forbids fragmentation, so the smaller size succeeding while the larger fails is a direct MTU proof. Then check \`ip link show\` inside the pod, on the veth, and on the VTEP interface — a mismatch anywhere along that chain does it. Both Calico and Cilium auto-detect MTU, but auto-detection fails when a node has multiple interfaces of different MTUs, or when the workload sits behind an additional tunnel (a VPN or a service mesh with mTLS adds *another* header on top of the overlay's, and the budgets stack).
+
+Two related subtleties. TCP has **MSS clamping** as a workaround — rewriting the MSS option during the handshake so the sender never generates an oversized segment, which is what many CNIs do automatically. It works well and it does nothing for **UDP**, which has no negotiation: an oversized UDP datagram is simply lost, which is why DNS answers over 512 bytes and QUIC traffic are often the first casualties of an MTU problem.`,
+      },
+      {
+        title: 'Under the overlay: what makes the fabric predictable',
+        content: `The overlay is only as good as the underlay carrying it, and two properties of a modern data-centre fabric decide whether it performs.
+
+**Spine-leaf.** The old three-tier design (access → aggregation → core) optimised for north-south traffic, where clients outside talked to servers inside, and it made east-west paths long and variable — two servers might be one hop apart or five. Distributed systems inverted that ratio: replication, service-to-service calls and shuffle traffic are now the majority. In a spine-leaf (Clos) fabric, every leaf switch connects to every spine and never to another leaf, so **any server-to-server path is exactly two hops** and latency is uniform and predictable. Capacity scales by adding spines, which raises bandwidth for the whole fabric at once rather than requiring a forklift upgrade of a core switch.
+
+**ECMP**, and the detail that makes it work for overlays. With multiple equal-cost paths across the spines, routers hash each packet's 5-tuple (source and destination IP, protocol, source and destination port) to choose one, keeping a flow on a single path so packets do not reorder. The problem for a tunnel is that **every encapsulated packet between two nodes has the same outer 5-tuple** — same node IPs, same UDP destination port 4789 — so the whole overlay between a node pair would hash to one link and use a fraction of the fabric. VXLAN solves it deliberately: the sender computes a hash of the **inner** packet's headers and writes it into the **outer UDP source port**. That field is otherwise unused, so each inner flow produces a different outer source port, ECMP spreads inner flows across spines, and packets within a flow still stay in order. It is an elegant piece of design and the reason overlays scale on a Clos fabric at all.
+
+**BUM traffic** — Broadcast, Unknown-unicast and Multicast — is the part where Kubernetes diverges from classic VXLAN. In a traditional deployment, a VTEP that does not know which remote VTEP owns a MAC must flood the frame, historically using IP multicast in the underlay, which is why VXLAN documentation talks about multicast groups per VNI. **Kubernetes CNIs avoid this entirely**: the control plane already knows every pod's IP, MAC and node, so agents program the forwarding database and ARP entries directly (\`bridge fdb show dev flannel.1\` on any node shows the pre-populated remote VTEP entries). There is no flooding and no underlay multicast requirement — which is fortunate, since almost no cloud VPC supports multicast. The trade-off is that the CNI is now responsible for keeping that table consistent, and a stale FDB entry after a node replacement produces traffic black-holed to an address that no longer exists.
+
+A short guide to the encapsulation choices you will actually meet:
+
+- **VXLAN** — the default and the safest choice; works over any IP underlay, widely offloaded in hardware, 50 bytes.
+- **Geneve** — VXLAN's successor with variable-length TLV options for carrying metadata; used by OVN-Kubernetes and AWS Gateway Load Balancer, and supported by Cilium.
+- **IP-in-IP** — 20 bytes, IPv4 only, no UDP header so **no port-based ECMP hashing** and no NAT traversal; Calico's older default, now largely superseded by VXLAN.
+- **GRE** — general-purpose and older; uncommon in Kubernetes.
+- **WireGuard / IPsec** — not alternatives but an additional layer for encryption in transit, costing another ~60 bytes of MTU, which must be subtracted on top of the overlay's own.
+
+And the diagnostic order when pod-to-pod traffic fails across nodes: confirm the underlay first (can node A reach node B at all, and is **UDP 4789 permitted** by the security group or firewall — a rule allowing only TCP is a classic cause of "everything works on the same node and nothing works across nodes"), then check MTU as above, then the VTEP interfaces and FDB entries, and only then NetworkPolicy. Since an overlay hides pod IPs from the fabric, cloud-side flow logs cannot answer any of the later questions — the truth is in the CNI's own state and in \`tcpdump\` on the node.`,
       },
     ],
     introduction: `## Overview
@@ -2861,16 +3227,17 @@ VXLAN kernel module missing: rare, but some stripped-down OS images lack the vxl
       },
     ],
     quickFire: [
-      { q: 'What is the difference between an overlay and an underlay network?', a: 'The underlay is the physical or cloud network that carries actual packets. The overlay is a virtual network built on top by encapsulating tenant traffic inside underlay packets.' },
-      { q: 'What is VXLAN and what problem does it solve?', a: 'Virtual Extensible LAN (RFC 7348) encapsulates Layer 2 frames inside UDP packets, extending Layer 2 segments across a Layer 3 underlay. Supports up to 16 million segments (24-bit VNI vs VLAN\'s 12-bit).' },
-      { q: 'What is a VTEP?', a: 'VXLAN Tunnel Endpoint -- the device (physical NIC or software) that encapsulates outgoing VXLAN frames and decapsulates incoming ones. Each hypervisor/node has a VTEP.' },
-      { q: 'How does Geneve differ from VXLAN?', a: 'Geneve (Generic Network Virtualization Encapsulation) has a variable-length options header allowing metadata to be carried with packets. Used by OVN and some cloud providers for richer SDN signaling.' },
-      { q: 'What is a spine-leaf topology and why is it used in data centers?', a: 'A two-tier Clos fabric where every leaf switch connects to every spine switch. Provides predictable, equal-cost multipath (ECMP) latency between any two servers and eliminates spanning tree.' },
-      { q: 'What is ECMP and why does it matter for overlays?', a: 'Equal-Cost Multipath routes packets across multiple parallel paths simultaneously. In spine-leaf, ECMP across spine switches maximizes bandwidth and provides link-level redundancy.' },
-      { q: 'What is IP-in-IP encapsulation (IPIP)?', a: 'A simpler overlay than VXLAN -- wraps an IP packet inside another IP packet with no L2 header. Lower overhead but limited to L3 routing; used by Calico in IPIP mode.' },
-      { q: 'How does Calico choose between VXLAN and BGP mode?', a: 'BGP mode programs real routes in the underlay -- no encapsulation overhead, best performance. VXLAN mode works on any network without BGP support. Choose BGP when the underlay supports it.' },
-      { q: 'What is the MTU impact of VXLAN encapsulation?', a: 'VXLAN adds 50 bytes of overhead (VXLAN header + UDP + outer IP + Ethernet). If the underlay MTU is 1500, inner packets must be capped at 1450 or the underlay must support jumbo frames (MTU 9000+).' },
-      { q: 'What is BUM traffic in VXLAN overlays?', a: 'Broadcast, Unknown unicast, and Multicast -- traffic that must be flooded to all VTEPs because the destination MAC is unknown. Handled via multicast groups or ingress replication (unicast to all VTEPs).' },
+      { q: 'What is the difference between an overlay and an underlay network?', a: 'The underlay is the real network that moves packets between machines — physical switches and routers, or a cloud VPC\'s routing. It knows nothing about containers. The overlay is a virtual network built on top, giving workloads addresses in a separate space and carrying their traffic inside ordinary underlay packets via encapsulation. The point of the split is churn: pod addressing changes every few seconds while the physical topology stays fixed, and the overlay absorbs all that change without asking the network team for anything.' },
+      { q: 'What is VXLAN and what problem does it solve?', a: 'Virtual Extensible LAN encapsulates an Ethernet frame in UDP (destination port 4789) with a 24-bit VNI identifying the virtual segment. It solves two problems: it lets a virtual Layer 2 segment span routed Layer 3 infrastructure, so pods on different subnets appear adjacent; and its 24-bit VNI allows about 16 million segments against a VLAN\'s 4,094. In Kubernetes its real value is that the underlay never has to learn pod addresses — it only ever routes node-to-node.' },
+      { q: 'What is a VTEP?', a: 'A VXLAN Tunnel Endpoint: the function that encapsulates outgoing frames and decapsulates incoming ones. In Kubernetes it is a virtual interface on each node created by the CNI — `flannel.1` for Flannel, `vxlan.calico` for Calico — holding the node\'s underlay IP as the tunnel source. It also holds the forwarding table mapping remote pod MACs to remote node IPs, which you can inspect with `bridge fdb show dev flannel.1`.' },
+      { q: 'How does Geneve differ from VXLAN?', a: 'Same idea — UDP encapsulation of an inner frame — but Geneve adds **variable-length TLV option fields**, so a controller can carry arbitrary metadata alongside the packet (security tags, source endpoint identity, routing hints) instead of being limited to VXLAN\'s fixed 24-bit VNI. That extensibility is why OVN-Kubernetes and AWS Gateway Load Balancer use it. The cost is a slightly larger and variable header, so MTU budgeting must assume the worst case, and hardware offload support is less universal than VXLAN\'s.' },
+      { q: 'What is a spine-leaf topology and why is it used?', a: 'A two-tier Clos fabric where every leaf switch connects to every spine and leaves never connect to each other, so **any server-to-server path is exactly two hops** with uniform, predictable latency. It replaced the three-tier access/aggregation/core design, which optimised for north-south client traffic and gave east-west paths of varying length — the wrong shape once replication and service-to-service calls became the bulk of traffic. Capacity grows by adding spines, which raises bandwidth across the whole fabric rather than requiring a bigger core switch.' },
+      { q: 'What is ECMP and why does it matter for overlays?', a: 'Equal-Cost Multi-Path spreads traffic across several equally good routes by hashing each packet\'s 5-tuple, keeping every flow pinned to one path so packets do not reorder. It is a problem for tunnels because **every encapsulated packet between two nodes shares the same outer 5-tuple**, so all overlay traffic between a node pair would take one link. VXLAN fixes this deliberately: the sender hashes the *inner* packet\'s headers and writes the result into the **outer UDP source port**, so distinct inner flows hash to different paths while each flow stays in order. This is why IP-in-IP scales worse on a Clos fabric — it has no UDP header and therefore no port field to vary.' },
+      { q: 'What is IP-in-IP encapsulation?', a: 'The minimal tunnel: an IPv4 packet inside another IPv4 packet, adding only 20 bytes. Calico used it as a default for years. Its drawbacks are why it has largely given way to VXLAN — IPv4 only, no UDP header so no port-based ECMP hashing (all traffic between a node pair pins to one path), poor NAT traversal, and it uses IP protocol 4, which many cloud security groups and firewalls do not permit by default.' },
+      { q: 'How does Calico choose between VXLAN and BGP mode?', a: 'BGP mode is the native-routing option: Calico peers with the physical routers (or, in a full mesh, with every other node) and advertises each node\'s pod CIDR, so the fabric routes to pod IPs directly — no encapsulation, full MTU, pod IPs visible to the network for flow logs and firewalling. It requires an underlay that will accept BGP peering and route your pod CIDRs, which many cloud VPCs and many network teams will not. VXLAN mode is the fallback that works anywhere over plain IP. Calico also supports `CrossSubnet`, which routes natively between nodes on the same subnet and encapsulates only when crossing one — the pragmatic middle setting.' },
+      { q: 'What is the MTU impact of VXLAN, and how does it fail?', a: 'VXLAN adds **50 bytes**, so on a 1500-byte underlay the pod MTU must be 1450 (1480 for IP-in-IP, ~1440 for WireGuard; on an AWS VPC with 9001-byte jumbo frames it is 8951, and hard-coding 1450 there throws away most of the efficiency). When it is wrong, the outer packet carries the Don\'t Fragment bit, so it is dropped rather than fragmented, and Path MTU Discovery — the mechanism meant to fix it — fails whenever ICMP is filtered by a security group or firewall. The signature is unmistakable once known: handshakes succeed, small requests and health checks work, and anything filling a full packet (large POST, TLS with a long certificate chain, `git clone`, image pull) hangs and times out. Confirm with `ping -M do -s 1422` succeeding while `-s 1472` fails.' },
+      { q: 'What is BUM traffic, and does it apply in Kubernetes?', a: 'Broadcast, Unknown-unicast and Multicast — the frames a Layer 2 segment must flood because no one knows which port owns the destination. Classic VXLAN handles it with underlay IP multicast groups per VNI, which is why the standard\'s documentation is full of multicast. **Kubernetes CNIs eliminate it**: the control plane already knows every pod\'s IP, MAC and node, so agents pre-program the forwarding database and ARP entries and never need to flood — fortunate, since virtually no cloud VPC supports multicast. The trade-off is that correctness now depends on the CNI keeping those tables current, and a stale FDB entry after a node replacement black-holes traffic to a node that no longer exists.' },
+      { q: 'Why do EKS, GKE and AKS often avoid overlays entirely?', a: 'Because they can give pods real VPC addresses instead. The AWS VPC CNI assigns each pod a secondary IP from the node\'s ENI, so there is no encapsulation, no MTU tax, and pods are visible to security groups and VPC flow logs — which restores both cloud-native segmentation and observability that an overlay hides. GKE does the same with alias IP ranges. The costs are a hard pod-density ceiling set by the instance type\'s ENI and IP limits (prefix delegation, allocating /28 blocks, exists to raise it) and real consumption of VPC address space, which becomes a planning constraint on large clusters.' },
     ],
     references: [
       'https://www.rfc-editor.org/rfc/rfc7348',
