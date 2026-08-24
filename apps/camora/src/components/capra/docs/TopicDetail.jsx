@@ -3004,9 +3004,19 @@ export default function TopicDetail({
           {topicDetails.visualizations && topicDetails.visualizations.length > 0 && (
             <section id="visual" className="scroll-mt-24">
               <div className="pt-3 grid gap-4 grid-cols-1">
-                {topicDetails.visualizations.map((viz, vi) => (
+                {/* Several topics point more than one visualization at the SAME
+                    diagram file (22 topics, 30 repeats — e.g. o7-slo.png used by
+                    two SLO cards), which rendered the identical image twice on
+                    one page. Show a given diagram once; later cards that reuse
+                    it keep their own title + prose, just without the repeat. */}
+                {(() => {
+                  const shownImages = new Set();
+                  return topicDetails.visualizations.map((viz, vi) => {
+                  const isRepeatImage = Boolean(viz.image) && shownImages.has(viz.image);
+                  if (viz.image) shownImages.add(viz.image);
+                  return (
                   <figure key={vi} className="viz-figure">
-                    {viz.image && (
+                    {viz.image && !isRepeatImage && (
                       <div style={{ background: 'white', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
                         {/* width:auto + maxWidth:100% so a diagram is never
                             upscaled past its native pixels — `width:100%`
@@ -3048,7 +3058,9 @@ export default function TopicDetail({
                       )}
                     </figcaption>
                   </figure>
-                ))}
+                  );
+                  });
+                })()}
               </div>
             </section>
           )}

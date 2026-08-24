@@ -117,6 +117,126 @@ function fenceUnfencedCode(content) {
   return out.join('\n');
 }
 
+// ── Hard-wrap reflow ──────────────────────────────────────────────────────
+// The block parser below emits ONE <p> per source line, which is right for
+// content where each line is its own point. But a large share of the topic
+// data was authored with 80-column hard wraps inside a paragraph:
+//
+//   GCC 15 moved C from gnu17 to gnu23. Under C23, bool, true, false and
+//   thread_local become reserved keywords, and a declaration of the form
+//   rettype identifier(); now means "takes no arguments".
+//
+// Rendered line-per-<p>, that paragraph shatters into stub paragraphs that
+// stop dead at ~500px and never fill the column — the "left aligned instead
+// of full width" report. Reflowing joins those lines back into one paragraph.
+//
+// The gate is deliberately narrow. Length alone is NOT enough: bullet-style
+// lists and shell-command runs also cluster near 80 chars, and merging those
+// would corrupt them. The reliable signal that text was machine-wrapped is a
+// CONTINUATION PAIR — a line ending with no terminal punctuation followed by
+// a line starting lowercase, i.e. one sentence sliced across two lines. A
+// group is only reflowed when at least one such pair is present, and lines
+// that look like code, CLI rows, shell commands, bullets, headers, ASCII
+// diagrams or table rows are never eligible in the first place.
+const WRAP_MAX = 100;
+const REFLOW_BULLET = /^(?:[-*+>#|`]|\d+[.)]\s|[✓●○◉◈◆◇▪▫■□❌✅])/;
+const REFLOW_BOX = /[─│┌┐└┘├┤┬┴┼═║╔╗╚╝╠╣╦╩╬▶▼◀▲→←↑↓►◄]/;
+// `term — definition` reference rows, handled by the CLI-group renderer.
+const REFLOW_CLI_ROW = /^[a-zA-Z][\w.+-]{0,28}\s+[—–]\s+/;
+// Source-code / config shapes. Broader than CODE_CONT above because here a
+// false negative merely leaves a line alone, while a false positive would
+// splice two code lines into one.
+const REFLOW_CODE = /[;{}]\s*$|=>|::|->|\|\||&&|\+=|[=<>!]==|^(?:if|for|while|else|elif|import|from|package|class|def|func|const|let|var|public|private|protected|return|print|echo|@)\b|^[\w,.\s]+=\s*\S|\w\[[^\]]*\]|#\s|\/\/|"""|\$\{|^\w+\.\w+\(/;
+// Shell invocation not covered by INLINE_TOOLS: a bare lowercase command word
+// followed by a quoted argument, a -flag or a /path — `trap 'echo ...' SIGTERM`,
+// `rm -f /tmp/x`. Prose never opens that way (a wrapped line's first word is
+// followed by another word, not by a quote/flag/path).
+const REFLOW_SHELL = /^[a-z][\w.-]*\s+(?:['"]|-{1,2}\w|\/\w)|\s\|\s/;
+// YAML / schema / template rows: `status: enum(...)`, `summary: "{{ $labels }}"`.
+// The key is lowercase — a prose lead-in ("Mitigation: pin -std= ...") is
+// capitalised, which is what keeps genuine wrapped prose eligible.
+// Also catches PromQL/label selectors — `kube_pod_status_reason{reason="Evicted"}`.
+const REFLOW_DATA_ROW = /^[a-z][\w.-]*:\s|\{\{|\$\w|\{\w+\s*[=:~]/;
+
+const isReflowable = (t) =>
+  t.length > 0 &&
+  t.length <= WRAP_MAX &&
+  t.split(/\s+/).length >= 4 &&
+  /[A-Za-z]/.test(t) &&
+  !t.endsWith(':') &&
+  !/ {2,}/.test(t) &&            // aligned two-column reference rows
+  !REFLOW_BULLET.test(t) &&
+  !REFLOW_BOX.test(t) &&
+  !REFLOW_CLI_ROW.test(t) &&
+  !REFLOW_CODE.test(t) &&
+  !REFLOW_SHELL.test(t) &&
+  !REFLOW_DATA_ROW.test(t) &&
+  !INLINE_TOOLS.has(t.split(/\s+/)[0]);   // `docker search nginx --limit 10`
+
+// Ends mid-sentence — no sentence-terminating punctuation (an optional
+// closing quote/bracket may trail it).
+const endsOpen = (t) => !/[.!?;:]["')\]]?$/.test(t);
+// Resumes a sentence rather than starting one.
+const continuesLine = (t) => /^[a-z(]/.test(t);
+
+function reflowHardWraps(content) {
+  if (typeof content !== 'string' || !content.includes('\n')) return content;
+  const lines = content.split('\n');
+  const out = [];
+  let group = [];
+  let groupIndent = null;
+  let inFence = false;
+
+  const flush = () => {
+    if (group.length >= 2) {
+      let wrapped = false;
+      for (let i = 0; i < group.length - 1; i++) {
+        if (endsOpen(group[i].trim()) && continuesLine(group[i + 1].trim())) {
+          wrapped = true;
+          break;
+        }
+      }
+      if (wrapped) {
+        out.push(groupIndent + group.map((l) => l.trim()).join(' '));
+        group = [];
+        groupIndent = null;
+        return;
+      }
+    }
+    out.push(...group);
+    group = [];
+    groupIndent = null;
+  };
+
+  for (const line of lines) {
+    if (line.trim().startsWith('```')) {
+      flush();
+      inFence = !inFence;
+      out.push(line);
+      continue;
+    }
+    if (inFence) {
+      flush();
+      out.push(line);
+      continue;
+    }
+    const trimmed = line.trim();
+    if (!isReflowable(trimmed)) {
+      flush();
+      out.push(line);
+      continue;
+    }
+    const indent = line.match(/^\s*/)[0];
+    // A change of indentation starts a new paragraph — indented continuation
+    // blocks under a lead-in line are common in this data.
+    if (groupIndent !== null && indent !== groupIndent) flush();
+    groupIndent = indent;
+    group.push(line);
+  }
+  flush();
+  return out.join('\n');
+}
+
 export default function FormattedContent({ content, inline = false }) {
   // Translate AWS service names to Azure/GCP equivalents for the chosen
   // cloud BEFORE parsing into blocks. The formatter skips fenced code so
@@ -287,8 +407,10 @@ export default function FormattedContent({ content, inline = false }) {
 
   const blocks = [];
   let currentBlock = { type: 'text', lines: [], lang: null };
-  // Fence any unfenced code (LLD/coding answers store raw source) before parsing.
-  const lines = fenceUnfencedCode(content).split('\n');
+  // Fence any unfenced code (LLD/coding answers store raw source) before
+  // parsing, THEN rejoin hard-wrapped prose. Order matters: fencing first
+  // puts raw source inside ``` blocks, which reflow skips outright.
+  const lines = reflowHardWraps(fenceUnfencedCode(content)).split('\n');
   let inCodeBlock = false;
   let codeBlockLang = null;
 
