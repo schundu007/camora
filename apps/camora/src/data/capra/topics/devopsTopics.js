@@ -223,16 +223,10 @@ export const devopsTopicCategoryMap = {
   'nb-perl-powershell':             'nativebuild',
   'nb-bitbucket-pipelines':         'nativebuild',
   'nb-native-signing':              'nativebuild',
-  // amdCiTopics.js — real-world CI case studies for a large C++/GPU codebase
-  // (AMD TheRock, OSDU). The file shipped with categories but no page wiring,
-  // so these six rendered nowhere; mapped here by subject instead of adding
-  // four more category chips to an already-long page.
-  'therock-ci-architecture':        'nativebuild',
-  'therock-selective-builds':       'nativebuild',
-  'therock-cross-repo-dedup':       'nativebuild',
-  'therock-test-topology':          'nativebuild',
-  'therock-gpu-runners':            'cicdtools',
-  'osdu-multicloud-cicd':           'cicdtools',
+  // amdCiTopics.js held six AMD TheRock / OSDU CI case studies and was retired
+  // in 24d3a801; its map entries outlived it, pointing at topics that no longer
+  // exist. Removed — catalog-integrity.test.ts now fails the build on dangling
+  // entries, which is what 37d6a430 had to clean up by hand once already.
   // New topics from authoritative sources (DORA 2024, CNCF, Gateway API v1)
   'dora-2024-capabilities':             'foundations',
   'opentelemetry-collector-pipelines':  'cloudnative',
