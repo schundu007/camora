@@ -8,20 +8,26 @@ import { describe, it, expect } from 'vitest';
  * nothing. Both fail silently; these tests are what make them loud.
  */
 async function loadDevopsBundle() {
-  const [mod, helm, flux, cp, nb, extra] = await Promise.all([
+  const [mod, helm, flux, cp, nb, extra, k8s] = await Promise.all([
     import('./devopsTopics.js'),
     import('./helmTopics.js'),
     import('./fluxTopics.js'),
     import('./controlPlaneTopics.js'),
     import('./nativeBuildTopics.js'),
     import('./devopsTopicsExtra.js'),
+    import('./k8sTopics.js'),
   ]);
   return {
     topics: [
       ...mod.devopsTopics, ...helm.helmTopics, ...flux.fluxTopics,
       ...cp.controlPlaneTopics, ...nb.nativeBuildTopics, ...extra.devopsExtraTopics,
+      ...k8s.k8sTopics,
     ],
-    map: { ...mod.devopsTopicCategoryMap, ...extra.devopsExtraTopicCategoryMap },
+    map: {
+      ...mod.devopsTopicCategoryMap,
+      ...extra.devopsExtraTopicCategoryMap,
+      ...k8s.k8sTopicCategoryMap,
+    },
     categoryIds: new Set(mod.devopsCategories.map((c: { id: string }) => c.id)),
     // devopsTopics.js also feeds the Observability and Platform Engineering
     // pages; topics routed there are legitimately absent from the DevOps map.
@@ -94,5 +100,78 @@ describe('kubernetes category structure', () => {
       (cat) => !Object.values(map).includes(cat),
     );
     expect(empty).toEqual([]);
+  });
+});
+
+describe('k8s topic modules', () => {
+  it('maps every topic the barrel exports', async () => {
+    const barrel = await import('./k8sTopics.js');
+    expect(barrel.k8sTopics.length).toBeGreaterThan(0);
+    const unmapped = barrel.k8sTopics
+      .filter((t: { id: string }) => !barrel.k8sTopicCategoryMap[t.id])
+      .map((t: { id: string }) => t.id);
+    expect(unmapped).toEqual([]);
+  });
+
+  it('does not leave a migrated topic behind in devopsTopics.js', async () => {
+    const mod = await import('./devopsTopics.js');
+    const barrel = await import('./k8sTopics.js');
+    const barrelIds = new Set(barrel.k8sTopics.map((t: { id: string }) => t.id));
+    const duplicated = mod.devopsTopics
+      .filter((t: { id: string }) => barrelIds.has(t.id))
+      .map((t: { id: string }) => t.id);
+    expect(duplicated).toEqual([]);
+  });
+});
+
+/**
+ * The depth floor. Three schemas coexist in this catalog and the renderer
+ * tolerates all of them, so a stub looks fine until measured. Scoped to the
+ * barrel rather than to every k8s-* category, so it holds for what has
+ * migrated and tightens automatically as the remaining modules land.
+ */
+describe('k8s topic depth floor', () => {
+  const load = () => import('./k8sTopics.js').then((m) => m.k8sTopics as any[]);
+
+  it('gives every migrated topic an introduction', async () => {
+    const thin = (await load()).filter((t) => !t.introduction || t.introduction.length < 200);
+    expect(thin.map((t) => t.id)).toEqual([]);
+  });
+
+  it('gives every migrated topic at least three deep-dive sections', async () => {
+    const thin = (await load()).filter((t) => !t.topics || t.topics.length < 3);
+    expect(thin.map((t) => t.id)).toEqual([]);
+  });
+
+  it('gives every migrated topic at least five quick-fire pairs', async () => {
+    const thin = (await load()).filter((t) => !t.quickFire || t.quickFire.length < 5);
+    expect(thin.map((t) => t.id)).toEqual([]);
+  });
+
+  it('cites at least one kubernetes.io source per topic', async () => {
+    const uncited = (await load()).filter(
+      (t) => !(t.references || []).some((r: string) => r.startsWith('https://kubernetes.io/')),
+    );
+    expect(uncited.map((t) => t.id)).toEqual([]);
+  });
+
+  it('fills every deep-dive section with content', async () => {
+    const empty: string[] = [];
+    for (const t of await load()) {
+      for (const s of t.topics || []) {
+        if (!s.title || !s.content || s.content.length < 300) empty.push(`${t.id}/${s.title}`);
+      }
+    }
+    expect(empty).toEqual([]);
+  });
+
+  it('gives every quick-fire pair a question and an answer', async () => {
+    const bad: string[] = [];
+    for (const t of await load()) {
+      (t.quickFire || []).forEach((p: { q?: string; a?: string }, i: number) => {
+        if (!p.q || !p.a) bad.push(`${t.id}[${i}]`);
+      });
+    }
+    expect(bad).toEqual([]);
   });
 });
