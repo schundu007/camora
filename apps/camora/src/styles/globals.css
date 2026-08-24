@@ -3145,7 +3145,13 @@ img { max-width: 100%; height: auto; }
    layout-cost is paid up-front on initial mount. */
 figure:has(> .viz-caption) {
   content-visibility: auto;
-  contain-intrinsic-size: 0 800px;
+  /* `auto` makes the browser remember the last rendered size, so a figure
+     that scrolls back out keeps its real width. The old `0 800px` declared a
+     zero-width placeholder: figures carrying an image were held open by the
+     image, but a caption-only figure (viz entries with question/answer and no
+     diagram) had nothing to hold it and rendered narrow. 800px is only the
+     first-paint height guess. */
+  contain-intrinsic-size: auto 800px;
 }
 .viz-caption-eyebrow {
   display: inline-block;
@@ -3495,6 +3501,11 @@ figure:has(> .viz-caption) {
 
 /* ── Viz figure cards — navy-tinted border ──────────────────────── */
 .viz-figure {
+  /* Every viz card fills its column, with or without a diagram. Without this,
+     width depends on whatever content happens to hold the figure open, so
+     image-less cards render narrower than their neighbours. */
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
   overflow: hidden;
