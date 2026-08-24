@@ -3007,12 +3007,22 @@ export default function TopicDetail({
                 {topicDetails.visualizations.map((viz, vi) => (
                   <figure key={vi} className="viz-figure">
                     {viz.image && (
-                      <div style={{ background: 'white', borderBottom: '1px solid var(--border)' }}>
+                      <div style={{ background: 'white', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
+                        {/* width:auto + maxWidth:100% so a diagram is never
+                            upscaled past its native pixels — `width:100%`
+                            stretched a 1633px-wide PNG onto an ~1810px card and
+                            softened every glyph. maxHeight keeps tall portrait
+                            diagrams (some are 3200px) from running the page off
+                            the screen. Matches TopicVisuals' diagram sizing. */}
                         <img
                           src={viz.image}
                           alt={viz.title}
                           loading="lazy"
-                          style={{ display: 'block', width: '100%', height: 'auto' }}
+                          style={{
+                            display: 'block', margin: '0 auto',
+                            maxWidth: '100%', maxHeight: '80vh',
+                            width: 'auto', height: 'auto', objectFit: 'contain',
+                          }}
                         />
                       </div>
                     )}

@@ -11,15 +11,18 @@
 import { devopsCategories } from './devopsTopics.js';
 import { k8sArchitectureTopics, k8sArchitectureTopicCategoryMap } from './k8sArchitectureTopics.js';
 import { k8sBareMetalTopics, k8sBareMetalTopicCategoryMap } from './k8sBareMetalTopics.js';
+import { k8sClusterAdminTopics, k8sClusterAdminTopicCategoryMap } from './k8sClusterAdminTopics.js';
 
 export const k8sTopics = [
   ...k8sArchitectureTopics,
   ...k8sBareMetalTopics,
+  ...k8sClusterAdminTopics,
 ];
 
 export const k8sTopicCategoryMap = {
   ...k8sArchitectureTopicCategoryMap,
   ...k8sBareMetalTopicCategoryMap,
+  ...k8sClusterAdminTopicCategoryMap,
 };
 
 export const k8sCategories = devopsCategories.filter((c) => c.id.startsWith('k8s-'));
