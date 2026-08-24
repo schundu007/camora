@@ -332,12 +332,28 @@ Sizing follows measurement: watch queue depth **per label**, not in aggregate. A
   },
   {
     id: "release-manifests-lkg",
+    topics: [
+      {
+        title: 'What a release manifest is',
+        content: `A release manifest is a single versioned file that pins every component of a stack to an exact, immutable identity: a \`git\` commit SHA or a content-addressed artifact digest, never a floating tag like \`latest\` or a branch name. For an AMD GPU stack that means firmware, the kernel driver (\`amdgpu\`), and the ROCm userspace (\`hip\`, \`rocblas\`, \`miopen\`) are all pinned together in one document. The manifest is the release. If you can read the manifest, you can rebuild or re-fetch the exact stack byte-for-byte.
+
+This is the same idea you already know from other ecosystems: Android's \`repo\` uses a \`manifest.xml\` that pins each git project to a \`revision\`; Zephyr's \`west\` uses a \`west.yml\` with a \`revision\` per module; Buildroot and Yocto pin package versions and \`SRCREV\`; language toolchains use lockfiles (\`conan.lock\`, \`vcpkg.json\` with a baseline, \`Cargo.lock\`, \`poetry.lock\`). A GPU-stack manifest is a lockfile for an operating-system-adjacent stack.`,
+      },
+      {
+        title: 'Why LKG exists',
+        content: 'Building against tip means every engineer absorbs every in-flight regression across three moving components at once. Last-Known-Good inverts this: the newest manifest that passed the full validation suite is promoted to a stable `LKG` pointer, and every engineer builds against `LKG` instead of tip. The trade is small staleness for a trusted, reproducible baseline. The whole job of this pipeline is to keep `LKG` fresh and honest so the rest of the org never debugs infrastructure they did not change.',
+      },
+      {
+        title: 'The promotion pipeline',
+        content: 'Manifests flow through channels: `dev` produces candidate manifests, `nightly` runs full integration against each candidate, `LKG` is the promote-on-green pointer, and `release` is the customer-facing tag cut from a known LKG. Artifacts are promoted, not rebuilt. A binary that passed validation moves between channels or registries unchanged; rebuilding would invalidate the very test result you are trusting.',
+      },
+    ],
     title: "Release Manifests & Last-Known-Good",
     icon: "package",
     color: "#3b82f6",
     questions: 6,
     description: "A release manifest pins every GPU-stack component to an exact hash so a validated Last-Known-Good build is reproducible on demand, not rediscovered from tip.",
-    introduction: "## What a release manifest is\n\nA release manifest is a single versioned file that pins every component of a stack to an exact, immutable identity: a `git` commit SHA or a content-addressed artifact digest, never a floating tag like `latest` or a branch name. For an AMD GPU stack that means firmware, the kernel driver (`amdgpu`), and the ROCm userspace (`hip`, `rocblas`, `miopen`) are all pinned together in one document. The manifest is the release. If you can read the manifest, you can rebuild or re-fetch the exact stack byte-for-byte.\n\nThis is the same idea you already know from other ecosystems: Android's `repo` uses a `manifest.xml` that pins each git project to a `revision`; Zephyr's `west` uses a `west.yml` with a `revision` per module; Buildroot and Yocto pin package versions and `SRCREV`; language toolchains use lockfiles (`conan.lock`, `vcpkg.json` with a baseline, `Cargo.lock`, `poetry.lock`). A GPU-stack manifest is a lockfile for an operating-system-adjacent stack.\n\n## Why LKG exists\n\nBuilding against tip means every engineer absorbs every in-flight regression across three moving components at once. Last-Known-Good inverts this: the newest manifest that passed the full validation suite is promoted to a stable `LKG` pointer, and every engineer builds against `LKG` instead of tip. The trade is small staleness for a trusted, reproducible baseline. The whole job of this pipeline is to keep `LKG` fresh and honest so the rest of the org never debugs infrastructure they did not change.\n\n## The promotion pipeline\n\nManifests flow through channels: `dev` produces candidate manifests, `nightly` runs full integration against each candidate, `LKG` is the promote-on-green pointer, and `release` is the customer-facing tag cut from a known LKG. Artifacts are promoted, not rebuilt. A binary that passed validation moves between channels or registries unchanged; rebuilding would invalidate the very test result you are trusting.",
+    introduction: '',
     whenToUse: [
       "You ship a multi-component stack (firmware, kernel driver, ROCm) where the combination, not any single component, is what must be validated and reproduced.",
       "Engineers report that tip is too unstable to develop against and need a trusted baseline that updates only after full validation passes.",
@@ -372,12 +388,30 @@ Sizing follows measurement: watch queue depth **per label**, not in aggregate. A
   },
   {
     id: "hardware-in-the-loop-ci",
+    topics: [
+      {
+        title: 'What Hardware-in-the-Loop CI Is',
+        content: 'Hardware-in-the-loop (HIL) CI runs your test suite against real silicon instead of an emulator or a cloud VM. For an AMD GPU stack, that means a pull request touching firmware, the `amdgpu` kernel driver, or a ROCm library actually reflashes a physical card, boots it, and runs `rocminfo`, `rocm-smi`, and the compute validation suite on that card before the PR is allowed to merge.',
+      },
+      {
+        title: 'Why Generic Cloud CI Cannot Do This',
+        content: 'A `ubuntu-latest` GitHub-hosted runner is a throwaway VM with no GPU on the PCIe bus, no access to a board\'s `SPI` flash, and no power control. You cannot emulate a VBIOS flash, a `PSP` secure-boot handshake, or a real memory-controller timing bug in software. The only way to catch a driver regression that hangs a specific ASIC is to run it on that ASIC. HIL exists because the thing under test is physical and non-virtualizable.',
+      },
+      {
+        title: 'The Shape of a Device Lab',
+        content: 'A HIL setup is a small fleet of bench nodes. Each bench is a host machine with one or more real GPUs or boards installed, a self-hosted GitHub Actions runner process, out-of-band management (`BMC`/`IPMI` or a smart PDU) for power control, and a serial console capture. Runner labels like `self-hosted`, `gpu`, `mi300x` let a workflow target the exact product it needs. Because a board can only run one job at a time, the hard problems are all about scheduling, exclusive leasing, and recovering a board that a bad flash just bricked.',
+      },
+      {
+        title: 'What This Topic Covers',
+        content: 'Bench and runner design, serialized exclusive access, the flash-test-recover loop, out-of-band recovery of a hung or bricked board, reporting results and serial logs back to the PR, and taming the flakiness and cost that come with running CI on physical hardware.',
+      },
+    ],
     title: "Hardware-in-the-Loop CI",
     icon: "cpu",
     color: "#8b5cf6",
     questions: 6,
     description: "How to wire real GPUs and boards into CI as hardware-in-the-loop test benches: self-hosted runners, exclusive leasing, flash-test-recover loops, and bricked-board recovery.",
-    introduction: "## What Hardware-in-the-Loop CI Is\n\nHardware-in-the-loop (HIL) CI runs your test suite against real silicon instead of an emulator or a cloud VM. For an AMD GPU stack, that means a pull request touching firmware, the `amdgpu` kernel driver, or a ROCm library actually reflashes a physical card, boots it, and runs `rocminfo`, `rocm-smi`, and the compute validation suite on that card before the PR is allowed to merge.\n\n## Why Generic Cloud CI Cannot Do This\n\nA `ubuntu-latest` GitHub-hosted runner is a throwaway VM with no GPU on the PCIe bus, no access to a board's `SPI` flash, and no power control. You cannot emulate a VBIOS flash, a `PSP` secure-boot handshake, or a real memory-controller timing bug in software. The only way to catch a driver regression that hangs a specific ASIC is to run it on that ASIC. HIL exists because the thing under test is physical and non-virtualizable.\n\n## The Shape of a Device Lab\n\nA HIL setup is a small fleet of bench nodes. Each bench is a host machine with one or more real GPUs or boards installed, a self-hosted GitHub Actions runner process, out-of-band management (`BMC`/`IPMI` or a smart PDU) for power control, and a serial console capture. Runner labels like `self-hosted`, `gpu`, `mi300x` let a workflow target the exact product it needs. Because a board can only run one job at a time, the hard problems are all about scheduling, exclusive leasing, and recovering a board that a bad flash just bricked.\n\n## What This Topic Covers\n\nBench and runner design, serialized exclusive access, the flash-test-recover loop, out-of-band recovery of a hung or bricked board, reporting results and serial logs back to the PR, and taming the flakiness and cost that come with running CI on physical hardware.",
+    introduction: '',
     whenToUse: [
       "A change touches firmware, VBIOS, the `amdgpu` kernel driver, or low-level ROCm runtime code where only real silicon can reproduce the fault, and an emulator or `ubuntu-latest` VM cannot exercise the PCIe or `SPI` flash path.",
       "You need pre-merge validation on a specific ASIC or board revision (for example `mi300x` versus `gfx1100`) that must run on labeled hardware rather than any generic runner.",

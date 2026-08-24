@@ -56,6 +56,49 @@ export const devopsExtraTopics = [
         image: '/diagrams/linkdiags/k8s-kube-proxy.png',
       },
     ],
+    topics: [
+      {
+        title: 'The networking model, and what CNI actually does',
+        content: `Kubernetes does not implement networking. It specifies a **contract** and delegates the implementation, which is why the answer to most networking questions begins with "which CNI".
+
+The contract has three clauses, and they are worth stating precisely because almost every design decision follows from them:
+
+1. Every Pod gets its own IP address.
+2. Every Pod can reach every other Pod **without NAT**, and each sees the other's real IP.
+3. Agents on a node — kubelet, daemons — can reach all Pods on that node.
+
+The second clause is the consequential one. Docker's default model NATs container traffic behind the host, so a container sees a rewritten source address and ports must be mapped. Kubernetes forbids that, which is what makes service discovery, mutual TLS, network policy and IP-based audit logging tractable — a Pod's identity on the wire is its own address.
+
+**CNI** is the plugin interface that delivers it. When kubelet has a Pod to start, it creates the network namespace and calls the configured CNI binary with ADD; the plugin allocates an address from the node's pod CIDR, creates a veth pair with one end in the Pod namespace and one on the host, sets routes, and returns the result. On teardown kubelet calls DEL. The full sequence: the API server accepts the Pod, the scheduler binds it to a node, that node's kubelet starts it, kubelet invokes CNI, CNI allocates and wires, and the Pod joins the network.
+
+Two consequences that show up constantly in practice. **Pod IPs are ephemeral** — they change on every restart or reschedule, so nothing should ever be configured with one; Services exist to provide the stable name and address. And **IPAM is per node**: each node holds a slice of the cluster pod CIDR, which means the node's slice size caps Pods per node, and exhausting it produces pending Pods with a failed sandbox creation rather than an obvious address error.
+
+**Same node** needs no encapsulation: both veth host-ends attach to a bridge, the bridge switches the frame, and the packet never leaves the machine.
+
+**Across nodes** is where implementations diverge. **Overlay** mode wraps the Pod packet in an outer UDP header — VXLAN typically — so the underlay only ever sees node-to-node traffic and needs to know nothing about pod addressing. It works on any network, which is why it is the default nearly everywhere, and it costs an encapsulation header (reducing usable MTU) plus the CPU to add and strip it. **Native routing** mode instead advertises pod routes into the underlay, usually with BGP, so packets travel unencapsulated at full MTU. It is faster and far easier to troubleshoot with ordinary tools, but requires an underlay that will accept those routes — which rules it out on most cloud VPCs without additional integration.
+
+**MTU is the classic failure.** VXLAN adds 50 bytes; if the CNI MTU is not lowered to match, large packets are dropped or fragmented and the symptom is maddening: small requests succeed, TLS handshakes hang, and large responses stall. Any "works for curl, breaks for real traffic" report should start with an MTU check.`,
+      },
+      {
+        title: 'Service routing — kube-proxy, IPVS, and the eBPF replacement',
+        content: `A Service ClusterIP is a **virtual address**: nothing listens on it and no interface owns it. It exists only as a set of forwarding rules on every node, and understanding that removes most confusion about why Services behave the way they do.
+
+**kube-proxy in iptables mode** is the traditional implementation. It watches Services and EndpointSlices, and writes rules that DNAT the ClusterIP to one of the ready backend Pod IPs, choosing randomly with statistical probability. The rules live in a chain per Service; the kernel evaluates them as a **linear list**, so cost grows with the number of Services, and every change rewrites and reloads a large ruleset. On a cluster with thousands of Services this becomes visibly slow both in the data path and in how long a change takes to converge — the practical reason large clusters move off it.
+
+**IPVS mode** replaces the linear chains with a kernel hash table, so lookup is effectively constant time regardless of Service count, and it offers real balancing algorithms — round robin, least connection, source hashing — rather than random selection. It still uses iptables for some auxiliary cases, so it reduces rather than eliminates that surface.
+
+**Cilium in eBPF mode** removes kube-proxy entirely. Programs attached at the socket and driver layers perform the translation, so a connection from a Pod to a ClusterIP is rewritten **at connect time in the socket layer** — the packet is addressed to the backend from the outset, and there is no per-packet DNAT and no conntrack entry for it. That eliminates the linear scaling, and it also removes an entire class of conntrack-exhaustion incidents. The same datapath provides identity-based policy and, through **Hubble**, flow-level observability that is genuinely difficult to obtain otherwise.
+
+The trade is operational: eBPF requires a sufficiently recent kernel, and debugging moves from readable iptables rules to bpftool and Cilium's own tooling. That is a real learning cost, and it is why the migration is usually driven by a scaling problem rather than by preference.
+
+**Choosing a CNI**, in practice:
+
+- **Flannel** — VXLAN overlay, minimal, and importantly **no NetworkPolicy support at all**, so a cluster on Flannel cannot enforce policy no matter what manifests it applies. That surprise is worth knowing before it is discovered during an audit.
+- **Calico** — BGP or overlay, mature policy engine with useful extensions beyond the standard API, and eBPF available as an option.
+- **Cilium** — eBPF datapath, kube-proxy replacement, L7-aware policy, Hubble, and cluster mesh. The most capable and the most to learn.
+- **Cloud-native plugins** (AWS VPC CNI, Azure CNI, GKE) — give the Pod a real VPC address, so cloud security groups and native load balancers apply directly and there is no overlay at all. The constraint is address space: pods consume VPC addresses, and per-node pod density is capped by the instance's ENI limits, which is a capacity-planning matter rather than a networking one.`,
+      },
+    ],
     introduction: `## Overview
 Every Pod in Kubernetes receives its own unique, routable IP address — this is the fundamental networking contract of the platform. Pod IPs are ephemeral: they change whenever a Pod restarts or is rescheduled. Services provide the stable IP and DNS name that the rest of the cluster uses.
 
@@ -184,6 +227,68 @@ With Calico BGP mode: Steps 4–7 are replaced by real BGP routes. No encapsulat
         title: 'NetworkPolicy — default allow vs default deny with explicit rules',
         description: 'Without any NetworkPolicy: all pod-to-pod traffic is allowed. Once a NetworkPolicy selects a Pod, only traffic matching an ingress or egress rule is permitted. Example: frontend pods can reach backend on TCP 8080; all other traffic to backend is blocked by a default-deny policy.',
         image: '/diagrams/linkdiags/k8s-network-policy.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'Default-allow, and the selector model that replaces it',
+        content: `The single most important fact: **a Kubernetes cluster is default-allow.** With no NetworkPolicy present, every Pod can reach every other Pod in every namespace. There is no implicit segmentation between environments, tenants or tiers, and a compromised front-end Pod can open a connection straight to a database Pod in another namespace.
+
+Policy is **additive and allow-only**. There is no deny rule. The model is:
+
+- A Pod is **unaffected** by policy until at least one NetworkPolicy selects it. It remains fully reachable.
+- The moment any policy selects a Pod for a direction, that Pod becomes **default-deny for that direction**, and only traffic matching some policy is permitted.
+- Multiple policies **union**: if any policy allows a flow, it is allowed. You cannot write a policy that subtracts from another.
+
+That last point is the one that trips people up. Adding a broad policy to "fix" a connectivity problem does not override a narrow one — it widens the permitted set, permanently, and the narrow policy's intent is quietly lost.
+
+Direction is explicit and independent. \`policyTypes\` lists Ingress, Egress, or both, and **omitting it is a common mistake**: a policy with only an ingress rule leaves egress entirely unrestricted, so a compromised Pod can still exfiltrate freely. Note also the asymmetry — restricting egress from A to B does nothing to ingress at B, and both sides must permit a flow for it to work. Debugging "why is this blocked" always means checking both ends.
+
+The standard baseline is an explicit default-deny per namespace, then narrow allows on top:
+
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata: { name: default-deny-all, namespace: prod }
+    spec:
+      podSelector: {}          # every Pod in the namespace
+      policyTypes: [Ingress, Egress]
+      # no rules — so nothing is allowed
+
+An empty podSelector selects everything in the namespace; an empty rules list allows nothing.
+
+**Three selector types**, and the distinction matters:
+
+- **podSelector** — Pods in the *same namespace* as the policy.
+- **namespaceSelector** — all Pods in namespaces matching labels. Kubernetes automatically sets \`kubernetes.io/metadata.name\` on every namespace, which is the reliable way to name one.
+- **ipBlock** — CIDR ranges, with optional \`except\`. This is the only way to express external destinations, and it is the mechanism for allowing egress to a managed database or a third-party API.
+
+The trap that produces the most confusion: a \`from\` entry containing both podSelector and namespaceSelector as **one list item** means "pods matching X **in** namespaces matching Y" — an intersection. Written as **two list items**, it means "pods matching X in this namespace **or** anything in namespaces matching Y" — a union, and almost always far broader than intended. The difference is a single dash in YAML.`,
+      },
+      {
+        title: 'DNS, egress, and the limits of the standard API',
+        content: `**Blocking DNS is the classic self-inflicted outage.** The moment a default-deny egress policy applies, Pods can no longer reach CoreDNS, so every hostname lookup fails. The symptom is universally misread as an application or Service problem because nothing appears blocked — resolution simply times out. Every namespace with egress policy needs an explicit DNS allowance:
+
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+
+TCP/53 matters as well as UDP: large responses and DNSSEC fall back to TCP, so a UDP-only rule produces intermittent failures on exactly the queries that are hardest to reproduce.
+
+**Egress is where the security value is**, and it is the half most often skipped. Ingress policy limits who can reach a Pod; egress policy limits what a compromised Pod can do — reaching the cloud metadata endpoint to steal credentials, calling an internal admin API, or exfiltrating data. Two rules are worth applying almost universally: block \`169.254.169.254/32\` unless the workload genuinely needs instance metadata, and restrict egress to the internet to the services that actually require it.
+
+**The API's real limits**, which decide when a mesh or a CNI extension is needed:
+
+- **It is L3/L4 only.** Selection is by IP, port and protocol. You cannot express "GET but not DELETE", or restrict by HTTP path or gRPC method. Cilium and Istio both extend to L7; the standard API does not.
+- **It cannot select by DNS name.** Rules resolve to IP ranges, so "allow egress to api.stripe.com" is not expressible in the standard API — a serious practical gap, since third-party endpoints sit behind rotating CDN addresses. Calico and Cilium both add DNS-aware egress rules for exactly this reason.
+- **Enforcement depends entirely on the CNI.** The API is inert unless the plugin implements it — Flannel does not, and applying policy there produces no error and no enforcement. Verify with a test, not with a successful \`kubectl apply\`.
+- **Policies are namespaced**, so a cluster-wide baseline means one policy per namespace and a mechanism to keep it there — a policy engine (Kyverno, Gatekeeper) generating a default-deny per new namespace is the usual answer. Calico and Cilium also offer genuinely cluster-scoped policy types.
+
+**How to roll this out without an outage.** Never begin by applying default-deny in production. Start by observing actual flows — Hubble, Calico flow logs, or a service mesh's telemetry — and derive the allow set from what really happens rather than from the architecture diagram, which is invariably incomplete. Apply the resulting policy in a staging namespace first, then to one production namespace, watching connection errors. **Then** add default-deny. And test policies as code: a small job that attempts each permitted and each forbidden connection, run in CI, is the only way to know a policy still does what it claimed after six months of edits.`,
       },
     ],
     introduction: `## Overview
@@ -364,6 +469,54 @@ Step 6 — Use Calico/Cilium for enforcement and enable audit logging to catch u
         image: '/diagrams/linkdiags/k8s-traffic-flow.png',
       },
     ],
+    topics: [
+      {
+        title: 'Following a request from client to container',
+        content: `Tracing the full path is the fastest way to build an accurate mental model, and it is a common interview exercise because each hop is a place things break.
+
+**External client to the cluster edge.** DNS resolves the hostname to a load balancer address — with an Ingress or Gateway, that is typically a cloud load balancer created by a Service of type LoadBalancer belonging to the ingress controller. The cloud LB forwards to a node, at a NodePort or directly to a Pod address depending on the mode.
+
+**Arrival at the node.** For a NodePort, kube-proxy's rules DNAT the connection to a backend Pod, which may be on a **different** node — one extra hop, and the source address is rewritten to the node's, so the application sees the node rather than the client. Setting \`externalTrafficPolicy: Local\` prevents that second hop and preserves the client address, at the cost that a node with no local backend fails its health check and is removed from the LB's rotation. That is the correct trade for most ingress controllers and the reason they are usually deployed as a DaemonSet.
+
+**The ingress controller.** This is a real Pod running a proxy — Envoy, NGINX, HAProxy. It terminates TLS, evaluates routing rules from Ingress or HTTPRoute objects, and picks a backend. Note that a mature controller resolves **EndpointSlices directly and load-balances itself**, bypassing the Service ClusterIP entirely. This matters: session affinity, retry and circuit-breaking configured on the Service have no effect, and the controller's own configuration governs.
+
+**Controller to application Pod.** If the ClusterIP path is used, kube-proxy or eBPF translates it; otherwise the controller connects straight to a Pod address. In a service mesh, the connection is intercepted by the sidecar or node proxy, which applies mTLS, policy, retries and telemetry before forwarding.
+
+**Into the container.** The packet arrives on the veth, enters the Pod's network namespace, and reaches the listening process. **A container listening on 127.0.0.1 is reachable only from inside its own Pod** — a frequent cause of a Pod that passes its liveness probe (kubelet uses the Pod IP) while all Service traffic fails, or the reverse.
+
+**East-west between Pods** is the simpler case: DNS resolves \`service.namespace.svc.cluster.local\` to the ClusterIP, and the local node translates it to a backend. Worth knowing that \`ndots: 5\` in the default resolv.conf means a name with fewer than five dots is tried against every search domain first, so an external hostname costs several failed lookups before the correct one — a measurable latency and DNS-load problem that is fixed by a trailing dot on fully-qualified names or a tuned dnsConfig.`,
+      },
+      {
+        title: 'Where traffic actually breaks, and how to isolate it',
+        content: `Almost every "the Service is not working" report resolves to one of a small set of causes. Working through them in order is faster than reading manifests.
+
+**The selector matches nothing.** A Service selects Pods by label; a typo or a changed template label produces a Service with no endpoints and connections that hang or refuse. \`kubectl get endpointslices\` is the direct check, and an empty result ends the investigation immediately. This is the single most common cause.
+
+**The Pod is not Ready.** Endpoints only include ready Pods, so a failing readiness probe silently removes a backend. If every replica is unready the Service has no endpoints at all — same symptom, different cause, and the probe status distinguishes them.
+
+**Port confusion.** A Service has three: \`port\` (the Service's own), \`targetPort\` (the container's), and \`nodePort\`. A mismatch between targetPort and the container's actual listening port produces connection refused from the backend while everything looks correctly configured. Named ports help, because the name is resolved against the Pod spec.
+
+**Listening on localhost.** As above — binding 127.0.0.1 rather than 0.0.0.0 makes the process unreachable from outside its namespace.
+
+**Policy.** A NetworkPolicy blocking the flow, very often the DNS case described in the network-policy topic. The signature is name resolution timing out rather than connections being refused.
+
+**MTU.** Small requests succeed, large ones or TLS handshakes hang. Almost always an overlay MTU that was not lowered for the encapsulation header.
+
+**Conntrack exhaustion.** On iptables-mode kube-proxy under high connection churn, the table fills and new connections are dropped with no useful error. \`nf_conntrack_count\` against \`nf_conntrack_max\` on the node is the check, and it explains failures that appear random and node-correlated.
+
+**A graceful-shutdown race.** Endpoint removal and the Pod's SIGTERM happen concurrently, so in-flight requests can be routed to a Pod that has already begun shutting down. This shows up as a burst of 502s on every deploy. The remedy is a \`preStop\` sleep of a few seconds so the Pod keeps serving while endpoint removal propagates, plus a \`terminationGracePeriodSeconds\` long enough to cover it.
+
+**Isolating a fault, in order.** Work from the inside out, which halves the search space at each step:
+
+1. \`kubectl exec\` into the Pod and curl \`localhost:<containerPort>\`. If this fails, it is the application, not the network.
+2. From another Pod, curl the **Pod IP** directly. Failure here means CNI, policy or MTU.
+3. Curl the **ClusterIP**. Failure means kube-proxy, endpoints or the selector.
+4. Curl the **Service DNS name**. Failure means CoreDNS or the search-domain configuration.
+5. Only then look at the ingress controller, the load balancer and DNS outside the cluster.
+
+An ephemeral debug container (\`kubectl debug\`) attaches tooling to a distroless Pod's namespaces without rebuilding the image, which is what makes step 1 possible on a production image with no shell.`,
+      },
+    ],
     introduction: `## Overview
 Understanding how a user request travels from a browser to a Kubernetes Pod and back is essential for both architecture decisions and incident debugging. Seven components participate in the journey, each with a distinct role.
 
@@ -512,6 +665,48 @@ Gateway API: The next generation — HTTPRoute, TCPRoute, GRPCRoute resources re
         image: '/diagrams/linkdiags/k8s-deployment-strategies.png',
       },
     ],
+    topics: [
+      {
+        title: 'What a rolling update really does, and the knobs that control it',
+        content: `A Deployment does not update Pods. It creates a **new ReplicaSet** and shifts replicas between old and new, which is why rollback is instant — the old ReplicaSet is still there, scaled to zero, and rolling back scales it back up rather than rebuilding anything.
+
+Two parameters govern the shift, and they are the whole of the strategy:
+
+- **maxUnavailable** — how many replicas may be unavailable during the update. As an absolute number or a percentage of desired.
+- **maxSurge** — how many replicas may exist above desired.
+
+The defaults are 25% each, which is a reasonable general answer and wrong at both extremes. With \`maxUnavailable: 0\` the update always adds capacity before removing any, so serving capacity never dips — the right choice for a latency-sensitive service, at the cost of needing headroom for the surge. With \`maxSurge: 0\` the update never exceeds the replica count, which is what a fixed licence pool or a constrained node group requires, at the cost of running below capacity mid-update. **Both cannot be zero**, since that permits no progress at all, and the API rejects it.
+
+Three further fields decide how the rollout behaves when something is wrong:
+
+- **minReadySeconds** — how long a Pod must be ready before counting as available. Without it, a Pod that becomes ready and crashes two seconds later still counts, and the rollout marches on destroying every healthy replica. This is the single most valuable field for catching a bad image, and it is usually unset.
+- **progressDeadlineSeconds** — after this long without progress the Deployment is marked failed. Note that it **does not roll back**; it stops and reports, so a human or an automated check must act. Assuming it self-heals is a common and costly misreading.
+- **revisionHistoryLimit** — how many old ReplicaSets to retain. Keep enough to roll back more than one revision.
+
+**Readiness probes are what make the whole mechanism safe.** Rolling update correctness depends entirely on "ready" meaning "can serve". A probe that returns 200 unconditionally converts a rolling update into a rolling outage, because Kubernetes faithfully removes healthy old Pods in exchange for new ones that cannot serve. The probe should check the dependencies the request path needs — and specifically **should not** check downstream services whose blip would take the whole fleet out of rotation simultaneously.
+
+Distinguish the three probes, since conflating them causes real incidents: **liveness** restarts a wedged container (make it cheap and local, or a slow dependency triggers mass restarts), **readiness** gates traffic, and **startup** suspends the other two while a slow application boots — which is the correct fix for a JVM that needs ninety seconds, rather than inflating the liveness threshold and thereby delaying real failure detection for the container's whole life.`,
+      },
+      {
+        title: 'Blue-green, canary, and choosing between them',
+        content: `Rolling update is the default because it needs no extra infrastructure. The other strategies buy properties it cannot provide.
+
+**Blue-green** runs two complete environments and switches traffic atomically, usually by repointing a Service selector or a Gateway route. Its properties are the appeal: the cutover is instantaneous, so no request is served by a mixed fleet, and rollback is equally instantaneous because blue is still running and untouched. The costs are double the resources for the overlap window, and — the part usually underestimated — **both versions must be able to share the database simultaneously**, since a rollback after a schema change is only possible if the schema supports both. Expand-and-contract migrations are a prerequisite, not an optimisation.
+
+**Canary** sends a small share of traffic to the new version, watches, and increases progressively. It is the only strategy that gives **real production signal before full exposure**, which is what makes it the right default for anything risky. It requires traffic splitting — a service mesh, or Gateway API weighted backendRefs — and, critically, per-version metrics: a canary you cannot measure separately from the baseline is just a slow rollout.
+
+Automating it is what makes canary practical. **Argo Rollouts** and **Flagger** both replace the Deployment with a controller that steps the weight up on a schedule, queries a metrics provider at each step, and rolls back automatically when an analysis fails. The analysis should compare canary against baseline rather than against a fixed threshold, because absolute thresholds fail during unrelated traffic changes and comparison does not.
+
+Two adjacent techniques worth knowing:
+
+- **Shadow / mirror traffic** copies live requests to the new version and discards the responses, so real production traffic exercises it with zero user risk. Ideal for validating a rewrite or a performance change; unsafe where the request has side effects, unless writes are stubbed.
+- **Feature flags** decouple release from deploy entirely, and can target by user or cohort rather than by traffic percentage. They complement rather than replace the above — the deploy is a rolling update, and the release is a flag flip.
+
+**Choosing.** Rolling update for stateless services where a brief mixed fleet is acceptable — most services. Blue-green when mixed versions are genuinely unacceptable, or when a fast, certain rollback is worth double the infrastructure. Canary when the change is risky and per-version metrics exist to judge it. Note also what none of these solve: **a stateful workload does not fit any of them cleanly**, because a StatefulSet updates in ordinal order with its own guarantees, and data migration governs the sequence rather than traffic shifting does.
+
+Finally, the property that matters more than the choice: **every strategy needs a defined rollback trigger and an owner.** A canary without automated analysis, or a blue-green without a decision rule, is a manual judgement made under pressure at the worst possible moment.`,
+      },
+    ],
     introduction: `## Overview
 Choosing the right deployment strategy determines how much risk you accept per release and how quickly you can recover from a bad deployment.
 
@@ -640,6 +835,48 @@ With Argo Rollouts: declare a Rollout resource with canarySteps (setWeight, paus
         title: 'Kubernetes troubleshooting command reference',
         description: '30 problems mapped to precise kubectl commands. Core principle: always run kubectl describe first — the Events section tells you what Kubernetes is actually doing. kubectl describe is a superpower.',
         image: '/diagrams/devops/k8s-networking-cni.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'Reading the state — what each phase and reason actually means',
+        content: `Diagnosis starts with reading the state precisely, because each one narrows the cause to a specific subsystem. \`kubectl describe pod\` is the first command, and the Events at the bottom usually contain the answer.
+
+**Pending** — the Pod exists in the API but no kubelet has started it. This is nearly always **scheduling**, and describe names the reason: insufficient CPU or memory on every node, a taint with no matching toleration, a node selector or affinity rule nothing satisfies, or a PersistentVolumeClaim that is unbound. A Pod pending with no scheduling message at all usually means the scheduler itself is unhealthy or the pod CIDR is exhausted.
+
+**ContainerCreating** — scheduled, but the sandbox is not up. Causes are image pull in progress, a volume that will not mount (very often a cloud disk attached to the wrong zone, or an RWO volume still attached to another node), a missing Secret or ConfigMap referenced by the spec, or a CNI failure allocating an address.
+
+**ImagePullBackOff / ErrImagePull** — the registry rejected or could not serve the image. A wrong tag or repository, missing \`imagePullSecrets\`, a private registry the node cannot reach, or rate limiting. The Events line states which.
+
+**CrashLoopBackOff** is the most misread of all. **It is not an error — it is a back-off timer.** The container starts, exits, and kubelet restarts it with exponential delay up to five minutes. The status tells you the container keeps exiting; it says nothing about why. The cause is in the logs of the **previous** run, which is what \`kubectl logs --previous\` retrieves — the current container may not have started yet, so plain \`kubectl logs\` frequently returns nothing and sends people down the wrong path.
+
+The exit code narrows it further: **0** means the process completed, which for a long-running service usually means the command was wrong or a config error caused a clean exit; **1** is a generic application error; **137** is SIGKILL, which for a container almost always means **OOMKilled** — confirm in the container's \`lastState\`; **139** is a segfault; **143** is SIGTERM, a normal shutdown. A liveness probe that fails repeatedly also produces a restart loop, and describe shows the probe failures explicitly, which distinguishes it from an application crash.
+
+**OOMKilled** deserves its own note because the fix is often wrong. The container exceeded its memory **limit** and the kernel killed it. Raising the limit is right if the workload genuinely needs more; it is wrong if there is a leak, which merely delays the kill. For the JVM and other runtimes with their own heap management, the actual cause is frequently a heap sized without reference to the container limit — the runtime sizes itself against the visible machine and is then killed for using what it was told it had.
+
+**Evicted** means kubelet reclaimed resources under node pressure — memory, disk or inodes. The Pod is not restarted in place; it is deleted and rescheduled, and the fix is usually a resource request that reflects reality, since Guaranteed and Burstable Pods are evicted after BestEffort ones.
+
+**Terminating and stuck** — a Pod that will not delete is nearly always a **finalizer** waiting on something, or a node that is unreachable so kubelet cannot confirm termination. Force deletion removes the API object without confirming the container stopped, which for a StatefulSet risks two instances writing at once; it should be the last resort, not the first.`,
+      },
+      {
+        title: 'A working procedure, and the tools for images with no shell',
+        content: `A repeatable order matters more than knowing every command, because it converges instead of wandering.
+
+1. **\`kubectl get pod -o wide\`** — phase, restart count, age, node. Restart count and age together tell you whether this is a new failure or a long-running loop.
+2. **\`kubectl describe pod\`** — read Events from the bottom up. Scheduling failures, probe failures, image pulls, volume mounts and evictions all report here, and roughly half of all cases end at this step.
+3. **\`kubectl logs --previous\`** for a restarting container, then current logs. For multi-container Pods, \`-c\` per container, and remember init containers have their own logs — a Pod stuck in Init is an init container failing, and its logs are the only place that shows.
+4. **\`kubectl get events --sort-by=.lastTimestamp\`** for namespace-wide context. A single Pod's failure is often a symptom of node pressure or a controller problem visible only here.
+5. **Exec in** and check from inside: is the process listening on the expected address and port, are the mounted files present, are the environment variables correct.
+6. **Check the node** if several Pods on one node are unhealthy — \`kubectl describe node\` for pressure conditions and allocatable capacity.
+
+**When the image has no shell.** Distroless and scratch images are correct for production and defeat \`kubectl exec\`. **\`kubectl debug\`** solves this in two forms, and knowing both is the point:
+
+- \`kubectl debug -it <pod> --image=busybox --target=<container>\` attaches an **ephemeral container** sharing the target's process and network namespaces, so its tooling can inspect the running process and its network without restarting anything. This is the one to reach for.
+- \`kubectl debug <pod> --copy-to=<name> --set-image=*=<image>\` creates a **copy** of the Pod with a different image or command — for when the container will not start at all, so there is nothing to attach to. Overriding the command with a sleep lets you inspect the filesystem and configuration of a Pod that otherwise crashes immediately.
+
+\`kubectl debug node/<node>\` gives a privileged Pod in the node's namespaces, which is how you inspect a node without SSH access.
+
+**A note on the most common false trail.** A Pod that is Running and Ready but receives no traffic is not a Pod problem at all — it is a Service, endpoint or policy problem, and the checks belong in the traffic-flow procedure. Confirm the Pod is genuinely serving with a localhost curl from inside it before investigating the Pod any further; if that works, the fault is somewhere between the client and the Pod, and time spent reading the Pod spec is time wasted.`,
       },
     ],
     introduction: `## Overview
