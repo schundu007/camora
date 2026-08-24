@@ -3018,21 +3018,26 @@ export default function TopicDetail({
                   <figure key={vi} className="viz-figure">
                     {viz.image && !isRepeatImage && (
                       <div style={{ background: 'white', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
-                        {/* width:auto + maxWidth:100% so a diagram is never
-                            upscaled past its native pixels — `width:100%`
+                        {/* Raster: width:auto + maxWidth:100% so a diagram is
+                            never upscaled past its native pixels — `width:100%`
                             stretched a 1633px-wide PNG onto an ~1810px card and
                             softened every glyph. maxHeight keeps tall portrait
                             diagrams (some are 3200px) from running the page off
-                            the screen. Matches TopicVisuals' diagram sizing. */}
+                            the screen. Matches TopicVisuals' diagram sizing.
+                            Vector: an SVG has no native pixel size, so it fills
+                            the card at any width and stays sharp — the reason
+                            the mermaid pipeline emits SVG. */}
                         <img
                           src={viz.image}
                           alt={viz.title}
                           loading="lazy"
-                          style={{
-                            display: 'block', margin: '0 auto',
-                            maxWidth: '100%', maxHeight: '80vh',
-                            width: 'auto', height: 'auto', objectFit: 'contain',
-                          }}
+                          style={/\.svg(\?|$)/i.test(viz.image)
+                            ? { display: 'block', margin: '0 auto', width: '100%', height: 'auto' }
+                            : {
+                                display: 'block', margin: '0 auto',
+                                maxWidth: '100%', maxHeight: '80vh',
+                                width: 'auto', height: 'auto', objectFit: 'contain',
+                              }}
                         />
                       </div>
                     )}

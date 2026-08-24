@@ -2169,7 +2169,7 @@ The architecture I would argue for: your REST or gRPC API remains the system of 
     visualizations: [
       {
         title: 'The network boot chain, out-of-band control, and the provisioning state machine',
-        image: '/diagrams/devops/cp-7-bare-metal.png',
+        image: '/diagrams/devops/cp-7-bare-metal.svg',
         description: `A bare-metal server at rest is a box with firmware and empty disks. Everything a provisioning system does is built on two independent channels: an in-band channel over the production NIC that the machine can only use after it boots something, and an out-of-band channel to the baseboard management controller that works even when the machine is powered off. Almost every bare-metal failure story is a story about one of those two channels.
 
 The network boot chain, in order:
