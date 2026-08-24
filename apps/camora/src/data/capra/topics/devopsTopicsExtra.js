@@ -4811,6 +4811,82 @@ Long-term: build toil metrics into the team's quarterly OKRs — toil percentage
     questions: 5,
     description: 'IDPs abstract infrastructure complexity from developers via golden paths. Backstage (CNCF) is the leading open-source IDP framework: software catalog, templates, plugins, TechDocs. Reduces cognitive load; accelerates onboarding.',
     visualizations: [],
+    topics: [
+      {
+        title: 'Portal, platform, and the distinction that decides whether this works',
+        content: `The two words are used interchangeably and mean different things, and getting them the wrong way round is the most expensive mistake in this space.
+
+A **developer portal** is an interface — a catalogue, a set of forms, dashboards, links, documentation. It is what a developer sees.
+
+An **Internal Developer Platform** is the API and automation underneath — the thing that actually provisions a database, creates a repository with CI wired up, grants access, or promotes a build. It is what a developer *uses*, whether or not there is a UI in front of it.
+
+Backstage is a portal. Crossplane, Terraform, Argo CD, your cloud APIs and your policy engine are the platform. The failure mode this distinction exists to prevent is building the portal first: a beautiful catalogue in front of processes that are still tickets and tribal knowledge. Developers click the button, the button files a Jira issue, and the portal becomes a slower path to the same queue. **If the underlying capability is not self-service and automated, the portal has nothing to expose.** Build one golden path end to end — a form that genuinely produces a running service — before building the second.
+
+That leads to the concept doing the real work here. A **golden path** is an opinionated, supported, end-to-end route for a common task, chosen so that it is *both* the easiest option and a good one. Its properties matter individually:
+
+- **Opinionated.** It picks the language, framework, CI pipeline, deployment target and observability wiring. A path with twelve choices is documentation, not a path.
+- **Supported.** The platform team owns it — it is upgraded, patched and fixed centrally. This is what a team gives up autonomy *for*, and if the trade is not honoured the path is abandoned.
+- **Optional but obviously best.** Mandating a golden path that is worse than the manual route produces malicious compliance and shadow infrastructure. Adoption is the signal that it is good; if you have to mandate it, fix the path rather than the policy.
+- **Not the only path.** Teams with genuinely unusual requirements need an escape hatch, or they will build a second, invisible platform.
+
+The organising principle behind all of it is **cognitive load** — the Team Topologies argument. A product team that must hold Kubernetes, Terraform, IAM, networking, CI, secret management and observability in mind alongside its own domain has little capacity left for the domain. A platform reduces *extraneous* load, in the specific sense of load imposed by the environment rather than by the problem. That is the measurable claim, and it is also the test: any platform feature that does not reduce what a developer must know or do is decoration.`,
+      },
+      {
+        title: 'Backstage in practice: what it is, and what it costs',
+        content: `Backstage — open-sourced by Spotify, now a CNCF incubating project — has four pieces that fit together.
+
+**The Software Catalog** is the foundation, and everything else depends on it. Each entity is declared in a \`catalog-info.yaml\` in its own repository:
+
+    apiVersion: backstage.io/v1alpha1
+    kind: Component
+    metadata:
+      name: payments-api
+      annotations:
+        github.com/project-slug: acme/payments-api
+        argocd/app-name: payments-api-prod
+        pagerduty.com/service-id: PXYZ123
+    spec:
+      type: service
+      lifecycle: production
+      owner: group:payments
+      system: checkout
+      dependsOn: [component:ledger, resource:payments-db]
+      providesApis: [payments-v2]
+
+The entity kinds — Component, API, Resource, System, Domain, Group, User — and the relations between them (\`ownerOf\`, \`dependsOn\`, \`providesApi\`) are what turn a list into a graph, and the graph is what answers the questions that make a catalogue worth having: who owns this, what breaks if it goes down, which services consume this API, what does this team actually run.
+
+**The Scaffolder (Software Templates)** implements golden paths as executable templates: a form collects parameters, then steps run — create the repository from a skeleton, open a pull request, register the component in the catalogue, wire the CI pipeline, create the Argo CD application. This is the piece that turns "we have a standard" into "the standard is what happens by default".
+
+**TechDocs** builds Markdown from each repository into a searchable central site, so documentation lives beside the code and is reviewed with it.
+
+**Plugins** integrate the tools people already use — CI status, Argo CD sync state, PagerDuty on-call, Grafana dashboards, cost data — into the entity page, so the catalogue is where you go rather than a place you register things and leave.
+
+Now the cost, because it is consistently underestimated. **Backstage is a framework, not a product.** You are not deploying an application; you are building and maintaining a TypeScript and React application, with your own fork of the plugin set, your own upgrade cadence, and your own build and deployment for it. Concretely:
+
+- It needs a **dedicated owning team**, not a side project. Organisations that staff it at 20% of one person's time end up with an unmaintained portal that nobody trusts.
+- **Upgrades are frequent and occasionally disruptive.** The project moves quickly, \`backstage-cli versions:bump\` is a routine chore, and there have been architectural migrations — most notably the new backend system, which required rework of custom backend plugins.
+- **Plugin quality varies widely**, from well-maintained to abandoned, and a plugin you depend on may need adopting.
+- The **catalogue rots**. This is the number-one practical failure: entities registered once, ownership going stale after a reorganisation, half the estate never registered at all. A catalogue that is 60% accurate is worse than none, because people stop trusting it and go back to asking in Slack.
+
+The mitigation for that last point is structural: **never rely on manual registration.** Use discovery providers to ingest \`catalog-info.yaml\` automatically from every repository in the organisation, source ownership from your identity provider or HR system rather than from a hand-edited field, and report on entities with missing or invalid owners as a standing metric. Where the catalogue can be derived, derive it.
+
+If the framework cost is not one you want to carry, the alternatives are real: **Port**, **Cortex** and **OpsLevel** are commercial portals that trade customisability for not being a codebase you own; **Roadie** and Spotify's own managed offering run Backstage for you; **Humanitec** occupies a different slot as a platform orchestrator rather than a portal, which is worth understanding as a category distinction.`,
+      },
+      {
+        title: 'Running a platform as a product',
+        content: `The single most useful reframing is that a platform team has **customers who can refuse to buy**. Everything follows from taking that literally.
+
+**Adoption is the metric, and it must be voluntary to mean anything.** If teams use the platform because it is the fastest way to get their job done, it works. If they use it because it is mandated, you have learned nothing about whether it is any good, and you have created an incentive to route around it invisibly. So publish adoption per golden path and treat a decline as a defect report.
+
+**Do discovery like a product team.** Interview developers, watch someone onboard, count the steps in the current process. The most common way a platform goes wrong is being built from the platform team's model of what is hard, which over-indexes on infrastructure elegance and under-indexes on the boring blockers — access requests, test data, a staging environment that works, and knowing whom to ask.
+
+**Measure the outcome, not the artifact.** Useful numbers: time from repository creation to a first production deployment; time from a new joiner's start date to their first merged change in production; the number of manual steps and handoffs in the most common workflow; and the share of services on a supported golden path. Unhelpful numbers: portal page views, plugin count, number of templates.
+
+**Version and deprecate like a public API.** Golden paths change, and teams built on them need a migration path with notice, tooling and a deadline — not a surprise. Breaking a hundred teams' pipelines silently is how a platform loses the trust it needs to be adopted voluntarily.
+
+Two failure modes are worth naming so they can be recognised early. The first is **the platform that is another queue**: self-service forms that terminate in a ticket, so the interface changed and the wait did not. The second is **the platform that leaks**: an abstraction that works until something goes wrong, at which point the developer must understand the entire underlying stack anyway — and now they must also understand the abstraction that hid it. That second one is unavoidable in the limit, so design for it deliberately: make the generated artifacts readable and owned by the team (a Helm chart in their repository, not a hidden template), surface the underlying errors rather than swallowing them, and make sure there is always a documented way down to the layer beneath. **The best platforms are transparent, not opaque** — they save you from doing the work, not from being able to see it.`,
+      },
+    ],
     introduction: `## Overview
 An Internal Developer Platform (IDP) is a self-service layer built by platform engineering teams to reduce cognitive load on application developers. Rather than requiring developers to understand Kubernetes, Terraform, IAM, and CI/CD pipelines in depth, an IDP presents golden paths — opinionated, pre-approved workflows for common operations.
 
@@ -4852,9 +4928,14 @@ Plugins: Backstage's extension model. Integrates existing tools (PagerDuty, GitH
       { question: 'How does Backstage Software Catalog work?', answer: 'Each service has a catalog-info.yaml committed alongside its code declaring entity kind, owner, lifecycle, and dependencies. A Backstage discovery processor scans configured locations (GitHub orgs) for catalog-info.yaml files and registers entities in the catalog database. Developers query the catalog to discover services, find owners, and check health via integrated plugins.' },
     ],
     quickFire: [
-      { q: 'What is a golden path?', a: 'The opinionated, platform-supported way to complete a common developer task -- reduces decision fatigue and enforces consistency.' },
-      { q: 'What CNCF project is the leading IDP framework?', a: 'Backstage, open-sourced by Spotify.' },
-      { q: 'What does Backstage Scaffolder do?', a: 'Creates new services from opinionated templates -- generates the repo, CI config, and Kubernetes manifests in one workflow.' },
+      { q: 'What is the difference between an IDP and a developer portal?', a: 'A **portal** is the interface — catalogue, forms, dashboards, docs — and an **IDP** is the API and automation underneath that actually provisions the database, creates the repository, wires CI and grants access. Backstage is a portal; Crossplane, Terraform, Argo CD and your cloud APIs are the platform. The distinction matters because building the portal first produces a beautiful catalogue in front of processes that are still tickets: developers click the button, the button files a Jira issue, and the portal becomes a slower route to the same queue. Automate one golden path end to end before building the second.' },
+      { q: 'What is a golden path?', a: 'An opinionated, supported, end-to-end route for a common task, designed to be simultaneously the easiest option and a good one. Four properties matter: **opinionated** (it chooses the language, CI, deployment target and observability wiring — a path with twelve choices is documentation), **supported** (the platform team owns upgrades and fixes, which is what a team gives up autonomy for), **optional but obviously best** (mandating a path worse than the manual route produces shadow infrastructure), and **not the only path**, because teams with genuinely unusual needs need an escape hatch.' },
+      { q: 'What CNCF project is the leading IDP framework, and what is the catch?', a: '**Backstage**, open-sourced by Spotify and now a CNCF incubating project. The catch is that it is a **framework, not a product**: you build and maintain a TypeScript/React application, with your own plugin set, your own upgrades and your own deployment. It needs a dedicated owning team, `backstage-cli versions:bump` is a routine chore, there have been architectural migrations (notably the new backend system) requiring rework of custom plugins, and plugin quality varies from well-maintained to abandoned. If that cost is unattractive, Port, Cortex and OpsLevel are commercial portals and Roadie or Spotify\'s own offering run Backstage as a service.' },
+      { q: 'How does the Backstage Software Catalog work?', a: 'Each entity declares itself in a `catalog-info.yaml` in its own repository, with a kind (Component, API, Resource, System, Domain, Group, User), an owner, and annotations linking it to external tools (`github.com/project-slug`, `argocd/app-name`, `pagerduty.com/service-id`). Relations between entities — `ownerOf`, `dependsOn`, `providesApi` — turn the list into a **graph**, which is what lets it answer the questions worth asking: who owns this, what breaks if it fails, who consumes this API, what does this team run. Backstage ingests descriptors via discovery providers scanning your source hosts.' },
+      { q: 'What is the main failure mode of a service catalogue?', a: '**Rot.** Entities registered once and never updated, ownership stale after a reorganisation, half the estate never registered at all. A catalogue that is 60% accurate is worse than none, because people stop trusting it and go back to asking in Slack — and once trust is gone it is very hard to recover. The fix is structural rather than cultural: never rely on manual registration, ingest descriptors automatically from every repository, source ownership from the identity provider or HR system rather than a hand-edited field, and report entities with missing or invalid owners as a standing metric.' },
+      { q: 'What does the Backstage Scaffolder do?', a: 'Turns a golden path into an executable template: a form collects parameters, then steps run — create a repository from a skeleton, open a pull request, register the component in the catalogue, wire up the CI pipeline, create the Argo CD application. It is the component that converts "we have a standard" into "the standard is what happens by default", which is the only version of a standard that survives contact with a deadline.' },
+      { q: 'How should a platform team measure success?', a: 'By outcomes, with **voluntary adoption** as the headline signal — if teams use it because it is the fastest way to get their job done it works, and if they use it because it is mandated you have learned nothing and created an incentive to route around it invisibly. Useful numbers: time from repository creation to first production deployment; time from a new joiner\'s start date to their first merged change in production; count of manual steps and handoffs in the most common workflow; share of services on a supported golden path. Unhelpful: portal page views, number of plugins, number of templates.' },
+      { q: 'What are the two classic ways an internal platform fails?', a: '**It becomes another queue** — self-service forms that terminate in a ticket, so the interface changed and the wait did not. And **it leaks** — the abstraction holds until something breaks, at which point the developer must understand the whole underlying stack *plus* the abstraction that hid it. The second is unavoidable in the limit, so design for it: make generated artifacts readable and owned by the team rather than hidden in a template, surface underlying errors instead of swallowing them, and always provide a documented way down to the layer beneath. Good platforms are transparent, not opaque.' },
     ],
     references: [
       'https://backstage.io/docs/',
@@ -4870,6 +4951,63 @@ Plugins: Backstage's extension model. Integrates existing tools (PagerDuty, GitH
     questions: 4,
     description: 'OpenGitOps 4 principles: declarative, versioned+immutable, pulled automatically, continuously reconciled. ArgoCD and Flux implement the pull model — in-cluster agents watch Git and reconcile desired vs actual state.',
     visualizations: [],
+    topics: [
+      {
+        title: 'Why the direction of the arrow is the whole argument',
+        content: `The four OpenGitOps principles — declarative, versioned and immutable, pulled automatically, continuously reconciled — are easy to recite and easy to under-read. The third one is where the substance is, and the reason is **credentials**.
+
+In push-based CD, the pipeline runs \`kubectl apply\` from outside. That means the CI system holds a kubeconfig with write access to production, which has three consequences that compound:
+
+- **The CI system becomes the highest-value target in your estate.** Anyone who can modify a workflow file, or compromise a third-party action, can reach the cluster. Supply-chain attacks on CI are common precisely because of this concentration.
+- **The cluster's API server must be reachable from CI**, which for a private cluster means a bastion, a VPN, or a publicly exposed endpoint — an inbound path that exists solely to let a deployment happen.
+- **Credentials multiply.** Fifty clusters means fifty sets of cluster credentials distributed across pipelines, each needing rotation.
+
+In pull-based CD, an agent **inside** the cluster reads the repository and applies changes locally. The credential direction inverts: the cluster needs read access to Git, and CI needs no cluster access at all. The API server can be entirely private with no inbound path. Adding a cluster adds an agent, not a credential distribution problem. **That security property, not the Git workflow, is the main argument for the pull model** — the audit trail and rollback that people usually cite are attributes of storing state in Git, which push-based pipelines could also do.
+
+The fourth principle, continuous reconciliation, is what makes it a *control loop* rather than a deployment trigger. The agent compares desired state against live state on an interval — Argo CD polls roughly every three minutes by default, with a webhook for immediate sync; Flux uses a per-source \`interval\` — and reports or corrects any divergence. The mechanism matters because it changes what "deployed" means: in a push pipeline, deployment is an event that happened once and whose effect decays; in GitOps, the desired state is asserted continuously, so a manual change does not persist.
+
+One precision worth having, because the usual illustration is wrong. It is often said that "if someone runs \`kubectl delete pod\`, the GitOps operator detects drift and recreates it." **It does not** — pods are not in Git; the Deployment's ReplicaSet controller recreates that pod, exactly as it would without GitOps. And self-healing is **not on by default**: in Argo CD, \`automated\` sync, \`prune\` and \`selfHeal\` are three separate opt-ins, and with none of them a drifted application simply shows as \`OutOfSync\` and waits for a human. The accurate statement is that a manual edit to a *managed resource* — someone \`kubectl edit\`s a Deployment's replica count — is detected as drift and, if \`selfHeal: true\`, reverted on the next reconciliation.`,
+      },
+      {
+        title: 'The operational realities: drift noise, promotion, and secrets',
+        content: `Three things dominate the day-to-day experience of running GitOps, and none of them appears in the principles.
+
+**Perpetual \`OutOfSync\` from fields you did not write.** The cluster mutates your objects: defaulting adds fields, mutating admission webhooks inject sidecars and labels, an HPA changes \`replicas\`, a cloud controller annotates a Service with a load balancer address. The agent compares its rendered manifest against the live object, sees a difference, and reports drift forever — which is far more damaging than it sounds, because a permanently amber dashboard trains everyone to ignore it, and real drift then hides among the noise. The tools for this are \`ignoreDifferences\` (with JSON pointers or JQ paths for the specific fields), \`Server-Side Apply\` with field management so the agent only owns the fields it sets, and for HPA-managed workloads, simply not specifying \`replicas\` in Git. Getting to a genuinely green board is worth real effort; a noisy one provides no signal at all.
+
+**Promotion is not solved by GitOps, and this surprises people.** The model says the cluster matches the repository. It says nothing about *how* the repository gets a new image tag, or how a change moves from staging to production. That is a workflow you must build, and the mainstream answers are:
+
+- **A rendered-manifests pattern**: application source in one repository, fully rendered environment manifests in another (or a separate branch), produced by CI. Promotion is then a pull request moving a digest from the staging directory to production — reviewable, diffable, and revertible, with the actual applied YAML visible rather than hidden behind a Helm template.
+- **Image automation**: Flux's image reflector and automation controllers, or Argo CD Image Updater, watch a registry and commit new tags automatically. Convenient for lower environments; usually too automatic for production.
+- **Pin by digest, not tag.** \`image: api:v1.4.2\` is mutable; \`api@sha256:...\` is the artifact that was tested and signed. This is also what makes admission-time signature verification meaningful.
+
+**Secrets cannot go in Git in plaintext**, and the three families of answer have genuinely different failure modes:
+
+| Approach | How | Weakness |
+| --- | --- | --- |
+| **SOPS** (+ age or KMS) | Encrypted values committed to Git; agent decrypts at apply | Ciphertext lives in history **forever** — a leaked key exposes every past secret, and rotation means re-encrypting everything |
+| **Sealed Secrets** | Encrypted to a controller's public key, only that cluster can decrypt | The controller's private key becomes a disaster-recovery problem — lose it and every sealed secret in Git is unrecoverable |
+| **External Secrets Operator** | Only a *reference* in Git; the operator fetches from Vault, AWS Secrets Manager, etc. | Adds a runtime dependency on the secret store; needs workload identity to authenticate |
+
+**External Secrets Operator is the mainstream default now**, for one structural reason: no secret material ever enters Git, so rotation happens in the secret store with no commit, and a repository leak exposes nothing but names. The reference-only property is what makes it worth the extra runtime dependency.`,
+      },
+      {
+        title: 'Argo CD and Flux, and where GitOps stops',
+        content: `The two dominant implementations are both CNCF graduated and differ in shape more than capability.
+
+**Argo CD** is application-centric with a strong web UI: an \`Application\` CRD points at a repository path and a destination cluster, and the UI shows a live resource tree with sync and health status — which makes it very easy for developers to answer "what is deployed and is it healthy". Multi-tenancy comes from \`AppProject\`, restricting which repositories, clusters and resource kinds a team may use, and the "app of apps" pattern (or \`ApplicationSet\`) manages fleets declaratively.
+
+**Flux** is a set of composable controllers — source, kustomize, helm, image reflector, image automation, notification — with no UI and a CLI-and-CRD interface. It composes more naturally into other systems, its \`dependsOn\` ordering between Kustomizations is cleaner for layered platform installs, and its tenancy model uses ServiceAccount impersonation so a tenant's manifests are applied with that tenant's RBAC — a genuinely strong isolation property.
+
+The practical selection criteria: choose Argo CD if the UI has real value to your developers (it usually does) and you want application-level visibility; choose Flux if you are building a platform where GitOps is a component of a larger automation and you prefer composable controllers to an application server.
+
+Finally, the boundaries — what GitOps does **not** give you, and where the accompanying tools sit:
+
+- **It is not progressive delivery.** A sync applies the change; it does not canary it. Argo Rollouts or Flagger provide the analysis-driven canary and blue/green on top, and GitOps manages *their* configuration.
+- **It does not order deployments across systems.** A release requiring a database migration, then a schema-compatible service, then a client change is orchestration, and the reconciler has no concept of it. Design changes to be backward-compatible so ordering does not matter — expand/contract migrations, tolerant readers — because the alternative is fighting the model.
+- **It does not stop drift, it reports it.** Without \`selfHeal\`, drift is visible and persistent; with it, someone's emergency \`kubectl edit\` during an incident is reverted within minutes, which is correct behaviour and can be a nasty surprise mid-incident. Establish the break-glass procedure — usually pausing auto-sync explicitly — before you need it.
+- **Rollback is \`git revert\`, and that is not always sufficient.** Reverting the manifest restores the previous configuration; it does not undo a database migration or an irreversible side effect. GitOps makes the *configuration* rollback trivial and leaves the state problem exactly where it was.`,
+      },
+    ],
     introduction: `## Overview
 GitOps is a set of practices where the desired state of infrastructure and applications is stored in Git and an automated operator continuously reconciles actual state to match desired state.
 
@@ -4912,9 +5050,15 @@ ArgoCD and Flux are the two dominant GitOps operators implementing these princip
       { question: 'How does ArgoCD implement GitOps?', answer: 'ArgoCD runs controllers inside the cluster (argocd-application-controller, argocd-repo-server). The controller polls Git repos (default 3min) or responds to webhooks. When it detects a difference between Git state and cluster state, it marks the Application as OutOfSync.\n\nWith auto-sync + self-heal: immediately applies the Git state. With manual sync: waits for human approval.\n\nArgoCD never needs external cluster credentials — it uses in-cluster service account RBAC. The cluster reaches out to Git, not the reverse.' },
     ],
     quickFire: [
-      { q: 'Key difference between push and pull GitOps?', a: 'Push: CI authenticates to cluster and applies changes (credentials in CI). Pull: in-cluster agent watches Git (credentials never leave cluster).' },
-      { q: 'Name the two dominant GitOps operators.', a: 'ArgoCD (built-in UI, App-of-Apps) and Flux (CNCF-graduated, modular controllers).' },
-      { q: 'How do you handle secrets in GitOps?', a: 'Never commit plaintext. Use Sealed Secrets (cluster-encrypted before commit) or External Secrets Operator (reference from Vault/AWS Secrets Manager).' },
+      { q: 'What are the four OpenGitOps principles?', a: '**Declarative** — the entire desired state is described as data, not as steps. **Versioned and immutable** — that state is stored in Git, so every change is auditable and revertible. **Pulled automatically** — an agent inside the target environment fetches the desired state, rather than an external pipeline pushing it in. **Continuously reconciled** — the agent constantly compares desired against actual and converges them, so deployment is a control loop rather than a one-off event.' },
+      { q: 'What is the key difference between push and pull GitOps?', a: 'The direction of credentials. In push, CI holds a kubeconfig with write access to production — concentrating the highest-value credential in the most attacked system, requiring the API server to be reachable from CI, and multiplying credentials by the number of clusters. In pull, an in-cluster agent reads from Git: CI needs **no** cluster access, the API server can be entirely private with no inbound path, and adding a cluster adds an agent rather than a credential distribution problem. That security property is the main argument; the audit trail and rollback usually cited come from storing state in Git, which push pipelines could also do.' },
+      { q: 'Name the two dominant GitOps operators and how they differ.', a: '**Argo CD** and **Flux**, both CNCF graduated. Argo CD is application-centric with a strong web UI showing a live resource tree with sync and health status, `AppProject` for multi-tenancy, and ApplicationSets for fleets. Flux is a set of composable controllers (source, kustomize, helm, image automation, notification) with a CLI-and-CRD interface, cleaner `dependsOn` ordering for layered platform installs, and tenancy via ServiceAccount impersonation so a tenant\'s manifests apply under that tenant\'s RBAC. Choose Argo CD when developer-facing visibility matters; Flux when GitOps is a component inside a larger platform automation.' },
+      { q: 'Does a GitOps operator automatically undo manual changes?', a: 'Only if you enable it, and only for resources it manages. In Argo CD, `automated` sync, `prune` and `selfHeal` are three separate opt-ins; with none of them, drift shows as `OutOfSync` and waits for a human. The common illustration is also wrong: `kubectl delete pod` is not undone by the GitOps operator — pods are not in Git, and the ReplicaSet controller recreates that pod exactly as it would without GitOps. What self-heal reverts is an edit to a **managed** resource, such as someone changing a Deployment\'s replica count by hand.' },
+      { q: 'How do you handle secrets in GitOps?', a: 'Three families. **SOPS** with age or a cloud KMS commits encrypted values to Git — simple, but the ciphertext lives in history forever, so a leaked key exposes every past secret and rotation means re-encrypting everything. **Sealed Secrets** encrypts to a cluster controller\'s public key so only that cluster can decrypt — but the controller\'s private key becomes a disaster-recovery problem, and losing it makes every sealed secret in Git unrecoverable. **External Secrets Operator** puts only a *reference* in Git and fetches the value from Vault or a cloud secret manager at runtime; it adds a runtime dependency and needs workload identity, and it is the mainstream default because no secret material ever enters the repository, so rotation requires no commit and a repository leak exposes only names.' },
+      { q: 'Why do GitOps applications show OutOfSync when nothing changed?', a: 'Because the cluster mutates your objects: API defaulting adds fields, mutating admission webhooks inject sidecars and labels, an HPA changes `replicas`, a cloud controller annotates a Service. The agent compares its rendered manifest to the live object, sees a difference, and reports drift indefinitely. This matters more than it appears — a permanently amber dashboard trains everyone to ignore it, so real drift hides in the noise. Fix it with `ignoreDifferences` targeting the specific fields, Server-Side Apply with field management so the agent owns only what it sets, and omitting `replicas` from Git for HPA-managed workloads.' },
+      { q: 'How do you promote a change between environments with GitOps?', a: 'You build it — GitOps says the cluster matches the repository and says nothing about how the repository changes. The most reviewable pattern is **rendered manifests**: application source in one repository, fully rendered per-environment manifests in another produced by CI, so promotion is a pull request moving an image **digest** from the staging directory to production, with the actual applied YAML visible in the diff. Alternatives are Flux\'s image automation controllers or Argo CD Image Updater watching a registry and committing tags — convenient below production, usually too automatic for it. Always pin by digest rather than tag: a tag is mutable, and a digest is the artifact that was tested and signed.' },
+      { q: 'What does GitOps not solve?', a: 'Progressive delivery (a sync applies a change, it does not canary it — Argo Rollouts or Flagger do that, and GitOps manages their config); cross-system ordering (a release needing a migration, then a service, then a client is orchestration the reconciler has no concept of — design backward-compatible changes instead of fighting it); and rollback of **state**. `git revert` restores the previous configuration and does nothing about a database migration or any irreversible side effect. GitOps makes configuration rollback trivial and leaves the state problem exactly where it was.' },
+      { q: 'What should you decide before an incident, when running self-heal?', a: 'The break-glass procedure. With `selfHeal: true`, an emergency `kubectl edit` during an outage is reverted on the next reconciliation — which is correct behaviour and an extremely unwelcome surprise at 3 a.m. Decide in advance how a responder legitimately takes manual control: normally pausing auto-sync on the affected application explicitly (or setting `sync-options` to disable it), making the change, then restoring the repository to match and re-enabling. Document it in the runbook and exercise it, because discovering it mid-incident costs minutes you do not have.' },
     ],
     references: [
       'https://opengitops.dev/',
@@ -4931,6 +5075,76 @@ ArgoCD and Flux are the two dominant GitOps operators implementing these princip
     questions: 4,
     description: 'SLSA defines 3 levels of supply chain integrity. Level 1: provenance. Level 2: hosted build + signed provenance. Level 3: hardened build + non-falsifiable provenance. Sigstore (Cosign, Rekor, Fulcio) implements keyless signing.',
     visualizations: [],
+    topics: [
+      {
+        title: 'The threat model: which attacks SLSA addresses, and which it does not',
+        content: `SLSA is easier to use correctly if you start from the attacks rather than the levels, because its scope is narrower than "supply chain security" and the boundary is where most misunderstanding lives.
+
+The framework's threat model walks the path from source to consumer and enumerates where an adversary can interpose:
+
+- **Source threats** — submitting bad code, bypassing review, compromising the source platform.
+- **Build threats** — compromising the build platform, tampering with the build process, injecting during dependency resolution, publishing an artifact that was never built from the claimed source.
+- **Distribution threats** — tampering with the artifact after the build, or with the registry that serves it.
+
+**SLSA v1.0's Build track addresses the middle group.** Its single guarantee, stated precisely, is: *the consumer can verify that this artifact was produced by the claimed builder, from the claimed source, using the claimed process.* Everything else is out of scope by design.
+
+That makes three exclusions important enough to state explicitly, and the common framing "created in response to SolarWinds and Log4Shell" gets one of them wrong:
+
+- **SolarWinds is in scope.** The build system was compromised and injected code into a binary that did not correspond to the reviewed source — exactly the discrepancy verifiable provenance exposes.
+- **Log4Shell is not.** That was a genuine vulnerability in a legitimate, correctly built, correctly published component. Provenance would have been perfect and useless. **The tool for Log4Shell is an SBOM**, which tells you which of your artifacts contain the affected version.
+- **The XZ Utils backdoor (2024) is also not in scope.** The malicious code was contributed over two years by a trusted maintainer and built normally, so it would have carried impeccable provenance. Supply-chain *integrity* held; trust in a person failed. That class of attack is addressed by review practices, maintainer diversity and reproducible builds — not by attestation.
+
+Holding those three cases apart is the difference between understanding the framework and reciting it.
+
+The other structural point about v1.0 is **tracks**. The specification was reorganised so that different aspects of the supply chain are graded separately — the **Build track** is defined and has three levels; source, dependency and other tracks are in development. This is also why any material describing "SLSA levels 1 to 4" is pre-1.0: the old draft's L4 (hermetic, reproducible builds) was removed from the numbered levels and deferred, precisely because bundling every property into one ladder made the higher rungs unreachable in practice.`,
+      },
+      {
+        title: 'The three Build levels, and what provenance actually contains',
+        content: `**Build L1 — provenance exists.** The build produces an attestation describing what was built and how. It need not be signed, and it can be generated by a script the developer controls, so it defends against nothing malicious. Its value is real but modest: it makes builds *auditable* and forces the organisation to be able to answer "which commit produced this binary", which a surprising number cannot.
+
+**Build L2 — signed provenance from a hosted build platform.** The build runs on a platform the consumer can identify (GitHub Actions, GitLab CI, Google Cloud Build), and the provenance is signed by that platform's identity rather than by a developer. This defends against forgery by anyone who cannot compromise the build platform itself: a developer can no longer claim on their laptop that an artifact came from \`main\`. Practically, L2 is the point at which provenance becomes evidence rather than documentation, and it is close to free on common platforms — \`actions/attest-build-provenance\` produces signed SLSA provenance in a few lines, and npm publishes provenance for packages built in Actions.
+
+**Build L3 — hardened platform, non-falsifiable provenance.** The step that requires real thought. At L3 the build platform must isolate builds from one another (so one build cannot influence another's output or steal its secrets) and must generate provenance in a way that **the build process itself cannot forge**. That last clause is the substance: at L2, a malicious build script running inside the build could in principle emit whatever provenance it liked, because it runs in the same context as the signing. At L3 the provenance is produced by the trusted control plane, outside the reach of the user-controlled steps. On GitHub this is achieved by generating provenance from a reusable workflow running on GitHub-hosted runners, where the workflow identity in the OIDC claim is not something the calling job can spoof.
+
+What a provenance attestation actually contains is worth knowing, because verification means checking these fields:
+
+    {
+      "subject":   [{"name": "api", "digest": {"sha256": "abc..."}}],
+      "predicateType": "https://slsa.dev/provenance/v1",
+      "predicate": {
+        "buildDefinition": {
+          "buildType": "https://actions.github.io/buildtypes/workflow/v1",
+          "externalParameters": {
+            "workflow": {"ref": "refs/tags/v1.4.2",
+                         "repository": "https://github.com/acme/api",
+                         "path": ".github/workflows/release.yml"}
+          },
+          "resolvedDependencies": [{"uri": "git+https://github.com/acme/api@refs/tags/v1.4.2",
+                                    "digest": {"gitCommit": "..."}}]
+        },
+        "runDetails": { "builder": {"id": "https://github.com/actions/runner"} }
+      }
+    }
+
+Notice what verification therefore requires: **a policy**. \`slsa-verifier\` or \`cosign verify-attestation\` will confirm the attestation is authentic, but *authentic* is not *acceptable*. You must assert the expected builder ID, the expected source repository, and usually the expected ref pattern — otherwise you have verified that *somebody* built this from *somewhere*, which is the same class of mistake as verifying that an image is signed without checking who signed it. The policy is the security control; the cryptography merely makes it enforceable.`,
+      },
+      {
+        title: 'Adopting it: an order of operations that works',
+        content: `The ladder tempts people to start at the top and stall. A sequence that reaches real value early:
+
+**1. Make builds reproducible enough to attest.** If artifacts are built from a developer's machine, from a mutable \`latest\` tag, or with untracked local state, there is nothing meaningful to attest. Move all release builds into CI first; this single step delivers more than L1 nominally requires.
+
+**2. Turn on provenance generation (L1→L2).** On GitHub, \`actions/attest-build-provenance\`; on other platforms, the equivalent, or \`slsa-github-generator\` for the full reusable-workflow approach. Do it for release artifacts first, not every build — the point is to cover what reaches production.
+
+**3. Verify it somewhere that matters.** This is the step most often skipped, and without it the previous two are theatre. Verification belongs at **admission** for cluster workloads (Kyverno or the Sigstore policy-controller checking both the signature identity and the provenance predicate) and at **install time** for dependencies you consume. Write the policy with the expected builder, repository and ref, and roll it out in audit mode first — expect third-party images to have no provenance at all.
+
+**4. Harden toward L3 where the artifact justifies it.** Not everything needs it. Apply it to what your customers run and what has broad blast radius: released binaries, base images, shared libraries, anything published externally.
+
+**5. Attach an SBOM alongside**, because as established above the two answer different questions and most real incidents need the inventory one.
+
+Two practical cautions. First, **provenance you cannot verify offline is a production dependency**. Bundle the certificate, signature and transparency-log inclusion proof with the artifact so verification works in an air-gapped or degraded environment; an admission controller that needs the public internet to admit a pod has placed a third party in your critical path. Second, **be honest about what a level buys**. L3 is a strong statement about your *build platform*; it says nothing about the quality or safety of the code, nothing about your dependencies' own provenance, and nothing about a trusted insider. Presenting SLSA compliance as supply-chain security in general is the mistake that makes the framework look like paperwork — its value is precise and worth having exactly because it is precise.`,
+      },
+    ],
     introduction: `## Overview
 SLSA (Supply-chain Levels for Software Artifacts, pronounced "salsa") is a security framework from Google (now OpenSSF) defining graduated levels of software supply chain integrity. Created in response to attacks like SolarWinds and Log4Shell where the build pipeline or dependency chain was compromised.
 
@@ -4971,10 +5185,16 @@ Sigstore is the open-source ecosystem implementing SLSA signing: Cosign (sign im
       { question: 'How does keyless signing with Sigstore work?', answer: '1. CI job requests OIDC token from provider (GitHub Actions)\n2. Cosign sends token to Sigstore Fulcio CA\n3. Fulcio verifies OIDC token, issues short-lived X.509 cert (10min TTL) bound to OIDC subject (github.com/org/repo/workflow@refs/heads/main)\n4. Cosign signs artifact with ephemeral private key\n5. Signature + certificate uploaded to Rekor transparency log\n6. Ephemeral key discarded\n\nVerification: cosign verify checks signature in Rekor, cert from Fulcio, OIDC subject matches expected workflow.' },
     ],
     quickFire: [
-      { q: 'What does SLSA stand for?', a: 'Supply-chain Levels for Software Artifacts.' },
-      { q: 'What is Cosign?', a: 'Sigstore tool for signing and verifying container images and attestations.' },
-      { q: 'What is Rekor?', a: 'Immutable transparency log for software signatures -- non-repudiation.' },
-      { q: 'What is keyless signing?', a: 'Sign with OIDC-based ephemeral certs (Sigstore Fulcio) instead of long-lived private keys.' },
+      { q: 'What does SLSA stand for and what does it grade?', a: '**Supply-chain Levels for Software Artifacts** (pronounced "salsa"), from Google and now under the OpenSSF, derived from Google\'s internal Binary Authorization for Borg. It grades **build integrity**: how strong the evidence is that an artifact was produced by the claimed builder, from the claimed source, using the claimed process. Since v1.0 it is organised into **tracks** — the Build track is defined with three levels, and source and other tracks are in development.' },
+      { q: 'What are the three SLSA v1.0 Build levels?', a: '**L1** — provenance exists describing how the artifact was built; unsigned and developer-generated, so it defends against nothing malicious but makes builds auditable. **L2** — that provenance is **signed by a hosted build platform\'s identity**, so a developer cannot fabricate on a laptop that an artifact came from `main`; this is the point at which provenance becomes evidence. **L3** — the build platform is **hardened**: builds are isolated from one another and provenance is generated by the trusted control plane so that **the build process itself cannot forge it**, which is the property that defends against a malicious build script.' },
+      { q: 'Why do older sources say SLSA has four levels?', a: 'Because they predate v1.0 (2023). The pre-1.0 draft had L1–L4 with L4 requiring hermetic and reproducible builds. v1.0 reorganised the specification into tracks and defined the Build track with **three** levels, deferring the old L4 requirements — largely because bundling every property into a single ladder made the top rungs unreachable in practice, so nobody climbed them. Quoting L1–L4 dates a document immediately.' },
+      { q: 'What is the difference between L2 and L3, precisely?', a: 'Who can forge the provenance. At L2 the provenance is signed by the build platform, but a malicious build script running inside the build shares the context that does the signing, so in principle it could emit whatever claims it liked. At L3 the provenance is produced by the **trusted control plane, outside the reach of user-controlled build steps**, so it is non-falsifiable even by a compromised build script — and builds are isolated from one another so one cannot influence another\'s output or read its secrets. On GitHub this is achieved by generating provenance from a reusable workflow on hosted runners, whose OIDC identity the calling job cannot spoof.' },
+      { q: 'Does SLSA address Log4Shell or the XZ backdoor?', a: 'Neither. **Log4Shell** was a real vulnerability in a legitimate, correctly built, correctly published component — provenance would have been perfect and useless, and the tool for it is an **SBOM** telling you which artifacts contain the affected version. **XZ Utils (2024)** was malicious code contributed over two years by a trusted maintainer and built normally, so it would have carried impeccable provenance; integrity held and trust in a person failed, which is addressed by review practices, maintainer diversity and reproducible builds. **SolarWinds is** in scope: the build system was compromised and produced a binary not corresponding to reviewed source, which is exactly what verifiable provenance exposes.' },
+      { q: 'What is Cosign?', a: 'The Sigstore tool for signing and verifying container images, blobs and attestations. In keyless mode it generates an ephemeral keypair, exchanges a workload OIDC token for a ten-minute certificate from Fulcio, signs, discards the private key, and records the event in Rekor — so there is no long-lived signing key to store, rotate or revoke. It stores signatures and attestations in the same OCI registry as the image, bound to the image **digest** rather than to a mutable tag.' },
+      { q: 'What is Rekor?', a: 'Sigstore\'s append-only, cryptographically verifiable transparency log, modelled on Certificate Transparency, recording each signing event and its timestamp. It is what makes short-lived certificates usable: a verifier confirms the log entry\'s timestamp falls within the certificate\'s ten-minute validity window, proving the signature was made while the certificate was valid rather than forged afterwards. It also provides public auditability — an unexpected entry for an artifact you own is evidence of misuse.' },
+      { q: 'What is keyless signing?', a: 'Signing with an ephemeral, machine-held keypair whose public half is bound to a workload\'s OIDC identity by a short-lived certificate, rather than with a long-lived private key an operator must protect. The name is a misnomer — keys exist, they just live for seconds. The real shift is architectural: **you prove an identity instead of guarding a secret**, which removes the key-management burden (generation, storage, rotation, revocation, audit) that stopped most teams from signing anything at all.' },
+      { q: 'What does verifying provenance actually require?', a: 'A **policy**, not just a signature check. `slsa-verifier` or `cosign verify-attestation` proves the attestation is authentic, but authentic is not acceptable — you must assert the expected **builder ID**, the expected **source repository**, and usually an expected **ref pattern**. Without that you have verified that somebody built this from somewhere, which is the same class of error as confirming an image is signed without checking who signed it. The cryptography makes the policy enforceable; the policy is the security control.' },
+      { q: 'How should an organisation adopt SLSA?', a: 'In order, and stopping when the value runs out. Move all release builds into CI first, since artifacts built on laptops or from mutable tags have nothing meaningful to attest. Turn on provenance generation for release artifacts (`actions/attest-build-provenance` or `slsa-github-generator`), which gets you to L2 cheaply. Then **verify it somewhere that matters** — at admission for cluster workloads, at install time for dependencies — with an explicit builder-and-repository policy, rolled out in audit mode first because third-party images will have none. Harden toward L3 only for artifacts that justify it: released binaries, base images, shared libraries. And attach an SBOM alongside, since most real incidents need the inventory rather than the lineage.' },
     ],
     references: [
       'https://slsa.dev/',
@@ -4991,6 +5211,65 @@ Sigstore is the open-source ecosystem implementing SLSA signing: Cosign (sign im
     questions: 4,
     description: 'DORA Four Keys: Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore. Elite: deploy on-demand, <1h MTTR, <15% CFR. Speed and stability are positively correlated — not a tradeoff.',
     visualizations: [],
+    topics: [
+      {
+        title: 'Getting the definitions right before measuring anything',
+        content: `Most DORA implementations produce numbers that are not comparable to anyone else's, and usually not comparable to their own from six months ago, because the definitions were never pinned down. Each key has a specific ambiguity, and resolving it is the actual work.
+
+**Deployment frequency.** A count, not a duration — but of what? A *deployment to production* that reaches users, not a pipeline run, not a staging deploy, not a merge to \`main\` in a system that deploys weekly. Two rules keep it honest: count per service (aggregating a monolith and forty microservices into one organisational number produces a figure that means nothing), and count *successful* deployments, tracking failures separately so a flapping pipeline does not inflate the score.
+
+**Change lead time.** The most misdefined of the four. It is **commit to running in production**, and the ambiguity is *which commit*. The first commit on a feature branch includes all the time the branch sat unfinished; the merge commit excludes review time entirely, which is usually the largest queue in the system. The definition that matches DORA's intent and is the most useful diagnostically is **first commit of the change that eventually shipped, to that change running in production** — because it includes review latency, which is where the time actually goes. Whatever you choose, write it down and never change it silently, since a redefinition looks exactly like an improvement on a chart.
+
+**Change failure rate.** The percentage of deployments that cause a degraded service requiring immediate remediation — a rollback, a hotfix, a fix-forward, or a patch. The trap is the detection window: if you count only failures noticed within an hour, you measure your alerting rather than your quality. Bound it explicitly (24 or 48 hours is common) and, crucially, **derive it from an artifact rather than from someone's judgement** — a rollback event, a revert commit, an incident linked to a deploy. A self-reported failure rate is a measure of team culture, and it falls the moment the number is watched.
+
+**Failed deployment recovery time.** Renamed from MTTR in the 2023 report, and the rename carries meaning. Generic incident MTTR includes every incident — a cloud provider outage, a certificate expiry, a traffic spike — most of which no deployment caused. The DORA metric is narrower: **time from a failure introduced by a change to service being restored**. Reporting general incident MTTR and labelling it DORA measures your provider as much as your delivery process. A related clean-up from the same report: reliability was separated out as its own operational-performance outcome rather than being folded into the four, so "are we meeting our SLOs" sits alongside the keys rather than inside them.
+
+One historical note for accuracy: the programme is now well past a decade of annual reports and tens of thousands of respondents, so "six years, 32,000 professionals" figures from older summaries understate it — and the published band thresholds have **moved between reports** as the industry has shifted, most visibly for change failure rate, where the elite band tightened from the 0–15% range quoted in older material toward roughly 5%. Treat the bands as a moving reference, not as constants.`,
+      },
+      {
+        title: 'Instrumenting the four keys from systems, not from people',
+        content: `Every DORA metric should be derived from events your systems already emit. If a human enters a number, you are measuring reporting behaviour.
+
+The event sources are mundane, which is the point:
+
+| Key | Event source |
+| --- | --- |
+| Deployment frequency | Deployment events — Argo CD sync succeeded, a GitHub Deployment status, a release pipeline completion |
+| Change lead time | Join the deploy event to the commits it contains (build metadata carrying the commit SHA), then to each commit's author timestamp |
+| Change failure rate | Rollback and revert events, incidents tagged with the causing deployment |
+| Recovery time | Incident open and resolve timestamps, filtered to deployment-caused incidents |
+
+The join in row two is where implementations succeed or fail. It only works if **the deployed artifact carries the commit it was built from** — an image labelled with \`org.opencontainers.image.revision\`, or a deployment annotation with the SHA. Deploying by mutable tag makes lead time uncomputable, because you cannot say what a running version contains. This is the same digest-pinning discipline that makes signature verification and rollback meaningful, which is a good argument for doing it once and getting three benefits.
+
+Two implementation notes worth knowing by name. Google Cloud's open-source **Four Keys** project is a reference implementation that ingests webhook events from GitHub, GitLab and incident tools into a warehouse and computes the metrics — useful as a data model even if you build your own. And the CD Foundation's **CDEvents** specification standardises pipeline event formats, which matters if your toolchain is heterogeneous enough that every integration is bespoke.
+
+Report the numbers in a way that survives contact with reality:
+
+- **Per service, then aggregate deliberately.** An organisational average hides the distribution, and the distribution is the finding — one team deploying forty times a day and thirty teams deploying monthly averages to something that describes nobody.
+- **Use medians and percentiles, not means.** Lead time is heavily skewed; one change that sat in review for three weeks moves a mean and tells you nothing about the typical experience. Report p50 and p85.
+- **Show trend, not a point.** A single quarter's figure is noise. The question worth asking is whether the trend moved and what changed when it did.
+- **Break lead time into stages.** This is the highest-value analysis in the whole exercise: commit → PR opened → first review → approved → merged → built → deployed. Almost always the dominant segment is *waiting*, not working — review queue and deploy queue — and it is far more tractable than making anything faster. A team that discovers 70% of its lead time is review latency has an actionable finding; a team that knows only "lead time is three days" does not.`,
+      },
+      {
+        title: 'Using them without breaking them',
+        content: `The four keys are a **thermometer, not a control surface**. They describe an outcome; you move them by changing the practices that produce it. The failure modes below all come from forgetting that.
+
+**Do not compare teams, and never attach them to performance review.** They are context-dependent: a payments service, a regulated system and an internal dashboard have legitimately different deployment cadences, and none is a verdict on the team. The moment the numbers affect an individual's review, Goodhart's law applies and they stop describing reality — deployment frequency rises by splitting one deploy into five, change failure rate falls because failures stop being reported, lead time falls because the definition quietly moves. Compare a team against its own past.
+
+**Do not optimise a key directly.** The three easiest ways to improve each number are all worthless: deploy trivial changes to raise frequency; stop counting minor failures to lower failure rate; redefine lead time to start at merge. Improvements come from the practices the research associates with them — trunk-based development, small batch sizes, comprehensive automated testing, loosely coupled architecture, continuous integration, and fast automated deploys.
+
+**Watch the pairs, not the individual metrics.** This is the most useful diagnostic technique available. The keys split into throughput (frequency, lead time) and stability (failure rate, recovery time), and **the central finding of the research is that these move together rather than trading off** — the same practices that make delivery fast make it safe, because small, frequent, reversible changes are both quicker to ship and cheaper to diagnose. So a *divergence* is the signal:
+
+| Pattern | What it usually means |
+| --- | --- |
+| Throughput up, stability down | Shipping faster by testing less — the classic false win |
+| Throughput up, stability flat or up | Genuine improvement; the practices are working |
+| Throughput down, stability up | Over-correcting after an incident: added gates, heavier process |
+| Both down | Something systemic — a painful migration, attrition, or an unmanaged dependency |
+
+**Know what they do not measure.** The four keys say nothing about whether the software was worth building. A team can deploy fifty times a day, with excellent stability, shipping features nobody uses. That is why DORA itself pairs delivery performance with organisational outcomes, and why SPACE, DevEx and DX Core 4 exist alongside — DORA covers the delivery system, and the human and product dimensions need their own measures. **Reliability**, since 2023, is likewise tracked as a separate operational outcome rather than as a fifth key.`,
+      },
+    ],
     introduction: `## Overview
 The DORA (DevOps Research and Assessment) Four Keys are the industry-standard metrics for measuring software delivery performance. Derived from six years of research across 32,000+ professionals in the annual State of DevOps reports.
 
@@ -5034,9 +5313,15 @@ Critical insight: elite teams achieve HIGH speed AND HIGH stability simultaneous
       { question: 'How do you measure Lead Time for Changes in practice?', answer: 'Lead Time = time from code commit merged to main → same commit running in production.\n\nImplementation:\n1. Record timestamp when commit merges to main branch\n2. Record timestamp when deployment containing that commit reaches production\n3. Lead time = production timestamp - commit timestamp\n\nTools: DORA Four Keys open-source project (BigQuery + Looker), Datadog CI Visibility, LinearB, Jellyfish.\n\nCommon bottlenecks: long PR review cycles, slow CI (>15min builds), manual approval gates, restricted deployment windows.' },
     ],
     quickFire: [
-      { q: 'What are the DORA Four Keys?', a: 'Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore Service.' },
-      { q: 'Elite MTTR benchmark?', a: 'Less than 1 hour to restore after a production incident.' },
-      { q: 'Do elite teams trade speed for stability?', a: 'No -- research shows they are positively correlated. Elite teams achieve high frequency AND low failure rates.' },
+      { q: 'What are the DORA four keys, and what changed in the naming?', a: '**Deployment frequency**, **change lead time**, **change failure rate**, and **failed deployment recovery time**. The first two measure throughput, the second two stability. The fourth was **renamed from MTTR in the 2023 report** because generic incident MTTR covers every incident, including ones no deployment caused — the DORA metric is specifically recovery from a failure introduced by a change. The same report separated **reliability** out as its own operational-performance outcome rather than folding it into the four.' },
+      { q: 'How do you define change lead time in practice?', a: 'Commit to running in production — with the ambiguity being *which commit*. The first commit on a branch includes time it sat unfinished; the merge commit excludes review, which is usually the biggest queue in the system. The definition matching DORA\'s intent and the most diagnostically useful is **first commit of the change that eventually shipped → that change running in production**, because it captures review latency. Whichever you pick, document it and never change it silently: a redefinition looks exactly like an improvement on a chart.' },
+      { q: 'How do you compute lead time technically?', a: 'Join the deployment event to the commits it contains, then take each commit\'s author timestamp. That join only works if **the deployed artifact carries its source commit** — an image labelled with `org.opencontainers.image.revision`, or a deployment annotation with the SHA. Deploying by mutable tag makes lead time uncomputable, since you cannot determine what a running version contains. The same digest-pinning discipline is what makes signature verification and precise rollback possible, so it pays for itself three times.' },
+      { q: 'What is the elite benchmark for recovery, and how firm are the bands?', a: 'Under one hour for failed deployment recovery, against more than a week for the low-performing cluster. But treat the published thresholds as a **moving reference rather than constants** — they have shifted between annual reports as the industry has moved, most visibly for change failure rate, where the elite band tightened from the 0–15% range quoted in older material toward roughly 5%. The shape of the bands is stable even when the numbers move, and your own trend matters more than which band you land in.' },
+      { q: 'Do elite teams trade speed for stability?', a: 'No, and this is the central finding of the research: throughput and stability are **positively correlated**. The same practices produce both — small, frequent, reversible changes are quicker to ship *and* cheaper to diagnose when they fail, whereas large infrequent releases bundle many changes so that any failure requires bisecting the batch. That is why the useful diagnostic is watching the pairs: throughput rising while stability falls means you are shipping faster by testing less, not improving.' },
+      { q: 'How do you avoid gaming the DORA metrics?', a: 'Derive them from **system events rather than self-report** (deployment events, revert commits, incidents linked to deploys — a self-reported failure rate measures culture and falls as soon as anyone watches it); never attach them to individual performance review, since Goodhart\'s law then guarantees they stop describing reality; and never optimise a key directly. The three easy wins are all worthless — deploying trivial changes to raise frequency, ceasing to count minor failures to lower failure rate, redefining lead time to start at merge. Move them by changing practice: trunk-based development, small batches, automated testing, loose coupling.' },
+      { q: 'What is the most valuable analysis to run on lead time?', a: '**Break it into stages**: commit → PR opened → first review → approved → merged → built → deployed. Almost always the dominant segment is *waiting* rather than working — review queue and deploy queue — and queue time is both larger and far more tractable than making any individual step faster. A team that finds 70% of its lead time is review latency has something to act on; a team that knows only "lead time is three days" does not. Report p50 and p85 rather than means, since lead time is heavily skewed and one three-week PR distorts an average.' },
+      { q: 'Why should DORA metrics be reported per service?', a: 'Because an organisational average hides the distribution, and the distribution is the finding. One team deploying forty times a day alongside thirty deploying monthly averages to a number describing nobody, and it conceals both the team worth learning from and the team that needs help. Aggregate deliberately and only after looking at the spread — and compare each team against its own trend rather than against each other, since a payments service, a regulated system and an internal dashboard have legitimately different cadences.' },
+      { q: 'What do the four keys not measure?', a: 'Whether the software was worth building. A team can deploy fifty times a day with excellent stability and ship features nobody uses — delivery performance says nothing about product outcomes. They also say nothing about the human dimensions: sustainability, satisfaction, cognitive load and collaboration are invisible to them, which is why SPACE, DevEx and DX Core 4 exist alongside rather than instead. And since 2023, reliability is explicitly tracked as a separate operational outcome rather than as a fifth key.' },
     ],
     references: [
       'https://dora.dev/research/',
@@ -5102,6 +5387,91 @@ Karpenter vs. Cluster Autoscaler: Cluster Autoscaler requires pre-defined node g
     ],
     visualizations: [
       { title: 'Karpenter Node Provisioning Flow', caption: 'Unschedulable pod -> Karpenter evaluates resource requirements -> selects cheapest EC2 instance type (On-Demand or Spot) -> calls EC2 RunInstances API directly (no ASG) -> node joins cluster -> pod scheduled. Consolidation loop runs continuously to remove underutilized nodes.', image: '/diagrams/linkdiags/karpenter-autoscaling.png' },
+    ],
+    quickFire: [
+      { q: 'How does Karpenter differ from Cluster Autoscaler?', a: 'Cluster Autoscaler operates on **pre-defined node groups** and can only change a group\'s desired count, so it must simulate whether a pod fits a group\'s assumed-identical node — which means someone designs the groups up front, a pod needing an unavailable shape stays pending, and good bin-packing requires proliferating groups. Karpenter has **no groups**: it reads pending pods\' actual requirements, solves for an instance type across hundreds of options, and calls the cloud API directly. It also evaluates all pending pods together, so it can launch one right-sized node where CA would spread across several. The counterweight: bypassing ASGs means ASG lifecycle hooks, warm pools and any ASG-based tooling no longer apply.' },
+      { q: 'What are NodePool and EC2NodeClass?', a: '**NodePool** declares what Karpenter may provision — permitted capacity types (Spot, On-Demand), architectures, instance families and zones — plus the disruption policy and a hard `limits` ceiling on total CPU and memory. **EC2NodeClass** holds the cloud-specific configuration: AMI family and selector, subnet and security-group selectors, IAM role, block devices and user data. Separating them lets one scheduling policy be reused across differently configured infrastructure. Note they replaced the older `Provisioner` and `AWSNodeTemplate`, so pre-2024 examples will not apply.' },
+      { q: 'What is Karpenter consolidation, and when would you limit it?', a: 'A continuous evaluation of whether the current nodes are the cheapest set that can hold the current pods, acting by deleting empty nodes, deleting nodes whose pods fit elsewhere, or **replacing** a node with a cheaper one — including Spot-to-Spot replacement where the instance-type pool is deep enough. Limit it when disruption is expensive: long-running jobs, workloads with slow warm-up or large caches, or during business hours and change freezes. The controls are **disruption budgets** (a count or percentage, optionally scheduled), PodDisruptionBudgets, and `karpenter.sh/do-not-disrupt` on individual pods. Watch for churn — nodes lasting minutes means `consolidateAfter` is too low or requests are wildly above usage.' },
+      { q: 'How does Karpenter handle Spot interruptions?', a: 'It subscribes to an SQS queue fed by EventBridge carrying Spot interruption warnings, rebalance recommendations, instance state changes and scheduled maintenance events; on a notice it cordons and drains the node immediately and provisions a replacement. What it cannot do is extend the **two-minute** window, so Spot suitability remains a workload property: the pod must honour SIGTERM promptly, have a PDB permitting eviction, and hold no irreplaceable local state. Karpenter reduces interruption *frequency* by drawing from deep capacity pools, and the lever there is flexibility — a NodePool restricted to two instance types is interrupted far more often than one allowing several families across all zones.' },
+      { q: 'What is drift in Karpenter?', a: 'When an existing node no longer matches its NodePool or EC2NodeClass specification — a new AMI, changed user data, altered requirements — Karpenter marks it drifted and replaces it through a rolling process governed by the disruption budgets and PDBs. This makes AMI patching a configuration change rather than a project, and it is also the behaviour most likely to surprise you: editing a NodePool can begin rolling the entire fleet. Set disruption budgets before you rely on it.' },
+      { q: 'Why might Karpenter provision nodes that are bigger than expected?', a: 'Two usual causes. **Resource requests**, because Karpenter provisions and packs on requests rather than usage — a pod requesting 4 CPUs and using 0.3 causes it to buy 4 CPUs, so over-requested workloads produce expensive nodes and Karpenter will efficiently pack the wrong number. And **DaemonSet overhead**, which is deducted from every node\'s usable capacity; on small instance types your CNI, log shipper, node exporter and agents can consume a large fraction of the node, making a larger instance genuinely cheaper per usable core. Right-sizing requests with VPA-in-recommendation-mode or Goldilocks is the prerequisite for good results, not a follow-up.' },
+      { q: 'Does Karpenter replace HPA?', a: 'No — they operate at different layers and must be tuned together. HPA (or KEDA) decides how many **pods** should exist based on load; Karpenter reacts to pods that cannot be scheduled by providing **nodes**. If HPA scales aggressively while node provisioning takes a minute or two, you have moved the queue rather than removed it, and pods sit pending. Where latency matters, keep a small amount of headroom — over-provisioning "pause" pods at low priority that real workloads preempt — so a scale-up event does not wait for an instance to boot.' },
+      { q: 'What is the main guardrail against a runaway Karpenter cluster?', a: 'The NodePool\'s `limits` on total CPU and memory, which caps how much Karpenter may provision in aggregate. Without it, a misconfigured HPA, a runaway job or a workload with a broken readiness probe can drive continuous provisioning and produce a very large bill before anyone notices. With it, the same failure surfaces as pods stuck pending — a visible, cheap, recoverable symptom. Pair it with `expireAfter` for regular node rotation and disruption budgets to bound the rate of change.' },
+    ],
+    topics: [
+      {
+        title: 'The structural difference from Cluster Autoscaler',
+        content: `Cluster Autoscaler and Karpenter both add nodes when pods will not schedule, and the mechanism underneath is completely different in a way that determines what each can do.
+
+**Cluster Autoscaler works through node groups.** You define Auto Scaling Groups in advance, each with a fixed instance type or a small mixed-instances policy, and CA's only lever is to change a group's desired count. Deciding which group to grow requires *simulating* whether a pod would fit on a node from that group — so CA has to assume every node in a group is identical, which is why heterogeneous groups cause mis-scaling. The consequences are familiar: someone has to design the groups up front, a pod needing a shape no group provides simply stays pending, and getting good bin-packing means creating more and more groups until managing them is its own job.
+
+**Karpenter has no groups.** It watches unschedulable pods, reads their actual requirements — CPU and memory requests, architecture, GPU, node selectors, affinities, topology spread constraints, taint tolerations — and **solves for an instance type**, then calls the cloud API directly to launch it. Because it evaluates the whole set of pending pods together, it can launch one large node for a batch that CA would have spread across several, and it can pick from hundreds of instance types rather than the four somebody happened to configure.
+
+Two CRDs express the policy:
+
+    apiVersion: karpenter.sh/v1
+    kind: NodePool
+    spec:
+      template:
+        spec:
+          requirements:
+            - key: karpenter.sh/capacity-type
+              operator: In
+              values: ["spot", "on-demand"]
+            - key: kubernetes.io/arch
+              operator: In
+              values: ["amd64", "arm64"]
+            - key: karpenter.k8s.aws/instance-category
+              operator: In
+              values: ["c", "m", "r"]
+          nodeClassRef: { group: karpenter.k8s.aws, kind: EC2NodeClass, name: default }
+          expireAfter: 720h
+      disruption:
+        consolidationPolicy: WhenEmptyOrUnderutilized
+        consolidateAfter: 1m
+        budgets:
+          - nodes: "10%"
+      limits: { cpu: "2000", memory: 4000Gi }
+
+**NodePool** describes what Karpenter is *allowed* to provision — capacity types, architectures, instance families, zones — plus disruption policy and a hard resource ceiling. **EC2NodeClass** holds the cloud-specific parts: AMI family and selector, subnet and security-group selectors, IAM role, block device mappings, user data. The split lets one scheduling policy be reused across differently configured infrastructure.
+
+Note the API has moved and older material will not apply cleanly: \`Provisioner\` and \`AWSNodeTemplate\` became \`NodePool\` and \`EC2NodeClass\` in the beta APIs, and **Karpenter reached v1 in 2024**, which renamed \`consolidationPolicy: WhenUnderutilized\` to \`WhenEmptyOrUnderutilized\`, made \`consolidateAfter\` a required field, moved \`expireAfter\` onto the node template, and replaced the \`do-not-evict\` and \`do-not-consolidate\` annotations with a single \`karpenter.sh/do-not-disrupt\`. Karpenter's core has also been donated to Kubernetes SIG Autoscaling with per-cloud implementations, so it is no longer AWS-only — Azure's node auto-provisioning is built on the same core.
+
+The counterweight, since Karpenter is usually presented without one: because it bypasses Auto Scaling Groups, **anything in your organisation that assumes ASGs stops applying** — ASG lifecycle hooks, warm pools, ASG-based capacity reservations, and any tooling or dashboard built on them. Cluster Autoscaler is also genuinely multi-cloud and extremely well understood. If your platform is heavily invested in ASG-based tooling, that is a real migration cost rather than a detail.`,
+      },
+      {
+        title: 'Consolidation and disruption: the part that needs configuring',
+        content: `Provisioning is the easy half. **Consolidation** is where Karpenter delivers most of its cost savings and also where it can hurt you, because it actively terminates nodes that are still running your workloads.
+
+Continuously, Karpenter asks whether the current set of nodes is the cheapest set that can hold the current set of pods. If not, it acts in one of three ways: **delete** an empty node; **delete** a node whose pods demonstrably fit elsewhere; or **replace** a node with a cheaper one that still fits its workloads. That third action is what separates it from Cluster Autoscaler, which only removes nodes that are already nearly empty after a scale-down delay. Karpenter also supports **spot-to-spot consolidation**, replacing a Spot node with a cheaper Spot instance, which requires the NodePool to allow a wide set of instance types so that the replacement pool is deep enough to be safe.
+
+The same loop handles **drift**: change the AMI, the user data, or the requirements in the NodePool, and existing nodes no longer match the desired specification, so Karpenter replaces them through a rolling process. This is genuinely useful — AMI patching becomes a config change rather than a project — and it is also the mechanism most likely to surprise you, because editing a NodePool can begin rolling your entire fleet.
+
+The controls that make this safe, and which should be configured before enabling any of it in production:
+
+- **Disruption budgets** (\`spec.disruption.budgets\`) cap how many nodes Karpenter may disrupt at once, expressed as a count or percentage, optionally scheduled — so you can allow 10% normally and 0% during business hours or a change freeze. This is the single most important setting and it is the one most often left at the default.
+- **PodDisruptionBudgets** are respected: Karpenter will not evict a pod if doing so would violate one. The corollary is a common stall — a PDB requiring \`minAvailable\` equal to the replica count blocks disruption forever, and Karpenter will keep trying and never succeed. Every workload that matters needs a PDB that permits *some* disruption.
+- **\`karpenter.sh/do-not-disrupt: "true"\`** on a pod exempts its node from voluntary disruption. Correct for a long-running job that cannot be interrupted; wrong as a default, because a node carrying one such pod becomes permanently unconsolidatable.
+- **\`terminationGracePeriod\`** on the NodePool bounds how long a node may take to drain, so a pod that ignores SIGTERM cannot block a fleet roll indefinitely.
+- **\`expireAfter\`** forces periodic node replacement, which is how you get regular patching and how you stop long-lived nodes from accumulating state.
+
+The failure mode to design against is **churn**. Aggressive consolidation on a cluster with variable load can replace nodes continuously, and each replacement costs image pulls, cache warm-up, connection re-establishment, and disruption to anything in flight. If you see nodes lasting minutes, raise \`consolidateAfter\`, tighten disruption budgets, and check whether resource requests are so far above actual usage that the packing solution keeps changing.`,
+      },
+      {
+        title: 'Spot, requests, and what Karpenter cannot do for you',
+        content: `**Spot handling** is one of Karpenter's better features and its limits should be stated plainly. Karpenter subscribes to an SQS queue fed by EventBridge with EC2 interruption warnings, rebalance recommendations, instance state changes and scheduled maintenance events. On an interruption notice it immediately cordons and drains the node and provisions a replacement — but the notice is **two minutes**, and no amount of tooling extends it. So Spot suitability is still a property of the workload: it needs to tolerate a two-minute drain, which means honouring SIGTERM promptly, having a PDB that permits eviction, and not holding irreplaceable local state.
+
+Karpenter reduces interruption *frequency* by choosing from deep capacity pools (it uses a price-and-capacity-optimised strategy rather than cheapest-first), and the practical lever there is **flexibility**: a NodePool restricted to two instance types has two pools to draw from and will be interrupted often; one allowing several families and all zones has many. The common production shape is a single NodePool permitting both capacity types with Spot preferred, plus \`topologySpreadConstraints\` on workloads so a single pool draining cannot remove all replicas of anything.
+
+**Resource requests are the input to everything**, and this is where most disappointing results originate. Karpenter provisions and packs based on *requests*, not on usage. Over-requested workloads therefore produce over-provisioned, expensive nodes and Karpenter will faithfully make the cluster efficient at the wrong number — a pod requesting 4 CPUs and using 0.3 causes it to buy 4 CPUs. Right-sizing requests (VPA in recommendation mode, or Goldilocks, against observed p95 usage) is the prerequisite, not the follow-up. Karpenter is an excellent bin-packer of whatever numbers you give it.
+
+A few remaining sharp edges worth knowing:
+
+- **DaemonSet overhead is real and is accounted for.** Every node loses capacity to your log shipper, CNI, node exporter and agents. On very small instance types that overhead can be a large fraction of the node, which is one reason Karpenter's chosen sizes may be larger than you expect — and generally correct.
+- **Karpenter is not a pod autoscaler.** It reacts to unschedulable pods; deciding how many pods should exist is HPA's or KEDA's job. The two layers must be tuned together, or HPA creates replicas faster than nodes can be provisioned and you simply move the queue.
+- **Stateful workloads constrain it.** A pod with an EBS-backed PersistentVolume is pinned to that volume's availability zone, so consolidation and replacement options are narrower; Karpenter understands the constraint, but expect less packing efficiency for stateful sets.
+- **\`limits\` on the NodePool is your blast-radius control.** It caps total CPU and memory Karpenter may provision, which is the guardrail that turns a runaway workload or a misconfigured HPA into a scheduling failure rather than a five-figure bill.`,
+      },
     ],
   },
   {
