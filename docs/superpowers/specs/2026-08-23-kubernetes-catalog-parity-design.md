@@ -90,6 +90,10 @@ chunk, loaded whenever a user opens DevOps. Orchestration alone accounts for
 - Windows sections (`/docs/concepts/windows/`, `windows-networking`,
   `windows-storage`, `windows-security`, `windows-resource-management`).
   Out of scope; note the omission in the Architecture topic.
+- `/docs/concepts/security/pod-security-policy/`. PodSecurityPolicy was
+  removed in v1.25; Pod Security Admission replaces it and gets a topic. PSP
+  is mentioned only as prior art inside that topic. Recorded here so the
+  omission is a decision rather than an oversight.
 - Renderer changes. The SRE-style branch already covers every field.
 - Touching the Observability or Platform Engineering pages.
 - Reorganising non-Kubernetes DevOps categories.
@@ -105,16 +109,16 @@ category.
 | Category id | Name | Existing topics moved | New topics | Doc pages covered |
 |---|---|---:|---:|---:|
 | `k8s-architecture` | Architecture & the API | 3 | 10 | ~23 |
-| `k8s-workloads` | Workloads & Pods | 5 | 13 | ~36 |
+| `k8s-workloads` | Workloads & Pods | 5 | 14 | ~36 |
 | `k8s-networking` | Networking & Service Discovery | 6 | 7 | ~13 |
 | `k8s-storage` | Storage | 1 | 9 | ~15 |
 | `k8s-config-policy` | Configuration & Policies | 1 | 5 | ~7 |
 | `k8s-security` | Security | 4 | 12 | ~18 |
 | `k8s-scheduling` | Scheduling, Preemption & Eviction | 5 | 10 | ~18 |
-| `k8s-cluster-admin` | Cluster Administration & Operations | 4 | 10 | ~18 |
+| `k8s-cluster-admin` | Cluster Administration & Operations | 4 | 11 | ~18 |
 | `k8s-baremetal` | Bare Metal & Production Setup | 2 | 7 | `/docs/setup/` |
 | `k8s-extending` | Extending Kubernetes | 2 | 6 | ~7 |
-| | **Total** | **33** | **89** | |
+| | **Total** | **33** | **91** | |
 
 `helm-vs-kustomize` moves to the existing `helm` category rather than into a
 Kubernetes sub-category.
@@ -140,7 +144,17 @@ Pod QoS classes; Pod disruptions and PDBs; static Pods and user namespaces;
 Downward API and advanced Pod configuration; Deployments, ReplicaSets and
 ReplicationController; StatefulSets; DaemonSets; Jobs, CronJobs and TTL
 cleanup; Workload API and PodGroups; container images; container lifecycle
-hooks.
+hooks; node resource managers.
+
+The node resource managers topic covers the kubelet suite documented at
+`/docs/concepts/workloads/resource-managers/` — Topology Manager, CPU Manager
+(`none` and `static` policies and their feature-gated options), Memory
+Manager, Device Manager and pod-level resource managers — and the QoS-class
+rules that decide which Pods get exclusive CPUs. It pairs with Pod QoS classes
+and with `k8s-scheduling`'s NUMA and device topics.
+
+`/docs/concepts/workloads/management/` (Managing Workloads) is covered by the
+`k8s-core-resources` section index rather than a topic of its own.
 
 **`k8s-networking` — Networking & Service Discovery**
 Existing: `kubernetes-services` (rewrite), `kubernetes-networking` (deepen),
@@ -190,8 +204,13 @@ Existing: `kubernetes-upgrades`, `kubernetes-observability`,
 New: node shutdown and swap memory management; node and cluster autoscaling;
 logging architecture and system logs; system metrics and kube-state-metrics;
 system traces; API Priority and Fairness; addons and cluster services;
-admission-webhook good practices; etcd operations, backup and restore; cluster
-certificate rotation.
+admission-webhook good practices; Dynamic Resource Allocation for cluster
+admins; etcd operations, backup and restore; cluster certificate rotation.
+
+The DRA topic here covers `/docs/concepts/cluster-administration/dra/` —
+operating DRA on a cluster. It is a different page from the DRA hardening
+guide under `k8s-security` and from the DRA scheduling concept under
+`k8s-scheduling`; all three are separate pages and get separate topics.
 
 **`k8s-baremetal` — Bare Metal & Production Setup**
 Existing: `kubeadm-provisioning` (rewrite), `kubernetes-the-hard-way`.
@@ -317,8 +336,35 @@ A Vitest suite under `apps/camora/src/data/capra/topics/__tests__/`:
    well-formed `https://kubernetes.io/` URL. Format only; no network calls in
    the test.
 
+5. **Coverage reconciliation** — every kubernetes.io Concepts page is either
+   claimed by a topic or explicitly excluded. Backed by a checked-in
+   inventory, `k8s-doc-coverage.json`:
+
+   ```json
+   {
+     "/docs/concepts/workloads/resource-managers/": "k8s-node-resource-managers",
+     "/docs/concepts/workloads/management/": "k8s-core-resources",
+     "/docs/concepts/security/pod-security-policy/": { "excluded": "removed in v1.25; superseded by Pod Security Admission" },
+     "/docs/concepts/windows/intro/": { "excluded": "Windows out of scope" }
+   }
+   ```
+
+   The test asserts every value that names a topic id resolves to a real
+   topic, and that no id is claimed by two pages without both appearing in
+   that topic's `references`. Refreshing the inventory against a live fetch is
+   a manual step at the start of each content phase, not a network call in the
+   test suite.
+
 Check 3 is what converts "high level" from a judgment call into a build
-failure.
+failure. Check 5 does the same for coverage.
+
+The inventory exists because the first draft of this spec collapsed ~162 doc
+pages into ten prose paragraphs and lost four of them —
+`/workloads/resource-managers/`, `/workloads/management/`,
+`/cluster-administration/dra/` and an unstated decision about
+`/security/pod-security-policy/`. Prose cannot be diffed against a page list;
+a JSON map can. Depth gaps are visible on review, coverage gaps are not,
+because nothing on the page points at the hole.
 
 ## Phasing
 
