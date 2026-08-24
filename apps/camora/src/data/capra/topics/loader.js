@@ -158,7 +158,7 @@ export const HEAVY_TOPIC_LOADERS = {
   // CNCF Platform Whitepaper, SLSA, Sigstore). 11 sub-categories, ~56 topics.
   // Diagrams at /diagrams/devops/*.png from gen-devops-diagrams.py.
   devops: async () => {
-    const [mod, helmMod, fluxMod, cpMod, nbMod, extraMod, k8sMod] = await Promise.all([
+    const [mod, helmMod, fluxMod, cpMod, nbMod, extraMod, k8sMod, gitMod] = await Promise.all([
       import('./devopsTopics.js'),
       import('./helmTopics.js'),
       import('./fluxTopics.js'),
@@ -166,6 +166,7 @@ export const HEAVY_TOPIC_LOADERS = {
       import('./nativeBuildTopics.js'),
       import('./devopsTopicsExtra.js'),
       import('./k8sTopics.js'),
+      import('./gitTopics.js'),
     ]);
     return {
       devopsCategories: mod.devopsCategories,
@@ -173,11 +174,12 @@ export const HEAVY_TOPIC_LOADERS = {
         ...mod.devopsTopicCategoryMap,
         ...extraMod.devopsExtraTopicCategoryMap,
         ...k8sMod.k8sTopicCategoryMap,
+        ...gitMod.gitTopicCategoryMap,
       },
       devopsTopics: [
         ...mod.devopsTopics, ...helmMod.helmTopics, ...fluxMod.fluxTopics,
         ...cpMod.controlPlaneTopics, ...nbMod.nativeBuildTopics,
-        ...extraMod.devopsExtraTopics, ...k8sMod.k8sTopics,
+        ...extraMod.devopsExtraTopics, ...k8sMod.k8sTopics, ...gitMod.gitTopics,
       ],
     };
   },

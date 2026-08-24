@@ -11,6 +11,7 @@
 export const devopsCategories = [
   { id: 'foundations',      name: 'DevOps Foundations & Culture',     icon: 'book',          color: '#3b82f6' },
   { id: 'cicd',             name: 'CI/CD Fundamentals',                icon: 'gitMerge',      color: '#22c55e' },
+  { id: 'git',              name: 'Git — Branching, Merging & History', icon: 'gitBranch',     color: '#f97316' },
   { id: 'cicdtools',        name: 'CI/CD Tools — Practical',           icon: 'tool',          color: '#16a34a' },
   { id: 'delivery',         name: 'Continuous Delivery Practices',    icon: 'send',          color: '#06b6d4' },
   { id: 'gitops',           name: 'GitOps',                            icon: 'gitPullRequest', color: '#0891b2' },
