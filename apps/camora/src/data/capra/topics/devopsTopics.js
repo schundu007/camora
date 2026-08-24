@@ -39519,6 +39519,40 @@ kubectl describe pytorchjob llm-finetune-job -n ml-team
   // ─────────────────────────────────────────────────────────────────────
   {
     id: 'dora-2024-capabilities',
+    topics: [
+      {
+        title: 'How the capability model works, and why it is not a checklist',
+        content: `DORA's research programme is a **predictive model**, not a maturity ladder. Each capability in the catalogue earned its place by showing a statistically significant relationship with software delivery performance, organisational performance, or wellbeing, across a decade of survey data. That framing matters because it changes how the list should be used: a capability is a lever with evidence behind it, not a box to tick.
+
+The capabilities group into four long-standing areas, plus one added recently:
+
+- **Technical** — trunk-based development, continuous integration, deployment automation, test automation, test data management, loosely coupled architecture, database change management, continuous delivery, code maintainability, empowering teams to choose tools.
+- **Process** — working in small batches, visibility of work in the value stream, customer feedback, team experimentation, streamlined change approval.
+- **Measurement** — monitoring and observability, proactive failure notification, WIP limits, visual management, monitoring systems to inform business decisions.
+- **Cultural** — generative (Westrum) culture, learning culture, job satisfaction, transformational leadership, psychological safety.
+- **AI** — added in the 2024 report, covering AI-assisted coding, review, testing and documentation.
+
+The most useful property of the model is its **directionality**. DORA repeatedly finds that technical practices drive process improvements, which drive cultural ones — not the reverse. That is a concrete planning instruction: an organisation trying to fix culture by running culture workshops, while deploying monthly through a change-advisory board, is working against the observed causal direction. Make deployment safe and frequent, and the cultural indicators move.
+
+The second useful property is that capabilities are **contextual**. The model does not claim every capability suits every organisation; it claims each has evidence behind it in the surveyed population. The intended use is to find your constraint — usually via value stream mapping — and pick the capability that addresses it, rather than to attempt all of them.
+
+A caution on numbers. The widely quoted multipliers (elite performers deploying orders of magnitude more often, with dramatically shorter lead times) come from specific report years, and the performance clusters have been redefined between editions — the number of clusters and their thresholds have both changed over time. Quote them as "in the year-X report" rather than as constants, and prefer your own trend over a benchmark: DORA's own guidance is that the metrics are for comparing a team to its past self, not to an industry median.`,
+      },
+      {
+        title: 'The 2024 AI finding, and how to read it honestly',
+        content: `The 2024 report's headline addition was the AI capability cluster, and the result was more interesting than the marketing summary suggests. **AI adoption was associated with improvements in individual-level outcomes — perceived productivity, flow, job satisfaction, and reduced burnout — while simultaneously being associated with a decrease in software delivery throughput and delivery stability.**
+
+That combination is counter-intuitive enough to be worth explaining rather than repeating. The most defensible reading is a batch-size effect. AI assistance makes it cheaper to produce code, so more code is produced. More code per change means larger batches, and larger batches are exactly what the rest of the DORA corpus identifies as the driver of slower delivery and higher change failure rates. The bottleneck was never typing; it is review, integration and verification, and AI accelerates the part that was not the constraint while adding load to the part that was.
+
+The practical conclusions follow directly, and they are the reason this cluster is worth studying rather than skimming:
+
+- **AI raises the value of the downstream capabilities**, it does not replace them. If generation gets faster, test automation, continuous integration and small-batch discipline become more load-bearing, not less.
+- **Watch change failure rate and review latency** when adopting AI tooling, not just developer sentiment. The individual-level metrics will look good regardless; the delivery-level metrics are where the cost shows up.
+- **Treat generated code as needing more review, not less.** The reviewer is now the constraint, and reviewing code no human has yet reasoned about is slower per line, not faster.
+
+More broadly, this is the correct way to read any DORA finding: the report reports **correlations in a survey population**, self-reported and cross-sectional. It is strong evidence about which levers are worth pulling and weak evidence about mechanism in any particular organisation. Use it to choose what to try, then measure your own four keys to find out whether it worked. An engineer who can state both the finding and its limits is demonstrating exactly the judgement the research is meant to support.`,
+      },
+    ],
     title: 'DORA 2024 — 39 Capabilities & AI Impact',
     icon: 'activity',
     color: '#3b82f6',
@@ -39547,6 +39581,44 @@ DORA (DevOps Research and Assessment) has published annual State of DevOps Repor
   },
   {
     id: 'opentelemetry-collector-pipelines',
+    topics: [
+      {
+        title: 'Pipeline anatomy — and why processor order is a correctness question',
+        content: `A Collector configuration declares components and then wires them into pipelines. The components are defined in top-level sections and only take effect when a pipeline under **service::pipelines** references them — a config can define twenty receivers and run none of them, which is the single most common "why is nothing arriving" cause.
+
+Four component types:
+
+- **Receivers** accept data — otlp (gRPC 4317 / HTTP 4318), prometheus, filelog, jaeger, zipkin, hostmetrics, kubeletstats.
+- **Processors** transform data in a pipeline, in the order listed.
+- **Exporters** send it onward — otlp, otlphttp, prometheusremotewrite, debug, plus vendor exporters.
+- **Connectors** join two pipelines, consuming from one and emitting into another. spanmetrics is the important one: it consumes traces and produces RED metrics, so you get request rate, error rate and duration without instrumenting them separately.
+
+**Processor order is part of the semantics, not a style choice.** Processors run in the sequence written, and two positions are effectively mandatory:
+
+- **memory_limiter first.** It refuses or drops data when heap passes a soft limit and forces a garbage collection at a hard limit. Placed first, it sheds load before any expensive work happens. Placed later, the Collector does the work and then dies anyway — and a Collector OOM-killed under load loses everything in flight, which turns a traffic spike into a telemetry blackout precisely when you need the telemetry.
+- **batch last, immediately before the exporters.** Batching after enrichment means one compressed network call per batch rather than per span, which is the difference between a viable and a wasteful egress bill.
+
+Between those two sit the processors that do the actual work: **k8sattributes** (adds pod, namespace, node, deployment and label metadata — it needs RBAC to list and watch pods, and silently adds nothing if that is missing), **resourcedetection** (cloud and host identity), **filter** (drop noisy health-check spans at the edge, the cheapest volume reduction available), **transform** using OTTL for attribute rewriting and PII redaction, and **attributes** for simple key operations.
+
+Getting PII redaction in the right place is worth stating explicitly: it belongs in the **agent**, on the node where the data originates, so sensitive values never cross the network to the gateway or a vendor. Redacting in the gateway means the raw value has already left the host.`,
+      },
+      {
+        title: 'Agent, gateway, and why tail sampling constrains your topology',
+        content: `Two deployment shapes, usually combined.
+
+**Agent** — a DaemonSet, or a sidecar, next to the workload. It receives over localhost, so the application's exporter call is cheap and fire-and-forget; retry, compression, batching and enrichment become the Collector's problem rather than every service's. It is also the only place with access to node-local context, which is what makes k8sattributes and hostmetrics work.
+
+**Gateway** — a horizontally scaled Deployment behind a Service. Agents forward to it. It provides one egress point for backend credentials, cross-service aggregation, global rate limiting, and a single place to add or change a destination.
+
+The reason topology is not just an operational preference is **tail-based sampling**. Head sampling decides at the first span, before anything is known, so it cannot preferentially keep errors or slow traces. Tail sampling decides after the trace completes, which is what lets you keep 100% of errors and traces over a latency threshold while dropping most successful ones — usually a 90-99% volume reduction with no loss of diagnostic value.
+
+But it has a hard requirement: **every span of a trace must reach the same Collector instance.** A trace scattered across three gateway replicas gives each replica a partial view, and each makes a wrong decision independently. The standard solution is a two-tier gateway. The first tier runs the **loadbalancing exporter** with routing_key: traceID, which hashes the trace ID to pick a backend consistently; the second tier runs tail_sampling and sees whole traces. Attempting tail sampling on a plain load-balanced Deployment is the classic misconfiguration, and it fails quietly — you get sampled data that looks plausible and is systematically wrong.
+
+Two further constraints follow from how tail sampling works. It **buffers** spans for a decision_wait window, so memory scales with trace throughput times that window; and any span arriving after the decision is dropped, which makes a long-running trace or a slow batch exporter upstream a source of truncated traces.
+
+On operating the thing: the Collector exposes its own metrics, and the ones that matter are otelcol_processor_dropped_spans, otelcol_exporter_send_failed_spans and the memory_limiter's refusal counters — **a Collector that is silently dropping data looks exactly like an application that is not emitting any**, so these should be alerted on. The debug exporter (formerly logging) is the first tool for "is anything arriving at all". In Kubernetes, the OpenTelemetry Operator manages Collector deployments as a CRD and provides auto-instrumentation: annotate a pod and a mutating webhook injects the language SDK, which removes the per-service instrumentation change from the rollout entirely.`,
+      },
+    ],
     title: 'OpenTelemetry Collector — Pipelines & Deployment',
     icon: 'filter',
     color: '#06b6d4',
@@ -39575,6 +39647,40 @@ OpenTelemetry Collector is a vendor-agnostic telemetry agent and pipeline that r
   },
   {
     id: 'kubernetes-gateway-api',
+    topics: [
+      {
+        title: 'The role-oriented model — the actual reason Gateway API exists',
+        content: `Ingress failed for a structural reason, not a feature reason. It put every concern in one resource: the infrastructure choice, the listener and TLS configuration, and the application routing rules all lived in one object, editable by one set of permissions. Anything the spec did not cover — and it covered very little — moved into vendor-specific annotations, so an Ingress was portable in name only and its real behaviour depended on which controller happened to read it.
+
+Gateway API splits that object along the lines of who is responsible for each part:
+
+- **GatewayClass** (cluster-scoped) names an implementation, via controllerName. Owned by the infrastructure provider. Roughly the analogue of a StorageClass.
+- **Gateway** requests an instance of that class: listeners, ports, protocols, TLS certificates. Owned by the cluster operator.
+- **Routes** — HTTPRoute, GRPCRoute, TLSRoute, TCPRoute, UDPRoute — express application routing and attach to a Gateway via parentRefs. Owned by the application team.
+
+The consequence is the point: **an application team can change routing without holding permission to change TLS or listeners**, and a platform team can move the whole estate to a different data plane by changing the GatewayClass. That separation is what Ingress could not express, and it is the answer to "why not just add fields to Ingress".
+
+Attachment is deliberately two-sided. A Route names its Gateway in parentRefs, and the Gateway's listener declares **allowedRoutes**, restricting which namespaces and kinds may attach. Neither side can unilaterally connect, which is what makes a shared Gateway safe to offer as a platform service.
+
+**ReferenceGrant** covers the other direction. A Route may only reference a backend Service in another namespace if that namespace publishes a ReferenceGrant permitting it. This exists because the alternative — allowing any namespace to route traffic to any Service — is a cross-namespace escalation, and the same mechanism guards references to TLS Secrets held elsewhere.
+
+Read **status** rather than assuming success. A Gateway reports Accepted and Programmed conditions, and a Route reports per-parent conditions including ResolvedRefs. A Route that is Accepted but has ResolvedRefs false is attached and routing nowhere, usually a missing ReferenceGrant or a Service that does not exist. This is a genuine improvement over Ingress, where a misconfiguration typically produced silence.`,
+      },
+      {
+        title: 'Traffic management, mesh, and migrating off Ingress',
+        content: `Features that required annotations under Ingress are first-class here, which is what makes progressive delivery portable.
+
+**Weighted splitting** is the canonical example: an HTTPRoute lists several backendRefs, each with a weight, and traffic divides proportionally. A canary is a weight change, expressed in the API and therefore identical across implementations — which is why Argo Rollouts and Flagger both target Gateway API, and why a canary configuration written for one data plane now survives a change of data plane.
+
+**Matching** covers path (Exact, PathPrefix, RegularExpression), headers, query parameters and method. **Filters** run per rule: RequestHeaderModifier, ResponseHeaderModifier, RequestMirror (shadow a copy of live traffic to a new version without affecting responses — the safest pre-canary check available), RequestRedirect and URLRewrite. **GRPCRoute**, GA in v1.1, matches on gRPC service and method rather than URL path, which is what makes gRPC routing tractable at all.
+
+**GAMMA** extends the same API to east-west service-mesh traffic: a Route attaches to a **Service** as its parentRef instead of a Gateway, so mesh routing and ingress routing are expressed in one vocabulary. This is the strategic reason to learn the API — it is converging the ingress and mesh configuration surfaces that have been separate for a decade.
+
+Implementations worth knowing: Envoy Gateway, Istio, Contour, NGINX Gateway Fabric, Cilium, Traefik, and the managed offerings from the cloud providers. Conformance is published per implementation and split into core, extended and implementation-specific features — **check the conformance report before assuming portability**, because extended features are genuinely optional and a manifest using them is not guaranteed to move.
+
+**Migrating.** The two APIs coexist, and the sane path is incremental: install a Gateway API implementation alongside the existing ingress controller, use the **ingress2gateway** tool to generate an initial translation, migrate one service by shifting DNS, and keep the Ingress until the Gateway reports Programmed and traffic is verified. The translation is a starting point rather than an answer — annotation-driven behaviour has no automatic equivalent, and rate limiting, authentication and WAF rules generally need reimplementing against whatever extension mechanism the chosen implementation offers. Budget for that rather than discovering it at cutover.`,
+      },
+    ],
     title: 'Kubernetes Gateway API v1',
     icon: 'globe',
     color: '#14b8a6',
@@ -39603,12 +39709,55 @@ Kubernetes Gateway API reached v1.0 (GA) in October 2023 and v1.2 in November 20
   },
   {
     id: 'platform-engineering-maturity',
+    topics: [
+      {
+        title: 'The CNCF maturity model — four levels across five aspects',
+        content: `A correction first, because the numbers are widely misquoted. The **CNCF Platform Engineering Maturity Model** defines **four levels**, not five, and organises them across **five aspects**, not a list of capability domains. The aspects are the useful part: they stop "maturity" collapsing into a single score that hides where the actual problem is.
+
+The four levels:
+
+- **Provisional** — ad hoc. Individuals or single teams solve their own infrastructure problems; solutions exist but are not shared, and knowledge is tribal.
+- **Operational** — the platform exists as a recognised thing with documented, repeatable processes, but it is still largely operated by requests to a team rather than consumed self-service.
+- **Scalable** — self-service and automated. Application teams provision and ship without the platform team in the request path, and the platform scales without headcount scaling with it.
+- **Optimizing** — the platform is measured and improved as a product, with feedback loops driving investment and capabilities adapting to changing user needs.
+
+The five aspects, each of which can sit at a different level:
+
+- **Investment** — how platform work is funded and staffed. The signal of immaturity is platform work done in the gaps of other work.
+- **Adoption** — why teams use it. Mandate is the low-maturity answer; pull is the high-maturity one.
+- **Interfaces** — how users consume the platform. Tickets at the bottom, self-service APIs, CLIs and portals at the top.
+- **Operations** — how the platform itself is run. Best-effort at the bottom, with defined SLOs and on-call at the top.
+- **Measurement** — how success is judged. No measurement, then vanity metrics, then user-outcome metrics.
+
+Assessing per aspect is what makes the model usable, because the common real-world shape is uneven: a technically excellent, fully automated platform (Interfaces at Scalable) that nobody chose to use and nobody measures (Adoption and Measurement at Provisional). A single maturity number hides exactly that, and it is the failure that wastes the most money.
+
+**Adoption is the aspect to watch.** A platform mandated into use produces no signal — teams comply and route around it where they can, and shadow IT appears. A platform teams choose reveals genuine value, and its adoption curve is the most honest health metric available.`,
+      },
+      {
+        title: 'Running the platform as a product, and measuring whether it works',
+        content: `The recurring finding across the CNCF Platforms White Paper and Team Topologies is the same: **the difference between a platform and an expensive internal tool is product management.** Concretely that means named internal customers, user research rather than assumption, a public roadmap, versioned interfaces with deprecation policy, documentation treated as part of the product, and published SLOs for the platform's own availability.
+
+**Golden paths** are the primary artefact. A golden path is the paved, opinionated route for a common case — create a service, get a repository, pipeline, observability, secrets, ingress and a production deployment, without learning the underlying systems. Two properties make one work. It must be genuinely faster than the alternative, or teams reasonably go around it. And it must be **paved, not walled**: a team with an unusual requirement must be able to step off, or the platform becomes a constraint and its most capable users become its opponents. The right measure is the fraction of teams on the path, not the absence of alternatives.
+
+**Thinnest viable platform** is the counterweight to over-building. Build the smallest thing that removes the load — often documentation and a template repository before any service exists — and let scope be pulled by demand. Platform teams fail far more often by building capability nobody asked for than by building too little.
+
+**Measurement.** The primary outcome is reduced cognitive load in stream-aligned teams, which is hard to measure directly, so use proxies and be honest that they are proxies:
+
+- **Time to first deploy** for a new service, and for a new engineer. The single most legible number, and the one leadership understands.
+- **Adoption and retention** — teams onboarded, and teams still using it a quarter later. Retention is the harder and more meaningful half.
+- **DORA metrics of the teams using the platform**, compared against their own history before adoption. This is the closest thing to a causal claim available.
+- **Developer satisfaction and self-reported friction**, via a regular survey. The SPACE framework is the standard vocabulary here, and it exists precisely because productivity is not one number.
+- **Support load per onboarded team**, trending down. Rising support load with rising adoption means the interface is wrong, not that the platform is popular.
+
+What not to measure: platform features shipped, tickets closed, or services onboarded under mandate. Each rewards activity over outcome, and a platform optimising for them drifts away from the teams it exists to serve.`,
+      },
+    ],
     title: 'Platform Engineering Maturity Model',
     icon: 'layers',
     color: '#8b5cf6',
-    description: 'CNCF Platform Engineering Whitepaper: 5 maturity levels, 13 capability domains, measuring platform ROI and developer satisfaction.',
+    description: 'CNCF Platform Engineering Maturity Model: four levels across five aspects — investment, adoption, interfaces, operations, measurement — plus how to run a platform as a product and measure whether it is working.',
     introduction: `## Overview
-The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. It introduces a maturity model with five levels and 13 capability domains that a platform must cover to deliver full value.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.`,
+The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform engineering as building internal products that accelerate application teams by reducing cognitive load and eliminating repetitive infrastructure tasks. The companion CNCF Platform Engineering Maturity Model grades a platform at one of four levels — Provisional, Operational, Scalable, Optimizing — across five aspects: investment, adoption, interfaces, operations and measurement. Grading each aspect separately is the point, because the common real-world shape is uneven.\n\nSenior DevOps/platform engineers are expected to benchmark their platforms against this model and articulate a roadmap toward higher maturity.`,
     keyConcepts: [
       { title: '5 Maturity Levels', description: '1. Provisional: ad-hoc, undocumented, built for immediate need. 2. Operationalized: documented, repeatable, but manually triggered. 3. Scalable: self-service, automated, handles multiple teams. 4. Optimizing: data-driven improvement cycles, DORA metrics tracked, developer feedback loops. 5. Leading: platform itself is a product with a roadmap, SLOs, and dedicated PM. Most organizations are at level 2-3; reaching level 4 requires cultural investment alongside tooling.' },
       { title: '13 Capability Domains', description: 'A mature IDP covers: (1) artifact/image store, (2) CI/CD pipelines, (3) cloud/environment provisioning, (4) developer portal, (5) IDP orchestration layer, (6) observability, (7) policy/governance, (8) RBAC/access control, (9) secrets management, (10) service catalog/registry, (11) service mesh, (12) testing frameworks, (13) toolchain selection/standardization. Not all domains need full coverage at once — prioritize by team pain points.' },
@@ -39631,6 +39780,40 @@ The CNCF Platform Engineering Whitepaper (2022, updated 2023) defines platform e
   },
   {
     id: 'gitops-secrets-management',
+    topics: [
+      {
+        title: 'Three patterns, compared by what happens when something leaks',
+        content: `The tension is real: GitOps wants everything declared in Git, and Git is a replicated, permanently-retained, widely-cloned store. Note first what a Kubernetes Secret is not — **base64 is an encoding, not encryption**, so a committed Secret manifest is a plaintext credential with an extra step.
+
+Three families of answer, best distinguished by their failure mode rather than their feature list.
+
+**Encrypt in Git — SOPS.** Mozilla SOPS encrypts values while leaving keys and structure readable, so a diff still shows which fields changed. Key material comes from age, PGP, or a cloud KMS (AWS KMS, GCP KMS, Azure Key Vault), and Flux decrypts natively while Argo CD needs a plugin such as KSOPS or argocd-vault-plugin. The repository is self-contained: no runtime dependency on an external secret store, and a disaster recovery is a clone plus a key. What leaks if the repository leaks is ciphertext — but ciphertext that will be retained forever, so an algorithm or key compromise is retroactive across all history. Rotation means rewriting and redeploying, and there is no revocation.
+
+**Encrypt in Git — Sealed Secrets.** Bitnami's controller holds a private key in the cluster; you encrypt with the public key using kubeseal, and only that controller can decrypt. Encryption is scoped by namespace and name by default, so a SealedSecret cannot be moved elsewhere to be decrypted. The operational catch is the controller's private key: **lose it and every SealedSecret in the repository is permanently undecryptable.** Backing up that key, and knowing where the backup is, is the whole disaster-recovery story for this option.
+
+**Reference externally — External Secrets Operator.** Git holds an ExternalSecret CRD naming a SecretStore and a remote key; ESO reads from AWS Secrets Manager, Vault, GCP Secret Manager, Azure Key Vault or 1Password and materialises a Kubernetes Secret, refreshing it on an interval. **Nothing sensitive is ever in Git, which is the decisive property.** Rotation happens in the secret store and propagates without a commit, and audit lives in the store where it is genuinely queryable. The cost is a hard runtime dependency: if the store is unreachable, new workloads cannot get their secrets, so the store's availability becomes part of your deployment path.
+
+**Vault Agent Injector and the Secrets Store CSI Driver** go further, mounting secrets into the pod filesystem — often as tmpfs — without creating a Kubernetes Secret object at all. That avoids etcd entirely and removes the "anyone with get secrets in the namespace can read it" problem, at the price of an injected sidecar or CSI volume and an application that reads from a file rather than an environment variable.
+
+**Choosing.** Small team, few clusters, no existing secret store, self-contained repositories matter: SOPS. Already running Vault or a cloud secret manager, or needing rotation and central audit: ESO. Highest sensitivity, and willing to change how applications consume secrets: CSI driver or Vault injection. Sealed Secrets is simple and popular but the key-loss failure mode should be a deliberate acceptance, not a discovery.`,
+      },
+      {
+        title: 'The operational half — rotation, blast radius, and what GitOps does not solve',
+        content: `Choosing a pattern is the easy part. These are the questions that decide whether the choice survives an incident.
+
+**Rotation.** Ask how long a rotation takes end to end. With ESO it is a write in the secret store plus a refresh interval — no commit, no deploy, and it can be automated on a schedule. With SOPS or Sealed Secrets it is re-encrypt, commit, review, merge, sync: a pull request per rotation, which in practice means rotation does not happen at the frequency policy claims. If your compliance regime requires 90-day rotation across hundreds of secrets, that difference decides the architecture.
+
+**Encryption key rotation** is the harder version, and it is the one people forget. SOPS supports re-keying, but every encrypted file must be re-encrypted and committed. Sealed Secrets rotates its sealing key automatically on a schedule while keeping old keys for decryption — so old SealedSecrets keep working, but they are still encrypted with the old key until re-sealed.
+
+**Blast radius.** Once a Kubernetes Secret exists, anyone with get on Secrets in that namespace can read it, and so can anyone who can create a pod that mounts it. **Encryption at rest in Git is irrelevant to that.** Encrypting the repository protects against repository compromise; it does nothing about cluster RBAC. Both need to be right, and the second is the one more commonly wrong. Enable etcd encryption at rest, keep Secret-reading RBAC narrow, and prefer per-namespace SecretStores over one cluster-wide store that can read everything.
+
+**Drift and reconciliation.** ESO overwrites the Kubernetes Secret on each refresh, so a manual edit silently reverts — correct behaviour, and confusing during an incident if nobody expects it. Argo CD will also flag ESO-managed Secrets as out of sync unless ignoreDifferences is configured, which is a routine source of permanently-yellow applications.
+
+**Bootstrapping** is the genuinely awkward part. ESO needs credentials to reach the secret store, and those credentials cannot themselves come from ESO. The clean answer is workload identity — IRSA on EKS, Workload Identity on GKE, Managed Identity on Azure, or Kubernetes auth in Vault — so the cluster's own identity is the credential and there is no root secret to store. Where that is unavailable, the bootstrap secret is provisioned out of band by the cluster's infrastructure code, and it should be the only one.
+
+**Prevention, independent of the pattern.** Push protection and secret scanning at the forge, a gitleaks or trufflehog pre-commit hook, and CI that fails on a detected secret. And rehearse the leak procedure: rotate first, purge history second, and assume anything that reached a remote is compromised. Every pattern above reduces the chance of a leak; none of them changes what you do once one has happened.`,
+      },
+    ],
     title: 'Secrets Management in GitOps',
     icon: 'lock',
     color: '#0891b2',
