@@ -116,9 +116,9 @@ category.
 | `k8s-security` | Security | 4 | 12 | ~18 |
 | `k8s-scheduling` | Scheduling, Preemption & Eviction | 5 | 10 | ~18 |
 | `k8s-cluster-admin` | Cluster Administration & Operations | 4 | 11 | ~18 |
-| `k8s-baremetal` | Bare Metal & Production Setup | 2 | 7 | `/docs/setup/` |
+| `k8s-baremetal` | Bare Metal & Production Setup | 2 | 8 | `/docs/setup/` |
 | `k8s-extending` | Extending Kubernetes | 2 | 6 | ~7 |
-| | **Total** | **33** | **92** | |
+| | **Total** | **33** | **93** | |
 
 Counts here are secondary to `k8s-doc-coverage.json`, which is the source of
 truth for what is covered. That file maps all 175 Concepts pages — 155 claimed
@@ -222,11 +222,54 @@ guide under `k8s-security` and from the DRA scheduling concept under
 
 **`k8s-baremetal` — Bare Metal & Production Setup**
 Existing: `kubeadm-provisioning` (rewrite), `kubernetes-the-hard-way`.
-New: production-environment checklist; HA control-plane topologies (stacked vs
-external etcd); container runtime installation; bare-metal load balancing
-(MetalLB, kube-vip); bare-metal storage (Longhorn, Rook/Ceph, OpenEBS, local
-PVs); node provisioning and imaging (PXE, Tinkerbell, Cluster API bare metal);
-air-gapped clusters and registry mirroring.
+New: **end-to-end bare-metal cluster build (capstone runbook)**; production-environment
+checklist; HA control-plane topologies (stacked vs external etcd); container
+runtime installation; bare-metal load balancing (MetalLB, kube-vip);
+bare-metal storage (Longhorn, Rook/Ceph, OpenEBS, local PVs); node
+provisioning and imaging (PXE, Tinkerbell, Cluster API bare metal); air-gapped
+clusters and registry mirroring.
+
+### The capstone runbook
+
+`k8s-baremetal-end-to-end` is the one topic that sequences the others into a
+single build a reader can follow from racked hardware to running workloads,
+with the actual commands, config files and manifests rather than prose about
+them:
+
+1. Hardware and network prep — BMC/IPMI, NIC bonding, VLANs, MTU, DNS and NTP,
+   disk layout.
+2. Node baseline — kernel modules (`overlay`, `br_netfilter`), sysctls, the
+   swap decision, cgroup v2, containerd install with `SystemdCgroup = true`.
+3. API-server VIP — kube-vip or HAProxy with keepalived, before `kubeadm init`.
+4. Control-plane bootstrap — `kubeadm init` from a config file, stacked versus
+   external etcd, `certSANs`, joining the remaining control-plane nodes.
+5. CNI — Cilium or Calico, pod CIDR alignment with the kubeadm config,
+   verification.
+6. Workers — join tokens, node labels and taints.
+7. Ingress and service LoadBalancer — MetalLB L2 or BGP address pools,
+   ingress-nginx.
+8. Storage — local-path, Longhorn or Rook/Ceph; setting a default StorageClass.
+9. Observability baseline — metrics-server, kube-prometheus-stack, log
+   shipping.
+10. Validation and day 2 — smoke tests, an etcd backup *and restore* drill,
+    an upgrade rehearsal, certificate renewal.
+
+Each step links to the topic that covers it in depth, so the runbook stays a
+spine rather than duplicating them. If it exceeds ~35 KB, split day 2 (step 10)
+into `k8s-baremetal-day-two`.
+
+**Why this topic is not derived from the doc tree.** `k8s-doc-coverage.json`
+guarantees parity with kubernetes.io, and kubernetes.io has no single
+end-to-end bare-metal build — its setup section is sliced the same way this
+category is. So a page-parity method is structurally blind to integrative
+topics: no page is missing, yet the thing a reader most needs is absent.
+`kubernetes-the-hard-way` is the closest existing topic and is deliberately
+not this — it is a manual-bootstrap learning exercise that omits HA load
+balancing, storage, ingress, observability and day-2 entirely.
+
+Coverage checks answer "is every page claimed". They cannot answer "can a
+reader actually do the thing". Capstone topics are added by judgment, and are
+exempt from the inventory by design — they claim no page and none is expected.
 
 **`k8s-extending` — Extending Kubernetes**
 Existing: `operators-and-crds` (rewrite), `kubernetes-api-aggregation`
