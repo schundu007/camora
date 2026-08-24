@@ -10,13 +10,16 @@
 // for what the DevOps page renders.
 import { devopsCategories } from './devopsTopics.js';
 import { k8sArchitectureTopics, k8sArchitectureTopicCategoryMap } from './k8sArchitectureTopics.js';
+import { k8sBareMetalTopics, k8sBareMetalTopicCategoryMap } from './k8sBareMetalTopics.js';
 
 export const k8sTopics = [
   ...k8sArchitectureTopics,
+  ...k8sBareMetalTopics,
 ];
 
 export const k8sTopicCategoryMap = {
   ...k8sArchitectureTopicCategoryMap,
+  ...k8sBareMetalTopicCategoryMap,
 };
 
 export const k8sCategories = devopsCategories.filter((c) => c.id.startsWith('k8s-'));
