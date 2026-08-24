@@ -65,3 +65,34 @@ describe('devops catalog integrity', () => {
     expect(dangling).toEqual([]);
   });
 });
+
+const K8S_CATEGORY_IDS = [
+  'k8s-architecture', 'k8s-workloads', 'k8s-networking', 'k8s-storage',
+  'k8s-config-policy', 'k8s-security', 'k8s-scheduling', 'k8s-cluster-admin',
+  'k8s-baremetal', 'k8s-extending',
+];
+
+describe('kubernetes category structure', () => {
+  it('declares all ten k8s categories', async () => {
+    const { categoryIds } = await loadDevopsBundle();
+    const missing = K8S_CATEGORY_IDS.filter((id) => !categoryIds.has(id));
+    expect(missing).toEqual([]);
+  });
+
+  it('has retired the flat orchestration category', async () => {
+    const { categoryIds, map } = await loadDevopsBundle();
+    expect(categoryIds.has('orchestration')).toBe(false);
+    const stragglers = Object.entries(map)
+      .filter(([, cat]) => cat === 'orchestration')
+      .map(([id]) => id);
+    expect(stragglers).toEqual([]);
+  });
+
+  it('leaves no k8s category empty', async () => {
+    const { map } = await loadDevopsBundle();
+    const empty = K8S_CATEGORY_IDS.filter(
+      (cat) => !Object.values(map).includes(cat),
+    );
+    expect(empty).toEqual([]);
+  });
+});
