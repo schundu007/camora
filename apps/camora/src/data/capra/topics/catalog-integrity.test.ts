@@ -106,9 +106,10 @@ describe('kubernetes category structure', () => {
 describe('k8s topic modules', () => {
   it('maps every topic the barrel exports', async () => {
     const barrel = await import('./k8sTopics.js');
+    const categoryMap = barrel.k8sTopicCategoryMap as Record<string, string>;
     expect(barrel.k8sTopics.length).toBeGreaterThan(0);
     const unmapped = barrel.k8sTopics
-      .filter((t: { id: string }) => !barrel.k8sTopicCategoryMap[t.id])
+      .filter((t: { id: string }) => !categoryMap[t.id])
       .map((t: { id: string }) => t.id);
     expect(unmapped).toEqual([]);
   });
