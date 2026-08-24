@@ -69,27 +69,15 @@ A declaration tells the compiler a name exists and what its type is. A definitio
 Cutting the graph:
 
 Forward declaration works when you only need a pointer or reference to a type, not its layout. The pimpl idiom pushes an entire dependency subtree behind an opaque pointer, so changing a private member no longer recompiles every client. Explicit instantiation with extern template moves template code generation into one TU instead of all of them. Precompiled headers cache the parsed state of a stable header set. C++20 modules replace textual inclusion with a compiled interface artifact that is parsed once.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Compilation model',
-        description: `Q: What exactly is a translation unit?
-A: One source file plus every header the preprocessor textually inserted into it, after conditional compilation has been resolved. It is the unit the compiler actually processes and the unit that produces one object file. The compiler never sees the whole program, which is why cross-TU errors surface only at link time or not at all.
-
-Q: Why must template definitions be in headers?
-A: The compiler can only instantiate a template when it sees both the template definition and the concrete template arguments. If the definition lives in a separate .cpp, the TU that uses vector of MyType has no body to instantiate and you get an undefined reference at link time. The escape hatch is explicit instantiation: define the template in a .cpp, then write template class Foo<int>; there, and declare extern template class Foo<int>; in the header.
-
-Q: Include guards or pragma once?
-A: Functionally both prevent double inclusion within a TU. pragma once is shorter, immune to guard-name collisions, and is supported by GCC, Clang, and MSVC, but it is not standard and it identifies files by inode or content, which can misbehave with symlinked or bind-mounted build trees. Include guards are standard and always correct. Most large codebases pick one and enforce it with a linter; the choice matters far less than consistency.
-
-Q: What is the actual difference between a declaration and a definition?
-A: A declaration introduces a name and its type. A definition additionally allocates storage or provides a body. You can declare a name many times; you can define it once per translation unit. extern int x; is a declaration, int x; at namespace scope is a definition, class Foo; is a declaration, and class Foo { ... }; is a definition.
-
-Q: Does the compiler catch ODR violations?
-A: Usually not. The standard says a program with conflicting definitions across TUs is ill-formed, no diagnostic required, because no single TU has enough information to detect it. LTO catches some cases because it sees all TUs at once and will warn about type mismatches. Otherwise you find them as silent memory corruption when two TUs disagree about a struct layout because one was compiled with a different -D flag.
-
-Q: What does -H do?
-A: It prints the include tree during compilation, one line per header, with leading dots indicating nesting depth. It is the fastest way to find out why a trivial .cpp takes eight seconds to compile — you will usually find one header near the top pulling in a hundred more.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What exactly is a translation unit?', a: 'One source file plus every header the preprocessor textually inserted into it, after conditional compilation has been resolved. It is the unit the compiler actually processes and the unit that produces one object file. The compiler never sees the whole program, which is why cross-TU errors surface only at link time or not at all.' },
+      { q: 'Why must template definitions be in headers?', a: 'The compiler can only instantiate a template when it sees both the template definition and the concrete template arguments. If the definition lives in a separate .cpp, the TU that uses vector of MyType has no body to instantiate and you get an undefined reference at link time. The escape hatch is explicit instantiation: define the template in a .cpp, then write template class Foo<int>; there, and declare extern template class Foo<int>; in the header.' },
+      { q: 'Include guards or pragma once?', a: 'Functionally both prevent double inclusion within a TU. pragma once is shorter, immune to guard-name collisions, and is supported by GCC, Clang, and MSVC, but it is not standard and it identifies files by inode or content, which can misbehave with symlinked or bind-mounted build trees. Include guards are standard and always correct. Most large codebases pick one and enforce it with a linter; the choice matters far less than consistency.' },
+      { q: 'What is the actual difference between a declaration and a definition?', a: 'A declaration introduces a name and its type. A definition additionally allocates storage or provides a body. You can declare a name many times; you can define it once per translation unit. extern int x; is a declaration, int x; at namespace scope is a definition, class Foo; is a declaration, and class Foo { ... }; is a definition.' },
+      { q: 'Does the compiler catch ODR violations?', a: 'Usually not. The standard says a program with conflicting definitions across TUs is ill-formed, no diagnostic required, because no single TU has enough information to detect it. LTO catches some cases because it sees all TUs at once and will warn about type mismatches. Otherwise you find them as silent memory corruption when two TUs disagree about a struct layout because one was compiled with a different -D flag.' },
+      { q: 'What does -H do?', a: 'It prints the include tree during compilation, one line per header, with leading dots indicating nesting depth. It is the fastest way to find out why a trivial .cpp takes eight seconds to compile — you will usually find one header near the top pulling in a hundred more.' },
     ],
     introduction: `Every C and C++ build problem you will be asked to debug in an interview reduces to one question: which of the four phases failed, and what did that phase actually see? The driver you invoke as gcc or g++ is not a compiler. It is a program that inspects file suffixes, decides which subprocesses to run, and chains them together: preprocess, compile proper, assemble, link. The GCC manual is explicit about this four-stage model, and it is worth internalizing because the error messages from each stage are completely different in character.
 
@@ -365,27 +353,15 @@ Runtime search order, exactly:
 5. /lib and /usr/lib (or the lib64 variants)
 
 The critical asymmetry: LD_LIBRARY_PATH beats RUNPATH but loses to RPATH. That is why modern toolchains default to --enable-new-dtags, emitting RUNPATH, so operators can still override with the environment.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Linking',
-        description: `Q: Why does -lfoo have to come after the objects that use it?
-A: Because the linker processes inputs left to right and searches an archive only once, extracting only members that satisfy symbols that are already undefined at that moment. If the archive is seen before anything references it, nothing is undefined yet, nothing gets extracted, and the archive is never revisited. Object files are unconditional so their order does not matter.
-
-Q: What is the difference between RPATH and RUNPATH?
-A: Both embed search directories in the binary. RPATH (DT_RPATH) is consulted before LD_LIBRARY_PATH and applies transitively to dependencies of dependencies. RUNPATH (DT_RUNPATH) is consulted after LD_LIBRARY_PATH and applies only to the binary's direct DT_NEEDED entries. If a binary has RUNPATH, RPATH is ignored entirely. Modern linkers emit RUNPATH by default via --enable-new-dtags.
-
-Q: What does SONAME do?
-A: When you link against libfoo.so, the linker copies that library's SONAME into your binary's DT_NEEDED entry rather than the filename you passed. At runtime ld.so looks for the SONAME. This is what lets you install libfoo.so.1.4.2 and libfoo.so.1.5.0 side by side and have old binaries keep loading the 1.x they were built for.
-
-Q: Why -fvisibility=hidden?
-A: It flips the default so nothing is exported unless you explicitly mark it. Fewer exported symbols means fewer dynamic relocations to process at load time, a smaller dynamic symbol table to search, no accidental ABI commitments to internal helpers, and better optimization because the compiler knows a hidden symbol cannot be interposed. The GCC manual states it can very substantially improve linking and load times.
-
-Q: LTO gave me a link error that the normal build did not. Why?
-A: Because LTO defers code generation to link time and holds all translation units at once, so it sees inconsistencies that per-TU compilation structurally cannot: mismatched declarations of the same function or object across TUs, and type mismatches that -Wodr reports. It is usually finding a real latent bug rather than creating a new one.
-
-Q: bfd, gold, lld, or mold?
-A: bfd is the GNU default and the most compatible; gold is ELF-only and now deprecated upstream; lld ships with LLVM, is substantially faster than bfd, and is the default on many toolchains; mold is faster still through aggressive parallelism and is the right choice for large link-bound C++ builds. Select with -fuse-ld=lld or -fuse-ld=mold. The main risk with the newer linkers is unsupported or differently interpreted linker script features.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why does -lfoo have to come after the objects that use it?', a: 'Because the linker processes inputs left to right and searches an archive only once, extracting only members that satisfy symbols that are already undefined at that moment. If the archive is seen before anything references it, nothing is undefined yet, nothing gets extracted, and the archive is never revisited. Object files are unconditional so their order does not matter.' },
+      { q: 'What is the difference between RPATH and RUNPATH?', a: 'Both embed search directories in the binary. RPATH (DT_RPATH) is consulted before LD_LIBRARY_PATH and applies transitively to dependencies of dependencies. RUNPATH (DT_RUNPATH) is consulted after LD_LIBRARY_PATH and applies only to the binary\'s direct DT_NEEDED entries. If a binary has RUNPATH, RPATH is ignored entirely. Modern linkers emit RUNPATH by default via --enable-new-dtags.' },
+      { q: 'What does SONAME do?', a: 'When you link against libfoo.so, the linker copies that library\'s SONAME into your binary\'s DT_NEEDED entry rather than the filename you passed. At runtime ld.so looks for the SONAME. This is what lets you install libfoo.so.1.4.2 and libfoo.so.1.5.0 side by side and have old binaries keep loading the 1.x they were built for.' },
+      { q: 'Why -fvisibility=hidden?', a: 'It flips the default so nothing is exported unless you explicitly mark it. Fewer exported symbols means fewer dynamic relocations to process at load time, a smaller dynamic symbol table to search, no accidental ABI commitments to internal helpers, and better optimization because the compiler knows a hidden symbol cannot be interposed. The GCC manual states it can very substantially improve linking and load times.' },
+      { q: 'LTO gave me a link error that the normal build did not. Why?', a: 'Because LTO defers code generation to link time and holds all translation units at once, so it sees inconsistencies that per-TU compilation structurally cannot: mismatched declarations of the same function or object across TUs, and type mismatches that -Wodr reports. It is usually finding a real latent bug rather than creating a new one.' },
+      { q: 'bfd, gold, lld, or mold?', a: 'bfd is the GNU default and the most compatible; gold is ELF-only and now deprecated upstream; lld ships with LLVM, is substantially faster than bfd, and is the default on many toolchains; mold is faster still through aggressive parallelism and is the right choice for large link-bound C++ builds. Select with -fuse-ld=lld or -fuse-ld=mold. The main risk with the newer linkers is unsupported or differently interpreted linker script features.' },
     ],
     introduction: `Linking is where a program stops being a set of independently compiled translation units and becomes one address space. Every TU emitted a symbol table with definitions it provides and references it does not, plus relocation records marking every place an address still needs to be filled in. The linker's contract is to bind each undefined reference to exactly one definition, lay out the sections, apply the relocations, and record what still has to happen at load time.
 
@@ -699,27 +675,15 @@ Debug levels:
 Target selection:
 
 -march=X sets the instruction set the compiler may emit; the resulting binary may not run at all on anything older. -mtune=X only affects scheduling and cost model and emits nothing outside the base ISA. -march=X implies -mtune=X. -march=native detects the build machine's CPU and enables everything it supports, which is the single most common way to ship a binary that dies with SIGILL on a slightly older host.`,
-      },
-      {
-        title: 'Quick-fire interview answers — GCC toolchain',
-        description: `Q: What is the difference between gcc -v and gcc -###?
-A: Both print the subprocess command lines the driver will run. -v runs them; -### prints them quoted and runs nothing. -### is the safe way to inspect exactly what flags the driver injects, including the include paths, target triple, and startup files you never typed.
-
-Q: -march versus -mtune?
-A: -march sets which instructions the compiler is allowed to emit, so it changes where the binary can run. -mtune only changes scheduling and cost decisions and never emits instructions outside the base architecture, so it is safe. Specifying -march implies the matching -mtune. The portable production combination is a conservative -march with an aggressive -mtune.
-
-Q: Should a debug build use -O0?
-A: -Og is usually the better answer. It enables -O1 minus the passes that badly interfere with debugging, so you get code that is several times faster than -O0 while variables and line numbers remain mostly trustworthy. Use -O0 when you need every variable live at every point.
-
-Q: Why is -Ofast dangerous?
-A: It enables -ffast-math and -fallow-store-data-races and explicitly disregards strict standards compliance. -ffast-math permits reassociation that changes floating-point results, breaks NaN and infinity handling and signed zero, and links a startup object that sets flush-to-zero mode process-wide — affecting libraries you did not compile. Use -O3 with specific relaxations you can justify instead.
-
-Q: My binary dies with SIGILL on the production host but works in CI. What did I do?
-A: Almost certainly -march=native on a build machine newer than the target. The compiler emitted instructions the deployment CPU does not implement, and the illegal instruction fires the first time that code path runs — which may be well after startup, inside a memcpy or a vectorized loop. Replace it with an explicit baseline -march plus -mtune.
-
-Q: GCC compiles it, Clang does not. Why?
-A: Common causes are default -std differences between compiler versions, GCC accepting more GNU extensions by default, two-phase name lookup in templates (Clang is stricter about dependent names, so you need this-> or typename), and differing default warning sets so -Werror trips on one and not the other. Building with both in CI is what stops this from becoming a release-day problem.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What is the difference between gcc -v and gcc -###?', a: 'Both print the subprocess command lines the driver will run. -v runs them; -### prints them quoted and runs nothing. -### is the safe way to inspect exactly what flags the driver injects, including the include paths, target triple, and startup files you never typed.' },
+      { q: '-march versus -mtune?', a: '-march sets which instructions the compiler is allowed to emit, so it changes where the binary can run. -mtune only changes scheduling and cost decisions and never emits instructions outside the base architecture, so it is safe. Specifying -march implies the matching -mtune. The portable production combination is a conservative -march with an aggressive -mtune.' },
+      { q: 'Should a debug build use -O0?', a: '-Og is usually the better answer. It enables -O1 minus the passes that badly interfere with debugging, so you get code that is several times faster than -O0 while variables and line numbers remain mostly trustworthy. Use -O0 when you need every variable live at every point.' },
+      { q: 'Why is -Ofast dangerous?', a: 'It enables -ffast-math and -fallow-store-data-races and explicitly disregards strict standards compliance. -ffast-math permits reassociation that changes floating-point results, breaks NaN and infinity handling and signed zero, and links a startup object that sets flush-to-zero mode process-wide — affecting libraries you did not compile. Use -O3 with specific relaxations you can justify instead.' },
+      { q: 'My binary dies with SIGILL on the production host but works in CI. What did I do?', a: 'Almost certainly -march=native on a build machine newer than the target. The compiler emitted instructions the deployment CPU does not implement, and the illegal instruction fires the first time that code path runs — which may be well after startup, inside a memcpy or a vectorized loop. Replace it with an explicit baseline -march plus -mtune.' },
+      { q: 'GCC compiles it, Clang does not. Why?', a: 'Common causes are default -std differences between compiler versions, GCC accepting more GNU extensions by default, two-phase name lookup in templates (Clang is stricter about dependent names, so you need this-> or typename), and differing default warning sets so -Werror trips on one and not the other. Building with both in CI is what stops this from becoming a release-day problem.' },
     ],
     introduction: `Most engineers use gcc for years without knowing that gcc is not a compiler. It is a driver. It reads the suffixes of the files you gave it, consults a table of spec strings, and launches subprocesses: the preprocessor, then cc1 or cc1plus for the compilation proper, then as to assemble, then collect2 to drive ld. Two flags expose the whole machine — gcc -v prints and runs each subprocess command, and gcc -### prints them without running anything. Almost every "why is this flag not doing what I expect" question is answered in thirty seconds by -###, because the driver injects a large set of implicit arguments you never typed: include paths, the target triple, startup files, and the default library set.
 
@@ -1006,27 +970,15 @@ is loud and cheap. A layer 3 mismatch is a link error that points at the wrong
 place. A layer 4 regression passes CI and fails at 3am. A layer 5 problem never
 reproduces on a developer laptop. Plan the rollout in that order of difficulty,
 not in the order the errors happen to appear.`,
-      },
-      {
-        title: 'Quick-fire interview answers — GCC upgrades',
-        description: `Q: What is the libstdc++ dual ABI and why does it exist?
-A: GCC 5.1 needed to change the layout of std::string and std::list to conform to C++11, which is an ABI break. Instead of breaking every existing binary, libstdc++ ships both implementations: the conforming ones live in the inline namespace std::__cxx11 so they mangle to different symbols. The macro _GLIBCXX_USE_CXX11_ABI picks which set your headers declare, 1 for new and 0 for old, independently of the -std you compile with.
-
-Q: You get "undefined reference to foo(std::__cxx11::basic_string...)". What happened?
-A: Two translation units or a prebuilt library disagree on _GLIBCXX_USE_CXX11_ABI. The caller was compiled with the new ABI and the definition it wants was compiled with the old one, or the reverse. Fix by rebuilding everything with one setting, or by compiling your code with -D_GLIBCXX_USE_CXX11_ABI=0 to match a vendor binary you cannot rebuild.
-
-Q: Is a GCC upgrade an ABI break by itself?
-A: Not usually. The libstdc++ ABI policy allows adding exported symbols and new instantiations within libstdc++.so.6, so objects built with different recent GCC versions generally link together. What is NOT allowed without a soname bump is changing the size, alignment or layout of an exported type, changing mangling, or removing symbols. The famous exception is the GCC 5 dual ABI, which was handled by adding a parallel namespace rather than bumping the soname.
-
-Q: How do you stage -Werror when the new compiler produces thousands of new warnings?
-A: Never flip global -Werror on upgrade day. Snapshot the warning set, then enable -Werror only for the specific diagnostics that are already at zero, one flag at a time: -Werror=return-type, then -Werror=implicit-function-declaration, and so on. Add a CI job that fails when the total warning count increases, so the debt stops growing while you burn it down.
-
-Q: How do you validate that an upgraded shared library is still ABI-compatible for downstream consumers?
-A: Build the library with both toolchains and run abidiff (libabigail) on the two .so files. Its exit status is a bit field: 4 means the ABIs differ, 8 means the difference is incompatible. Gate the release on bit 8 being clear. abi-compliance-checker gives a similar report with HTML output; abipkgdiff does it at the package level.
-
-Q: What do you do about a performance regression that only appears after the upgrade?
-A: Treat it as a benchmark bisect, not a compiler bug, until proven otherwise. Run the same benchmark binary set with old and new toolchains at identical flags, confirm the regression is real and outside noise, then narrow by optimization level and by individual -f flags before ever suspecting a miscompile. Most "GCC 14 made us slower" reports turn out to be a changed inlining threshold or a vectorization decision that a -fno- flag or a targeted attribute fixes.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What is the libstdc++ dual ABI and why does it exist?', a: 'GCC 5.1 needed to change the layout of std::string and std::list to conform to C++11, which is an ABI break. Instead of breaking every existing binary, libstdc++ ships both implementations: the conforming ones live in the inline namespace std::__cxx11 so they mangle to different symbols. The macro _GLIBCXX_USE_CXX11_ABI picks which set your headers declare, 1 for new and 0 for old, independently of the -std you compile with.' },
+      { q: 'You get "undefined reference to foo(std::__cxx11::basic_string...)". What happened?', a: 'Two translation units or a prebuilt library disagree on _GLIBCXX_USE_CXX11_ABI. The caller was compiled with the new ABI and the definition it wants was compiled with the old one, or the reverse. Fix by rebuilding everything with one setting, or by compiling your code with -D_GLIBCXX_USE_CXX11_ABI=0 to match a vendor binary you cannot rebuild.' },
+      { q: 'Is a GCC upgrade an ABI break by itself?', a: 'Not usually. The libstdc++ ABI policy allows adding exported symbols and new instantiations within libstdc++.so.6, so objects built with different recent GCC versions generally link together. What is NOT allowed without a soname bump is changing the size, alignment or layout of an exported type, changing mangling, or removing symbols. The famous exception is the GCC 5 dual ABI, which was handled by adding a parallel namespace rather than bumping the soname.' },
+      { q: 'How do you stage -Werror when the new compiler produces thousands of new warnings?', a: 'Never flip global -Werror on upgrade day. Snapshot the warning set, then enable -Werror only for the specific diagnostics that are already at zero, one flag at a time: -Werror=return-type, then -Werror=implicit-function-declaration, and so on. Add a CI job that fails when the total warning count increases, so the debt stops growing while you burn it down.' },
+      { q: 'How do you validate that an upgraded shared library is still ABI-compatible for downstream consumers?', a: 'Build the library with both toolchains and run abidiff (libabigail) on the two .so files. Its exit status is a bit field: 4 means the ABIs differ, 8 means the difference is incompatible. Gate the release on bit 8 being clear. abi-compliance-checker gives a similar report with HTML output; abipkgdiff does it at the package level.' },
+      { q: 'What do you do about a performance regression that only appears after the upgrade?', a: 'Treat it as a benchmark bisect, not a compiler bug, until proven otherwise. Run the same benchmark binary set with old and new toolchains at identical flags, confirm the regression is real and outside noise, then narrow by optimization level and by individual -f flags before ever suspecting a miscompile. Most "GCC 14 made us slower" reports turn out to be a changed inlining threshold or a vectorization decision that a -fno- flag or a targeted attribute fixes.' },
     ],
     introduction: `The job description line reads "manage and upgrade GCC compiler toolchains, ensuring compatibility and optimal performance across platforms." That sentence describes a platform migration, not a package update. In a large C++ estate the compiler is the single most load-bearing dependency: every binary, every static library, every vendor .so and every container image encodes assumptions about it.
 
@@ -1382,27 +1334,15 @@ runtime, so getaddrinfo and getpwnam in a fully static glibc binary need the
 matching glibc shared objects present anyway. The linker warns about it. musl
 does not have that design and is the honest answer when you genuinely want one
 self-contained file.`,
-      },
-      {
-        title: 'Quick-fire interview answers — standard libraries and symbol versioning',
-        description: `Q: Why does a binary built on a new distribution fail on an old one with a GLIBC version error?
-A: glibc symbols carry version nodes. The linker binds to whatever default version exists on the build machine and records a requirement for it. glibc keeps old versions forever, so old binaries run on new glibc, but there is no forward compatibility: an older glibc simply does not have the node. GLIBC_2.34 is the common one because glibc 2.34 folded libpthread, libdl, librt and libanl into libc.so.6 and gave a huge set of symbols a new node at once.
-
-Q: How do you build a binary that runs on old and new Linux hosts?
-A: Build against the oldest glibc you intend to support, not the newest. In practice that means building inside a container of the oldest supported distribution, or a manylinux image (named by glibc version under PEP 600), or against a sysroot of the old distribution, or with gcc-toolset on old RHEL so the compiler is modern while the runtime dependency stays old.
-
-Q: When is -static-libstdc++ safe?
-A: When the C++ runtime does not have to be shared. A leaf executable, or a plugin whose interface is extern "C" with no C++ types and no exceptions crossing the boundary, is fine. It is not safe when two components in one process each statically link libstdc++ and then exchange C++ objects, throw across the boundary, or rely on shared standard library state — you then have two type_info sets, two locale tables and two allocators in one address space.
-
-Q: Can you link libstdc++ and libc++ code into one program?
-A: Not if standard library types cross the boundary. libc++ puts everything in an inline namespace (std::__1 under the stable ABI), so the symbols do not match and you get link errors, which is the good outcome. The dangerous case is passing a std::string through a void* or an opaque handle, where nothing catches it and the layouts differ.
-
-Q: What does a version script buy you for your own shared library?
-A: Control of the exported surface. A node with global listing your public prefix and local: *; hides every internal symbol, which shrinks the dynamic symbol table, speeds up load-time relocation, prevents symbol interposition surprises, and stops downstream code from depending on internals you never meant to publish. It also lets you keep an old implementation of a symbol at an old version node while shipping a new default, so existing binaries keep working.
-
-Q: Why does a fully static binary still fail on DNS lookups?
-A: glibc implements the Name Service Switch by dlopen-ing modules such as libnss_files and libnss_dns at runtime. Statically linking does not remove that, so getaddrinfo and getpwnam still need matching glibc shared objects on the host. The linker warns about it at link time. If you want a genuinely self-contained binary, build against musl.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why does a binary built on a new distribution fail on an old one with a GLIBC version error?', a: 'glibc symbols carry version nodes. The linker binds to whatever default version exists on the build machine and records a requirement for it. glibc keeps old versions forever, so old binaries run on new glibc, but there is no forward compatibility: an older glibc simply does not have the node. GLIBC_2.34 is the common one because glibc 2.34 folded libpthread, libdl, librt and libanl into libc.so.6 and gave a huge set of symbols a new node at once.' },
+      { q: 'How do you build a binary that runs on old and new Linux hosts?', a: 'Build against the oldest glibc you intend to support, not the newest. In practice that means building inside a container of the oldest supported distribution, or a manylinux image (named by glibc version under PEP 600), or against a sysroot of the old distribution, or with gcc-toolset on old RHEL so the compiler is modern while the runtime dependency stays old.' },
+      { q: 'When is -static-libstdc++ safe?', a: 'When the C++ runtime does not have to be shared. A leaf executable, or a plugin whose interface is extern "C" with no C++ types and no exceptions crossing the boundary, is fine. It is not safe when two components in one process each statically link libstdc++ and then exchange C++ objects, throw across the boundary, or rely on shared standard library state — you then have two type_info sets, two locale tables and two allocators in one address space.' },
+      { q: 'Can you link libstdc++ and libc++ code into one program?', a: 'Not if standard library types cross the boundary. libc++ puts everything in an inline namespace (std::__1 under the stable ABI), so the symbols do not match and you get link errors, which is the good outcome. The dangerous case is passing a std::string through a void* or an opaque handle, where nothing catches it and the layouts differ.' },
+      { q: 'What does a version script buy you for your own shared library?', a: 'Control of the exported surface. A node with global listing your public prefix and local: *; hides every internal symbol, which shrinks the dynamic symbol table, speeds up load-time relocation, prevents symbol interposition surprises, and stops downstream code from depending on internals you never meant to publish. It also lets you keep an old implementation of a symbol at an old version node while shipping a new default, so existing binaries keep working.' },
+      { q: 'Why does a fully static binary still fail on DNS lookups?', a: 'glibc implements the Name Service Switch by dlopen-ing modules such as libnss_files and libnss_dns at runtime. Statically linking does not remove that, so getaddrinfo and getpwnam still need matching glibc shared objects on the host. The linker warns about it at link time. If you want a genuinely self-contained binary, build against musl.' },
     ],
     introduction: `Every C++ binary on Linux is a negotiation between three libraries it did not write: the C++ standard library, libgcc, and the C library. Most of the time the negotiation is invisible. The times it is not invisible are the times that cost a weekend, and they cluster around two questions: which standard library implementation is this, and what is the oldest host this artifact can run on.
 
@@ -1718,27 +1658,15 @@ Inspection.
   Dependency Walker is long dead; the modern replacement is Dependencies, which
   understands API sets (the api-ms-win-* virtual DLLs) that depends.exe reports
   as missing.`,
-      },
-      {
-        title: 'Quick-fire interview answers — MSVC',
-        description: `Q: What is the difference between /MT and /MD?
-A: /MT statically links the CRT into the image; /MD links to the shared CRT DLLs (ucrtbase.dll, vcruntime140.dll, msvcp140.dll). /MTd and /MDd are the debug variants. Every EXE and DLL in a process makes this choice independently, and mixing them means multiple CRTs with separate heaps in one process.
-
-Q: What actually happens when a DLL built with /MT frees memory allocated by an EXE built with /MD?
-A: The free goes to the wrong allocator. The static CRT in the DLL has its own heap and its own bookkeeping; the pointer belongs to the shared CRT heap. It is heap corruption, and it usually crashes somewhere unrelated much later. The correct designs are to pass memory the caller allocated, to expose a matching free function from whichever side allocated, or to use only value types and handles across the boundary.
-
-Q: Does anything catch a runtime mismatch at build time?
-A: Yes, often. MSVC emits detect-mismatch directives for the runtime library and iterator debug level, so a /MT object linked with a /MD object, or a debug object with a release one, produces LNK2038 naming RuntimeLibrary or _ITERATOR_DEBUG_LEVEL. It does not catch the case where the mismatch is between two separately linked binaries that only meet at runtime.
-
-Q: How do you export a function from a DLL?
-A: __declspec(dllexport) on the definition and __declspec(dllimport) at the consumer, normally through one macro flipped by a define set only when building the DLL. It works for C++ mangled names, which is the main reason to prefer it over a .def file. Use a .def file when you need ordinals, NONAME or PRIVATE, which cannot be expressed any other way.
-
-Q: What is the difference between the .lib produced next to a DLL and a static library .lib?
-A: The one next to a DLL is an import library: stubs plus a name table that tell the loader which DLL and which export to bind. The static library contains real object code that gets copied into your binary. Same extension, completely different artifact.
-
-Q: How do you pin a specific MSVC toolset in CI?
-A: Locate the installation with vswhere (vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath), then call vcvarsall.bat with an explicit architecture and -vcvars_ver, for example -vcvars_ver=14.44 for a specific VS 2022 toolset. Pin the Windows SDK version in the same call. Do not rely on "latest installed", which changes under you when the agent image updates.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What is the difference between /MT and /MD?', a: '/MT statically links the CRT into the image; /MD links to the shared CRT DLLs (ucrtbase.dll, vcruntime140.dll, msvcp140.dll). /MTd and /MDd are the debug variants. Every EXE and DLL in a process makes this choice independently, and mixing them means multiple CRTs with separate heaps in one process.' },
+      { q: 'What actually happens when a DLL built with /MT frees memory allocated by an EXE built with /MD?', a: 'The free goes to the wrong allocator. The static CRT in the DLL has its own heap and its own bookkeeping; the pointer belongs to the shared CRT heap. It is heap corruption, and it usually crashes somewhere unrelated much later. The correct designs are to pass memory the caller allocated, to expose a matching free function from whichever side allocated, or to use only value types and handles across the boundary.' },
+      { q: 'Does anything catch a runtime mismatch at build time?', a: 'Yes, often. MSVC emits detect-mismatch directives for the runtime library and iterator debug level, so a /MT object linked with a /MD object, or a debug object with a release one, produces LNK2038 naming RuntimeLibrary or _ITERATOR_DEBUG_LEVEL. It does not catch the case where the mismatch is between two separately linked binaries that only meet at runtime.' },
+      { q: 'How do you export a function from a DLL?', a: '__declspec(dllexport) on the definition and __declspec(dllimport) at the consumer, normally through one macro flipped by a define set only when building the DLL. It works for C++ mangled names, which is the main reason to prefer it over a .def file. Use a .def file when you need ordinals, NONAME or PRIVATE, which cannot be expressed any other way.' },
+      { q: 'What is the difference between the .lib produced next to a DLL and a static library .lib?', a: 'The one next to a DLL is an import library: stubs plus a name table that tell the loader which DLL and which export to bind. The static library contains real object code that gets copied into your binary. Same extension, completely different artifact.' },
+      { q: 'How do you pin a specific MSVC toolset in CI?', a: 'Locate the installation with vswhere (vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath), then call vcvarsall.bat with an explicit architecture and -vcvars_ver, for example -vcvars_ver=14.44 for a specific VS 2022 toolset. Pin the Windows SDK version in the same call. Do not rely on "latest installed", which changes under you when the agent image updates.' },
     ],
     introduction: `Windows native C++ is a full second toolchain, not a porting detail. If a job description says strong knowledge of MSVC libraries, it means the interviewer expects you to be able to debug a build on a machine with no Unix tooling, where the compiler is cl.exe, the linker is link.exe, the standard library is Microsoft's, symbols live in a separate file, and nothing is exported from a shared library unless you explicitly said so.
 
@@ -2028,24 +1956,14 @@ Text mode, locking, and sockets:
 The Windows CRT opens files in text mode by default, translating LF to CRLF on write and CRLF to LF on read, and historically treating Ctrl+Z as end of file. Any binary read must pass "b" to fopen or call _setmode(fd, _O_BINARY); _fmode or _set_fmode changes the process default. POSIX has one mode. File locking differs even more consequentially for build tools: Windows share modes are mandatory, so an open handle without FILE_SHARE_DELETE blocks unlink and rename, while POSIX unlink always succeeds and the inode simply lives until the last descriptor closes. That is why a Windows build fails with "Access is denied" when an antivirus scanner or a stale compiler process still holds an output file, and why atomic replace on Windows means ReplaceFile or MoveFileEx with MOVEFILE_REPLACE_EXISTING rather than a plain rename over an open file.
 
 Sockets are BSD-shaped on Windows but not BSD. You must call WSAStartup before any socket call and WSACleanup after; a socket is a SOCKET, not an int, and INVALID_SOCKET is not -1; you close it with closesocket, not close; errors come from WSAGetLastError, not errno; and there is no reliable select on file descriptors that are not sockets. Time and locale diverge too: CLOCK_MONOTONIC versus QueryPerformanceCounter, gmtime_r versus gmtime_s with reversed argument order, and a Windows locale model that is not the POSIX one.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Windows vs POSIX',
-        description: `Q: Windows has no fork. What is the practical consequence for a codebase that shells out?
-A: You cannot write "set up the child state, then exec" as straight-line code. On Windows every child attribute — redirected handles, working directory, environment, inheritance set — must be assembled before the single CreateProcess call, in STARTUPINFO or STARTUPINFOEX. Anything you would have done between fork and exec has to become a parameter. In practice that means the process-spawn abstraction in your codebase must be a descriptor struct rather than a callback, because a callback has nowhere to run on Windows.
-
-Q: Does std::thread give you a fully portable threading story?
-A: No. It portably covers creation, joining, detaching, and the standard mutex and condition variable types. It does not cover stack size, thread naming, priority, affinity, or cancellation, and those are exactly the things that show up in production tuning and in crash dumps. native_handle() is the escape hatch: pthread_setname_np on Linux, SetThreadDescription on Windows. Treat those call sites as platform code and put them behind one function.
-
-Q: Why does a shared library that links cleanly on Linux fail to link on Windows?
-A: ELF exports every non-static symbol by default; a Windows DLL exports nothing unless it is marked __declspec(dllexport) or listed in a .def file. So a Linux build never forces you to declare your public surface, and the Windows build does. The standard fix is a generated export macro — dllexport when building the library, dllimport when consuming it, and empty or __attribute__((visibility("default"))) elsewhere — combined with building Linux with -fvisibility=hidden so both platforms enforce the same surface.
-
-Q: A build tool intermittently fails on Windows with "Access is denied" deleting an output file. What is going on?
-A: Windows share modes are mandatory. If any process holds a handle opened without FILE_SHARE_DELETE, unlink and rename on that file fail. Antivirus scanners, search indexers, and a compiler process that has not fully exited are the usual culprits. On POSIX the same sequence works because unlink only removes the directory entry and the inode survives until the last descriptor closes. Fixes: open with FILE_SHARE_DELETE, use MoveFileEx with MOVEFILE_REPLACE_EXISTING for atomic replacement, and add bounded retry with backoff around delete and rename in the build tool itself.
-
-Q: What is the right structure for platform-specific code?
-A: One narrow interface per capability — process, filesystem, dynamic library, thread naming, time — declared in a header with no platform types in it, and two implementation files, one per platform, selected by the build system rather than by preprocessor conditionals inside a shared file. The rule is that ifdefs live in the build graph and in a handful of leaf .cpp files, never sprinkled through business logic. When the surface is large enough that hand-rolling is a liability, adopt Qt Core, Boost.Filesystem/Boost.Process, ASIO, or APR rather than growing your own.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Windows has no fork. What is the practical consequence for a codebase that shells out?', a: 'You cannot write "set up the child state, then exec" as straight-line code. On Windows every child attribute — redirected handles, working directory, environment, inheritance set — must be assembled before the single CreateProcess call, in STARTUPINFO or STARTUPINFOEX. Anything you would have done between fork and exec has to become a parameter. In practice that means the process-spawn abstraction in your codebase must be a descriptor struct rather than a callback, because a callback has nowhere to run on Windows.' },
+      { q: 'Does std::thread give you a fully portable threading story?', a: 'No. It portably covers creation, joining, detaching, and the standard mutex and condition variable types. It does not cover stack size, thread naming, priority, affinity, or cancellation, and those are exactly the things that show up in production tuning and in crash dumps. native_handle() is the escape hatch: pthread_setname_np on Linux, SetThreadDescription on Windows. Treat those call sites as platform code and put them behind one function.' },
+      { q: 'Why does a shared library that links cleanly on Linux fail to link on Windows?', a: 'ELF exports every non-static symbol by default; a Windows DLL exports nothing unless it is marked __declspec(dllexport) or listed in a .def file. So a Linux build never forces you to declare your public surface, and the Windows build does. The standard fix is a generated export macro — dllexport when building the library, dllimport when consuming it, and empty or __attribute__((visibility("default"))) elsewhere — combined with building Linux with -fvisibility=hidden so both platforms enforce the same surface.' },
+      { q: 'A build tool intermittently fails on Windows with "Access is denied" deleting an output file. What is going on?', a: 'Windows share modes are mandatory. If any process holds a handle opened without FILE_SHARE_DELETE, unlink and rename on that file fail. Antivirus scanners, search indexers, and a compiler process that has not fully exited are the usual culprits. On POSIX the same sequence works because unlink only removes the directory entry and the inode survives until the last descriptor closes. Fixes: open with FILE_SHARE_DELETE, use MoveFileEx with MOVEFILE_REPLACE_EXISTING for atomic replacement, and add bounded retry with backoff around delete and rename in the build tool itself.' },
+      { q: 'What is the right structure for platform-specific code?', a: 'One narrow interface per capability — process, filesystem, dynamic library, thread naming, time — declared in a header with no platform types in it, and two implementation files, one per platform, selected by the build system rather than by preprocessor conditionals inside a shared file. The rule is that ifdefs live in the build graph and in a handful of leaf .cpp files, never sprinkled through business logic. When the surface is large enough that hand-rolling is a liability, adopt Qt Core, Boost.Filesystem/Boost.Process, ASIO, or APR rather than growing your own.' },
     ],
     introduction: `Cross-platform C++ rarely breaks at the language level. Both MSVC and GCC/Clang implement the same standard, and since C++17 the standard library covers filesystem paths, threads, and time reasonably well. What breaks is the layer beneath: the system libraries. Win32 and POSIX were designed from different premises, and where they differ they differ structurally, not cosmetically.
 
@@ -2358,27 +2276,15 @@ Debugging:
   --debug=b,v,i,j,m  selective debug: basic, verbose, implicit, jobs, makefile remaking
   --trace       print each recipe with the file and line that triggered it and why
   $(info ...) / $(warning ...) / $(error ...)   inline diagnostics during parsing`,
-      },
-      {
-        title: 'Quick-fire interview answers — GNU Make',
-        description: `Q: What exactly makes make decide to rebuild a target?
-A: The target does not exist, or at least one prerequisite has a newer modification time than the target. That is the whole rule. It is not content hashing, not a build ID, not a compiler-flag comparison. Consequences: changing CFLAGS does not trigger a rebuild, a clock skew or a restored-from-backup file with an old mtime silently skips work, and filesystems with coarse mtime granularity can miss a change made within the same tick.
-
-Q: What is the difference between = and := ?
-A: With = the right-hand side is recursively expanded, meaning it is re-evaluated every time the variable is referenced. With := it is simply expanded once at assignment. Use := by default. The two classic bites are self-reference (X = $(X) -O2 is an infinite loop make rejects) and $(shell ...) with = , which re-runs the command on every reference.
-
-Q: What are order-only prerequisites and why do you need them?
-A: Prerequisites listed after a pipe character. They must be built before the target, but their timestamps do not cause a rebuild. The standard use is a build output directory: a directory mtime changes whenever a file is written into it, so as a normal prerequisite it would force everything to rebuild on every run.
-
-Q: What breaks when you go from make to make -j?
-A: Any dependency you never declared. Serial make happened to run things in the order they appeared, which masked missing edges; -j exposes them as nondeterministic failures. The other three classes are shared scratch files (two recipes writing the same temp path), non-atomic output (a reader sees a partially written file), and recipes that assume a directory already exists. Fix by declaring the real dependencies, using $$ to make temp names unique per process, writing to a temp file and renaming, and using .DELETE_ON_ERROR so half-written targets do not survive.
-
-Q: Why is .DELETE_ON_ERROR recommended in every serious makefile?
-A: Because by default a failed recipe leaves whatever it had already written on disk. If the compiler was killed halfway through writing an object file, that truncated file now has a newer timestamp than its source, so the next make considers it up to date and the build proceeds with a corrupt artifact. .DELETE_ON_ERROR removes the target when the recipe exits nonzero.
-
-Q: Why does make still matter when the team uses CMake or Bazel?
-A: Because CMake is a generator, not a build tool. Its default Unix generator emits Makefiles that make then executes, so every incremental-build question, every parallelism bug, and every "why did that rebuild" investigation lands in generated make code that you have to read. The same is true of autotools, the Linux kernel build, buildroot, and thousands of vendor SDKs.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What exactly makes make decide to rebuild a target?', a: 'The target does not exist, or at least one prerequisite has a newer modification time than the target. That is the whole rule. It is not content hashing, not a build ID, not a compiler-flag comparison. Consequences: changing CFLAGS does not trigger a rebuild, a clock skew or a restored-from-backup file with an old mtime silently skips work, and filesystems with coarse mtime granularity can miss a change made within the same tick.' },
+      { q: 'What is the difference between = and := ?', a: 'With = the right-hand side is recursively expanded, meaning it is re-evaluated every time the variable is referenced. With := it is simply expanded once at assignment. Use := by default. The two classic bites are self-reference (X = $(X) -O2 is an infinite loop make rejects) and $(shell ...) with = , which re-runs the command on every reference.' },
+      { q: 'What are order-only prerequisites and why do you need them?', a: 'Prerequisites listed after a pipe character. They must be built before the target, but their timestamps do not cause a rebuild. The standard use is a build output directory: a directory mtime changes whenever a file is written into it, so as a normal prerequisite it would force everything to rebuild on every run.' },
+      { q: 'What breaks when you go from make to make -j?', a: 'Any dependency you never declared. Serial make happened to run things in the order they appeared, which masked missing edges; -j exposes them as nondeterministic failures. The other three classes are shared scratch files (two recipes writing the same temp path), non-atomic output (a reader sees a partially written file), and recipes that assume a directory already exists. Fix by declaring the real dependencies, using $$ to make temp names unique per process, writing to a temp file and renaming, and using .DELETE_ON_ERROR so half-written targets do not survive.' },
+      { q: 'Why is .DELETE_ON_ERROR recommended in every serious makefile?', a: 'Because by default a failed recipe leaves whatever it had already written on disk. If the compiler was killed halfway through writing an object file, that truncated file now has a newer timestamp than its source, so the next make considers it up to date and the build proceeds with a corrupt artifact. .DELETE_ON_ERROR removes the target when the recipe exits nonzero.' },
+      { q: 'Why does make still matter when the team uses CMake or Bazel?', a: 'Because CMake is a generator, not a build tool. Its default Unix generator emits Makefiles that make then executes, so every incremental-build question, every parallelism bug, and every "why did that rebuild" investigation lands in generated make code that you have to read. The same is true of autotools, the Linux kernel build, buildroot, and thousands of vendor SDKs.' },
     ],
     introduction: `make is fifty years old and still the substrate under most C and C++ builds. GNU Make (gmake on the BSDs and Solaris, where make is a different, weaker program) is the dialect everyone actually means: version 4.4.1 is the current documented edition, and the pattern rules, functions, and jobserver that real build systems depend on are GNU extensions, not POSIX make.
 
@@ -2771,27 +2677,15 @@ find_package has two modes. MODULE mode looks for a Find<Name>.cmake script in C
 Presets:
 
 CMakePresets.json (checked in) and CMakeUserPresets.json (gitignored) replace ad-hoc shell wrappers. A configure preset names the generator, binaryDir, and cacheVariables; build, test, package, and workflow presets chain off it. Visual Studio, VS Code, and CLion all read them, and the same file drives CI, which is the point: one definition of "the debug build" instead of three.`,
-      },
-      {
-        title: 'Quick-fire interview answers — CMake',
-        description: `Q: What is the single biggest difference between modern and legacy CMake?
-A: Legacy CMake sets state on directories — include_directories, link_directories, add_definitions — which applies to every target defined afterwards in that directory and its subdirectories, and to nothing else. Modern CMake sets state on targets, and the state propagates along the dependency graph. The consequence is that in modern CMake a consumer gets exactly what its dependencies declared and nothing more, and the same declarations work whether the dependency is a subdirectory or an installed package.
-
-Q: How do you decide between PUBLIC, PRIVATE, and INTERFACE?
-A: Ask whether the dependency appears in your public headers. If a consumer must see it to compile against you, it is PUBLIC. If it appears only in your .cpp files, it is PRIVATE. INTERFACE is for targets that have no build of their own — header-only libraries — or for requirements that apply to consumers but not to you. Over-marking things PUBLIC is the common error and it silently balloons every consumer's compile line.
-
-Q: Why is target_include_directories(foo PUBLIC include) a bug?
-A: Because that relative path resolves to an absolute path in your source tree and gets written into the exported target. A consumer who installs your package gets an include directory pointing at a path on the build machine. The fix is $<BUILD_INTERFACE:...> for the source-tree path and $<INSTALL_INTERFACE:include> for the installed one, or FILE_SET HEADERS on CMake 3.23 and newer.
-
-Q: What is the difference between find_package CONFIG mode and MODULE mode?
-A: MODULE mode runs a Find<Name>.cmake script, usually shipped with CMake or written by you, that guesses at library and header locations. CONFIG mode loads <Name>Config.cmake installed by the package itself, which defines imported targets with their real usage requirements and their own dependencies. CONFIG is authoritative and is what you should both prefer as a consumer and provide as a producer.
-
-Q: Why should you not use file(GLOB) to collect source files?
-A: Because glob is evaluated at configure time. Adding a new source file does not change any file CMake watches, so the build system is not regenerated and the new file is never compiled — and the failure looks like a linker error about a missing symbol, far from the cause. CONFIGURE_DEPENDS makes CMake re-check on every build, which costs a directory scan each time and still does not help other developers who have not reconfigured. Listing sources explicitly makes additions visible in code review.
-
-Q: What is the point of CMakePresets.json?
-A: One checked-in definition of each build configuration — generator, binary directory, cache variables, toolchain — shared by the command line, Visual Studio, VS Code, CLion, and CI. It removes the class of bug where CI builds with different flags than developers because the flags lived in a shell script nobody kept in sync. Schema version 1 arrived in CMake 3.19 and build and test presets in version 2.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What is the single biggest difference between modern and legacy CMake?', a: 'Legacy CMake sets state on directories — include_directories, link_directories, add_definitions — which applies to every target defined afterwards in that directory and its subdirectories, and to nothing else. Modern CMake sets state on targets, and the state propagates along the dependency graph. The consequence is that in modern CMake a consumer gets exactly what its dependencies declared and nothing more, and the same declarations work whether the dependency is a subdirectory or an installed package.' },
+      { q: 'How do you decide between PUBLIC, PRIVATE, and INTERFACE?', a: 'Ask whether the dependency appears in your public headers. If a consumer must see it to compile against you, it is PUBLIC. If it appears only in your .cpp files, it is PRIVATE. INTERFACE is for targets that have no build of their own — header-only libraries — or for requirements that apply to consumers but not to you. Over-marking things PUBLIC is the common error and it silently balloons every consumer\'s compile line.' },
+      { q: 'Why is target_include_directories(foo PUBLIC include) a bug?', a: 'Because that relative path resolves to an absolute path in your source tree and gets written into the exported target. A consumer who installs your package gets an include directory pointing at a path on the build machine. The fix is $<BUILD_INTERFACE:...> for the source-tree path and $<INSTALL_INTERFACE:include> for the installed one, or FILE_SET HEADERS on CMake 3.23 and newer.' },
+      { q: 'What is the difference between find_package CONFIG mode and MODULE mode?', a: 'MODULE mode runs a Find<Name>.cmake script, usually shipped with CMake or written by you, that guesses at library and header locations. CONFIG mode loads <Name>Config.cmake installed by the package itself, which defines imported targets with their real usage requirements and their own dependencies. CONFIG is authoritative and is what you should both prefer as a consumer and provide as a producer.' },
+      { q: 'Why should you not use file(GLOB) to collect source files?', a: 'Because glob is evaluated at configure time. Adding a new source file does not change any file CMake watches, so the build system is not regenerated and the new file is never compiled — and the failure looks like a linker error about a missing symbol, far from the cause. CONFIGURE_DEPENDS makes CMake re-check on every build, which costs a directory scan each time and still does not help other developers who have not reconfigured. Listing sources explicitly makes additions visible in code review.' },
+      { q: 'What is the point of CMakePresets.json?', a: 'One checked-in definition of each build configuration — generator, binary directory, cache variables, toolchain — shared by the command line, Visual Studio, VS Code, CLion, and CI. It removes the class of bug where CI builds with different flags than developers because the flags lived in a shell script nobody kept in sync. Schema version 1 arrived in CMake 3.19 and build and test presets in version 2.' },
     ],
     introduction: `CMake is the default answer for cross-platform C++ and has been for a decade, but the version of CMake most codebases actually contain was written before 2014. That older style sets global, directory-scoped state — include_directories, link_directories, add_definitions, CMAKE_CXX_FLAGS — which applies to every target declared after it in the current directory and its children. It works until a project has more than one target with different requirements, at which point every target gets every other target's flags and nobody can tell which are load-bearing.
 
@@ -3192,27 +3086,15 @@ CMake loads the toolchain file very early, before compiler detection, via cmake 
 CMAKE_STAGING_PREFIX is the one people miss. CMAKE_INSTALL_PREFIX is always the runtime location on the target — /usr, say — because that path gets baked into config files and rpaths. CMAKE_STAGING_PREFIX is where the install tree actually lands on the build machine. Without it you either install into your own /usr or you break every path that was computed from the install prefix.
 
 The find_root_path knobs are the other half. CMAKE_FIND_ROOT_PATH prepends directories to every find_* search. The four mode variables then decide, per category, whether to look in those roots, in the host root, or both: ONLY searches only the re-rooted paths, NEVER ignores them and uses only the host system root, and BOTH searches both. The idiomatic block is PROGRAM set to NEVER (you need host-executable tools such as protoc, flex, and pkg-config) and LIBRARY, INCLUDE, and PACKAGE set to ONLY (you need target artifacts). Get this wrong and find_package(ZLIB) resolves to /usr/lib/x86_64-linux-gnu/libz.so, configure succeeds, and the link fails with "file in wrong format" — or on a bad day succeeds and the binary refuses to start on the board.`,
-      },
-      {
-        title: 'Quick-fire interview answers — cross-compilation',
-        description: `Q: What is the difference between build, host, and target?
-A: Build is the machine running the compiler. Host is the machine the produced binary will run on. Target only exists when the produced binary is itself a compiler — it is the architecture that compiler will emit code for. For an ordinary application cross build there are only two machines and passing --target to configure accomplishes nothing. CMake calls the host machine CMAKE_SYSTEM_NAME and the build machine CMAKE_HOST_SYSTEM_NAME, which is the reverse of what most people expect on first read.
-
-Q: What does --sysroot do that -I and -L do not?
-A: -I and -L add search paths on top of the compiler built-in defaults, so /usr/include and /usr/lib on the build machine remain in the search order and can still win. --sysroot re-roots the built-in defaults themselves, so the target headers and libraries replace the host ones rather than competing with them. It also makes the linker resolve absolute paths recorded inside linker scripts and .so symlinks relative to the sysroot, which -L cannot do.
-
-Q: Why does find_package find the wrong library when cross-compiling?
-A: Because CMAKE_FIND_ROOT_PATH_MODE_LIBRARY, _INCLUDE and _PACKAGE default to BOTH, so CMake searches the host system paths as well as the sysroot. On a Debian build machine the host copy of a common library is almost always present and often gets found first. The fix is to set those three to ONLY in the toolchain file and leave CMAKE_FIND_ROOT_PATH_MODE_PROGRAM at NEVER so host build tools still resolve.
-
-Q: What happens to try_run when you cross-compile?
-A: CMake compiles the test program but cannot execute it, so it creates cache entries the developer is expected to fill in by hand: the run result variable for the exit code and <var>__TRYRUN_OUTPUT for the captured stdout and stderr. Configure will stop and ask. The clean fixes are to set CMAKE_CROSSCOMPILING_EMULATOR to something like qemu-aarch64 so CMake can actually run the probe, or to guard the try_run behind if(NOT CMAKE_CROSSCOMPILING) and supply a known answer for the cross path.
-
-Q: How do you run tests for a cross-built binary in CI?
-A: Two options. Register qemu-user through binfmt_misc on the runner so target binaries execute transparently, which is what the multiarch qemu-user-static container does; then ctest works unchanged. Or set CMAKE_CROSSCOMPILING_EMULATOR to the qemu binary, which CMake also uses as the default CROSSCOMPILING_EMULATOR target property so add_test commands get prefixed automatically. QEMU user mode covers CPU semantics and syscalls; it does not cover device drivers, real timing, or SIMD-adjacent performance, so a hardware smoke test on real boards still belongs in the pipeline.
-
-Q: What is multiarch and how is it different from multilib?
-A: Multilib is one package shipping several ABIs of the same library under lib and lib64 on one architecture — the classic 32-bit-on-64-bit x86 case. Multiarch is Debian's scheme for co-installing genuinely different architectures: libraries move to /usr/lib/<gnu-triplet>, you enable a foreign architecture with dpkg --add-architecture arm64, and you install target packages with a suffix such as libssl-dev:arm64. Multiarch gives you a real target sysroot assembled by the package manager instead of one you tarball off a device.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What is the difference between build, host, and target?', a: 'Build is the machine running the compiler. Host is the machine the produced binary will run on. Target only exists when the produced binary is itself a compiler — it is the architecture that compiler will emit code for. For an ordinary application cross build there are only two machines and passing --target to configure accomplishes nothing. CMake calls the host machine CMAKE_SYSTEM_NAME and the build machine CMAKE_HOST_SYSTEM_NAME, which is the reverse of what most people expect on first read.' },
+      { q: 'What does --sysroot do that -I and -L do not?', a: '-I and -L add search paths on top of the compiler built-in defaults, so /usr/include and /usr/lib on the build machine remain in the search order and can still win. --sysroot re-roots the built-in defaults themselves, so the target headers and libraries replace the host ones rather than competing with them. It also makes the linker resolve absolute paths recorded inside linker scripts and .so symlinks relative to the sysroot, which -L cannot do.' },
+      { q: 'Why does find_package find the wrong library when cross-compiling?', a: 'Because CMAKE_FIND_ROOT_PATH_MODE_LIBRARY, _INCLUDE and _PACKAGE default to BOTH, so CMake searches the host system paths as well as the sysroot. On a Debian build machine the host copy of a common library is almost always present and often gets found first. The fix is to set those three to ONLY in the toolchain file and leave CMAKE_FIND_ROOT_PATH_MODE_PROGRAM at NEVER so host build tools still resolve.' },
+      { q: 'What happens to try_run when you cross-compile?', a: 'CMake compiles the test program but cannot execute it, so it creates cache entries the developer is expected to fill in by hand: the run result variable for the exit code and <var>__TRYRUN_OUTPUT for the captured stdout and stderr. Configure will stop and ask. The clean fixes are to set CMAKE_CROSSCOMPILING_EMULATOR to something like qemu-aarch64 so CMake can actually run the probe, or to guard the try_run behind if(NOT CMAKE_CROSSCOMPILING) and supply a known answer for the cross path.' },
+      { q: 'How do you run tests for a cross-built binary in CI?', a: 'Two options. Register qemu-user through binfmt_misc on the runner so target binaries execute transparently, which is what the multiarch qemu-user-static container does; then ctest works unchanged. Or set CMAKE_CROSSCOMPILING_EMULATOR to the qemu binary, which CMake also uses as the default CROSSCOMPILING_EMULATOR target property so add_test commands get prefixed automatically. QEMU user mode covers CPU semantics and syscalls; it does not cover device drivers, real timing, or SIMD-adjacent performance, so a hardware smoke test on real boards still belongs in the pipeline.' },
+      { q: 'What is multiarch and how is it different from multilib?', a: 'Multilib is one package shipping several ABIs of the same library under lib and lib64 on one architecture — the classic 32-bit-on-64-bit x86 case. Multiarch is Debian\'s scheme for co-installing genuinely different architectures: libraries move to /usr/lib/<gnu-triplet>, you enable a foreign architecture with dpkg --add-architecture arm64, and you install target packages with a suffix such as libssl-dev:arm64. Multiarch gives you a real target sysroot assembled by the package manager instead of one you tarball off a device.' },
     ],
     introduction: `Cross-compilation is the routine case, not the exotic one. Embedded Linux, mobile, WebAssembly, Apple Silicon universal binaries, and any CI matrix that ships more than one architecture all involve producing binaries on a machine that cannot run them. The reason it feels hard is that build systems were designed around the assumption that the compiler, the libraries it links against, and the machine executing the resulting program are all the same box, and every layer that assumption leaks through has to be corrected by hand.
 
@@ -3526,27 +3408,15 @@ moc constraints worth knowing because they surface as build failures: a class te
 
 qmake versus CMake:
 Qt 5 was qmake-first with a .pro file, and CMake support was a community-maintained afterthought. Qt 6 inverted this — Qt itself is built with CMake, the documentation leads with CMake, and the Qt-specific commands qt_add_executable, qt_add_library, qt_add_qml_module, qt_add_resources, and qt_add_translations are first-class. A build engineer joining a Qt 5 codebase should expect a qmake-to-CMake migration to be on the roadmap and should understand that qmake's implicit conventions (CONFIG += ..., automatic moc, automatic install paths) have to be made explicit in CMake.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Qt build',
-        description: `Q: What does moc actually do, and why does Qt need it?
-A: moc reads headers, finds classes declaring Q_OBJECT, and generates a C++ file containing the QMetaObject for that class — the string tables and dispatch code that implement signals and slots, dynamic properties, and runtime introspection. Standard C++ has no reflection, so Qt generates the reflection data at build time instead. The output is moc_myclass.cpp from a header, or myfile.moc from a .cpp, and it must be compiled and linked with the rest of the project.
-
-Q: What causes "undefined reference to vtable for MyWidget"?
-A: The moc output for that class was never compiled or never linked. Common causes: Q_OBJECT was added to a header after the build system had already generated its dependency graph, so a stale build did not re-run moc; the header is not listed in any target's sources so AUTOMOC never scanned it; or a Q_OBJECT class lives in a .cpp file and the corresponding #include "foo.moc" line is missing. Reconfiguring, or a clean build, is the usual immediate fix; the durable fix is listing the header in the target sources.
-
-Q: What is the difference between qt_add_executable and add_executable?
-A: qt_add_executable wraps CMake's built-in command with Qt-specific handling — plugin importing for static builds, platform-specific target properties, and bundle handling on macOS and iOS. On desktop the difference is small; on Android, iOS, and WebAssembly it is the difference between a working artifact and a bare ELF nobody can run. Use qt_add_executable in Qt 6 projects unconditionally.
-
-Q: How do you enable moc in a CMake project?
-A: Either set CMAKE_AUTOMOC to ON, or call qt_standard_project_setup, which turns it on for you along with sensible defaults for AUTOUIC and AUTORCC. AUTOMOC scans every source and header listed in a target for the Q_OBJECT and Q_GADGET macros and adds the generated files to the build automatically.
-
-Q: Static Qt or shared Qt?
-A: Shared is the default and the LGPL-safe option, because LGPLv3 requires that the end user be able to relink the application against a modified Qt. Static linking makes deployment trivially simple — one executable, no plugin directory, no platform-plugin failure mode — but under LGPLv3 it obliges you to ship the object files or an equivalent mechanism that lets a user relink. Static builds of Qt are also a separate compile of Qt itself, so you own building and maintaining it. Commercial licensing removes the relink obligation, which is a common and legitimate reason to buy it.
-
-Q: What breaks first when migrating Qt 5 to Qt 6?
-A: The build system, because qmake .pro files have to become CMakeLists.txt with explicit find_package(Qt6 REQUIRED COMPONENTS ...) and target_link_libraries against namespaced Qt6:: targets. After that, removed and relocated APIs: QTextStream::setCodec is gone in favour of setEncoding, several Qt 5 modules were removed outright, and OpenGL APIs moved into the Qt OpenGL module. The Qt5Compat module carries a set of the removed classes forward, which is a migration crutch rather than a destination.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What does moc actually do, and why does Qt need it?', a: 'moc reads headers, finds classes declaring Q_OBJECT, and generates a C++ file containing the QMetaObject for that class — the string tables and dispatch code that implement signals and slots, dynamic properties, and runtime introspection. Standard C++ has no reflection, so Qt generates the reflection data at build time instead. The output is moc_myclass.cpp from a header, or myfile.moc from a .cpp, and it must be compiled and linked with the rest of the project.' },
+      { q: 'What causes "undefined reference to vtable for MyWidget"?', a: 'The moc output for that class was never compiled or never linked. Common causes: Q_OBJECT was added to a header after the build system had already generated its dependency graph, so a stale build did not re-run moc; the header is not listed in any target\'s sources so AUTOMOC never scanned it; or a Q_OBJECT class lives in a .cpp file and the corresponding #include "foo.moc" line is missing. Reconfiguring, or a clean build, is the usual immediate fix; the durable fix is listing the header in the target sources.' },
+      { q: 'What is the difference between qt_add_executable and add_executable?', a: 'qt_add_executable wraps CMake\'s built-in command with Qt-specific handling — plugin importing for static builds, platform-specific target properties, and bundle handling on macOS and iOS. On desktop the difference is small; on Android, iOS, and WebAssembly it is the difference between a working artifact and a bare ELF nobody can run. Use qt_add_executable in Qt 6 projects unconditionally.' },
+      { q: 'How do you enable moc in a CMake project?', a: 'Either set CMAKE_AUTOMOC to ON, or call qt_standard_project_setup, which turns it on for you along with sensible defaults for AUTOUIC and AUTORCC. AUTOMOC scans every source and header listed in a target for the Q_OBJECT and Q_GADGET macros and adds the generated files to the build automatically.' },
+      { q: 'Static Qt or shared Qt?', a: 'Shared is the default and the LGPL-safe option, because LGPLv3 requires that the end user be able to relink the application against a modified Qt. Static linking makes deployment trivially simple — one executable, no plugin directory, no platform-plugin failure mode — but under LGPLv3 it obliges you to ship the object files or an equivalent mechanism that lets a user relink. Static builds of Qt are also a separate compile of Qt itself, so you own building and maintaining it. Commercial licensing removes the relink obligation, which is a common and legitimate reason to buy it.' },
+      { q: 'What breaks first when migrating Qt 5 to Qt 6?', a: 'The build system, because qmake .pro files have to become CMakeLists.txt with explicit find_package(Qt6 REQUIRED COMPONENTS ...) and target_link_libraries against namespaced Qt6:: targets. After that, removed and relocated APIs: QTextStream::setCodec is gone in favour of setEncoding, several Qt 5 modules were removed outright, and OpenGL APIs moved into the Qt OpenGL module. The Qt5Compat module carries a set of the removed classes forward, which is a migration crutch rather than a destination.' },
     ],
     introduction: `Most Qt material is written for application developers. A build engineer needs a different mental model: Qt is a C++ framework with a mandatory code-generation phase, a plugin-based runtime that fails in a distinctive way when packaged wrong, and a dual-licensing model that imposes real constraints on how you are allowed to link.
 
@@ -3815,27 +3685,15 @@ macdeployqt copies Qt libraries into the bundle as private frameworks under Cont
 linuxdeployqt is community-maintained and produces an AppDir suitable for AppImage packaging. Linux has no single blessed answer, which is why AppImage, Flatpak, and native .deb/.rpm all remain in use.
 
 Qt 6 added a build-system-integrated path. qt_generate_deploy_app_script produces a script that you install(SCRIPT ...), and at install time it calls qt_deploy_runtime_dependencies, which on Windows and macOS drives windeployqt or macdeployqt underneath, and on Linux uses CMake's file(GET_RUNTIME_DEPENDENCIES) and additionally deploys non-Qt project libraries, excluding system directories by default. It accepts GENERATE_QT_CONF, plugin filters such as NO_PLUGINS, INCLUDE_PLUGIN_TYPES and EXCLUDE_PLUGIN_TYPES, and DEPLOY_TOOL_OPTIONS for passing platform tool flags through. This is the modern answer: deployment described in CMakeLists rather than in a shell script that drifts.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Qt deployment',
-        description: `Q: An application starts on the build machine and fails on a clean machine with "no Qt platform plugin could be initialized". What happened?
-A: The platforms plugin directory was not shipped, or was shipped in the wrong place. Qt requires the QPA plugin — qwindows.dll, libqcocoa.dylib, or libqxcb.so — in a platforms subdirectory of the distribution directory. On the build machine the application finds it through the Qt installation paths compiled into the library; on a clean machine those paths do not exist. The fix is running windeployqt, macdeployqt, or the CMake deploy script rather than copying DLLs by hand. Setting QT_DEBUG_PLUGINS to 1 prints every path Qt searched, which turns a guess into a diagnosis.
-
-Q: What is qt.conf for?
-A: It overrides the hard-coded paths compiled into the Qt library. QLibraryInfo looks for it first as :/qt/etc/qt.conf in the resource system, then in the macOS bundle Resources directory, then next to the executable. Its [Paths] section sets Prefix, Plugins, QmlImports, Libraries, Binaries and others; relative entries resolve against Prefix, which itself resolves relative to the executable directory on Windows and Linux and to Contents on macOS. It is the right tool when your layout is not the default one.
-
-Q: Why did the application ship fine and then fail the first time a user opened a JPEG?
-A: The qjpeg image format plugin was not deployed. PNG support is built into Qt GUI; JPEG, GIF, WebP, and SVG are plugins loaded on demand. Nothing fails at link time or at startup — the failure surfaces at first use as an empty image with no dialog. The same shape of bug hits sqldrivers and the TLS backend plugins.
-
-Q: What does qt_generate_deploy_app_script give you over calling windeployqt in a shell script?
-A: It puts deployment in the build description instead of alongside it. You call it in CMakeLists and install the generated script; at install time it invokes qt_deploy_runtime_dependencies, which uses windeployqt on Windows and macdeployqt on macOS, and on Linux uses file(GET_RUNTIME_DEPENDENCIES) and also picks up non-Qt project libraries. One CMake target then produces a deployable tree on all three platforms, and plugin filtering and qt.conf generation are arguments rather than shell flags.
-
-Q: How do you notarise a Qt application for macOS?
-A: Produce a proper .app bundle (MACOSX_BUNDLE ON), run macdeployqt to embed Qt as private frameworks under Contents/Frameworks and plugins under Contents/PlugIns, then sign every nested binary — frameworks and plugins included — with a Developer ID Application certificate and hardened runtime enabled, sign the bundle last, and submit for notarisation with notarytool before stapling the ticket. Signing the outer bundle without signing the embedded frameworks and plugins is the usual reason notarisation is rejected.
-
-Q: Static build to avoid deployment — what is the catch?
-A: It genuinely removes the plugin directory and the whole platform-plugin failure class, because required plugins are imported at link time. The catches are that you must build Qt from source with -static and maintain that build yourself, and that under LGPLv3 you take on the obligation to let recipients relink the application against their own Qt. Shipping object files to satisfy that is unacceptable to most proprietary products, which is why static Qt and a commercial licence usually travel together.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'An application starts on the build machine and fails on a clean machine with "no Qt platform plugin could be initialized". What happened?', a: 'The platforms plugin directory was not shipped, or was shipped in the wrong place. Qt requires the QPA plugin — qwindows.dll, libqcocoa.dylib, or libqxcb.so — in a platforms subdirectory of the distribution directory. On the build machine the application finds it through the Qt installation paths compiled into the library; on a clean machine those paths do not exist. The fix is running windeployqt, macdeployqt, or the CMake deploy script rather than copying DLLs by hand. Setting QT_DEBUG_PLUGINS to 1 prints every path Qt searched, which turns a guess into a diagnosis.' },
+      { q: 'What is qt.conf for?', a: 'It overrides the hard-coded paths compiled into the Qt library. QLibraryInfo looks for it first as :/qt/etc/qt.conf in the resource system, then in the macOS bundle Resources directory, then next to the executable. Its [Paths] section sets Prefix, Plugins, QmlImports, Libraries, Binaries and others; relative entries resolve against Prefix, which itself resolves relative to the executable directory on Windows and Linux and to Contents on macOS. It is the right tool when your layout is not the default one.' },
+      { q: 'Why did the application ship fine and then fail the first time a user opened a JPEG?', a: 'The qjpeg image format plugin was not deployed. PNG support is built into Qt GUI; JPEG, GIF, WebP, and SVG are plugins loaded on demand. Nothing fails at link time or at startup — the failure surfaces at first use as an empty image with no dialog. The same shape of bug hits sqldrivers and the TLS backend plugins.' },
+      { q: 'What does qt_generate_deploy_app_script give you over calling windeployqt in a shell script?', a: 'It puts deployment in the build description instead of alongside it. You call it in CMakeLists and install the generated script; at install time it invokes qt_deploy_runtime_dependencies, which uses windeployqt on Windows and macdeployqt on macOS, and on Linux uses file(GET_RUNTIME_DEPENDENCIES) and also picks up non-Qt project libraries. One CMake target then produces a deployable tree on all three platforms, and plugin filtering and qt.conf generation are arguments rather than shell flags.' },
+      { q: 'How do you notarise a Qt application for macOS?', a: 'Produce a proper .app bundle (MACOSX_BUNDLE ON), run macdeployqt to embed Qt as private frameworks under Contents/Frameworks and plugins under Contents/PlugIns, then sign every nested binary — frameworks and plugins included — with a Developer ID Application certificate and hardened runtime enabled, sign the bundle last, and submit for notarisation with notarytool before stapling the ticket. Signing the outer bundle without signing the embedded frameworks and plugins is the usual reason notarisation is rejected.' },
+      { q: 'Static build to avoid deployment — what is the catch?', a: 'It genuinely removes the plugin directory and the whole platform-plugin failure class, because required plugins are imported at link time. The catches are that you must build Qt from source with -static and maintain that build yourself, and that under LGPLv3 you take on the obligation to let recipients relink the application against their own Qt. Shipping object files to satisfy that is unacceptable to most proprietary products, which is why static Qt and a commercial licence usually travel together.' },
     ],
     introduction: `Deployment is where Qt projects fail publicly. The build is green, the application runs on every developer machine, and the first clean install dies with a dialog that names plugins it found rather than paths it looked in. Almost every Qt team has shipped this bug at least once, and being able to explain it precisely is a reliable signal of having actually operated a Qt product rather than only built one.
 
@@ -4137,24 +3995,14 @@ vcpkg takes a different shape. Manifest mode puts direct dependencies in vcpkg.j
 Configure with -DCMAKE_TOOLCHAIN_FILE=<vcpkg-root>/scripts/buildsystems/vcpkg.cmake and vcpkg installs during the CMake configure step. Configuration lives in the triplet (x64-windows, x64-linux, arm64-osx, or a custom one), not in a profile. Versions are pinned by builtin-baseline, which is a commit SHA of the vcpkg registry that establishes the version floor for every port in the graph, refined by per-dependency "version>=" and hard "overrides".
 
 The right-hand side of the diagram is the part that pays for itself: binary caching. vcpkg computes an ABI hash over every file in the port directory, the triplet file contents and name, the C and C++ compiler executables, the selected features, the ABI hash of each dependency, the CMake version, and any variables listed in VCPKG_ENV_PASSTHROUGH. Conan computes the package ID. Both then look the artifact up in a remote before building anything. That is the whole value proposition at scale: a clean CI build of a 200-dependency graph goes from forty minutes of compiling Boost and Qt to three minutes of downloading.`,
-      },
-      {
-        title: 'Quick-fire interview answers — C++ dependency management',
-        description: `Q: Why can npm ship one artifact per version but C++ package managers cannot?
-A: Because a compiled C++ artifact is only usable by a consumer with a compatible ABI, and ABI in C++ is determined by compiler, compiler version, standard library, language standard, exception model, CRT linkage, and several flags. Package managers therefore key binaries on the full build configuration — Conan calls that the package ID, vcpkg calls it the ABI hash — and fall back to building from source when there is no matching binary.
-
-Q: What is the difference between a Conan profile and a vcpkg triplet?
-A: They occupy the same slot but at different granularity. A Conan profile is a file of settings (os, arch, compiler, compiler.version, compiler.cppstd, build_type), options, tool_requires, and per-package overrides, and you can pass separate build and host profiles for cross-compilation. A vcpkg triplet is a named CMake fragment (x64-linux, x64-windows-static) that sets VCPKG_TARGET_ARCHITECTURE, VCPKG_CRT_LINKAGE, VCPKG_LIBRARY_LINKAGE and friends. Triplets are coarser; you write a custom triplet file when you need something the built-in set does not cover.
-
-Q: How do you pin dependencies reproducibly in each tool?
-A: Conan uses conan.lock. Run conan lock create . to snapshot the resolved graph including recipe revisions, then conan install . --lockfile=conan.lock in CI; a lockfile in the working directory is picked up implicitly. vcpkg uses builtin-baseline, a registry commit SHA, plus per-dependency "version>=" constraints and "overrides" for hard pins. Update baselines deliberately with vcpkg x-update-baseline, not on every build.
-
-Q: When is CMake FetchContent the right answer instead?
-A: When you have a handful of header-only or small CMake-native dependencies, want zero external tooling, and are willing to rebuild them from source on every clean build. FetchContent has no binary cache, no ABI model, no lockfile, and no way to reuse a prebuilt Qt or Boost across a fleet. It is fine for a leaf project; it does not scale to a platform with a hundred consumers.
-
-Q: What actually makes binary caching worth the setup cost?
-A: Cache hit rate multiplied by build cost. If a hundred CI jobs a day each rebuild the same forty-minute dependency closure, a shared cache converts that into one build plus ninety-nine downloads. The trap is silent cache-key instability: an environment variable that is not in VCPKG_ENV_PASSTHROUGH, a compiler upgraded on one agent, or an absolute path baked into a recipe will drop the hit rate to near zero and nobody notices because the build still succeeds.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why can npm ship one artifact per version but C++ package managers cannot?', a: 'Because a compiled C++ artifact is only usable by a consumer with a compatible ABI, and ABI in C++ is determined by compiler, compiler version, standard library, language standard, exception model, CRT linkage, and several flags. Package managers therefore key binaries on the full build configuration — Conan calls that the package ID, vcpkg calls it the ABI hash — and fall back to building from source when there is no matching binary.' },
+      { q: 'What is the difference between a Conan profile and a vcpkg triplet?', a: 'They occupy the same slot but at different granularity. A Conan profile is a file of settings (os, arch, compiler, compiler.version, compiler.cppstd, build_type), options, tool_requires, and per-package overrides, and you can pass separate build and host profiles for cross-compilation. A vcpkg triplet is a named CMake fragment (x64-linux, x64-windows-static) that sets VCPKG_TARGET_ARCHITECTURE, VCPKG_CRT_LINKAGE, VCPKG_LIBRARY_LINKAGE and friends. Triplets are coarser; you write a custom triplet file when you need something the built-in set does not cover.' },
+      { q: 'How do you pin dependencies reproducibly in each tool?', a: 'Conan uses conan.lock. Run conan lock create . to snapshot the resolved graph including recipe revisions, then conan install . --lockfile=conan.lock in CI; a lockfile in the working directory is picked up implicitly. vcpkg uses builtin-baseline, a registry commit SHA, plus per-dependency "version>=" constraints and "overrides" for hard pins. Update baselines deliberately with vcpkg x-update-baseline, not on every build.' },
+      { q: 'When is CMake FetchContent the right answer instead?', a: 'When you have a handful of header-only or small CMake-native dependencies, want zero external tooling, and are willing to rebuild them from source on every clean build. FetchContent has no binary cache, no ABI model, no lockfile, and no way to reuse a prebuilt Qt or Boost across a fleet. It is fine for a leaf project; it does not scale to a platform with a hundred consumers.' },
+      { q: 'What actually makes binary caching worth the setup cost?', a: 'Cache hit rate multiplied by build cost. If a hundred CI jobs a day each rebuild the same forty-minute dependency closure, a shared cache converts that into one build plus ninety-nine downloads. The trap is silent cache-key instability: an environment variable that is not in VCPKG_ENV_PASSTHROUGH, a compiler upgraded on one agent, or an absolute path baked into a recipe will drop the hit rate to near zero and nobody notices because the build still succeeds.' },
     ],
     introduction: `Every other mainstream language settled its packaging question a decade or more ago. C++ did not, and the reason is the ABI. A Python wheel is consumable by any CPython of the right minor version; a C++ static library is consumable only by a translation unit compiled with a compatible compiler, standard library, language standard, exception model, and set of ABI-affecting flags. There is no single binary artifact that works everywhere, so a C++ package manager has to treat build configuration as part of the package identity. Understanding that one sentence is the difference between using these tools and fighting them.
 
@@ -4440,27 +4288,15 @@ sccache covers the same ground for C, C++, Rust, CUDA, and HIP, and adds first-c
 Distribution. distcc ships preprocessed source to remote workers and is only correct when every worker has an identical compiler; icecream (icecc) improves on it with a scheduler and toolchain shipping. sccache offers icecream-style distributed compilation with toolchain packaging, authentication, and sandboxing. All of these distribute compilation only. Bazel and Buck2 remote execution is a different mechanism: it distributes any action in a hermetically declared graph and caches by action digest, which is stronger but requires that the build be hermetic in the first place — covered in the Bazel and Monorepo Build Systems topics.
 
 Link. mold is the current answer on Linux. Benchmarks on a 16-core machine linking debuginfo-enabled binaries: Clang 19 takes 42.07 seconds with GNU ld, 33.13 with gold, 5.20 with lld, and 1.35 with mold. Enable it with -fuse-ld=mold on Clang and GCC 12.1 or later, -B/usr/libexec/mold on older GCC, or wrap an existing build with mold -run make. lld is the portable fallback and works on macOS and Windows too.`,
-      },
-      {
-        title: 'Quick-fire interview answers — C++ build performance',
-        description: `Q: Where does a large C++ build actually spend its time?
-A: Usually template instantiation and header parsing in the compiler frontend, not codegen. Every translation unit re-parses its whole include closure and re-instantiates the same templates, then the linker discards the duplicates. Measure it with -ftime-trace plus ClangBuildAnalyzer, or -ftime-report on GCC, before touching anything.
-
-Q: Name three things that silently defeat a ccache hit.
-A: __DATE__ or __TIME__ in a header, which forces preprocessor mode and then differs every build; absolute paths, which appear in -I flags and in debug info from -g and differ per checkout directory; and the working directory itself, which ccache hashes by default. The fixes are sloppiness = time_macros, base_dir plus -fdebug-prefix-map, and hash_dir = false.
-
-Q: Why does link time not improve when you add cores?
-A: Traditional linkers are largely single-threaded and cannot start until the last object file exists, so the link is a serial tail on an otherwise parallel build. mold attacks it with heavy parallelism and is several times faster than lld; on the same 16-core benchmark Clang 19 links in 1.35 seconds with mold versus 42 seconds with GNU ld. Linkers are also the memory hogs, which is why over-sizing -j causes swap during the link phase.
-
-Q: What is the real cost of unity builds?
-A: They cut redundant header parsing, often by a large factor, but they break incremental builds — touching one source file recompiles its whole batch. They also change semantics: internal-linkage names and anonymous namespaces from different files now collide, static initialization order changes, and macros leak across file boundaries. CMake exposes UNITY_BUILD with UNITY_BUILD_BATCH_SIZE and UNITY_BUILD_UNIQUE_ID to mitigate some of that. The usual outcome is unity builds in CI, normal builds locally.
-
-Q: How do you pick -j?
-A: By memory, not by core count. Compilers use a few hundred megabytes each; linkers on a large debug binary can use ten gigabytes or more. -j equal to core count is fine for the compile phase and can swap the machine during the link phase. Use Ninja pools to cap concurrent links separately from concurrent compiles, or set -j to min(cores, RAM_GB / peak_link_GB) when links dominate.
-
-Q: Thin LTO or full LTO?
-A: Full LTO merges everything into one module and optimizes globally — best code, worst scalability, and a serial memory-bound link. ThinLTO keeps per-module summaries and parallelizes and caches the optimization step, typically getting most of the runtime benefit at a small fraction of the build cost. For anything you build more than once a day, ThinLTO.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Where does a large C++ build actually spend its time?', a: 'Usually template instantiation and header parsing in the compiler frontend, not codegen. Every translation unit re-parses its whole include closure and re-instantiates the same templates, then the linker discards the duplicates. Measure it with -ftime-trace plus ClangBuildAnalyzer, or -ftime-report on GCC, before touching anything.' },
+      { q: 'Name three things that silently defeat a ccache hit.', a: '__DATE__ or __TIME__ in a header, which forces preprocessor mode and then differs every build; absolute paths, which appear in -I flags and in debug info from -g and differ per checkout directory; and the working directory itself, which ccache hashes by default. The fixes are sloppiness = time_macros, base_dir plus -fdebug-prefix-map, and hash_dir = false.' },
+      { q: 'Why does link time not improve when you add cores?', a: 'Traditional linkers are largely single-threaded and cannot start until the last object file exists, so the link is a serial tail on an otherwise parallel build. mold attacks it with heavy parallelism and is several times faster than lld; on the same 16-core benchmark Clang 19 links in 1.35 seconds with mold versus 42 seconds with GNU ld. Linkers are also the memory hogs, which is why over-sizing -j causes swap during the link phase.' },
+      { q: 'What is the real cost of unity builds?', a: 'They cut redundant header parsing, often by a large factor, but they break incremental builds — touching one source file recompiles its whole batch. They also change semantics: internal-linkage names and anonymous namespaces from different files now collide, static initialization order changes, and macros leak across file boundaries. CMake exposes UNITY_BUILD with UNITY_BUILD_BATCH_SIZE and UNITY_BUILD_UNIQUE_ID to mitigate some of that. The usual outcome is unity builds in CI, normal builds locally.' },
+      { q: 'How do you pick -j?', a: 'By memory, not by core count. Compilers use a few hundred megabytes each; linkers on a large debug binary can use ten gigabytes or more. -j equal to core count is fine for the compile phase and can swap the machine during the link phase. Use Ninja pools to cap concurrent links separately from concurrent compiles, or set -j to min(cores, RAM_GB / peak_link_GB) when links dominate.' },
+      { q: 'Thin LTO or full LTO?', a: 'Full LTO merges everything into one module and optimizes globally — best code, worst scalability, and a serial memory-bound link. ThinLTO keeps per-module summaries and parallelizes and caches the optimization step, typically getting most of the runtime benefit at a small fraction of the build cost. For anything you build more than once a day, ThinLTO.' },
     ],
     introduction: `Build performance work goes wrong in a specific, predictable way: someone reads that unity builds or precompiled headers are fast, enables them globally, breaks incremental builds for the whole team, and cannot say whether the change helped because there was never a baseline. The discipline is the same as any other performance work — measure, find the dominant cost, attack that, re-measure.
 
@@ -4746,27 +4582,15 @@ debuginfod removes the manual step entirely. It is an HTTP server distributing E
 Optimized builds. At -O2 a variable may be in a register, in different registers at different points, or eliminated entirely, and gdb prints <optimized out>. Inlined frames collapse. -Og exists for this: GCC documents it as "the optimization level of choice for the standard edit-compile-debug cycle," enabling variable tracking while disabling the passes that most damage debuggability. -g is orthogonal to -O and should be on for release builds too — you strip the result into a separate file rather than compiling without debug info.
 
 On Windows the shapes differ but the problem is identical: MiniDumpWriteDump produces a minidump, which is a subset of a full crash dump chosen for size, and reading it requires both the binaries and the matching PDB files. Symbols are matched by a GUID and age stamp rather than a build-id, and a symbol server plus _NT_SYMBOL_PATH plays the role debuginfod plays on Linux.`,
-      },
-      {
-        title: 'Quick-fire interview answers — native debugging',
-        description: `Q: Why does gdb print <optimized out> and what do you do about it?
-A: At -O2 the variable may live in a register that has been reused, may exist only at some program points, or may have been eliminated because its value is derivable. The compiler emits honest DWARF saying so. Options: rebuild the specific translation unit at -Og, which GCC documents as the level of choice for the edit-compile-debug cycle; read the value out of registers using the disassembly; or reconstruct it from other live state. Do not compile production at -O0 to make debugging easier — you change the timing and often the bug.
-
-Q: What does a core dump not contain?
-A: The contents of file-backed executable mappings. The core records that libssl.so was mapped at some address, not its code. It therefore cannot be interpreted without the exact binaries that were loaded, matched by build-id. It also excludes whatever /proc/PID/coredump_filter masks off, and by default it does not include file-backed shared mappings.
-
-Q: A core will not produce a backtrace and gdb says the build-id does not match. What happened?
-A: The binary you handed gdb is not the binary that crashed. Usually someone rebuilt from the same commit, and any non-reproducible input — a timestamp, a path, a different compiler patch level — changed the output. The fix is to archive the exact stripped binary and its .debug file per release, keyed by build-id, or better, run a debuginfod server over your release artifacts so gdb fetches the right one automatically.
-
-Q: Why strip production binaries if you need symbols to debug?
-A: You keep the symbols, you just do not ship them in the binary. objcopy --only-keep-debug extracts them, strip -g removes them from the shipped artifact, and objcopy --add-gnu-debuglink links the two. The build-id in both halves lets gdb pair them later. This gives smaller deploy artifacts and less disclosure, with no loss of debuggability.
-
-Q: How do you capture a core from a crashing container?
-A: /proc/sys/kernel/core_pattern is a host setting and is not namespaced, so the container obeys the host pattern. Either point it at an absolute path on a volume mounted into the container, or use the host's systemd-coredump pipe handler, which captures regardless of namespace. Raise the limit with docker run --ulimit core=-1, and make sure the process is not running as a user that cannot write the destination.
-
-Q: How do you make a crashing test in CI produce something actionable?
-A: Enable cores in the job (ulimit -c unlimited, an absolute core_pattern under the workspace), run the test, and on failure run gdb in batch mode against the binary and core with thread apply all bt full, then upload the core, the binary, the .debug file, and the backtrace as artifacts. Without that, a crashing test gives you an exit code and a rerun.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why does gdb print <optimized out> and what do you do about it?', a: 'At -O2 the variable may live in a register that has been reused, may exist only at some program points, or may have been eliminated because its value is derivable. The compiler emits honest DWARF saying so. Options: rebuild the specific translation unit at -Og, which GCC documents as the level of choice for the edit-compile-debug cycle; read the value out of registers using the disassembly; or reconstruct it from other live state. Do not compile production at -O0 to make debugging easier — you change the timing and often the bug.' },
+      { q: 'What does a core dump not contain?', a: 'The contents of file-backed executable mappings. The core records that libssl.so was mapped at some address, not its code. It therefore cannot be interpreted without the exact binaries that were loaded, matched by build-id. It also excludes whatever /proc/PID/coredump_filter masks off, and by default it does not include file-backed shared mappings.' },
+      { q: 'A core will not produce a backtrace and gdb says the build-id does not match. What happened?', a: 'The binary you handed gdb is not the binary that crashed. Usually someone rebuilt from the same commit, and any non-reproducible input — a timestamp, a path, a different compiler patch level — changed the output. The fix is to archive the exact stripped binary and its .debug file per release, keyed by build-id, or better, run a debuginfod server over your release artifacts so gdb fetches the right one automatically.' },
+      { q: 'Why strip production binaries if you need symbols to debug?', a: 'You keep the symbols, you just do not ship them in the binary. objcopy --only-keep-debug extracts them, strip -g removes them from the shipped artifact, and objcopy --add-gnu-debuglink links the two. The build-id in both halves lets gdb pair them later. This gives smaller deploy artifacts and less disclosure, with no loss of debuggability.' },
+      { q: 'How do you capture a core from a crashing container?', a: '/proc/sys/kernel/core_pattern is a host setting and is not namespaced, so the container obeys the host pattern. Either point it at an absolute path on a volume mounted into the container, or use the host\'s systemd-coredump pipe handler, which captures regardless of namespace. Raise the limit with docker run --ulimit core=-1, and make sure the process is not running as a user that cannot write the destination.' },
+      { q: 'How do you make a crashing test in CI produce something actionable?', a: 'Enable cores in the job (ulimit -c unlimited, an absolute core_pattern under the workspace), run the test, and on failure run gdb in batch mode against the binary and core with thread apply all bt full, then upload the core, the binary, the .debug file, and the backtrace as artifacts. Without that, a crashing test gives you an exit code and a rerun.' },
     ],
     introduction: `The gap this topic closes is between "the service crashed" and "here is the line that crashed and the value that caused it." That gap is where most teams lose days, because the artifacts needed to close it have to be arranged before the crash, not after.
 
@@ -5068,27 +4892,15 @@ ThreadSanitizer detects data races using vector clocks and a shadow word per mem
 MemorySanitizer finds reads of uninitialized memory. It is the strictest and the hardest to deploy, because it needs every line of code instrumented including the C++ standard library — in practice you build libc++ with MSan. Cost is roughly 3x, and -fsanitize-memory-track-origins=2 adds another 1.5x to 2x on top while telling you where the uninitialized value was born, which is the difference between an actionable report and a mystery.
 
 Valgrind memcheck is the alternative that needs no rebuild at all. It runs the binary under dynamic binary translation, so it works on a stripped vendor library or a production binary you cannot recompile, and it finds uninitialized value use without an instrumented libc. The price is 10x to 30x slowdown, another 2x on top with --track-origins=yes, and a structural blind spot: memcheck sees only heap allocations, so stack buffer overflows and global overflows that ASan catches trivially are invisible to it.`,
-      },
-      {
-        title: 'Quick-fire interview answers — sanitizers',
-        description: `Q: Why can you not run ASan and TSan in the same binary?
-A: Both need to own the whole address space layout and both install allocator and libc interceptors. Their shadow mappings collide, so clang rejects -fsanitize=address,thread outright as an invalid combination. The practical answer is that they are separate build configurations and separate CI jobs — you never get one binary that is both.
-
-Q: What can you combine?
-A: UBSan composes with everything: -fsanitize=address,undefined and -fsanitize=thread,undefined are both valid and are what you actually build. ASan, TSan and MSan are mutually exclusive with each other. LeakSanitizer is bundled into ASan on Linux and also exists standalone as -fsanitize=leak for when you want leak detection without the 2x ASan overhead.
-
-Q: Why does a UBSan finding not fail the build by default?
-A: Because UBSan is recoverable by default — it prints a diagnostic and keeps running, and the process exits zero. CI stays green while the report scrolls past in the log. You need -fno-sanitize-recover=all at compile time, or UBSAN_OPTIONS=halt_on_error=1, plus UBSAN_OPTIONS=print_stacktrace=1 to get a symbolized frame list instead of a bare source location.
-
-Q: Your ASan report shows hex addresses instead of function names. What is wrong?
-A: The runtime cannot find llvm-symbolizer. Put it on PATH or set ASAN_SYMBOLIZER_PATH to the binary. Also confirm you compiled with -g and -fno-omit-frame-pointer; without frame pointers the unwinder produces truncated or wrong stacks. If you deliberately want raw output for offline processing, ASAN_OPTIONS=symbolize=0 and symbolize later.
-
-Q: Where do you run each sanitizer in a pipeline?
-A: ASan plus UBSan on every pull request — 2x on a unit test suite is affordable and it catches the highest-value bug classes. TSan nightly as a separate build because it is 5x-15x and needs the whole dependency tree instrumented. MSan only if you already build your own libc++. Valgrind on demand, for third-party binaries you cannot rebuild or for a bug ASan cannot see.
-
-Q: What does the quarantine do and why does it matter for long-running tests?
-A: Freed heap blocks are held poisoned rather than reused, so a later access is reported as use-after-free instead of silently hitting recycled memory. The consequence is that a long soak test under ASan grows RSS steadily. ASAN_OPTIONS=quarantine_size_mb bounds it, at the cost of missing use-after-free on blocks that aged out.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why can you not run ASan and TSan in the same binary?', a: 'Both need to own the whole address space layout and both install allocator and libc interceptors. Their shadow mappings collide, so clang rejects -fsanitize=address,thread outright as an invalid combination. The practical answer is that they are separate build configurations and separate CI jobs — you never get one binary that is both.' },
+      { q: 'What can you combine?', a: 'UBSan composes with everything: -fsanitize=address,undefined and -fsanitize=thread,undefined are both valid and are what you actually build. ASan, TSan and MSan are mutually exclusive with each other. LeakSanitizer is bundled into ASan on Linux and also exists standalone as -fsanitize=leak for when you want leak detection without the 2x ASan overhead.' },
+      { q: 'Why does a UBSan finding not fail the build by default?', a: 'Because UBSan is recoverable by default — it prints a diagnostic and keeps running, and the process exits zero. CI stays green while the report scrolls past in the log. You need -fno-sanitize-recover=all at compile time, or UBSAN_OPTIONS=halt_on_error=1, plus UBSAN_OPTIONS=print_stacktrace=1 to get a symbolized frame list instead of a bare source location.' },
+      { q: 'Your ASan report shows hex addresses instead of function names. What is wrong?', a: 'The runtime cannot find llvm-symbolizer. Put it on PATH or set ASAN_SYMBOLIZER_PATH to the binary. Also confirm you compiled with -g and -fno-omit-frame-pointer; without frame pointers the unwinder produces truncated or wrong stacks. If you deliberately want raw output for offline processing, ASAN_OPTIONS=symbolize=0 and symbolize later.' },
+      { q: 'Where do you run each sanitizer in a pipeline?', a: 'ASan plus UBSan on every pull request — 2x on a unit test suite is affordable and it catches the highest-value bug classes. TSan nightly as a separate build because it is 5x-15x and needs the whole dependency tree instrumented. MSan only if you already build your own libc++. Valgrind on demand, for third-party binaries you cannot rebuild or for a bug ASan cannot see.' },
+      { q: 'What does the quarantine do and why does it matter for long-running tests?', a: 'Freed heap blocks are held poisoned rather than reused, so a later access is reported as use-after-free instead of silently hitting recycled memory. The consequence is that a long soak test under ASan grows RSS steadily. ASAN_OPTIONS=quarantine_size_mb bounds it, at the cost of missing use-after-free on blocks that aged out.' },
     ],
     introduction: `Memory bugs in C and C++ are the class of defect that survives code review and unit tests and then shows up as a crash in production with a stack that points nowhere near the actual fault. A heap buffer overflow corrupts an adjacent allocation; the program continues, and the failure surfaces later in unrelated code. A use-after-free reads memory that was recycled into a different object; the values look plausible until they do not. Sanitizers exist to convert these delayed, misattributed failures into immediate, precise reports at the exact instruction that did the wrong thing.
 
@@ -5376,27 +5188,15 @@ The invocation flags that matter day to day: ctest -j for parallelism, --output-
 Layer three, coverage:
 
 Two toolchains. The GCC lineage: compile and link with --coverage, which emits a .gcno next to each object at compile time and writes a .gcda at process exit; gcov turns those into per-line counts, lcov aggregates into a .info file and genhtml renders it, with branch data behind --rc branch_coverage=1. The LLVM lineage: -fprofile-instr-generate -fcoverage-mapping, LLVM_PROFILE_FILE controlling raw profile paths with patterns like %p for pid and %Nm for a merge pool, llvm-profdata merge -sparse to index, then llvm-cov show, report or export. llvm-cov reports six metrics of increasing granularity — function, instantiation, line, region, branch, MC/DC — and -fcoverage-mcdc enables the last.`,
-      },
-      {
-        title: 'Quick-fire interview answers — C++ testing',
-        description: `Q: Why gtest_discover_tests instead of a single add_test for the whole binary?
-A: Granularity. One add_test means CTest sees one pass/fail for hundreds of tests, cannot parallelize inside it, cannot apply a per-test timeout, and a crash loses every result in that binary. gtest_discover_tests enumerates the binary's tests and registers each one, so you get per-test scheduling, timeouts, labels and reporting. The tradeoff is that discovery has to execute the test binary, which needs care when cross-compiling.
-
-Q: A test passes alone and fails under ctest -j16. First hypothesis?
-A: Shared mutable external state — a fixed port, a fixed temp file path, a shared database or a working directory. Confirm with ctest --schedule-random and by running the suspect pair together. Fix by removing the sharing; if you genuinely cannot, RESOURCE_LOCK on a named lock serializes just those tests while the rest still run in parallel. RUN_SERIAL is the blunter version that stops everything else.
-
-Q: Why does branch coverage matter more in C++ than line coverage?
-A: Because a single C++ line routinely contains multiple decisions. Short-circuit && and ||, ternaries, default arguments, and implicit destructor and exception-unwinding paths all live on one source line. Line coverage marks that line green once any path through it executes. Branch coverage requires each decision outcome to have been taken, which is what actually exercises the error handling.
-
-Q: Your coverage number went from 61% to 84% in a sprint and quality did not change. What happened?
-A: Almost certainly tests that execute code without asserting on it — instantiating objects, calling getters, or a parameterized test sprayed over inputs with a trivial assertion. Coverage measures execution, not verification. The counters that resist this are diff coverage on changed lines, branch rather than line, and mutation testing, which fails when a deliberately broken build still passes the suite.
-
-Q: How do you hunt a flaky test?
-A: ctest --repeat until-fail:100 -R FlakyName to establish a rate, --schedule-random and running under -j to surface ordering and contention, --gtest_shuffle with a recorded --gtest_random_seed for reproducibility, and a TSan build if the flake involves threads. Quarantining with --repeat until-pass hides the signal and should be a temporary label, never the fix.
-
-Q: A test crashes and its coverage data is missing. Why?
-A: gcov writes .gcda at normal process exit. A test that segfaults, aborts under a sanitizer, or calls _exit never flushes. Call __gcov_dump at a checkpoint, or use LLVM source-based coverage with the %c continuous mode pattern in LLVM_PROFILE_FILE, which keeps the counters synced so a crash still yields usable data.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why gtest_discover_tests instead of a single add_test for the whole binary?', a: 'Granularity. One add_test means CTest sees one pass/fail for hundreds of tests, cannot parallelize inside it, cannot apply a per-test timeout, and a crash loses every result in that binary. gtest_discover_tests enumerates the binary\'s tests and registers each one, so you get per-test scheduling, timeouts, labels and reporting. The tradeoff is that discovery has to execute the test binary, which needs care when cross-compiling.' },
+      { q: 'A test passes alone and fails under ctest -j16. First hypothesis?', a: 'Shared mutable external state — a fixed port, a fixed temp file path, a shared database or a working directory. Confirm with ctest --schedule-random and by running the suspect pair together. Fix by removing the sharing; if you genuinely cannot, RESOURCE_LOCK on a named lock serializes just those tests while the rest still run in parallel. RUN_SERIAL is the blunter version that stops everything else.' },
+      { q: 'Why does branch coverage matter more in C++ than line coverage?', a: 'Because a single C++ line routinely contains multiple decisions. Short-circuit && and ||, ternaries, default arguments, and implicit destructor and exception-unwinding paths all live on one source line. Line coverage marks that line green once any path through it executes. Branch coverage requires each decision outcome to have been taken, which is what actually exercises the error handling.' },
+      { q: 'Your coverage number went from 61% to 84% in a sprint and quality did not change. What happened?', a: 'Almost certainly tests that execute code without asserting on it — instantiating objects, calling getters, or a parameterized test sprayed over inputs with a trivial assertion. Coverage measures execution, not verification. The counters that resist this are diff coverage on changed lines, branch rather than line, and mutation testing, which fails when a deliberately broken build still passes the suite.' },
+      { q: 'How do you hunt a flaky test?', a: 'ctest --repeat until-fail:100 -R FlakyName to establish a rate, --schedule-random and running under -j to surface ordering and contention, --gtest_shuffle with a recorded --gtest_random_seed for reproducibility, and a TSan build if the flake involves threads. Quarantining with --repeat until-pass hides the signal and should be a temporary label, never the fix.' },
+      { q: 'A test crashes and its coverage data is missing. Why?', a: 'gcov writes .gcda at normal process exit. A test that segfaults, aborts under a sanitizer, or calls _exit never flushes. Call __gcov_dump at a checkpoint, or use LLVM source-based coverage with the %c continuous mode pattern in LLVM_PROFILE_FILE, which keeps the counters synced so a crash still yields usable data.' },
     ],
     introduction: `A C++ test suite has failure modes that other ecosystems mostly do not. Tests are compiled artifacts, so the suite has a build time as well as a run time, and in a large repo the build often dominates. Tests share a process, so one test's global state leaks into the next. Tests can crash the runner rather than fail politely, taking every other test in the binary with them. And coverage instrumentation interacts with optimization in ways that make the numbers subtly wrong if you do not know what you are looking at.
 
@@ -5696,27 +5496,15 @@ cppcheck sits alongside, valuable because it is independent: a different engine 
 Rung four: commercial. Coverity, PVS-Studio, Klocwork, Helix QAC. What you are buying is whole-program interprocedural analysis across translation unit boundaries, certified rule packs with traceability for MISRA, AUTOSAR, CERT and functional safety audits, and a triage database that remembers every previous decision so a finding dismissed last year does not reappear. What you pay is licence cost, multi-hour full scans that cannot run per-PR, and their own false positives.
 
 The two cross-cutting mechanisms that make any of this survivable in a large repo are diff scoping — analyze only what changed — and SARIF, the 2.1.0 interchange format that lets every tool feed one code-scanning surface that deduplicates results by partialFingerprints and annotates only the lines in the pull request.`,
-      },
-      {
-        title: 'Quick-fire interview answers — static analysis',
-        description: `Q: Why does clang-tidy need compile_commands.json?
-A: Because it is a real compiler front end, not a text linter. It has to parse the translation unit exactly as the build did — include paths, defines, standard version, target — and it gets those from the compilation database. Generate it with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON and pass -p build. Without it clang-tidy guesses, fails to find headers, and reports parse errors that look like findings and destroy trust in the tool.
-
-Q: Which warnings does -Wall -Wextra not give you?
-A: -Wshadow, -Wconversion, -Wsign-conversion, -Wdouble-promotion, -Wformat=2, and on the C++ side -Wold-style-cast, -Wnon-virtual-dtor and -Wuseless-cast. -Wnull-dereference exists but needs optimization enabled to do anything. The naming misleads people into thinking -Wall is exhaustive; it is a curated subset from decades ago.
-
-Q: Why -Werror in CI but not in local dev builds?
-A: Two reasons. A compiler upgrade or a new warning flag turns every developer's working tree red simultaneously, for code that was fine yesterday; in CI you control the compiler version and can stage the upgrade. And during exploratory work an unused variable should not block a build you are about to throw away. CMake supports this directly with COMPILE_WARNING_AS_ERROR on the target plus --compile-no-warning-as-error to override locally.
-
-Q: How do you enable clang-tidy on a two-million-line legacy codebase without stopping the team?
-A: Never full-repo blocking on day one. Run it in report-only mode to size the problem, pick a narrow high-signal set like bugprone-* and clang-analyzer-*, gate only on lines changed in the pull request using clang-tidy-diff.py, and let the full-repo run happen nightly as a non-blocking trend. Ratchet by adding one check group at a time after the existing findings for it are cleared.
-
-Q: What is SARIF for?
-A: A common 2.1.0 output format so clang-tidy, cppcheck, the analyzer and CodeQL all feed one alert surface instead of four log formats. Uploaded via the upload-sarif action or the code-scanning API, deduplicated across runs by partialFingerprints, and surfaced as inline annotations on the lines a pull request actually touched. Limits matter: 25,000 results per run with only the top 5,000 kept, and 10 MB gzip-compressed per file.
-
-Q: A check you enabled is 40 percent false positives. What do you do?
-A: Disable that specific check repo-wide and say so in .clang-tidy with a comment. Do not scatter NOLINT through the code to keep it on — that hides the real hits too and encodes the noise permanently. Inline suppression is for a handful of genuine exceptions with a reason attached; a systematically wrong check is a configuration decision, not a per-site one.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why does clang-tidy need compile_commands.json?', a: 'Because it is a real compiler front end, not a text linter. It has to parse the translation unit exactly as the build did — include paths, defines, standard version, target — and it gets those from the compilation database. Generate it with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON and pass -p build. Without it clang-tidy guesses, fails to find headers, and reports parse errors that look like findings and destroy trust in the tool.' },
+      { q: 'Which warnings does -Wall -Wextra not give you?', a: '-Wshadow, -Wconversion, -Wsign-conversion, -Wdouble-promotion, -Wformat=2, and on the C++ side -Wold-style-cast, -Wnon-virtual-dtor and -Wuseless-cast. -Wnull-dereference exists but needs optimization enabled to do anything. The naming misleads people into thinking -Wall is exhaustive; it is a curated subset from decades ago.' },
+      { q: 'Why -Werror in CI but not in local dev builds?', a: 'Two reasons. A compiler upgrade or a new warning flag turns every developer\'s working tree red simultaneously, for code that was fine yesterday; in CI you control the compiler version and can stage the upgrade. And during exploratory work an unused variable should not block a build you are about to throw away. CMake supports this directly with COMPILE_WARNING_AS_ERROR on the target plus --compile-no-warning-as-error to override locally.' },
+      { q: 'How do you enable clang-tidy on a two-million-line legacy codebase without stopping the team?', a: 'Never full-repo blocking on day one. Run it in report-only mode to size the problem, pick a narrow high-signal set like bugprone-* and clang-analyzer-*, gate only on lines changed in the pull request using clang-tidy-diff.py, and let the full-repo run happen nightly as a non-blocking trend. Ratchet by adding one check group at a time after the existing findings for it are cleared.' },
+      { q: 'What is SARIF for?', a: 'A common 2.1.0 output format so clang-tidy, cppcheck, the analyzer and CodeQL all feed one alert surface instead of four log formats. Uploaded via the upload-sarif action or the code-scanning API, deduplicated across runs by partialFingerprints, and surfaced as inline annotations on the lines a pull request actually touched. Limits matter: 25,000 results per run with only the top 5,000 kept, and 10 MB gzip-compressed per file.' },
+      { q: 'A check you enabled is 40 percent false positives. What do you do?', a: 'Disable that specific check repo-wide and say so in .clang-tidy with a comment. Do not scatter NOLINT through the code to keep it on — that hides the real hits too and encodes the noise permanently. Inline suppression is for a handful of genuine exceptions with a reason attached; a systematically wrong check is a configuration decision, not a per-site one.' },
     ],
     introduction: `Static analysis finds defects without running the program, which makes it complementary to the sanitizers and the test suite rather than a substitute. Sanitizers only see code paths the tests execute; static analysis reads every path in the source but cannot know which ones are reachable in practice. That asymmetry is the whole reason both exist, and it is the first thing an interviewer wants you to articulate.
 
@@ -6001,27 +5789,15 @@ Output is the third. print writes to stdout with buffering that CI log collector
 Packaging is what makes the tooling reproducible. A pyproject.toml with a [project] table and a [project.scripts] entry point turns the package into a real command on PATH. A lockfile — uv.lock, or a fully hashed requirements file installed with --require-hashes — means agent A and agent B run byte-identical tooling. Without that pin the build tool is itself an unversioned dependency of your build, and "it worked yesterday" becomes an unanswerable question.
 
 Testing closes the loop. pytest with tmp_path gives each test a clean directory; monkeypatch.setenv and monkeypatch.chdir isolate environment assumptions and undo them at teardown; unittest.mock.patch on your run() wrapper lets you assert the exact argument vector a command would have received without executing anything. That is the test that catches a quoting regression before it ships.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Python build tooling',
-        description: `Q: Why move build logic out of YAML into Python?
-A: Because YAML has no unit tests, no local execution path, and no type checking, so every change is validated only by running the pipeline. Python build tooling runs on a laptop, is tested with pytest, checked with mypy, and pinned by version so every agent runs the same code. The YAML shrinks to triggers and one command per step, which is what declarative config is actually good at.
-
-Q: What is wrong with subprocess.run("make -j8 && ./deploy.sh", shell=True)?
-A: Three things. It invokes a shell, so any interpolated value — a branch name, a tag, a user-supplied argument — can inject commands. It has no check=True, so a failing make is silently ignored. It has no timeout, so a hung child holds the agent indefinitely. The correct form is a list of arguments, shell=False, check=True, captured or streamed output, and an explicit timeout.
-
-Q: How do you propagate a subprocess failure out of a build script correctly?
-A: Either let check=True raise CalledProcessError and handle it at the top level, or capture the CompletedProcess and call sys.exit on its returncode. What you must not do is log the error and return normally — CI reads the process exit code, not your log, so a swallowed failure produces a green build on a broken artifact.
-
-Q: How do you make sure every build agent runs the same version of your build tooling?
-A: Package it with pyproject.toml and a [project.scripts] entry point, publish it to an internal index, and install from a lockfile — uv.lock via uv sync --frozen, or a hash-pinned requirements file installed with pip install --require-hashes. Installing from a branch, or pip install -e on the agent, lets the tooling version drift per agent and failures stop being reproducible.
-
-Q: How do you unit test a function that shells out?
-A: Wrap every subprocess call in one thin run() helper, then patch that helper in tests and assert on the exact argument list it received. For filesystem work use the pytest tmp_path fixture so each test gets an isolated directory, and monkeypatch.setenv for environment assumptions. You are testing your own decision logic — which flags get built, in what order — not whether the compiler works.
-
-Q: How do you generate a CI matrix programmatically?
-A: Have a Python command emit JSON on stdout, publish it as a job output, and have the downstream job consume it. In GitHub Actions that means appending to the file named by the GITHUB_OUTPUT environment variable, declaring it under the job outputs, and expanding it with fromJSON in the matrix. The matrix is then derived from what actually changed rather than hand-maintained in YAML.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why move build logic out of YAML into Python?', a: 'Because YAML has no unit tests, no local execution path, and no type checking, so every change is validated only by running the pipeline. Python build tooling runs on a laptop, is tested with pytest, checked with mypy, and pinned by version so every agent runs the same code. The YAML shrinks to triggers and one command per step, which is what declarative config is actually good at.' },
+      { q: 'What is wrong with subprocess.run("make -j8 && ./deploy.sh", shell=True)?', a: 'Three things. It invokes a shell, so any interpolated value — a branch name, a tag, a user-supplied argument — can inject commands. It has no check=True, so a failing make is silently ignored. It has no timeout, so a hung child holds the agent indefinitely. The correct form is a list of arguments, shell=False, check=True, captured or streamed output, and an explicit timeout.' },
+      { q: 'How do you propagate a subprocess failure out of a build script correctly?', a: 'Either let check=True raise CalledProcessError and handle it at the top level, or capture the CompletedProcess and call sys.exit on its returncode. What you must not do is log the error and return normally — CI reads the process exit code, not your log, so a swallowed failure produces a green build on a broken artifact.' },
+      { q: 'How do you make sure every build agent runs the same version of your build tooling?', a: 'Package it with pyproject.toml and a [project.scripts] entry point, publish it to an internal index, and install from a lockfile — uv.lock via uv sync --frozen, or a hash-pinned requirements file installed with pip install --require-hashes. Installing from a branch, or pip install -e on the agent, lets the tooling version drift per agent and failures stop being reproducible.' },
+      { q: 'How do you unit test a function that shells out?', a: 'Wrap every subprocess call in one thin run() helper, then patch that helper in tests and assert on the exact argument list it received. For filesystem work use the pytest tmp_path fixture so each test gets an isolated directory, and monkeypatch.setenv for environment assumptions. You are testing your own decision logic — which flags get built, in what order — not whether the compiler works.' },
+      { q: 'How do you generate a CI matrix programmatically?', a: 'Have a Python command emit JSON on stdout, publish it as a job output, and have the downstream job consume it. In GitHub Actions that means appending to the file named by the GITHUB_OUTPUT environment variable, declaring it under the job outputs, and expanding it with fromJSON in the matrix. The matrix is then derived from what actually changed rather than hand-maintained in YAML.' },
     ],
     introduction: `The job description leads with advanced Python used to automate workflows and enhance build processes. That is a specific dialect of Python, and it is not the one most candidates prepare. Nobody is asking about web frameworks or dataframes. They are asking whether you can write the tool that builds, tests, signs, and publishes the product — and whether that tool is something a team can maintain for five years.
 
@@ -6421,27 +6197,15 @@ The trap that produces most broken Windows CI is error handling. The ErrorAction
 Native executables are a second, separate trap. msbuild, git, and signtool are not cmdlets — they do not raise PowerShell errors at all. They set the last-exit-code variable. PowerShell 7.4 added a preference variable that makes a non-zero native exit code issue an error according to ErrorActionPreference, but its documented default is false. Until you opt in, every native tool invocation needs an explicit exit code check.
 
 The diagram maps this onto an agent fleet: Perl scripts still driving the Unix side of the build, PowerShell driving MSBuild, the Visual Studio developer shell, and signtool on the Windows side, with one orchestration layer calling into both.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Perl and PowerShell',
-        description: `Q: Why is Perl still in mature build systems?
-A: Three reasons that predate every alternative. Its regular expression engine is the reference everyone else copied, so text munging — parsing compiler output, rewriting manifests, extracting versions — is native. It ships on essentially every Unix system, which mattered when installing a runtime on a build machine required a ticket. And the code works, so nobody has funded a rewrite. You inherit it, you do not choose it.
-
-Q: What does Perl system() return, and how do you check whether the command succeeded?
-A: It returns the wait status, not the exit code. Shift right by eight to get the actual exit value. A return of -1 means the program could not be started or the wait call failed, with the reason in the error variable. Masking the low seven bits tells you the signal number if the child was killed. Comparing the raw return to zero works for detecting success but gives you a meaningless number on failure.
-
-Q: What is the single most important line in a PowerShell CI script?
-A: Setting ErrorActionPreference to Stop at the top. The documented default is Continue, which prints a non-terminating error in red and keeps going, and try and catch do not catch non-terminating errors. Without Stop a script can print three errors and exit zero, which CI reads as success.
-
-Q: You call msbuild.exe from PowerShell and it fails. Does the script stop?
-A: No, by default. Native executables do not raise PowerShell errors — they set the last-exit-code variable. You must check it explicitly, or opt into the PowerShell 7.4 preference variable that makes non-zero native exits issue errors according to ErrorActionPreference. Its documented default is false.
-
-Q: Is PowerShell execution policy a security control?
-A: No, and Microsoft says so in the documentation — it is not a security system that restricts user actions, because a user who cannot run a script can simply type its contents at the command line. It prevents unintentional execution. In CI, running pwsh with -NoProfile and -ExecutionPolicy Bypass is normal practice, not a workaround.
-
-Q: PowerShell 7 versus Windows PowerShell 5.1 — which do you target?
-A: PowerShell 7.x for anything new: cross-platform, actively developed, and installed side by side with 5.1 rather than replacing it. Windows PowerShell 5.1 is in-box on every Windows machine and is what an unattended bootstrap can rely on before anything is installed. Some older Windows-only modules still require 5.1, which is what the compatibility layer exists for.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why is Perl still in mature build systems?', a: 'Three reasons that predate every alternative. Its regular expression engine is the reference everyone else copied, so text munging — parsing compiler output, rewriting manifests, extracting versions — is native. It ships on essentially every Unix system, which mattered when installing a runtime on a build machine required a ticket. And the code works, so nobody has funded a rewrite. You inherit it, you do not choose it.' },
+      { q: 'What does Perl system() return, and how do you check whether the command succeeded?', a: 'It returns the wait status, not the exit code. Shift right by eight to get the actual exit value. A return of -1 means the program could not be started or the wait call failed, with the reason in the error variable. Masking the low seven bits tells you the signal number if the child was killed. Comparing the raw return to zero works for detecting success but gives you a meaningless number on failure.' },
+      { q: 'What is the single most important line in a PowerShell CI script?', a: 'Setting ErrorActionPreference to Stop at the top. The documented default is Continue, which prints a non-terminating error in red and keeps going, and try and catch do not catch non-terminating errors. Without Stop a script can print three errors and exit zero, which CI reads as success.' },
+      { q: 'You call msbuild.exe from PowerShell and it fails. Does the script stop?', a: 'No, by default. Native executables do not raise PowerShell errors — they set the last-exit-code variable. You must check it explicitly, or opt into the PowerShell 7.4 preference variable that makes non-zero native exits issue errors according to ErrorActionPreference. Its documented default is false.' },
+      { q: 'Is PowerShell execution policy a security control?', a: 'No, and Microsoft says so in the documentation — it is not a security system that restricts user actions, because a user who cannot run a script can simply type its contents at the command line. It prevents unintentional execution. In CI, running pwsh with -NoProfile and -ExecutionPolicy Bypass is normal practice, not a workaround.' },
+      { q: 'PowerShell 7 versus Windows PowerShell 5.1 — which do you target?', a: 'PowerShell 7.x for anything new: cross-platform, actively developed, and installed side by side with 5.1 rather than replacing it. Windows PowerShell 5.1 is in-box on every Windows machine and is what an unattended bootstrap can rely on before anything is installed. Some older Windows-only modules still require 5.1, which is what the compatibility layer exists for.' },
     ],
     introduction: `A job description that names both Perl and PowerShell is telling you something concrete: this is an established build system with a Unix heritage and a Windows product surface. Nobody starts a new project in Perl. Nobody automates a Linux-only shop with PowerShell. Both appearing together means legacy build tooling on one side and Windows agents on the other, and the role involves keeping both alive.
 
@@ -6942,27 +6706,15 @@ Time limits round it out. The default maximum time for a pipeline step is 120 mi
 Runners are the escape hatch. When your toolchain cannot live in a cloud image — a licensed compiler, a macOS notarisation step, a Windows SDK — you register a self-hosted runner and target it with runs-on labels. A step runs on the next available runner that has all the listed labels; if none online matches every label, the step fails. Notably, you are not charged build minutes for work run on your own self-hosted runners.
 
 Deployments add the environment layer: a deployment property on a step marks it as targeting that environment, unlocks deployment-scoped variables, and populates the Deployments view with what is currently where. Combined with a manual trigger, that is the approval gate for production.`,
-      },
-      {
-        title: 'Quick-fire interview answers — Bitbucket Pipelines',
-        description: `Q: What is the difference between a cache and an artifact?
-A: Artifacts pass files between steps within one pipeline run — build in step one, consume in step two — and they are a correctness mechanism. Caches persist across pipeline runs to avoid re-downloading dependencies, and they are a speed optimisation that is explicitly best-effort. If your pipeline breaks when a cache is cold, you have used a cache where you needed an artifact.
-
-Q: Why did my step get killed with no error message?
-A: Almost always memory. A default step has 4 GB shared between the build container, every service container, and Pipelines overhead, and each service defaults to 1024 MB with a maximum of five per step. Two or three services at defaults leave the build container with very little. Size the services explicitly, drop unused ones, or move the step to 2x for double the memory.
-
-Q: How do you run a step on your own hardware?
-A: Register a self-hosted runner and select it with runs-on labels on the step. The step runs on the next available runner carrying all the listed labels, and if no online runner matches every label the step fails. That is how you handle a licensed toolchain, macOS signing and notarisation, or a Windows SDK. You are also not charged build minutes for self-hosted runner time.
-
-Q: How do you deploy to AWS without storing long-lived keys?
-A: Set oidc to true on the step. Bitbucket issues a signed token in the step OIDC token variable, and you register the Bitbucket identity provider URL and audience as a trusted provider on the AWS side, then exchange the token for temporary credentials with assume-role-with-web-identity. No static access key ever exists in the repository.
-
-Q: How do you avoid copy-pasting the same step three times?
-A: YAML anchors and aliases. Define the step once with an anchor, then reference it by alias in default, branches, and pull-requests. For logic shared across repositories, use a Pipe — a versioned Docker container invoked with a pipe property and a variables block.
-
-Q: Honestly, where does Bitbucket Pipelines fall short of GitHub Actions?
-A: Reusable components. The Pipes catalogue is a fraction of the GitHub Actions marketplace, there is no equivalent of reusable workflows or composite actions, and there is no native matrix strategy — you write the steps out or generate them. It is a clean, opinionated, container-per-step system with a much smaller ecosystem around it.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'What is the difference between a cache and an artifact?', a: 'Artifacts pass files between steps within one pipeline run — build in step one, consume in step two — and they are a correctness mechanism. Caches persist across pipeline runs to avoid re-downloading dependencies, and they are a speed optimisation that is explicitly best-effort. If your pipeline breaks when a cache is cold, you have used a cache where you needed an artifact.' },
+      { q: 'Why did my step get killed with no error message?', a: 'Almost always memory. A default step has 4 GB shared between the build container, every service container, and Pipelines overhead, and each service defaults to 1024 MB with a maximum of five per step. Two or three services at defaults leave the build container with very little. Size the services explicitly, drop unused ones, or move the step to 2x for double the memory.' },
+      { q: 'How do you run a step on your own hardware?', a: 'Register a self-hosted runner and select it with runs-on labels on the step. The step runs on the next available runner carrying all the listed labels, and if no online runner matches every label the step fails. That is how you handle a licensed toolchain, macOS signing and notarisation, or a Windows SDK. You are also not charged build minutes for self-hosted runner time.' },
+      { q: 'How do you deploy to AWS without storing long-lived keys?', a: 'Set oidc to true on the step. Bitbucket issues a signed token in the step OIDC token variable, and you register the Bitbucket identity provider URL and audience as a trusted provider on the AWS side, then exchange the token for temporary credentials with assume-role-with-web-identity. No static access key ever exists in the repository.' },
+      { q: 'How do you avoid copy-pasting the same step three times?', a: 'YAML anchors and aliases. Define the step once with an anchor, then reference it by alias in default, branches, and pull-requests. For logic shared across repositories, use a Pipe — a versioned Docker container invoked with a pipe property and a variables block.' },
+      { q: 'Honestly, where does Bitbucket Pipelines fall short of GitHub Actions?', a: 'Reusable components. The Pipes catalogue is a fraction of the GitHub Actions marketplace, there is no equivalent of reusable workflows or composite actions, and there is no native matrix strategy — you write the steps out or generate them. It is a clean, opinionated, container-per-step system with a much smaller ecosystem around it.' },
     ],
     introduction: `Bitbucket Pipelines is Atlassian's CI service, configured by a single bitbucket-pipelines.yml at the repository root and executed as a series of Docker containers. It is worth knowing specifically because a large population of enterprises standardised on Atlassian — Jira, Confluence, Bitbucket — and their build systems live here rather than on GitHub or GitLab. A job description that names Bitbucket is telling you which world you are entering.
 
@@ -7383,27 +7135,15 @@ Stapling attaches the ticket to the artifact so Gatekeeper can verify offline. W
 Linux has no comparable OS-enforced model. Nothing checks the signature on an arbitrary ELF binary before executing it. Trust lives at the package layer: GPG-signed RPMs and DEBs, signed repository metadata, and clients configured to check signatures. IMA and EVM exist for kernel-enforced file integrity but are rare outside high-assurance deployments. The practical consequence is that on Linux your distribution channel is your trust boundary.
 
 The CI problem is common to all three. A signing key a build agent can read is a signing key any code running on that agent can use, including a compromised dependency. The pattern that holds up is a dedicated signing service: build agents produce unsigned artifacts and request a signature; the service holds keys in an HSM or KMS, authenticates the caller with short-lived federated credentials rather than a stored secret, applies policy about what may be signed, and writes an audit entry for every operation.`,
-      },
-      {
-        title: 'Quick-fire interview answers — native signing',
-        description: `Q: Why does signing a native binary differ from signing a container image?
-A: A container signature is detached, stored in a registry, and verified by infrastructure you control — an admission controller you configured. A native signature is embedded in the file and verified by the operating system on a machine you do not administer, before your code runs. You cannot push policy to your users, so getting it wrong is a support incident rather than a deployment failure.
-
-Q: What happens if you sign without a timestamp?
-A: The signature stops verifying the day the certificate expires, including on copies shipped years earlier to machines that will never be updated. A countersigned timestamp asserts the signature was made while the certificate was valid, so it keeps verifying afterwards. Microsoft documents plainly that without the timestamp option the file simply is not time stamped.
-
-Q: What changed for code-signing keys in 2023?
-A: Effective June 1, 2023, the CA/Browser Forum Code Signing Baseline Requirements require the subscriber private key to be generated, stored, and used in a suitable hardware crypto module meeting at least FIPS 140-2 Level 2 or equivalent. This applies to OV as well as EV certificates and ended the practice of storing a .pfx in a secrets manager. Certificate validity is also capped at 460 days for certificates issued on or after March 1, 2026.
-
-Q: Is a notarized macOS app the same as a signed one?
-A: No, they are two separate checks. Signing proves who built it, using a Developer ID certificate. Notarization means Apple scanned the artifact and issued a ticket. Gatekeeper wants both. Notarization additionally requires the hardened runtime and a secure timestamp, so a plain codesign without them is rejected at submission.
-
-Q: Why staple the notarization ticket?
-A: So Gatekeeper can verify without network access. Without stapling, first launch requires an online ticket lookup, which fails offline or behind a restrictive proxy — the archetypal works-everywhere-except-at-the-customer bug. Stapling attaches the ticket to the app, disk image, or installer package.
-
-Q: How do you sign in CI without exposing the private key?
-A: Never put the key on the agent. Use a signing service or cloud KMS where the agent sends a digest and receives a signature, authenticated with short-lived federated credentials rather than a stored secret. Keys stay in an HSM, the service enforces policy about what may be signed, and every operation is logged. On Windows this is exactly what signtool with the /dlib option and a cloud signing provider does natively.`,
-      },
+      }
+    ],
+    quickFire: [
+      { q: 'Why does signing a native binary differ from signing a container image?', a: 'A container signature is detached, stored in a registry, and verified by infrastructure you control — an admission controller you configured. A native signature is embedded in the file and verified by the operating system on a machine you do not administer, before your code runs. You cannot push policy to your users, so getting it wrong is a support incident rather than a deployment failure.' },
+      { q: 'What happens if you sign without a timestamp?', a: 'The signature stops verifying the day the certificate expires, including on copies shipped years earlier to machines that will never be updated. A countersigned timestamp asserts the signature was made while the certificate was valid, so it keeps verifying afterwards. Microsoft documents plainly that without the timestamp option the file simply is not time stamped.' },
+      { q: 'What changed for code-signing keys in 2023?', a: 'Effective June 1, 2023, the CA/Browser Forum Code Signing Baseline Requirements require the subscriber private key to be generated, stored, and used in a suitable hardware crypto module meeting at least FIPS 140-2 Level 2 or equivalent. This applies to OV as well as EV certificates and ended the practice of storing a .pfx in a secrets manager. Certificate validity is also capped at 460 days for certificates issued on or after March 1, 2026.' },
+      { q: 'Is a notarized macOS app the same as a signed one?', a: 'No, they are two separate checks. Signing proves who built it, using a Developer ID certificate. Notarization means Apple scanned the artifact and issued a ticket. Gatekeeper wants both. Notarization additionally requires the hardened runtime and a secure timestamp, so a plain codesign without them is rejected at submission.' },
+      { q: 'Why staple the notarization ticket?', a: 'So Gatekeeper can verify without network access. Without stapling, first launch requires an online ticket lookup, which fails offline or behind a restrictive proxy — the archetypal works-everywhere-except-at-the-customer bug. Stapling attaches the ticket to the app, disk image, or installer package.' },
+      { q: 'How do you sign in CI without exposing the private key?', a: 'Never put the key on the agent. Use a signing service or cloud KMS where the agent sends a digest and receives a signature, authenticated with short-lived federated credentials rather than a stored secret. Keys stay in an HSM, the service enforces policy about what may be signed, and every operation is logged. On Windows this is exactly what signtool with the /dlib option and a cloud signing provider does natively.' },
     ],
     introduction: `Every desktop and embedded product eventually runs into this. The build works, the tests pass, and then Windows SmartScreen warns users away from the installer, or macOS refuses to open the application at all, or an enterprise customer asks for the signing chain before they will deploy it. Signing is not a security nicety on native software; it is the difference between a product that installs and a product that does not.
 
