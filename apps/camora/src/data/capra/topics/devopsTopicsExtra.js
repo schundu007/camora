@@ -1023,6 +1023,69 @@ Step 6: Check NetworkPolicy. kubectl get networkpolicy -n <namespace>. A policy 
         image: '/diagrams/linkdiags/ansible-roles-collections.png',
       },
     ],
+    topics: [
+      {
+        title: 'What a role really is — and the myth that roles cannot ship plugins',
+        content: `A role is not a package. It is a **directory layout that Ansible knows how to auto-load**, and the loading rule is the whole mechanism: when a role is applied, Ansible reads \`tasks/main.yml\`, \`handlers/main.yml\`, \`defaults/main.yml\` and \`vars/main.yml\` without you referencing them, and it prepends \`files/\` and \`templates/\` to the search path used by \`copy\` and \`template\`. That is why \`template: src=nginx.conf.j2\` resolves inside a role with no path — the role's \`templates/\` directory is temporarily first on the search path. Nothing about a role is registered anywhere; it is discovered by position, under \`roles/\` next to the playbook or under a path in \`roles_path\`.
+
+A very common claim — repeated in the older version of this page — is that **roles cannot contain Python modules or filter plugins. That is false**, and the truth is more interesting. A standalone role may carry \`library/\`, \`module_utils/\`, \`filter_plugins/\`, \`lookup_plugins/\` and \`action_plugins/\`, and Ansible adds each of those to the corresponding plugin search path *for the duration of that role's execution*. The real limitations are the ones that matter in production:
+
+| | Role-embedded plugin | Collection plugin |
+| --- | --- | --- |
+| Visible to | only while that role runs | anywhere, via FQCN |
+| Name collisions | resolved by search order, silently | namespaced, so impossible |
+| Versioning | whatever the role directory happens to contain | semantic version, resolved and pinnable |
+| Inside a collection | **not supported** — roles in a collection cannot ship their own plugins | plugins live once, at \`plugins/\` in the collection root |
+
+So the correct statement is: role-embedded plugins work, are unversioned and unnamespaced, and stop working the moment you move that role into a collection. Two roles that both define \`filter_plugins/to_json.py\` will shadow each other depending on execution order, and the failure is silent — you get the wrong filter, not an error.
+
+The other half of a role that people get wrong is \`defaults/\` versus \`vars/\`. Both are auto-loaded, but they sit at opposite ends of precedence: \`defaults/main.yml\` is the **lowest** precedence source in the whole system (only command-line connection flags rank below it), while \`vars/main.yml\` sits above every inventory and playbook variable and can only be beaten by task vars, \`include_vars\`, \`set_fact\`, role params and \`-e\`. The practical rule follows directly: anything a consumer of the role is meant to change goes in \`defaults/\`; anything that would break the role if changed — a package name that must match the OS family, an internal path — goes in \`vars/\`. Putting a tunable in \`vars/\` is the classic reason a user's \`group_vars/webservers.yml\` is "ignored".`,
+      },
+      {
+        title: 'Collections: namespaces, a real dependency resolver, and where they actually install',
+        content: `Ansible 2.10 broke the monolith apart. Everything except the small set of modules under \`ansible.builtin\` moved out of the engine into collections, and the engine itself was renamed \`ansible-core\`. The \`ansible\` package you install from PyPI is now a **batteries-included bundle** — one ansible-core plus a few hundred pinned collections — while \`ansible-core\` alone is the engine with almost nothing in it. Knowing which one a machine has explains most "module not found" reports: \`pip install ansible-core\` gives you \`ansible.builtin\` and nothing else, so \`community.general.timezone\` genuinely is not there.
+
+A collection is \`namespace.name\` — \`community.general\`, \`amazon.aws\`, \`kubernetes.core\`, \`ansible.posix\` — with a fixed layout:
+
+    ansible_collections/company/infra/
+      galaxy.yml           # namespace, name, version, dependencies
+      roles/               # roles, addressed as company.infra.rolename
+      plugins/modules/     # custom modules, addressed as company.infra.modname
+      plugins/filter/      # Jinja2 filters
+      playbooks/           # runnable playbooks, ansible-playbook company.infra.deploy
+      docs/
+
+Two mechanisms make this more than a tarball. The first is the **fully-qualified collection name**. \`company.infra.deploy_app\` is unambiguous, which is why \`ansible-lint\` has enforced FQCN for years and why the \`collections:\` play keyword (which lets you write short names by declaring a search list) is now discouraged — it reintroduces exactly the ambiguity FQCNs removed. The second is a **real dependency resolver**: since ansible-core 2.11 \`ansible-galaxy\` uses resolvelib to solve the \`dependencies\` graph declared in \`galaxy.yml\`, so version constraints across transitively-required collections are reconciled or reported as a conflict. Role \`meta/main.yml\` \`dependencies\` are not comparable — they are a *run-order* mechanism that executes the listed roles first, deduplicated by role-plus-parameters unless \`allow_duplicates: true\`.
+
+Where collections land trips up more pipelines than anything else. Installs go to the **first** path in \`ANSIBLE_COLLECTIONS_PATH\` (plural \`..._PATHS\` was the pre-2.10 spelling and is deprecated), defaulting to \`~/.ansible/collections\`. But a \`collections/\` directory sitting beside your playbook is searched automatically. That gives the repo-local pattern worth adopting:
+
+    # collections/requirements.yml — committed
+    collections:
+      - name: community.general
+        version: ">=8.0.0,<9.0.0"
+      - name: amazon.aws
+        version: "7.6.1"
+    roles:
+      - name: geerlingguy.nginx
+        version: "3.1.4"
+
+    ansible-galaxy install -r collections/requirements.yml -p collections/
+
+\`ansible-galaxy install\` (no subcommand) handles both top-level keys; \`ansible-galaxy collection install\` and \`ansible-galaxy role install\` each handle only their own. Pin exactly for anything you deploy from — Galaxy is not immutable in the way a container registry digest is, and an unpinned \`community.general\` is a silent, unreviewed dependency upgrade on every CI run. If you publish internally, \`ansible-galaxy collection verify\` checks GPG signatures against the ones the server advertises, which is the only way to detect a tampered artifact from a private Automation Hub.`,
+      },
+      {
+        title: 'Choosing one, and the cost of changing your mind',
+        content: `The decision is not "small versus large". It is **whether the unit needs an identity outside the repository that contains it**. If the answer is no — this role configures our Nginx, for our app, in this repo — a plain role under \`roles/\` is the right thing, and wrapping it in a collection buys you nothing but a longer name. If the answer is yes — two teams consume it, it needs a version number, someone will ask "which version is on the box?" — it belongs in a collection, because a version number is the entire point.
+
+The migration is not free, and the costs are asymmetric:
+
+- **Every task name changes.** Inside a collection, short module names still resolve through \`ansible.builtin\` and the collection's own namespace, but consumers must address the role as \`company.infra.webserver\`. Existing playbooks break at parse time, which is at least loud.
+- **Role-embedded plugins must move** to \`plugins/\` at the collection root, and their references change to FQCN. This one is quiet: a \`filter_plugins/\` directory inside a collection role is simply not loaded, so the first symptom is a templating error at runtime on a code path nobody exercised in CI.
+- **\`meta/main.yml\` dependencies on Galaxy roles do not travel.** A collection role that depends on \`geerlingguy.nginx\` has no way to declare that; the dependency has to become a collection dependency in \`galaxy.yml\` or an explicit install step.
+
+Testing is where the version drift bites hardest, and the tooling has moved. Molecule creates an ephemeral instance, converges the role, verifies, and destroys — but **its default verifier has been \`ansible\` (assertion tasks in \`verify.yml\`), not testinfra, since Molecule 3**, and **Molecule 6 removed \`molecule init role\` entirely** in favour of scaffolding with \`ansible-creator init\`. Guides written before 2023 will tell you to run commands that no longer exist. The same drift applies to the engine: ansible-core has raised its controller Python floor repeatedly (3.9 in 2.15, 3.10 in 2.16, 3.11 in 2.18), and ansible-core 2.19 replaced the templating engine with a data-tagging implementation that tightened how implicit templating and \`unsafe\` values behave — the most disruptive change to existing playbooks in years. **Pin ansible-core in your \`requirements.txt\`, not just your collections**, or CI upgrades the engine under you.`,
+      },
+    ],
     introduction: `## Overview
 Ansible provides two levels of reuse: Roles (within a project) and Collections (across projects and teams).
 
@@ -1145,15 +1208,16 @@ Run just the web tier: ansible-playbook playbooks/web.yml -i inventory/productio
       },
     ],
     quickFire: [
-      { q: 'What is the standard directory structure of an Ansible Role?', a: 'tasks/, handlers/, templates/, files/, vars/, defaults/, meta/, and tests/. Only tasks/main.yml is required; the rest are optional.' },
-      { q: 'What is the difference between vars/ and defaults/ in a Role?', a: 'defaults/ has the lowest variable precedence -- easily overridden by inventory or playbook vars. vars/ has higher precedence and is harder to override.' },
-      { q: 'What is an Ansible Collection?', a: 'A distribution format packaging roles, modules, plugins, and playbooks together under a namespace.name format (e.g., community.general). Installed via ansible-galaxy collection install.' },
-      { q: 'When should you use a Role vs a Collection?', a: 'Role: single reusable unit of configuration (install nginx). Collection: bundle multiple roles, custom modules, and plugins for distribution across teams or via Galaxy.' },
-      { q: 'How do you install a Role from Ansible Galaxy?', a: 'ansible-galaxy role install geerlingguy.nginx, or declare it in requirements.yml and run ansible-galaxy install -r requirements.yml.' },
-      { q: 'What is meta/main.yml used for in a Role?', a: 'Declares role metadata: author, license, supported platforms, and role dependencies (other roles that must run first).' },
-      { q: 'How do you test an Ansible Role in isolation?', a: 'With Molecule -- it spins up a container or VM, applies the role, runs assertions (via testinfra or ansible assertions), then destroys the environment.' },
-      { q: 'What is the purpose of handlers/ in a Role?', a: 'Handlers run only when notified by a task (e.g., restart nginx after config change). They run once at the end of the play regardless of how many tasks notify them.' },
-      { q: 'How do you pin a specific version of a Collection in requirements.yml?', a: 'Use the version key: - name: community.general version: ">=6.0.0,<7.0.0". This prevents breaking changes from upstream updates.' },
+      { q: 'What is the standard directory structure of an Ansible Role?', a: 'The auto-loaded directories are `tasks/`, `handlers/`, `defaults/`, `vars/`, `meta/`, plus `files/` and `templates/` which are added to the search path for `copy` and `template`. A standalone role may also carry `library/`, `module_utils/` and `*_plugins/` directories. `ansible-galaxy init` scaffolds a `tests/` directory too, but it is legacy — real testing is done with Molecule. None of the directories is individually mandatory; a role with no `main.yml` anywhere is an error.' },
+      { q: 'What is the difference between vars/ and defaults/ in a Role?', a: 'Opposite ends of precedence, not "more or less important". `defaults/main.yml` is the lowest-precedence source in Ansible — inventory `group_vars`, `host_vars`, play vars and `-e` all beat it. `vars/main.yml` outranks every inventory and play variable and loses only to task vars, `include_vars`, `set_fact`, role params and `-e`. Put anything a consumer should tune in `defaults/`; put internal constants that would break the role if changed in `vars/`. A tunable placed in `vars/` is the usual reason someone\'s `group_vars` override "does nothing".' },
+      { q: 'Can a standalone role contain custom modules and filter plugins?', a: 'Yes — this is widely mis-stated. A role outside a collection can ship `library/`, `module_utils/`, `filter_plugins/`, `lookup_plugins/` and `action_plugins/`, and Ansible adds them to the plugin search path while that role runs. The catch: they are unnamespaced (two roles defining the same filter shadow each other silently, by execution order), unversioned, and **not supported inside a collection** — a role packaged in a collection must move its plugins to the collection\'s top-level `plugins/` directory.' },
+      { q: 'What is an Ansible Collection?', a: 'A versioned, `namespace.name`-addressed distribution unit containing roles, modules, plugins, playbooks and docs, declared by `galaxy.yml` and installed with `ansible-galaxy collection install`. Since Ansible 2.10 nearly all content ships this way: `ansible-core` is the engine plus the `ansible.builtin` modules, and the `ansible` PyPI package is that engine bundled with a few hundred pinned collections.' },
+      { q: 'When should you use a Role vs a Collection?', a: 'Ask whether the unit needs an identity outside its repository. Internal to one project, consumed by one team, versioned by the repo\'s own git history — a role is correct and a collection adds only ceremony. Shared across repos or teams, or needing "which version is deployed?" to have an answer — a collection, because the version number and the namespace are the entire value. Collections also become mandatory the moment you need custom plugins that are safe to use outside the one role that ships them.' },
+      { q: 'How do you pin dependencies in requirements.yml?', a: '`requirements.yml` has two top-level keys, `roles:` and `collections:`, each entry taking a `version`. Use an exact version for anything you deploy from and a compatible range only where you actively track upstream: `- name: amazon.aws` / `version: "7.6.1"`. Note that `ansible-galaxy install -r` processes both keys, whereas `ansible-galaxy collection install -r` and `ansible-galaxy role install -r` each ignore the other\'s. An unpinned entry means every CI run may resolve a different version.' },
+      { q: 'Where do collections install to, and how do you make that repo-local?', a: 'By default to the first path in `ANSIBLE_COLLECTIONS_PATH` (the old plural `ANSIBLE_COLLECTIONS_PATHS` is deprecated), which is `~/.ansible/collections` — machine-global and invisible to reviewers. Because a `collections/` directory beside the playbook is searched automatically, the better pattern is to commit `collections/requirements.yml` and install with `-p collections/`, so the dependency set is per-repo, reproducible, and diffable.' },
+      { q: 'What is meta/main.yml used for in a Role, and how do role dependencies actually behave?', a: 'It declares Galaxy metadata (author, license, `min_ansible_version`, supported platforms, tags) and `dependencies`. Those dependencies are **not** a resolver — they are a run-order mechanism: listed roles execute before this one, deduplicated by role name plus parameters unless `allow_duplicates: true` is set. Real version resolution only exists for collections, via resolvelib against `galaxy.yml`.' },
+      { q: 'How do you test an Ansible Role in isolation?', a: 'Molecule: create an ephemeral instance (container or cloud VM via a driver plugin), converge the role, verify, destroy. Two details that most older guides get wrong — the default verifier has been `ansible` (assertions in `verify.yml`) rather than testinfra since Molecule 3, and `molecule init role` was removed in Molecule 6, with scaffolding now done by `ansible-creator init`. Always add a second converge to assert idempotence: the run must report zero changed tasks.' },
+      { q: 'What is the purpose of handlers/ in a Role?', a: 'Handlers are tasks that run only when notified, once per play regardless of how many tasks notify them, and by default only after all normal tasks in the play have finished. That deferral is the point: ten config templates can each notify `restart nginx` and the service restarts once, at the end, after the config is consistent. The failure modes are worth knowing — handlers are matched by name (a duplicate handler name means only the last definition is reachable, which is what `listen:` exists to avoid), and if a later task fails the play aborts and **queued handlers never run**, leaving new config on disk with the old process serving it, unless you pass `--force-handlers` or flush early with `meta: flush_handlers`.' },
     ],
     references: [
       'https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html',
@@ -1175,6 +1239,84 @@ Run just the web tier: ansible-playbook playbooks/web.yml -i inventory/productio
         title: 'Ansible project directory tree — all 21 components explained',
         description: 'ansible-project/ root with inventory/production + staging, group_vars/all.yml + webservers.yml, host_vars/server1.yml, roles/common + webserver + database, playbooks/site.yml + web.yml + db.yml, templates/ (Jinja2), files/ (static), ansible.cfg (config), requirements.yml (dependencies).',
         image: '/diagrams/linkdiags/ansible-architecture.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'The layout is a precedence diagram, not a filing cabinet',
+        content: `Every directory in the canonical Ansible project exists because of *where it sits in variable precedence*, not because it is a tidy place to keep things. Read the tree that way and the layout stops being arbitrary:
+
+    ansible-project/
+      ansible.cfg                 # config resolution, see below
+      inventory/
+        production                # hosts + groups, INI or YAML
+        staging
+      group_vars/
+        all.yml                   # every host, lowest of the inventory sources
+        webservers.yml            # one group
+      host_vars/
+        web01.yml                 # one host, beats every group
+      roles/
+        common/  webserver/  database/
+      playbooks/
+        site.yml  web.yml  db.yml
+      collections/requirements.yml
+
+\`group_vars/\` and \`host_vars/\` are **auto-loaded by name**: a file named after a group or host is merged for the matching hosts with no import statement anywhere. This is the single most useful property of the layout and the one that silently breaks — the directories are resolved relative to *the inventory file* **and** relative to *the playbook*, and both are loaded, with the playbook-adjacent copy winning. A repo with \`group_vars/\` at the root and \`inventory/production\` in a subdirectory has two possible resolutions, which is why the recommended shape puts \`group_vars/\` and \`host_vars/\` beside the inventory they belong to, and why \`ansible-inventory --host web01 -i inventory/production\` is the right way to settle an argument about which value is in effect.
+
+Group merging has a rule people assume rather than learn. Groups are merged **least-specific first**, so \`all\` loses to every named group; between groups at the same level the order is **alphabetical**, and \`ansible_group_priority\` (higher wins, default 1) is the tiebreaker. \`hash_behaviour = merge\` exists to deep-merge dicts across groups instead of replacing them, and you should not use it: it is global, changes semantics for every variable in the project, and is discouraged in the documentation. The supported way to combine dictionaries is the \`combine\` filter at the point of use.
+
+Then \`host_vars/\` beats all of it, and \`-e\` beats everything. Full order, low to high, in the form worth memorising for an interview:
+
+**role defaults → inventory group_vars (\`all\`, then named groups) → inventory host_vars → play vars / \`vars_files\` → role \`vars/\` → block vars → task vars → \`include_vars\` → \`set_fact\` and registered vars → role and include params → extra vars (\`-e\`)**
+
+The official list has 22 entries; the compressed version above preserves every ordering that comes up in practice. Two entries are worth calling out because they surprise people: **role \`vars/\` outranks all inventory variables**, so a value in \`roles/x/vars/main.yml\` cannot be overridden from \`group_vars\` at all — only by \`-e\`; and **\`set_fact\` outranks inventory too**, and persists for the rest of the play on that host, which is why a \`set_fact\` inside a loop is a common source of "the variable changed by itself".`,
+      },
+      {
+        title: 'ansible.cfg, inventory and the settings that are actually load-bearing',
+        content: `\`ansible.cfg\` is resolved by a first-match search, not merged: **\`ANSIBLE_CONFIG\` env var → \`./ansible.cfg\` in the current working directory → \`~/.ansible.cfg\` → \`/etc/ansible/ansible.cfg\`**. The first one found wins *entirely*; settings in the others are not layered underneath. This is why "it works on my machine" so often means "I have a \`~/.ansible.cfg\`". There is also a security rule that produces a genuinely baffling symptom: **Ansible refuses to load \`ansible.cfg\` from a world-writable current directory** and warns, silently falling through to the next candidate — a repo checked out into a \`777\` directory loses its whole configuration.
+
+A settings block worth having, and one line worth arguing about:
+
+    [defaults]
+    inventory      = inventory/production
+    roles_path     = roles
+    collections_path = collections
+    forks          = 50
+    stdout_callback = yaml
+    [ssh_connection]
+    pipelining = True
+
+\`forks\` defaults to **5** — five hosts at a time — which is the reason a play over 200 machines takes forty minutes when it should take two. Raise it to what the controller can sustain (50–100 is ordinary; the ceiling is controller CPU and file descriptors, since each fork is a process). \`pipelining = True\` removes one SSH round-trip per task by piping the module to the remote Python instead of writing a temp file first, typically a 30–50% wall-clock reduction on task-heavy plays; it requires \`requiretty\` to be off in the target's sudoers, which is the default on all current distributions.
+
+The line you will see in most tutorials and should **not** copy is \`host_key_checking = False\`. It disables host-key verification for every connection, which trades a real man-in-the-middle protection for the convenience of not managing \`known_hosts\` — on a control node that holds root on the fleet. Do the correct thing instead: populate \`known_hosts\` from a trusted source at provisioning time, or \`ssh-keyscan -H\` into a repo-tracked file and point \`ANSIBLE_SSH_ARGS\` at it with \`-o UserKnownHostsFile=\`. For genuinely ephemeral hosts, scope the exemption to those hosts rather than globally.
+
+On inventory: static INI or YAML files are fine for fixed fleets, but anything cloud-backed should use an **inventory plugin** (\`amazon.aws.aws_ec2\`, \`google.cloud.gcp_compute\`, \`azure.azcollection.azure_rm\`) configured by a \`*.aws_ec2.yml\` file, not the legacy executable inventory scripts. Plugins bring caching (\`cache: true\` with a \`jsonfile\` or Redis backend, so you are not re-listing every instance on each run) and \`keyed_groups\`, which turn instance tags directly into Ansible groups — meaning \`group_vars/tag_role_web.yml\` applies automatically to whatever is currently tagged that way, and the inventory stops being a file anyone has to remember to update.`,
+      },
+      {
+        title: 'Playbook composition: import vs include, and what site.yml is for',
+        content: `\`site.yml\` is a convention, not a feature: a top-level playbook that composes the tier playbooks so that the whole estate can be converged in one command, while each tier remains separately runnable.
+
+    # playbooks/site.yml
+    - import_playbook: db.yml
+    - import_playbook: web.yml
+
+The composition mechanism has a fork in it that causes more confusion than any other part of Ansible, and it is **static versus dynamic**:
+
+| | \`import_*\` (static) | \`include_*\` (dynamic) |
+| --- | --- | --- |
+| Processed | at playbook parse time | when the task is reached |
+| Tags | apply to every task inside | apply only to the include itself |
+| \`--list-tasks\` / \`--list-tags\` | shows the contents | shows only the include |
+| \`when:\` | copied onto every inner task | evaluated once, gates the whole include |
+| Loops | not allowed | allowed (\`loop:\` over the include) |
+| Variables in the filename | must be resolvable at parse time | resolved at runtime |
+
+The consequence people hit in production: you tag a task inside an included file, run \`--tags deploy\`, and nothing happens — because the *include* was not tagged, so the file was never reached. Either tag the include, or use \`import_tasks\`. The mirror-image consequence: you try to \`import_tasks: "{{ os_family }}.yml"\` where \`os_family\` comes from a fact, and it fails at parse time because facts do not exist yet. Rule of thumb — **import for structure, include for anything conditional or looped**, and remember \`import_playbook\` is the only option at the top level of a playbook file.
+
+Two more practices belong in the same conversation. First, secrets: never a plaintext password in \`group_vars\`. \`ansible-vault\` encrypts files or individual values (\`ansible-vault encrypt_string\`), and the pattern that survives review is to keep encrypted values in a separate \`group_vars/<group>/vault.yml\` referenced by plaintext pointers in \`vars.yml\` (\`db_password: "{{ vault_db_password }}"\`) — so a \`git diff\` still tells you *which* secret changed, even though the value is opaque. Supply the key with \`--vault-id\`, from a file or a script that fetches it from your secret manager; \`--ask-vault-pass\` does not work in CI. Better still for cloud estates, skip storing the secret entirely and look it up at runtime with \`community.hashi_vault.hashi_vault\` or \`amazon.aws.aws_secret\`.
+
+Second, blast radius. \`serial: "25%"\` converts a play from all-hosts-at-once into a rolling batch, and \`max_fail_percentage\` aborts the rollout when a batch fails rather than marching through the fleet. Combined with \`--check --diff\` in CI against staging inventory, that is the difference between a config error affecting one batch and a config error affecting everything.`,
       },
     ],
     introduction: `## Overview
@@ -1280,15 +1422,16 @@ Never put secrets in plain-text vars files — use Ansible Vault to encrypt them
       },
     ],
     quickFire: [
-      { q: 'What is the purpose of group_vars/ in an Ansible project?', a: 'Stores variable files named after inventory groups. group_vars/webservers.yml applies to all hosts in the [webservers] group automatically.' },
-      { q: 'What is host_vars/ used for?', a: 'Stores per-host variable files named after the host. host_vars/web01.yml applies only to the host named web01, overriding group_vars for that host.' },
-      { q: 'What is the Ansible variable precedence order (high to low)?', a: 'Extra vars (-e) > task vars > block vars > role vars > set_fact > host_vars > group_vars > role defaults. Extra vars always win.' },
-      { q: 'What is an Ansible inventory and what formats does it support?', a: 'The inventory defines which hosts to manage and their groups. Supports INI, YAML, and dynamic inventory scripts/plugins (AWS EC2, GCP, Azure).' },
-      { q: 'What is the site.yml playbook convention?', a: 'site.yml is the top-level playbook that imports all other playbooks (webservers.yml, dbservers.yml). It orchestrates the entire infrastructure in one run.' },
-      { q: 'How do handlers differ from regular tasks in execution order?', a: 'Handlers run once at the end of a play, not inline. Multiple tasks can notify the same handler but it only runs once -- prevents duplicate service restarts.' },
-      { q: 'What is ansible-vault and when should you use it?', a: 'ansible-vault encrypts sensitive files or variables (passwords, API keys). Use it for any secret stored in the repo; decrypt at runtime with --vault-password-file or --ask-vault-pass.' },
-      { q: 'How does Ansible determine the order of hosts within a group?', a: 'Alphabetical by default within an INI inventory. Use serial or order: shuffle/reverse_sorted at the play level to control execution order.' },
-      { q: 'What is the difference between import_tasks and include_tasks?', a: 'import_tasks is static (parsed at playbook load, supports tags on all tasks). include_tasks is dynamic (evaluated at runtime, supports conditional includes with when).' },
+      { q: 'What is the purpose of group_vars/ and host_vars/?', a: 'They are auto-loaded variable directories: a file named after an inventory group or host is merged for the matching hosts with no import anywhere. Groups merge least-specific first (`all` first, then named groups alphabetically, with `ansible_group_priority` as tiebreaker) and `host_vars` beats all of them. The gotcha is location — both directories are resolved relative to the inventory file *and* relative to the playbook, and both are loaded with the playbook-adjacent copy winning, so keep them beside the inventory they describe and settle disputes with `ansible-inventory --host <h> -i <inv>`.' },
+      { q: 'What is the Ansible variable precedence order (high to low)?', a: 'Highest to lowest: extra vars (`-e`) → include/role params → `set_fact` and registered vars → `include_vars` → task vars → block vars → role `vars/` → play vars and `vars_files` → inventory `host_vars` → inventory `group_vars` (named groups, then `all`) → role `defaults/`. Two entries surprise people: role `vars/main.yml` outranks *every* inventory variable, so a value placed there cannot be overridden from `group_vars` at all; and `set_fact` also outranks inventory and persists for the rest of the play on that host.' },
+      { q: 'What is an Ansible inventory and what formats does it support?', a: 'The set of managed hosts and their groups. Static INI or YAML files work for fixed fleets; anything cloud-backed should use an inventory plugin (`amazon.aws.aws_ec2`, `google.cloud.gcp_compute`, `azure.azcollection.azure_rm`) driven by a `*.aws_ec2.yml` config, not the legacy executable inventory scripts they replaced. Plugins add caching, so you are not re-listing every instance on each run, and `keyed_groups`, which turn cloud tags directly into Ansible groups — the inventory then updates itself instead of drifting.' },
+      { q: 'How is ansible.cfg resolved, and what is the trap?', a: 'First match wins, with no merging between candidates: `ANSIBLE_CONFIG` → `./ansible.cfg` in the current working directory → `~/.ansible.cfg` → `/etc/ansible/ansible.cfg`. Because it is first-match, a stray `~/.ansible.cfg` silently replaces your project\'s entire configuration. The subtler trap: Ansible **refuses to load `ansible.cfg` from a world-writable directory** for security reasons, warns, and falls through — so a repo checked out with loose permissions loses its config in a way that looks like nothing at all.' },
+      { q: 'Why is host_key_checking = False bad advice?', a: 'It disables SSH host-key verification for the whole project, on a control node that typically holds privileged access to every host — trading real man-in-the-middle protection for the convenience of not managing `known_hosts`. The correct fixes are to seed `known_hosts` at provisioning time, or `ssh-keyscan -H` into a repo-tracked file referenced via `-o UserKnownHostsFile=` in `ANSIBLE_SSH_ARGS`. If some hosts really are ephemeral, scope the exemption to those hosts with a host variable rather than turning it off globally.' },
+      { q: 'What is the site.yml playbook convention?', a: 'A top-level playbook that composes the per-tier playbooks with `import_playbook`, so the entire estate converges with one command while each tier stays independently runnable. It is a convention only — Ansible attaches no special meaning to the filename. `import_playbook` is the only composition directive valid at the top level of a playbook file; `include_tasks` and friends operate inside a play.' },
+      { q: 'What is the difference between import_tasks and include_tasks?', a: '`import_tasks` is static: processed at parse time, so tags and `when:` propagate to every task inside, and `--list-tasks` shows the contents — but the filename cannot depend on a runtime fact and it cannot be looped. `include_tasks` is dynamic: resolved when reached, so it accepts loops and runtime-computed filenames, but a tag on an inner task is unreachable because the include itself was not tagged. That last point causes the classic "`--tags deploy` ran nothing" bug. Import for structure, include for anything conditional or looped.' },
+      { q: 'How do handlers differ from regular tasks in execution order?', a: 'They run only when notified, once per play no matter how many tasks notify them, and by default only after every normal task in the play has completed — so ten templates can each notify `restart nginx` and the service restarts once, on consistent config. Two failure modes: handlers are addressed by name, so a duplicate name makes the earlier definition unreachable (`listen:` exists to avoid this), and if a task fails the play aborts with **queued handlers never running**, leaving new config on disk under an old process. `--force-handlers` or an explicit `meta: flush_handlers` covers that.' },
+      { q: 'What is ansible-vault and how should it be used in CI?', a: 'It encrypts whole files or individual values (`ansible-vault encrypt_string`) with AES-256, so secrets can live in git. The pattern that survives code review is a `group_vars/<group>/vault.yml` of encrypted values referenced by plaintext pointers in a sibling `vars.yml` (`db_password: "{{ vault_db_password }}"`) — the diff then shows *which* secret changed even though the value is opaque. In CI supply the key with `--vault-id`, from a file or a script that fetches it from your secret manager; `--ask-vault-pass` is interactive and cannot be used. For cloud estates, prefer not storing the secret at all and looking it up at runtime via `community.hashi_vault.hashi_vault` or `amazon.aws.aws_secret`.' },
+      { q: 'How do you limit the blast radius of a playbook run?', a: '`serial: "25%"` turns an all-hosts-at-once play into rolling batches, and `max_fail_percentage` aborts the rollout when a batch exceeds a failure threshold instead of marching on through the fleet. Add `--limit` to scope a run to named hosts or a pattern, and `--check --diff` against staging to see the intended changes before any are made. `forks` (default **5**) controls parallelism within a batch and is usually the reason a large play is inexplicably slow.' },
     ],
     references: [
       'https://docs.ansible.com/ansible/latest/tips_tricks/ansible_tips_tricks.html',
@@ -1310,6 +1453,85 @@ Never put secrets in plain-text vars files — use Ansible Vault to encrypt them
         title: 'Nine-step Terraform CI/CD pipeline',
         description: 'Code Commit → Validate (syntax) → Format Check (terraform fmt) → Terraform Init → Terraform Plan (generate execution plan) → Policy/Security Check (Sentinel/OPA/Checkov) → Manual Approval gate → Terraform Apply → Production Cloud infrastructure.',
         image: '/diagrams/linkdiags/terraform-cicd.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'The pipeline\'s real job: make the plan the reviewable artifact',
+        content: `A Terraform pipeline is not a build pipeline with \`terraform\` substituted for \`npm\`. A build produces an artifact you can inspect before it does anything; Terraform's equivalent artifact is **the plan**, and the entire design of a safe pipeline follows from one requirement: *the thing a human approves must be the exact thing that gets applied*.
+
+That is why the two-workflow shape is standard, and why the saved plan file matters more than any other detail:
+
+    # pr.yml — runs on pull_request
+    terraform fmt -check -recursive
+    terraform init -backend=false        # no credentials, no state access
+    terraform validate
+    terraform init                       # real backend
+    terraform plan -input=false -lock-timeout=5m -out=tfplan
+    terraform show -json tfplan > plan.json
+    checkov -f plan.json                 # policy over the plan, not the HCL
+    # post \`terraform show -no-color tfplan\` as a PR comment
+
+    # apply.yml — runs on push to main, after environment approval
+    terraform init
+    terraform apply -input=false -auto-approve tfplan   # the saved file
+
+\`terraform apply tfplan\` is not a convenience. Running a bare \`terraform apply -auto-approve\` on \`main\` re-plans against whatever the world looks like at that moment, so what executes may differ from what was reviewed — someone clicked in the console, another pipeline ran, a data source now returns something else. Applying the saved plan removes that gap: **a saved plan records the state serial it was generated against and refuses to apply if state has moved** ("Saved plan is stale"), which converts a silent divergence into a loud failure. The cost is that the plan file is version-bound — it must be applied by the same Terraform version and the same provider versions that produced it — so the two jobs must pin identical \`terraform_version\` and share the committed \`.terraform.lock.hcl\`.
+
+Two steps in the list are commonly reordered wrongly. \`terraform validate\` requires provider schemas, so it needs an \`init\` first — but it does **not** need state or credentials, so \`terraform init -backend=false\` gives you a syntax-and-reference check in a job with no cloud access at all, which is the right place to catch typos on an untrusted fork PR. And policy scanning belongs on \`plan.json\`, not on the \`.tf\` files: Checkov, OPA/conftest and Sentinel can all read HCL, but only the plan knows the resolved value of a variable, a module's actual inputs, and what a \`for_each\` expanded into. A bucket that is public only when \`var.env == "sandbox"\` is invisible to source-level scanning.`,
+      },
+      {
+        title: 'The parts that leak: plan artifacts, credentials, and the provider lock file',
+        content: `Three details separate a pipeline that is genuinely safe from one that only looks it.
+
+**A saved plan file contains secrets in plaintext.** \`tfplan\` and its JSON rendering embed resolved values — an RDS \`master_password\`, a generated private key, an API token passed as a variable — with no encryption and with \`sensitive = true\` providing exactly no protection at rest (it only redacts CLI *output*). Uploading \`tfplan\` as a CI artifact therefore publishes those values to anyone who can read the run. Mitigate deliberately: keep the artifact retention to a day or two, restrict who can download run artifacts, post only the redacted \`terraform show -no-color\` text to the PR rather than the JSON, and prefer generating secrets *inside* the provider (\`random_password\` written straight to Secrets Manager) over passing them in as variables at all. The same reasoning applies to state, which stores those values permanently — which is why the state bucket needs SSE-KMS and a tight bucket policy, not just versioning.
+
+**Long-lived cloud keys in CI are the biggest single risk, and are now avoidable.** \`AWS_ACCESS_KEY_ID\` in repository secrets is a credential that never expires, is readable by every workflow, and survives the departure of whoever created it. Use **OIDC federation** instead: the CI provider mints a short-lived, workflow-scoped identity token and the cloud exchanges it for temporary credentials.
+
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::111122223333:role/tf-plan
+          aws-region: eu-west-1
+
+The trust policy on that role must constrain the \`sub\` claim to a specific repository *and* ref or environment — a policy that trusts \`repo:org/*:*\` is barely better than a static key. Give plan and apply **different roles**: plan needs read plus state read/write; apply needs the mutating permissions. That one split means a compromised fork PR cannot change infrastructure.
+
+**\`.terraform.lock.hcl\` must be committed, and usually needs more platforms than your laptop.** The dependency lock file pins provider versions *and* their checksums, so it is what makes a CI run reproducible and what makes provider supply-chain tampering detectable. The failure everybody hits: the lock file was generated on an Apple Silicon laptop, so it records only \`darwin_arm64\` hashes, and the Linux CI runner fails with "provider ... does not have a package available for your current platform". The fix is to record every platform you build on:
+
+    terraform providers lock \\
+      -platform=linux_amd64 -platform=darwin_arm64 -platform=linux_arm64
+
+Run \`terraform init -lockfile=readonly\` in CI so a job can never quietly rewrite the pins.`,
+      },
+      {
+        title: 'Environments, drift, and the state-locking change you need to know about',
+        content: `**Terraform workspaces are the wrong tool for prod-versus-dev**, despite being the first thing tutorials reach for. HashiCorp's own documentation says so: workspaces hold multiple states within one backend, one configuration and one set of credentials, so a mistake in the shared configuration reaches production, and there is no way to give production a different account, a different role or a different approval gate. They are designed for short-lived parallel states — a per-PR ephemeral environment, a quick experiment — which is a genuinely good use in CI. For real environments use **separate root modules with separate backends**:
+
+    modules/{vpc,eks,rds}/          # reusable, versioned
+    envs/dev/{main.tf,backend.tf}   # own bucket/key, own IAM role
+    envs/prod/{main.tf,backend.tf}
+
+with the differences expressed as module inputs. \`terraform init -backend-config=\` is what keeps that DRY: \`backend "s3" {}\` is declared empty in code (backend blocks cannot take variables or interpolation — a hard language restriction, not an oversight) and the bucket, key and region are injected per environment from a \`.tfbackend\` file or \`-backend-config="key=prod/eks.tfstate"\` flags in CI.
+
+The locking mechanism has changed and much of the material online is out of date. The S3 backend historically required a **second** resource, a DynamoDB table, to serialise runs. **Terraform 1.10 added native S3 locking via \`use_lockfile = true\`**, which uses S3 conditional writes to create a \`<key>.tflock\` object — one service instead of two, and no table to provision, pay for, or forget in a new region. **Terraform 1.11 deprecated the \`dynamodb_table\` argument**, and it is scheduled for removal in a future major version.
+
+    terraform {
+      backend "s3" {
+        bucket       = "acme-tfstate-prod"
+        key          = "eks/terraform.tfstate"
+        region       = "eu-west-1"
+        encrypt      = true
+        kms_key_id   = "arn:aws:kms:eu-west-1:111122223333:key/..."
+        use_lockfile = true      # replaces dynamodb_table
+      }
+    }
+
+If you migrate an existing backend, set both for one transition period so runs on older CLI versions still take the DynamoDB lock, then drop the table once every runner is on 1.10+.
+
+Finally, a pipeline that only runs on pull requests measures your intentions, not your infrastructure. Add a **scheduled drift detector**: \`terraform plan -detailed-exitcode\` exits \`0\` for no changes, \`2\` for changes pending, and \`1\` for an error — so a nightly job can alert on exit code 2 and tell you that someone changed a security group by hand. Two operational notes for any automated run: set \`TF_IN_AUTOMATION=1\` to suppress the CLI's "next step" suggestions, and always pass \`-lock-timeout=5m\` so a run that collides with another waits rather than failing instantly. And whichever CLI you standardise on, pin it — Terraform has been under the BUSL since August 2023, which is what prompted the **OpenTofu** fork; the two are still broadly compatible at the configuration level but have diverged in features (OpenTofu shipped native client-side state encryption in 1.7), so "terraform" in a pipeline should always mean an exact pinned binary.`,
       },
     ],
     introduction: `## Overview
@@ -1426,15 +1648,16 @@ Multi-env pattern: use different S3 keys per environment (dev/vpc/terraform.tfst
       },
     ],
     quickFire: [
-      { q: 'Why must you never run terraform apply directly in CI without a plan step?', a: 'Without a plan step, you cannot review or gate what changes will be applied. Always run plan first, store the plan file, then apply that exact file.' },
-      { q: 'How do you prevent concurrent terraform apply runs corrupting state?', a: 'State locking -- S3 backend uses a DynamoDB table to acquire a lock before any write. A second apply blocks until the lock is released.' },
-      { q: 'What is a PR preview plan in a Terraform CI workflow?', a: 'Running terraform plan on a PR branch and posting the output as a PR comment so reviewers can see infrastructure changes before merge.' },
-      { q: 'How do you pass a saved plan file from plan to apply in CI?', a: 'terraform plan -out=tfplan saves the binary plan. terraform apply tfplan applies exactly that plan with no re-evaluation -- prevents drift between steps.' },
-      { q: 'What is Checkov and what does it check?', a: 'A static analysis tool for IaC. It scans Terraform files for security misconfigurations (e.g., open S3 buckets, unencrypted disks) before apply.' },
-      { q: 'How do you handle Terraform secrets in CI pipelines?', a: 'Inject via environment variables (TF_VAR_name) from the CI secret store (GitHub Actions secrets, Vault, AWS SSM). Never hardcode secrets in .tf files.' },
-      { q: 'What is the ATLANTIS workflow?', a: 'A Terraform pull request automation tool. It runs plan on PR open, posts results as a comment, and runs apply when a reviewer comments "atlantis apply".' },
-      { q: 'How do Terraform workspaces help in a CI/CD pipeline?', a: 'Workspaces provide separate state files within one backend config -- useful for per-environment (dev/staging/prod) isolation without duplicating backend config.' },
-      { q: 'What does terraform init -backend-config do in CI?', a: 'Injects backend configuration at runtime without storing credentials in code. Used to pass bucket/region/key values from CI environment variables.' },
+      { q: 'Why must you never run a bare terraform apply in CI?', a: 'Because `apply` without a saved plan file re-plans against the world as it is at apply time, so what executes can differ from what a human reviewed — a console change, a concurrent pipeline, or a data source returning something new is enough. `terraform plan -out=tfplan` followed by `terraform apply tfplan` closes that gap: the plan records the state serial it was built against and refuses to run if state has moved ("Saved plan is stale"), turning a silent divergence into a loud failure.' },
+      { q: 'How do you pass a saved plan file from plan to apply in CI?', a: 'Upload `tfplan` as a build artifact from the plan job and download it in the apply job. Both jobs must use the **same Terraform version and the same provider versions** — a plan file is bound to them — so pin `terraform_version` and share the committed `.terraform.lock.hcl`. Treat the artifact as a secret: a plan file embeds resolved values in plaintext, including anything marked `sensitive`, so keep retention short and downloads restricted, and post only the redacted `terraform show -no-color` text to the PR.' },
+      { q: 'Does a Terraform plan file contain secrets?', a: 'Yes, in plaintext, and `sensitive = true` does not help — that flag only redacts CLI output, not what is written to disk. A database password, a generated key, or any secret passed in as a variable appears verbatim in `tfplan` and in `terraform show -json`. The same applies to state. Restrict artifact access, keep retention to a day or two, encrypt state with SSE-KMS, and where possible generate secrets inside the provider (`random_password` written directly to Secrets Manager) so they never travel as an input.' },
+      { q: 'How do you handle cloud credentials in a Terraform pipeline?', a: 'Use OIDC federation, not stored keys: the CI provider mints a short-lived workflow-scoped token that the cloud exchanges for temporary credentials (`permissions: id-token: write` plus `aws-actions/configure-aws-credentials` on GitHub Actions; Workload Identity Federation on GCP; federated credentials on Azure). Constrain the trust policy\'s `sub` claim to a specific repository *and* ref or environment — trusting `repo:org/*:*` is barely better than a static key. Give plan and apply separate roles so a fork PR that can plan cannot mutate anything.' },
+      { q: 'What is Checkov, and why scan the plan rather than the HCL?', a: 'Checkov is an open-source policy scanner (originally Bridgecrew, now Prisma Cloud) with a large library of built-in checks — unencrypted volumes, public buckets, `0.0.0.0/0` ingress, missing logging — plus custom policies in Python or YAML. Point it at `terraform show -json tfplan`, not the `.tf` files: only the plan knows the resolved value of a variable, what a module actually received, and what a `for_each` expanded into, so a bucket that is public only when `var.env == "sandbox"` is invisible to source-level scanning. Note that **tfsec is no longer separately maintained** — Aqua folded it into Trivy\'s misconfiguration scanner — so new pipelines should use Trivy, Checkov, or OPA/conftest.' },
+      { q: 'What does terraform init -backend-config do in CI, and why is it necessary?', a: 'Backend blocks cannot contain variables or interpolation — a hard language restriction, because the backend must be resolvable before Terraform evaluates anything. So you declare `backend "s3" {}` empty in code and inject the bucket, key and region per environment at init time, either from a `.tfbackend` file (`-backend-config=envs/prod.tfbackend`) or as flags. That is what lets one root module serve several environments without duplicating the backend block, and it is why the environment selection lives in the pipeline rather than in the configuration.' },
+      { q: 'How do Terraform workspaces fit into a CI/CD pipeline?', a: 'Well for ephemeral parallel states — a per-PR sandbox that is created and destroyed with the branch — and badly for prod-versus-dev. All workspaces in a backend share one configuration and one set of credentials, so there is no way to give production a different account, role or approval gate, and a mistake in the shared config reaches everything; HashiCorp\'s own documentation advises against using them for strongly separated environments. Use separate root modules under `envs/` with separate backends and IAM roles for real environments.' },
+      { q: 'What is the Atlantis workflow?', a: 'Atlantis is a self-hosted server that turns Terraform into a pull-request conversation: it watches for PRs touching `.tf` files, runs `terraform plan` automatically, and posts the output as a comment. Reviewers then comment `atlantis apply` to apply, and Atlantis merges or unlocks afterwards. It holds a per-project lock for the duration of a PR so two PRs cannot plan against the same state concurrently, and `apply_requirements: [approved, mergeable]` enforces that a human approved and the branch is up to date. The trade-off versus plain CI: the workflow is much nicer, but you now run a long-lived server holding cloud credentials, which needs the same care as any bastion.' },
+      { q: 'How do you detect infrastructure drift?', a: 'Run `terraform plan -detailed-exitcode` on a schedule. It exits `0` when there are no changes, `2` when a diff exists, and `1` on error — so a nightly job that alerts on exit code 2 tells you someone changed a security group by hand before the next real deployment surprises you with it. Pair it with `-lock-timeout` so the scheduled run waits for an in-flight apply instead of failing, and give the drift job read-only credentials.' },
+      { q: 'Why must .terraform.lock.hcl be committed, and what breaks if it is wrong?', a: 'It pins provider versions *and* their checksums, which is what makes a CI run reproducible and what makes tampering with a provider package detectable. The common breakage: the lock file was generated on an Apple Silicon laptop so it records only `darwin_arm64` hashes, and the Linux runner fails with "provider does not have a package available for your current platform". Fix it by recording every platform you use — `terraform providers lock -platform=linux_amd64 -platform=darwin_arm64` — and run `terraform init -lockfile=readonly` in CI so no job can silently rewrite the pins.' },
     ],
     references: [
       'https://developer.hashicorp.com/terraform/language/settings/backends/s3',
@@ -1456,6 +1679,81 @@ Multi-env pattern: use different S3 keys per environment (dev/vpc/terraform.tfst
         title: 'count (index-based) vs for_each (key-based) resource creation',
         description: 'count=3 creates aws_instance.web[0][1][2] using count.index. for_each={dev="t3.micro", prod="t3.medium"} creates aws_instance.web["dev"] and aws_instance.web["prod"] using each.key/each.value. Key danger: reordering a count list may destroy the wrong resource. for_each keys are stable — only new keys create new resources.',
         image: '/diagrams/linkdiags/terraform-count-for-each.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'The difference is the address, and the address is what state is keyed on',
+        content: `\`count\` and \`for_each\` both create multiple instances of a resource or module, but the choice determines the **resource address**, and the address is the primary key Terraform uses to match configuration against state. Everything else follows from that.
+
+\`count\` produces integer-indexed addresses — \`aws_instance.web[0]\`, \`[1]\`, \`[2]\`. \`for_each\` produces string-keyed ones — \`aws_instance.web["dev"]\`, \`["prod"]\`. An index is *positional*: it says nothing about the instance except where it happened to sit in a list. A key is *nominal*: it identifies the instance by something meaningful.
+
+That distinction produces the failure that makes this an interview question at all. Suppose \`count = length(var.subnet_cidrs)\` and someone removes the **first** element from a five-element list. Terraform does not see "one item removed". It compares addresses: \`[0]\` used to hold \`10.0.1.0/24\` and now holds \`10.0.2.0/24\`, \`[1]\` shifted too, and so on down the list. The plan is not "destroy one subnet" — it is **four resources modified or replaced and one destroyed**, a cascade caused entirely by renumbering. If those subnets carry route table associations and NAT gateways, the replacement fans out through everything that depends on them. The same thing happens if a list is merely reordered, or if the list comes from a data source whose ordering is not guaranteed.
+
+\`for_each\` has no positions to shift:
+
+    resource "aws_subnet" "this" {
+      for_each          = var.subnets            # map(string), cidr keyed by name
+      vpc_id            = aws_vpc.main.id
+      cidr_block        = each.value
+      availability_zone = each.key
+      tags = { Name = "subnet-\${each.key}" }
+    }
+
+Remove the \`eu-west-1a\` entry and exactly one address disappears: \`aws_subnet.this["eu-west-1a"]\`. Add \`eu-west-1c\` and exactly one is created. Nothing else in the plan moves. **Inside the block, \`each.key\` is the map key and \`each.value\` is the corresponding value**; with a set (from \`toset()\`) both are the same string, which is a small wart worth remembering.
+
+The rule that follows: use \`for_each\` for anything with an identity — an environment, a region, a tenant, a team, a named subnet — and reserve \`count\` for genuinely interchangeable, anonymous replicas where an index *is* the whole identity (three identical workers behind a load balancer), and for the conditional-creation idiom below.`,
+      },
+      {
+        title: 'for_each\'s own failure modes, and how to convert without destroying anything',
+        content: `\`for_each\` is safer, not unconditional. It has one hard constraint that produces Terraform's most-searched error message:
+
+> Invalid for_each argument: the "for_each" map includes keys derived from resource attributes that cannot be determined until apply.
+
+**\`for_each\` keys must be known at plan time.** Values may be unknown — a resource attribute is fine on the right-hand side — but the keys are how Terraform names the instances in the plan, so they cannot depend on anything the plan does not yet know. \`for_each = toset(aws_subnet.this[*].id)\` fails on a first run, because those IDs do not exist yet. The fixes, in order of preference: key on something static you already have (\`for_each = var.subnets\`, then reference \`aws_subnet.this[each.key].id\` inside), or restructure so the unknown value is the map's *value*; \`-target\`ing a first apply is a last resort, not a design.
+
+Two related constraints: keys must be strings, so \`toset()\` over a list of objects fails (objects are not valid set elements for keying) — use a \`for\` expression to project a stable identifier as the key instead, \`{ for u in var.users : u.name => u }\`. And duplicates collapse: \`toset(["a","a","b"])\` yields two elements, silently, so a duplicated entry in a list disappears rather than erroring.
+
+Converting \`count\` to \`for_each\` on live infrastructure used to require \`terraform state mv\` for each instance — imperative, run from someone's laptop, unreviewable and easy to get wrong. **Since Terraform 1.1 the right tool is a \`moved\` block**, which is ordinary configuration:
+
+    moved {
+      from = aws_instance.web[0]
+      to   = aws_instance.web["dev"]
+    }
+    moved {
+      from = aws_instance.web[1]
+      to   = aws_instance.web["prod"]
+    }
+
+Because it is code, it goes through pull request, and \`terraform plan\` shows the rename as a move rather than a destroy/create — which is precisely the review you want before touching production. Terraform 1.5 added \`import\` blocks and 1.7 \`removed\` blocks, completing the set: the whole family of state surgery is now declarative and reviewable, and reaching for \`terraform state mv\` in 2026 should prompt the question "why isn't this a \`moved\` block?". Keep the blocks in the configuration for at least one apply in every environment, then delete them.
+
+The counterpart operation, forcing one instance to be rebuilt, has also changed. \`terraform taint\` was **deprecated in 0.15.2 and later removed**; the replacement is a plan-time flag, \`terraform apply -replace="aws_instance.web[\\"prod\\"]"\`. The improvement is not cosmetic: \`taint\` mutated state immediately and invisibly, so the next person to run \`plan\` saw a destroy they did not ask for, whereas \`-replace\` shows up in the plan for the run that requested it and nowhere else.`,
+      },
+      {
+        title: 'count\'s remaining legitimate use, and referencing multi-instance resources',
+        content: `\`count\` is not obsolete. Its idiomatic use is **conditional creation**, because there is no \`if\` in HCL:
+
+    resource "aws_nat_gateway" "this" {
+      count         = var.enable_nat ? 1 : 0
+      subnet_id     = aws_subnet.public[0].id
+      allocation_id = aws_eip.nat[0].id
+    }
+
+\`count = 0\` creates nothing; the resource exists in configuration but has no instances, so it can be toggled without deleting code. The price is that the resource is now a **list even when there is at most one of it**, so every reference needs \`[0]\` — and if the resource is disabled, \`aws_nat_gateway.this[0].id\` is an "index out of range" error rather than a null. Two idioms handle that: \`one(aws_nat_gateway.this[*].id)\` returns the single element or \`null\` if there are none, and the splat expression \`aws_nat_gateway.this[*].id\` returns an empty list rather than erroring. \`try()\` around the index is a worse habit — it swallows unrelated errors too.
+
+Referencing across the two forms is where syntax gets confused:
+
+| Need | \`count\` | \`for_each\` |
+| --- | --- | --- |
+| One instance | \`aws_instance.web[0]\` | \`aws_instance.web["prod"]\` |
+| All of one attribute | \`aws_instance.web[*].id\` (splat) | \`values(aws_instance.web)[*].id\` or \`[for k, v in aws_instance.web : v.id]\` |
+| Map of key to attribute | n/a | \`{ for k, v in aws_instance.web : k => v.id }\` |
+| Current item inside the block | \`count.index\` | \`each.key\`, \`each.value\` |
+| Fan out a dependent resource | \`count = length(...)\` again | \`for_each = aws_instance.web\` — keys line up automatically |
+
+The last row is the quiet advantage. When a dependent resource does \`for_each = aws_instance.web\`, its keys are inherited from the parent's keys, so the two sets of addresses stay aligned forever with no length arithmetic and no chance of an off-by-one after someone edits a list. The splat operator (\`[*]\`) works on \`count\` resources and on lists; it does **not** work on a \`for_each\` resource directly, because that is a map — hence \`values()\` first.
+
+One last trap that applies to both: \`count\` and \`for_each\` are **not valid inside a \`resource\` block's nested blocks**; for repeated nested blocks (ingress rules, \`setting\` blocks, lifecycle hooks) the construct is \`dynamic\`, which iterates with \`for_each\` but generates blocks rather than resource instances. Confusing the two produces "Blocks of type X are not expected here" and a long detour.`,
       },
     ],
     introduction: `## Overview
@@ -1541,15 +1839,16 @@ Interview one-liner: count is index-based and fragile with reordering; for_each 
       },
     ],
     quickFire: [
-      { q: 'What is the key difference between count and for_each?', a: 'count uses an integer index; for_each uses a map or set of strings as keys. for_each produces stable resource addresses when items are added or removed.' },
-      { q: 'Why is for_each preferred over count for most resources?', a: 'Adding an item to the middle of a count list shifts all subsequent indexes, causing Terraform to destroy and recreate those resources. for_each keys are stable.' },
-      { q: 'How do you reference the current item inside a for_each block?', a: 'Use each.key for the map key and each.value for the map value. For a set of strings each.key == each.value.' },
-      { q: 'How do you convert a list to a set for use with for_each?', a: 'Use toset(var.my_list). for_each does not accept lists directly because lists allow duplicate values and have no stable key.' },
-      { q: 'How does terraform taint work and what replaced it?', a: 'taint marked a resource for forced replacement on the next apply. It was deprecated in Terraform 0.15.2 and replaced by terraform apply -replace=<resource_address>.' },
-      { q: 'What happens to state when you switch a resource from count to for_each?', a: 'Terraform sees the old count-indexed resources (aws_instance.web[0]) and new for_each-keyed resources (aws_instance.web["prod"]) as different -- it destroys and recreates unless you use terraform state mv.' },
-      { q: 'How do you reference a resource created with for_each from another resource?', a: 'Use aws_instance.web["key"].id or use a for expression: [for k, v in aws_instance.web : v.id].' },
-      { q: 'Can for_each iterate over a list of objects?', a: 'Not directly -- convert to a map first using { for obj in var.list : obj.name => obj }. The key must be unique per resource.' },
-      { q: 'What does count = 0 effectively do?', a: 'It destroys the resource if it exists, without removing the block from the configuration. Useful for conditionally creating a resource based on a boolean variable.' },
+      { q: 'What is the key difference between count and for_each?', a: 'They produce different resource addresses, and the address is what state is keyed on. `count` gives integer indices — `aws_instance.web[0]` — which are positional and shift when the underlying collection changes. `for_each` gives string keys — `aws_instance.web["prod"]` — which are nominal and stable. Everything else about the comparison, including the safety argument, is a consequence of that one difference.' },
+      { q: 'Why is for_each safer than count for most resources?', a: 'Because indices renumber and keys do not. Remove the first element of a five-item list driving `count` and Terraform does not see one removal — it sees `[0]` now holding what `[1]` held, `[1]` holding `[2]`, and so on, and plans to modify or replace four resources and destroy one. With `for_each`, deleting a map key removes exactly one address and touches nothing else. On anything with an identity — environments, regions, tenants, named subnets — that difference is the gap between a routine change and an unplanned rebuild that cascades into everything downstream.' },
+      { q: 'How do you reference the current item inside a for_each block?', a: '`each.key` and `each.value`. With a map, `each.key` is the map key and `each.value` the corresponding value. With a set — including anything you passed through `toset()` — both are the same string, since a set has no separate keys. `count.index` is the `count` equivalent, and neither is available in the other form.' },
+      { q: 'How do you convert a list to something for_each can use?', a: '`for_each = toset(var.names)` for a list of strings. Two caveats: duplicates collapse silently, so `["a","a","b"]` becomes two elements rather than an error; and `toset()` over a list of *objects* will not work as a keying source. For objects, project a stable identifier with a `for` expression — `for_each = { for u in var.users : u.name => u }` — which also gives you a meaningful address instead of a hash.' },
+      { q: 'Why does "for_each includes keys derived from resource attributes" happen, and how do you fix it?', a: '`for_each` keys are how Terraform names instances in the plan, so they must be known at plan time. Values may be unknown, keys may not — which is why `for_each = toset(aws_subnet.this[*].id)` fails on a first apply, when those IDs do not exist yet. Fix it by keying on something static you already have (`for_each = var.subnets`, then look up `aws_subnet.this[each.key].id` inside the block), or by restructuring so the unknown lands in the map\'s value. Splitting the apply with `-target` works but is a workaround, not a design.' },
+      { q: 'How do you convert a resource from count to for_each without destroying it?', a: 'Use `moved` blocks, available since Terraform 1.1: `moved { from = aws_instance.web[0]  to = aws_instance.web["dev"] }`, one per instance. Because it is configuration rather than a CLI command, it goes through pull request and `terraform plan` renders the change as a move instead of a destroy/create — which is exactly the review you want before touching production. The old `terraform state mv` approach still works but is imperative, run from someone\'s laptop, and unreviewable. Leave the blocks in place until every environment has applied once, then remove them.' },
+      { q: 'How does terraform taint work, and what replaced it?', a: 'It does not — `terraform taint` was deprecated in 0.15.2 and removed. The replacement is `terraform apply -replace="aws_instance.web[\\"prod\\"]"`. The reason for the change is behavioural, not cosmetic: `taint` mutated state immediately and invisibly, so the next colleague to run `plan` saw a destroy nobody asked for. `-replace` is a plan-time flag, so the forced replacement appears in the plan of the run that requested it and affects no other run.' },
+      { q: 'How do you reference a resource created with for_each from another resource?', a: 'Index it by key — `aws_instance.web["prod"].id` — or, to fan out a dependent resource one-per-parent, set `for_each = aws_instance.web` on the dependant, which inherits the parent\'s keys so the two address sets stay aligned automatically. For all values of an attribute, `for_each` resources are maps, so the splat operator does not apply directly: use `values(aws_instance.web)[*].id` or a `for` expression. Splat (`[*]`) is for `count` resources and lists.' },
+      { q: 'What does count = 0 effectively do, and what does it cost?', a: 'It is HCL\'s conditional creation idiom — `count = var.enabled ? 1 : 0` — leaving the resource in configuration but with no instances, so a feature can be toggled without deleting code. The cost is that the resource becomes a list even when there is at most one, so every reference needs `[0]`, and when it is disabled `aws_nat_gateway.this[0].id` raises "index out of range" instead of returning null. Use `one(aws_nat_gateway.this[*].id)`, which yields the single element or `null`, or the splat form, which yields an empty list.' },
+      { q: 'Can count or for_each be used on nested blocks inside a resource?', a: 'No — they only create resource or module *instances*. Repeated nested blocks (security group `ingress` rules, `setting` blocks, and similar) need `dynamic`, which takes its own `for_each` and generates blocks rather than instances: `dynamic "ingress" { for_each = var.rules  content { ... } }`. Mixing the two up produces "Blocks of type X are not expected here", which reads like a schema problem and is actually the wrong construct.' },
     ],
     references: [
       'https://developer.hashicorp.com/terraform/language/meta-arguments/count',
@@ -1570,6 +1869,65 @@ Interview one-liner: count is index-based and fragile with reordering; for_each 
         title: 'Remote state architecture — S3 + DynamoDB',
         description: 'Developer A starts plan → DynamoDB checked → lock acquired (LockID written) → terraform.tfstate read from S3 → operations run → state written back to S3 → lock released. Developer B must wait if lock is held. S3 versioning provides state recovery.',
         image: '/diagrams/linkdiags/terraform-architecture.png',
+      },
+    ],
+    topics: [
+      {
+        title: 'What state is, and the two things people get wrong about it',
+        content: `State is the map from configuration to reality. For every resource, \`terraform.tfstate\` records the address (\`aws_instance.web\`), the provider's real identifier (\`i-0abc123\`), every attribute the provider returned, and the dependency edges. Without it Terraform cannot tell "create this" from "this already exists", because there is no reliable way to ask a cloud "which of your resources did I make?" — tags are advisory and mutable, and most APIs cannot answer the question at all.
+
+Two properties of that file drive every design decision around it.
+
+**State is a cache, and caches go stale.** The attributes in state are what the provider returned *last time*, not what is true now. This is why \`terraform plan\` performs a refresh — re-reading every managed resource from the provider — before comparing against configuration, and why refresh is the slow part of a plan on a large workspace. It is also why \`-refresh=false\` is a foot-gun rather than an optimisation: it plans against remembered values, so a resource someone changed in the console looks unchanged. When you *do* need speed on a large state, \`-target\` a subtree rather than skipping refresh.
+
+**State contains every secret your infrastructure touches, in plaintext.** An RDS \`password\`, a \`tls_private_key\`, an IAM access key created by Terraform, a Kubernetes secret's data — all stored verbatim as JSON. \`sensitive = true\` only suppresses CLI output; it changes nothing about what is written. That single fact determines the security posture of the whole setup: **read access to the state file is equivalent to read access to those secrets**, so the bucket needs SSE-KMS with a restricted key policy, \`aws:SecureTransport\` enforced, public access blocked at both bucket and account level, and an IAM policy that scopes access to the specific key prefix. It is also the strongest argument for never letting Terraform manage a long-lived credential in the first place: prefer \`random_password\` written straight into Secrets Manager and read by the application at runtime, so the value in state is at least rotatable.
+
+Local state adds a third problem on top: no locking. Two engineers with local copies both refresh, both plan against the same pre-apply view, and both apply. Neither plan accounted for the other, so you get duplicate resources, orphaned ones Terraform no longer knows about, or a state file that has lost track of what it created. Remote state does not merely make collaboration convenient — it is what makes concurrent use *safe*.`,
+      },
+      {
+        title: 'The S3 backend, and the locking mechanism that changed in Terraform 1.10',
+        content: `For years the standard answer to "how do you lock S3 state?" was "a DynamoDB table" — S3 had no compare-and-swap, so a second service provided the mutex. **That is no longer the current answer, and this is the most commonly out-of-date fact in Terraform material.** S3 gained conditional writes, and **Terraform 1.10 (November 2024) added \`use_lockfile = true\`**, which acquires the lock by creating a \`<key>.tflock\` object with an \`If-None-Match\` precondition — atomic, in the same bucket, with no extra service. **Terraform 1.11 deprecated the \`dynamodb_table\` argument**, which is scheduled for removal in a future major release.
+
+    terraform {
+      backend "s3" {
+        bucket       = "acme-tfstate-prod"
+        key          = "network/terraform.tfstate"
+        region       = "eu-west-1"
+        encrypt      = true
+        kms_key_id   = "arn:aws:kms:eu-west-1:111122223333:key/1234abcd-..."
+        use_lockfile = true
+      }
+    }
+
+Whichever mechanism holds it, the lock protocol is the same. Before \`plan\` or \`apply\` mutates anything, Terraform writes a lock record containing a lock ID, the operation, who is running it, from which host, and when. Any other run that finds an existing record fails immediately, printing those details — the point being that the error tells you *whom to go and ask*, not just that you are blocked. The lock is released when the operation ends, normally or with an error.
+
+The interesting case is when it is not released: the runner was killed, the network dropped, a CI job hit its timeout. The lock persists and every subsequent run fails with the stale holder's details. \`terraform force-unlock <LOCK_ID>\` removes it — and it is genuinely dangerous, because if the original process is *still running* you have just permitted a concurrent apply against the same state. The discipline is: read the lock message, confirm that run is actually dead (check the CI job, check the person named in it), then force-unlock, then **run \`terraform plan\` before anything else** to see whether the interrupted apply left state and reality out of sync. An apply that dies mid-flight typically has created some resources; whether they made it into state depends on when it died, and the plan is how you find out.
+
+Bucket configuration that is not optional: **versioning on** — it is the only undo for a corrupted or truncated state write, and recovery is a matter of restoring the previous object version; a lifecycle rule keeping noncurrent versions for 90 days is a reasonable default. Add \`prevent_destroy = true\` on the bucket if Terraform manages it, and **do not manage the state bucket in the configuration whose state it holds** — bootstrap it separately (a small config with local state, committed, or ClickOps plus \`import\`), because the alternative is a config that must destroy its own backend.
+
+If you are on OpenTofu rather than Terraform, note that it took a different route to the same concern: OpenTofu 1.7 added **native client-side state encryption**, so state is encrypted before it reaches the backend rather than relying on the bucket's server-side encryption.`,
+      },
+      {
+        title: 'Sharing state between stacks, and the coupling it creates',
+        content: `Once infrastructure is split into several root modules — network, data, platform, apps — they need to reference each other. The built-in mechanism is the \`terraform_remote_state\` data source:
+
+    data "terraform_remote_state" "network" {
+      backend = "s3"
+      config = {
+        bucket = "acme-tfstate-prod"
+        key    = "network/terraform.tfstate"
+        region = "eu-west-1"
+      }
+    }
+    # then: data.terraform_remote_state.network.outputs.vpc_id
+
+It works and it is convenient, and it has a consequence people discover late: **it reads the entire state file, not just the outputs.** There is no server-side filtering — the data source downloads the whole object and picks the outputs out locally. So any principal that can consume an output from the network stack can also read that stack's database passwords, private keys, and every other attribute in it. In a multi-team estate that is a privilege-escalation path dressed up as a dependency.
+
+It also creates a hard coupling on the *storage layout*: the consumer hard-codes the producer's bucket and key, so moving or renaming a state file breaks every downstream stack, and the producer cannot refactor its outputs without a coordinated change.
+
+The looser alternative is to publish through a real interface. The producing stack writes its outputs to **SSM Parameter Store** (or Secrets Manager, or Consul); the consuming stack reads them with \`data "aws_ssm_parameter"\`. Now the contract is a parameter path (\`/prod/network/vpc_id\`), IAM can be scoped to exactly those paths, and nothing about the producer's state file is exposed. Better still where it applies: use the provider's own data sources to look infrastructure up by tag or name — \`data "aws_vpc" { tags = { Name = "prod" } }\` — so the stacks are coupled only to a naming convention, and either can be rebuilt independently.
+
+Two other state operations worth knowing, both now declarative. To rename or move a resource without destroying it, use a **\`moved\` block** rather than \`terraform state mv\`; to adopt an existing resource, an **\`import\` block** (Terraform 1.5+) rather than the \`terraform import\` command. Both appear in the plan, so they are reviewed in a pull request like any other change, which is exactly what state surgery most needed. Finally, \`terraform state pull > backup.tfstate\` before any manual state operation costs nothing and has saved a great many afternoons.`,
       },
     ],
     introduction: `## Overview
@@ -1683,15 +2041,16 @@ Prevention: use Terraform Cloud or Enterprise, which handles lock management wit
       },
     ],
     quickFire: [
-      { q: 'What two AWS resources implement the Terraform S3 backend?', a: 'An S3 bucket stores the state file. A DynamoDB table (with a LockID partition key) provides state locking to prevent concurrent writes.' },
-      { q: 'What happens if two engineers run terraform apply simultaneously without locking?', a: 'Both reads stale state, apply conflicting changes, and one overwrites the other\'s state -- causing resource drift and potentially destroying infrastructure.' },
-      { q: 'How does state locking work with DynamoDB?', a: 'Before any write, Terraform puts a conditional item in DynamoDB (LockID = state path). If the item already exists, the apply fails with a lock error until the first run completes.' },
-      { q: 'What is terraform_remote_state and when is it used?', a: 'A data source that reads outputs from another stack\'s state file. Enables cross-stack references (e.g., networking stack exports vpc_id, app stack reads it) without coupling codebases.' },
-      { q: 'What is the risk of using terraform_remote_state for cross-stack references?', a: 'It creates a tight read dependency on another stack\'s state. If that stack\'s outputs change, the consuming stack can break silently. Some teams prefer SSM Parameter Store instead.' },
-      { q: 'How do Terraform workspaces provide environment isolation?', a: 'Each workspace maintains a separate state file in the backend (S3 key includes the workspace name). The same code can deploy to dev/staging/prod by switching workspaces.' },
-      { q: 'How do you force-unlock a stuck state?', a: 'terraform force-unlock <lock-id>. Only do this when certain no apply is actually running -- a stale lock from a crashed process is the safe use case.' },
-      { q: 'How do you move a resource in state without destroying it?', a: 'terraform state mv <old_address> <new_address>. Used after renaming a resource block or switching from count to for_each.' },
-      { q: 'Why should the Terraform state S3 bucket have versioning enabled?', a: 'Versioning allows rollback to a previous state file if a bad apply corrupts state. It is a critical safety net alongside locking.' },
+      { q: 'What implements locking for the S3 backend?', a: 'As of **Terraform 1.10**, S3 alone: `use_lockfile = true` acquires the lock by creating a `<key>.tflock` object using S3 conditional writes, so no second service is involved. The older answer — a DynamoDB table with a `LockID` partition key — was necessary only because S3 previously had no compare-and-swap; **`dynamodb_table` was deprecated in Terraform 1.11** and is slated for removal. Set both during a migration so runners on older CLI versions still lock, then drop the table once everything is on 1.10+.' },
+      { q: 'What happens if two engineers apply simultaneously without locking?', a: 'Both refresh and plan against the same pre-apply view of the world, so neither plan accounts for the other\'s changes. Whoever writes state last overwrites the other\'s record. The results range from duplicate resources, to resources that exist in the cloud but not in state (orphans nothing will ever clean up), to a state file that no longer describes reality — after which every subsequent plan is wrong. This is not a rare race: a plan plus apply on a large workspace can take minutes, which is a wide window.' },
+      { q: 'How does state locking work, mechanically?', a: 'Before any operation that could mutate state, Terraform writes a lock record — a lock ID, the operation, the user, the host, and a timestamp — and refuses to proceed if one already exists, printing the existing holder\'s details so you know whom to ask. With `use_lockfile` that record is a `<key>.tflock` object created under an `If-None-Match` precondition, which is atomic; with the legacy DynamoDB backend it was a conditional `PutItem` on the `LockID` key. The lock is released when the operation finishes, whether it succeeded or errored.' },
+      { q: 'How do you force-unlock a stuck state, and what must you check first?', a: '`terraform force-unlock <LOCK_ID>`, taking the ID from the error message. It is dangerous: if the original process is still alive you have just authorised a concurrent apply. So confirm the holder is really dead — check the CI job or the person named in the lock — then force-unlock, then run `terraform plan` *before* anything else, because an apply that died mid-flight has probably created resources and whether they reached state depends on exactly when it died. Pull a backup first with `terraform state pull > backup.tfstate`.' },
+      { q: 'Why must the state S3 bucket have versioning enabled?', a: 'It is the only undo. A truncated write, a bad `force-unlock` followed by a concurrent apply, or an accidental `terraform state rm` all corrupt the current object; with versioning you restore the previous version and carry on, and without it the recovery path is rebuilding state by hand with `import` blocks, one resource at a time. Add a lifecycle rule retaining noncurrent versions for around 90 days, block public access, enforce SSE-KMS, and set `prevent_destroy` if Terraform manages the bucket.' },
+      { q: 'Does state contain secrets, and what follows from that?', a: 'Yes — database passwords, private keys, generated credentials and Kubernetes secret data are all stored as plaintext JSON, and `sensitive = true` only redacts CLI output, not the file. So read access to state is read access to those secrets. Encrypt with SSE-KMS under a restricted key policy, scope IAM to the specific key prefix, enforce `aws:SecureTransport`, and never grant broad `s3:GetObject` on the state bucket. Where possible avoid the problem: have Terraform write generated secrets straight into Secrets Manager and have applications read them at runtime. On OpenTofu, 1.7\'s client-side state encryption addresses this directly.' },
+      { q: 'What is terraform_remote_state and when is it used?', a: 'A data source that reads another root module\'s state file to consume its outputs — the built-in way to wire a network stack to a platform stack. Configure it with the producer\'s backend, bucket and key, then reference `data.terraform_remote_state.network.outputs.vpc_id`. It is convenient and needs no extra infrastructure, which is why it is everywhere; its costs are in the next question.' },
+      { q: 'What is the risk of using terraform_remote_state for cross-stack references?', a: 'It reads the **whole** state file, not just the outputs — there is no server-side filtering, so anyone who can consume an output can also read that stack\'s passwords and private keys. It also hard-codes the producer\'s bucket and key into the consumer, so moving or renaming a state file breaks every downstream stack. Prefer publishing through an interface: write outputs to SSM Parameter Store and read them with `data "aws_ssm_parameter"`, so IAM can be scoped to exact paths — or look resources up by tag with the provider\'s own data sources, coupling the stacks only to a naming convention.' },
+      { q: 'Do workspaces give you environment isolation?', a: 'Not the kind that matters. Workspaces hold multiple states in one backend under one configuration with one set of credentials, so production cannot have a different account, a different IAM role, or a different approval gate, and a mistake in the shared configuration reaches everything — HashiCorp\'s documentation explicitly advises against them for strongly separated environments. They are good for short-lived parallel states, such as a per-PR sandbox. Real isolation means separate root modules under `envs/` with separate backends, buckets and roles.' },
+      { q: 'How do you move or adopt a resource in state without destroying it?', a: 'Declaratively. To rename or restructure, use a **`moved` block** (Terraform 1.1+); to bring an existing resource under management, an **`import` block** (1.5+) with its `id` and target address; to drop one without destroying it, a **`removed` block** (1.7+). All three render in `terraform plan` and go through pull request, unlike the equivalent `terraform state mv` / `terraform import` / `terraform state rm` commands, which mutate state immediately from whoever\'s laptop ran them. Delete the blocks once every environment has applied.' },
     ],
     references: [
       'https://developer.hashicorp.com/terraform/language/settings/backends/s3',
