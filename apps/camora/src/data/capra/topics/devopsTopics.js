@@ -1764,7 +1764,7 @@ Pragmatic framing: software architecture and team structure are TWO REPRESENTATI
         title: 'CI loop — commit → build → test → fail-fast → fix-or-revert',
         description: 'The canonical Fowler/XP feedback loop: every push to mainline triggers an automated self-testing build; a red main is the team\'s top priority and either gets fixed within ~10 minutes or the change is reverted.',
         image: '/diagrams/devops/b1-ci.png',
-      }
+      },
     ],
     quickFire: [
       { q: 'Define CI in Fowler\'s terms.', a: 'From martinfowler.com: "members of a team integrate their work frequently, usually each person integrates at least daily, leading to multiple integrations per day. Each integration is verified by an automated build including test to detect integration errors as quickly as possible." The key phrase is "as quickly as possible" — that is what distinguishes CI from periodic integration.' },
@@ -1999,7 +1999,7 @@ The ranking is useful when consulting on a struggling team: do not start with "w
         title: 'Deployment pipeline — commit to production with explicit gate',
         description: 'Humble & Farley\'s pipeline: commit stage → automated acceptance tests → capacity/UAT stages → manual or automated production gate. Continuous Delivery makes every green build a release candidate; Continuous Deployment automates the final push.',
         image: '/diagrams/devops/b2-cd-vs-deploy.png',
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between Continuous Delivery and Continuous Deployment?', a: 'Continuous Delivery is the capability — every commit that passes the pipeline is a releasable artifact. Humble: "the ability to get changes of all types into production safely and quickly in a sustainable way." Continuous Deployment is the automated exercise of that capability — every green commit auto-deploys to production. Same pipeline, different final gate: Delivery has a human Approve button; Deployment has automation.' },
@@ -2221,7 +2221,7 @@ Pipeline-as-code. The pipeline definition lives in the repo, versioned alongside
         title: 'Trunk-based vs Git Flow vs GitHub Flow',
         description: 'Trunk-based: short-lived (hours-day) branches off main, merged back constantly, feature flags for incomplete work. Git Flow: long-lived develop + release branches, weekly+ integration. GitHub Flow: feature branches off main, merged via PR; close to trunk-based but typically with longer-lived branches.',
         image: '/diagrams/devops/b6-trunk.png',
-      }
+      },
     ],
     quickFire: [
       { q: 'Define trunk-based development.', a: 'From trunkbaseddevelopment.com (Paul Hammant): "developers collaborate on code in a single branch called trunk, resist any pressure to create other long-lived development branches by employing documented techniques." All developers commit to a single shared branch at least once a day. Branches, when used, live hours to a day, not weeks.' },
@@ -2428,7 +2428,7 @@ What success looks like. Median branch lifetime under 24 hours, p95 under 48 hou
         title: 'Pipeline-as-code lifecycle',
         description: 'Pipeline definition lives in the same repo as the code it builds, reviewed via PR, versioned with the application. The CI server reads the definition on each push; the pipeline is a build artifact, not a server-side configuration.',
         image: '/diagrams/devops/b3-pipeline-as-code.png',
-      }
+      },
     ],
     quickFire: [
       { q: 'What is pipeline-as-code and why does it matter?', a: 'Pipeline-as-code means the CI/CD pipeline is defined in a file (Jenkinsfile, .github/workflows/ci.yml, .gitlab-ci.yml) that lives in the application repository and is versioned, reviewed, and branched alongside the code. Before this, pipelines were click-configured in a UI — no review process, no audit trail, no way to revert a pipeline alongside a code revert. Pipeline-as-code closes the lifecycle loop: the pipeline that built v2.3.1 is tagged in git alongside v2.3.1.' },
@@ -2641,7 +2641,7 @@ Run a canary. The platform team upgrades their own one or two pipelines to the n
         title: 'The test pyramid + ice-cream cone anti-pattern',
         description: 'Cohn\'s pyramid: ~70% unit, ~20% integration, ~10% E2E. The ice-cream cone is the inverted shape — heavy E2E, thin unit base — slow, brittle, expensive to maintain.',
         image: '/diagrams/devops/b4-test-pyramid.png',
-      }
+      },
     ],
     quickFire: [
       { q: 'Explain the test pyramid.', a: 'Mike Cohn (Succeeding with Agile, 2009): many fast unit tests at the base, fewer integration tests in the middle, very few end-to-end tests at the top. Rough proportions: 70% unit, 20% integration, 10% E2E. The shape matters because test levels have radically different speed, determinism, and maintenance cost. Unit tests run in milliseconds; E2E tests run in minutes. The pyramid packs maximum signal into minimum time, enabling a 10-minute commit stage.' },
@@ -2842,7 +2842,7 @@ When to adopt: ≥5 services owned by ≥3 teams; independent deployability is a
         title: 'Monorepo build graph + remote cache',
         description: 'Build systems compute a target dependency graph, hash inputs per target, and consult a remote cache for hits. Cache hit → skip. Cache miss → build + write back. Incremental builds skip everything not affected by the change.',
         image: '/diagrams/devops/b5-monorepo-build.png',
-      }
+      },
     ],
     quickFire: [
       { q: 'What is a monorepo and what problem does a build system solve that npm workspaces does not?', a: 'A monorepo is a single git repository containing multiple services, libraries, or frontends. npm/pnpm/yarn workspaces solve dependency management — deduplicated node_modules, internal package linking. They do not solve the build problem: without a build system, naive CI runs every test on every change. A real build system (Turborepo, Nx, Bazel) adds a dependency graph to compute which packages are affected by a change, per-target input hashing to identify cache hits, and a remote cache to share built artifacts across machines and CI runners.' },
@@ -3085,7 +3085,6 @@ The structure scales: paths-filter at the top of the workflow can skip backend t
       },
       {
         title: 'OIDC trust chain — JWT → STS → temporary credentials',
-        image: '/diagrams/devops/ct1-gha.png',
         content: `1. Workflow declares permissions: id-token: write. GitHub's runner provisions a JWT with claims for this specific run: sub: repo:myorg/myrepo:ref:refs/heads/main, aud: sts.amazonaws.com, plus standard JWT fields (iss, exp, iat, jti).
 
 2. The aws-actions/configure-aws-credentials action calls AWS STS AssumeRoleWithWebIdentity, passing the JWT as the WebIdentityToken parameter and the target role ARN.
@@ -4210,173 +4209,8 @@ Use \`$GITHUB_OUTPUT\` (not \`set-output\`, which was deprecated in 2022) to pas
     color: '#f59e0b',
     questions: 5,
     description: 'Cron syntax, user vs system crontabs, /etc/cron.d vs /etc/crontab, environment pitfalls, systemd timers as the modern alternative, and debugging strategies. Essential for any infrastructure or backend role.',
-    visualizations: [
-      {
-        title: 'Crontab field layout and special strings',
-        description: `A cron expression is five space-separated fields followed by the command to run. Left to right: minute (0-59), hour (0-23), day-of-month (1-31), month (1-12), day-of-week (0-7, where both 0 and 7 mean Sunday).
-
-\`\`\`
-┌──── minute       (0–59)
-│  ┌─── hour          (0–23)
-│  │  ┌── day-of-month  (1–31)
-│  │  │  ┌─ month        (1–12)
-│  │  │  │  ┌ day-of-week  (0–7, 0 and 7 = Sunday)
-│  │  │  │  │
-*  *  *  *  *  command
-\`\`\`
-
-Special characters:
-* — any value (wildcard). "Every minute" is * * * * *. "Every hour at minute 0" is 0 * * * *.
-/ — step values. */15 in the minute field means "every 15 minutes." 0 */4 * * * means "every 4 hours at minute 0."
-, — list. 0 9,12,15 * * 1-5 means "9am, noon, and 3pm on weekdays."
-- — range. 1-5 in day-of-week means Monday through Friday.
-
-Special @-strings that replace the five-field syntax:
-@reboot       — run once at daemon startup
-@yearly       — 0 0 1 1 * (midnight Jan 1)
-@monthly      — 0 0 1 * * (midnight first of month)
-@weekly       — 0 0 * * 0 (midnight Sunday)
-@daily        — 0 0 * * * (midnight every day)
-@hourly       — 0 * * * * (minute 0 of every hour)
-
-Crontab file locations:
-/var/spool/cron/crontabs/<user>  — per-user crontabs managed by crontab -e
-/etc/crontab                      — system crontab (has an extra "user" column)
-/etc/cron.d/                      — drop-in system crontabs (same format as /etc/crontab)
-/etc/cron.{hourly,daily,weekly,monthly}/  — scripts dropped here run by run-parts
-
-Cron daemon logs to /var/log/syslog (Debian/Ubuntu) or /var/log/cron (RHEL/CentOS).
-Filter with: grep CRON /var/log/syslog | tail -20`,
-        image: null,
-      },
-      {
-        title: 'systemd timer unit anatomy vs cron equivalent',
-        description: `A systemd timer replaces a cron job with two unit files: a .timer file and a matching .service file. The timer fires the service on schedule.
-
-Equivalent of "0 2 * * *  /usr/local/bin/backup.sh" as systemd units:
-
-\`\`\`ini
-# /etc/systemd/system/backup.timer
-[Unit]
-Description=Daily backup at 02:00
-
-[Timer]
-OnCalendar=*-*-* 02:00:00
-Persistent=true        # run immediately if the system was off at fire-time
-
-[Install]
-WantedBy=timers.target
-\`\`\`
-
-\`\`\`ini
-# /etc/systemd/system/backup.service
-[Unit]
-Description=Backup job
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/backup.sh
-User=backupuser
-\`\`\`
-
-Enable and start: systemctl enable --now backup.timer
-
-Check status:
-systemctl list-timers --all          — see next trigger + last trigger for every timer
-journalctl -u backup.service         — full output log, no mail, no /dev/null needed
-systemctl status backup.service      — last run exit code and output
-
-Key advantages over cron:
-1. Persistent=true handles missed fires (machine was off) — cron drops them silently.
-2. Full journal integration — every stdout/stderr line lands in journald.
-3. OnBootSec=5min — relative timers for startup tasks (cron @reboot has no delay control).
-4. Resource limits (MemoryMax=, CPUQuota=) on the service unit constrain the job.
-5. After=network-online.target ensures network is up before the service starts.`,
-        image: null,
-      }
-    ],
+    visualizations: [],
     topics: [
-      {
-        title: 'Crontab field layout and special strings',
-        content: `A cron expression is five space-separated fields followed by the command to run. Left to right: minute (0-59), hour (0-23), day-of-month (1-31), month (1-12), day-of-week (0-7, where both 0 and 7 mean Sunday).
-
-\`\`\`
-┌──── minute       (0–59)
-│  ┌─── hour          (0–23)
-│  │  ┌── day-of-month  (1–31)
-│  │  │  ┌─ month        (1–12)
-│  │  │  │  ┌ day-of-week  (0–7, 0 and 7 = Sunday)
-│  │  │  │  │
-*  *  *  *  *  command
-\`\`\`
-
-Special characters:
-* — any value (wildcard). "Every minute" is * * * * *. "Every hour at minute 0" is 0 * * * *.
-/ — step values. */15 in the minute field means "every 15 minutes." 0 */4 * * * means "every 4 hours at minute 0."
-, — list. 0 9,12,15 * * 1-5 means "9am, noon, and 3pm on weekdays."
-- — range. 1-5 in day-of-week means Monday through Friday.
-
-Special @-strings that replace the five-field syntax:
-@reboot       — run once at daemon startup
-@yearly       — 0 0 1 1 * (midnight Jan 1)
-@monthly      — 0 0 1 * * (midnight first of month)
-@weekly       — 0 0 * * 0 (midnight Sunday)
-@daily        — 0 0 * * * (midnight every day)
-@hourly       — 0 * * * * (minute 0 of every hour)
-
-Crontab file locations:
-/var/spool/cron/crontabs/<user>  — per-user crontabs managed by crontab -e
-/etc/crontab                      — system crontab (has an extra "user" column)
-/etc/cron.d/                      — drop-in system crontabs (same format as /etc/crontab)
-/etc/cron.{hourly,daily,weekly,monthly}/  — scripts dropped here run by run-parts
-
-Cron daemon logs to /var/log/syslog (Debian/Ubuntu) or /var/log/cron (RHEL/CentOS).
-Filter with: grep CRON /var/log/syslog | tail -20`,
-      },
-      {
-        title: 'systemd timer unit anatomy vs cron equivalent',
-        content: `A systemd timer replaces a cron job with two unit files: a .timer file and a matching .service file. The timer fires the service on schedule.
-
-Equivalent of "0 2 * * *  /usr/local/bin/backup.sh" as systemd units:
-
-\`\`\`ini
-# /etc/systemd/system/backup.timer
-[Unit]
-Description=Daily backup at 02:00
-
-[Timer]
-OnCalendar=*-*-* 02:00:00
-Persistent=true        # run immediately if the system was off at fire-time
-
-[Install]
-WantedBy=timers.target
-\`\`\`
-
-\`\`\`ini
-# /etc/systemd/system/backup.service
-[Unit]
-Description=Backup job
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/backup.sh
-User=backupuser
-\`\`\`
-
-Enable and start: systemctl enable --now backup.timer
-
-Check status:
-systemctl list-timers --all          — see next trigger + last trigger for every timer
-journalctl -u backup.service         — full output log, no mail, no /dev/null needed
-systemctl status backup.service      — last run exit code and output
-
-Key advantages over cron:
-1. Persistent=true handles missed fires (machine was off) — cron drops them silently.
-2. Full journal integration — every stdout/stderr line lands in journald.
-3. OnBootSec=5min — relative timers for startup tasks (cron @reboot has no delay control).
-4. Resource limits (MemoryMax=, CPUQuota=) on the service unit constrain the job.
-5. After=network-online.target ensures network is up before the service starts.`,
-      },
       {
         title: 'Crontab field layout and special strings',
         content: `A cron expression is five space-separated fields followed by the command to run. Left to right: minute (0-59), hour (0-23), day-of-month (1-31), month (1-12), day-of-week (0-7, where both 0 and 7 mean Sunday).
@@ -4909,7 +4743,6 @@ Built-in container registry. Every project gets a Docker registry at registry.gi
       },
       {
         title: 'Pipeline lifecycle — MR pipeline, merged-result, merge-train',
-        image: '/diagrams/devops/ct3-gitlab-ci.png',
         content: `Branch pipeline. Triggered by push to a branch. Default. Runs against the actual commit on the branch.
 
 Merge request pipeline. Triggered by MR open/update. Runs against the source branch's HEAD commit. Useful for "test what's in the MR." Note: this does NOT include changes from main since the branch was created — if main has moved, the MR pipeline doesn't see those changes.
@@ -4926,7 +4759,6 @@ Review apps. A pipeline job can deploy a review app (review/$CI_COMMIT_REF_SLUG 
       },
       {
         title: 'Auto DevOps + integrated DevSecOps scanning',
-        image: '/diagrams/devops/ct3-gitlab-ci.png',
         content: `Auto DevOps. A canned .gitlab-ci.yml template that detects your language (Node, Python, Java, Go, Ruby, etc.) and runs: build, test, code quality, SAST, dependency scanning, container scanning, license compliance, DAST (against review apps), and Auto Deploy to a Kubernetes cluster (Helm-based). Enable it in project settings; no .gitlab-ci.yml needed for the basic case. Useful for prototyping; most production projects override the auto-template with explicit jobs.
 
 Built-in security scans (Ultimate tier or via Open Source equivalents):
@@ -6037,7 +5869,6 @@ Agents (executor pods/VMs) come in two shapes:
       },
       {
         title: 'Declarative Pipeline lifecycle — stages, post, parallel',
-        image: '/diagrams/devops/ct2-jenkins.png',
         content: `Lifecycle of a build:
 1. Webhook from SCM → Jenkins controller queues a build.
 2. Controller assigns the build to an executor based on the agent { } directive (any/label/kubernetes/docker).
@@ -6055,7 +5886,6 @@ Compared to GitHub Actions: Jenkins's parallel and post blocks are more expressi
       },
       {
         title: 'Jenkins on Kubernetes — kubernetes plugin pod templates',
-        image: '/diagrams/devops/ct2-jenkins.png',
         content: `Sequence per build:
 1. Controller receives a build trigger.
 2. Jenkinsfile declares pod template: agent { kubernetes { yaml '...' } } — defines containers (jnlp + maven + docker-dind + kaniko), resources, node selectors, tolerations.
@@ -7080,7 +6910,6 @@ Workflows orchestrate jobs with DAG dependencies (requires:), filters (only on c
       },
       {
         title: 'Workflow with parallel test splitting + approval gate',
-        image: '/diagrams/devops/ct4-circleci.png',
         content: `1. Push to main → Webhook triggers CircleCI → workflow build-test-deploy starts.
 
 2. install job: docker executor with cimg/node:20.18; restore_cache by lockfile hash; npm ci; save_cache. Cold install ~3min; warm cache ~15s.
@@ -8032,7 +7861,6 @@ Pipeline DSL: pipeline.yml is the entry point. Steps can be hardcoded YAML or ge
       },
       {
         title: 'Dynamic pipeline generation pattern',
-        image: '/diagrams/devops/ct7-buildkite.png',
         content: `1. Webhook from SCM hits Buildkite → Buildkite triggers the build.
 2. Buildkite reads .buildkite/pipeline.yml for the entry. This file might be 5 lines:
 
@@ -8853,7 +8681,6 @@ How execution flows:
       },
       {
         title: 'Tekton Triggers — webhook → EventListener → PipelineRun',
-        image: '/diagrams/devops/ct5-tekton.png',
         content: `Components:
 - EventListener — Kubernetes Service exposing an HTTP endpoint. Webhooks point at it.
 - TriggerBinding — extracts data from event payload (e.g., GitHub push body) into named values.
@@ -9810,7 +9637,6 @@ CronWorkflow schedules a Workflow on a cron expression — declarative scheduled
       },
       {
         title: 'DAG template + fan-out / fan-in pattern',
-        image: '/diagrams/devops/ct6-argo-wf.png',
         content: `Walking through a typical ML training fan-out / fan-in:
 
 1. validate-data step (single Pod) — checks input data shape.
@@ -10798,6 +10624,38 @@ These are the answers an Argo Workflows-fluent engineer should give without prep
     visualizations: [],
     topics: [
       {
+        title: 'Strategy comparison — when to pick which',
+        image: '/diagrams/devops/c3-deployment-strategies.png',
+        content: `Recreate. Stop all old, start all new. Properties: 100% downtime equal to startup; simplest; one version live. Use for: stateful apps that can't run two versions concurrently, dev/staging without uptime requirement, single-instance utilities.
+
+Rolling update (K8s default). Replace pods incrementally — maxSurge controls extra pods during deploy, maxUnavailable controls pods that can be down. Both versions live during the rollout, traffic randomly hits both. Properties: zero downtime if readiness probes work, no metric gate, no instant rollback.
+- Rule of thumb: maxSurge 25%, maxUnavailable 0 for production stateless apps. Surge buys you no-impact rollout at 1.25x infrastructure cost during the deploy.
+
+Blue/Green. Two full environments. Deploy to green, validate, swap traffic at the load balancer. Properties: instant cutover, instant rollback (swap back), 2x infrastructure during deploy, schema must support both versions.
+- L4 swap: change LB target group. Connection-level cutover; old connections drain.
+- L7 swap: change ingress/service routing rules. Request-level cutover.
+
+Canary. Send small fraction (1-10%) to new version, measure, expand. Properties: bounded blast radius, requires traffic-splitting (mesh, ingress) and metrics, slower than blue/green. Argo Rollouts and Flagger automate this on K8s.
+
+A/B test. Like canary but split by user attribute (geo, header, cohort) for product experiments rather than safety. Often paired with feature flags.
+
+Shadow / dark launch. Mirror production traffic to new version; discard responses. Tests under real load with no user impact. 2x backend traffic.
+
+Decision matrix:
+
+| Need                                            | Strategy                       |
+|-------------------------------------------------|--------------------------------|
+| Zero downtime, simple                           | Rolling update                 |
+| Critical app, fast rollback                     | Blue/green                     |
+| Have telemetry, want bounded blast radius       | Canary                         |
+| Database schema change                          | Blue/green + expand-contract   |
+| Stateful app, can't run two versions            | Recreate (with maintenance)    |
+| Performance regression test                     | Shadow                         |
+| Test product variants                           | A/B (canary mechanics, segmented) |
+
+Most production K8s shops layer: rolling for routine, canary for risky changes, blue/green for the most critical service, shadow for performance-sensitive paths.`,
+      },
+      {
         title: 'K8s rolling update internals and gotchas',
         content: `K8s rolling update is the default for Deployment — and the most-misconfigured strategy in production.
 
@@ -10887,38 +10745,6 @@ Resource requests for HPA. HPA needs requests set on containers. Without it, HPA
 
 The deeper point. Rolling update done right is invisible to users — but the defaults aren't right. Nearly every production K8s outage attributed to "the deploy" comes from missing readiness probes, incorrect maxUnavailable, or no preStop hook. Fix these once per service and move on.`,
       },
-      {
-        title: 'Strategy comparison — when to pick which',
-        image: '/diagrams/devops/c3-deployment-strategies.png',
-        content: `Recreate. Stop all old, start all new. Properties: 100% downtime equal to startup; simplest; one version live. Use for: stateful apps that can't run two versions concurrently, dev/staging without uptime requirement, single-instance utilities.
-
-Rolling update (K8s default). Replace pods incrementally — maxSurge controls extra pods during deploy, maxUnavailable controls pods that can be down. Both versions live during the rollout, traffic randomly hits both. Properties: zero downtime if readiness probes work, no metric gate, no instant rollback.
-- Rule of thumb: maxSurge 25%, maxUnavailable 0 for production stateless apps. Surge buys you no-impact rollout at 1.25x infrastructure cost during the deploy.
-
-Blue/Green. Two full environments. Deploy to green, validate, swap traffic at the load balancer. Properties: instant cutover, instant rollback (swap back), 2x infrastructure during deploy, schema must support both versions.
-- L4 swap: change LB target group. Connection-level cutover; old connections drain.
-- L7 swap: change ingress/service routing rules. Request-level cutover.
-
-Canary. Send small fraction (1-10%) to new version, measure, expand. Properties: bounded blast radius, requires traffic-splitting (mesh, ingress) and metrics, slower than blue/green. Argo Rollouts and Flagger automate this on K8s.
-
-A/B test. Like canary but split by user attribute (geo, header, cohort) for product experiments rather than safety. Often paired with feature flags.
-
-Shadow / dark launch. Mirror production traffic to new version; discard responses. Tests under real load with no user impact. 2x backend traffic.
-
-Decision matrix:
-
-| Need                                            | Strategy                       |
-|-------------------------------------------------|--------------------------------|
-| Zero downtime, simple                           | Rolling update                 |
-| Critical app, fast rollback                     | Blue/green                     |
-| Have telemetry, want bounded blast radius       | Canary                         |
-| Database schema change                          | Blue/green + expand-contract   |
-| Stateful app, can't run two versions            | Recreate (with maintenance)    |
-| Performance regression test                     | Shadow                         |
-| Test product variants                           | A/B (canary mechanics, segmented) |
-
-Most production K8s shops layer: rolling for routine, canary for risky changes, blue/green for the most critical service, shadow for performance-sensitive paths.`,
-      },
     ],
     references: [
       'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/',
@@ -10938,6 +10764,33 @@ Most production K8s shops layer: rolling for routine, canary for risky changes, 
     description: 'Decouple deploy from release. Flag types (release, ops, experiment, permission), evaluation models (server-side vs client-side, streaming vs polling), targeting rules, audit + kill-switch, technical debt management. Vendors: LaunchDarkly (market leader), Statsig (experiment-heavy, free tier), Unleash (OSS), Flagsmith (OSS / SaaS), Optimizely (experimentation).',
     visualizations: [],
     topics: [
+      {
+        title: 'Flag taxonomy and evaluation model',
+        image: '/diagrams/devops/c2-feature-flags.png',
+        content: `Release flags — gate code that's deployed but not yet released. Live for days or weeks; deleted after rollout. The most common type. "feature-checkout-v2" turns on for 1% of users on Monday, 100% by Friday, code path collapsed to always-on by next sprint.
+
+Experiment flags — A/B/n testing. Flag value drives variant assignment, often with bucketing by user ID for stable assignment. Live for the duration of the experiment (weeks). Tied to analytics for outcome measurement.
+
+Operational flags — kill switches, circuit breakers, rate limiters. Long-lived; often permanent. "disable-recommendations" lets ops turn off a heavy code path during an incident without a deploy.
+
+Permission flags — entitlement gating tied to plan tier or beta access. Long-lived; tied to user/account attributes. "premium-export" on for paid plans only.
+
+Why the distinction matters. Release flags are technical debt — every one represents a "remove me" task. Experiment flags expire. Operational flags are infrastructure. Permission flags are product. Mixing them in one config screen creates rot. Mature platforms tag flags by type.
+
+Evaluation model — server-side vs client-side:
+
+Server-side: Flag SDK runs in your backend. Receives full ruleset; evaluates locally. User attributes never leave your service. No latency in flag check. Most platforms (LaunchDarkly, Statsig, Unleash) support this via streaming SDK that maintains a local cache.
+
+Client-side (browser/mobile): Flag SDK runs in the user's device. Two patterns:
+- "Bootstrap mode": server evaluates flags for the user, ships pre-evaluated values to the client. Simpler; cheaper at scale; less responsive to flag changes.
+- "Direct evaluation": client SDK fetches rules and evaluates locally. Reactive to flag changes mid-session. Costs API requests; rules are exposed (sometimes a security concern).
+
+Streaming vs polling:
+- Streaming SDK opens a long-lived connection (SSE, websocket) to the flag service, gets pushed flag changes within ~1s. Production-grade for mid-session updates.
+- Polling SDK fetches the ruleset every N seconds (typically 30-60s). Simpler; bandwidth-efficient at scale; can take a minute to propagate changes.
+
+Local evaluation, central authority. The architecture all major platforms converge on: SDKs evaluate locally with cached rules, control plane is the source of truth, changes flow via push or pull. This keeps flag checks at microsecond latency while preserving the ability to flip flags from a UI in seconds.`,
+      },
       {
         title: 'Vendor landscape — choosing a feature flag platform',
         content: `LaunchDarkly (market leader, ~40% share):
@@ -10980,33 +10833,6 @@ Operational gotchas:
 - Default values matter: SDK should serve a safe default if the flag service is unreachable. Test with the SDK in error state.
 - Event volume: experiment flags emit events per evaluation. At 10k QPS × 10 flags = 100k events/sec — vendor bills surprise.`,
       },
-      {
-        title: 'Flag taxonomy and evaluation model',
-        image: '/diagrams/devops/c2-feature-flags.png',
-        content: `Release flags — gate code that's deployed but not yet released. Live for days or weeks; deleted after rollout. The most common type. "feature-checkout-v2" turns on for 1% of users on Monday, 100% by Friday, code path collapsed to always-on by next sprint.
-
-Experiment flags — A/B/n testing. Flag value drives variant assignment, often with bucketing by user ID for stable assignment. Live for the duration of the experiment (weeks). Tied to analytics for outcome measurement.
-
-Operational flags — kill switches, circuit breakers, rate limiters. Long-lived; often permanent. "disable-recommendations" lets ops turn off a heavy code path during an incident without a deploy.
-
-Permission flags — entitlement gating tied to plan tier or beta access. Long-lived; tied to user/account attributes. "premium-export" on for paid plans only.
-
-Why the distinction matters. Release flags are technical debt — every one represents a "remove me" task. Experiment flags expire. Operational flags are infrastructure. Permission flags are product. Mixing them in one config screen creates rot. Mature platforms tag flags by type.
-
-Evaluation model — server-side vs client-side:
-
-Server-side: Flag SDK runs in your backend. Receives full ruleset; evaluates locally. User attributes never leave your service. No latency in flag check. Most platforms (LaunchDarkly, Statsig, Unleash) support this via streaming SDK that maintains a local cache.
-
-Client-side (browser/mobile): Flag SDK runs in the user's device. Two patterns:
-- "Bootstrap mode": server evaluates flags for the user, ships pre-evaluated values to the client. Simpler; cheaper at scale; less responsive to flag changes.
-- "Direct evaluation": client SDK fetches rules and evaluates locally. Reactive to flag changes mid-session. Costs API requests; rules are exposed (sometimes a security concern).
-
-Streaming vs polling:
-- Streaming SDK opens a long-lived connection (SSE, websocket) to the flag service, gets pushed flag changes within ~1s. Production-grade for mid-session updates.
-- Polling SDK fetches the ruleset every N seconds (typically 30-60s). Simpler; bandwidth-efficient at scale; can take a minute to propagate changes.
-
-Local evaluation, central authority. The architecture all major platforms converge on: SDKs evaluate locally with cached rules, control plane is the source of truth, changes flow via push or pull. This keeps flag checks at microsecond latency while preserving the ability to flip flags from a UI in seconds.`,
-      },
     ],
     references: [
       'https://launchdarkly.com/blog/feature-flag-best-practices/',
@@ -11027,6 +10853,79 @@ Local evaluation, central authority. The architecture all major platforms conver
     description: 'Beyond rolling updates: gradual exposure of new versions to users with metric gates and automatic rollback. Strategies (blue/green, canary, A/B, shadow), platforms (Argo Rollouts, Flagger, Spinnaker), and the analysis-driven decision model from the Continuous Delivery / SRE traditions.',
     visualizations: [],
     topics: [
+      {
+        title: 'Progressive delivery — the spectrum of rollout strategies',
+        image: '/diagrams/devops/c1-progressive-delivery.png',
+        content: `Recreate (the bad baseline). Stop all old pods, start all new ones. Downtime equal to startup time. Used only for stateful systems that can't run two versions concurrently.
+
+Rolling update (Kubernetes default). Replace pods incrementally — bring up N new, drain N old. Deployment.spec.strategy.rollingUpdate.maxSurge / maxUnavailable. Eliminates downtime but: traffic hits new + old simultaneously during the rollout, no metric gate, manual rollback if you notice problems.
+
+Blue/Green. Two full environments (blue = current, green = new). Deploy to green, validate, then swap traffic at the load balancer. Properties:
+- Instant cutover, instant rollback (swap back).
+- 2x infrastructure during deploy. Tradeoff for speed and safety.
+- Database schema must support both versions during cutover (expand-contract migrations).
+- Common in stateful platforms: Spinnaker pioneered this for Netflix. AWS CodeDeploy supports natively. Argo Rollouts has BlueGreen strategy.
+
+Canary. Send small fraction (1%, 5%, 10%) of traffic to new version. Measure error rate, latency, business KPIs. If healthy, expand to 100%. If unhealthy, rollback automatically. Properties:
+- Bounded blast radius. A bad release affects only the canary slice.
+- Requires traffic-splitting capability (service mesh, ingress, or in-app).
+- Requires telemetry to make the decision (metric source: Prometheus, Datadog, NewRelic).
+- Slower than blue/green: canary phases take minutes to hours to gather signal.
+- Argo Rollouts and Flagger are the K8s-native implementations.
+
+A/B testing. Like canary but the routing decision is by user attribute (geo, account tier, header), not random. Used for product experiments more than safe deploy. Often combined with feature flags (LaunchDarkly, Unleash, Statsig) — "show feature X to users in cohort A".
+
+Shadow / Dark launch. Send copy of production traffic to new version; new version's responses discarded (just observe). Lets you test new version under real load without user impact. Cost: 2x backend traffic. Useful for performance regression testing pre-cutover.
+
+Progressive rollout (geo / cell / region). Deploy to one cell or region at a time. Validate, expand. Industry standard at Google, Microsoft, Amazon. Slower per-rollout but reduces blast radius across geographies. Often combined with canary inside each cell.
+
+Choosing among them:
+
+| Strategy      | Blast radius | Infra cost | Speed     | Best for                                          |
+|---------------|--------------|------------|-----------|---------------------------------------------------|
+| Recreate      | 100% downtime| 1x         | Fast      | Stateful, no zero-downtime requirement            |
+| Rolling       | Random       | 1x         | Fast      | Stateless, simple                                 |
+| Blue/Green    | 0%           | 2x         | Instant   | Critical apps, schema changes, fast rollback      |
+| Canary        | 1-10%        | 1x + small | Medium    | Most production apps with telemetry               |
+| A/B           | Targeted     | 1x         | Slow      | Product experiments                               |
+| Shadow        | 0% user      | 2x backend | Long      | Pre-prod load test                                |
+| Geo rollout   | One region   | 1x         | Slow      | Multi-region apps                                 |
+
+Most mature platforms layer these: a single change rolls out as canary inside one region, then geo-progresses to additional regions, with shadow tests preceding real customer traffic for performance-sensitive code paths.
+
+The deeper point. Progressive delivery isn't a deploy strategy — it's an admission that pre-prod testing isn't sufficient and the rollout itself must be a controlled experiment. The savings are real: high-functioning teams catch ~80% of bad deploys at 1-5% canary, not in 100% of users.`,
+      },
+      {
+        title: 'Argo Rollouts — Progressive Delivery Controller',
+        image: '/diagrams/devops/ct6-argo-rollouts-arch.png',
+        content: `How Argo Rollouts extends Kubernetes:
+  Rollout CRD replaces Deployment for workloads that need progressive delivery
+  rollouts-controller watches Rollout objects and manages canary or blue-green promotion
+  The controller creates and scales ReplicaSets just like Deployment does, but with fine-grained control
+
+Canary strategy flow:
+  1. New version pushed to Rollout spec.template
+  2. Controller creates new ReplicaSet and sends canary-weight% of traffic to it
+  3. AnalysisRun (optional) queries Prometheus/Datadog/NewRelic for metrics
+  4. If metrics pass, controller advances the step (increases weight)
+  5. If metrics fail, controller automatically rolls back to stable ReplicaSet
+  6. At 100% weight, old ReplicaSet scales to 0
+
+Blue-green strategy flow:
+  1. New version deployed to preview Service (no production traffic)
+  2. Automated analysis or manual approval gates promotion
+  3. On promotion: active Service selector switches to new ReplicaSet
+  4. Old ReplicaSet kept for scaleDownDelaySeconds then removed
+
+Traffic management integrations:
+  Gateway API HTTPRoute weight fields — most forward-compatible
+  Istio VirtualService — weighted routing between stable and canary subsets
+  NGINX Ingress — canary annotation weight
+  AWS ALB — weighted target groups
+  SMI TrafficSplit — service mesh traffic splitting spec
+
+Diagram source: KubeDiagrams (Apache 2.0) — generated from official Argo Rollouts install manifest.`,
+      },
       {
         title: 'Argo Rollouts vs Flagger — K8s progressive delivery',
         content: `Two CNCF projects own the K8s progressive-delivery space. Same goal, different architectures:
@@ -11263,187 +11162,6 @@ Don't skip ahead to "every service has fully automated canary with statistical s
 
 The deeper point. Progressive delivery is a maturity progression, not a feature flag. Each step requires operational investment and pays back in proportional incident reduction. Teams that try to skip from rolling-only to fully-automated-statistical-canary fail because the surrounding maturity (telemetry, runbooks, rollback discipline) isn't in place yet.`,
       },
-      {
-        title: 'Progressive delivery — the spectrum of rollout strategies',
-        image: '/diagrams/devops/c1-progressive-delivery.png',
-        content: `Recreate (the bad baseline). Stop all old pods, start all new ones. Downtime equal to startup time. Used only for stateful systems that can't run two versions concurrently.
-
-Rolling update (Kubernetes default). Replace pods incrementally — bring up N new, drain N old. Deployment.spec.strategy.rollingUpdate.maxSurge / maxUnavailable. Eliminates downtime but: traffic hits new + old simultaneously during the rollout, no metric gate, manual rollback if you notice problems.
-
-Blue/Green. Two full environments (blue = current, green = new). Deploy to green, validate, then swap traffic at the load balancer. Properties:
-- Instant cutover, instant rollback (swap back).
-- 2x infrastructure during deploy. Tradeoff for speed and safety.
-- Database schema must support both versions during cutover (expand-contract migrations).
-- Common in stateful platforms: Spinnaker pioneered this for Netflix. AWS CodeDeploy supports natively. Argo Rollouts has BlueGreen strategy.
-
-Canary. Send small fraction (1%, 5%, 10%) of traffic to new version. Measure error rate, latency, business KPIs. If healthy, expand to 100%. If unhealthy, rollback automatically. Properties:
-- Bounded blast radius. A bad release affects only the canary slice.
-- Requires traffic-splitting capability (service mesh, ingress, or in-app).
-- Requires telemetry to make the decision (metric source: Prometheus, Datadog, NewRelic).
-- Slower than blue/green: canary phases take minutes to hours to gather signal.
-- Argo Rollouts and Flagger are the K8s-native implementations.
-
-A/B testing. Like canary but the routing decision is by user attribute (geo, account tier, header), not random. Used for product experiments more than safe deploy. Often combined with feature flags (LaunchDarkly, Unleash, Statsig) — "show feature X to users in cohort A".
-
-Shadow / Dark launch. Send copy of production traffic to new version; new version's responses discarded (just observe). Lets you test new version under real load without user impact. Cost: 2x backend traffic. Useful for performance regression testing pre-cutover.
-
-Progressive rollout (geo / cell / region). Deploy to one cell or region at a time. Validate, expand. Industry standard at Google, Microsoft, Amazon. Slower per-rollout but reduces blast radius across geographies. Often combined with canary inside each cell.
-
-Choosing among them:
-
-| Strategy      | Blast radius | Infra cost | Speed     | Best for                                          |
-|---------------|--------------|------------|-----------|---------------------------------------------------|
-| Recreate      | 100% downtime| 1x         | Fast      | Stateful, no zero-downtime requirement            |
-| Rolling       | Random       | 1x         | Fast      | Stateless, simple                                 |
-| Blue/Green    | 0%           | 2x         | Instant   | Critical apps, schema changes, fast rollback      |
-| Canary        | 1-10%        | 1x + small | Medium    | Most production apps with telemetry               |
-| A/B           | Targeted     | 1x         | Slow      | Product experiments                               |
-| Shadow        | 0% user      | 2x backend | Long      | Pre-prod load test                                |
-| Geo rollout   | One region   | 1x         | Slow      | Multi-region apps                                 |
-
-Most mature platforms layer these: a single change rolls out as canary inside one region, then geo-progresses to additional regions, with shadow tests preceding real customer traffic for performance-sensitive code paths.
-
-The deeper point. Progressive delivery isn't a deploy strategy — it's an admission that pre-prod testing isn't sufficient and the rollout itself must be a controlled experiment. The savings are real: high-functioning teams catch ~80% of bad deploys at 1-5% canary, not in 100% of users.`,
-      },
-      {
-        title: 'Argo Rollouts — Progressive Delivery Controller',
-        image: '/diagrams/devops/ct6-argo-rollouts-arch.png',
-        content: `How Argo Rollouts extends Kubernetes:
-  Rollout CRD replaces Deployment for workloads that need progressive delivery
-  rollouts-controller watches Rollout objects and manages canary or blue-green promotion
-  The controller creates and scales ReplicaSets just like Deployment does, but with fine-grained control
-
-Canary strategy flow:
-  1. New version pushed to Rollout spec.template
-  2. Controller creates new ReplicaSet and sends canary-weight% of traffic to it
-  3. AnalysisRun (optional) queries Prometheus/Datadog/NewRelic for metrics
-  4. If metrics pass, controller advances the step (increases weight)
-  5. If metrics fail, controller automatically rolls back to stable ReplicaSet
-  6. At 100% weight, old ReplicaSet scales to 0
-
-Blue-green strategy flow:
-  1. New version deployed to preview Service (no production traffic)
-  2. Automated analysis or manual approval gates promotion
-  3. On promotion: active Service selector switches to new ReplicaSet
-  4. Old ReplicaSet kept for scaleDownDelaySeconds then removed
-
-Traffic management integrations:
-  Gateway API HTTPRoute weight fields — most forward-compatible
-  Istio VirtualService — weighted routing between stable and canary subsets
-  NGINX Ingress — canary annotation weight
-  AWS ALB — weighted target groups
-  SMI TrafficSplit — service mesh traffic splitting spec
-
-Diagram source: KubeDiagrams (Apache 2.0) — generated from official Argo Rollouts install manifest.`,
-      },
-      {
-        title: 'Argo Rollouts vs Flagger — K8s progressive delivery',
-        content: `Two CNCF projects own the K8s progressive-delivery space. Same goal, different architectures:
-
-Argo Rollouts (Argo Project, CNCF graduated):
-
-What it is. A Deployment-replacement CRD. You write a Rollout instead of a Deployment, declare strategy (BlueGreen or Canary), and Rollouts manages the ReplicaSets and traffic-shifting:
-
-\`\`\`yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Rollout
-metadata: { name: api }
-spec:
-  replicas: 10
-  strategy:
-    canary:
-      steps:
-        - setWeight: 10
-        - pause: { duration: 5m }
-        - setWeight: 25
-        - analysis: { templates: [{ templateName: success-rate }] }
-        - setWeight: 50
-        - pause: {}                # manual approval
-        - setWeight: 100
-      trafficRouting:
-        istio:
-          virtualService:
-            name: api
-            routes: [primary]
-  selector: { matchLabels: { app: api } }
-  template:
-    metadata: { labels: { app: api } }
-    spec:
-      containers:
-        - name: api
-          image: ghcr.io/myorg/api:v2.0.0
-\`\`\`
-
-Properties:
-- Uses external traffic splitter: Istio, Linkerd, ALB, NGINX, Traefik, Apache APISIX, SMI. The Rollouts controller updates the splitter's config; Rollouts itself doesn't proxy traffic.
-- AnalysisTemplate CRD declares metric checks (Prometheus query, Datadog metric, NewRelic NRQL, Wavefront, Web). If query result fails threshold during the canary phase, Rollouts automatically rolls back.
-- Has its own dashboard CLI (kubectl-argo-rollouts) and UI (argo-rollouts-dashboard).
-- Best paired with Argo CD for full GitOps. Argo CD applies the Rollout manifest, Rollouts handles the cutover.
-
-Flagger (Weaveworks → Flux project, CNCF):
-
-What it is. A Canary CRD that wraps an existing Deployment and orchestrates traffic shifting:
-
-\`\`\`yaml
-apiVersion: flagger.app/v1beta1
-kind: Canary
-metadata: { name: api }
-spec:
-  targetRef: { apiVersion: apps/v1, kind: Deployment, name: api }
-  service: { port: 8080 }
-  analysis:
-    interval: 1m
-    threshold: 5
-    maxWeight: 50
-    stepWeight: 10
-    metrics:
-      - name: request-success-rate
-        thresholdRange: { min: 99 }
-        interval: 30s
-      - name: request-duration
-        thresholdRange: { max: 500 }
-        interval: 30s
-    webhooks:
-      - name: load-test
-        url: http://flagger-loadtester/
-\`\`\`yaml
-
-Properties:
-- Wraps existing Deployment — when the Deployment image changes, Flagger detects, scales up a "primary" + "canary" ReplicaSet pair, and orchestrates traffic shift via service mesh / ingress.
-- Built-in metric checks via Prometheus (default) or Datadog/NewRelic/Dynatrace/CloudWatch/Stackdriver.
-- Loadtester webhook: synthetic traffic during canary windows so the metric query has signal.
-- Best paired with Flux CD for full GitOps. Often deployed via the Flux toolkit's helmrelease.
-
-Differences in practice:
-
-Architecture:
-- Argo Rollouts replaces the Deployment with a Rollout CRD.
-- Flagger sits on top of an unchanged Deployment, manages a parallel canary.
-
-CD pairing:
-- Argo Rollouts + Argo CD = the full Argo stack. Common at orgs that adopted Argo end-to-end.
-- Flagger + Flux = the full Flux stack. Common at orgs that adopted Flux end-to-end.
-
-Both work with either CD platform; pairings reflect community gravity.
-
-UI:
-- Argo Rollouts has a richer UI (dashboard with rollout state, manual promotion, abort).
-- Flagger doesn't have its own UI; you observe via Prometheus/Grafana and kubectl describe.
-
-Strategy support:
-- Argo Rollouts: Canary + BlueGreen + Experiment (pure A/B).
-- Flagger: Canary + BlueGreen + A/B (header-based) + Mirroring (shadow traffic).
-
-Manual approvals:
-- Argo Rollouts: pause: {} step pauses indefinitely, kubectl-argo-rollouts promote resumes.
-- Flagger: less prescriptive; you change the Canary spec or use webhooks for approval gating.
-
-Operationally, both are mature and production-grade at large scale (Intuit, Adobe, BlackRock for Argo Rollouts; weaveworks customers, large EU enterprises for Flagger). Pick the one that matches the rest of your platform stack.
-
-Spinnaker — for completeness. Netflix-pioneered multi-cloud deploy platform with deep canary capability via Kayenta (statistical canary analysis). Heavyweight to operate; popular at orgs with deep Netflix-OSS lineage. Modern shops increasingly pick Argo Rollouts or Flagger for K8s-native simplicity.
-
-LaunchDarkly Release Management, Statsig deployment-aware flags — feature flag platforms with rollout capabilities at the application layer (in-app routing, not infrastructure). Different model: works for any app stack, but doesn't shape K8s pod traffic. Often layered with Argo Rollouts or Flagger for "K8s rollout + per-user flag" hybrid.`,
-      },
     ],
     references: [
       'https://argoproj.github.io/argo-rollouts/',
@@ -11464,6 +11182,84 @@ LaunchDarkly Release Management, Statsig deployment-aware flags — feature flag
     description: 'Versioned schema migrations under CI/CD. Tools (Flyway, Liquibase, Sqitch, Atlas, Bytebase, Prisma Migrate, Alembic). Online DDL for high-traffic tables (gh-ost, pt-online-schema-change, pg_repack). Expand-contract pattern. Handling rollbacks (or not). PR-gating, drift detection, migration in K8s init containers vs pre-deploy job.',
     visualizations: [],
     topics: [
+      {
+        title: 'Migration tooling and the expand-contract pattern',
+        image: '/diagrams/devops/c4-db-migrations.png',
+        content: `Flyway (JVM-native, broad support):
+- Versioned SQL files (V1__init.sql, V2__add_column.sql).
+- Tracks applied migrations in flyway_schema_history table.
+- "Migrate-only" — does not generate migrations, you write the SQL.
+- Strong checksum validation (fails if a previously-applied migration was edited).
+- Best for: Java/JVM shops, polyglot teams that want plain SQL.
+
+Liquibase (XML/YAML/SQL changesets):
+- Multi-format changesets, can describe changes abstractly (Liquibase generates DB-specific SQL).
+- Stronger rollback support than Flyway (declarative reversal).
+- Heavier than Flyway; opinionated about format.
+- Best for: enterprise shops with strict change management, multi-database environments.
+
+Atlas (HCL-first, schema-as-code, 2023+):
+- Declare desired schema in HCL; Atlas computes the diff vs live DB and generates migration.
+- Built-in linting (catches dangerous migrations), migration directory + lint + apply pipeline.
+- Cloud version offers schema review in PRs.
+- Best for: teams that want Terraform-style schema-as-code; modern Postgres/MySQL/SQLite shops.
+
+Bytebase (database DevOps platform):
+- Migration platform with PR-style review workflows, RBAC, audit log.
+- Web UI for DBAs and developers to collaborate on migrations.
+- Multi-database (Postgres, MySQL, MongoDB, ClickHouse, Snowflake).
+- Best for: orgs with dedicated DBA function or compliance-heavy migration approval.
+
+Sqitch (no-config, dependency graph):
+- Plain SQL, no framework lock-in, dependency between migrations declared explicitly.
+- Smaller community but principled design.
+
+Prisma Migrate (TypeScript / ORM):
+- Tied to Prisma schema; generates migrations from schema diffs.
+- Best for: Prisma-using TypeScript apps; less compelling outside that stack.
+
+Alembic (SQLAlchemy / Python):
+- The Python equivalent of Flyway. Generates migrations from SQLAlchemy model diffs.
+- Best for: Python apps using SQLAlchemy.
+
+Expand-contract pattern (the only safe rolling-update pattern):
+
+The problem. Rolling deploys mean two app versions run simultaneously. Schema must support both. A naive "drop column" while the old version still queries it = 500s.
+
+The pattern, three deploys per breaking change:
+
+Phase 1 (Expand). Migration adds new shape, keeps old.
+- Add column: ALTER TABLE users ADD COLUMN new_email VARCHAR(255);
+- New name and old name coexist. Old code unaffected.
+
+Phase 2 (Migrate). App version that writes both old and new.
+- App writes new_email and old email_address simultaneously.
+- Backfill old rows: UPDATE users SET new_email = email_address WHERE new_email IS NULL;
+- Validation: spot-check rows; both values match.
+
+Phase 3 (Contract). App version that reads only new; migration drops old.
+- Deploy app that ignores old column.
+- After full rollout, separate migration: ALTER TABLE users DROP COLUMN email_address;
+
+This is three deploys. It is slow. It is correct. The shortcut (deploy migration + new code together) loses rollback capability and breaks the rolling update.
+
+Patterns by change type:
+- Add column nullable → safe, single deploy.
+- Add column NOT NULL → expand-contract (add nullable, backfill, then NOT NULL).
+- Drop column → expand-contract (deploy code that ignores column, then drop).
+- Rename column → expand-contract twice (add new, dual-write, switch reads, drop old).
+- Change column type → typically expand-contract twice with a new column.
+- Add index → online if your DB supports it (Postgres CREATE INDEX CONCURRENTLY, MySQL pt-online-schema-change).
+- Drop index → usually safe online.
+- Rename table → expand-contract via view: create view with new name, deploy code that uses view, eventually rename and drop view.
+
+Tools that automate expand-contract:
+- Atlas migrate lint flags dangerous migrations (drop column without prior check).
+- Bytebase enforces review workflows for breaking changes.
+- gh-ost / pt-online-schema-change perform online schema changes with the rolling update pattern built in.
+
+Skipping expand-contract is the #1 cause of "we deployed and DB queries started 500-ing".`,
+      },
       {
         title: 'Online DDL and CI/CD integration',
         content: `Online DDL — running schema changes on tables under load:
@@ -11544,84 +11340,6 @@ Migration anti-patterns:
 
 Drift detection. Schema drift = prod schema diverges from migration history (manual hotfix in prod, dev-only changes leaking). Atlas, Bytebase, and Liquibase Pro detect drift. CI step that compares schema snapshots; alert on divergence.`,
       },
-      {
-        title: 'Migration tooling and the expand-contract pattern',
-        image: '/diagrams/devops/c4-db-migrations.png',
-        content: `Flyway (JVM-native, broad support):
-- Versioned SQL files (V1__init.sql, V2__add_column.sql).
-- Tracks applied migrations in flyway_schema_history table.
-- "Migrate-only" — does not generate migrations, you write the SQL.
-- Strong checksum validation (fails if a previously-applied migration was edited).
-- Best for: Java/JVM shops, polyglot teams that want plain SQL.
-
-Liquibase (XML/YAML/SQL changesets):
-- Multi-format changesets, can describe changes abstractly (Liquibase generates DB-specific SQL).
-- Stronger rollback support than Flyway (declarative reversal).
-- Heavier than Flyway; opinionated about format.
-- Best for: enterprise shops with strict change management, multi-database environments.
-
-Atlas (HCL-first, schema-as-code, 2023+):
-- Declare desired schema in HCL; Atlas computes the diff vs live DB and generates migration.
-- Built-in linting (catches dangerous migrations), migration directory + lint + apply pipeline.
-- Cloud version offers schema review in PRs.
-- Best for: teams that want Terraform-style schema-as-code; modern Postgres/MySQL/SQLite shops.
-
-Bytebase (database DevOps platform):
-- Migration platform with PR-style review workflows, RBAC, audit log.
-- Web UI for DBAs and developers to collaborate on migrations.
-- Multi-database (Postgres, MySQL, MongoDB, ClickHouse, Snowflake).
-- Best for: orgs with dedicated DBA function or compliance-heavy migration approval.
-
-Sqitch (no-config, dependency graph):
-- Plain SQL, no framework lock-in, dependency between migrations declared explicitly.
-- Smaller community but principled design.
-
-Prisma Migrate (TypeScript / ORM):
-- Tied to Prisma schema; generates migrations from schema diffs.
-- Best for: Prisma-using TypeScript apps; less compelling outside that stack.
-
-Alembic (SQLAlchemy / Python):
-- The Python equivalent of Flyway. Generates migrations from SQLAlchemy model diffs.
-- Best for: Python apps using SQLAlchemy.
-
-Expand-contract pattern (the only safe rolling-update pattern):
-
-The problem. Rolling deploys mean two app versions run simultaneously. Schema must support both. A naive "drop column" while the old version still queries it = 500s.
-
-The pattern, three deploys per breaking change:
-
-Phase 1 (Expand). Migration adds new shape, keeps old.
-- Add column: ALTER TABLE users ADD COLUMN new_email VARCHAR(255);
-- New name and old name coexist. Old code unaffected.
-
-Phase 2 (Migrate). App version that writes both old and new.
-- App writes new_email and old email_address simultaneously.
-- Backfill old rows: UPDATE users SET new_email = email_address WHERE new_email IS NULL;
-- Validation: spot-check rows; both values match.
-
-Phase 3 (Contract). App version that reads only new; migration drops old.
-- Deploy app that ignores old column.
-- After full rollout, separate migration: ALTER TABLE users DROP COLUMN email_address;
-
-This is three deploys. It is slow. It is correct. The shortcut (deploy migration + new code together) loses rollback capability and breaks the rolling update.
-
-Patterns by change type:
-- Add column nullable → safe, single deploy.
-- Add column NOT NULL → expand-contract (add nullable, backfill, then NOT NULL).
-- Drop column → expand-contract (deploy code that ignores column, then drop).
-- Rename column → expand-contract twice (add new, dual-write, switch reads, drop old).
-- Change column type → typically expand-contract twice with a new column.
-- Add index → online if your DB supports it (Postgres CREATE INDEX CONCURRENTLY, MySQL pt-online-schema-change).
-- Drop index → usually safe online.
-- Rename table → expand-contract via view: create view with new name, deploy code that uses view, eventually rename and drop view.
-
-Tools that automate expand-contract:
-- Atlas migrate lint flags dangerous migrations (drop column without prior check).
-- Bytebase enforces review workflows for breaking changes.
-- gh-ost / pt-online-schema-change perform online schema changes with the rolling update pattern built in.
-
-Skipping expand-contract is the #1 cause of "we deployed and DB queries started 500-ing".`,
-      },
     ],
     references: [
       'https://flywaydb.org/documentation/',
@@ -11642,88 +11360,6 @@ Skipping expand-contract is the #1 cause of "we deployed and DB queries started 
     description: 'The discipline of producing, signing, and shipping releases. Versioning (semver, calver), branch strategies (trunk-based vs gitflow), hotfix flow, signed artifacts, build provenance (SLSA), bill-of-materials (SBOM), release notes generation, deploy windows.',
     visualizations: [],
     topics: [
-      {
-        title: 'Build provenance, signing, and SLSA',
-        content: `Modern release engineering = supply-chain security. The shift since SolarWinds (2020) and Log4Shell (2021): every release artifact has provenance and signatures.
-
-SLSA (Supply-chain Levels for Software Artifacts) — graduated framework:
-
-Level 0: No provenance.
-
-Level 1: Provenance documented automatically during build. Can verify "which CI workflow built this".
-
-Level 2: Provenance signed and tamper-resistant. Hosted CI (GitHub Actions, GitLab CI) with workload identity (OIDC).
-
-Level 3: Provenance from hardened CI. Reusable workflows; build environment is reproducible. CI runner is isolated per build.
-
-Level 4: Reproducible builds. Two independent rebuilds from the same source produce bit-identical artifacts. Hard to achieve; few projects fully comply.
-
-Most production shops target Level 2-3. Level 1 is the floor; Level 4 is aspirational.
-
-Sigstore — the cryptographic infrastructure:
-
-cosign — sign and verify container images.
-- Keyless signing via OIDC: no long-lived signing keys; sign with the build runner's OIDC identity.
-- "cosign sign --yes ghcr.io/myorg/api:v1.2.3" — signs with workload identity.
-- Verify: "cosign verify --certificate-identity ... --certificate-oidc-issuer https://token.actions.githubusercontent.com ghcr.io/myorg/api:v1.2.3".
-
-Rekor — transparency log for signatures (Merkle tree, like CT logs for TLS).
-- Every signature recorded immutably; verifiers can check the signature was logged.
-
-Fulcio — short-lived certificate authority (10-minute certs based on OIDC identity).
-
-The chain: build runner → OIDC token → Fulcio cert → cosign sign → Rekor log entry. Verifier traverses backward.
-
-SBOM (Software Bill of Materials) — what's inside the artifact:
-
-Formats:
-- SPDX (Linux Foundation; license-focused, mature).
-- CycloneDX (OWASP; vulnerability-focused, more compact).
-
-Tools:
-- syft — generates SBOM from container images, filesystem, source.
-- cyclonedx-cli, syft, trivy can output CycloneDX.
-- bom (kubernetes-sigs) generates SPDX.
-
-What's in an SBOM: every package + version + license + supplier + checksums. Used for vulnerability matching (when a CVE drops, you query "which artifacts contain this lib?"), license compliance, and incident response.
-
-OSS Build (the supply-chain stack):
-
-\`\`\`yaml
-# .github/workflows/release.yml (sketch)
-jobs:
-  build:
-    permissions:
-      id-token: write    # for keyless cosign
-      packages: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker build -t ghcr.io/myorg/api:\${{ github.sha }} .
-      - run: docker push ghcr.io/myorg/api:\${{ github.sha }}
-      - uses: sigstore/cosign-installer@v3
-      - run: cosign sign --yes ghcr.io/myorg/api:\${{ github.sha }}
-      - uses: anchore/sbom-action@v0
-        with:
-          image: ghcr.io/myorg/api:\${{ github.sha }}
-          format: cyclonedx-json
-      - uses: slsa-framework/slsa-github-generator@v2.0.0
-        with:
-          base64-subjects: \${{ steps.hash.outputs.hashes }}
-\`\`\`yaml
-
-Verification at deploy time:
-- Admission controller (Kyverno, OPA Gatekeeper, sigstore-policy-controller) verifies image signature before scheduling pods.
-- "Only deploy images signed by our org's GHA workload" = a cluster-wide policy.
-
-Reproducible builds (SLSA Level 4):
-- Two independent rebuilds from the same source produce identical artifacts.
-- Requires fixing build timestamps, ordering, and toolchain versions.
-- Bazel + remote caching is one path; Nix + flakes is another.
-- Few projects fully achieve it; partial reproducibility is more common.
-
-The deeper point. Release engineering today is not just "tag and deploy". It's "tag, build, sign, log, SBOM, attest provenance, deploy with verification". The toolchain is mature; adoption is the friction. Get to SLSA Level 2 in a single sprint; getting to Level 3 takes a few months.`,
-      },
       {
         title: 'Versioning, branching, and the hotfix flow',
         image: '/diagrams/devops/c5-release-engineering.png',
@@ -12414,7 +12050,6 @@ Other components:
       },
       {
         title: 'Application reconciliation lifecycle — sync waves, hooks, health',
-        image: '/diagrams/devops/g2-argocd.png',
         content: `1. Trigger. Webhook from git host, polling cycle (default 3 min), or manual sync from UI/CLI.
 
 2. Fetch desired state. application-controller asks repo-server for rendered manifests at current targetRevision. repo-server clones (or uses cached repo) and renders: Helm template, Kustomize build, raw YAML, Jsonnet, or plugin.
@@ -13412,7 +13047,6 @@ Flux's UI (Weave GitOps OSS) exists but is thinner than Argo CD's. Most Flux ope
       },
       {
         title: 'Kustomization reconciliation lifecycle',
-        image: '/diagrams/devops/g3-fluxcd.png',
         content: `1. GitRepository CRD references a git URL + branch. source-controller polls every 1 minute (configurable). On new commits, fetches the tree, packages it as an artifact, stores in-cluster.
 
 2. Kustomization CRD references the GitRepository (sourceRef.name) and a path within the repo. kustomize-controller polls Kustomization CRDs every 10 minutes (configurable per CRD).
@@ -14322,6 +13956,57 @@ These are answers a Flux-fluent platform engineer should give without preparatio
     visualizations: [],
     topics: [
       {
+        title: 'App of Apps — the original recursive pattern',
+        image: '/diagrams/devops/g4-app-of-apps.png',
+        content: `Concretely, you commit a repo layout like:
+
+\`\`\`
+bootstrap/
+  root.yaml                       # the root Application
+  apps/
+    cert-manager.yaml             # child Application -> charts/cert-manager
+    external-dns.yaml             # child Application -> charts/external-dns
+    ingress-nginx.yaml            # child Application -> charts/ingress-nginx
+    monitoring.yaml               # child Application -> charts/kube-prometheus-stack
+charts/
+  cert-manager/                   # actual Helm/Kustomize manifests
+  external-dns/
+\`\`\`
+
+The root Application:
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/myorg/platform.git
+    targetRevision: main
+    path: bootstrap/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+\`\`\`yaml
+
+Argo CD applies the root, sees the children as ordinary Kubernetes resources of kind Application, and the controller takes ownership of each. From a single argocd app create root (or a manifest commit), you bootstrap an entire cluster.
+
+Why teams reached for it. Pre-ApplicationSet (Argo CD 1.x and early 2.x), there was no native loop construct. App of Apps gave you "one git push to onboard a new addon" without a templating engine. It composes well with Kustomize overlays per environment: bootstrap/overlays/prod/apps/ differs from bootstrap/overlays/staging/apps/ by a few addons, and the root targets the right overlay per cluster.
+
+Sync waves. The pattern relies on argocd.argoproj.io/sync-wave annotations to order operations: root applies in wave 0, namespaces and CRDs in wave -1 (negative numbers run earlier), addons in wave 1, workloads in wave 5. Without sync waves, the controller may try to install a Helm release before its CRDs exist, and you get spurious "no matches for kind" errors that resolve on the next sync.
+
+Recursion depth. App of Apps is recursive — a child Application can itself be an App of Apps. Three-level hierarchies are common at platform-team scale: root -> cluster-bootstrap -> per-tenant Applications. Beyond three levels, debugging which Application owns which resource gets painful and you should reach for ApplicationSet.
+
+Pruning gotcha. prune: true on the root means deleting the child manifest from git deletes the child Application — and prune on the child means the child's resources go too. Cascading prune is exactly what you want for clean teardown but is also how a botched rebase wipes prod. Argo CD 2.10+ added PruneLast=true annotations and the ServerSideApply prune-propagation policy to make this safer; pin a recent version.`,
+      },
+      {
         title: 'ApplicationSet — generators replace recursive bootstrap',
         content: `ApplicationSet, GA in Argo CD 2.3 (2022) and now the recommended path, replaces the recursive root Application with a controller that generates Applications from a templated spec. You write one ApplicationSet manifest; the controller emits N Applications, one per generator iteration, and keeps them in sync as the generator output changes.
 
@@ -14413,57 +14098,6 @@ Template determinism. Generators must produce stable output. A list generator ba
 
 Migration path. Most teams now follow this sequence: keep the bootstrap App of Apps small (Argo CD config + a couple of root ApplicationSets), move every fleet pattern to ApplicationSet, retire deep recursive App of Apps. By Argo CD 2.14 (2026) the docs explicitly recommend ApplicationSet for any fan-out larger than ~10 children.`,
       },
-      {
-        title: 'App of Apps — the original recursive pattern',
-        image: '/diagrams/devops/g4-app-of-apps.png',
-        content: `Concretely, you commit a repo layout like:
-
-\`\`\`
-bootstrap/
-  root.yaml                       # the root Application
-  apps/
-    cert-manager.yaml             # child Application -> charts/cert-manager
-    external-dns.yaml             # child Application -> charts/external-dns
-    ingress-nginx.yaml            # child Application -> charts/ingress-nginx
-    monitoring.yaml               # child Application -> charts/kube-prometheus-stack
-charts/
-  cert-manager/                   # actual Helm/Kustomize manifests
-  external-dns/
-\`\`\`
-
-The root Application:
-
-\`\`\`yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: root
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://github.com/myorg/platform.git
-    targetRevision: main
-    path: bootstrap/apps
-    directory:
-      recurse: true
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: argocd
-  syncPolicy:
-    automated: { prune: true, selfHeal: true }
-\`\`\`yaml
-
-Argo CD applies the root, sees the children as ordinary Kubernetes resources of kind Application, and the controller takes ownership of each. From a single argocd app create root (or a manifest commit), you bootstrap an entire cluster.
-
-Why teams reached for it. Pre-ApplicationSet (Argo CD 1.x and early 2.x), there was no native loop construct. App of Apps gave you "one git push to onboard a new addon" without a templating engine. It composes well with Kustomize overlays per environment: bootstrap/overlays/prod/apps/ differs from bootstrap/overlays/staging/apps/ by a few addons, and the root targets the right overlay per cluster.
-
-Sync waves. The pattern relies on argocd.argoproj.io/sync-wave annotations to order operations: root applies in wave 0, namespaces and CRDs in wave -1 (negative numbers run earlier), addons in wave 1, workloads in wave 5. Without sync waves, the controller may try to install a Helm release before its CRDs exist, and you get spurious "no matches for kind" errors that resolve on the next sync.
-
-Recursion depth. App of Apps is recursive — a child Application can itself be an App of Apps. Three-level hierarchies are common at platform-team scale: root -> cluster-bootstrap -> per-tenant Applications. Beyond three levels, debugging which Application owns which resource gets painful and you should reach for ApplicationSet.
-
-Pruning gotcha. prune: true on the root means deleting the child manifest from git deletes the child Application — and prune on the child means the child's resources go too. Cascading prune is exactly what you want for clean teardown but is also how a botched rebase wipes prod. Argo CD 2.10+ added PruneLast=true annotations and the ServerSideApply prune-propagation policy to make this safer; pin a recent version.`,
-      },
     ],
     references: [
       'https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/',
@@ -14484,40 +14118,6 @@ Pruning gotcha. prune: true on the root means deleting the child manifest from g
     description: 'Topologies for managing fleets of Kubernetes clusters from git: hub-and-spoke (one Argo CD or Flux instance managing many clusters) versus federation (per-cluster controllers reading a shared git source). Cross-cluster secrets, identity, and using GitOps as the cluster-bootstrap mechanism for disaster recovery.',
     visualizations: [],
     topics: [
-      {
-        title: 'Cluster generators, Flux multi-tenancy, and cross-cluster secrets',
-        content: `Argo CD ApplicationSet cluster generator reads cluster Secrets in the argocd namespace and emits one Application per matching cluster. Selectors filter on labels added at registration time. Cluster onboarding becomes "kubectl apply a cluster Secret with the right labels" — typically via Crossplane, Cluster API, or a Terraform module that registers the cluster after provisioning.
-
-Flux multi-tenancy uses one bootstrap per cluster:
-
-\`\`\`bash
-flux bootstrap github --owner=myorg --repository=fleet \\
-  --branch=main --path=clusters/prod-us-east-1 --personal
-\`\`\`yaml
-
-Each cluster gets its own path under clusters/. The path's kustomization.yaml composes the addons and tenant Kustomizations for that cluster. Flux's Kustomization CRD has a path field that scopes reconciliation, and postBuild.substitute injects cluster-identifying values without templating engines.
-
-Tenant isolation. Flux multi-tenancy lockdown ships with three guarantees:
-- spec.serviceAccountName on a Kustomization forces it to apply with a specific ServiceAccount, scoping its RBAC. Without it, Kustomizations apply with cluster-admin via the flux-system controller. Setting per-tenant SAs is the single most important hardening step.
-- --no-cross-namespace-refs on each Flux controller prevents one tenant's Kustomization from referring to another tenant's GitRepository.
-- --default-service-account=flux-tenant makes the cluster reject Kustomizations that don't specify a SA at all.
-
-These flags have been the documented multi-tenant baseline since Flux 2.0 (2022) and are the GA pattern through Flux 2.4 (early 2026).
-
-Cross-cluster secrets — the four common patterns:
-
-External Secrets Operator (ESO). Most popular pattern in 2025-2026. Each cluster runs ESO; ESO reads from a central secret backend (AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, Azure Key Vault, 1Password, Doppler) and materialises Kubernetes Secrets locally. The ExternalSecret CRD is committed to git; the actual secret value is not. Per-cluster authentication uses workload identity (IRSA on EKS, Workload Identity on GKE/AKS) so each cluster gets only its own scope.
-
-Sealed Secrets (Bitnami, joined CNCF Sandbox 2022). Each cluster has a controller with its own keypair; you encrypt a Secret manifest with that public key (kubeseal) and commit the SealedSecret to git. Only that cluster can decrypt. Properties: secret material lives in git (encrypted), no central secret backend required, key rotation is a real ceremony. Best for small fleets or air-gapped clusters.
-
-SPIFFE/SPIRE for workload identity. Distribute SVIDs and let workloads authenticate with their identity rather than shared secrets. mTLS to a database via a SPIRE-issued cert; no shared password. Adoption growing through 2025-2026 with cert-manager-csi-driver-spiffe and Istio's SPIRE integration. Higher operational floor than ESO; pays back when you have many cross-cluster service-to-service calls.
-
-HashiCorp Vault Agent Injector. Vault sidecar injects secrets at pod start. Long-standing enterprise pattern; ESO has eaten much of its market for new deployments because ESO is git-native and the ExternalSecret CRD is auditable.
-
-Anti-pattern: putting plaintext Secrets in git. Sometimes done with private repos and the rationalisation that "the repo is private". This conflates access control with encryption. Don't.
-
-Disaster recovery — GitOps as cluster bootstrap. The promise: cluster destroyed, recovery is "create empty cluster, point GitOps controller at fleet repo, wait." Achieving this requires: cluster provisioning is itself codified (Terraform, Crossplane, Cluster API), bootstrap step installs Argo CD or Flux (flux bootstrap, argocd-autopilot), addons install first via sync-waves, stateful data is out of scope (restored via Velero, application-level backup), secrets bootstrapping handles the chicken-and-egg (provisioning Terraform creates OIDC provider and IRSA role; GitOps installs ESO which reads secrets). Time-to-recovery: ~15 minutes from "cluster created" to "all addons healthy" on EKS, no stateful workloads.`,
-      },
       {
         title: 'Hub-and-spoke versus federated GitOps topologies',
         image: '/diagrams/devops/g5-multi-cluster.png',
@@ -14569,6 +14169,40 @@ Argo CD multi-cluster ApplicationSet pattern:
 
 Diagram source: KubeDiagrams (Apache 2.0) — generated from Gateway API multicluster examples.`,
       },
+      {
+        title: 'Cluster generators, Flux multi-tenancy, and cross-cluster secrets',
+        content: `Argo CD ApplicationSet cluster generator reads cluster Secrets in the argocd namespace and emits one Application per matching cluster. Selectors filter on labels added at registration time. Cluster onboarding becomes "kubectl apply a cluster Secret with the right labels" — typically via Crossplane, Cluster API, or a Terraform module that registers the cluster after provisioning.
+
+Flux multi-tenancy uses one bootstrap per cluster:
+
+\`\`\`bash
+flux bootstrap github --owner=myorg --repository=fleet \\
+  --branch=main --path=clusters/prod-us-east-1 --personal
+\`\`\`yaml
+
+Each cluster gets its own path under clusters/. The path's kustomization.yaml composes the addons and tenant Kustomizations for that cluster. Flux's Kustomization CRD has a path field that scopes reconciliation, and postBuild.substitute injects cluster-identifying values without templating engines.
+
+Tenant isolation. Flux multi-tenancy lockdown ships with three guarantees:
+- spec.serviceAccountName on a Kustomization forces it to apply with a specific ServiceAccount, scoping its RBAC. Without it, Kustomizations apply with cluster-admin via the flux-system controller. Setting per-tenant SAs is the single most important hardening step.
+- --no-cross-namespace-refs on each Flux controller prevents one tenant's Kustomization from referring to another tenant's GitRepository.
+- --default-service-account=flux-tenant makes the cluster reject Kustomizations that don't specify a SA at all.
+
+These flags have been the documented multi-tenant baseline since Flux 2.0 (2022) and are the GA pattern through Flux 2.4 (early 2026).
+
+Cross-cluster secrets — the four common patterns:
+
+External Secrets Operator (ESO). Most popular pattern in 2025-2026. Each cluster runs ESO; ESO reads from a central secret backend (AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, Azure Key Vault, 1Password, Doppler) and materialises Kubernetes Secrets locally. The ExternalSecret CRD is committed to git; the actual secret value is not. Per-cluster authentication uses workload identity (IRSA on EKS, Workload Identity on GKE/AKS) so each cluster gets only its own scope.
+
+Sealed Secrets (Bitnami, joined CNCF Sandbox 2022). Each cluster has a controller with its own keypair; you encrypt a Secret manifest with that public key (kubeseal) and commit the SealedSecret to git. Only that cluster can decrypt. Properties: secret material lives in git (encrypted), no central secret backend required, key rotation is a real ceremony. Best for small fleets or air-gapped clusters.
+
+SPIFFE/SPIRE for workload identity. Distribute SVIDs and let workloads authenticate with their identity rather than shared secrets. mTLS to a database via a SPIRE-issued cert; no shared password. Adoption growing through 2025-2026 with cert-manager-csi-driver-spiffe and Istio's SPIRE integration. Higher operational floor than ESO; pays back when you have many cross-cluster service-to-service calls.
+
+HashiCorp Vault Agent Injector. Vault sidecar injects secrets at pod start. Long-standing enterprise pattern; ESO has eaten much of its market for new deployments because ESO is git-native and the ExternalSecret CRD is auditable.
+
+Anti-pattern: putting plaintext Secrets in git. Sometimes done with private repos and the rationalisation that "the repo is private". This conflates access control with encryption. Don't.
+
+Disaster recovery — GitOps as cluster bootstrap. The promise: cluster destroyed, recovery is "create empty cluster, point GitOps controller at fleet repo, wait." Achieving this requires: cluster provisioning is itself codified (Terraform, Crossplane, Cluster API), bootstrap step installs Argo CD or Flux (flux bootstrap, argocd-autopilot), addons install first via sync-waves, stateful data is out of scope (restored via Velero, application-level backup), secrets bootstrapping handles the chicken-and-egg (provisioning Terraform creates OIDC provider and IRSA role; GitOps installs ESO which reads secrets). Time-to-recovery: ~15 minutes from "cluster created" to "all addons healthy" on EKS, no stateful workloads.`,
+      },
     ],
     references: [
       'https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#clusters',
@@ -14589,6 +14223,25 @@ Diagram source: KubeDiagrams (Apache 2.0) — generated from Gateway API multicl
     description: 'Drift is when cluster state diverges from git — a kubectl edit hotfix, a mutating admission webhook, a partial sync failure, or an operator reconciling its own CRs. How Argo CD self-heal and Flux automation detect and correct drift, when auto-heal is wrong (operator-managed CRs, Helm post-render mutations), and the tooling for diffing live state against git.',
     visualizations: [],
     topics: [
+      {
+        title: 'What drift is and where it comes from',
+        image: '/diagrams/devops/g6-gitops-drift.png',
+        content: `Source 1: human imperative changes. The classic case. An on-call engineer runs kubectl edit deploy/api to bump replicas during an incident, fixes the immediate problem, and forgets to commit the change. On the next reconcile, the controller reports drift. Argo CD with selfHeal enabled rolls back the replicas to git's value — sometimes during the same incident, sometimes hours later. Either way the operator's hotfix vanishes and the incident reopens. The healthy pattern: imperative changes are allowed but must be followed by a PR within minutes; auto-heal is off for production until the change has merged.
+
+Source 2: mutating admission webhooks. Linkerd injects a sidecar; Istio injects an envoy; Kyverno mutates labels; OPA Gatekeeper adds defaults; cloud-provider webhooks add nodeSelectors. The controller applies pod spec X; the cluster stores pod spec X-plus-mutations. On next compare, the controller sees difference and considers the resource OutOfSync. Argo CD has ignoreDifferences (and the newer respectIgnoreDifferences flag, 2.10+) precisely for this: declare which fields are owned by webhooks and skip them in the diff.
+
+Source 3: operators that mutate their own CRs. The cert-manager Certificate CR is created by you from git; cert-manager updates its .status and sometimes adds annotations. Argo CD by default ignores .status. Flux Kustomization with prune: true correctly leaves these alone. Trickier case: Helm operator-installed charts where the operator mutates fields in the rendered Deployment (Strimzi, ArgoCD itself, Crossplane providers). Without explicit ignoreDifferences, the controller fights the operator forever.
+
+Source 4: partial sync failure. Argo CD applies 50 manifests; 49 succeed, 1 fails on a webhook timeout. Cluster state is now neither the previous version nor the new version. Status is OutOfSync with a sync error. Both controllers retry; eventually it converges, but during the gap drift is real.
+
+Source 5: HPA, VPA, and other autoscalers. The Horizontal Pod Autoscaler updates Deployment.spec.replicas continuously based on load. If git declares replicas: 3 and HPA wants 17, the controller sees drift on every reconcile. Mitigation: omit spec.replicas from the git manifest and let HPA own it; use the controller's ignoreDifferences for the field. Argo CD added a built-in spec.replicas ignore for HorizontalPodAutoscaler-targeted Deployments in 2.10.
+
+Source 6: cluster-scoped defaults. Namespaces' default LimitRange or ResourceQuota mutates pod specs. Default StorageClass changes a PVC's storageClassName from "" to "gp3". Many of these mutations look like drift but are part of the cluster's intentional behaviour.
+
+Source 7: external systems writing to the cluster. ExternalDNS updates Service annotations. cert-manager mutates Ingress annotations. AWS Load Balancer Controller adds finalizers and annotations. Each is legitimate, each looks like drift to a naive controller.
+
+The honest taxonomy. Drift falls into two buckets: drift the controller should correct (human imperative changes that should have been a PR) and drift the controller should tolerate (mutations from cooperating systems). The configuration burden is enumerating the second bucket; the operational burden is making sure auto-heal is turned on only where the first bucket dominates.`,
+      },
       {
         title: 'Argo CD selfHeal versus Flux automation, and detection tooling',
         content: `Both controllers detect drift on every reconcile; they differ in how aggressively they correct it.
@@ -14661,25 +14314,6 @@ Helm release ownership. helm install outside of GitOps, then GitOps tries to ado
 Pre-existing cluster resources. A cluster with manually-created namespaces predates the GitOps adoption. The fleet repo declares those namespaces. GitOps will try to "adopt" them; depending on the version, it might delete and recreate (disastrous if there are PVCs) or annotate-and-keep. The conservative path is to import existing resources by hand-applying the GitOps annotations before the first reconcile.
 
 The discipline. Auto-heal is correct for stateless workloads in stable namespaces with no operator interference. Mature platform teams turn it on per-environment and per-namespace, not blanket fleet-wide. The audit log of auto-heal events is itself a valuable signal: a sudden spike in auto-heals on a given Application is usually a webhook misconfiguration, not a hostile actor.`,
-      },
-      {
-        title: 'What drift is and where it comes from',
-        image: '/diagrams/devops/g6-gitops-drift.png',
-        content: `Source 1: human imperative changes. The classic case. An on-call engineer runs kubectl edit deploy/api to bump replicas during an incident, fixes the immediate problem, and forgets to commit the change. On the next reconcile, the controller reports drift. Argo CD with selfHeal enabled rolls back the replicas to git's value — sometimes during the same incident, sometimes hours later. Either way the operator's hotfix vanishes and the incident reopens. The healthy pattern: imperative changes are allowed but must be followed by a PR within minutes; auto-heal is off for production until the change has merged.
-
-Source 2: mutating admission webhooks. Linkerd injects a sidecar; Istio injects an envoy; Kyverno mutates labels; OPA Gatekeeper adds defaults; cloud-provider webhooks add nodeSelectors. The controller applies pod spec X; the cluster stores pod spec X-plus-mutations. On next compare, the controller sees difference and considers the resource OutOfSync. Argo CD has ignoreDifferences (and the newer respectIgnoreDifferences flag, 2.10+) precisely for this: declare which fields are owned by webhooks and skip them in the diff.
-
-Source 3: operators that mutate their own CRs. The cert-manager Certificate CR is created by you from git; cert-manager updates its .status and sometimes adds annotations. Argo CD by default ignores .status. Flux Kustomization with prune: true correctly leaves these alone. Trickier case: Helm operator-installed charts where the operator mutates fields in the rendered Deployment (Strimzi, ArgoCD itself, Crossplane providers). Without explicit ignoreDifferences, the controller fights the operator forever.
-
-Source 4: partial sync failure. Argo CD applies 50 manifests; 49 succeed, 1 fails on a webhook timeout. Cluster state is now neither the previous version nor the new version. Status is OutOfSync with a sync error. Both controllers retry; eventually it converges, but during the gap drift is real.
-
-Source 5: HPA, VPA, and other autoscalers. The Horizontal Pod Autoscaler updates Deployment.spec.replicas continuously based on load. If git declares replicas: 3 and HPA wants 17, the controller sees drift on every reconcile. Mitigation: omit spec.replicas from the git manifest and let HPA own it; use the controller's ignoreDifferences for the field. Argo CD added a built-in spec.replicas ignore for HorizontalPodAutoscaler-targeted Deployments in 2.10.
-
-Source 6: cluster-scoped defaults. Namespaces' default LimitRange or ResourceQuota mutates pod specs. Default StorageClass changes a PVC's storageClassName from "" to "gp3". Many of these mutations look like drift but are part of the cluster's intentional behaviour.
-
-Source 7: external systems writing to the cluster. ExternalDNS updates Service annotations. cert-manager mutates Ingress annotations. AWS Load Balancer Controller adds finalizers and annotations. Each is legitimate, each looks like drift to a naive controller.
-
-The honest taxonomy. Drift falls into two buckets: drift the controller should correct (human imperative changes that should have been a PR) and drift the controller should tolerate (mutations from cooperating systems). The configuration burden is enumerating the second bucket; the operational burden is making sure auto-heal is turned on only where the first bucket dominates.`,
       },
     ],
     references: [
@@ -15192,34 +14826,6 @@ Common pitfalls:
     visualizations: [],
     topics: [
       {
-        title: 'Tradeoffs, anti-patterns, stateful corner cases',
-        content: `Anti-pattern 1: "Immutable" images that aren't deterministic. FROM ubuntu:latest, apt-get install without version pin, pip install without lock file. Two builds an hour apart can produce different images. Fix: pin everything.
-
-Anti-pattern 2: Mutating "immutable" images. Teams that say "we're immutable" but SSH into production hosts to fix things. This is mutable infrastructure with extra steps. Two enforcement levers: no SSH to production (replace with break-glass tooling like AWS SSM Session Manager, Teleport), read-only root filesystem.
-
-Anti-pattern 3: Image sprawl without lifecycle. Every CI run pushes a new image; nothing ever deletes anything. ECR / GCR storage costs grow linearly forever. Fix: lifecycle policies on day one — keep last N production images, expire untagged after X days.
-
-Anti-pattern 4: Treating database hosts as immutable. You can replace a stateless web server. Replacing a database means moving 200 GB of data. Patterns that work: compute / storage separation, operator-managed stateful workloads (CloudNativePG, Crunchy, Zalando), managed services (RDS, Cloud SQL).
-
-Anti-pattern 5: Long bake times that block emergencies. If "patch the TLS cert in prod" requires a 30-minute Packer rebuild, you have an incident-response problem. Mitigations: hot config injection (certs / secrets from Vault, Secrets Manager at boot), layered images, emergency RW mode with strict audit.
-
-Cost / complexity tradeoffs:
-- Storage scales with deploy frequency × image count × image size. Mitigations: layered images, lifecycle policies.
-- Build infrastructure needs beefy CI runners. Self-hosted ARC runners on K8s scale better.
-- Network egress for image pulls. Mitigations: per-region registries (ECR replication, Harbor), pull-through caches.
-- Cold-start time. New instance from AMI = boot + cloud-init + app start. Mitigations: pre-warmed pools.
-
-Security tradeoffs. Immutable improves security in steady state but creates risk if image build pipelines are compromised. The supply chain becomes the attack target. Mitigations: signed images (cosign), SLSA-attested builds, build-time SBOM generation, separation of build / sign / deploy credentials.
-
-The 2026 patterns:
-- Build pipeline standardization. Packer for VM images, Docker buildx / kaniko for containers, sigstore for signing, syft for SBOMs, Trivy / Grype for scanning, OPA / Kyverno for admission policies that block unsigned or unscanned images.
-- Talos / Bottlerocket as the K8s node OS. Mainstream on EKS / GKE / AKS for new deployments.
-- Immutable everywhere except where it breaks. Compute is immutable; data layer is mutable but isolated. Don't fight statefulness; fence it.
-- GitOps for deploy artifacts. Image references in Kustomize / Helm / Argo CD manifests in Git.
-
-The deeper point. Immutable infrastructure is the operational model that K8s, modern AWS, and most platform-engineering practice converge toward. The tradeoffs are real (build cycle time, storage, stateful awkwardness) but the benefits — drift-free fleets, predictable rollback, auditable artifacts — compound over time.`,
-      },
-      {
         title: 'The principle and the build pipeline',
         image: '/diagrams/devops/e3-immutable.png',
         content: `The term was popularized by Chad Fowler in 2013 ("Trash Your Servers and Burn Your Code"); the practice predates the term, going back to AMI-based deployments at Netflix and Etsy in the late 2000s.
@@ -15293,6 +14899,34 @@ Flatcar (Microsoft). CoreOS Container Linux fork. Auto-updating image-based Linu
 
 The trend: K8s-node OSes are moving toward "minimal, immutable, A/B-update, no SSH".`,
       },
+      {
+        title: 'Tradeoffs, anti-patterns, stateful corner cases',
+        content: `Anti-pattern 1: "Immutable" images that aren't deterministic. FROM ubuntu:latest, apt-get install without version pin, pip install without lock file. Two builds an hour apart can produce different images. Fix: pin everything.
+
+Anti-pattern 2: Mutating "immutable" images. Teams that say "we're immutable" but SSH into production hosts to fix things. This is mutable infrastructure with extra steps. Two enforcement levers: no SSH to production (replace with break-glass tooling like AWS SSM Session Manager, Teleport), read-only root filesystem.
+
+Anti-pattern 3: Image sprawl without lifecycle. Every CI run pushes a new image; nothing ever deletes anything. ECR / GCR storage costs grow linearly forever. Fix: lifecycle policies on day one — keep last N production images, expire untagged after X days.
+
+Anti-pattern 4: Treating database hosts as immutable. You can replace a stateless web server. Replacing a database means moving 200 GB of data. Patterns that work: compute / storage separation, operator-managed stateful workloads (CloudNativePG, Crunchy, Zalando), managed services (RDS, Cloud SQL).
+
+Anti-pattern 5: Long bake times that block emergencies. If "patch the TLS cert in prod" requires a 30-minute Packer rebuild, you have an incident-response problem. Mitigations: hot config injection (certs / secrets from Vault, Secrets Manager at boot), layered images, emergency RW mode with strict audit.
+
+Cost / complexity tradeoffs:
+- Storage scales with deploy frequency × image count × image size. Mitigations: layered images, lifecycle policies.
+- Build infrastructure needs beefy CI runners. Self-hosted ARC runners on K8s scale better.
+- Network egress for image pulls. Mitigations: per-region registries (ECR replication, Harbor), pull-through caches.
+- Cold-start time. New instance from AMI = boot + cloud-init + app start. Mitigations: pre-warmed pools.
+
+Security tradeoffs. Immutable improves security in steady state but creates risk if image build pipelines are compromised. The supply chain becomes the attack target. Mitigations: signed images (cosign), SLSA-attested builds, build-time SBOM generation, separation of build / sign / deploy credentials.
+
+The 2026 patterns:
+- Build pipeline standardization. Packer for VM images, Docker buildx / kaniko for containers, sigstore for signing, syft for SBOMs, Trivy / Grype for scanning, OPA / Kyverno for admission policies that block unsigned or unscanned images.
+- Talos / Bottlerocket as the K8s node OS. Mainstream on EKS / GKE / AKS for new deployments.
+- Immutable everywhere except where it breaks. Compute is immutable; data layer is mutable but isolated. Don't fight statefulness; fence it.
+- GitOps for deploy artifacts. Image references in Kustomize / Helm / Argo CD manifests in Git.
+
+The deeper point. Immutable infrastructure is the operational model that K8s, modern AWS, and most platform-engineering practice converge toward. The tradeoffs are real (build cycle time, storage, stateful awkwardness) but the benefits — drift-free fleets, predictable rollback, auditable artifacts — compound over time.`,
+      },
     ],
     references: [
       'https://www.packer.io/docs',
@@ -15313,6 +14947,69 @@ The trend: K8s-node OSes are moving toward "minimal, immutable, A/B-update, no S
     description: 'SSH-based agentless configuration management from Red Hat. YAML playbooks, idempotent modules, dynamic inventory, Roles and Collections via Galaxy, ansible-vault for secrets, and AWX / Ansible Automation Platform for execution at scale.',
     visualizations: [],
     topics: [
+      {
+        title: 'Ansible model — agentless, push-based, YAML-declarative',
+        image: '/diagrams/devops/e1-ansible.png',
+        content: `Push, not pull. The control node opens an SSH connection to each managed node, copies a Python module to /tmp on the target, executes it with the right arguments, collects JSON output, then deletes it. WinRM is used for Windows targets. There is no daemon on the managed node — only Python (and on Windows, PowerShell).
+
+Idempotent modules. Each module (file, copy, template, package, service, user, lineinfile, blockinfile, systemd, etc.) reports changed: true / false. A second run on a converged host produces all changed: false — that is the convergence guarantee. Modules are written to be safe to re-run, not "create then fail because exists".
+
+Declarative-ish. Playbooks describe desired state but are executed top-to-bottom in order; tasks see the host's state from previous tasks within the same play. This is "ordered declarative", not pure declarative like Terraform's graph.
+
+Inventory. The list of hosts plus per-host / per-group variables.
+- Static INI: hosts.ini with [web], [db], [web:vars] sections. Smallest setup.
+- Static YAML: same idea, nested groups, easier to template.
+- Dynamic plugins: aws_ec2, gcp_compute, azure_rm, vmware_vm_inventory, kubernetes.core.k8s, netbox.netbox.nb_inventory. Inventory is generated on every run from the cloud / source-of-truth, so adding an EC2 instance with the right tag means it shows up in the next ansible-playbook run with no edit.
+- Constructed plugin layers groups on top (e.g. group hosts by tag.environment).
+
+A minimal play:
+
+\`\`\`yaml
+- name: Configure web tier
+  hosts: web
+  become: true
+  vars:
+    nginx_version: '1.27.3'
+  tasks:
+    - name: Install nginx
+      ansible.builtin.package:
+        name: "nginx={{ nginx_version }}"
+        state: present
+    - name: Render nginx.conf
+      ansible.builtin.template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        mode: '0644'
+      notify: reload nginx
+  handlers:
+    - name: reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+\`\`\`yaml
+
+Handlers fire only if a notifying task reported changed: true, and only once at end of play.
+
+Variables and precedence. Ansible has 22 documented levels of variable precedence (command-line extra-vars highest, role defaults lowest). The sane subset:
+- group_vars/all.yml — defaults for every host.
+- group_vars/<group>.yml — per-environment / per-tier overrides.
+- host_vars/<host>.yml — per-host overrides (rare; usually a smell).
+- Role defaults — what the role assumes if nothing else is set.
+- --extra-vars on command line — emergency override.
+
+If you find yourself fighting precedence, you have too many layers; flatten.
+
+Ansible Facts. ansible.builtin.setup runs at play start and gathers ~500 facts per host (OS, network interfaces, mounts, packages). Cached optionally in Redis / JSON files for fact_caching to skip the gather on subsequent runs.
+
+Performance. SSH + Python is slower than agent-based pull. Mitigations:
+- Mitogen plugin (3-7x speedup via SSH multiplexing + Python interpreter reuse) — popular but unmaintained as of 2025; use with caution.
+- pipelining: true in ansible.cfg eliminates the temp-file copy step.
+- forks = 50 or higher for fan-out. Default 5 is conservative.
+- Async tasks (async: 300, poll: 0) for long-running operations.
+
+Even with all tuning, 1000+ hosts in a single play is slower than Puppet/Salt's pull model. For that scale, AWX / AAP shards execution across multiple control nodes.`,
+      },
       {
         title: 'Roles, Collections, Galaxy, ansible-vault, AWX/AAP',
         content: `Roles. A directory layout convention for reusable units:
@@ -15381,69 +15078,6 @@ Common pitfalls:
 - Massive monolithic playbooks. Split by tier, use import_playbook for orchestration.
 - Storing secrets in ansible-vault but committing the vault password to the same repo.`,
       },
-      {
-        title: 'Ansible model — agentless, push-based, YAML-declarative',
-        image: '/diagrams/devops/e1-ansible.png',
-        content: `Push, not pull. The control node opens an SSH connection to each managed node, copies a Python module to /tmp on the target, executes it with the right arguments, collects JSON output, then deletes it. WinRM is used for Windows targets. There is no daemon on the managed node — only Python (and on Windows, PowerShell).
-
-Idempotent modules. Each module (file, copy, template, package, service, user, lineinfile, blockinfile, systemd, etc.) reports changed: true / false. A second run on a converged host produces all changed: false — that is the convergence guarantee. Modules are written to be safe to re-run, not "create then fail because exists".
-
-Declarative-ish. Playbooks describe desired state but are executed top-to-bottom in order; tasks see the host's state from previous tasks within the same play. This is "ordered declarative", not pure declarative like Terraform's graph.
-
-Inventory. The list of hosts plus per-host / per-group variables.
-- Static INI: hosts.ini with [web], [db], [web:vars] sections. Smallest setup.
-- Static YAML: same idea, nested groups, easier to template.
-- Dynamic plugins: aws_ec2, gcp_compute, azure_rm, vmware_vm_inventory, kubernetes.core.k8s, netbox.netbox.nb_inventory. Inventory is generated on every run from the cloud / source-of-truth, so adding an EC2 instance with the right tag means it shows up in the next ansible-playbook run with no edit.
-- Constructed plugin layers groups on top (e.g. group hosts by tag.environment).
-
-A minimal play:
-
-\`\`\`yaml
-- name: Configure web tier
-  hosts: web
-  become: true
-  vars:
-    nginx_version: '1.27.3'
-  tasks:
-    - name: Install nginx
-      ansible.builtin.package:
-        name: "nginx={{ nginx_version }}"
-        state: present
-    - name: Render nginx.conf
-      ansible.builtin.template:
-        src: templates/nginx.conf.j2
-        dest: /etc/nginx/nginx.conf
-        owner: root
-        mode: '0644'
-      notify: reload nginx
-  handlers:
-    - name: reload nginx
-      ansible.builtin.service:
-        name: nginx
-        state: reloaded
-\`\`\`yaml
-
-Handlers fire only if a notifying task reported changed: true, and only once at end of play.
-
-Variables and precedence. Ansible has 22 documented levels of variable precedence (command-line extra-vars highest, role defaults lowest). The sane subset:
-- group_vars/all.yml — defaults for every host.
-- group_vars/<group>.yml — per-environment / per-tier overrides.
-- host_vars/<host>.yml — per-host overrides (rare; usually a smell).
-- Role defaults — what the role assumes if nothing else is set.
-- --extra-vars on command line — emergency override.
-
-If you find yourself fighting precedence, you have too many layers; flatten.
-
-Ansible Facts. ansible.builtin.setup runs at play start and gathers ~500 facts per host (OS, network interfaces, mounts, packages). Cached optionally in Redis / JSON files for fact_caching to skip the gather on subsequent runs.
-
-Performance. SSH + Python is slower than agent-based pull. Mitigations:
-- Mitogen plugin (3-7x speedup via SSH multiplexing + Python interpreter reuse) — popular but unmaintained as of 2025; use with caution.
-- pipelining: true in ansible.cfg eliminates the temp-file copy step.
-- forks = 50 or higher for fan-out. Default 5 is conservative.
-- Async tasks (async: 300, poll: 0) for long-running operations.
-
-Even with all tuning, 1000+ hosts in a single play is slower than Puppet/Salt's pull model. For that scale, AWX / AAP shards execution across multiple control nodes.`,
-      },
     ],
     references: [
       'https://docs.ansible.com/ansible/latest/index.html',
@@ -15464,51 +15098,6 @@ Even with all tuning, 1000+ hosts in a single play is slower than Puppet/Salt's 
     description: 'The pre-Ansible / pre-Kubernetes generation of config management. Puppet (Ruby DSL, master/agent), Chef (Ruby cookbooks, Knife, Test Kitchen), Salt (Python, master/minion ZeroMQ). Mortality watch, license changes, and migration paths in 2026.',
     visualizations: [],
     topics: [
-      {
-        title: 'Migration paths off Puppet / Chef / Salt',
-        content: `Most teams that own Puppet / Chef / Salt code in 2026 are evaluating where to go. The realistic options:
-
-Option 1: Stay. The cheapest path. Puppet 8 and Chef Infra 18 still receive patches; Salt 3007 is current. The risk is talent — finding engineers who know Puppet DSL or Chef Ruby cookbooks gets harder every year. Expect 30-50% pay premium for a Puppet-fluent engineer in 2026 vs an Ansible-fluent one.
-
-Option 2: Migrate to Ansible. The most common destination. Why:
-- YAML is more accessible than Puppet DSL or Ruby.
-- Agentless eliminates the master/agent operational tax.
-- Ad-hoc remediation is much easier.
-- Network device automation comes free.
-
-Process is incremental:
-1. Inventory all Puppet manifests / Chef cookbooks; categorize by criticality.
-2. Convert the simplest first — package install, file management, service. Map nearly 1:1 to Ansible modules.
-3. Convert templated configs.
-4. Hardest: idiomatic Puppet defined types or Chef LWRPs — these are real custom logic that needs rewriting as Ansible modules / roles.
-5. Run both in parallel during migration; cut over per-role, not per-host.
-
-No turnkey converter exists; the data extraction is mechanical, the logic conversion is human.
-
-Option 3: Move to Kubernetes. Skip host-level config management entirely. Bake an OS image with cloud-init / Packer for the K8s nodes; manage everything else as containers + Helm / Kustomize / Argo CD manifests. Right move when: workload is stateless or already containerized, team can absorb K8s operational learning curve, new compute being provisioned anyway. Wrong move when: workload is stateful in ways that don't translate, fleet is heterogeneous.
-
-Option 4: Move to immutable infrastructure (Packer / AMIs). Bake images, replace instances, retire config management entirely. Works best for stateless or 12-factor; works poorly when local state on hosts is part of the design.
-
-Option 5: Cinc (for Chef shops). Drop-in OSS replacement. Same code, same cookbooks, same Knife CLI; just replaces the binary. Right call when you have heavy Chef investment, can't justify migration cost, want to escape commercial Chef licensing.
-
-Option 6: Hybrid. Run K8s for new workloads, keep Puppet / Chef / Salt for the legacy fleet that won't move. What most large enterprises actually do.
-
-Common migration anti-patterns:
-- Big-bang rewrites (rewrite all 200 modules in 6 months). Always over-runs; teams burn out.
-- Treating Ansible as Puppet-with-different-syntax. The idioms differ.
-- Migrating data without rationalizing it. Hiera trees with 10 levels of inheritance translate to Ansible group_vars hell. Flatten on migration.
-- Underestimating testing. Test Kitchen / rspec-puppet have no Ansible equivalent at the same fidelity.
-- Forgetting the secrets path. Hiera-eyaml / Chef encrypted data bags / Salt pillar GPG don't trivially map to ansible-vault.
-
-The realistic timeline. Migrating a meaningful Puppet / Chef / Salt estate (50+ modules, mature CI, multiple environments) to Ansible takes 9-18 months for a 2-3 person platform team.
-
-The deeper point. Puppet, Chef, and Salt are not bad tools — they were great for their era and remain capable today. They are losing not on technical merit but on:
-- Corporate sponsor turbulence (Perforce, Progress, Broadcom).
-- Generational change (engineers under 30 mostly haven't used them).
-- The K8s eclipse (most new compute doesn't need host-level config).
-
-Plan migrations on this basis, not on "tool X is bad". Pick the destination that fits your future workload, not the most fashionable one.`,
-      },
       {
         title: 'Puppet, Chef, Salt — architectures and current state',
         image: '/diagrams/devops/e2-pcs.png',
@@ -15559,6 +15148,51 @@ Ownership. SaltStack acquired by VMware in 2020, which was acquired by Broadcom 
 Mortality watch. Salt has the smallest user base of the three and the most uncertain corporate sponsor.
 
 The 2026 picture: Puppet, Chef, Salt are all legacy-tool territory. Maintenance, not greenfield. Most new infra avoids host-level config management entirely by running in containers on Kubernetes.`,
+      },
+      {
+        title: 'Migration paths off Puppet / Chef / Salt',
+        content: `Most teams that own Puppet / Chef / Salt code in 2026 are evaluating where to go. The realistic options:
+
+Option 1: Stay. The cheapest path. Puppet 8 and Chef Infra 18 still receive patches; Salt 3007 is current. The risk is talent — finding engineers who know Puppet DSL or Chef Ruby cookbooks gets harder every year. Expect 30-50% pay premium for a Puppet-fluent engineer in 2026 vs an Ansible-fluent one.
+
+Option 2: Migrate to Ansible. The most common destination. Why:
+- YAML is more accessible than Puppet DSL or Ruby.
+- Agentless eliminates the master/agent operational tax.
+- Ad-hoc remediation is much easier.
+- Network device automation comes free.
+
+Process is incremental:
+1. Inventory all Puppet manifests / Chef cookbooks; categorize by criticality.
+2. Convert the simplest first — package install, file management, service. Map nearly 1:1 to Ansible modules.
+3. Convert templated configs.
+4. Hardest: idiomatic Puppet defined types or Chef LWRPs — these are real custom logic that needs rewriting as Ansible modules / roles.
+5. Run both in parallel during migration; cut over per-role, not per-host.
+
+No turnkey converter exists; the data extraction is mechanical, the logic conversion is human.
+
+Option 3: Move to Kubernetes. Skip host-level config management entirely. Bake an OS image with cloud-init / Packer for the K8s nodes; manage everything else as containers + Helm / Kustomize / Argo CD manifests. Right move when: workload is stateless or already containerized, team can absorb K8s operational learning curve, new compute being provisioned anyway. Wrong move when: workload is stateful in ways that don't translate, fleet is heterogeneous.
+
+Option 4: Move to immutable infrastructure (Packer / AMIs). Bake images, replace instances, retire config management entirely. Works best for stateless or 12-factor; works poorly when local state on hosts is part of the design.
+
+Option 5: Cinc (for Chef shops). Drop-in OSS replacement. Same code, same cookbooks, same Knife CLI; just replaces the binary. Right call when you have heavy Chef investment, can't justify migration cost, want to escape commercial Chef licensing.
+
+Option 6: Hybrid. Run K8s for new workloads, keep Puppet / Chef / Salt for the legacy fleet that won't move. What most large enterprises actually do.
+
+Common migration anti-patterns:
+- Big-bang rewrites (rewrite all 200 modules in 6 months). Always over-runs; teams burn out.
+- Treating Ansible as Puppet-with-different-syntax. The idioms differ.
+- Migrating data without rationalizing it. Hiera trees with 10 levels of inheritance translate to Ansible group_vars hell. Flatten on migration.
+- Underestimating testing. Test Kitchen / rspec-puppet have no Ansible equivalent at the same fidelity.
+- Forgetting the secrets path. Hiera-eyaml / Chef encrypted data bags / Salt pillar GPG don't trivially map to ansible-vault.
+
+The realistic timeline. Migrating a meaningful Puppet / Chef / Salt estate (50+ modules, mature CI, multiple environments) to Ansible takes 9-18 months for a 2-3 person platform team.
+
+The deeper point. Puppet, Chef, and Salt are not bad tools — they were great for their era and remain capable today. They are losing not on technical merit but on:
+- Corporate sponsor turbulence (Perforce, Progress, Broadcom).
+- Generational change (engineers under 30 mostly haven't used them).
+- The K8s eclipse (most new compute doesn't need host-level config).
+
+Plan migrations on this basis, not on "tool X is bad". Pick the destination that fits your future workload, not the most fashionable one.`,
       },
     ],
     references: [
@@ -15688,6 +15322,42 @@ The deeper point. Drift is the symptom of mutable infrastructure interacting wit
     visualizations: [],
     topics: [
       {
+        title: 'The kernel primitives — namespaces and cgroups v2',
+        image: '/diagrams/devops/f1-container-fundamentals.png',
+        content: `Linux namespaces — the seven flavors that matter for containers:
+
+1. PID namespace. Container sees its own PID 1 and its descendants; cannot see or signal host processes. Created via clone(CLONE_NEWPID). The first process in the namespace becomes PID 1 — which is why "exec a shell as PID 1" surprises engineers (no zombie reaping unless they handle SIGCHLD, no signal default handlers).
+
+2. Mount namespace. Container has its own mount table. The container's root filesystem is a pivot_root into a directory that contains the unpacked image layers (overlayfs). Bind mounts for /etc/resolv.conf, /etc/hostname, etc., are explicit.
+
+3. Network namespace. Container has its own loopback, network interfaces, routing table, iptables rules, sockets. Connected to host via veth pair + bridge (Docker default), or via CNI plugins (Kubernetes).
+
+4. UTS namespace. Container has its own hostname and domainname.
+
+5. IPC namespace. Container has its own System V IPC objects and POSIX message queues.
+
+6. User namespace. Container can have its own UID/GID mapping — root inside (UID 0) maps to an unprivileged UID outside. The kernel feature that makes rootless containers safe(r). Podman + Docker (with userns-remap) use it; default Docker historically did not.
+
+7. Time namespace (Linux 5.6, 2020). Container can have its own CLOCK_MONOTONIC and CLOCK_BOOTTIME offsets. Useful for checkpoint/restore (CRIU).
+
+cgroups v2 (unified hierarchy, default in modern distros — RHEL 9, Ubuntu 22.04+, Debian 11+, Fedora 31+):
+- cpu controller — cpu.max sets quota + period, cpu.weight sets relative weight (1-10000, default 100). Replaces v1's cpu.cfs_quota_us / cpu.shares.
+- memory controller — memory.max (hard limit, OOM-kill on breach), memory.high (soft limit, throttle), memory.low (reclaim protection).
+- io controller — io.max (per-device IOPS / bandwidth caps), io.weight.
+- pids controller — pids.max caps process count (fork-bomb mitigation).
+- hugetlb, rdma, misc controllers for specialized workloads.
+
+cgroups v2 is mandatory for modern features — Pod Security Standards "restricted" profile, ephemeral containers, Kubernetes 1.28+ swap support, systemd-level controller delegation. v1 still works but is deprecated.
+
+Capabilities — splitting root into 38 fine-grained privileges (CAP_NET_ADMIN, CAP_SYS_ADMIN, CAP_NET_BIND_SERVICE, etc.). Default container runtime drops most: a Docker container has only 14 capabilities by default. Add what you need with --cap-add; drop everything with --cap-drop=ALL and add back specifically.
+
+seccomp — kernel syscall filter. Default Docker / containerd profile blocks ~44 of ~330 syscalls (keyctl, ptrace, mount, kexec_load, ...). Custom profiles via --security-opt seccomp=profile.json. Kubernetes Pod Security Standard restricted requires seccompProfile: { type: RuntimeDefault } at minimum.
+
+LSM (Linux Security Modules) — AppArmor (Ubuntu / Debian default) or SELinux (RHEL / Fedora default). Mandatory access control on top of DAC. Docker ships docker-default AppArmor profile; containerd + CRI-O auto-label container processes container_t under SELinux.
+
+The defense-in-depth ladder, from container escape easiest to hardest: shared host process namespace > shared mount > full capabilities + privileged > default capabilities only > capabilities dropped + read-only rootfs > custom seccomp + AppArmor / SELinux + non-root + user namespace. Production container hardening means walking up that ladder.`,
+      },
+      {
         title: 'OCI specs and the runtime stack — image-spec, runtime-spec, distribution-spec',
         content: `The Open Container Initiative (OCI, founded 2015 under the Linux Foundation by Docker, CoreOS, Google, Red Hat, others) publishes three specs that define what a "container" is portably:
 
@@ -15730,42 +15400,6 @@ Docker vs Podman:
 
 Both produce OCI-compliant images that run anywhere.`,
       },
-      {
-        title: 'The kernel primitives — namespaces and cgroups v2',
-        image: '/diagrams/devops/f1-container-fundamentals.png',
-        content: `Linux namespaces — the seven flavors that matter for containers:
-
-1. PID namespace. Container sees its own PID 1 and its descendants; cannot see or signal host processes. Created via clone(CLONE_NEWPID). The first process in the namespace becomes PID 1 — which is why "exec a shell as PID 1" surprises engineers (no zombie reaping unless they handle SIGCHLD, no signal default handlers).
-
-2. Mount namespace. Container has its own mount table. The container's root filesystem is a pivot_root into a directory that contains the unpacked image layers (overlayfs). Bind mounts for /etc/resolv.conf, /etc/hostname, etc., are explicit.
-
-3. Network namespace. Container has its own loopback, network interfaces, routing table, iptables rules, sockets. Connected to host via veth pair + bridge (Docker default), or via CNI plugins (Kubernetes).
-
-4. UTS namespace. Container has its own hostname and domainname.
-
-5. IPC namespace. Container has its own System V IPC objects and POSIX message queues.
-
-6. User namespace. Container can have its own UID/GID mapping — root inside (UID 0) maps to an unprivileged UID outside. The kernel feature that makes rootless containers safe(r). Podman + Docker (with userns-remap) use it; default Docker historically did not.
-
-7. Time namespace (Linux 5.6, 2020). Container can have its own CLOCK_MONOTONIC and CLOCK_BOOTTIME offsets. Useful for checkpoint/restore (CRIU).
-
-cgroups v2 (unified hierarchy, default in modern distros — RHEL 9, Ubuntu 22.04+, Debian 11+, Fedora 31+):
-- cpu controller — cpu.max sets quota + period, cpu.weight sets relative weight (1-10000, default 100). Replaces v1's cpu.cfs_quota_us / cpu.shares.
-- memory controller — memory.max (hard limit, OOM-kill on breach), memory.high (soft limit, throttle), memory.low (reclaim protection).
-- io controller — io.max (per-device IOPS / bandwidth caps), io.weight.
-- pids controller — pids.max caps process count (fork-bomb mitigation).
-- hugetlb, rdma, misc controllers for specialized workloads.
-
-cgroups v2 is mandatory for modern features — Pod Security Standards "restricted" profile, ephemeral containers, Kubernetes 1.28+ swap support, systemd-level controller delegation. v1 still works but is deprecated.
-
-Capabilities — splitting root into 38 fine-grained privileges (CAP_NET_ADMIN, CAP_SYS_ADMIN, CAP_NET_BIND_SERVICE, etc.). Default container runtime drops most: a Docker container has only 14 capabilities by default. Add what you need with --cap-add; drop everything with --cap-drop=ALL and add back specifically.
-
-seccomp — kernel syscall filter. Default Docker / containerd profile blocks ~44 of ~330 syscalls (keyctl, ptrace, mount, kexec_load, ...). Custom profiles via --security-opt seccomp=profile.json. Kubernetes Pod Security Standard restricted requires seccompProfile: { type: RuntimeDefault } at minimum.
-
-LSM (Linux Security Modules) — AppArmor (Ubuntu / Debian default) or SELinux (RHEL / Fedora default). Mandatory access control on top of DAC. Docker ships docker-default AppArmor profile; containerd + CRI-O auto-label container processes container_t under SELinux.
-
-The defense-in-depth ladder, from container escape easiest to hardest: shared host process namespace > shared mount > full capabilities + privileged > default capabilities only > capabilities dropped + read-only rootfs > custom seccomp + AppArmor / SELinux + non-root + user namespace. Production container hardening means walking up that ladder.`,
-      },
     ],
     references: [
       'https://opencontainers.org/',
@@ -15787,9 +15421,9 @@ The defense-in-depth ladder, from container escape easiest to hardest: shared ho
     visualizations: [
       {
         title: 'Docker explained — full architecture walkthrough (video)',
-        video: 'https://www.youtube.com/watch?v=QEzbZKtLi-g',
         description: 'End-to-end walkthrough of Docker architecture: how the client, daemon, containerd, runc, and registry fit together.',
-      }
+        video: 'https://www.youtube.com/watch?v=QEzbZKtLi-g',
+      },
     ],
     quickFire: [
       { q: 'Docker in one sentence?', a: 'Open platform that packages applications and dependencies into isolated containers using Linux namespaces and cgroups, with a client-server architecture (CLI → daemon → registry).' },
@@ -15809,6 +15443,51 @@ The defense-in-depth ladder, from container escape easiest to hardest: shared ho
       { q: 'How do you exec into a running container?', a: 'docker exec -it <container> sh (or bash if available). These are answers a Docker-fluent engineer should give without preparation.' },
     ],
     topics: [
+      {
+        title: 'Official Docker architecture diagram — client, daemon, registry',
+        image: '/diagrams/devops/docker-architecture-official.webp',
+        content: `Three zones:
+
+Client — the Docker CLI. docker run, docker build, and docker pull are the three core commands. All communicate with the Docker daemon via REST API over a UNIX socket.
+
+Docker Host — the machine running the Docker daemon (dockerd). The daemon manages Images (stored locally) and Containers (running instances). docker build creates images locally; docker pull fetches them from the registry into the local image store.
+
+Registry — stores and distributes images. Docker Hub is the default public registry. Images available include nginx, ubuntu, postgres, and thousands of community images. Registries also support Extensions and Plugins for additional tooling (JFrog, Portainer, VMware, etc.).
+
+Solid arrows = synchronous requests (docker run starts a container immediately).
+Dashed arrows = pull operations (daemon fetches image layers from registry as needed).`,
+      },
+      {
+        title: 'Docker architecture — client, daemon, images, containers, registry',
+        image: '/diagrams/devops/f6-docker-overview.png',
+        content: `Docker Client (docker CLI). The primary way users interact with Docker. When you run commands like docker run, docker build, or docker pull, the client sends these requests to the Docker daemon via a REST API over a UNIX socket (/var/run/docker.sock) or a network interface.
+
+Docker Daemon (dockerd). The long-running server process that does the actual work — building images, starting/stopping containers, managing networks and volumes. The daemon listens for API requests and can communicate with other daemons to manage distributed services.
+
+Docker Registry. Stores Docker images. Docker Hub is the default public registry; anyone can pull public images or push their own. Private registries (GitHub Container Registry, AWS ECR, Google Artifact Registry) are used for proprietary images. docker pull fetches an image from the registry; docker push uploads one.
+
+The request flow for docker run nginx:
+
+1. CLI sends "run nginx" to daemon over UNIX socket
+2. Daemon checks local image cache for nginx:latest
+3. If not cached → daemon pulls image layers from Docker Hub
+4. Daemon unpacks image layers via overlayfs into a merged rootfs
+5. Daemon creates Linux namespaces (PID, net, mount, UTS, IPC) to isolate the container
+6. Daemon applies cgroup limits (CPU, memory, PIDs) to bound resource usage
+7. Daemon execs nginx as PID 1 inside the container
+
+Docker objects:
+
+Images. Read-only blueprints for containers. Built from a Dockerfile — each instruction (FROM, RUN, COPY, etc.) creates a new content-addressed layer. Only changed layers rebuild; unchanged layers are cache hits. A multi-arch image index references per-platform manifests (linux/amd64, linux/arm64, etc.).
+
+Containers. Runnable instances of an image. Isolated at the OS level using Linux namespaces and cgroups. Containers can be created, started, stopped, moved, and deleted. Each container has its own writable layer on top of the read-only image layers — changes don't affect the underlying image.
+
+Volumes. Persistent storage that lives outside the container's writable layer. Volumes survive container deletion. Bind mounts map a host directory into the container; named volumes are managed by Docker and stored in /var/lib/docker/volumes/.
+
+Networks. Docker creates a default bridge network. Containers on the same bridge network can communicate by container name. docker network create lets you define custom bridge, overlay (Swarm / multi-host), or host networks.
+
+Docker Desktop. Bundles the daemon, CLI, Docker Compose, Kubernetes, and a GUI into a single application for Mac, Windows, and Linux. The recommended install path for local development.`,
+      },
       {
         title: 'Docker objects deep-dive — images, layers, containers, volumes, networks',
         content: `Images in depth.
@@ -15862,51 +15541,6 @@ Networking modes.
   macvlan           — assigns a MAC address; appears as a physical device on the network
 
 Container-to-container communication on the same user-defined bridge network uses DNS resolution by container name: the payment service can reach the database at postgres://db:5432 if both are on the same network and the DB container is named "db".`,
-      },
-      {
-        title: 'Official Docker architecture diagram — client, daemon, registry',
-        image: '/diagrams/devops/docker-architecture-official.webp',
-        content: `Three zones:
-
-Client — the Docker CLI. docker run, docker build, and docker pull are the three core commands. All communicate with the Docker daemon via REST API over a UNIX socket.
-
-Docker Host — the machine running the Docker daemon (dockerd). The daemon manages Images (stored locally) and Containers (running instances). docker build creates images locally; docker pull fetches them from the registry into the local image store.
-
-Registry — stores and distributes images. Docker Hub is the default public registry. Images available include nginx, ubuntu, postgres, and thousands of community images. Registries also support Extensions and Plugins for additional tooling (JFrog, Portainer, VMware, etc.).
-
-Solid arrows = synchronous requests (docker run starts a container immediately).
-Dashed arrows = pull operations (daemon fetches image layers from registry as needed).`,
-      },
-      {
-        title: 'Docker architecture — client, daemon, images, containers, registry',
-        image: '/diagrams/devops/f6-docker-overview.png',
-        content: `Docker Client (docker CLI). The primary way users interact with Docker. When you run commands like docker run, docker build, or docker pull, the client sends these requests to the Docker daemon via a REST API over a UNIX socket (/var/run/docker.sock) or a network interface.
-
-Docker Daemon (dockerd). The long-running server process that does the actual work — building images, starting/stopping containers, managing networks and volumes. The daemon listens for API requests and can communicate with other daemons to manage distributed services.
-
-Docker Registry. Stores Docker images. Docker Hub is the default public registry; anyone can pull public images or push their own. Private registries (GitHub Container Registry, AWS ECR, Google Artifact Registry) are used for proprietary images. docker pull fetches an image from the registry; docker push uploads one.
-
-The request flow for docker run nginx:
-
-1. CLI sends "run nginx" to daemon over UNIX socket
-2. Daemon checks local image cache for nginx:latest
-3. If not cached → daemon pulls image layers from Docker Hub
-4. Daemon unpacks image layers via overlayfs into a merged rootfs
-5. Daemon creates Linux namespaces (PID, net, mount, UTS, IPC) to isolate the container
-6. Daemon applies cgroup limits (CPU, memory, PIDs) to bound resource usage
-7. Daemon execs nginx as PID 1 inside the container
-
-Docker objects:
-
-Images. Read-only blueprints for containers. Built from a Dockerfile — each instruction (FROM, RUN, COPY, etc.) creates a new content-addressed layer. Only changed layers rebuild; unchanged layers are cache hits. A multi-arch image index references per-platform manifests (linux/amd64, linux/arm64, etc.).
-
-Containers. Runnable instances of an image. Isolated at the OS level using Linux namespaces and cgroups. Containers can be created, started, stopped, moved, and deleted. Each container has its own writable layer on top of the read-only image layers — changes don't affect the underlying image.
-
-Volumes. Persistent storage that lives outside the container's writable layer. Volumes survive container deletion. Bind mounts map a host directory into the container; named volumes are managed by Docker and stored in /var/lib/docker/volumes/.
-
-Networks. Docker creates a default bridge network. Containers on the same bridge network can communicate by container name. docker network create lets you define custom bridge, overlay (Swarm / multi-host), or host networks.
-
-Docker Desktop. Bundles the daemon, CLI, Docker Compose, Kubernetes, and a GUI into a single application for Mac, Windows, and Linux. The recommended install path for local development.`,
       },
     ],
     references: [
@@ -16125,6 +15759,15 @@ Best practices summary:
     questions: 5,
     description: 'Docker Buildx extends the Docker CLI with BuildKit — a next-generation builder that executes Dockerfile stages as a DAG, caches at layer granularity, and produces multi-architecture images in one push. It is the standard tool for production CI/CD pipelines.',
     visualizations: [],
+    quickFire: [
+      { q: 'What is the difference between docker build and docker buildx build?', a: 'docker build uses the legacy builder inside dockerd. docker buildx build uses BuildKit, which adds DAG-based parallel execution, multi-platform support, cache export backends, secrets, and attestations.' },
+      { q: 'Why can\'t you use --load and --platform linux/amd64,linux/arm64 together?', a: '--load writes to the local Docker image store which only supports one platform at a time. Use --push for multi-arch, or build with a single platform for --load.' },
+      { q: 'What is mode=max in cache-to?', a: 'Exports ALL intermediate layers including every RUN/COPY step as cache. mode=min only exports the final stage. mode=max gets better cache hit rates at the cost of more storage.' },
+      { q: 'How do you pass a secret to a build without it appearing in docker history?', a: '--secret id=mykey,src=./key.txt and RUN --mount=type=secret,id=mykey ... in the Dockerfile. The mount is temporary — it never writes to any image layer.' },
+      { q: 'What is an OCI Image Index?', a: 'A manifest list that references per-platform image manifests. A docker pull picks the right one automatically based on the pulling host\'s OS/arch.' },
+      { q: 'How does QEMU multi-platform building work?', a: 'binfmt_misc registers QEMU user-space emulators for foreign architectures. The build host runs arm64 binaries under emulation. Slower than native but requires no additional nodes.' },
+      { q: 'What does --attest type=provenance do?', a: 'Attaches SLSA provenance metadata to the image in the registry — build inputs, source repo, builder identity. Enables supply-chain attestation verification with cosign or docker buildx imagetools.' },
+    ],
     topics: [
       {
         title: 'BuildKit pipeline — multi-platform build with cache backends',
@@ -16164,15 +15807,6 @@ Attestations (supply chain security):
   --attest type=provenance,mode=max → SLSA provenance metadata
   docker buildx imagetools inspect myapp:v1 — verify attestations in registry`,
       },
-    ],
-    quickFire: [
-      { q: 'What is the difference between docker build and docker buildx build?', a: 'docker build uses the legacy builder inside dockerd. docker buildx build uses BuildKit, which adds DAG-based parallel execution, multi-platform support, cache export backends, secrets, and attestations.' },
-      { q: 'Why can\'t you use --load and --platform linux/amd64,linux/arm64 together?', a: '--load writes to the local Docker image store which only supports one platform at a time. Use --push for multi-arch, or build with a single platform for --load.' },
-      { q: 'What is mode=max in cache-to?', a: 'Exports ALL intermediate layers including every RUN/COPY step as cache. mode=min only exports the final stage. mode=max gets better cache hit rates at the cost of more storage.' },
-      { q: 'How do you pass a secret to a build without it appearing in docker history?', a: '--secret id=mykey,src=./key.txt and RUN --mount=type=secret,id=mykey ... in the Dockerfile. The mount is temporary — it never writes to any image layer.' },
-      { q: 'What is an OCI Image Index?', a: 'A manifest list that references per-platform image manifests. A docker pull picks the right one automatically based on the pulling host\'s OS/arch.' },
-      { q: 'How does QEMU multi-platform building work?', a: 'binfmt_misc registers QEMU user-space emulators for foreign architectures. The build host runs arm64 binaries under emulation. Slower than native but requires no additional nodes.' },
-      { q: 'What does --attest type=provenance do?', a: 'Attaches SLSA provenance metadata to the image in the registry — build inputs, source repo, builder identity. Enables supply-chain attestation verification with cosign or docker buildx imagetools.' },
     ],
     references: [
       'https://docs.docker.com/reference/cli/docker/buildx/',
@@ -16381,6 +16015,63 @@ Other Dockerfile-alternative tools:
     ],
     topics: [
       {
+        title: 'Docker CLI — container lifecycle, inspection, disk management',
+        image: '/diagrams/devops/f17-docker-cli.png',
+        content: `docker run key flags:
+  -d                        detach (run in background)
+  --name <name>             assign a name; enables DNS on user-defined networks
+  --rm                      remove container + anonymous volumes on exit (incompatible with --restart)
+  --restart unless-stopped  restart on crash and after daemon restart; ignores manual docker stop
+  --restart on-failure:3    restart only on non-zero exit, max 3 attempts; stops on config errors
+  -p 127.0.0.1:8080:8080   publish port; bind to localhost only (omitting IP binds 0.0.0.0)
+  -e VAR=value              set environment variable
+  -v /host/path:/ctr/path   bind mount; :ro for read-only
+  --mount type=volume,...   explicit mount syntax; preferred over -v for clarity
+  -u 1000:1000              run as specific UID:GID
+  --read-only               read-only rootfs; pair with --tmpfs /tmp for writable scratch
+  --init                    run tini as PID 1; proper signal forwarding and zombie reaping
+
+docker stop vs docker kill:
+  stop — sends SIGTERM; waits --time seconds (default 10); then sends SIGKILL (graceful)
+  kill — sends SIGKILL immediately by default (no grace period)
+  Use stop except when the container is frozen or in an infinite loop
+
+docker exec -it <name> sh   — get a shell inside a running container
+  Runs in the container's existing namespaces — same network, filesystem, PID namespace
+  Fails with 'container not running' if the container has exited
+
+Inspection commands:
+  docker inspect <name>     — full JSON: IP, mounts, env, labels, state, resource limits
+  docker inspect <name> | jq '.[0].NetworkSettings.Networks'   — extract network config
+  docker logs <name> --tail 100 --follow  — stream last 100 lines + follow
+  docker stats              — live cgroup metrics: CPU%, MEM, NET I/O, BLOCK I/O
+  docker stats --no-stream  — one-shot snapshot of all running containers
+  docker top <name>         — processes running inside the container (ps output)
+  docker port <name>        — show host-side port mappings
+  docker diff <name>        — files changed vs image (A=added, C=changed, D=deleted)
+
+File operations:
+  docker cp <name>:/app/log ./log    — copy from container to host
+  docker cp ./config <name>:/app/    — copy from host to container
+  Works on stopped containers too
+
+Image inspection:
+  docker image history myapp:v1 --no-trunc  — all layers + commands + sizes
+  docker inspect myapp:v1 | jq '.[0].RootFS.Layers | length'  — layer count
+
+Disk management (docker system):
+  docker system df          — usage breakdown: images, containers, volumes, build cache
+  docker system df -v       — verbose: per-image and per-container breakdown
+  docker system prune       — removes: stopped containers, dangling images, unused networks, build cache
+  docker system prune -a    — also removes ALL unused images (not just dangling)
+  docker system prune -a --volumes  — also removes unnamed volumes (CAREFUL: data loss)
+  Named volumes are NEVER removed by prune — only explicit 'docker volume rm'
+
+docker system events — real-time event stream:
+  Tracks: container create/start/stop/die, image pull/tag/push, network connect/disconnect
+  Filter: docker events --filter type=container --filter event=die`,
+      },
+      {
         title: 'Lesser-known CLI commands — attach, create, port, search, login, version, info',
         content: `docker attach — connect stdio to a running container.
 
@@ -16477,63 +16168,6 @@ docker info
     Registry: https://index.docker.io/v1/ (default) — shows configured mirrors
     WARNING: No swap limit support — host kernel lacks swap accounting (memory-swap limits ignored)`,
       },
-      {
-        title: 'Docker CLI — container lifecycle, inspection, disk management',
-        image: '/diagrams/devops/f17-docker-cli.png',
-        content: `docker run key flags:
-  -d                        detach (run in background)
-  --name <name>             assign a name; enables DNS on user-defined networks
-  --rm                      remove container + anonymous volumes on exit (incompatible with --restart)
-  --restart unless-stopped  restart on crash and after daemon restart; ignores manual docker stop
-  --restart on-failure:3    restart only on non-zero exit, max 3 attempts; stops on config errors
-  -p 127.0.0.1:8080:8080   publish port; bind to localhost only (omitting IP binds 0.0.0.0)
-  -e VAR=value              set environment variable
-  -v /host/path:/ctr/path   bind mount; :ro for read-only
-  --mount type=volume,...   explicit mount syntax; preferred over -v for clarity
-  -u 1000:1000              run as specific UID:GID
-  --read-only               read-only rootfs; pair with --tmpfs /tmp for writable scratch
-  --init                    run tini as PID 1; proper signal forwarding and zombie reaping
-
-docker stop vs docker kill:
-  stop — sends SIGTERM; waits --time seconds (default 10); then sends SIGKILL (graceful)
-  kill — sends SIGKILL immediately by default (no grace period)
-  Use stop except when the container is frozen or in an infinite loop
-
-docker exec -it <name> sh   — get a shell inside a running container
-  Runs in the container's existing namespaces — same network, filesystem, PID namespace
-  Fails with 'container not running' if the container has exited
-
-Inspection commands:
-  docker inspect <name>     — full JSON: IP, mounts, env, labels, state, resource limits
-  docker inspect <name> | jq '.[0].NetworkSettings.Networks'   — extract network config
-  docker logs <name> --tail 100 --follow  — stream last 100 lines + follow
-  docker stats              — live cgroup metrics: CPU%, MEM, NET I/O, BLOCK I/O
-  docker stats --no-stream  — one-shot snapshot of all running containers
-  docker top <name>         — processes running inside the container (ps output)
-  docker port <name>        — show host-side port mappings
-  docker diff <name>        — files changed vs image (A=added, C=changed, D=deleted)
-
-File operations:
-  docker cp <name>:/app/log ./log    — copy from container to host
-  docker cp ./config <name>:/app/    — copy from host to container
-  Works on stopped containers too
-
-Image inspection:
-  docker image history myapp:v1 --no-trunc  — all layers + commands + sizes
-  docker inspect myapp:v1 | jq '.[0].RootFS.Layers | length'  — layer count
-
-Disk management (docker system):
-  docker system df          — usage breakdown: images, containers, volumes, build cache
-  docker system df -v       — verbose: per-image and per-container breakdown
-  docker system prune       — removes: stopped containers, dangling images, unused networks, build cache
-  docker system prune -a    — also removes ALL unused images (not just dangling)
-  docker system prune -a --volumes  — also removes unnamed volumes (CAREFUL: data loss)
-  Named volumes are NEVER removed by prune — only explicit 'docker volume rm'
-
-docker system events — real-time event stream:
-  Tracks: container create/start/stop/die, image pull/tag/push, network connect/disconnect
-  Filter: docker events --filter type=container --filter event=die`,
-      },
     ],
     references: [
       'https://docs.docker.com/reference/cli/docker/container/run/',
@@ -16560,6 +16194,60 @@ docker system events — real-time event stream:
       { q: 'What does overlay2 storage driver store on disk?', a: 'Each image layer is stored as four directories: lowerdir (read-only parent layers), upperdir (writable container layer), workdir (atomic operations), merged (unified mount point shown to the container).' },
     ],
     topics: [
+      {
+        title: 'Docker daemon architecture — dockerd, containerd, runc, subsystems',
+        image: '/diagrams/devops/f16-docker-daemon.png',
+        content: `dockerd — the high-level daemon:
+  Exposes the Docker REST API (Unix socket /var/run/docker.sock by default, or TCP :2375/:2376)
+  Handles image management, networking, volumes, build, swarm
+  Delegates container lifecycle operations to containerd via gRPC
+
+containerd — the container runtime supervisor:
+  Manages container state (create/start/stop/delete)
+  Pulls and unpacks OCI images into the snapshotter
+  Fires hooks (OCI spec): createRuntime, createContainer, startContainer, poststop
+  Exposes its own socket at /run/containerd/containerd.sock
+
+runc / crun — OCI runtime:
+  Called by containerd shim for each container start
+  Sets up namespaces, cgroups, rootfs, and executes the process
+  Exits after container starts — it is NOT the process supervisor
+
+daemon.json location: /etc/docker/daemon.json  (Linux)
+After editing, reload with: systemctl reload docker
+Conflicts between daemon.json and systemd ExecStart= flags cause dockerd to fail.
+
+Storage drivers (snapshotter for image layers):
+  overlay2 — recommended for all modern Linux (kernel 4.0+)
+    Uses overlayfs; four directories per layer: lowerdir/upperdir/workdir/merged
+    XFS can enforce per-container size with pquota+overlay2.size
+  fuse-overlayfs — for rootless Docker on older kernels without native overlayfs
+  btrfs / zfs — native CoW filesystems; use only if the host already runs btrfs/zfs
+  windowsfilter — Windows only
+
+Logging drivers:
+  json-file (default) — logs to /var/lib/docker/containers/<id>/<id>-json.log
+    Always configure max-size and max-file to prevent disk exhaustion
+    docker logs command works with this driver
+  journald — forwards to systemd journal; use journalctl to read
+  fluentd / awslogs / gcplogs — ship directly to external systems
+    WARNING: docker logs DOES NOT WORK with these drivers
+    The command returns: 'configured logging driver does not support reading'
+
+TLS for remote API (when exposing :2376):
+  tlscacert — CA that signed client certs
+  tlscert / tlskey — server certificate
+  tlsverify: true — mutual TLS (reject clients without valid cert)
+  Without TLS, anyone with network access to :2375 has full Docker control
+
+live-restore: true — containers keep running if dockerd restarts (e.g. during upgrade)
+  Off by default. Critical for production to prevent unnecessary container restarts.
+
+User namespace remapping (userns-remap: "default"):
+  Maps container UID 0 to a high host UID (e.g. 100000).
+  Container root cannot write to host files owned by real root.
+  Breaks bind-mount permissions unless data dirs are chowned to the mapped UID.`,
+      },
       {
         title: 'dockerd startup sequence and socket configuration',
         content: `Understanding how dockerd starts and what happens before it accepts API calls is essential for debugging daemon startup failures in production.
@@ -16697,60 +16385,6 @@ PID namespace visibility:
   From inside the container: the same process appears as PID 1 (the init).
   nsenter -t 2110 -p --mount -- ps aux  # enter container's PID namespace from host`,
       },
-      {
-        title: 'Docker daemon architecture — dockerd, containerd, runc, subsystems',
-        image: '/diagrams/devops/f16-docker-daemon.png',
-        content: `dockerd — the high-level daemon:
-  Exposes the Docker REST API (Unix socket /var/run/docker.sock by default, or TCP :2375/:2376)
-  Handles image management, networking, volumes, build, swarm
-  Delegates container lifecycle operations to containerd via gRPC
-
-containerd — the container runtime supervisor:
-  Manages container state (create/start/stop/delete)
-  Pulls and unpacks OCI images into the snapshotter
-  Fires hooks (OCI spec): createRuntime, createContainer, startContainer, poststop
-  Exposes its own socket at /run/containerd/containerd.sock
-
-runc / crun — OCI runtime:
-  Called by containerd shim for each container start
-  Sets up namespaces, cgroups, rootfs, and executes the process
-  Exits after container starts — it is NOT the process supervisor
-
-daemon.json location: /etc/docker/daemon.json  (Linux)
-After editing, reload with: systemctl reload docker
-Conflicts between daemon.json and systemd ExecStart= flags cause dockerd to fail.
-
-Storage drivers (snapshotter for image layers):
-  overlay2 — recommended for all modern Linux (kernel 4.0+)
-    Uses overlayfs; four directories per layer: lowerdir/upperdir/workdir/merged
-    XFS can enforce per-container size with pquota+overlay2.size
-  fuse-overlayfs — for rootless Docker on older kernels without native overlayfs
-  btrfs / zfs — native CoW filesystems; use only if the host already runs btrfs/zfs
-  windowsfilter — Windows only
-
-Logging drivers:
-  json-file (default) — logs to /var/lib/docker/containers/<id>/<id>-json.log
-    Always configure max-size and max-file to prevent disk exhaustion
-    docker logs command works with this driver
-  journald — forwards to systemd journal; use journalctl to read
-  fluentd / awslogs / gcplogs — ship directly to external systems
-    WARNING: docker logs DOES NOT WORK with these drivers
-    The command returns: 'configured logging driver does not support reading'
-
-TLS for remote API (when exposing :2376):
-  tlscacert — CA that signed client certs
-  tlscert / tlskey — server certificate
-  tlsverify: true — mutual TLS (reject clients without valid cert)
-  Without TLS, anyone with network access to :2375 has full Docker control
-
-live-restore: true — containers keep running if dockerd restarts (e.g. during upgrade)
-  Off by default. Critical for production to prevent unnecessary container restarts.
-
-User namespace remapping (userns-remap: "default"):
-  Maps container UID 0 to a high host UID (e.g. 100000).
-  Container root cannot write to host files owned by real root.
-  Breaks bind-mount permissions unless data dirs are chowned to the mapped UID.`,
-      },
     ],
     references: [
       'https://docs.docker.com/reference/cli/dockerd/',
@@ -16782,6 +16416,75 @@ User namespace remapping (userns-remap: "default"):
       { q: 'What does OOM score mean in Docker?', a: 'It\'s a kernel value (lower = less likely to be killed). Docker lowers the daemon\'s OOM score so the daemon survives host memory pressure. Container processes compete at normal OOM scores. These are answers a container-resource-fluent engineer should give without preparation.' },
     ],
     topics: [
+      {
+        title: 'cgroups v2 resource controls — CPU, memory, PIDs, and OOM',
+        image: '/diagrams/devops/f13-docker-resource-limits.png',
+        content: `CPU controls:
+
+--cpus <decimal>
+  Sets the CFS (Completely Fair Scheduler) quota. --cpus 1.5 = --cpu-period 100000 --cpu-quota 150000.
+  The container gets 150ms out of every 100ms period = 1.5 cores worth of CPU time.
+  This is a HARD limit — the container is throttled when it hits the quota regardless of host load.
+
+--cpu-shares <integer>  (default: 1024)
+  A SOFT weight, only enforced under CPU contention. --cpu-shares 512 gets half the CPU of a default container when the host is busy. When the host is idle, any container can use 100% of CPU.
+
+--cpuset-cpus "0,2" or "0-3"
+  Pins the container to specific CPU cores. Useful for NUMA-aware workloads or isolating latency-sensitive containers.
+
+Memory controls:
+
+-m / --memory <size>  (minimum: 6 MB)
+  Hard limit. When a container exceeds this, the Linux OOM killer terminates the most memory-hungry process inside the container.
+
+--memory-swap <size>
+  Total RAM + swap combined. Math:
+    --memory-swap == --memory:  zero swap access (OOM at RAM limit)
+    --memory-swap unset:        container can use swap equal to its RAM limit
+    --memory-swap > --memory:   (value - memory) = available swap
+    --memory-swap=-1:           unlimited swap (uses all host swap)
+
+--memory-reservation <size>
+  Soft limit. Must be less than --memory. Under memory pressure, the kernel tries to reclaim down to this value.
+
+--oom-kill-disable
+  Prevents OOM kill for this container. DANGEROUS without -m set — the host can run out of memory trying to honor this.
+
+OOM killer priority:
+  Docker daemon has a lower OOM score than containers. Under memory pressure, the kernel kills containers before the daemon. Container OOM scores are not adjusted — they compete normally with each other.
+
+PID limit:
+
+--pids-limit <n>
+  Caps the number of processes/threads the container can spawn. Default: unlimited.
+  Fork bombs are stopped dead by --pids-limit 200 or 500.
+
+Inspecting actual limits from inside a container:
+  cat /sys/fs/cgroup/memory.max        # actual memory hard limit
+  cat /sys/fs/cgroup/cpu.max           # "quota period" e.g. "150000 100000"
+  cat /sys/fs/cgroup/pids.max          # PID limit
+
+WARNING: free, top, and /proc/meminfo inside a container show HOST memory stats, not container-limited values. This is a well-known cgroup quirk — the procfs interface was designed before cgroups. Always use the /sys/fs/cgroup/ path for accurate container limits.
+
+docker stats — runtime view from outside:
+  docker stats mycontainer
+  Shows: CPU %, MEM USAGE / LIMIT, MEM %, NET I/O, BLOCK I/O, PIDs
+  This reads from the actual cgroup values, so it is accurate.
+
+Resource limits in Docker Compose:
+  services:
+    web:
+      deploy:
+        resources:
+          limits:
+            cpus: "1.5"
+            memory: 512m
+          reservations:
+            cpus: "0.5"
+            memory: 256m
+
+  deploy.resources is the standard way. Older style (mem_limit, cpus) is deprecated.`,
+      },
       {
         title: 'cgroup v2 hierarchy — how limits propagate through the tree',
         content: `cgroup v2 uses a unified hierarchy under /sys/fs/cgroup/. Every Docker container gets its own leaf cgroup; limits set on parent cgroups apply to all descendants.
@@ -16929,129 +16632,6 @@ Setting limits in Compose (v3 deploy block):
             cpus: "0.5"      # soft minimum weight (cpu.weight)
             memory: "256m"   # memory.low soft reservation`,
       },
-      {
-        title: 'cgroups v2 resource controls — CPU, memory, PIDs, and OOM',
-        image: '/diagrams/devops/f13-docker-resource-limits.png',
-        content: `CPU controls:
-
---cpus <decimal>
-  Sets the CFS (Completely Fair Scheduler) quota. --cpus 1.5 = --cpu-period 100000 --cpu-quota 150000.
-  The container gets 150ms out of every 100ms period = 1.5 cores worth of CPU time.
-  This is a HARD limit — the container is throttled when it hits the quota regardless of host load.
-
---cpu-shares <integer>  (default: 1024)
-  A SOFT weight, only enforced under CPU contention. --cpu-shares 512 gets half the CPU of a default container when the host is busy. When the host is idle, any container can use 100% of CPU.
-
---cpuset-cpus "0,2" or "0-3"
-  Pins the container to specific CPU cores. Useful for NUMA-aware workloads or isolating latency-sensitive containers.
-
-Memory controls:
-
--m / --memory <size>  (minimum: 6 MB)
-  Hard limit. When a container exceeds this, the Linux OOM killer terminates the most memory-hungry process inside the container.
-
---memory-swap <size>
-  Total RAM + swap combined. Math:
-    --memory-swap == --memory:  zero swap access (OOM at RAM limit)
-    --memory-swap unset:        container can use swap equal to its RAM limit
-    --memory-swap > --memory:   (value - memory) = available swap
-    --memory-swap=-1:           unlimited swap (uses all host swap)
-
---memory-reservation <size>
-  Soft limit. Must be less than --memory. Under memory pressure, the kernel tries to reclaim down to this value.
-
---oom-kill-disable
-  Prevents OOM kill for this container. DANGEROUS without -m set — the host can run out of memory trying to honor this.
-
-OOM killer priority:
-  Docker daemon has a lower OOM score than containers. Under memory pressure, the kernel kills containers before the daemon. Container OOM scores are not adjusted — they compete normally with each other.
-
-PID limit:
-
---pids-limit <n>
-  Caps the number of processes/threads the container can spawn. Default: unlimited.
-  Fork bombs are stopped dead by --pids-limit 200 or 500.
-
-Inspecting actual limits from inside a container:
-  cat /sys/fs/cgroup/memory.max        # actual memory hard limit
-  cat /sys/fs/cgroup/cpu.max           # "quota period" e.g. "150000 100000"
-  cat /sys/fs/cgroup/pids.max          # PID limit
-
-WARNING: free, top, and /proc/meminfo inside a container show HOST memory stats, not container-limited values. This is a well-known cgroup quirk — the procfs interface was designed before cgroups. Always use the /sys/fs/cgroup/ path for accurate container limits.
-
-docker stats — runtime view from outside:
-  docker stats mycontainer
-  Shows: CPU %, MEM USAGE / LIMIT, MEM %, NET I/O, BLOCK I/O, PIDs
-  This reads from the actual cgroup values, so it is accurate.
-
-Resource limits in Docker Compose:
-  services:
-    web:
-      deploy:
-        resources:
-          limits:
-            cpus: "1.5"
-            memory: 512m
-          reservations:
-            cpus: "0.5"
-            memory: 256m
-
-  deploy.resources is the standard way. Older style (mem_limit, cpus) is deprecated.`,
-      },
-      {
-        title: 'CPU shares vs CPU quota — enforcement under contention and throttling',
-        content: `Docker exposes two orthogonal CPU control mechanisms. Confusing them is one of the most common reasons engineers set limits that have no effect or that cause unexpected throttling.
-
-CPU shares (--cpu-shares, default 1024):
-  Implemented via cgroup cpu.weight (v2) or cpu.shares (v1).
-  A SOFT proportional weight, only meaningful when the host CPU is fully contended.
-  Container A with 2048 shares vs Container B with 1024 shares:
-    Under full contention: A gets 2/3 of CPU, B gets 1/3.
-    When B is idle: A can use 100% of CPU (shares don't cap).
-  Use case: multi-tenant hosts where you want proportional fairness, not hard limits.
-
-CPU quota (--cpus, --cpu-period, --cpu-quota):
-  Implemented via cgroup cpu.max = "quota period".
-  A HARD limit enforced regardless of host load.
-  --cpus 1.5 translates to: cpu.max = "150000 100000"
-    Container gets at most 150ms of CPU per 100ms period.
-    Even if the host is idle, the container is throttled at this rate.
-  Use case: preventing a container from monopolizing CPU at any time.
-
-Detecting CPU throttling in production:
-  # From inside the container
-  cat /sys/fs/cgroup/cpu.stat
-  # Key fields:
-  #   nr_throttled    — number of periods where container was throttled
-  #   throttled_usec  — total microseconds of throttle time
-
-  # From the host
-  cat /sys/fs/cgroup/docker/<id>/cpu.stat
-
-  # Prometheus metric (cAdvisor / Docker stats):
-  container_cpu_throttled_seconds_total
-
-Throttle gotcha — the "Java/Go startup burst" problem:
-  JVM startup or Go binary init can burst CPU far above steady-state.
-  With --cpus 0.5, the burst exhausts the CFS quota in the first 50ms of a period.
-  The container then sits throttled for the remaining 50ms — appears to freeze.
-  Fix 1: increase --cpus for the startup phase (or use init containers in Kubernetes).
-  Fix 2: increase --cpu-period to 500ms; quota is still 0.5 but spreads the burst.
-  Fix 3: use --cpu-shares (soft) instead of --cpus (hard) if neighbors are not noisy.
-
-Setting limits in Compose (v3 deploy block):
-  services:
-    api:
-      image: myapi:latest
-      deploy:
-        resources:
-          limits:
-            cpus: "2.0"      # hard cap; throttled above this
-            memory: "1g"
-          reservations:
-            cpus: "0.5"      # soft minimum weight (cpu.weight)
-            memory: "256m"   # memory.low soft reservation`,
-      },
     ],
     references: [
       'https://docs.docker.com/engine/containers/resource_constraints/',
@@ -17068,6 +16648,21 @@ Setting limits in Compose (v3 deploy block):
     questions: 5,
     description: 'Docker gives every container its own network namespace by default. Containers on the same user-defined bridge network discover each other by name via Docker\'s embedded DNS. Port publishing creates iptables DNAT rules so host traffic reaches the container. Overlay networks extend this to multi-host clusters.',
     visualizations: [],
+    quickFire: [
+      { q: 'What is Docker\'s embedded DNS IP?', a: '127.0.0.11 — always this IP, works even inside IPv6-only containers.' },
+      { q: 'Why can\'t two containers on the default bridge talk by name?', a: 'Docker\'s embedded DNS only works on user-defined networks. Default bridge (docker0) containers get a copy of the host\'s /etc/resolv.conf — no container-name resolution. Always create a user-defined bridge for multi-container apps.' },
+      { q: 'What does docker run -p 8080:3000 actually do?', a: 'Docker installs an iptables DNAT rule: traffic arriving on host port 8080 is rewritten to the container\'s IP:3000. Docker manages the rule lifecycle — created on container start, removed on stop.' },
+      { q: 'Does Docker respect UFW firewall rules?', a: 'No. Docker inserts iptables rules in the nat table, which runs before UFW\'s INPUT/OUTPUT chains. A port published with -p is reachable even if UFW blocks it. Use host-IP binding (-p 127.0.0.1:8080:3000) to restrict access.' },
+      { q: 'How many containers can share one bridge/overlay network?', a: 'Hard limit of 1,000. Above that, Docker warns the network "becomes unstable and inter-container communications may break." Split into multiple networks for large deployments.' },
+      { q: 'What three ports must be open between Swarm nodes for overlay networking?', a: '2377/TCP (control plane), 4789/UDP (VXLAN data), 7946/TCP+UDP (node gossip). Port 7946 is not configurable.' },
+      { q: 'What is the difference between macvlan and ipvlan?', a: 'macvlan: each container gets its own MAC address — appears as a physical device on the LAN. ipvlan: containers share the host\'s MAC but get their own IPs. Cloud providers usually block macvlan (requires promiscuous mode); ipvlan works around that.' },
+      { q: 'Critical macvlan gotcha?', a: 'Containers on a macvlan network cannot communicate with the host directly — Linux kernel restriction. Also: not supported in rootless mode or Docker Desktop Mac/Windows.' },
+      { q: 'host network mode on Docker Desktop Mac/Windows?', a: 'Not natively supported (requires opt-in in Docker Desktop 4.34+). -p flags are ignored and produce a warning when --network host is used. Linux only for production use.' },
+      { q: 'Difference between bridge and host network mode?', a: 'Bridge: own network namespace, isolated IP, requires port publishing, NAT overhead. Host: shares host network namespace, no -p needed, no NAT, no isolation. Linux-only.' },
+      { q: 'How do you restrict a published port to localhost only?', a: 'docker run -p 127.0.0.1:8080:3000 — the host-IP prefix binds only on loopback; 0.0.0.0 is default which binds all interfaces.' },
+      { q: 'What network does Docker Compose create by default?', a: 'A user-defined bridge named <project>_default. All services attach automatically and resolve each other by service name.' },
+      { q: 'Can you hot-attach a running container to a new network?', a: 'Yes on user-defined bridges: docker network connect my-net container. Not possible on the default bridge without stopping/recreating. These are answers a Docker-networking-fluent engineer should give without preparation.' },
+    ],
     topics: [
       {
         title: 'Docker network modes — bridge, host, overlay, macvlan, ipvlan',
@@ -17147,21 +16742,6 @@ Network commands:
   docker network prune                                  # remove unused networks`,
       },
     ],
-    quickFire: [
-      { q: 'What is Docker\'s embedded DNS IP?', a: '127.0.0.11 — always this IP, works even inside IPv6-only containers.' },
-      { q: 'Why can\'t two containers on the default bridge talk by name?', a: 'Docker\'s embedded DNS only works on user-defined networks. Default bridge (docker0) containers get a copy of the host\'s /etc/resolv.conf — no container-name resolution. Always create a user-defined bridge for multi-container apps.' },
-      { q: 'What does docker run -p 8080:3000 actually do?', a: 'Docker installs an iptables DNAT rule: traffic arriving on host port 8080 is rewritten to the container\'s IP:3000. Docker manages the rule lifecycle — created on container start, removed on stop.' },
-      { q: 'Does Docker respect UFW firewall rules?', a: 'No. Docker inserts iptables rules in the nat table, which runs before UFW\'s INPUT/OUTPUT chains. A port published with -p is reachable even if UFW blocks it. Use host-IP binding (-p 127.0.0.1:8080:3000) to restrict access.' },
-      { q: 'How many containers can share one bridge/overlay network?', a: 'Hard limit of 1,000. Above that, Docker warns the network "becomes unstable and inter-container communications may break." Split into multiple networks for large deployments.' },
-      { q: 'What three ports must be open between Swarm nodes for overlay networking?', a: '2377/TCP (control plane), 4789/UDP (VXLAN data), 7946/TCP+UDP (node gossip). Port 7946 is not configurable.' },
-      { q: 'What is the difference between macvlan and ipvlan?', a: 'macvlan: each container gets its own MAC address — appears as a physical device on the LAN. ipvlan: containers share the host\'s MAC but get their own IPs. Cloud providers usually block macvlan (requires promiscuous mode); ipvlan works around that.' },
-      { q: 'Critical macvlan gotcha?', a: 'Containers on a macvlan network cannot communicate with the host directly — Linux kernel restriction. Also: not supported in rootless mode or Docker Desktop Mac/Windows.' },
-      { q: 'host network mode on Docker Desktop Mac/Windows?', a: 'Not natively supported (requires opt-in in Docker Desktop 4.34+). -p flags are ignored and produce a warning when --network host is used. Linux only for production use.' },
-      { q: 'Difference between bridge and host network mode?', a: 'Bridge: own network namespace, isolated IP, requires port publishing, NAT overhead. Host: shares host network namespace, no -p needed, no NAT, no isolation. Linux-only.' },
-      { q: 'How do you restrict a published port to localhost only?', a: 'docker run -p 127.0.0.1:8080:3000 — the host-IP prefix binds only on loopback; 0.0.0.0 is default which binds all interfaces.' },
-      { q: 'What network does Docker Compose create by default?', a: 'A user-defined bridge named <project>_default. All services attach automatically and resolve each other by service name.' },
-      { q: 'Can you hot-attach a running container to a new network?', a: 'Yes on user-defined bridges: docker network connect my-net container. Not possible on the default bridge without stopping/recreating. These are answers a Docker-networking-fluent engineer should give without preparation.' },
-    ],
     references: [
       'https://docs.docker.com/engine/network/',
       'https://docs.docker.com/engine/network/drivers/bridge/',
@@ -17177,6 +16757,21 @@ Network commands:
     questions: 5,
     description: 'Container filesystems are assembled from read-only image layers stacked via overlayfs, with a thin writable layer on top that is deleted when the container is removed. Named volumes and bind mounts provide durable storage that survives container deletion.',
     visualizations: [],
+    quickFire: [
+      { q: 'What are the four overlay2 directories and what does each do?', a: 'lowerdir (read-only image layers), upperdir (writable container diff), workdir (kernel scratch, internal), merged (unified view the container sees).' },
+      { q: 'What is copy_up and what is its critical performance gotcha?', a: 'On the first write to a file from a read-only layer, overlayfs copies the ENTIRE file to upperdir before modifying it. File-level, not block-level — a 1GB file is fully copied even for a 1-byte change. Databases in containers suffer measurable overhead. Use volumes for write-intensive data.' },
+      { q: 'Does changing file permissions trigger copy_up?', a: 'Yes. chmod/chown on a read-only layer file also triggers a full copy_up — the file is duplicated to upperdir even without content changes.' },
+      { q: 'How does file deletion work in overlayfs?', a: 'Deleting a file creates a whiteout file in upperdir; overlayfs hides the original from the merged view. The image layer is never modified. Deleting a directory creates an opaque directory in upperdir.' },
+      { q: 'What is the rename(2) gotcha in overlayfs?', a: 'Renaming a directory only works when both source and destination are in the upperdir. Cross-layer directory renames return EXDEV ("cross-device link not permitted"). Applications must fall back to copy-then-unlink.' },
+      { q: 'What does docker ps -s show and what\'s the trap?', a: 'size = this container\'s writable layer. virtual size = image + writable. Never sum virtual sizes across containers — image layers are shared, summing them massively over-counts actual disk usage.' },
+      { q: 'overlay2 layer limit?', a: '128 lower layers maximum. Deep docker build chains or docker commit chains can hit this ceiling.' },
+      { q: 'What happens when you mount a named volume over a container directory that already has files?', a: 'If the volume is empty, container files are copied INTO the volume (population). If the volume is non-empty, the pre-existing container files are obscured (not deleted, just hidden by the volume mount).' },
+      { q: '--mount vs -v for bind mounts — key difference?', a: '-v auto-creates the host directory if missing (as root-owned). --mount errors if the source path doesn\'t exist. Prefer --mount in production for explicit failure.' },
+      { q: 'SELinux :Z label danger?', a: 'Using :Z on system directories (/home, /usr) permanently relabels the host directory with a private container label, potentially making the host OS inoperable.' },
+      { q: 'tmpfs default size and persistence gotcha?', a: 'Default max size = 50% of host RAM. Data may still hit disk if the host has swap enabled. Not available on Docker Desktop Mac/Windows. Cannot be shared between containers.' },
+      { q: 'Does docker rm delete named volumes?', a: 'No. Use docker rm -v (removes anonymous volumes only), docker volume rm <name>, or docker volume prune. Named volumes survive container deletion by design.' },
+      { q: 'Why use volumes instead of writing inside a container for databases?', a: 'Container writable layer uses copy-on-write storage driver overhead. Volumes provide raw filesystem performance (no CoW abstraction). Also: data persists across container recreation. These are answers a Docker-storage-fluent engineer should give without preparation.' },
+    ],
     topics: [
       {
         title: 'overlayfs internals — four directories, copy_up, whiteouts, and gotchas',
@@ -17264,21 +16859,6 @@ Backup and restore named volume:
   docker run --rm -v mydata:/data -v $(pwd):/backup alpine     tar xzf /backup/mydata.tar.gz -C /data`,
       },
     ],
-    quickFire: [
-      { q: 'What are the four overlay2 directories and what does each do?', a: 'lowerdir (read-only image layers), upperdir (writable container diff), workdir (kernel scratch, internal), merged (unified view the container sees).' },
-      { q: 'What is copy_up and what is its critical performance gotcha?', a: 'On the first write to a file from a read-only layer, overlayfs copies the ENTIRE file to upperdir before modifying it. File-level, not block-level — a 1GB file is fully copied even for a 1-byte change. Databases in containers suffer measurable overhead. Use volumes for write-intensive data.' },
-      { q: 'Does changing file permissions trigger copy_up?', a: 'Yes. chmod/chown on a read-only layer file also triggers a full copy_up — the file is duplicated to upperdir even without content changes.' },
-      { q: 'How does file deletion work in overlayfs?', a: 'Deleting a file creates a whiteout file in upperdir; overlayfs hides the original from the merged view. The image layer is never modified. Deleting a directory creates an opaque directory in upperdir.' },
-      { q: 'What is the rename(2) gotcha in overlayfs?', a: 'Renaming a directory only works when both source and destination are in the upperdir. Cross-layer directory renames return EXDEV ("cross-device link not permitted"). Applications must fall back to copy-then-unlink.' },
-      { q: 'What does docker ps -s show and what\'s the trap?', a: 'size = this container\'s writable layer. virtual size = image + writable. Never sum virtual sizes across containers — image layers are shared, summing them massively over-counts actual disk usage.' },
-      { q: 'overlay2 layer limit?', a: '128 lower layers maximum. Deep docker build chains or docker commit chains can hit this ceiling.' },
-      { q: 'What happens when you mount a named volume over a container directory that already has files?', a: 'If the volume is empty, container files are copied INTO the volume (population). If the volume is non-empty, the pre-existing container files are obscured (not deleted, just hidden by the volume mount).' },
-      { q: '--mount vs -v for bind mounts — key difference?', a: '-v auto-creates the host directory if missing (as root-owned). --mount errors if the source path doesn\'t exist. Prefer --mount in production for explicit failure.' },
-      { q: 'SELinux :Z label danger?', a: 'Using :Z on system directories (/home, /usr) permanently relabels the host directory with a private container label, potentially making the host OS inoperable.' },
-      { q: 'tmpfs default size and persistence gotcha?', a: 'Default max size = 50% of host RAM. Data may still hit disk if the host has swap enabled. Not available on Docker Desktop Mac/Windows. Cannot be shared between containers.' },
-      { q: 'Does docker rm delete named volumes?', a: 'No. Use docker rm -v (removes anonymous volumes only), docker volume rm <name>, or docker volume prune. Named volumes survive container deletion by design.' },
-      { q: 'Why use volumes instead of writing inside a container for databases?', a: 'Container writable layer uses copy-on-write storage driver overhead. Volumes provide raw filesystem performance (no CoW abstraction). Also: data persists across container recreation. These are answers a Docker-storage-fluent engineer should give without preparation.' },
-    ],
     references: [
       'https://docs.docker.com/engine/storage/',
       'https://docs.docker.com/engine/storage/volumes/',
@@ -17308,6 +16888,71 @@ Backup and restore named volume:
       { q: 'How do you cleanly tear everything down including volumes?', a: 'docker compose down -v — stops containers, removes networks, removes named volumes. These are answers a Docker-Compose-fluent engineer should give without preparation.' },
     ],
     topics: [
+      {
+        title: 'Docker Compose architecture — services, networks, volumes, dependencies',
+        image: '/diagrams/devops/f10-docker-compose.png',
+        content: `Default network: Compose automatically creates a user-defined bridge named <project>_default. All services attach and resolve each other by SERVICE NAME via Docker's embedded DNS (127.0.0.11). Container IP addresses are dynamic — not persisted across restarts or recreations.
+
+Critical port semantics gotcha: With ports: "8001:5432" on a postgres service, OTHER services inside the compose network must connect on port 5432 (the container port), NOT 8001 (the host port). Only external clients use 8001.
+
+Service reconnection requirement: When a service is updated and recreated, its IP address changes. The old connection is invalidated. Applications MUST reconnect using the service name — not a cached IP.
+
+compose.yaml structure:
+  services:  containers to run (each maps to docker run arguments)
+  networks:  custom networks; default: one bridge per project
+  volumes:   named volumes declared here, referenced in services
+  configs:   config files injected as files into services
+  secrets:   secrets (production/Swarm feature)
+
+depends_on conditions — the correct way:
+  depends_on:
+    db:
+      condition: service_healthy   # waits for HEALTHCHECK to pass
+    cache:
+      condition: service_started   # waits only for container start (not ready)
+    migrate:
+      condition: service_completed_successfully  # for one-shot init jobs
+
+condition: service_started is the default and is almost always wrong for databases. The container starts before postgres is ready to accept connections. Always pair databases with a healthcheck + condition: service_healthy.
+
+network_mode options for a service:
+  host            — shares host network stack; service DNS resolution fails with this mode
+  none            — all networking disabled
+  service:<name>  — share network namespace with another service container
+  container:<id>  — share with a specific container ID
+
+Custom and external networks:
+  networks:
+    internal-net:
+      internal: true    # no external connectivity, no default gateway
+    shared-net:
+      external: true    # must already exist; docker compose up fails if missing
+
+  external: true networks are how multiple Compose projects communicate — they share a pre-existing network. If the network is missing at compose up time, it fails with "Network not found".
+
+  Services on different networks cannot communicate unless they share at least one common network.
+
+Multiple compose files (overrides):
+  docker compose -f compose.yaml -f compose.override.yaml up
+  compose.override.yaml is automatically merged if present in the same directory.
+  Production base file + dev override adds ports, volume mounts, debug env vars.
+
+Profiles — conditional services:
+  services:
+    docs:
+      profiles: [dev]        # only starts with --profile dev
+  docker compose --profile dev up
+  Production docker compose up skips profiled services.
+
+extra_hosts — custom /etc/hosts entries:
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  host-gateway special value: resolves to host IP (Linux: bridge IP; Mac/Windows: host.docker.internal)
+
+Scaling:
+  docker compose up --scale worker=4   # run 4 worker replicas
+  For load-balanced scaling, use Docker Swarm (docker stack deploy) or Kubernetes.`,
+      },
       {
         title: 'Compose v2 vs v3 schema — what actually changed and what was removed',
         content: `Compose file schema versioning caused years of confusion. Understanding what changed prevents common migration errors.
@@ -17485,211 +17130,6 @@ Environment variable substitution:
   Check resolved values before deploying:
     docker compose config   # prints fully-interpolated compose.yaml`,
       },
-      {
-        title: 'Docker Compose architecture — services, networks, volumes, dependencies',
-        image: '/diagrams/devops/f10-docker-compose.png',
-        content: `Default network: Compose automatically creates a user-defined bridge named <project>_default. All services attach and resolve each other by SERVICE NAME via Docker's embedded DNS (127.0.0.11). Container IP addresses are dynamic — not persisted across restarts or recreations.
-
-Critical port semantics gotcha: With ports: "8001:5432" on a postgres service, OTHER services inside the compose network must connect on port 5432 (the container port), NOT 8001 (the host port). Only external clients use 8001.
-
-Service reconnection requirement: When a service is updated and recreated, its IP address changes. The old connection is invalidated. Applications MUST reconnect using the service name — not a cached IP.
-
-compose.yaml structure:
-  services:  containers to run (each maps to docker run arguments)
-  networks:  custom networks; default: one bridge per project
-  volumes:   named volumes declared here, referenced in services
-  configs:   config files injected as files into services
-  secrets:   secrets (production/Swarm feature)
-
-depends_on conditions — the correct way:
-  depends_on:
-    db:
-      condition: service_healthy   # waits for HEALTHCHECK to pass
-    cache:
-      condition: service_started   # waits only for container start (not ready)
-    migrate:
-      condition: service_completed_successfully  # for one-shot init jobs
-
-condition: service_started is the default and is almost always wrong for databases. The container starts before postgres is ready to accept connections. Always pair databases with a healthcheck + condition: service_healthy.
-
-network_mode options for a service:
-  host            — shares host network stack; service DNS resolution fails with this mode
-  none            — all networking disabled
-  service:<name>  — share network namespace with another service container
-  container:<id>  — share with a specific container ID
-
-Custom and external networks:
-  networks:
-    internal-net:
-      internal: true    # no external connectivity, no default gateway
-    shared-net:
-      external: true    # must already exist; docker compose up fails if missing
-
-  external: true networks are how multiple Compose projects communicate — they share a pre-existing network. If the network is missing at compose up time, it fails with "Network not found".
-
-  Services on different networks cannot communicate unless they share at least one common network.
-
-Multiple compose files (overrides):
-  docker compose -f compose.yaml -f compose.override.yaml up
-  compose.override.yaml is automatically merged if present in the same directory.
-  Production base file + dev override adds ports, volume mounts, debug env vars.
-
-Profiles — conditional services:
-  services:
-    docs:
-      profiles: [dev]        # only starts with --profile dev
-  docker compose --profile dev up
-  Production docker compose up skips profiled services.
-
-extra_hosts — custom /etc/hosts entries:
-  extra_hosts:
-    - "host.docker.internal:host-gateway"
-  host-gateway special value: resolves to host IP (Linux: bridge IP; Mac/Windows: host.docker.internal)
-
-Scaling:
-  docker compose up --scale worker=4   # run 4 worker replicas
-  For load-balanced scaling, use Docker Swarm (docker stack deploy) or Kubernetes.`,
-      },
-      {
-        title: 'Health-check-based startup ordering — depends_on patterns for production',
-        content: `The most common Compose failure in production is a service starting before its dependency is ready. depends_on with condition: service_healthy solves this — but requires correct healthcheck configuration.
-
-The problem without healthchecks:
-  web starts after db container starts, but postgres takes 2-5 seconds to initialize.
-  web immediately tries to connect: "Connection refused" or "FATAL: database does not exist".
-  Without retry logic in the application, web crashes and never comes back.
-
-Solution: healthcheck + condition: service_healthy
-
-  services:
-    db:
-      image: postgres:16
-      environment:
-        POSTGRES_DB: mydb
-        POSTGRES_USER: app
-        POSTGRES_PASSWORD: secret
-      healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U app -d mydb"]
-        interval: 5s       # check every 5 seconds
-        timeout: 5s        # fail the check if it takes >5s
-        retries: 5         # mark unhealthy after 5 consecutive failures
-        start_period: 10s  # grace period before checks start (for slow init)
-      volumes:
-        - pgdata:/var/lib/postgresql/data
-
-    web:
-      build: .
-      depends_on:
-        db:
-          condition: service_healthy   # waits for pg_isready to pass
-      ports:
-        - "8080:8080"
-
-  volumes:
-    pgdata:
-
-Healthcheck test forms:
-  CMD string — runs in shell: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
-  CMD exec — no shell: ["CMD", "curl", "-f", "http://localhost/health"]
-  NONE — disables inherited healthcheck from base image
-
-Useful healthcheck patterns by service type:
-  PostgreSQL:   pg_isready -U \${POSTGRES_USER} -d \${POSTGRES_DB}
-  MySQL:        mysqladmin ping -h localhost -u root -p\${MYSQL_ROOT_PASSWORD}
-  Redis:        redis-cli ping
-  HTTP service: curl -f http://localhost:8080/health || exit 1
-  Kafka:        kafka-broker-api-versions --bootstrap-server localhost:9092
-
-condition: service_completed_successfully — for one-shot jobs:
-  services:
-    migrate:
-      image: myapp
-      command: python manage.py migrate
-      depends_on:
-        db:
-          condition: service_healthy
-
-    web:
-      image: myapp
-      depends_on:
-        migrate:
-          condition: service_completed_successfully
-        db:
-          condition: service_healthy
-
-  This pattern ensures migrations run before the app server, preventing startup errors
-  on first deployment or after schema changes.`,
-      },
-      {
-        title: 'Multi-environment Compose override pattern — base + dev + prod files',
-        content: `Compose's file merging mechanism allows a single base configuration to be extended for different environments without duplication.
-
-Base file (compose.yaml) — production-ready defaults:
-  services:
-    web:
-      image: myapp:latest
-      environment:
-        - LOG_LEVEL=info
-        - DB_HOST=db
-      restart: unless-stopped
-      deploy:
-        resources:
-          limits:
-            memory: 512m
-    db:
-      image: postgres:16
-      volumes:
-        - pgdata:/var/lib/postgresql/data
-      healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U app"]
-        interval: 10s
-        retries: 5
-  volumes:
-    pgdata:
-
-Dev override (compose.override.yaml — auto-merged):
-  services:
-    web:
-      image: myapp:dev              # override image for local dev
-      build: .                      # build locally instead of pulling
-      ports:
-        - "8080:8080"               # expose for local access (no reverse proxy in dev)
-        - "5678:5678"               # debugger port
-      environment:
-        - LOG_LEVEL=debug           # more verbose
-        - RELOAD=true               # hot reload
-      volumes:
-        - .:/app                    # live code mount for hot reload
-    db:
-      ports:
-        - "5432:5432"               # expose DB directly for local tools (e.g. pgAdmin)
-
-Production deployment (no override file — use base only):
-  docker compose -f compose.yaml up -d
-  # No compose.override.yaml in prod; only base file with hardened settings
-
-Staging with specific file:
-  docker compose -f compose.yaml -f compose.staging.yaml up -d
-
-Merge semantics (important for debugging):
-  Scalars (image, command): override file wins
-  Lists (ports, volumes): APPENDED (not replaced)
-  Maps (environment, labels): MERGED (override values take precedence per key)
-  Example: if base has env LOG_LEVEL=info and override has LOG_LEVEL=debug,
-           the merged result is LOG_LEVEL=debug.
-
-Environment variable substitution:
-  Use .env file (auto-loaded from project directory):
-    DB_PASSWORD=secret
-    RAILS_ENV=production
-  Reference in compose.yaml:
-    environment:
-      - DB_PASSWORD=\${DB_PASSWORD}
-  Override for specific runs:
-    DB_PASSWORD=other docker compose up
-  Check resolved values before deploying:
-    docker compose config   # prints fully-interpolated compose.yaml`,
-      },
     ],
     references: [
       'https://docs.docker.com/compose/',
@@ -17719,6 +17159,70 @@ Environment variable substitution:
       { q: 'GHCR vs Docker Hub for team use?', a: 'GHCR: free for public, free for private with GitHub Actions, tied to GitHub org permissions. Docker Hub: rate-limited (100/6h unauthenticated, 200/6h free), requires separate credentials. These are answers a container-registry-fluent engineer should give without preparation.' },
     ],
     topics: [
+      {
+        title: 'Image lifecycle — build, tag, push, pull, manifest',
+        image: '/diagrams/devops/f12-docker-registry.png',
+        content: `Registry API (OCI Distribution Spec):
+  GET  /v2/<name>/manifests/<reference>  → fetch manifest by tag or digest
+  GET  /v2/<name>/blobs/<digest>         → fetch a layer tar.gz by SHA256
+  POST /v2/<name>/blobs/uploads/         → initiate blob upload
+  PUT  /v2/<name>/manifests/<reference>  → push manifest
+
+Only new/changed layers are uploaded — docker push computes which layer digests the registry already has and skips them.
+
+Image naming format:
+  [registry/][namespace/]repository[:tag][@digest]
+
+  nginx                                          → docker.io/library/nginx:latest
+  myapp:v1.2.3                                   → docker.io/<user>/myapp:v1.2.3
+  ghcr.io/myorg/myapp:v1.2.3                     → GitHub Container Registry
+  123456789.dkr.ecr.us-east-1.amazonaws.com/app  → AWS ECR
+  gcr.io/myproject/myapp                         → Google Container Registry (legacy)
+  us-docker.pkg.dev/myproject/repo/myapp         → Google Artifact Registry (current)
+
+Tagging strategy:
+  latest   — mutable; always points to the most recent build. NEVER pin to latest in production.
+  v1.2.3   — SemVer tag. Still mutable — can be overwritten with docker push.
+  sha256:abc123...  — immutable digest. Cryptographically guaranteed to be the exact image.
+
+To pin by digest (most secure):
+  FROM node:20-alpine@sha256:3b7b4b4c...
+  docker run node:20-alpine@sha256:3b7b4b4c...
+
+docker inspect — check what's local:
+  docker inspect myapp:v1.2.3 | jq '.[0].RepoDigests'
+
+Multi-architecture images (OCI Image Index):
+A multi-arch "fat manifest" (Image Index) contains a list of per-platform manifests:
+  {
+    "schemaVersion": 2,
+    "mediaType": "application/vnd.oci.image.index.v1+json",
+    "manifests": [
+      { "platform": { "os": "linux", "architecture": "amd64" }, "digest": "sha256:..." },
+      { "platform": { "os": "linux", "architecture": "arm64" }, "digest": "sha256:..." }
+    ]
+  }
+
+docker pull on an M2 Mac automatically selects the arm64 manifest. CI on x86 gets amd64. No separate tags needed.
+
+Build multi-arch with BuildKit:
+  docker buildx create --name multi --use --bootstrap
+  docker buildx build     --platform linux/amd64,linux/arm64     -t ghcr.io/myorg/myapp:v1.2.3     --push .
+
+QEMU emulation is used for cross-architecture builds on a single host. For production CI, use native arm64 runners for faster builds.
+
+Registry authentication:
+  Docker Hub:    docker login -u <user> --password-stdin
+  GHCR:          echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
+  AWS ECR:       aws ecr get-login-password | docker login --username AWS --password-stdin <ecr-url>
+  GCP AR:        gcloud auth configure-docker us-docker.pkg.dev
+  Self-hosted:   docker login registry.internal:5000
+
+docker logout removes stored credentials from ~/.docker/config.json. In CI, prefer OIDC-based auth (no long-lived credentials).
+
+Harbor — self-hosted enterprise registry:
+  Vulnerability scanning (Trivy integration), image replication, RBAC, garbage collection, webhook triggers. Used when data residency or compliance requires on-premises storage.`,
+      },
       {
         title: 'Local Docker Registry (registry:2) — air-gapped and CI mirror workflows',
         content: `Running a local Docker registry uses the official registry:2 image, which implements the OCI Distribution Spec.
@@ -17880,70 +17384,6 @@ Pull-through cache configuration (daemon.json) — transparently mirror Docker H
   Any docker pull nginx now first checks the mirror; falls through to Docker Hub only on miss.
   Set up registry:2 as the mirror: REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io`,
       },
-      {
-        title: 'Image lifecycle — build, tag, push, pull, manifest',
-        image: '/diagrams/devops/f12-docker-registry.png',
-        content: `Registry API (OCI Distribution Spec):
-  GET  /v2/<name>/manifests/<reference>  → fetch manifest by tag or digest
-  GET  /v2/<name>/blobs/<digest>         → fetch a layer tar.gz by SHA256
-  POST /v2/<name>/blobs/uploads/         → initiate blob upload
-  PUT  /v2/<name>/manifests/<reference>  → push manifest
-
-Only new/changed layers are uploaded — docker push computes which layer digests the registry already has and skips them.
-
-Image naming format:
-  [registry/][namespace/]repository[:tag][@digest]
-
-  nginx                                          → docker.io/library/nginx:latest
-  myapp:v1.2.3                                   → docker.io/<user>/myapp:v1.2.3
-  ghcr.io/myorg/myapp:v1.2.3                     → GitHub Container Registry
-  123456789.dkr.ecr.us-east-1.amazonaws.com/app  → AWS ECR
-  gcr.io/myproject/myapp                         → Google Container Registry (legacy)
-  us-docker.pkg.dev/myproject/repo/myapp         → Google Artifact Registry (current)
-
-Tagging strategy:
-  latest   — mutable; always points to the most recent build. NEVER pin to latest in production.
-  v1.2.3   — SemVer tag. Still mutable — can be overwritten with docker push.
-  sha256:abc123...  — immutable digest. Cryptographically guaranteed to be the exact image.
-
-To pin by digest (most secure):
-  FROM node:20-alpine@sha256:3b7b4b4c...
-  docker run node:20-alpine@sha256:3b7b4b4c...
-
-docker inspect — check what's local:
-  docker inspect myapp:v1.2.3 | jq '.[0].RepoDigests'
-
-Multi-architecture images (OCI Image Index):
-A multi-arch "fat manifest" (Image Index) contains a list of per-platform manifests:
-  {
-    "schemaVersion": 2,
-    "mediaType": "application/vnd.oci.image.index.v1+json",
-    "manifests": [
-      { "platform": { "os": "linux", "architecture": "amd64" }, "digest": "sha256:..." },
-      { "platform": { "os": "linux", "architecture": "arm64" }, "digest": "sha256:..." }
-    ]
-  }
-
-docker pull on an M2 Mac automatically selects the arm64 manifest. CI on x86 gets amd64. No separate tags needed.
-
-Build multi-arch with BuildKit:
-  docker buildx create --name multi --use --bootstrap
-  docker buildx build     --platform linux/amd64,linux/arm64     -t ghcr.io/myorg/myapp:v1.2.3     --push .
-
-QEMU emulation is used for cross-architecture builds on a single host. For production CI, use native arm64 runners for faster builds.
-
-Registry authentication:
-  Docker Hub:    docker login -u <user> --password-stdin
-  GHCR:          echo $GITHUB_TOKEN | docker login ghcr.io -u $GITHUB_USER --password-stdin
-  AWS ECR:       aws ecr get-login-password | docker login --username AWS --password-stdin <ecr-url>
-  GCP AR:        gcloud auth configure-docker us-docker.pkg.dev
-  Self-hosted:   docker login registry.internal:5000
-
-docker logout removes stored credentials from ~/.docker/config.json. In CI, prefer OIDC-based auth (no long-lived credentials).
-
-Harbor — self-hosted enterprise registry:
-  Vulnerability scanning (Trivy integration), image replication, RBAC, garbage collection, webhook triggers. Used when data residency or compliance requires on-premises storage.`,
-      },
     ],
     references: [
       'https://github.com/opencontainers/distribution-spec',
@@ -17961,6 +17401,15 @@ Harbor — self-hosted enterprise registry:
     questions: 5,
     description: 'Docker Swarm turns a group of Docker hosts into a single cluster managed through the standard Docker API. It uses Raft consensus for manager HA, overlay networks for cross-host communication, and a routing mesh that load-balances published ports on every node — no separate load balancer needed for simple deployments.',
     visualizations: [],
+    quickFire: [
+      { q: 'What is the minimum manager count for a fault-tolerant Swarm?', a: '3 managers. With 3, the cluster tolerates 1 manager failure while maintaining quorum (2/3).' },
+      { q: 'What happens if a Swarm loses quorum?', a: 'No new tasks can be scheduled and the API returns \'swarm does not have a leader\'. Existing running containers continue until they are stopped or fail. Recovery: docker swarm init --force-new-cluster on a surviving manager.' },
+      { q: 'What is the difference between replicated and global service mode?', a: 'Replicated runs a fixed number of tasks distributed across eligible nodes. Global runs exactly one task on every eligible node — useful for log shippers, monitoring agents, or node-local services.' },
+      { q: 'How does the routing mesh work?', a: 'IPVS listens on the published port on every node. Incoming traffic is forwarded to a healthy task regardless of which node it arrived at. The tradeoff is that the real client IP is SNATted.' },
+      { q: 'What is start-first update order and when should you use it?', a: 'start-first launches the new task and waits for it to pass its healthcheck before stopping the old one. Use it for zero-downtime rolling deploys — requires enough node capacity to run N+parallelism tasks simultaneously.' },
+      { q: 'How do secrets work in Swarm vs Compose?', a: 'Swarm encrypts secrets in the Raft log and mounts them as tmpfs at /run/secrets. In docker compose (non-Swarm), secrets are bind-mounted from host files — not encrypted. True encryption only works in Swarm mode.' },
+      { q: 'What ports does Swarm require open between nodes?', a: 'TCP 2377 (cluster management), TCP/UDP 7946 (node communication), UDP 4789 (VXLAN overlay data plane).' },
+    ],
     topics: [
       {
         title: 'Swarm architecture — Raft managers, worker nodes, routing mesh',
@@ -18011,15 +17460,6 @@ Secrets and configs in Swarm:
   Service containers only get secrets explicitly granted to them.`,
       },
     ],
-    quickFire: [
-      { q: 'What is the minimum manager count for a fault-tolerant Swarm?', a: '3 managers. With 3, the cluster tolerates 1 manager failure while maintaining quorum (2/3).' },
-      { q: 'What happens if a Swarm loses quorum?', a: 'No new tasks can be scheduled and the API returns \'swarm does not have a leader\'. Existing running containers continue until they are stopped or fail. Recovery: docker swarm init --force-new-cluster on a surviving manager.' },
-      { q: 'What is the difference between replicated and global service mode?', a: 'Replicated runs a fixed number of tasks distributed across eligible nodes. Global runs exactly one task on every eligible node — useful for log shippers, monitoring agents, or node-local services.' },
-      { q: 'How does the routing mesh work?', a: 'IPVS listens on the published port on every node. Incoming traffic is forwarded to a healthy task regardless of which node it arrived at. The tradeoff is that the real client IP is SNATted.' },
-      { q: 'What is start-first update order and when should you use it?', a: 'start-first launches the new task and waits for it to pass its healthcheck before stopping the old one. Use it for zero-downtime rolling deploys — requires enough node capacity to run N+parallelism tasks simultaneously.' },
-      { q: 'How do secrets work in Swarm vs Compose?', a: 'Swarm encrypts secrets in the Raft log and mounts them as tmpfs at /run/secrets. In docker compose (non-Swarm), secrets are bind-mounted from host files — not encrypted. True encryption only works in Swarm mode.' },
-      { q: 'What ports does Swarm require open between nodes?', a: 'TCP 2377 (cluster management), TCP/UDP 7946 (node communication), UDP 4789 (VXLAN overlay data plane).' },
-    ],
     references: [
       'https://docs.docker.com/engine/swarm/',
       'https://docs.docker.com/reference/cli/docker/service/create/',
@@ -18048,6 +17488,75 @@ Secrets and configs in Swarm:
       { q: 'What is the recommended security checklist for production containers?', a: 'USER non-root, --cap-drop ALL, --no-new-privileges, --read-only rootfs, seccomp profile, image scanning in CI, SHA digest pinning for base images, no secrets in ENV. These are answers a container-security-fluent engineer should give without preparation.' },
     ],
     topics: [
+      {
+        title: 'Container security layers — image, runtime, and kernel hardening',
+        image: '/diagrams/devops/f11-docker-security.png',
+        content: `Layer 1 — Image security (before the container even runs):
+
+Minimal base images. Every package in the base image is a potential CVE. Use:
+  distroless (Google) — no shell, no package manager, only runtime libs. gcr.io/distroless/nodejs20-debian12
+  Alpine Linux     — musl libc + busybox, ~5MB base, small attack surface
+  scratch          — truly empty; only for statically-linked binaries (Go, Rust)
+
+Multi-stage builds separate build tools from the runtime image — the compiler, test frameworks, and dev deps never ship to production.
+
+Image scanning — find CVEs before pushing:
+  trivy image myapp:v1.2.3       # Aqua Security, widely used in CI
+  grype myapp:v1.2.3             # Anchore
+  docker scout cves myapp:v1.2.3 # Docker's built-in scanner
+  snyk container test myapp:v1.2.3
+
+Image signing with cosign (SLSA provenance):
+  cosign sign --key cosign.key ghcr.io/myorg/myapp:v1.2.3
+  cosign verify --key cosign.pub ghcr.io/myorg/myapp:v1.2.3
+  Keyless signing via OIDC token (GitHub Actions, no private key needed):
+    cosign sign ghcr.io/myorg/myapp@sha256:...
+
+Layer 2 — Runtime capabilities (Linux capabilities):
+
+Default Docker container has 14 of 38+ capabilities active. Most dangerous:
+  CAP_NET_ADMIN    — modify host routing tables, firewall rules
+  CAP_SYS_ADMIN    — mount filesystems, ptrace, kernel module loading (near-root)
+  CAP_SYS_PTRACE   — trace any process
+  CAP_DAC_OVERRIDE — bypass file permission checks
+
+Hardened capability set:
+  docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
+  # Only grant NET_BIND_SERVICE if you need to bind port < 1024
+
+privileged: true disables ALL capability dropping and gives access to host devices — equivalent to root on the host. Never use in production.
+
+--no-new-privileges — prevents setuid/setgid binaries from gaining elevated privileges. Should always be set.
+--read-only — mounts root filesystem as read-only. Combine with tmpfs for writable dirs:
+  docker run --read-only --tmpfs /tmp myapp
+
+Layer 3 — Seccomp (syscall filtering):
+
+Default Docker/containerd seccomp profile blocks ~44 of ~300+ Linux syscalls including: keyctl, ptrace, mount, kexec_load, unshare, add_key.
+
+Custom seccomp profile:
+  docker run --security-opt seccomp=profile.json myapp
+
+Layer 4 — Rootless Docker:
+
+Rootless mode runs the entire Docker daemon as an unprivileged user. The container's root (UID 0) maps to a high host UID (e.g. 100000+) via user namespaces. A full container escape yields only unprivileged host access.
+
+Limitations of rootless mode:
+  - Some network modes unavailable (macvlan, ipvlan)
+  - AppArmor profiles may not load
+  - Overlay storage driver requires kernel 5.11+ (or use fuse-overlayfs)
+  - Expose ports < 1024 requires CAP_NET_BIND_SERVICE or sysctl net.ipv4.ip_unprivileged_port_start=0
+
+Security checklist for production containers:
+  USER non-root (in Dockerfile, before CMD)
+  --cap-drop ALL + add only needed caps
+  --no-new-privileges
+  --read-only + --tmpfs for writable paths
+  seccomp profile (at minimum: RuntimeDefault)
+  Scan image in CI (trivy/grype)
+  Pin base image to SHA digest (not a mutable tag)
+  No secrets in ENV or image layers (use --mount=type=secret)`,
+      },
       {
         title: 'AppArmor and seccomp profiles — writing and applying mandatory access control',
         content: `AppArmor and seccomp are complementary kernel-level security mechanisms. Seccomp filters which syscalls can be made; AppArmor controls what files and capabilities those syscalls can touch.
@@ -18251,75 +17760,6 @@ Supply-chain security checklist:
   5. Verify signature in deployment pipeline or admission controller
   6. Pin base images by SHA digest in Dockerfiles (not mutable tags)`,
       },
-      {
-        title: 'Container security layers — image, runtime, and kernel hardening',
-        image: '/diagrams/devops/f11-docker-security.png',
-        content: `Layer 1 — Image security (before the container even runs):
-
-Minimal base images. Every package in the base image is a potential CVE. Use:
-  distroless (Google) — no shell, no package manager, only runtime libs. gcr.io/distroless/nodejs20-debian12
-  Alpine Linux     — musl libc + busybox, ~5MB base, small attack surface
-  scratch          — truly empty; only for statically-linked binaries (Go, Rust)
-
-Multi-stage builds separate build tools from the runtime image — the compiler, test frameworks, and dev deps never ship to production.
-
-Image scanning — find CVEs before pushing:
-  trivy image myapp:v1.2.3       # Aqua Security, widely used in CI
-  grype myapp:v1.2.3             # Anchore
-  docker scout cves myapp:v1.2.3 # Docker's built-in scanner
-  snyk container test myapp:v1.2.3
-
-Image signing with cosign (SLSA provenance):
-  cosign sign --key cosign.key ghcr.io/myorg/myapp:v1.2.3
-  cosign verify --key cosign.pub ghcr.io/myorg/myapp:v1.2.3
-  Keyless signing via OIDC token (GitHub Actions, no private key needed):
-    cosign sign ghcr.io/myorg/myapp@sha256:...
-
-Layer 2 — Runtime capabilities (Linux capabilities):
-
-Default Docker container has 14 of 38+ capabilities active. Most dangerous:
-  CAP_NET_ADMIN    — modify host routing tables, firewall rules
-  CAP_SYS_ADMIN    — mount filesystems, ptrace, kernel module loading (near-root)
-  CAP_SYS_PTRACE   — trace any process
-  CAP_DAC_OVERRIDE — bypass file permission checks
-
-Hardened capability set:
-  docker run --cap-drop ALL --cap-add NET_BIND_SERVICE myapp
-  # Only grant NET_BIND_SERVICE if you need to bind port < 1024
-
-privileged: true disables ALL capability dropping and gives access to host devices — equivalent to root on the host. Never use in production.
-
---no-new-privileges — prevents setuid/setgid binaries from gaining elevated privileges. Should always be set.
---read-only — mounts root filesystem as read-only. Combine with tmpfs for writable dirs:
-  docker run --read-only --tmpfs /tmp myapp
-
-Layer 3 — Seccomp (syscall filtering):
-
-Default Docker/containerd seccomp profile blocks ~44 of ~300+ Linux syscalls including: keyctl, ptrace, mount, kexec_load, unshare, add_key.
-
-Custom seccomp profile:
-  docker run --security-opt seccomp=profile.json myapp
-
-Layer 4 — Rootless Docker:
-
-Rootless mode runs the entire Docker daemon as an unprivileged user. The container's root (UID 0) maps to a high host UID (e.g. 100000+) via user namespaces. A full container escape yields only unprivileged host access.
-
-Limitations of rootless mode:
-  - Some network modes unavailable (macvlan, ipvlan)
-  - AppArmor profiles may not load
-  - Overlay storage driver requires kernel 5.11+ (or use fuse-overlayfs)
-  - Expose ports < 1024 requires CAP_NET_BIND_SERVICE or sysctl net.ipv4.ip_unprivileged_port_start=0
-
-Security checklist for production containers:
-  USER non-root (in Dockerfile, before CMD)
-  --cap-drop ALL + add only needed caps
-  --no-new-privileges
-  --read-only + --tmpfs for writable paths
-  seccomp profile (at minimum: RuntimeDefault)
-  Scan image in CI (trivy/grype)
-  Pin base image to SHA digest (not a mutable tag)
-  No secrets in ENV or image layers (use --mount=type=secret)`,
-      },
     ],
     references: [
       'https://docs.docker.com/engine/security/',
@@ -18352,6 +17792,55 @@ Security checklist for production containers:
       { q: 'What is the size difference between a naive Node.js image and a multi-stage one?', a: 'Typically 800MB naive vs 150MB multi-stage — an 81% reduction by keeping the TypeScript compiler, bundler, and test frameworks out of the runtime image. These are answers a Docker-fluent engineer should give without preparation.' },
     ],
     topics: [
+      {
+        title: 'Stage flow diagram — builder → test → final with size annotations',
+        image: '/diagrams/devops/f13-docker-multi-stage.png',
+        content: `Stage structure (typical 3-stage build):
+
+  ┌─────────────────────────────┐
+  │  builder  (dashed border)   │  ~800 MB
+  │  FROM node:22 AS builder    │  Full compiler + devDeps
+  │  RUN npm ci && npm run build│
+  └────────────┬────────────────┘
+               │ COPY --from=builder /app/dist ./dist
+               │ COPY --from=builder /app/node_modules ./node_modules (prod only)
+  ┌────────────▼────────────────┐
+  │  test     (dashed border)   │  ~820 MB (adds test frameworks)
+  │  FROM builder AS test       │  Intermediate — not in final image
+  │  RUN npm test               │
+  └────────────────────────────-┘
+               (discarded — test stage output not COPY'd anywhere)
+
+  ┌─────────────────────────────┐
+  │  final    (solid border)    │  ~150 MB
+  │  FROM node:22-alpine AS     │  Runtime only: prod node_modules + dist
+  │  final                      │
+  │  COPY --from=builder ...    │
+  └────────────────────────────-┘
+               │
+               ▼
+  docker build output image  (~150 MB, 81% smaller than single-stage)
+
+Key visual concepts:
+  Dashed borders = intermediate stages discarded after build; never ship to registry.
+  Solid border = the final FROM stage; this is the image produced by docker build.
+  Directed edges = explicit COPY --from=<stage> transfers; only listed files cross stage boundaries.
+  Size annotations at each stage show the progressive reduction: 800 MB → 820 MB (test) → 150 MB (final).
+
+BuildKit parallel execution:
+  Stages with no COPY --from dependency between them run in parallel automatically.
+  Example: if test stage does not depend on builder's output directly, they can build concurrently.
+  BuildKit builds a dependency DAG from FROM and COPY --from instructions; independent nodes parallelize.
+
+--target flag for partial builds:
+  docker build --target test .   → builds only through the test stage; useful in CI to run tests
+                                    without building the final runtime image when the test fails.
+  docker build --target builder . → produces the heavy build-tools image for debugging build failures.
+
+This diagram is the standard visual for explaining multi-stage builds in interviews:
+  "Each stage is an independent filesystem. COPY --from is the only way data crosses stage boundaries.
+   Everything not explicitly copied is discarded. The final image is only the last stage."`,
+      },
       {
         title: 'Multi-stage build anatomy — stages, COPY --from, and the final image',
         content: `A multi-stage Dockerfile has multiple FROM instructions. Each FROM starts a new build stage. Stages are numbered (0, 1, 2...) or named with AS <name>. The final FROM stage defines the image docker build produces.
@@ -18589,55 +18078,6 @@ COPY --from=backend /server /server
 
 Wall-clock time = max(frontend, backend) instead of their sum.`,
       },
-      {
-        title: 'Stage flow diagram — builder → test → final with size annotations',
-        image: '/diagrams/devops/f13-docker-multi-stage.png',
-        content: `Stage structure (typical 3-stage build):
-
-  ┌─────────────────────────────┐
-  │  builder  (dashed border)   │  ~800 MB
-  │  FROM node:22 AS builder    │  Full compiler + devDeps
-  │  RUN npm ci && npm run build│
-  └────────────┬────────────────┘
-               │ COPY --from=builder /app/dist ./dist
-               │ COPY --from=builder /app/node_modules ./node_modules (prod only)
-  ┌────────────▼────────────────┐
-  │  test     (dashed border)   │  ~820 MB (adds test frameworks)
-  │  FROM builder AS test       │  Intermediate — not in final image
-  │  RUN npm test               │
-  └────────────────────────────-┘
-               (discarded — test stage output not COPY'd anywhere)
-
-  ┌─────────────────────────────┐
-  │  final    (solid border)    │  ~150 MB
-  │  FROM node:22-alpine AS     │  Runtime only: prod node_modules + dist
-  │  final                      │
-  │  COPY --from=builder ...    │
-  └────────────────────────────-┘
-               │
-               ▼
-  docker build output image  (~150 MB, 81% smaller than single-stage)
-
-Key visual concepts:
-  Dashed borders = intermediate stages discarded after build; never ship to registry.
-  Solid border = the final FROM stage; this is the image produced by docker build.
-  Directed edges = explicit COPY --from=<stage> transfers; only listed files cross stage boundaries.
-  Size annotations at each stage show the progressive reduction: 800 MB → 820 MB (test) → 150 MB (final).
-
-BuildKit parallel execution:
-  Stages with no COPY --from dependency between them run in parallel automatically.
-  Example: if test stage does not depend on builder's output directly, they can build concurrently.
-  BuildKit builds a dependency DAG from FROM and COPY --from instructions; independent nodes parallelize.
-
---target flag for partial builds:
-  docker build --target test .   → builds only through the test stage; useful in CI to run tests
-                                    without building the final runtime image when the test fails.
-  docker build --target builder . → produces the heavy build-tools image for debugging build failures.
-
-This diagram is the standard visual for explaining multi-stage builds in interviews:
-  "Each stage is an independent filesystem. COPY --from is the only way data crosses stage boundaries.
-   Everything not explicitly copied is discarded. The final image is only the last stage."`,
-      },
     ],
     references: [
       'https://docs.docker.com/build/building/multi-stage/',
@@ -18669,6 +18109,45 @@ This diagram is the standard visual for explaining multi-stage builds in intervi
       { q: 'What is the difference between always and unless-stopped restart policies?', a: 'Both restart on crash and after daemon/host restart. The difference: unless-stopped will NOT restart a container you manually stopped with docker stop. always will. These are answers a Docker-fluent engineer should give without preparation.' },
     ],
     topics: [
+      {
+        title: 'Container lifecycle state machine diagram — states, transitions, triggering commands',
+        image: '/diagrams/devops/f14-docker-lifecycle-states.png',
+        content: `States (color-coded by group):
+
+  [created]   — allocated, not started (gray)
+  [running]   — PID 1 executing (green)
+  [paused]    — cgroups freezer active, CPU=0, memory preserved (amber)
+  [stopped]   — PID 1 exited or killed, layer still on disk (gray)
+  [removing]  — docker rm in progress, writable layer being deleted (orange)
+  [dead]      — removal failed (mounted volume in use, etc.) (red)
+
+State transitions and triggering commands:
+
+  created  ──── docker start ────────────────────────►  running
+  running  ──── docker pause ─────────────────────────► paused
+  paused   ──── docker unpause ───────────────────────► running
+  running  ──── docker stop (SIGTERM → wait → SIGKILL) ► stopped
+  running  ──── docker kill (SIGKILL) ─────────────────► stopped
+  running  ──── PID 1 exits (success or error) ────────► stopped
+  stopped  ──── docker start ────────────────────────►  running
+  stopped  ──── docker rm ─────────────────────────────► removing → (gone)
+  running  ──── docker rm -f ─────────────────────────► removing → (gone)
+  removing ──── failure (volume lock, etc.) ───────────► dead
+  dead     ──── docker rm -f (retry) ─────────────────► (gone)
+
+The 'docker run' shortcut:
+  docker run = docker create + docker start in a single command.
+  Most common path; rarely need docker create separately unless pre-staging containers.
+
+'docker restart' is not a state; it is stop + start as two sequential operations.
+
+Interview-ready summary:
+  "A container is created (layer allocated), transitions to running when the process starts,
+   can be paused (frozen in-place by the cgroups freezer) and unpaused, stopped when PID 1
+   exits or the daemon sends a signal, and finally removed when the writable layer is deleted.
+   The dead state is rare — it means removal was attempted but failed, typically because a
+   mounted volume is locked by another process."`,
+      },
       {
         title: 'Container states, transitions, and the full lifecycle command map',
         content: `Container states.
@@ -18864,45 +18343,6 @@ docker update --restart unless-stopped myapp
 # Apply to multiple containers
 docker update --memory 256m app1 app2 app3
 \`\`\``,
-      },
-      {
-        title: 'Container lifecycle state machine diagram — states, transitions, triggering commands',
-        image: '/diagrams/devops/f14-docker-lifecycle-states.png',
-        content: `States (color-coded by group):
-
-  [created]   — allocated, not started (gray)
-  [running]   — PID 1 executing (green)
-  [paused]    — cgroups freezer active, CPU=0, memory preserved (amber)
-  [stopped]   — PID 1 exited or killed, layer still on disk (gray)
-  [removing]  — docker rm in progress, writable layer being deleted (orange)
-  [dead]      — removal failed (mounted volume in use, etc.) (red)
-
-State transitions and triggering commands:
-
-  created  ──── docker start ────────────────────────►  running
-  running  ──── docker pause ─────────────────────────► paused
-  paused   ──── docker unpause ───────────────────────► running
-  running  ──── docker stop (SIGTERM → wait → SIGKILL) ► stopped
-  running  ──── docker kill (SIGKILL) ─────────────────► stopped
-  running  ──── PID 1 exits (success or error) ────────► stopped
-  stopped  ──── docker start ────────────────────────►  running
-  stopped  ──── docker rm ─────────────────────────────► removing → (gone)
-  running  ──── docker rm -f ─────────────────────────► removing → (gone)
-  removing ──── failure (volume lock, etc.) ───────────► dead
-  dead     ──── docker rm -f (retry) ─────────────────► (gone)
-
-The 'docker run' shortcut:
-  docker run = docker create + docker start in a single command.
-  Most common path; rarely need docker create separately unless pre-staging containers.
-
-'docker restart' is not a state; it is stop + start as two sequential operations.
-
-Interview-ready summary:
-  "A container is created (layer allocated), transitions to running when the process starts,
-   can be paused (frozen in-place by the cgroups freezer) and unpaused, stopped when PID 1
-   exits or the daemon sends a signal, and finally removed when the writable layer is deleted.
-   The dead state is rare — it means removal was attempted but failed, typically because a
-   mounted volume is locked by another process."`,
       },
     ],
     references: [
@@ -19781,50 +19221,7 @@ No single layer is enough; defense-in-depth is the senior-engineer answer.`,
     color: '#14b8a6',
     questions: 5,
     description: 'The everyday API surface: Pod (smallest schedulable unit), workload controllers (Deployment, StatefulSet, DaemonSet, Job, CronJob), Services (ClusterIP, NodePort, LoadBalancer, ExternalName), Ingress, ConfigMap, Secret, PersistentVolumeClaim, StorageClass, Namespace, ResourceQuota, LimitRange.',
-    visualizations: [
-      {
-        title: 'Pods, workload controllers, Services, storage, namespace policy',
-        image: '/diagrams/devops/k8s-core-resources.png',
-        description: `Pod. The smallest schedulable unit. One or more containers sharing network namespace, shared volumes, and a Pod-level lifecycle. Patterns: Sidecar (sidecar container as v1.29 GA via restartPolicy: Always on initContainer), Adapter, Ambassador, Init container.
-
-You almost never write a bare Pod. Pods are managed by a controller.
-
-Deployment. The default workload for stateless apps. Owns a ReplicaSet which owns Pods. Rolling-update strategy with maxSurge / maxUnavailable. Each spec.template change creates a new ReplicaSet; old one scaled down as new one scales up. revisionHistoryLimit caps stored ReplicaSets (default 10).
-
-StatefulSet. Pods get stable identity: pod-0, pod-1, pod-2 — DNS names predictable, ordinal-indexed. Ordered start (pod-0 ready before pod-1 starts) and reverse-ordered terminate. Each Pod gets its own PersistentVolumeClaim from a volumeClaimTemplate. Use for: distributed databases (Cassandra, MongoDB, etcd), Kafka, Elasticsearch.
-
-DaemonSet. One Pod per node. Use for: log shippers (Fluent Bit, Vector), node monitoring (node-exporter, Datadog agent), CNI plugin agents (cilium-agent), CSI node plugins.
-
-Job. Run-to-completion. completions sets total runs; parallelism sets concurrent. Used for batch: schema migrations, one-shot data pipelines. Indexed Job (since v1.24 GA) gives each Pod a JOB_COMPLETION_INDEX env var.
-
-CronJob. Job on a schedule. cron expression in spec.schedule. concurrencyPolicy: Allow / Forbid / Replace.
-
-Choosing: Deployment for stateless web/API. StatefulSet for stateful database with stable identity. DaemonSet for per-node agent. Job for batch one-shot. CronJob for scheduled batch.
-
-Services. Stable virtual IP (ClusterIP) backed by a set of Pods selected via label selector. Types: ClusterIP (default, internal VIP), NodePort (cluster + high port), LoadBalancer (cloud LB provisioned by CCM), ExternalName (CNAME indirection), Headless (clusterIP: None, DNS returns Pod IPs directly — used by StatefulSets).
-
-EndpointSlices replaced single-Endpoints object for scale — Endpoints had a 1MB etcd object size limit, painful above ~1,000 backing Pods.
-
-Ingress (legacy but everywhere). HTTP/HTTPS L7 routing. Implementations: NGINX (most common), Traefik, HAProxy, Contour, Istio, Kong, AWS ALB controller, GCE ingress. Annotations approach is what Gateway API exists to replace.
-
-ConfigMap. Non-secret config. Mount as files (volumeMount) or inject as env vars. Updates propagate to mounted files within ~minutes (kubelet refresh). Env vars don't update — pod restart required. Size limit 1MB.
-
-Secret. Same shape as ConfigMap; base64-encoded by default (NOT encrypted at rest unless EncryptionConfiguration enabled). Production: pair with External Secrets Operator + cloud secret manager.
-
-PersistentVolumeClaim (PVC). Request for storage of size X with access mode (ReadWriteOnce, ReadOnlyMany, ReadWriteMany, ReadWriteOncePod since v1.27). Bound to a PersistentVolume by the PV binder. Dynamic provisioning: PVC references a StorageClass.
-
-StorageClass. "Profile" for dynamic provisioning. Specifies CSI provisioner, parameters (EBS volume type gp3, IOPS), reclaim policy (Delete, Retain), volume binding mode (WaitForFirstConsumer delays binding until a Pod schedules — volume lands in the right zone).
-
-Namespace. Soft tenancy boundary. Most resources are namespaced. Cluster-scoped: Node, PV, StorageClass, ClusterRole, CRD, Namespace itself.
-
-ResourceQuota. Caps aggregate resource usage in a namespace: CPU/memory requests+limits, storage, object counts.
-
-LimitRange. Per-Pod / per-Container defaults and bounds. Default container request: 100m/128Mi. Stops un-requested Pods (BestEffort QoS class, evicted first under pressure).
-
-QoS class. Derived from requests/limits: Guaranteed (requests == limits everywhere), Burstable (some requests but not equal), BestEffort (none). Eviction order under MemoryPressure: BestEffort > Burstable > Guaranteed.`,
-        image: '/diagrams/devops/g2-k8s-resources.png',
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: 'Pods, workload controllers, Services, storage, namespace policy',
@@ -20057,52 +19454,7 @@ kubectl get pods -o wide -l app=my-app
     color: '#14b8a6',
     questions: 5,
     description: 'The two dominant K8s manifest tools, with opposite philosophies. Helm packages charts (Go-templated YAML + values.yaml + releases) for vendoring and distribution. Kustomize patches a base with environment overlays — no templates, pure structured merge. The 2026 consensus: Helm for third-party software you consume, Kustomize for your own app, and a hybrid pattern when you need both.',
-    visualizations: [
-      {
-        title: 'Helm 3 charts and Kustomize overlays',
-        image: '/diagrams/devops/k8s-helm-kustomize.png',
-        description: `Helm is the package manager for Kubernetes. A chart is a directory: Chart.yaml (metadata + dependencies), values.yaml (defaults), templates/*.yaml (Go templates), templates/_helpers.tpl (named templates), charts/ (vendored sub-charts).
-
-Templates render Go template syntax against the merged values. helm install myrelease ./mychart -f prod-values.yaml renders templates with merged values (chart defaults + -f files + --set CLI overrides), validates against the K8s OpenAPI schema, and applies as a Release. Helm tracks releases as Secrets in the cluster (kind=helm.sh/release.v1).
-
-Helm 3 vs Helm 2. Helm 3 (released November 2019) removed Tiller, the in-cluster server-side component of Helm 2. Tiller had cluster-admin RBAC by default — major security regression. Helm 3 is fully client-side; renders locally and applies via kubectl. Helm 2 EOL November 2020.
-
-Hooks. Annotations on resources to run them at specific lifecycle phases: pre-install, post-install, pre-upgrade, post-upgrade, pre-delete, post-delete, pre-rollback, post-rollback, test. Typical hook: a Job that runs DB migration pre-upgrade.
-
-Dependencies. Chart.yaml dependencies references sub-charts (alias, version, repository, condition). helm dependency update fetches into charts/. Sub-chart values nest under their alias in parent values.yaml.
-
-OCI registry support (Helm 3.8+, GA). Charts pushed and pulled as OCI artifacts to any OCI-compliant registry — ECR, GHCR, GAR, Docker Hub, Harbor, Quay. helm push, helm pull, helm install oci://registry/chart:1.0.0. Has largely replaced the legacy "Helm repo" for new infrastructure.
-
-Helm strengths: Mature ecosystem (Bitnami, prometheus-community, ingress-nginx, cert-manager all distribute as Helm charts). Vendoring third-party software easy. Release lifecycle (helm history, helm rollback). Templating power.
-
-Helm weaknesses: Templating is fragile. Whitespace, indent, nindent, toYaml — complex charts become unreadable. Not GitOps-native by itself.
-
-Kustomize. The templates-free alternative. Built into kubectl since v1.14 (kubectl apply -k). Model: a base directory of plain manifests + overlay directories that patch the base.
-
-Patch types: Strategic merge patch (K8s-aware: merges by key inside lists). JSON 6902 patch (operation-based: add/remove/replace, path, value). Strategic merge can't always express your change — JSON 6902 needed for replacing a list rather than merging.
-
-Generators: configMapGenerator (builds ConfigMap from files or literals; appends content hash to name — forces Pod restart when config changes). secretGenerator (same for Secrets).
-
-Transformers: namespace, namePrefix, nameSuffix, commonLabels, commonAnnotations, replicas, images.
-
-Components (Kustomize 4+). Reusable mixins. Multiple overlays consume the same component without copy-paste.
-
-Kustomize strengths: No templates. Native to kubectl. Diffable in PRs. GitOps-friendly.
-
-Kustomize weaknesses: Limited expressiveness. No package distribution. Cross-resource transformations need configuration.
-
-When each wins:
-
-Helm wins for: vendoring third-party software (cert-manager, prometheus, ingress-nginx); distributing your software to external consumers; apps with many environments and feature toggles; release lifecycle without GitOps.
-
-Kustomize wins for: your own application with environment overlays; internal platform abstractions where pure YAML matters; audit-friendly review.
-
-Hybrid (the 2026 consensus): Helm chart with Kustomize overlay. Argo CD and Flux both support this — render the Helm chart, then apply Kustomize patches on top.
-
-Other tools to know: Jsonnet / Tanka (Grafana Labs), cdk8s (CDK style for K8s), KCL (CNCF sandbox).`,
-        image: '/diagrams/devops/g3-helm-kustomize.png',
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: 'Helm 3 charts and Kustomize overlays',
@@ -20163,78 +19515,7 @@ Other tools to know: Jsonnet / Tanka (Grafana Labs), cdk8s (CDK style for K8s), 
     color: '#14b8a6',
     questions: 5,
     description: 'How external traffic reaches Pods. Ingress (legacy, controller-specific via annotations) vs Gateway API (CNCF-standard, GA mid-2023, role-separated GatewayClass / Gateway / HTTPRoute / TCPRoute / GRPCRoute). Covers controllers (NGINX, Traefik, HAProxy, Contour, Istio gateway, Kong, Envoy Gateway) and the 2026 implementation status.',
-    visualizations: [
-      {
-        title: 'Ingress legacy and Gateway API role separation',
-        image: '/diagrams/devops/k8s-ingress-gateway.png',
-        description: `Ingress is the original K8s API for HTTP(S) ingress. Stable since v1.19 (networking.k8s.io/v1). The Ingress resource describes intent. An Ingress controller running in the cluster watches Ingress objects and configures something (NGINX config, Envoy xDS, HAProxy config, cloud LB) to make it real.
-
-The annotation problem. The Ingress spec is intentionally minimal; advanced features are smuggled through controller-specific annotations: nginx.ingress.kubernetes.io/* (~80 annotations), traefik.ingress.kubernetes.io/*, alb.ingress.kubernetes.io/*, haproxy.org/*. Switching controllers requires rewriting every annotation.
-
-Major Ingress controllers in 2026:
-- NGINX Ingress (kubernetes/ingress-nginx). The community-led NGINX-based controller. Most-deployed globally.
-- Traefik. Cloud-native HTTP reverse proxy. Native CRDs (IngressRoute, Middleware).
-- HAProxy Ingress / HAProxy Kubernetes Ingress. Battle-tested HAProxy, lower memory than NGINX.
-- Contour. CNCF incubating. Envoy-based.
-- Istio Gateway. When you already run Istio.
-- AWS Load Balancer Controller. Provisions ALB or NLB per Ingress. EKS standard.
-- GCE Ingress. On GKE, provisions GCLB.
-- Kong Ingress. API gateway with authn, rate limiting, transformation.
-- Envoy Gateway (CNCF, GA 2024). Full Gateway API implementation backed by Envoy.
-- NGINX Gateway Fabric (NGF). Separate from ingress-nginx; future-direction product.
-
-Gateway API is the CNCF-standardized successor to Ingress. SIG-Network project. Core resources GA mid-2023; ongoing feature additions (ServiceMesh GAMMA, CORS, RetryOnTimeout) in beta/experimental tracks.
-
-Why a successor? Ingress had three structural problems:
-1. Annotations as feature smuggling.
-2. No role separation — same Ingress YAML mixed cluster-operator concerns (TLS cert names, controller class) with app-team concerns (routes, backends).
-3. No expressivity for non-HTTP protocols.
-
-Gateway API splits the model:
-
-GatewayClass. Cluster-scoped. Names the controller. The infra team owns this — same way StorageClass works for storage.
-
-Gateway. Namespaced. References a GatewayClass. Declares listeners (port, protocol, TLS). The platform team owns this; it's the "shared ingress" object that app teams attach routes to.
-
-HTTPRoute, TCPRoute, GRPCRoute, TLSRoute, UDPRoute. Namespaced. Owned by app teams. Attaches to a Gateway; describes routing rules.
-
-Properties of the new model:
-
-Role separation. Cluster-admin owns GatewayClass. Platform team owns Gateway and listener TLS. App teams own *Route. ReferenceGrant gates cross-namespace references explicitly.
-
-Expressive routing without annotations. weight, timeouts, header/path/method matchers, RequestHeaderModifier / ResponseHeaderModifier filters, URLRewrite, RequestRedirect, RequestMirror — all in the spec.
-
-Multi-protocol. TCPRoute and TLSRoute for L4. GRPCRoute for native gRPC. UDPRoute for UDP.
-
-Cross-namespace by design. A Gateway in gateway-infra namespace can be attached to by HTTPRoutes in many app namespaces.
-
-Conformance program. SIG-Network publishes a conformance test suite. Implementations declare conformance levels (Core, Extended, Mesh).
-
-2026 implementation status (Gateway API support):
-
-Solid Gateway API support (Core conformant): Envoy Gateway, NGINX Gateway Fabric, Contour, Istio Gateway, Kong Gateway, Traefik (3.x), Cilium Gateway, Gloo Gateway (Solo.io), HAProxy Kubernetes Ingress.
-
-Cloud-managed: GKE Gateway (GA), AKS Application Gateway for Containers (GA 2024), AWS Gateway API support via AWS Gateway API Controller for VPC Lattice.
-
-Migration patterns:
-- Greenfield: start with Gateway API directly.
-- Brownfield: run both. Ingress for legacy app routes; Gateway API for new routes.
-- Conversion: most controllers ship a one-time converter from Ingress + their annotations to HTTPRoute + standard fields.
-
-When to still use Ingress in 2026:
-- Stable existing setups where migration cost outweighs benefit.
-- Tools that emit Ingress (most cert-manager solver setups).
-
-When Gateway API wins clearly:
-- Multi-team setups where role separation matters.
-- Multi-protocol routing (TCP, gRPC, TLS passthrough, UDP).
-- Service mesh ingress (GAMMA initiative).
-- New clusters / new platforms.
-
-The deeper point. Gateway API is the explicit, multi-team, multi-protocol Ingress that should have shipped in 2018. By mid-2026, most new K8s platforms are Gateway API first.`,
-        image: '/diagrams/devops/g6-gateway-api.png',
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: 'Ingress legacy and Gateway API role separation',
@@ -20390,64 +19671,7 @@ Diagram source: KubeDiagrams (Apache 2.0) — generated from official Gateway AP
     color: '#14b8a6',
     questions: 5,
     description: 'How Kubernetes turns into a platform for everything: define a CustomResourceDefinition, write a controller that reconciles it, ship the pair as an Operator. Covers controller pattern, Operator SDK, Kubebuilder, finalizers, ownerReferences, leader election, OperatorHub, well-known operators (cert-manager, ArgoCD, Strimzi, CloudNativePG), capability levels 1-5.',
-    visualizations: [
-      {
-        title: 'CRDs, controller pattern, building operators',
-        image: '/diagrams/devops/k8s-operators-crds.png',
-        description: `A CustomResourceDefinition (CRD) extends the Kubernetes API with a new kind. The CRD itself is a cluster-scoped resource. Once the CRD exists, kubectl get postgresclusters works just like kubectl get pods. The OpenAPI schema is enforced by the apiserver.
-
-A controller is a process that runs the reconcile loop:
-1. Watch CRD instances via the K8s informer (efficient list/watch with caching).
-2. On any event (create/update/delete), enqueue a reconcile request keyed by namespace/name.
-3. Reconcile reads current state of the CR + the world (child Pods, PVCs, Services).
-4. Diff against desired state; compute actions.
-5. Apply actions via the K8s client (create/update/patch).
-6. Write status back to the CR's /status subresource.
-
-Reconcile must be idempotent. The reconciler is called many times for the same object — on every event, periodic resync, retry on error. Common pattern: every reconcile recomputes desired state from spec and applies via server-side-apply with a stable fieldManager — drift heals automatically.
-
-Owner references. When the controller creates child resources (Pods, PVCs, Secrets), it sets metadata.ownerReferences pointing to the parent CR. The garbage collector deletes children when the parent is deleted.
-
-Finalizers. metadata.finalizers is a list of strings. K8s won't actually delete an object until the list is empty. The controller uses this to do cleanup before the object disappears (drain volumes, release cloud resources, deregister from external systems).
-
-Leader election. Operator runs as a Deployment with replicas: 2 or 3 for HA, but only one replica should reconcile at a time. Standard solution: client-go leaderelection package coordinates via a Lease resource. Losers wait; on leader Pod death, a new leader is elected within seconds.
-
-Conditions. status.conditions is a list of typed status statements. The K8s convention since v1.19 (metav1.Condition). kubectl wait --for=condition=Ready depends on this.
-
-Two dominant scaffolding frameworks for Go operators:
-
-Kubebuilder (sigs.k8s.io/kubebuilder). The "official" K8s SIG project. Generates: CRD manifests from Go structs (kubebuilder markers), a Manager with cache + client + leader election, Reconcile loop skeleton, RBAC manifests, webhook server scaffolding, test harness with envtest (apiserver + etcd in tmpfs).
-
-Operator SDK (operator-framework/operator-sdk). Red Hat's superset. Wraps Kubebuilder for Go and adds Helm-based and Ansible-based operator paths (no Go required). Adds OLM packaging (ClusterServiceVersion, CatalogSource), scorecard for capability testing, bundle generation.
-
-Use Kubebuilder if you're writing pure Go. Use Operator SDK if you need OLM or Helm/Ansible-based operators.
-
-OperatorHub.io. Catalog of operators packaged as OLM bundles. Operators distributed here include: cert-manager (X.509 cert issuance + rotation), Argo CD operator, Strimzi Kafka operator, CloudNativePG (PostgreSQL), Prometheus operator, External Secrets Operator (ESO), Velero (backup/restore + DR).
-
-Operator Capability Levels:
-- Level 1 — Basic install. Operator can create the workload from the CR.
-- Level 2 — Seamless upgrades. Operator can upgrade the operand and itself without data loss.
-- Level 3 — Full lifecycle. Backup, restore, scaling, fault recovery.
-- Level 4 — Deep insights. Metrics, alerts, log streaming, performance analysis.
-- Level 5 — Auto-pilot. Auto-scaling, auto-healing, auto-tuning, capacity prediction.
-
-Most production operators are Level 3-4. Level 5 is rare; CloudNativePG and Strimzi approach it.
-
-OLM (Operator Lifecycle Manager). The K8s-native package manager for operators. Concepts: CatalogSource (index of available operators), Subscription ("I want operator X version Y"), ClusterServiceVersion (CSV — operator metadata + install plan + RBAC), InstallPlan. Outside of OpenShift, OLM adoption is partial — many shops install operators directly via Helm chart and skip OLM.
-
-Anti-patterns to avoid:
-1. Operators that own infrastructure outside the cluster but don't use finalizers.
-2. Reconcile that isn't idempotent. Endless ReplicaSet churn.
-3. Over-broad RBAC. Operator with cluster-admin to be safe. Use Kubebuilder marker generators to scope precisely.
-4. Watching too much. Cluster-wide Pod watch consumes memory and apiserver bandwidth.
-5. Putting business logic in admission webhooks. Webhooks must be fast and reliable.
-6. Storing operational state in CR status. Status should be observed state.
-7. Operators per service. Use community operators instead of building yet another from scratch.
-
-The deeper point. Operators are how Kubernetes became infrastructure: anything stateful or operationally complex (databases, message queues, observability stacks, cert managers) ships as a CRD + controller. The platform team's job in 2026 is increasingly "compose existing operators" rather than "write new ones".`,
-        image: '/diagrams/devops/g4-operators.png',
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: 'CRDs, controller pattern, building operators',
@@ -20520,65 +19744,7 @@ The deeper point. Operators are how Kubernetes became infrastructure: anything s
     color: '#14b8a6',
     questions: 5,
     description: 'East-west traffic plane: mTLS, retries, timeouts, circuit breakers, traffic shifting, zero-trust networking. Three production-grade meshes in 2026: Istio (Envoy data plane, ambient mode 2024+), Linkerd (Linkerd2-proxy in Rust), and Cilium Service Mesh (eBPF data plane).',
-    visualizations: [
-      {
-        title: 'Data plane architectures and 2026 mesh capabilities',
-        image: '/diagrams/devops/k8s-service-mesh.png',
-        description: `Every service mesh has two halves: a data plane (intercepts traffic) and a control plane (configures the data plane).
-
-Sidecar data plane. A proxy container in every Pod. The proxy intercepts ingress/egress traffic via iptables redirection. Used by: Istio (Envoy sidecar), Linkerd (Linkerd2-proxy sidecar), Consul Connect, AWS App Mesh. Tradeoff: per-Pod resource cost (50-200MB RAM, 0.1-0.5 CPU per sidecar) and an extra hop on every request (~0.5-2ms).
-
-Ambient / sidecarless data plane. New in Istio (ambient mode, GA 2024). Two layers: ztunnel (per-node DaemonSet, handles L4 TCP mTLS and policy) + waypoint proxy (per-namespace or per-service-account Envoy, handles L7 HTTP/gRPC features). If you only need mTLS + L4 policy, you only run ztunnel. Pods stay clean.
-
-eBPF data plane. Cilium Service Mesh (Cilium 1.12+, GA-quality 2024+). The Cilium agent loads eBPF programs into the kernel. Programs intercept socket-level operations and apply policy/encryption without proxies. For L4, Cilium runs entirely in the kernel — zero userspace hop. For L7, Cilium uses Envoy as a per-node proxy.
-
-Tradeoffs: No per-Pod sidecar cost. Lowest latency for L4-only meshes. Linux-only (eBPF). L7 features still rely on Envoy under the hood, but per-node not per-Pod.
-
-Control plane. Istio: istiod (single binary since v1.5). Linkerd: control plane runs as a few Deployments — destination, identity, proxy-injector. Cilium: cilium-agent DaemonSet plus cilium-operator. No separate control-plane binary.
-
-Capabilities common to all production meshes:
-
-mTLS. Every service-to-service call encrypted, both sides authenticate via cert. Identity bound to ServiceAccount (Istio SPIFFE-based, Linkerd similar). Zero-trust pods.
-
-Traffic shifting. Weighted routing between subsets of a Service. Used by progressive-delivery tools (Argo Rollouts, Flagger).
-
-Retries / timeouts / circuit breakers. Per-route policy. Linkerd uses retry budgets (max 20% retry traffic) rather than fixed attempt counts — opinionated choice that prevents retry storms.
-
-L7 authorization. AuthorizationPolicy in Istio, Server + ServerAuthorization in Linkerd, CiliumNetworkPolicy with HTTP rules in Cilium.
-
-Observability: Per-call metrics (success rate, latency p50/p95/p99, RPS, by source/destination/route). Distributed tracing. Per-call access logs.
-
-The 2026 reality:
-
-Istio. The dominant CNCF graduated mesh. Largest user base, most features, ambient mode now production-recommended over sidecar for new installs. Heavy in operational complexity. IBM, Salesforce, Airbnb, eBay, Atlassian all run Istio at scale.
-
-Linkerd. CNCF graduated, second-largest. Famously simpler than Istio. Linkerd 2.14+ stabilized HTTPRoute Gateway API support. License change in 2024 (split between OSS and commercial Buoyant Enterprise) caused friction; some shops moved to Istio in response.
-
-Cilium Service Mesh. Ascending fast 2024-2026. The eBPF differentiator (no sidecar = no per-Pod cost) is genuinely valuable at scale. Adopted at scale by Datadog, Capital One, Bell Canada, Adobe.
-
-Comparison summary:
-
-| Dimension       | Istio (sidecar)   | Istio (ambient)   | Linkerd          | Cilium Mesh      |
-|-----------------|-------------------|-------------------|------------------|------------------|
-| Data plane      | Envoy per Pod     | ztunnel + waypoint| Linkerd2-proxy   | eBPF + Envoy/node|
-| Per-Pod cost    | 100-200MB         | ~0                | 30-80MB          | ~0               |
-| Latency (L4)    | +1-2ms            | +0.5-1ms          | +0.5-1ms         | +tens of us      |
-| L7 features     | Full              | Via waypoint      | Subset           | Via Envoy/node   |
-| Multi-cluster   | Mature            | Mature            | Mature           | Mature           |
-| Complexity      | High              | Medium            | Low              | Medium           |
-| Windows nodes   | Yes               | Yes               | Yes              | No               |
-
-When service mesh is wrong:
-1. You have 5 services and call them via in-cluster DNS. Mesh complexity dwarfs the benefit.
-2. All your traffic is north-south (browser → app). Use API gateway / Gateway API.
-3. You need P99 < 1ms east-west. Sidecar mesh adds too much.
-4. You don't have a platform team. Mesh becomes a debugging tax.
-5. Your apps are mostly external SaaS calls.
-
-The deeper point. Service mesh solved the late-2010s problem: "we have hundreds of services in K8s and no one knows who can call what". For greenfield apps in 2026, NetworkPolicy + Gateway API + per-app retry libraries cover 80% of needs without a mesh.`,
-        image: '/diagrams/devops/g5-service-mesh.png',
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: 'Data plane architectures and 2026 mesh capabilities',
@@ -20683,7 +19849,6 @@ OTLP wire protocol. OpenTelemetry Protocol — gRPC + HTTP variants. Default tra
       },
       {
         title: 'OTel Collector pipeline — receivers, processors, exporters',
-        image: '/diagrams/devops/o1-otel.png',
         content: `Receivers ingest data:
 - otlp/grpc on :4317 — apps push spans/metrics/logs via OTLP gRPC.
 - otlp/http on :4318 — same but HTTP for browser clients.
@@ -21798,6 +20963,32 @@ These are answers an OTel-fluent platform engineer should give without preparati
     visualizations: [],
     topics: [
       {
+        title: 'Prometheus + Grafana stack architecture',
+        image: '/diagrams/devops/o3-prom-grafana.png',
+        content: `1. Apps expose /metrics endpoint. Standard format: text-based, one metric per line. Example: http_requests_total{method="GET",route="/api/users",status="200"} 12345.
+
+2. Service discovery (kubernetes_sd_config, consul_sd, file_sd) tells Prometheus which targets to scrape. In K8s: ServiceMonitor / PodMonitor CRDs (kube-prometheus-stack) declare scrape targets.
+
+3. Prometheus scrapes /metrics on scrape_interval (default 15s). HTTP GET to each target. Stores in local TSDB (time-series database, 15 days retention default).
+
+4. Recording rules pre-compute expensive aggregations on schedule. e.g., sum(rate(http_requests_total[5m])) by (service) computed every minute, stored as service:http_requests_per_second:rate5m. Subsequent queries use the pre-computed value.
+
+5. Alerting rules evaluate expressions. When true, fire to Alertmanager. Example: up{job="api"} == 0 → "API down".
+
+6. Alertmanager dedupes, groups, routes alerts. Per-route receivers: PagerDuty for critical, Slack for warning, email for info. Maintenance windows via silences.
+
+7. Remote write forwards metrics to long-term storage (Mimir, Thanos, VictoriaMetrics, Cortex). Local Prometheus has 15-day retention; long-term has years.
+
+8. Grafana queries Prometheus or long-term storage via PromQL. Dashboards render time-series. Grafana Alerting (newer; v10+) replaces Alertmanager for some workflows.
+
+9. PromQL examples:
+   - Instant query: up{job="api"} → current value.
+   - Range query: rate(http_requests_total[5m]) → per-second rate over last 5min.
+   - Aggregation: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) → p99 latency.
+
+The pull model is distinctive. Push-based alternatives (StatsD, InfluxDB push) require apps to push metrics; if push fails, metrics lost. Pull means Prometheus is the source of truth — if it can't reach the app, the metric series shows up=0 (which itself is a useful signal).`,
+      },
+      {
         title: 'Long-term storage — Mimir / Thanos / VictoriaMetrics',
         content: `Prometheus's local TSDB has fundamental limitations:
 - Single-node: no HA. Restart loses recent data not yet flushed.
@@ -21862,32 +21053,6 @@ Cost comparison (100k samples/sec ingest, 1 year retention):
 - Datadog metrics at this volume: $30k-100k/month.
 
 OSS long-term storage is 10-50x cheaper than Datadog/New Relic for metrics at scale.`,
-      },
-      {
-        title: 'Prometheus + Grafana stack architecture',
-        image: '/diagrams/devops/o3-prom-grafana.png',
-        content: `1. Apps expose /metrics endpoint. Standard format: text-based, one metric per line. Example: http_requests_total{method="GET",route="/api/users",status="200"} 12345.
-
-2. Service discovery (kubernetes_sd_config, consul_sd, file_sd) tells Prometheus which targets to scrape. In K8s: ServiceMonitor / PodMonitor CRDs (kube-prometheus-stack) declare scrape targets.
-
-3. Prometheus scrapes /metrics on scrape_interval (default 15s). HTTP GET to each target. Stores in local TSDB (time-series database, 15 days retention default).
-
-4. Recording rules pre-compute expensive aggregations on schedule. e.g., sum(rate(http_requests_total[5m])) by (service) computed every minute, stored as service:http_requests_per_second:rate5m. Subsequent queries use the pre-computed value.
-
-5. Alerting rules evaluate expressions. When true, fire to Alertmanager. Example: up{job="api"} == 0 → "API down".
-
-6. Alertmanager dedupes, groups, routes alerts. Per-route receivers: PagerDuty for critical, Slack for warning, email for info. Maintenance windows via silences.
-
-7. Remote write forwards metrics to long-term storage (Mimir, Thanos, VictoriaMetrics, Cortex). Local Prometheus has 15-day retention; long-term has years.
-
-8. Grafana queries Prometheus or long-term storage via PromQL. Dashboards render time-series. Grafana Alerting (newer; v10+) replaces Alertmanager for some workflows.
-
-9. PromQL examples:
-   - Instant query: up{job="api"} → current value.
-   - Range query: rate(http_requests_total[5m]) → per-second rate over last 5min.
-   - Aggregation: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) → p99 latency.
-
-The pull model is distinctive. Push-based alternatives (StatsD, InfluxDB push) require apps to push metrics; if push fails, metrics lost. Pull means Prometheus is the source of truth — if it can't reach the app, the metric series shows up=0 (which itself is a useful signal).`,
       },
     ],
     introduction: `## Overview
@@ -23110,7 +22275,6 @@ Grafana visualizes Loki natively + Elastic/OpenSearch via plugins. Dashboards sh
       },
       {
         title: 'Loki architecture — labels + chunks',
-        image: '/diagrams/devops/o4-log-agg.png',
         content: `Components:
 - distributor: receives log streams via Promtail/Fluent Bit/OTel push. Validates labels; hashes by label set; forwards to ingesters.
 - ingester: writes logs to memory + WAL; flushes chunks to object storage every ~30 min (or 1MB compressed).
@@ -24488,7 +23652,6 @@ In a UI like Jaeger or Tempo, this trace renders as a flame graph: time on x-axi
       },
       {
         title: 'Context propagation — W3C Trace Context across services',
-        image: '/diagrams/devops/o2-tracing.png',
         content: `Headers:
 - traceparent: 00-{32-char-traceID}-{16-char-spanID}-{flags}. Format version 00; flags: 00 (not sampled) or 01 (sampled).
 - tracestate: vendor1=value1,vendor2=value2. Optional; for vendor-specific data.
@@ -25660,7 +24823,6 @@ This is the value proposition vs OSS Grafana stack: integrated. Single UI for tr
       },
       {
         title: 'APM platform comparison matrix',
-        image: '/diagrams/devops/o5-apm.png',
         content: `Datadog (market leader, ~30% APM share 2026):
 
 Strengths:
@@ -26840,6 +26002,88 @@ These are answers an APM-fluent platform/SRE engineer should give without prepar
     visualizations: [],
     topics: [
       {
+        title: 'SLI / SLO / SLA — definitions and math',
+        image: '/diagrams/devops/o7-slo.png',
+        content: `SLI — Service Level Indicator. A measurement of one aspect of service behavior. Always a ratio of "good events" / "valid events". Examples:
+- Availability SLI: HTTP requests with status < 500 and latency < 1s, divided by all HTTP requests (excluding 4xx that aren't service fault — 401, 403, 404 typically excluded as "valid request, valid response").
+- Latency SLI: Requests served within 200ms, divided by all requests.
+- Freshness SLI (data pipelines): Records processed within 5 minutes of arrival, divided by all records.
+- Correctness SLI (ML systems): Predictions matching ground truth, divided by labeled predictions.
+
+SLI definition matters. The Google SRE Workbook is exact: an SLI is a ratio over a measurement window, with explicit numerator (good) and denominator (valid). Vague SLIs ("uptime") fail in production — they don't tell you what counts and what doesn't.
+
+SLO — Service Level Objective. The target you commit to internally for that SLI, over a defined window. Three components:
+- The SLI definition.
+- A target percentage (99.9%, 99.95%, 99%).
+- A rolling time window (28 days is most common; 30 days, 7 days, or quarterly also seen).
+
+Example: "99.9% of HTTP requests return non-5xx within 1s, measured over a rolling 28-day window."
+
+The number of nines isn't aspirational. It's a budget for how much downtime you tolerate while remaining within the objective. Write it down and treat it as a contract internally.
+
+SLA — Service Level Agreement. The contractual commitment to a customer with financial penalties for breach. Examples: AWS S3 SLA = 99.9% monthly availability, with service credits below 99.9%, more credits below 99.0%.
+
+Relationship: SLA < SLO < actual performance. Set the SLO inside the SLA so you have margin. Set actual SLI tracking inside the SLO so you have signal before breach.
+
+Math — converting "nines" to allowed downtime over a 28-day window:
+- 99%      → 6h 43m allowed bad time per 28 days (~0.96% bad)
+- 99.5%    → 3h 21m
+- 99.9%    → 40m 19s
+- 99.95%   → 20m 9s
+- 99.99%   → 4m 1s
+- 99.999%  → 24s
+
+Each "nine" is 10x harder than the previous one. Going from 99.9% → 99.99% is not a 0.09% improvement — it's a 10x reduction in allowed bad time. This is why teams that promise "five nines" without infrastructure for it always miss.
+
+Choosing your target is a product decision, not an engineering decision. Ask: what level of reliability do users actually need to achieve their goals? More than that is wasted effort that should have gone elsewhere. Less than that loses customers. Consumer search: 99.9%. Internal batch ETL: 99% might be plenty. Stripe payment processing: 99.99%+ because failed payments are catastrophic.
+
+Aggregating SLIs across endpoints. Most services have many endpoints with very different criticality. Two patterns:
+- One SLO per critical endpoint or endpoint class. "POST /payments availability" has its own SLO; "GET /healthz" doesn't.
+- Weighted SLI: aggregate "good events" across endpoints, weighted by request volume, into one number. Simpler dashboarding; can mask failure of low-volume but critical paths.
+
+Most teams that mature into SLO discipline end up with a small number (3-10) of named, durable SLOs per service. Resist the temptation to add an SLO per metric — they become noise no one defends.`,
+      },
+      {
+        title: 'Error budgets — the budget for risk',
+        content: `The arithmetic. If your SLO is 99.9% availability over 28 days, your error budget is 0.1% of requests (or 40m 19s of total downtime). Burn through the budget and the policy kicks in. Don't burn through it and you have margin to take risks.
+
+What an error budget pays for:
+- Releases. Every deploy carries risk. Error budget pays for the experiments and hotfixes.
+- Maintenance windows. Scheduled outages count against budget.
+- Experiments. A/B tests with measurable error impact.
+- Risk-tolerant deploys. Canary at 5% for 10 minutes spends some budget; that's fine if budget is healthy.
+
+What it doesn't pay for:
+- Operational incidents. Those are unbudgeted; they're the reason the budget exists. The budget represents the bar below which operational issues become a strategic problem (not just a Tuesday).
+
+Error budget policies — the actual enforcement mechanism. Without policy, the budget is just data. Common policies:
+
+Policy 1 (mild): When budget < 25% remaining, leadership reviews release cadence; non-essential deploys deprioritized.
+
+Policy 2 (medium): When budget < 0% (overspent), all non-critical changes pause. Bug fixes only. Engineering effort redirected to reliability.
+
+Policy 3 (strict, Google-style): SLO breach triggers a specific protocol — feature freeze, on-call rotation review, post-mortem on contributing changes, paging chain escalation.
+
+The political reality. Error budget policies require executive support to enforce. "We can't ship Feature X this week because we burnt our error budget" lands flat unless there's organizational alignment that the SLO is real.
+
+Burn rate vs simple budget. Better than tracking "% remaining" is tracking burn rate — how fast are we spending budget, normalized to budget? Burn rate = 1 means at the end of 28 days you'll have spent exactly all budget. Burn rate = 10 means you're spending 10x faster than sustainable; you'll exhaust budget in ~2.8 days.
+
+Burn rate is what alerts on. The Google SRE Workbook prescribes multi-window multi-burn-rate alerting for actionable, non-noisy SLO alerts.
+
+Error budget review cadence:
+- Weekly: did anything dent the budget? What was it?
+- Monthly: are we spending budget on the right things (releases, experiments) or the wrong things (incidents)?
+- Quarterly: is the SLO target right? Should it be tighter (we're way under budget every cycle, customers might be willing to pay for it) or looser (we breach every cycle, the target is unrealistic)?
+
+Common anti-patterns:
+- Setting SLOs no one can defend ("99.99% across the board, because more reliable is better"). Almost certainly wrong.
+- Tracking SLOs but never enforcing budget. Performative.
+- One-month-only retrospection without burn rate alerting. You learn after the fact, which is too late.
+- Pure availability SLO when the actual user pain is latency. Pick the SLI that matches the customer experience.
+
+Multi-team SLO accounting. In microservices, your SLO depends on dependencies' SLOs. The naive math: 99.9% × 99.9% × 99.9% (three sequential dependencies, each 99.9%) = 99.7%. So you can't credibly commit to 99.9% if you have three serial dependencies at 99.9%. Either negotiate dependency SLOs upward, add redundancy, or set your SLO realistically.`,
+      },
+      {
         title: 'Multi-window multi-burn-rate alerting',
         content: `The Google SRE Workbook's prescription for actionable SLO alerts. The problem it solves: naive SLO alerting is either too sensitive (constant pages on temporary blips) or too slow (you don't know you breached until it's too late).
 
@@ -26965,89 +26209,6 @@ When SLOs work organizationally:
 
 The deeper point. SLOs aren't a metric. They're a forcing function for the conversation between engineering and product about reliability tradeoffs. The math is easy; the conversation is the hard part. Tools (Sloth, Pyrra, Nobl9, Datadog SLO) automate the math so the conversation can focus on the tradeoffs.`,
       },
-      {
-        title: 'SLI / SLO / SLA — definitions and math',
-        image: '/diagrams/devops/o7-slo.png',
-        content: `SLI — Service Level Indicator. A measurement of one aspect of service behavior. Always a ratio of "good events" / "valid events". Examples:
-- Availability SLI: HTTP requests with status < 500 and latency < 1s, divided by all HTTP requests (excluding 4xx that aren't service fault — 401, 403, 404 typically excluded as "valid request, valid response").
-- Latency SLI: Requests served within 200ms, divided by all requests.
-- Freshness SLI (data pipelines): Records processed within 5 minutes of arrival, divided by all records.
-- Correctness SLI (ML systems): Predictions matching ground truth, divided by labeled predictions.
-
-SLI definition matters. The Google SRE Workbook is exact: an SLI is a ratio over a measurement window, with explicit numerator (good) and denominator (valid). Vague SLIs ("uptime") fail in production — they don't tell you what counts and what doesn't.
-
-SLO — Service Level Objective. The target you commit to internally for that SLI, over a defined window. Three components:
-- The SLI definition.
-- A target percentage (99.9%, 99.95%, 99%).
-- A rolling time window (28 days is most common; 30 days, 7 days, or quarterly also seen).
-
-Example: "99.9% of HTTP requests return non-5xx within 1s, measured over a rolling 28-day window."
-
-The number of nines isn't aspirational. It's a budget for how much downtime you tolerate while remaining within the objective. Write it down and treat it as a contract internally.
-
-SLA — Service Level Agreement. The contractual commitment to a customer with financial penalties for breach. Examples: AWS S3 SLA = 99.9% monthly availability, with service credits below 99.9%, more credits below 99.0%.
-
-Relationship: SLA < SLO < actual performance. Set the SLO inside the SLA so you have margin. Set actual SLI tracking inside the SLO so you have signal before breach.
-
-Math — converting "nines" to allowed downtime over a 28-day window:
-- 99%      → 6h 43m allowed bad time per 28 days (~0.96% bad)
-- 99.5%    → 3h 21m
-- 99.9%    → 40m 19s
-- 99.95%   → 20m 9s
-- 99.99%   → 4m 1s
-- 99.999%  → 24s
-
-Each "nine" is 10x harder than the previous one. Going from 99.9% → 99.99% is not a 0.09% improvement — it's a 10x reduction in allowed bad time. This is why teams that promise "five nines" without infrastructure for it always miss.
-
-Choosing your target is a product decision, not an engineering decision. Ask: what level of reliability do users actually need to achieve their goals? More than that is wasted effort that should have gone elsewhere. Less than that loses customers. Consumer search: 99.9%. Internal batch ETL: 99% might be plenty. Stripe payment processing: 99.99%+ because failed payments are catastrophic.
-
-Aggregating SLIs across endpoints. Most services have many endpoints with very different criticality. Two patterns:
-- One SLO per critical endpoint or endpoint class. "POST /payments availability" has its own SLO; "GET /healthz" doesn't.
-- Weighted SLI: aggregate "good events" across endpoints, weighted by request volume, into one number. Simpler dashboarding; can mask failure of low-volume but critical paths.
-
-Most teams that mature into SLO discipline end up with a small number (3-10) of named, durable SLOs per service. Resist the temptation to add an SLO per metric — they become noise no one defends.`,
-      },
-      {
-        title: 'Error budgets — the budget for risk',
-        image: '/diagrams/devops/o7-slo.png',
-        content: `The arithmetic. If your SLO is 99.9% availability over 28 days, your error budget is 0.1% of requests (or 40m 19s of total downtime). Burn through the budget and the policy kicks in. Don't burn through it and you have margin to take risks.
-
-What an error budget pays for:
-- Releases. Every deploy carries risk. Error budget pays for the experiments and hotfixes.
-- Maintenance windows. Scheduled outages count against budget.
-- Experiments. A/B tests with measurable error impact.
-- Risk-tolerant deploys. Canary at 5% for 10 minutes spends some budget; that's fine if budget is healthy.
-
-What it doesn't pay for:
-- Operational incidents. Those are unbudgeted; they're the reason the budget exists. The budget represents the bar below which operational issues become a strategic problem (not just a Tuesday).
-
-Error budget policies — the actual enforcement mechanism. Without policy, the budget is just data. Common policies:
-
-Policy 1 (mild): When budget < 25% remaining, leadership reviews release cadence; non-essential deploys deprioritized.
-
-Policy 2 (medium): When budget < 0% (overspent), all non-critical changes pause. Bug fixes only. Engineering effort redirected to reliability.
-
-Policy 3 (strict, Google-style): SLO breach triggers a specific protocol — feature freeze, on-call rotation review, post-mortem on contributing changes, paging chain escalation.
-
-The political reality. Error budget policies require executive support to enforce. "We can't ship Feature X this week because we burnt our error budget" lands flat unless there's organizational alignment that the SLO is real.
-
-Burn rate vs simple budget. Better than tracking "% remaining" is tracking burn rate — how fast are we spending budget, normalized to budget? Burn rate = 1 means at the end of 28 days you'll have spent exactly all budget. Burn rate = 10 means you're spending 10x faster than sustainable; you'll exhaust budget in ~2.8 days.
-
-Burn rate is what alerts on. The Google SRE Workbook prescribes multi-window multi-burn-rate alerting for actionable, non-noisy SLO alerts.
-
-Error budget review cadence:
-- Weekly: did anything dent the budget? What was it?
-- Monthly: are we spending budget on the right things (releases, experiments) or the wrong things (incidents)?
-- Quarterly: is the SLO target right? Should it be tighter (we're way under budget every cycle, customers might be willing to pay for it) or looser (we breach every cycle, the target is unrealistic)?
-
-Common anti-patterns:
-- Setting SLOs no one can defend ("99.99% across the board, because more reliable is better"). Almost certainly wrong.
-- Tracking SLOs but never enforcing budget. Performative.
-- One-month-only retrospection without burn rate alerting. You learn after the fact, which is too late.
-- Pure availability SLO when the actual user pain is latency. Pick the SLI that matches the customer experience.
-
-Multi-team SLO accounting. In microservices, your SLO depends on dependencies' SLOs. The naive math: 99.9% × 99.9% × 99.9% (three sequential dependencies, each 99.9%) = 99.7%. So you can't credibly commit to 99.9% if you have three serial dependencies at 99.9%. Either negotiate dependency SLOs upward, add redundancy, or set your SLO realistically.`,
-      },
     ],
     references: [
       'https://sre.google/workbook/implementing-slos/',
@@ -27068,6 +26229,81 @@ Multi-team SLO accounting. In microservices, your SLO depends on dependencies' S
     description: 'Kernel-level observability without code changes. eBPF runs verified programs at kprobes/uprobes/tracepoints/XDP, attaches them to syscalls and network paths, and exports telemetry to user-space. Cilium Hubble (L3/L4/L7 network flows), Pixie (in-cluster auto-telemetry), Parca/Pyroscope (continuous profiling), Falco/Tetragon (runtime security), Kepler (power).',
     visualizations: [],
     topics: [
+      {
+        title: 'eBPF as an observability primitive',
+        image: '/diagrams/devops/o6-ebpf.png',
+        content: `What it actually is. eBPF lets you load small programs into the running Linux kernel, attached to specific kernel events. The programs are verified for safety (bounded loops, no arbitrary memory access, no kernel panics), JIT-compiled to native code, and run with near-zero overhead — typically 1-3% CPU at production load.
+
+Attach points (where programs run):
+- kprobes / kretprobes: any kernel function entry/exit. Trace tcp_sendmsg, ext4_file_write_iter, schedule(), anything.
+- uprobes / uretprobes: user-space function entry/exit in a target binary. Trace SSL_read in libssl to decrypt TLS, malloc/free, application functions.
+- tracepoints: stable kernel-defined events (syscall enter/exit, scheduler events, page faults). Preferred over kprobes — survive kernel upgrades.
+- XDP (eXpress Data Path): runs at the NIC driver before sk_buff allocation. Used for DDoS filtering, load balancing (Katran), Cilium L4 LB.
+- tc (traffic control): network packet processing at the qdisc layer. Used for L7 visibility, network policy enforcement.
+- LSM (Linux Security Module) hooks: kernel security checks. Used by Tetragon, Tracee for runtime security.
+- perf events: CPU sampling, hardware counters. Used by Parca, Pyroscope for continuous profiling.
+- USDT (User Statically-Defined Tracing): probe points compiled into binaries (Postgres, Node.js, Python). Stable, intentional probe points.
+
+Maps: kernel ↔ user-space shared memory. eBPF programs write events into ring buffers / hash maps; user-space agents read them. This is how telemetry escapes the kernel without context switches.
+
+Verifier: rejects unsafe programs at load time. Bounded loops only (proven to terminate), all memory accesses must be checked, no NULL derefs, complexity limits (1M instructions verified). The price of safety: some patterns won't compile and require rewrites.
+
+CO-RE (Compile Once, Run Everywhere): BPF programs use BTF (BPF Type Format) to relocate field accesses at load time across kernel versions. Lets one binary work across kernel 5.4 → 6.x without rebuilding. Critical for portable tooling (Cilium, Falco distribute single binaries).
+
+Why this rewrites observability. Old model: instrument every app with SDKs, run sidecars, pay 20-50% latency tax. New model: run an eBPF agent on the node, see everything kernel-level. No app changes. No language-specific SDKs. Works the same for Go, Rust, Python, Java, COBOL. The kernel is the universal instrumentation layer.
+
+Limits. Need privileged container or specific capabilities (CAP_BPF, CAP_PERFMON in 5.8+; CAP_SYS_ADMIN before). L7 protocol parsing (HTTP/2, gRPC, Kafka) is per-protocol code you have to write or rely on a tool that wrote it. TLS visibility requires uprobing libssl (BoringSSL/Rustls have different uprobe layouts). Managed K8s sometimes restricts eBPF (GKE Sandbox, EKS Bottlerocket variants).`,
+      },
+      {
+        title: 'eBPF observability tool landscape',
+        content: `Cilium Hubble (network observability):
+- L3/L4 flow logs: source → dest, protocol, port, verdict, duration. From kernel, no app changes.
+- L7 visibility: HTTP, gRPC, Kafka, DNS — Hubble parses these in eBPF and emits structured flow events.
+- Service map: auto-built from flow data; shows which services talk to which, error rates, P99 latency.
+- DNS observability: every kube-dns lookup, every NXDOMAIN, every slow resolution surfaced.
+- Network policy enforcement (Cilium proper, not just Hubble): identity-based (SA, label) policies in eBPF — orders of magnitude faster than iptables.
+- Backed by Isovalent (acquired by Cisco 2024). Default CNI on GKE Dataplane v2, EKS optional, AKS optional. Largest commercial eBPF deployment.
+
+Pixie (in-cluster auto-observability):
+- Drop a DaemonSet, get full telemetry: HTTP request/response bodies, MySQL/Postgres queries, gRPC calls, JVM heap, CPU profiles.
+- PxL: SQL-like query language to ask ad-hoc questions across the cluster. No persistent storage by default — last ~24h kept in memory.
+- Open-source under New Relic. Best for "what just happened in the last hour" debugging without setup.
+- Tradeoff: not designed for long-term retention or compliance archival. Pair with another stack for that.
+
+Parca (continuous profiling):
+- Samples on-CPU stack traces from every process via perf events + eBPF.
+- Builds flame graphs across the whole fleet. Compare profiles between deploys. Find the function that regressed.
+- Native pprof format. Interoperates with Pyroscope, Datadog Profiler, Grafana Tempo profiling.
+- Polar Signals (commercial behind it). Open-source server.
+
+Pyroscope (profiling, broader):
+- Continuous profiling, multi-language. Eats lang profilers (Go pprof, py-spy, async-profiler) AND eBPF profiles.
+- Now part of Grafana Labs (acquired 2023). Integrated with Grafana, Tempo, Loki.
+
+Falco (runtime security observability):
+- Syscall-level rule engine. "Alert if a shell is spawned in a container", "alert if /etc/shadow is read", "alert if outbound connection to X".
+- Originally libsinsp + kernel module; modern Falco uses libbpf (eBPF backend) by default.
+- CNCF graduated. Sysdig commercial offering builds on it.
+
+Tetragon (security + enforcement):
+- Built by Isovalent on top of Cilium's eBPF infrastructure.
+- Goes further than Falco: not just observe, also enforce in-kernel (kill process, block syscall) via signal injection.
+- Lower overhead than Falco (no event copy to user-space until after policy decision).
+
+Kepler (Kubernetes-aware energy):
+- Estimates per-pod CPU, GPU, RAM energy consumption via eBPF + RAPL counters + ML model.
+- Reports kWh per workload — cloud-FinOps and sustainability use case.
+- Sandbox in CNCF.
+
+Tracee (security tracing):
+- Aqua Security's open-source tool. eBPF-based runtime security and forensics. Records syscalls, network, file access for incident replay.
+
+bcc / bpftrace (DIY tracing):
+- Sandbox tools. bpftrace = awk-like one-liners ("kprobe:tcp_sendmsg { @[comm] = count(); }").
+- Brendan Gregg's bcc collection: hundreds of canned scripts (execsnoop, biolatency, opensnoop). What SREs reach for during deep debugging when canned dashboards don't show the answer.
+
+Choosing among them. Network: Cilium Hubble. Application telemetry without instrumentation: Pixie. Continuous profiling: Parca or Pyroscope. Runtime security: Falco (observe-only) or Tetragon (observe + enforce). Custom one-off questions: bpftrace.`,
+      },
       {
         title: 'eBPF vs sidecar vs agent — telemetry tradeoffs',
         content: `Three deployment models for cluster-level observability, three different tradeoff profiles:
@@ -27152,82 +26388,6 @@ Cost surprises. eBPF tools are usually low overhead, but:
 Vendor lock vs. portability. Cilium, Pixie, Parca all open source. But running them well at scale = commercial support (Isovalent, New Relic, Polar Signals, Grafana). Same dynamic as Prometheus → Grafana Cloud — community core, paid ops. Plan for it; don't pretend you'll self-operate forever.
 
 Kernel updates are now load-bearing. With eBPF in your observability path, kernel rolls become CI events. A kernel deprecating an attach point = your tool breaks. Watch CO-RE compatibility releases of your tools before kernel upgrades.`,
-      },
-      {
-        title: 'eBPF as an observability primitive',
-        image: '/diagrams/devops/o6-ebpf.png',
-        content: `What it actually is. eBPF lets you load small programs into the running Linux kernel, attached to specific kernel events. The programs are verified for safety (bounded loops, no arbitrary memory access, no kernel panics), JIT-compiled to native code, and run with near-zero overhead — typically 1-3% CPU at production load.
-
-Attach points (where programs run):
-- kprobes / kretprobes: any kernel function entry/exit. Trace tcp_sendmsg, ext4_file_write_iter, schedule(), anything.
-- uprobes / uretprobes: user-space function entry/exit in a target binary. Trace SSL_read in libssl to decrypt TLS, malloc/free, application functions.
-- tracepoints: stable kernel-defined events (syscall enter/exit, scheduler events, page faults). Preferred over kprobes — survive kernel upgrades.
-- XDP (eXpress Data Path): runs at the NIC driver before sk_buff allocation. Used for DDoS filtering, load balancing (Katran), Cilium L4 LB.
-- tc (traffic control): network packet processing at the qdisc layer. Used for L7 visibility, network policy enforcement.
-- LSM (Linux Security Module) hooks: kernel security checks. Used by Tetragon, Tracee for runtime security.
-- perf events: CPU sampling, hardware counters. Used by Parca, Pyroscope for continuous profiling.
-- USDT (User Statically-Defined Tracing): probe points compiled into binaries (Postgres, Node.js, Python). Stable, intentional probe points.
-
-Maps: kernel ↔ user-space shared memory. eBPF programs write events into ring buffers / hash maps; user-space agents read them. This is how telemetry escapes the kernel without context switches.
-
-Verifier: rejects unsafe programs at load time. Bounded loops only (proven to terminate), all memory accesses must be checked, no NULL derefs, complexity limits (1M instructions verified). The price of safety: some patterns won't compile and require rewrites.
-
-CO-RE (Compile Once, Run Everywhere): BPF programs use BTF (BPF Type Format) to relocate field accesses at load time across kernel versions. Lets one binary work across kernel 5.4 → 6.x without rebuilding. Critical for portable tooling (Cilium, Falco distribute single binaries).
-
-Why this rewrites observability. Old model: instrument every app with SDKs, run sidecars, pay 20-50% latency tax. New model: run an eBPF agent on the node, see everything kernel-level. No app changes. No language-specific SDKs. Works the same for Go, Rust, Python, Java, COBOL. The kernel is the universal instrumentation layer.
-
-Limits. Need privileged container or specific capabilities (CAP_BPF, CAP_PERFMON in 5.8+; CAP_SYS_ADMIN before). L7 protocol parsing (HTTP/2, gRPC, Kafka) is per-protocol code you have to write or rely on a tool that wrote it. TLS visibility requires uprobing libssl (BoringSSL/Rustls have different uprobe layouts). Managed K8s sometimes restricts eBPF (GKE Sandbox, EKS Bottlerocket variants).`,
-      },
-      {
-        title: 'eBPF observability tool landscape',
-        image: '/diagrams/devops/o6-ebpf.png',
-        content: `Cilium Hubble (network observability):
-- L3/L4 flow logs: source → dest, protocol, port, verdict, duration. From kernel, no app changes.
-- L7 visibility: HTTP, gRPC, Kafka, DNS — Hubble parses these in eBPF and emits structured flow events.
-- Service map: auto-built from flow data; shows which services talk to which, error rates, P99 latency.
-- DNS observability: every kube-dns lookup, every NXDOMAIN, every slow resolution surfaced.
-- Network policy enforcement (Cilium proper, not just Hubble): identity-based (SA, label) policies in eBPF — orders of magnitude faster than iptables.
-- Backed by Isovalent (acquired by Cisco 2024). Default CNI on GKE Dataplane v2, EKS optional, AKS optional. Largest commercial eBPF deployment.
-
-Pixie (in-cluster auto-observability):
-- Drop a DaemonSet, get full telemetry: HTTP request/response bodies, MySQL/Postgres queries, gRPC calls, JVM heap, CPU profiles.
-- PxL: SQL-like query language to ask ad-hoc questions across the cluster. No persistent storage by default — last ~24h kept in memory.
-- Open-source under New Relic. Best for "what just happened in the last hour" debugging without setup.
-- Tradeoff: not designed for long-term retention or compliance archival. Pair with another stack for that.
-
-Parca (continuous profiling):
-- Samples on-CPU stack traces from every process via perf events + eBPF.
-- Builds flame graphs across the whole fleet. Compare profiles between deploys. Find the function that regressed.
-- Native pprof format. Interoperates with Pyroscope, Datadog Profiler, Grafana Tempo profiling.
-- Polar Signals (commercial behind it). Open-source server.
-
-Pyroscope (profiling, broader):
-- Continuous profiling, multi-language. Eats lang profilers (Go pprof, py-spy, async-profiler) AND eBPF profiles.
-- Now part of Grafana Labs (acquired 2023). Integrated with Grafana, Tempo, Loki.
-
-Falco (runtime security observability):
-- Syscall-level rule engine. "Alert if a shell is spawned in a container", "alert if /etc/shadow is read", "alert if outbound connection to X".
-- Originally libsinsp + kernel module; modern Falco uses libbpf (eBPF backend) by default.
-- CNCF graduated. Sysdig commercial offering builds on it.
-
-Tetragon (security + enforcement):
-- Built by Isovalent on top of Cilium's eBPF infrastructure.
-- Goes further than Falco: not just observe, also enforce in-kernel (kill process, block syscall) via signal injection.
-- Lower overhead than Falco (no event copy to user-space until after policy decision).
-
-Kepler (Kubernetes-aware energy):
-- Estimates per-pod CPU, GPU, RAM energy consumption via eBPF + RAPL counters + ML model.
-- Reports kWh per workload — cloud-FinOps and sustainability use case.
-- Sandbox in CNCF.
-
-Tracee (security tracing):
-- Aqua Security's open-source tool. eBPF-based runtime security and forensics. Records syscalls, network, file access for incident replay.
-
-bcc / bpftrace (DIY tracing):
-- Sandbox tools. bpftrace = awk-like one-liners ("kprobe:tcp_sendmsg { @[comm] = count(); }").
-- Brendan Gregg's bcc collection: hundreds of canned scripts (execsnoop, biolatency, opensnoop). What SREs reach for during deep debugging when canned dashboards don't show the answer.
-
-Choosing among them. Network: Cilium Hubble. Application telemetry without instrumentation: Pixie. Continuous profiling: Parca or Pyroscope. Runtime security: Falco (observe-only) or Tetragon (observe + enforce). Custom one-off questions: bpftrace.`,
       },
     ],
     references: [
@@ -28233,6 +27393,47 @@ The pragmatic 2026 reading. Twelve-factor isn't a checklist; it's a framework fo
     visualizations: [],
     topics: [
       {
+        title: 'Service boundaries and the decomposition decision',
+        image: '/diagrams/devops/j2-microservices.png',
+        content: `When microservices help:
+- Multiple teams want to ship independently. Coordination overhead in a monolith dominates.
+- Different parts of the system have very different scale or technology requirements (the recommendations service needs Python for ML; the API needs Go for performance; the admin tool needs Ruby for productivity).
+- Different SLOs per area (payment 99.99%, recommendations 99%).
+- Compliance boundary (PCI scope reduction by isolating payment from rest of system).
+
+When microservices hurt:
+- Single team owns everything. Distributed monolith is worse than a real monolith.
+- Strong consistency requirements across many services. Distributed transactions are pain.
+- Team is small (<20 engineers). Operational overhead of microservices doesn't pay back.
+- Domain not well-understood. You'll redraw boundaries 5 times; in a monolith refactoring is cheap, in microservices it is months.
+
+Domain-Driven Design (DDD) bounded contexts are the standard tool:
+
+Bounded context = a region where a domain model and its terminology are consistent. "Customer" in Sales context (lead, prospect) is a different model from "Customer" in Billing context (account, payment method).
+
+Method:
+1. Event Storming — workshop where domain experts list domain events on sticky notes.
+2. Cluster events into commands and aggregates.
+3. Identify bounded contexts where models are consistent.
+4. Each bounded context becomes a candidate microservice (or remains a module within a service).
+
+Boundary smells:
+- One service calls another in 80% of requests → boundary is wrong; merge.
+- One change requires modifications to N services → boundary is wrong; redraw.
+- Two teams constantly modify the same service → boundary doesn't match team structure.
+
+Conway's Law as a tool. The system reflects the team structure. Inverse Conway maneuver — restructure teams to match desired architecture, then build it. Used at Amazon (two-pizza teams), Spotify (squads).
+
+Sizing rule: each service is small enough that one team owns it end-to-end (build, deploy, oncall) and big enough that the team has interesting work for 6+ months. "How small" depends on team size; "10x services per engineer" is a smell.
+
+Anti-patterns to avoid:
+- Distributed monolith: services that must deploy together, share schemas, have synchronous chains. Monolith with microservices' tax.
+- Nano-services: every endpoint a service. Operational overhead destroys productivity.
+- Layered services (UI, BFF, API, DB): horizontal layers, not domain boundaries. Hard to add features (touches every layer).
+
+The 2026 reality. Many teams that adopted microservices 2017-2020 are consolidating in 2024-2026. "Modular monolith" is the current pragmatic frame: well-structured monolith with module boundaries that you could split later if needed.`,
+      },
+      {
         title: 'Communication patterns and failure modes',
         content: `Synchronous communication (REST, gRPC):
 
@@ -28304,47 +27505,6 @@ Common mistakes:
 - No timeouts. The default timeout in HTTP libraries is often "infinite". Always set a deadline.
 - Synchronous chain of 5+ services per request. Latency budget gone before doing real work.
 - One service per database (correct) but joins across services in app code (wrong). Reshape data flow; don't reproduce SQL joins in HTTP.`,
-      },
-      {
-        title: 'Service boundaries and the decomposition decision',
-        image: '/diagrams/devops/j2-microservices.png',
-        content: `When microservices help:
-- Multiple teams want to ship independently. Coordination overhead in a monolith dominates.
-- Different parts of the system have very different scale or technology requirements (the recommendations service needs Python for ML; the API needs Go for performance; the admin tool needs Ruby for productivity).
-- Different SLOs per area (payment 99.99%, recommendations 99%).
-- Compliance boundary (PCI scope reduction by isolating payment from rest of system).
-
-When microservices hurt:
-- Single team owns everything. Distributed monolith is worse than a real monolith.
-- Strong consistency requirements across many services. Distributed transactions are pain.
-- Team is small (<20 engineers). Operational overhead of microservices doesn't pay back.
-- Domain not well-understood. You'll redraw boundaries 5 times; in a monolith refactoring is cheap, in microservices it is months.
-
-Domain-Driven Design (DDD) bounded contexts are the standard tool:
-
-Bounded context = a region where a domain model and its terminology are consistent. "Customer" in Sales context (lead, prospect) is a different model from "Customer" in Billing context (account, payment method).
-
-Method:
-1. Event Storming — workshop where domain experts list domain events on sticky notes.
-2. Cluster events into commands and aggregates.
-3. Identify bounded contexts where models are consistent.
-4. Each bounded context becomes a candidate microservice (or remains a module within a service).
-
-Boundary smells:
-- One service calls another in 80% of requests → boundary is wrong; merge.
-- One change requires modifications to N services → boundary is wrong; redraw.
-- Two teams constantly modify the same service → boundary doesn't match team structure.
-
-Conway's Law as a tool. The system reflects the team structure. Inverse Conway maneuver — restructure teams to match desired architecture, then build it. Used at Amazon (two-pizza teams), Spotify (squads).
-
-Sizing rule: each service is small enough that one team owns it end-to-end (build, deploy, oncall) and big enough that the team has interesting work for 6+ months. "How small" depends on team size; "10x services per engineer" is a smell.
-
-Anti-patterns to avoid:
-- Distributed monolith: services that must deploy together, share schemas, have synchronous chains. Monolith with microservices' tax.
-- Nano-services: every endpoint a service. Operational overhead destroys productivity.
-- Layered services (UI, BFF, API, DB): horizontal layers, not domain boundaries. Hard to add features (touches every layer).
-
-The 2026 reality. Many teams that adopted microservices 2017-2020 are consolidating in 2024-2026. "Modular monolith" is the current pragmatic frame: well-structured monolith with module boundaries that you could split later if needed.`,
       },
     ],
     references: [
@@ -28655,6 +27815,48 @@ The pragmatic 2026 view. Serverless excels at spiky, event-driven, glue-code wor
     visualizations: [],
     topics: [
       {
+        title: 'Expand-contract in depth and online DDL theory',
+        image: '/diagrams/devops/k1-db-migrations.png',
+        content: `Expand-contract — the canonical breaking-change pattern.
+
+The premise. During any rolling deploy, two app versions execute the same schema. Any schema change that one version cannot tolerate causes errors during the rollout window. Expand-contract decomposes one logical change into a sequence of additive (safe) changes plus a final destructive (safe-by-then) change.
+
+The full ladder for a column rename email_address to email:
+
+1. Migration 1 (expand). ADD COLUMN email; nullable, no default that rewrites the table.
+2. App release A. Writes both columns on every insert/update. Reads still come from email_address.
+3. Backfill job. Chunked UPDATE that sets email = email_address WHERE email IS NULL, throttled by replica lag.
+4. Migration 2. Add NOT NULL via the safe path (Postgres: CHECK NOT VALID then VALIDATE; MySQL: ALTER with online DDL tool).
+5. App release B. Reads from email; still writes both for safety.
+6. Validation window. Metrics confirm zero reads of email_address in production logs (audit via column-level access tracing or query log sampling).
+7. App release C. Stops writing email_address.
+8. Migration 3 (contract). DROP COLUMN email_address.
+
+Eight steps, three migrations, three app deploys, one backfill, one validation gate. The point: the dangerous step (step 8) only runs after step 6 has proven nothing reads the old column. The pattern fails when teams compress steps to save time; the most common failure is collapsing release B and release C, which leaves no observable gap to detect lingering reads.
+
+Online DDL theory. The fundamental tension: ALTER on a hot table either holds a lock long enough to break SLOs or copies data in the background and reconciles concurrent writes. Every online DDL implementation picks one of three reconciliation strategies:
+
+Strategy A — trigger-based shadow table (pt-online-schema-change). The tool creates an empty shadow with the new shape, installs INSERT/UPDATE/DELETE triggers on the original that mirror writes to the shadow, then chunk-copies historical rows. Atomic RENAME at the end. Cost: every write does double the work for the duration of the migration; trigger overhead is real on write-heavy workloads.
+
+Strategy B — log-replay shadow table (gh-ost). Same shadow, but reads the binary log instead of installing triggers. The migrator process replays binlog events into the shadow, throttling on replica lag and pausing during traffic spikes. Cost: needs row-based binlog and a separate process; benefit: no trigger overhead on the original table, easier to pause and resume.
+
+Strategy C — multi-version table (pgroll, Postgres logical-evolution proposals). The original table is unchanged; a new "version" of the table is built as a view or partition with the new shape. Both versions visible simultaneously; readers pick a schema version per-connection. The shape change is purely metadata. Cost: only works when the change can be expressed as a view (column rename, additive change, type widening); cannot handle arbitrary DDL.
+
+Postgres specifics worth memorizing:
+- ADD COLUMN with a non-volatile default in PG 11+ stores the default in pg_attribute and avoids a table rewrite. Volatile defaults still rewrite.
+- ALTER COLUMN ... TYPE rewrites unless the new type is binary-coercible (e.g. varchar(50) to varchar(100), or text to varchar without length).
+- SET NOT NULL is fast in PG 12+ if a matching CHECK constraint already exists with VALIDATE.
+- CREATE INDEX CONCURRENTLY is two passes; if the second pass fails the index is left INVALID. Always check pg_index.indisvalid after.
+- VACUUM FULL is a full rewrite under exclusive lock; pg_repack is the online substitute.
+
+MySQL specifics:
+- INSTANT DDL (8.0+) supports column add, rename, default change, drop in O(1) for most cases. Check ALGORITHM=INSTANT support before reaching for gh-ost.
+- INPLACE algorithm rebuilds the clustered index without locking, but holds metadata lock briefly at start and end. Use for index ops on smaller tables.
+- COPY algorithm is the lock-the-world fallback. Should never appear in a production migration plan.
+
+The senior heuristic: pick the smallest tool for the change. INSTANT and concurrent index builds first; pgroll or gh-ost when the operation actually requires a table rewrite or trigger-fan-out; pt-osc only when binlog-based replication is unavailable.`,
+      },
+      {
         title: 'Multi-region ordering, chunked backfills, schema-on-read evolution',
         content: `Multi-region migration ordering. The problem: a schema change must apply to every replica in every region without breaking applications routing to those regions.
 
@@ -28703,48 +27905,6 @@ Versioning APIs alongside schema — consumer-driven contracts. The pattern: the
 
 The senior insight: contract testing is the only mechanism that catches "I dropped a field that nobody on my team reads, but two downstream services parse it" before production. Schema registries enforce wire-format compatibility; consumer-driven contracts enforce semantic compatibility.`,
       },
-      {
-        title: 'Expand-contract in depth and online DDL theory',
-        image: '/diagrams/devops/k1-db-migrations.png',
-        content: `Expand-contract — the canonical breaking-change pattern.
-
-The premise. During any rolling deploy, two app versions execute the same schema. Any schema change that one version cannot tolerate causes errors during the rollout window. Expand-contract decomposes one logical change into a sequence of additive (safe) changes plus a final destructive (safe-by-then) change.
-
-The full ladder for a column rename email_address to email:
-
-1. Migration 1 (expand). ADD COLUMN email; nullable, no default that rewrites the table.
-2. App release A. Writes both columns on every insert/update. Reads still come from email_address.
-3. Backfill job. Chunked UPDATE that sets email = email_address WHERE email IS NULL, throttled by replica lag.
-4. Migration 2. Add NOT NULL via the safe path (Postgres: CHECK NOT VALID then VALIDATE; MySQL: ALTER with online DDL tool).
-5. App release B. Reads from email; still writes both for safety.
-6. Validation window. Metrics confirm zero reads of email_address in production logs (audit via column-level access tracing or query log sampling).
-7. App release C. Stops writing email_address.
-8. Migration 3 (contract). DROP COLUMN email_address.
-
-Eight steps, three migrations, three app deploys, one backfill, one validation gate. The point: the dangerous step (step 8) only runs after step 6 has proven nothing reads the old column. The pattern fails when teams compress steps to save time; the most common failure is collapsing release B and release C, which leaves no observable gap to detect lingering reads.
-
-Online DDL theory. The fundamental tension: ALTER on a hot table either holds a lock long enough to break SLOs or copies data in the background and reconciles concurrent writes. Every online DDL implementation picks one of three reconciliation strategies:
-
-Strategy A — trigger-based shadow table (pt-online-schema-change). The tool creates an empty shadow with the new shape, installs INSERT/UPDATE/DELETE triggers on the original that mirror writes to the shadow, then chunk-copies historical rows. Atomic RENAME at the end. Cost: every write does double the work for the duration of the migration; trigger overhead is real on write-heavy workloads.
-
-Strategy B — log-replay shadow table (gh-ost). Same shadow, but reads the binary log instead of installing triggers. The migrator process replays binlog events into the shadow, throttling on replica lag and pausing during traffic spikes. Cost: needs row-based binlog and a separate process; benefit: no trigger overhead on the original table, easier to pause and resume.
-
-Strategy C — multi-version table (pgroll, Postgres logical-evolution proposals). The original table is unchanged; a new "version" of the table is built as a view or partition with the new shape. Both versions visible simultaneously; readers pick a schema version per-connection. The shape change is purely metadata. Cost: only works when the change can be expressed as a view (column rename, additive change, type widening); cannot handle arbitrary DDL.
-
-Postgres specifics worth memorizing:
-- ADD COLUMN with a non-volatile default in PG 11+ stores the default in pg_attribute and avoids a table rewrite. Volatile defaults still rewrite.
-- ALTER COLUMN ... TYPE rewrites unless the new type is binary-coercible (e.g. varchar(50) to varchar(100), or text to varchar without length).
-- SET NOT NULL is fast in PG 12+ if a matching CHECK constraint already exists with VALIDATE.
-- CREATE INDEX CONCURRENTLY is two passes; if the second pass fails the index is left INVALID. Always check pg_index.indisvalid after.
-- VACUUM FULL is a full rewrite under exclusive lock; pg_repack is the online substitute.
-
-MySQL specifics:
-- INSTANT DDL (8.0+) supports column add, rename, default change, drop in O(1) for most cases. Check ALGORITHM=INSTANT support before reaching for gh-ost.
-- INPLACE algorithm rebuilds the clustered index without locking, but holds metadata lock briefly at start and end. Use for index ops on smaller tables.
-- COPY algorithm is the lock-the-world fallback. Should never appear in a production migration plan.
-
-The senior heuristic: pick the smallest tool for the change. INSTANT and concurrent index builds first; pgroll or gh-ost when the operation actually requires a table rewrite or trigger-fan-out; pt-osc only when binlog-based replication is unavailable.`,
-      },
     ],
     references: [
       'https://www.postgresql.org/docs/current/ddl-alter.html',
@@ -28765,6 +27925,39 @@ The senior heuristic: pick the smallest tool for the change. INSTANT and concurr
     description: 'Why databases were excluded from the original GitOps wave and how Atlas Operator, Bytebase, Schemahero, and pgroll closed the gap. Declarative schema, role, and index management with controllers, drift detection, and the hard limit at stateful data.',
     visualizations: [],
     topics: [
+      {
+        title: 'Why databases were excluded and what changed',
+        image: '/diagrams/devops/k2-gitops-dbs.png',
+        content: `Why databases were excluded.
+
+Reason 1 — state mutation has side effects. Applying a Deployment manifest replaces the previous Deployment; the action is idempotent and the previous resource is recoverable. Applying a DROP COLUMN destroys data. The reconciliation loop cannot blindly apply a DDL.
+
+Reason 2 — schema is not the whole state. The cluster's desired state is the full set of manifests. The database's desired state is shape only; the data is not in Git and never will be. Any GitOps tool for databases has to define the boundary between what it owns (schema, roles, indexes, extensions) and what it does not (rows, sequences, statistics).
+
+Reason 3 — order matters. K8s manifests can be applied in any order; the controller resolves dependencies. SQL migrations are inherently ordered.
+
+Reason 4 — failure modes are catastrophic. A Deployment that fails health-checks is rolled back automatically. A migration that corrupts data is not rollback-able from a controller's perspective.
+
+The 2022 to 2026 thaw. Several tools converged on the same architecture: declare schema in Git, controller computes the diff against live DB, generates a migration, optionally requires human approval, applies, records the result.
+
+Atlas Operator (Ariga, 2023+). Kubernetes CRD: AtlasSchema and AtlasMigration. Desired schema lives in HCL or SQL files referenced from the CR. The operator runs Atlas internally to compute the diff, generates the migration, and applies it according to the policy in the CR (auto-apply for additive, require approval for destructive). Built-in lint catches dangerous diffs before they reach the cluster.
+
+Strengths: native K8s primitive, integrates with ArgoCD/Flux as just another resource, supports MySQL/Postgres/SQLite/SQL Server. Lint policy is the killer feature; you can declare "block any diff that drops a column" cluster-wide.
+
+Limits: no first-class workflow for multi-step expand-contract beyond what Atlas itself supports.
+
+Bytebase (2022+). Not a controller in the strict GitOps sense; a database DevOps platform with a Git integration. PRs in a designated repo trigger Bytebase pipelines that propose migrations, route them through review/approval, and apply them in stages (dev to staging to prod). Workflow-heavy. RBAC, audit trail, multi-environment promotion, scheduled runs, slack/email approvals. The de facto choice for compliance-heavy orgs.
+
+Limits: not declarative in the K8s sense; cannot reconcile drift autonomously.
+
+Schemahero (Replicated, 2020+). Earliest of the group. K8s CRD: Database (connection) and Table (desired shape per table). The operator computes the diff and applies it. Smaller community than Atlas Operator in 2026; still maintained.
+
+pgroll (Xata, 2023+). Postgres-only. Implements multi-version schema evolution natively: every migration creates a new schema version exposed as a view; clients select a version per-connection. Old and new schemas coexist; rollout is a client-side switch, not a server-side cutover. Solves the multi-deploy expand-contract ladder at the database level.
+
+Limits: Postgres-only; constrains DDL to operations that can be expressed as views.
+
+Liquibase Hub / Flyway Cloud. Hosted policy and audit layers on top of the existing migration tools. Less "GitOps" and more "Git-integrated migration service with cloud-side policy enforcement".`,
+      },
       {
         title: 'Drift detection, the stateful-data limit, and real-world adoption',
         content: `What GitOps for databases actually owns:
@@ -28820,39 +28013,6 @@ Tooling choice as of 2026:
 - Postgres-only, expand-contract central to the workflow: pgroll alongside Atlas or as the primary tool.
 - Existing Liquibase/Flyway investment: stay with the current tool plus their cloud governance layer; switching costs are high and the gain is marginal.`,
       },
-      {
-        title: 'Why databases were excluded and what changed',
-        image: '/diagrams/devops/k2-gitops-dbs.png',
-        content: `Why databases were excluded.
-
-Reason 1 — state mutation has side effects. Applying a Deployment manifest replaces the previous Deployment; the action is idempotent and the previous resource is recoverable. Applying a DROP COLUMN destroys data. The reconciliation loop cannot blindly apply a DDL.
-
-Reason 2 — schema is not the whole state. The cluster's desired state is the full set of manifests. The database's desired state is shape only; the data is not in Git and never will be. Any GitOps tool for databases has to define the boundary between what it owns (schema, roles, indexes, extensions) and what it does not (rows, sequences, statistics).
-
-Reason 3 — order matters. K8s manifests can be applied in any order; the controller resolves dependencies. SQL migrations are inherently ordered.
-
-Reason 4 — failure modes are catastrophic. A Deployment that fails health-checks is rolled back automatically. A migration that corrupts data is not rollback-able from a controller's perspective.
-
-The 2022 to 2026 thaw. Several tools converged on the same architecture: declare schema in Git, controller computes the diff against live DB, generates a migration, optionally requires human approval, applies, records the result.
-
-Atlas Operator (Ariga, 2023+). Kubernetes CRD: AtlasSchema and AtlasMigration. Desired schema lives in HCL or SQL files referenced from the CR. The operator runs Atlas internally to compute the diff, generates the migration, and applies it according to the policy in the CR (auto-apply for additive, require approval for destructive). Built-in lint catches dangerous diffs before they reach the cluster.
-
-Strengths: native K8s primitive, integrates with ArgoCD/Flux as just another resource, supports MySQL/Postgres/SQLite/SQL Server. Lint policy is the killer feature; you can declare "block any diff that drops a column" cluster-wide.
-
-Limits: no first-class workflow for multi-step expand-contract beyond what Atlas itself supports.
-
-Bytebase (2022+). Not a controller in the strict GitOps sense; a database DevOps platform with a Git integration. PRs in a designated repo trigger Bytebase pipelines that propose migrations, route them through review/approval, and apply them in stages (dev to staging to prod). Workflow-heavy. RBAC, audit trail, multi-environment promotion, scheduled runs, slack/email approvals. The de facto choice for compliance-heavy orgs.
-
-Limits: not declarative in the K8s sense; cannot reconcile drift autonomously.
-
-Schemahero (Replicated, 2020+). Earliest of the group. K8s CRD: Database (connection) and Table (desired shape per table). The operator computes the diff and applies it. Smaller community than Atlas Operator in 2026; still maintained.
-
-pgroll (Xata, 2023+). Postgres-only. Implements multi-version schema evolution natively: every migration creates a new schema version exposed as a view; clients select a version per-connection. Old and new schemas coexist; rollout is a client-side switch, not a server-side cutover. Solves the multi-deploy expand-contract ladder at the database level.
-
-Limits: Postgres-only; constrains DDL to operations that can be expressed as views.
-
-Liquibase Hub / Flyway Cloud. Hosted policy and audit layers on top of the existing migration tools. Less "GitOps" and more "Git-integrated migration service with cloud-side policy enforcement".`,
-      },
     ],
     references: [
       'https://atlasgo.io/integrations/kubernetes/operator',
@@ -28873,48 +28033,6 @@ Liquibase Hub / Flyway Cloud. Hosted policy and audit layers on top of the exist
     description: 'Five-pillar data observability (freshness, volume, schema, distribution, lineage), the OpenLineage standard, dbt and Airflow integrations, data SLOs, and how 2026 has consolidated around Monte Carlo, Bigeye, Anomalo on the commercial side and OpenLineage plus Marquez on the open-source side.',
     visualizations: [],
     topics: [
-      {
-        title: 'Data SLOs and the distinction from application observability',
-        content: `Data SLOs. Application SLOs measure availability and latency. Data SLOs measure freshness, completeness, and quality. The grammar is the same (target percentage over a window) but the SLIs are different.
-
-SLI 1 — Freshness SLI. Percentage of windows where the table was updated within the SLA. Example: the orders_daily table SLO: 99% of days, the table contains all of yesterday's orders by 6am UTC. Implementation: SQL query that runs hourly, checks max(event_time) and updated_at, records a boolean. Soda, dbt freshness tests, or Monte Carlo freshness monitors all do this.
-
-SLI 2 — Schema-stability SLI. Percentage of days with no unexpected schema change. Approved changes (PR-reviewed dbt model edits) are expected. Unapproved changes (upstream Postgres migration without coordination) are violations. Implementation: schema snapshot service, comparison against a registered contract, alert on diff.
-
-SLI 3 — Anomaly-detection SLI. Percentage of windows free of distribution anomalies. For each metric (null rate, row count, mean of revenue column), did the value stay within the expected range? Implementation: anomaly detection (Monte Carlo, Anomalo, Bigeye, custom) producing one alert per metric per window; SLI rolls up over the SLO window.
-
-SLI 4 — Volume SLI. Percentage of windows with row count within expected range. The table received between expected_min and expected_max rows in the window. Implementation: anomaly detection on count(*) per window; or static threshold for stable workloads.
-
-The senior insight on data SLOs: error budgets work the same way as application SLOs. A team that burns its freshness SLO four weeks in a row should freeze new pipeline development until the existing pipelines are stabilized. The cultural challenge is that data teams have historically not been on-call for freshness; SLOs make that operational reality explicit.
-
-Distinction from application observability:
-
-What application observability cares about: availability (does the request succeed), latency (how long does it take), error rate (what fraction fail), saturation (how close to capacity).
-
-What data observability cares about: freshness (is the data current), completeness (are all the rows there), correctness (are the values right), conformance (does the schema match the contract), lineage (what depends on what).
-
-The first three pillars (freshness, volume, schema) have direct application-observability analogues. Distribution and lineage do not. Lineage in particular has no app-side equivalent: distributed tracing answers "what calls what during this request"; data lineage answers "what produced this dataset, statically, across all runs". They are different graphs.
-
-The 2026 consolidation. The category is mature. Three commercial leaders (Monte Carlo, Bigeye, Anomalo); Soda for code-first and budget-conscious teams; OpenLineage emerging as the de facto interchange standard. Marquez and DataHub dominate the OSS lineage server space.
-
-Three trends worth tracking:
-
-Trend 1 — OpenLineage as the universal contract. Commercial vendors increasingly support OpenLineage event ingestion as a first-class input. Long-term direction: lineage becomes vendor-neutral, observability vendors compete on detection and UX, not on lineage capture.
-
-Trend 2 — Column-level lineage becomes table stakes. Through 2023, table-level was the norm; column-level was a premium feature. By 2026, dbt manifest parsing has made column-level lineage standard for warehouse layers; Spark/Beam still typically table-level.
-
-Trend 3 — Data contracts. The shift toward explicit producer-consumer contracts (often Avro or Protobuf in Schema Registry, or YAML in dbt's contracts feature) has reduced reliance on automatic schema-diff detection. Schema breaks are fewer; the ones that happen are caught at the producer side.
-
-Anti-patterns worth avoiding:
-
-Anti-pattern 1 — Per-table tests but no lineage. Running 5,000 dbt tests with no graph means alerts are isolated; you cannot tell which alerts cascade from one root cause. Lineage turns 5,000 alerts into one root-cause alert with 4,999 affected dashboards.
-
-Anti-pattern 2 — Anomaly detection on everything. Auto-monitoring every metric on every column produces alert fatigue. Pick the columns that matter (revenue, user_id, primary keys) and tune thresholds. Monte Carlo and Anomalo both warn against this.
-
-Anti-pattern 3 — Lineage without query parsing. Lineage from dbt sources (which someone declared) is incomplete; lineage from parsed SQL queries (across all tools) is the truth. OpenLineage emission from query engines beats hand-curated lineage every time.
-
-Anti-pattern 4 — Treating data observability as the data team's problem. Schema changes are produced by application teams; they need to be in the alert path. Monte Carlo's GitHub integration and dbt's contracts feature are explicitly cross-team mechanisms.`,
-      },
       {
         title: 'The five pillars and the tooling landscape',
         image: '/diagrams/devops/k3-data-observability.png',
@@ -28967,6 +28085,48 @@ Airflow OpenLineage plugin. Emits an event per task: input datasets, output data
 Spark/Beam OpenLineage integration. SparkListener-based; emits events per Spark job. Captures lineage for ETL jobs that don't use dbt (Iceberg writes, Delta Lake transformations, ML feature engineering). Beam has a similar SDK-level integration.
 
 Putting it together. A modern data org in 2026 typically emits OpenLineage events from Airflow, Spark, and dbt to a central server (Marquez or DataHub or a commercial backend). Lineage queries answer "what depends on this table" and "what produced this column" across the entire stack.`,
+      },
+      {
+        title: 'Data SLOs and the distinction from application observability',
+        content: `Data SLOs. Application SLOs measure availability and latency. Data SLOs measure freshness, completeness, and quality. The grammar is the same (target percentage over a window) but the SLIs are different.
+
+SLI 1 — Freshness SLI. Percentage of windows where the table was updated within the SLA. Example: the orders_daily table SLO: 99% of days, the table contains all of yesterday's orders by 6am UTC. Implementation: SQL query that runs hourly, checks max(event_time) and updated_at, records a boolean. Soda, dbt freshness tests, or Monte Carlo freshness monitors all do this.
+
+SLI 2 — Schema-stability SLI. Percentage of days with no unexpected schema change. Approved changes (PR-reviewed dbt model edits) are expected. Unapproved changes (upstream Postgres migration without coordination) are violations. Implementation: schema snapshot service, comparison against a registered contract, alert on diff.
+
+SLI 3 — Anomaly-detection SLI. Percentage of windows free of distribution anomalies. For each metric (null rate, row count, mean of revenue column), did the value stay within the expected range? Implementation: anomaly detection (Monte Carlo, Anomalo, Bigeye, custom) producing one alert per metric per window; SLI rolls up over the SLO window.
+
+SLI 4 — Volume SLI. Percentage of windows with row count within expected range. The table received between expected_min and expected_max rows in the window. Implementation: anomaly detection on count(*) per window; or static threshold for stable workloads.
+
+The senior insight on data SLOs: error budgets work the same way as application SLOs. A team that burns its freshness SLO four weeks in a row should freeze new pipeline development until the existing pipelines are stabilized. The cultural challenge is that data teams have historically not been on-call for freshness; SLOs make that operational reality explicit.
+
+Distinction from application observability:
+
+What application observability cares about: availability (does the request succeed), latency (how long does it take), error rate (what fraction fail), saturation (how close to capacity).
+
+What data observability cares about: freshness (is the data current), completeness (are all the rows there), correctness (are the values right), conformance (does the schema match the contract), lineage (what depends on what).
+
+The first three pillars (freshness, volume, schema) have direct application-observability analogues. Distribution and lineage do not. Lineage in particular has no app-side equivalent: distributed tracing answers "what calls what during this request"; data lineage answers "what produced this dataset, statically, across all runs". They are different graphs.
+
+The 2026 consolidation. The category is mature. Three commercial leaders (Monte Carlo, Bigeye, Anomalo); Soda for code-first and budget-conscious teams; OpenLineage emerging as the de facto interchange standard. Marquez and DataHub dominate the OSS lineage server space.
+
+Three trends worth tracking:
+
+Trend 1 — OpenLineage as the universal contract. Commercial vendors increasingly support OpenLineage event ingestion as a first-class input. Long-term direction: lineage becomes vendor-neutral, observability vendors compete on detection and UX, not on lineage capture.
+
+Trend 2 — Column-level lineage becomes table stakes. Through 2023, table-level was the norm; column-level was a premium feature. By 2026, dbt manifest parsing has made column-level lineage standard for warehouse layers; Spark/Beam still typically table-level.
+
+Trend 3 — Data contracts. The shift toward explicit producer-consumer contracts (often Avro or Protobuf in Schema Registry, or YAML in dbt's contracts feature) has reduced reliance on automatic schema-diff detection. Schema breaks are fewer; the ones that happen are caught at the producer side.
+
+Anti-patterns worth avoiding:
+
+Anti-pattern 1 — Per-table tests but no lineage. Running 5,000 dbt tests with no graph means alerts are isolated; you cannot tell which alerts cascade from one root cause. Lineage turns 5,000 alerts into one root-cause alert with 4,999 affected dashboards.
+
+Anti-pattern 2 — Anomaly detection on everything. Auto-monitoring every metric on every column produces alert fatigue. Pick the columns that matter (revenue, user_id, primary keys) and tune thresholds. Monte Carlo and Anomalo both warn against this.
+
+Anti-pattern 3 — Lineage without query parsing. Lineage from dbt sources (which someone declared) is incomplete; lineage from parsed SQL queries (across all tools) is the truth. OpenLineage emission from query engines beats hand-curated lineage every time.
+
+Anti-pattern 4 — Treating data observability as the data team's problem. Schema changes are produced by application teams; they need to be in the alert path. Monte Carlo's GitHub integration and dbt's contracts feature are explicitly cross-team mechanisms.`,
       },
     ],
     references: [
@@ -29987,31 +29147,30 @@ Monitoring a healthy Bazel monorepo (BuildBuddy metrics):
   color: '#7c3aed',
   questions: 5,
   description: `eBPF lets you run sandboxed programs inside the Linux kernel without changing kernel source or loading kernel modules. It is the foundation for modern observability, networking, and security tooling used by Kubernetes, Cilium, Falco, and Datadog.`,
-  visualizations: [
-    {
-      title: `eBPF Architecture and Execution Pipeline`,
-      description: `An eBPF program begins as C source code compiled by Clang into BPF bytecode, a 64-bit RISC-like instruction set. Before the kernel ever executes a single instruction the bytecode passes through the eBPF verifier, a static analysis engine that proves termination and memory safety. The verifier performs a depth-first traversal of the control-flow graph, tracking register types and ranges at each instruction. It rejects programs with back-edges that could cause infinite loops unless bounded loop support is enabled, and it refuses any instruction that dereferences an unvalidated pointer.
+  visualizations: [],
+    topics: [
+      {
+        title: 'eBPF Architecture and Execution Pipeline',
+        image: '/diagrams/devops/ebpf-programming-arch.png',
+        content: `An eBPF program begins as C source code compiled by Clang into BPF bytecode, a 64-bit RISC-like instruction set. Before the kernel ever executes a single instruction the bytecode passes through the eBPF verifier, a static analysis engine that proves termination and memory safety. The verifier performs a depth-first traversal of the control-flow graph, tracking register types and ranges at each instruction. It rejects programs with back-edges that could cause infinite loops unless bounded loop support is enabled, and it refuses any instruction that dereferences an unvalidated pointer.
 
 Once the verifier accepts the bytecode, the JIT compiler translates it to native machine code for the host architecture. On x86-64 this is near-zero overhead compared to a raw kernel function. The program is then attached to a hook point, which can be a kprobe on any kernel symbol, a tracepoint on a stable TRACE_EVENT, an XDP hook at the earliest point in the NIC driver receive path, a TC hook at the traffic control layer, a cgroup hook for per-container policy, or a sock_ops hook for per-connection TCP state.
 
 eBPF maps bridge kernel-space programs and user-space processes. A hash map might accumulate per-PID counters that a Go daemon reads every second. A ring buffer delivers high-throughput events to user space without dropping. The perf_event_array pushes variable-length records through the perf subsystem. All map access from BPF programs uses helper functions, never direct pointer arithmetic into map memory, so the verifier can track safety across map lookups.
 
 The libbpf skeleton API auto-generates a C header from your compiled object file. Opening the skeleton, loading it, and attaching it requires roughly ten lines of boilerplate, giving you typed accessors to every map and program in the object. CO-RE relocations encoded in the BTF section of the object file let the same binary run on kernels from 4.14 to 6.x without recompilation.`,
-      image: `/diagrams/devops/ebpf-programming-arch.png`,
-    },
-    {
-      title: `XDP and TC Packet Processing Flow`,
-      description: `XDP operates at the lowest hook point the Linux networking stack exposes: inside the NIC driver's receive function, before sk_buff allocation. A program running at this hook receives a pointer to the raw packet frame and must return one of four codes. XDP_PASS sends the packet up the normal stack. XDP_DROP discards it in the driver with zero allocation cost, making it the fastest possible firewall action. XDP_TX hairpins the modified packet back out the same interface. XDP_REDIRECT sends it to another interface, CPU, or AF_XDP socket for user-space fast-path processing.
+      },
+      {
+        title: 'XDP and TC Packet Processing Flow',
+        image: '/diagrams/devops/ebpf-programming-flow.png',
+        content: `XDP operates at the lowest hook point the Linux networking stack exposes: inside the NIC driver's receive function, before sk_buff allocation. A program running at this hook receives a pointer to the raw packet frame and must return one of four codes. XDP_PASS sends the packet up the normal stack. XDP_DROP discards it in the driver with zero allocation cost, making it the fastest possible firewall action. XDP_TX hairpins the modified packet back out the same interface. XDP_REDIRECT sends it to another interface, CPU, or AF_XDP socket for user-space fast-path processing.
 
 The TC hook sits further up the stack, after sk_buff creation, and has access to the full socket buffer metadata including connection tracking state and routing decisions. TC BPF programs can inspect and modify the packet, change the tc verdict, or redirect through the cls_bpf classifier. Because sk_buff is available, TC programs can access L4 headers without manually parsing offsets.
 
 A common Kubernetes CNI pattern uses XDP for the initial ingress drop firewall enforcing network policy, then TC egress for per-pod bandwidth shaping and packet encapsulation. Cilium implements exactly this split: XDP drop for denied connections, TC for VXLAN or Geneve encapsulation and load balancing. The separation keeps the high-frequency deny path at the earliest possible hook while keeping the more complex policy evaluation in TC where sk_buff helpers are available.
 
 bpftrace sits above all of this as a one-liner scripting layer. It compiles AWK-like programs to BPF internally and is ideal for ad-hoc tracing: counting syscalls by comm, measuring block I/O latency as a histogram, or printing every execve argument. For production agents you want libbpf with proper CO-RE because bpftrace does not produce portable binaries.`,
-      image: `/diagrams/devops/ebpf-programming-flow.png`,
-    }
-    ],
-    topics: [
+      },
       {
         title: 'eBPF maps — types, access patterns, and pinning',
         content: `eBPF maps are the shared memory between kernel-space BPF programs and user-space processes. Every map type is identified by a numeric key and returns a value; the map lives in kernel memory referenced by a file descriptor.
@@ -30147,28 +29306,6 @@ Useful Cilium CLI for debugging:
   cilium monitor --type drop             # watch dropped packets in real time
   cilium bpf ct list global             # connection tracking table
   cilium bpf lb list                    # service -> backend mappings in BPF`,
-      },
-      {
-        title: 'eBPF Architecture and Execution Pipeline',
-        image: '/diagrams/devops/ebpf-programming-arch.png',
-        content: `An eBPF program begins as C source code compiled by Clang into BPF bytecode, a 64-bit RISC-like instruction set. Before the kernel ever executes a single instruction the bytecode passes through the eBPF verifier, a static analysis engine that proves termination and memory safety. The verifier performs a depth-first traversal of the control-flow graph, tracking register types and ranges at each instruction. It rejects programs with back-edges that could cause infinite loops unless bounded loop support is enabled, and it refuses any instruction that dereferences an unvalidated pointer.
-
-Once the verifier accepts the bytecode, the JIT compiler translates it to native machine code for the host architecture. On x86-64 this is near-zero overhead compared to a raw kernel function. The program is then attached to a hook point, which can be a kprobe on any kernel symbol, a tracepoint on a stable TRACE_EVENT, an XDP hook at the earliest point in the NIC driver receive path, a TC hook at the traffic control layer, a cgroup hook for per-container policy, or a sock_ops hook for per-connection TCP state.
-
-eBPF maps bridge kernel-space programs and user-space processes. A hash map might accumulate per-PID counters that a Go daemon reads every second. A ring buffer delivers high-throughput events to user space without dropping. The perf_event_array pushes variable-length records through the perf subsystem. All map access from BPF programs uses helper functions, never direct pointer arithmetic into map memory, so the verifier can track safety across map lookups.
-
-The libbpf skeleton API auto-generates a C header from your compiled object file. Opening the skeleton, loading it, and attaching it requires roughly ten lines of boilerplate, giving you typed accessors to every map and program in the object. CO-RE relocations encoded in the BTF section of the object file let the same binary run on kernels from 4.14 to 6.x without recompilation.`,
-      },
-      {
-        title: 'XDP and TC Packet Processing Flow',
-        image: '/diagrams/devops/ebpf-programming-flow.png',
-        content: `XDP operates at the lowest hook point the Linux networking stack exposes: inside the NIC driver's receive function, before sk_buff allocation. A program running at this hook receives a pointer to the raw packet frame and must return one of four codes. XDP_PASS sends the packet up the normal stack. XDP_DROP discards it in the driver with zero allocation cost, making it the fastest possible firewall action. XDP_TX hairpins the modified packet back out the same interface. XDP_REDIRECT sends it to another interface, CPU, or AF_XDP socket for user-space fast-path processing.
-
-The TC hook sits further up the stack, after sk_buff creation, and has access to the full socket buffer metadata including connection tracking state and routing decisions. TC BPF programs can inspect and modify the packet, change the tc verdict, or redirect through the cls_bpf classifier. Because sk_buff is available, TC programs can access L4 headers without manually parsing offsets.
-
-A common Kubernetes CNI pattern uses XDP for the initial ingress drop firewall enforcing network policy, then TC egress for per-pod bandwidth shaping and packet encapsulation. Cilium implements exactly this split: XDP drop for denied connections, TC for VXLAN or Geneve encapsulation and load balancing. The separation keeps the high-frequency deny path at the earliest possible hook while keeping the more complex policy evaluation in TC where sk_buff helpers are available.
-
-bpftrace sits above all of this as a one-liner scripting layer. It compiles AWK-like programs to BPF internally and is ideal for ad-hoc tracing: counting syscalls by comm, measuring block I/O latency as a histogram, or printing every execve argument. For production agents you want libbpf with proper CO-RE because bpftrace does not produce portable binaries.`,
       },
     ],
   introduction: `## Overview
@@ -30648,25 +29785,23 @@ The practical workflow is to use bpftrace for the investigation phase and libbpf
   color: '#0891b2',
   questions: 5,
   description: `containerd is the industry-standard container runtime daemon that manages the complete container lifecycle, from image pull and storage through execution and supervision. Understanding its internal architecture, the OCI specifications it implements, and how Kubernetes communicates with it through CRI is essential for any senior DevOps or platform engineering role.`,
-  visualizations: [
-    {
-      title: `containerd Architecture and Internal Subsystems`,
-      description: `containerd is structured as a long-running daemon that exposes a gRPC API consumed by clients such as Docker, nerdctl, and the Kubernetes kubelet. At the outermost layer sits the API surface, split into the native containerd API (used by nerdctl and ctr) and the CRI plugin which translates Kubernetes CRI calls into containerd native calls.
-
-Internally, containerd is organized around several loosely coupled subsystems. The content store is an immutable, content-addressable blob store keyed by SHA-256 digest. Every image layer, manifest, and config lives here. The snapshotter subsystem sits on top of the content store and manages the writable container filesystem by constructing layered views over the read-only image data. The default snapshotter on Linux is overlayfs, which uses kernel-level copy-on-write; alternatives include devmapper for block-level snapshots and native for a plain directory copy approach.
+  visualizations: [],
+    topics: [
+      {
+        title: 'containerd Architecture and Internal Subsystems',
+        image: '/diagrams/devops/containerd-deep-dive-arch.png',
+        content: `Internally, containerd is organized around several loosely coupled subsystems. The content store is an immutable, content-addressable blob store keyed by SHA-256 digest. Every image layer, manifest, and config lives here. The snapshotter subsystem sits on top of the content store and manages the writable container filesystem by constructing layered views over the read-only image data. The default snapshotter on Linux is overlayfs, which uses kernel-level copy-on-write; alternatives include devmapper for block-level snapshots and native for a plain directory copy approach.
 
 The metadata subsystem uses an embedded BoltDB database to track image references, container records, snapshot names, and content leases. Leases prevent the garbage collector from deleting content that is being actively prepared. The garbage collector runs periodically and removes unreferenced blobs and snapshots.
 
 The tasks subsystem is responsible for creating and managing running processes. When a container is started, containerd spawns a containerd-shim process for each container. The shim is a thin supervisor that remains alive for the full duration of the container. It holds the PTY, stdin/stdout pipes, and the exit status, meaning containerd itself can be restarted without killing running containers.
 
 The events bus provides an internal publish-subscribe mechanism that allows subsystems and external clients to observe lifecycle events such as container-create, task-start, and task-exit. Clients like Kubernetes controllers or log shipping agents subscribe to this bus rather than polling.`,
-      image: `/diagrams/devops/containerd-deep-dive-arch.png`,
-    },
-    {
-      title: `Docker Run to Kernel Process: Full Stack Call Flow`,
-      description: `When you run docker run on a modern Docker installation, the request passes through several discrete layers before a Linux process appears in the kernel. Understanding this full stack is what interviewers are testing when they ask "what happens when you run docker run".
-
-Docker CLI sends an HTTP request to the Docker daemon (dockerd). dockerd, since Docker 20+, delegates container lifecycle to containerd over a Unix socket at /run/containerd/containerd.sock using gRPC. dockerd acts as a containerd client, calling containerd APIs to create and start containers.
+      },
+      {
+        title: 'Docker Run to Kernel Process: Full Stack Call Flow',
+        image: '/diagrams/devops/containerd-deep-dive-flow.png',
+        content: `Docker CLI sends an HTTP request to the Docker daemon (dockerd). dockerd, since Docker 20+, delegates container lifecycle to containerd over a Unix socket at /run/containerd/containerd.sock using gRPC. dockerd acts as a containerd client, calling containerd APIs to create and start containers.
 
 containerd receives the CreateContainer and CreateTask calls. It resolves the image from its content store (pulling from the registry if absent), prepares a snapshot via the snapshotter, and generates a runtime bundle: a directory containing the container rootfs and an OCI runtime spec JSON file (config.json) that describes the namespaces, cgroups, capabilities, mounts, and process to execute.
 
@@ -30675,10 +29810,7 @@ containerd then forks a containerd-shim-runc-v2 process for the container. The s
 runc exits after setup (it is not a daemon), leaving the shim alive as the supervisor. The shim opens a socket back to containerd to report exit codes. containerd reports task status back to dockerd, which reports back to the Docker CLI. The result is an isolated Linux process running inside a set of kernel namespaces with enforced cgroups, with no long-running runc process in between.
 
 For Kubernetes, the path is identical from the containerd layer down, but the caller is the kubelet CRI plugin rather than dockerd, and the sequencing involves RunPodSandbox before CreateContainer.`,
-      image: `/diagrams/devops/containerd-deep-dive-flow.png`,
-    }
-    ],
-    topics: [
+      },
       {
         title: 'containerd snapshotter internals — overlayfs layer chain',
         content: `The snapshotter subsystem is how containerd converts OCI image layers into a usable container rootfs. Understanding it is essential for diagnosing disk space issues and running containerd-in-container CI environments.
@@ -30810,30 +29942,6 @@ Rule of thumb:
   Kubernetes node debugging   -> crictl
   Docker-compatible workflows -> nerdctl
   Internal containerd state   -> ctr`,
-      },
-      {
-        title: 'containerd Architecture and Internal Subsystems',
-        image: '/diagrams/devops/containerd-deep-dive-arch.png',
-        content: `Internally, containerd is organized around several loosely coupled subsystems. The content store is an immutable, content-addressable blob store keyed by SHA-256 digest. Every image layer, manifest, and config lives here. The snapshotter subsystem sits on top of the content store and manages the writable container filesystem by constructing layered views over the read-only image data. The default snapshotter on Linux is overlayfs, which uses kernel-level copy-on-write; alternatives include devmapper for block-level snapshots and native for a plain directory copy approach.
-
-The metadata subsystem uses an embedded BoltDB database to track image references, container records, snapshot names, and content leases. Leases prevent the garbage collector from deleting content that is being actively prepared. The garbage collector runs periodically and removes unreferenced blobs and snapshots.
-
-The tasks subsystem is responsible for creating and managing running processes. When a container is started, containerd spawns a containerd-shim process for each container. The shim is a thin supervisor that remains alive for the full duration of the container. It holds the PTY, stdin/stdout pipes, and the exit status, meaning containerd itself can be restarted without killing running containers.
-
-The events bus provides an internal publish-subscribe mechanism that allows subsystems and external clients to observe lifecycle events such as container-create, task-start, and task-exit. Clients like Kubernetes controllers or log shipping agents subscribe to this bus rather than polling.`,
-      },
-      {
-        title: 'Docker Run to Kernel Process: Full Stack Call Flow',
-        image: '/diagrams/devops/containerd-deep-dive-flow.png',
-        content: `Docker CLI sends an HTTP request to the Docker daemon (dockerd). dockerd, since Docker 20+, delegates container lifecycle to containerd over a Unix socket at /run/containerd/containerd.sock using gRPC. dockerd acts as a containerd client, calling containerd APIs to create and start containers.
-
-containerd receives the CreateContainer and CreateTask calls. It resolves the image from its content store (pulling from the registry if absent), prepares a snapshot via the snapshotter, and generates a runtime bundle: a directory containing the container rootfs and an OCI runtime spec JSON file (config.json) that describes the namespaces, cgroups, capabilities, mounts, and process to execute.
-
-containerd then forks a containerd-shim-runc-v2 process for the container. The shim receives the bundle path and is told to create the container. The shim calls runc create, which reads config.json and uses libcontainer to configure Linux namespaces (pid, net, mnt, uts, ipc, user), apply cgroups for resource limits, set seccomp filters, apply AppArmor or SELinux labels, set up the pivot_root for the filesystem, and finally exec the init process inside the container.
-
-runc exits after setup (it is not a daemon), leaving the shim alive as the supervisor. The shim opens a socket back to containerd to report exit codes. containerd reports task status back to dockerd, which reports back to the Docker CLI. The result is an isolated Linux process running inside a set of kernel namespaces with enforced cgroups, with no long-running runc process in between.
-
-For Kubernetes, the path is identical from the containerd layer down, but the caller is the kubelet CRI plugin rather than dockerd, and the sequencing involves RunPodSandbox before CreateContainer.`,
       },
     ],
   introduction: `## Overview
@@ -31211,33 +30319,28 @@ grep snapshotter /etc/containerd/config.toml
   color: '#dc2626',
   questions: 5,
   description: `Firecracker is an open-source Virtual Machine Monitor written in Rust by AWS that uses Linux KVM to run lightweight microVMs with millisecond boot times and minimal memory overhead. It powers AWS Lambda and Fargate by combining the hardware isolation of VMs with the density and speed traditionally associated with containers.`,
-  visualizations: [
-    {
-      title: `Firecracker VMM Architecture`,
-      description: `Firecracker runs as a single userspace process per microVM. At the core is the Rust-based VMM that speaks directly to the Linux KVM subsystem via /dev/kvm ioctls. KVM provides the hardware virtualization extensions (Intel VT-x or AMD-V) that allow guest code to run at near-native speed while the host kernel retains control.
-
-The VMM exposes a REST API exclusively over a Unix domain socket. An external orchestrator, such as containerd or a custom Lambda worker manager, configures the VM through this API before boot. Configuration covers the guest kernel image, the root filesystem, network interfaces, and block devices. No general-purpose HTTP port is ever opened.
+  visualizations: [],
+    topics: [
+      {
+        title: 'Firecracker VMM Architecture',
+        image: '/diagrams/devops/firecracker-microvms-arch.png',
+        content: `The VMM exposes a REST API exclusively over a Unix domain socket. An external orchestrator, such as containerd or a custom Lambda worker manager, configures the VM through this API before boot. Configuration covers the guest kernel image, the root filesystem, network interfaces, and block devices. No general-purpose HTTP port is ever opened.
 
 Virtual devices are implemented via the virtio specification. virtio-net provides the guest network interface backed by a TAP device on the host. virtio-blk provides the root block device backed by a file or block device on the host. vsock is an optional virtio device that enables socket-based communication between the guest and the host without requiring a network interface at all, which is useful for metadata services and log drains.
 
 The jailer is a separate Rust binary that wraps the Firecracker process before it starts. The jailer performs several hardening steps in order: it places the process in a new network namespace, applies cgroup v2 limits for CPU and memory, chroots into a minimal directory containing only the Firecracker binary and the socket path, and installs a seccomp-BPF filter that allows only the specific syscalls Firecracker needs to operate. The result is a process with a drastically reduced attack surface even if the VMM code itself were compromised.`,
-      image: `/diagrams/devops/firecracker-microvms-arch.png`,
-    },
-    {
-      title: `Firecracker Boot Sequence and Serverless Integration`,
-      description: `The full lifecycle from API call to running guest code follows a strict sequence. First, the orchestrator spawns the jailer, which in turn executes the Firecracker binary inside its hardened environment. Firecracker opens the Unix socket and waits for configuration requests.
-
-The orchestrator then issues a series of PUT requests to the REST API: PUT /boot-source with the kernel image path and kernel command-line arguments, PUT /drives/rootfs with the path to the root filesystem image, and PUT /network-interfaces/eth0 with the TAP device name and guest MAC address. Once configuration is complete the orchestrator sends PUT /actions with InstanceStart.
+      },
+      {
+        title: 'Firecracker Boot Sequence and Serverless Integration',
+        image: '/diagrams/devops/firecracker-microvms-flow.png',
+        content: `The orchestrator then issues a series of PUT requests to the REST API: PUT /boot-source with the kernel image path and kernel command-line arguments, PUT /drives/rootfs with the path to the root filesystem image, and PUT /network-interfaces/eth0 with the TAP device name and guest MAC address. Once configuration is complete the orchestrator sends PUT /actions with InstanceStart.
 
 Firecracker loads the kernel directly into guest memory using its built-in Linux loader, bypassing BIOS and GRUB entirely. The kernel boots straight to the init process in the guest root filesystem. Total time from InstanceStart to a running guest process is typically 125 milliseconds or less because there is no firmware phase.
 
 In AWS Lambda the root filesystem is a read-only snapshot. When a new invocation arrives, Lambda clones a memory snapshot of a pre-warmed microVM using Firecracker snapshotting rather than booting from scratch, reducing cold-start latency to single-digit milliseconds for subsequent invocations in the same availability zone.
 
 firecracker-containerd is a project that implements the containerd remote snapshotter and shim interfaces on top of Firecracker. It allows Kubernetes and containerd to schedule OCI container images as Kata-style microVM workloads transparently. Each pod or container gets its own Firecracker microVM, and the container image layers are mounted into the guest via virtiofs or a devicemapper snapshot. This integration path is how organizations run untrusted multi-tenant container workloads with VM-level isolation without changing their Kubernetes control plane.`,
-      image: `/diagrams/devops/firecracker-microvms-flow.png`,
-    }
-    ],
-    topics: [
+      },
       {
         title: 'Firecracker jailer hardening — seccomp, namespaces, cgroups',
         content: `The jailer binary is a mandatory wrapper that applies defense-in-depth isolation before the Firecracker VMM process starts. It runs as root, applies all restrictions, then drops privileges before exec-ing Firecracker.
@@ -31341,73 +30444,6 @@ Gotcha: network state after restore
   The guest kernel's network stack sees the restored state, but the host TAP is gone.
   Orchestrators must: delete old TAP, create new TAP, hot-attach it via the REST API
   before resuming the guest.`,
-      },
-      {
-        title: 'firecracker-containerd — Kubernetes integration for microVMs',
-        content: `firecracker-containerd bridges the OCI/Kubernetes world and Firecracker's REST API, allowing standard container tooling to schedule workloads into microVMs transparently.
-
-Architecture components:
-
-containerd (standard)
-  Receives CRI calls from kubelet as usual.
-  Selects runtime class "firecracker" based on RuntimeClass resource.
-
-firecracker-containerd shim (containerd-shim-aws-firecracker)
-  Implements the containerd shim v2 API.
-  Instead of calling runc, it spawns a Firecracker microVM per pod/container.
-  Translates containerd task lifecycle (Create/Start/Wait/Delete) into Firecracker REST API calls.
-
-remote snapshotter
-  Standard containerd snapshotter pulls image layers to the host.
-  firecracker-containerd uses a devmapper-based remote snapshotter to expose
-  image layers as block devices inside the guest via virtio-blk.
-  Alternative: virtiofs to expose image layers as filesystem mounts inside the guest.
-
-Guest agent (fc-agent)
-  A small binary running inside the microVM.
-  Communicates with the shim over vsock (not network).
-  Receives exec requests, manages container process lifecycle inside the guest.
-  Returns exit codes and log streams back to the shim via vsock.
-
-Kubernetes RuntimeClass configuration:
-  apiVersion: node.k8s.io/v1
-  kind: RuntimeClass
-  metadata:
-    name: firecracker
-  handler: aws-firecracker
-
-  # Pod spec to opt into microVM isolation:
-  spec:
-    runtimeClassName: firecracker
-    containers:
-    - name: app
-      image: myapp:latest
-
-Security properties vs standard containers:
-  Standard container: shared host kernel, namespaces only
-  firecracker-containerd: separate KVM guest kernel per pod, hardware VMX isolation
-  Threat model: guest kernel compromise does not affect host or other guests
-  Cost: ~125ms cold start, ~5MB memory overhead for VMM process per microVM`,
-      },
-      {
-        title: 'Firecracker VMM Architecture',
-        image: '/diagrams/devops/firecracker-microvms-arch.png',
-        content: `The VMM exposes a REST API exclusively over a Unix domain socket. An external orchestrator, such as containerd or a custom Lambda worker manager, configures the VM through this API before boot. Configuration covers the guest kernel image, the root filesystem, network interfaces, and block devices. No general-purpose HTTP port is ever opened.
-
-Virtual devices are implemented via the virtio specification. virtio-net provides the guest network interface backed by a TAP device on the host. virtio-blk provides the root block device backed by a file or block device on the host. vsock is an optional virtio device that enables socket-based communication between the guest and the host without requiring a network interface at all, which is useful for metadata services and log drains.
-
-The jailer is a separate Rust binary that wraps the Firecracker process before it starts. The jailer performs several hardening steps in order: it places the process in a new network namespace, applies cgroup v2 limits for CPU and memory, chroots into a minimal directory containing only the Firecracker binary and the socket path, and installs a seccomp-BPF filter that allows only the specific syscalls Firecracker needs to operate. The result is a process with a drastically reduced attack surface even if the VMM code itself were compromised.`,
-      },
-      {
-        title: 'Firecracker Boot Sequence and Serverless Integration',
-        image: '/diagrams/devops/firecracker-microvms-flow.png',
-        content: `The orchestrator then issues a series of PUT requests to the REST API: PUT /boot-source with the kernel image path and kernel command-line arguments, PUT /drives/rootfs with the path to the root filesystem image, and PUT /network-interfaces/eth0 with the TAP device name and guest MAC address. Once configuration is complete the orchestrator sends PUT /actions with InstanceStart.
-
-Firecracker loads the kernel directly into guest memory using its built-in Linux loader, bypassing BIOS and GRUB entirely. The kernel boots straight to the init process in the guest root filesystem. Total time from InstanceStart to a running guest process is typically 125 milliseconds or less because there is no firmware phase.
-
-In AWS Lambda the root filesystem is a read-only snapshot. When a new invocation arrives, Lambda clones a memory snapshot of a pre-warmed microVM using Firecracker snapshotting rather than booting from scratch, reducing cold-start latency to single-digit milliseconds for subsequent invocations in the same availability zone.
-
-firecracker-containerd is a project that implements the containerd remote snapshotter and shim interfaces on top of Firecracker. It allows Kubernetes and containerd to schedule OCI container images as Kata-style microVM workloads transparently. Each pod or container gets its own Firecracker microVM, and the container image layers are mounted into the guest via virtiofs or a devicemapper snapshot. This integration path is how organizations run untrusted multi-tenant container workloads with VM-level isolation without changing their Kubernetes control plane.`,
       },
       {
         title: 'firecracker-containerd — Kubernetes integration for microVMs',
@@ -31932,30 +30968,7 @@ From the Kubernetes control plane's perspective the pod is just a pod. Resource 
   color: '#7c3aed',
   questions: 5,
   description: `Dagger is a programmable CI/CD engine that lets you define pipelines as code using Go, Python, or TypeScript SDKs, backed by a BuildKit-powered DAG executor with automatic caching. It eliminates the gap between local development and CI by running the exact same containerized pipeline everywhere.`,
-  visualizations: [
-    {
-      title: `Dagger Engine Architecture`,
-      description: `The Dagger engine sits at the center of the system as a long-running daemon that exposes a GraphQL API over a Unix socket. Client SDKs written in Go, Python, or TypeScript connect to this API and describe pipelines as a directed acyclic graph of operations rather than as sequential shell scripts.
-
-Each node in the DAG represents a pure function: it takes typed inputs, runs inside a container, and produces outputs that can become inputs to downstream nodes. BuildKit handles the low-level container execution, layer caching, and parallelism. Dagger translates the GraphQL operation graph into a BuildKit LLB graph, which means every intermediate result is content-addressed and stored in a shared cache layer backed by the local BuildKit content store or Dagger Cloud.
-
-On the left side of the architecture are the trigger sources: a developer running dagger call on their laptop, a GitHub Actions job invoking the Dagger CLI, a GitLab CI job, or a Buildkite step. All of them connect to a local or remote Dagger engine instance and submit the same GraphQL payload. The engine resolves the DAG, skips any nodes whose inputs have not changed since the last run, and fans out parallel branches automatically.
-
-On the right side are the outputs: published container images, test results, binaries, deployment artifacts, and structured log streams. Because the DAG is deterministic and content-addressed, a pipeline that passed on a developer laptop produces bit-for-bit identical artifacts in CI unless the source inputs differ.`,
-      image: `/diagrams/devops/dagger-ci-arch.png`
-    },
-    {
-      title: `Dagger Pipeline Execution Flow`,
-      description: `When a developer invokes dagger call build --src . the CLI serializes the function call into a GraphQL mutation and sends it to the engine. The engine checks its BuildKit content store for a cached result keyed by the SHA256 digest of every input: the source directory snapshot, the base image digest, environment variable values, and secret hashes. If a cache hit exists for every node in the subgraph, the result is returned instantly without executing any containers.
-
-For cache misses the engine schedules container execution through BuildKit. Parallel branches run concurrently inside isolated namespaces. A Services node starts a sidecar container, for example a PostgreSQL or Redis instance, and binds it to an ephemeral hostname visible only to peer nodes in the same pipeline run. Integration test nodes connect to this ephemeral hostname as if it were a real server, run their test binary, and stream logs back through the GraphQL subscription.
-
-Cache volumes are named mounts that persist across pipeline runs. A Go module cache volume mounted at /go/pkg/mod means go mod download only fetches new packages. A Node.js volume at /app/node_modules means npm ci is skipped entirely when the lockfile digest matches the previous run. These volumes are stored in BuildKit's content store and, with Dagger Cloud enabled, synchronized to a distributed cache layer so that any runner picking up the same pipeline gets a warm cache regardless of which physical machine it executes on.
-
-At the end of the run the engine publishes the final artifact, emits a structured result back to the CLI, and optionally pushes a cache snapshot to Dagger Cloud. The developer sees pass or fail with the same log output they would see in GitHub Actions, because it is literally the same code path.`,
-      image: `/diagrams/devops/dagger-ci-flow.png`
-    }
-    ],
+  visualizations: [],
     topics: [
       {
         title: 'Dagger Engine Architecture',
@@ -32464,123 +31477,7 @@ The decision hinges on pipeline complexity and team investment capacity. For a s
   color: '#4f46e5',
   questions: 5,
   description: `Kubernetes the Hard Way is a manual bootstrapping approach that teaches every component of a Kubernetes cluster without automation tools like kubeadm. Understanding this process reveals how etcd, the API server, scheduler, controller manager, kubelet, and kube-proxy interact to form a working control plane and data plane.`,
-  visualizations: [
-    {
-      title: `Control Plane Architecture`,
-      description: `The Kubernetes control plane consists of five primary components that work in concert to manage cluster state. At the center is etcd, a distributed key-value store that persists all cluster state using the Raft consensus algorithm. Every other component communicates exclusively through the kube-apiserver, which is the single gateway to etcd.
-
-The kube-apiserver receives requests from clients such as kubectl, authenticates and authorizes them through a multi-stage chain, runs admission controllers, and then reads or writes to etcd. When a resource changes in etcd, the API server notifies watchers through its internal watch mechanism, which is how controllers and the scheduler react to state changes without polling.
-
-The kube-scheduler watches for unscheduled pods via a watch on the API server. When a new pod appears with no node assignment, the scheduler runs the pod through a sequence of filter predicates to eliminate ineligible nodes, then scores the remaining nodes, and finally binds the pod to the highest-scoring node by writing a Binding object back through the API server.
-
-The kube-controller-manager bundles dozens of independent control loops into one process. Each controller observes a specific resource type through a watch, compares observed state to desired state, and takes corrective action. For example, the ReplicaSet controller creates or deletes pods to match a desired replica count, while the Node controller evicts pods from nodes that stop reporting heartbeats.
-
-On each worker node, the kubelet is the primary agent. It registers the node with the API server, watches for pods assigned to its node, and drives the container runtime through the CRI interface, the network plugin through CNI, and the storage driver through CSI. The kubelet's sync loop runs continuously, reconciling the desired pod specifications with the actual running containers.
-
-Finally, kube-proxy runs on every node and programs the kernel's networking rules so that Service ClusterIPs route to healthy pod endpoints. It watches EndpointSlice objects and translates them into either iptables chains or IPVS virtual servers depending on its mode configuration.`,
-      image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
-    },
-    {
-      title: `kubectl apply to Running Pod Data Flow`,
-      description: `Tracing a single kubectl apply command through the entire stack is one of the most instructive exercises in understanding Kubernetes internals. The journey begins at the client and ends with a container process running on a worker node, touching every control plane component along the way.
-
-When a user runs kubectl apply, the client reads the kubeconfig file to determine the cluster API server address and the credentials to use. The kubeconfig contains a cluster entry with a certificate authority, a user entry with a client certificate and key or a token, and a context that maps a cluster to a user. kubectl sends an HTTP request to the API server with these credentials.
-
-The kube-apiserver receives the request and runs it through the authentication chain. The chain tries each configured authenticator in order: x509 client certificates, bearer tokens, and webhook authenticators. Once authentication succeeds and a user identity is established, the request proceeds to authorization where RBAC checks whether the identity has the correct verb and resource permission.
-
-After authorization, admission controllers run in two phases. First, mutating admission webhooks may modify the object, for example adding default values or injecting sidecar containers. Second, validating admission webhooks and built-in validating controllers reject objects that violate policies. If all admission steps pass, the API server serializes the object to etcd.
-
-When etcd commits the write, the API server notifies all watchers of that resource type. The scheduler, which holds an open watch for pods with no node name, receives the new pod event. It runs the pod through filter predicates such as NodeResourcesFit, NodeAffinity, and TaintToleration to produce a list of feasible nodes. It then scores feasible nodes using priority functions and selects the winner, writing a Binding object to the API server, which sets the pod's nodeName field in etcd.
-
-The kubelet on the winning node, which also holds a watch for pods assigned to its node name, receives the pod event. The kubelet's sync loop calls the container runtime via CRI to pull images and create containers, calls the CNI plugin to set up the pod network namespace and assign an IP, and optionally calls CSI to attach and mount persistent volumes. Once all containers are running, the kubelet updates the pod status fields in etcd through the API server, and the pod is now visible as Running.`,
-      image: `/diagrams/devops/kubernetes-the-hard-way-flow.png`,
-    },
-    {
-      title: `🔐 TLS/PKI Certificate Architecture — 1 CA, 8 Certs`,
-      description: `Every component-to-component connection in a Kubernetes cluster is encrypted and mutually authenticated using TLS certificates signed by a single root CA. Understanding which certificate is used for which connection is essential for debugging authentication failures and for rotating certificates safely.
-
-The cluster CA is generated first and its key must be protected above all other secrets. All other certificates are signed by this CA. The API server verifies client certificates by checking the signature against this CA public key.
-
-The 8 certificates generated in Kubernetes the Hard Way:
-
-admin.pem — CN: admin, O: system:masters. Used by kubectl for cluster-admin access. The system:masters group bypasses RBAC entirely.
-
-kube-controller-manager.pem — CN: system:kube-controller-manager, O: system:kube-controller-manager. Used by the controller manager to authenticate to the API server.
-
-kube-proxy.pem — CN: system:kube-proxy, O: system:node-proxier. Used by kube-proxy on each worker node.
-
-kube-scheduler.pem — CN: system:kube-scheduler, O: system:kube-scheduler. Used by the scheduler to authenticate to the API server.
-
-kubernetes.pem — CN: kubernetes, SANs include the API server load balancer IP, each controller IP, 10.32.0.1 (first ClusterIP), and kubernetes.default.svc.cluster.local. This is the server-side TLS certificate for the API server and is also used for etcd peer and client communication.
-
-service-account.pem — CN: service-accounts. This is NOT a TLS certificate for a connection. The API server uses the private key to sign service account JWT tokens that are mounted into pods, and uses the public key to verify them.
-
-Each worker node gets its own certificate — CN: system:node:NODE_NAME, O: system:nodes. The Node authorization mode uses the system:nodes group membership to limit what each kubelet can access, and the NodeRestriction admission plugin further limits each kubelet to only modifying objects related to its own node.
-
-The O (Organization) field is how certificate identity maps to Kubernetes RBAC groups. When the API server sees a client certificate with O: system:masters, that client has cluster-admin rights. When it sees O: system:nodes, the Node authorizer handles the request. This mapping is how the cluster bootstraps its own access control without needing API objects to already exist.
-
-Certificate SANs trap: the kubernetes.pem certificate must include every address through which the API server will be reached — load balancer IP, each controller private IP, 127.0.0.1, and the kubernetes service ClusterIP (typically 10.32.0.1). Missing any of these causes TLS handshake failures from that access path.`,
-      image: `/diagrams/devops/g1-k8s-arch.png`,
-    },
-    {
-      title: `🌐 Networking Deep Dive — Pod CIDR, CNI Bridge, kube-proxy iptables`,
-      description: `Kubernetes networking is built on three non-overlapping IP spaces that never NAT between nodes: the Node CIDR (physical machine IPs), the Pod CIDR (virtual IPs inside overlay or routed network), and the Service CIDR (virtual IPs that exist only in iptables/IPVS rules). Getting these three ranges right is the first networking decision and errors here require full cluster rebuilds.
-
-In Kubernetes the Hard Way, the IP ranges are:
-  Node network: 10.240.0.0/24 (GCP VPC, 3 machines)
-  Pod CIDR: 10.200.0.0/16 (each node gets a /24 slice: 10.200.0.0/24, 10.200.1.0/24, 10.200.2.0/24)
-  Service CIDR: 10.32.0.0/24 (ServiceIPs are virtual — no packets are actually sent to them)
-
-The br-netfilter kernel module is mandatory. Without it, iptables cannot see traffic crossing Linux bridge devices, so kube-proxy rules are silently bypassed for pod-to-pod traffic. It is loaded with: modprobe br-netfilter. The net.bridge.bridge-nf-call-iptables sysctl must also be set to 1.
-
-Static routes are configured per-node in the Hard Way so each node knows which /24 prefix lives on which other node's IP. This is the simplest possible L3 routing model — no overlay, just static host routes:
-
-  ip route add 10.200.1.0/24 via 10.240.0.21
-
-CNI bridge plugin creates a bridge device called cni0 on each node. When a pod is created, a veth pair is created: one end goes into the pod network namespace as eth0, the other end is attached to cni0. The bridge plugin assigns the pod IP from the node's /24 slice.
-
-kube-proxy iptables chains translate Service ClusterIPs to pod IPs. For each Service there is a KUBE-SVC-HASH chain. For each endpoint (pod) there is a KUBE-SEP-HASH chain with a DNAT rule. The KUBE-SVC chain probabilistically selects one KUBE-SEP chain using --probability statistic match rules. When a connection arrives for ClusterIP:port, it is NATed to one of the backing pod IPs and a conntrack entry is created so return packets are NATed back.
-
-DNS uses CoreDNS deployed as a Deployment with a Service at 10.32.0.10 by default. The kubelet configures each pod's /etc/resolv.conf to point to this ClusterIP. CoreDNS watches Service and Endpoint objects and answers A/AAAA queries for service.namespace.svc.cluster.local names.`,
-      image: `/diagrams/devops/g2-k8s-resources.png`,
-    },
-    {
-      title: `⚙️ Bootstrap Sequence — Component Startup Order and Systemd Units`,
-      description: `Bootstrapping Kubernetes the Hard Way reveals a precise dependency ordering that automated tools obscure. Understanding this order is critical for diagnosing startup failures — each component will hang or crash-loop if a dependency is not yet healthy.
-
-Phase 1 — Infrastructure (before any K8s components):
-  Generate root CA and all 8 component certificates. Distribute certs to each machine.
-  Generate kubeconfig files for each component (controller-manager, scheduler, kube-proxy, admin).
-  Generate the data encryption config for secret encryption at rest.
-
-Phase 2 — etcd (must start before API server):
-  etcd is deployed as a systemd service on each control plane node.
-  It takes --initial-cluster with all peer addresses and starts in --initial-cluster-state new.
-  Health check: etcdctl endpoint status must return all members with isLeader or isLearner.
-  Only after etcd is healthy can the API server start.
-
-Phase 3 — Control Plane (kube-apiserver first, then others):
-  kube-apiserver starts and connects to etcd. It also generates its own internal state.
-  kube-controller-manager starts and connects to the API server. It waits until the API server is ready before it begins controller reconciliation loops.
-  kube-scheduler starts and connects to the API server. It begins watching for unscheduled pods.
-  All three are run as systemd services with Restart=on-failure.
-
-Phase 4 — Worker Nodes (after control plane is healthy):
-  containerd starts first as the container runtime.
-  kubelet starts and registers the node with the API server via a POST to /api/v1/nodes.
-  kube-proxy starts and begins programming iptables rules for existing Services.
-
-Phase 5 — Cluster Addons:
-  CoreDNS is deployed as a Kubernetes Deployment and Service.
-  The kubelet configures /etc/resolv.conf in each pod to use the CoreDNS Service IP.
-
-Systemd unit key flags that differ from kubeadm defaults:
-  kubelet --container-runtime-endpoint=unix:///var/run/containerd/containerd.sock
-  containerd requires SystemdCgroup = true in /etc/containerd/config.toml — without this, containerd and kubelet use different cgroup drivers and pods restart in a loop.
-  The Delegate=yes and CPUAccounting=yes settings in the kubelet service unit are required for cgroup v2 resource accounting to propagate from the kubelet's own cgroup into pod cgroups.`,
-      image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
-    }
-    ],
+  visualizations: [],
     topics: [
       {
         title: 'Control Plane Architecture',
@@ -32655,7 +31552,6 @@ DNS uses CoreDNS deployed as a Deployment with a Service at 10.32.0.10 by defaul
       },
       {
         title: '⚙️ Bootstrap Sequence — Component Startup Order and Systemd Units',
-        image: '/diagrams/devops/kubernetes-the-hard-way-arch.png',
         content: `Phase 1 — Infrastructure (before any K8s components):
   Generate root CA and all 8 component certificates. Distribute certs to each machine.
   Generate kubeconfig files for each component (controller-manager, scheduler, kube-proxy, admin).
@@ -33127,26 +32023,7 @@ For clusters with fewer than roughly 500 Services the difference in practice is 
   color: '#0891b2',
   questions: 5,
   description: `Kubernetes Storage covers the full lifecycle of persistent volumes, storage classes, and CSI drivers that allow stateful workloads to survive pod restarts and rescheduling. Understanding PV binding, dynamic provisioning, access modes, and snapshot workflows is essential for running databases and other stateful applications reliably in Kubernetes.`,
-  visualizations: [
-    {
-      title: `Kubernetes Storage Architecture`,
-      description: `The Kubernetes storage architecture is built around three primary API objects that interact to provide durable storage to pods. A PersistentVolume (PV) represents a piece of storage in the cluster, provisioned either by an administrator (static) or automatically by a StorageClass controller (dynamic). A PersistentVolumeClaim (PVC) is a user request for storage that specifies the desired size, access mode, and optionally a StorageClass. The control plane watches for unbound PVCs and runs a binding loop to match them against available PVs based on capacity, access mode, and label selectors.
-
-When dynamic provisioning is in play, the PVC references a StorageClass by name. The StorageClass encodes which CSI provisioner to call, the reclaimPolicy, the volumeBindingMode, and any driver-specific parameters. The provisioner contacts the underlying infrastructure (a cloud block store, NFS filer, or distributed storage system) and creates the physical volume, then creates the PV object in Kubernetes and binds it to the waiting PVC. The pod mounts the PVC as a volume and the kubelet on the target node calls the CSI node plugin to stage and publish the volume.
-
-The CSI (Container Storage Interface) layer sits between Kubernetes and storage backends. On the controller side, external sidecar containers such as external-provisioner, external-attacher, and external-resizer watch Kubernetes API objects and translate state changes into gRPC calls against the CSI controller plugin. On the node side, the node-driver-registrar registers the CSI node plugin with the kubelet, and the liveness-probe sidecar monitors plugin health. This split design keeps storage driver code entirely out of the Kubernetes core.`,
-      image: `/diagrams/devops/kubernetes-storage-arch.png`,
-    },
-    {
-      title: `PVC Lifecycle and VolumeSnapshot Restore Flow`,
-      description: `A PVC moves through a well-defined set of phases during its lifetime. When created, it starts in Pending. The controller binding loop or dynamic provisioner then binds it to a PV, transitioning both objects to Bound. A pod that mounts the PVC causes the kubelet to call the CSI node plugin to NodeStageVolume and NodePublishVolume, making the storage visible inside the container. When the pod is deleted, NodeUnpublishVolume and NodeUnstageVolume run. When the PVC itself is deleted, the PV enters Released, and then its fate depends on the reclaimPolicy: Delete removes the backing storage, Retain keeps it for manual recovery, and Recycle (deprecated) ran rm -rf on the volume.
-
-The VolumeSnapshot system adds a separate API layer for point-in-time copies. A VolumeSnapshotClass names the CSI driver and policies for creating snapshots. When a user creates a VolumeSnapshot pointing to a source PVC, the snapshot controller calls CreateSnapshot on the CSI driver. A VolumeSnapshotContent object is created representing the actual snapshot in the backend. To restore, the user creates a new PVC with a dataSource field that references the VolumeSnapshot. The CSI provisioner calls CreateVolume with a snapshot source parameter, and the backend clones the snapshot data into the new volume. The new PVC proceeds through normal binding and can then be mounted by a pod, giving a full restore path without manual backup tooling.
-
-StatefulSets use volumeClaimTemplates to give each pod replica its own stable PVC. When a StatefulSet scales up, each new pod gets a PVC created from the template with the pod ordinal in the name, such as data-mydb-0, data-mydb-1, and so on. These PVCs are not deleted when the StatefulSet scales down or when the pod is rescheduled, preserving data across restarts.`,
-      image: `/diagrams/devops/kubernetes-storage-flow.png`,
-    }
-    ],
+  visualizations: [],
     topics: [
       {
         title: 'Kubernetes Storage Architecture',
@@ -33581,30 +32458,7 @@ The correct fix is to choose a CSI driver and backend that natively support RWX,
   color: '#7c3aed',
   questions: 5,
   description: `Kubernetes pod scheduling determines how the control plane assigns pods to nodes using a multi-phase pipeline of filtering, scoring, and binding decisions. Mastering scheduling lets you control placement for availability, performance, cost, and fault isolation across your cluster.`,
-  visualizations: [
-    {
-      title: `Scheduler Pipeline Architecture`,
-      description: `The Kubernetes scheduler operates as a two-phase system: the scheduling cycle and the binding cycle. During the scheduling cycle, the scheduler first runs through a series of filter plugins to eliminate nodes that cannot satisfy the pod's requirements. These filters evaluate resource requests and limits, node selectors, node affinity rules, pod affinity and anti-affinity rules, taints and tolerations, volume topology constraints, and custom plugin logic. Only nodes that pass every filter enter the scoring phase.
-
-In the scoring phase, each surviving node receives a normalized score from every enabled score plugin. Plugins such as LeastRequestedPriority, BalancedResourceAllocation, InterPodAffinityPriority, TaintTolerationPriority, and SelectorSpreadPriority each contribute a weighted score. The scheduler sums the weighted scores and selects the node with the highest total. Ties are broken randomly to distribute load evenly.
-
-After a node is selected, the Reserve extension point marks internal scheduler state to prevent double-booking while the binding cycle proceeds asynchronously. The Permit extension point allows plugins to block, wait, or approve the scheduling decision, enabling batch and gang scheduling scenarios. Finally, the Bind extension point creates the binding object that writes the nodeName into the pod spec, committing the assignment to the API server.
-
-The scheduling framework introduced in Kubernetes 1.15 made all of these extension points pluggable. Operators can compile custom scheduler plugins and deploy them as out-of-tree schedulers or alongside the default scheduler, giving teams precise control over placement logic without forking core Kubernetes.`,
-      image: `/diagrams/devops/kubernetes-pod-scheduling-arch.png`,
-    },
-    {
-      title: `Topology Spread and Affinity Flow`,
-      description: `When pods must be distributed across failure domains such as availability zones or physical racks, Kubernetes provides two complementary mechanisms: pod anti-affinity rules and topology spread constraints. The flow starts at pod creation time when the API server validates the pod spec and passes it to the scheduler queue.
-
-The scheduler dequeues the pod and evaluates topology spread constraints first as filter logic. For each constraint, it counts how many qualifying pods already exist in each topology bucket for the given topologyKey label. If placing the new pod on a candidate node would make the difference between the maximum and minimum bucket counts exceed maxSkew, that node is filtered out when the whenUnsatisfiable policy is DoNotSchedule. If the policy is ScheduleAnyway, the node remains eligible but receives a lower priority score.
-
-Pod affinity and anti-affinity rules are evaluated separately by the InterPodAffinity filter and scorer. Anti-affinity with topologyKey set to kubernetes.io/hostname creates a hard constraint that no two matching pods share the same node. Anti-affinity with topologyKey set to topology.kubernetes.io/zone prevents co-location at the zone level. Required affinity rules block scheduling entirely if unsatisfied, while preferred rules reduce the score without blocking.
-
-The interaction between these two systems means you must understand which takes precedence. Topology spread constraints are generally more expressive and easier to tune than anti-affinity because they encode the skew tolerance numerically, whereas anti-affinity is binary. When a cluster autoscaler is present, topology spread constraints also help the autoscaler understand which zone needs a new node before it provisions one.`,
-      image: `/diagrams/devops/kubernetes-pod-scheduling-flow.png`,
-    }
-    ],
+  visualizations: [],
     topics: [
       {
         title: 'Scheduler Pipeline Architecture',
@@ -34076,32 +32930,7 @@ Fifth, if the pods have pod affinity rules that reference other pods, the autosc
   color: '#dc2626',
   questions: 5,
   description: `Kubescape and Kubernetes runtime security tools provide continuous posture assessment and real-time threat detection across cluster infrastructure. This topic covers the full defense-in-depth stack from static scanning and admission control through kernel-level syscall monitoring and policy enforcement.`,
-  visualizations: [
-    {
-      title: `Kubernetes Runtime Security Architecture`,
-      description: `The runtime security architecture layers multiple detection and enforcement planes across a Kubernetes cluster. At the foundation, Falco runs as a DaemonSet on every node, deploying either a kernel module or eBPF probe to intercept raw syscalls from the Linux kernel. When a container executes a syscall that matches a Falco rule condition, the event is enriched with Kubernetes metadata and forwarded to Falco Sidekick, which fans out alerts to Slack, PagerDuty, Elasticsearch, or any webhook target.
-
-Above the kernel layer, the Kubernetes API server hosts two admission webhook phases. In the mutating phase, Kyverno ClusterPolicies can inject sidecar containers, set default resource limits, or apply seccomp profiles before objects are persisted. In the validating phase, OPA Gatekeeper evaluates ConstraintTemplate-derived constraints and blocks objects that violate policy. Both tools operate on AdmissionReview requests and must respond within the webhook timeout window.
-
-The Pod Security Standards admission controller runs inside kube-apiserver itself and enforces one of three profiles per namespace via a label. Restricted namespaces reject pods that lack a seccomp profile, request host namespaces, run as root, or set allowPrivilegeEscalation. Baseline namespaces block the most dangerous capabilities and host paths while permitting setuid binaries.
-
-Kubescape operates at a higher abstraction level, consuming the live cluster state or manifest files and scoring them against control frameworks such as NSA-CISA, MITRE ATT&CK for Kubernetes, and CIS Benchmarks. Each control maps to an RBAC, workload, or network configuration check and produces a weighted risk score. The in-cluster operator schedules periodic rescans and exports metrics to Prometheus so teams can track posture drift over time.
-
-Seccomp and AppArmor profiles form the last enforcement layer. A seccomp profile expressed in JSON defines an allowlist or denylist of syscall numbers, and RuntimeDefault delegates this decision to the container runtime. AppArmor profiles are loaded into the host kernel and restrict file paths, network operations, and capabilities at a finer grain than seccomp alone.`,
-      image: `/diagrams/devops/kubescape-runtime-security-arch.png`
-    },
-    {
-      title: `Runtime Security Event and Policy Flow`,
-      description: `The event and policy flow diagram traces the lifecycle of a suspicious runtime event from kernel detection through alerting, remediation recommendation, and posture score update. When a container process calls execve to spawn a shell, the Falco eBPF probe captures the syscall in a ring buffer and passes it to the Falco userspace engine. The engine evaluates the event against its ordered ruleset, enriches it with the pod name, namespace, container ID, and service account from the Kubernetes enrichment cache, and emits a structured JSON alert.
-
-Falco Sidekick receives the alert over HTTP and applies its own output routing rules. High-priority alerts tagged terminal_shell_in_container are sent to PagerDuty and also written to an Elasticsearch index for SIEM correlation. Lower-priority informational events go only to a Slack channel for developer visibility.
-
-In parallel, the Kubescape operator has run its scheduled posture scan. It pulls the live workloads and RBAC policies from the API server, evaluates each control, and writes a WorkloadConfigurationScanSummary custom resource. The summary shows that two deployments in the payments namespace are missing readOnlyRootFilesystem and one ServiceAccount has wildcard verb bindings. Prometheus scrapes the kubescape_resources_by_severity metric and Grafana fires a posture-regression alert when critical findings increase week-over-week.
-
-On the admission path, a developer submits a new Deployment that omits a seccomp profile and sets hostNetwork to true. The Pod Security Standards controller, enforcing the Restricted profile on that namespace, rejects the pod with a descriptive reason. If the namespace is Baseline, the hostNetwork rejection still fires but the missing seccomp profile is permitted, illustrating how the three tiers create graduated enforcement rings. The developer consults the Kyverno policy report generated from the same object to understand which additional ClusterPolicy rules were violated even without hard blocking.`,
-      image: `/diagrams/devops/kubescape-runtime-security-flow.png`
-    }
-    ],
+  visualizations: [],
     topics: [
       {
         title: 'Kubernetes Runtime Security Architecture',
@@ -35184,104 +34013,7 @@ A broken alerting pipeline is a silent failure: the system is on fire and nobody
     color: '#7c3aed',
     questions: 4,
     description: `Admission controllers are the last line of defense in the Kubernetes API request pipeline. They run after authentication and authorization but before the object is written to etcd. Mutating controllers can modify objects; validating controllers can accept or reject them. Understanding the admission chain is critical for implementing security policies and for debugging mysterious resource creation failures.`,
-    visualizations: [
-      {
-        title: `Pod Security Admission and OPA/Gatekeeper`,
-        description: `Pod Security Admission (PSA) is the built-in replacement for the deprecated PodSecurityPolicy. It enforces Pod Security Standards at the namespace level with three modes: enforce (blocks creation), audit (logs violations), and warn (returns warnings to kubectl but allows creation).
-
-Three pre-defined security profiles:
-  privileged — no restrictions, allows all pod fields
-  baseline — prevents most known privilege escalations: no hostNetwork, no hostPID, no privileged containers, no host path volumes mounting sensitive paths
-  restricted — heavily restricted, requires non-root containers, read-only root filesystem, drops all capabilities
-
-Apply to a namespace with a label:
-
-\`\`\`yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: production
-  labels:
-    pod-security.kubernetes.io/enforce: restricted
-    pod-security.kubernetes.io/audit: restricted
-    pod-security.kubernetes.io/warn: restricted
-\`\`\`
-
-OPA/Gatekeeper provides policy-as-code beyond what PSA covers. Gatekeeper runs as a MutatingAdmissionWebhook and ValidatingAdmissionWebhook. Policies are written as ConstraintTemplates (Rego code) and Constraints (instances of a template with parameters).
-
-\`\`\`yaml
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sRequiredLabels
-metadata:
-  name: require-team-label
-spec:
-  match:
-    kinds:
-      - apiGroups: [""]
-        kinds: ["Namespace"]
-  parameters:
-    labels: ["team"]
-\`\`\`
-
-ValidatingAdmissionPolicy (CEL-based, GA in K8s 1.30) is the native in-cluster alternative to Gatekeeper for simple policies. Policies are written in CEL expressions directly in Kubernetes objects — no webhook server required, lower latency, no single point of failure.
-
-\`\`\`yaml
-apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingAdmissionPolicy
-metadata:
-  name: require-run-as-non-root
-spec:
-  failurePolicy: Fail
-  matchConstraints:
-    resourceRules:
-      - apiGroups: [""]
-        apiVersions: ["v1"]
-        operations: ["CREATE", "UPDATE"]
-        resources: ["pods"]
-  validations:
-    - expression: "object.spec.securityContext.runAsNonRoot == true"
-      message: "Pods must run as non-root"
-\`\`\``,
-        image: `/diagrams/devops/g2-k8s-resources.png`,
-      },
-      {
-        title: `Common Built-in Admission Controllers Reference`,
-        description: `The API server flag --enable-admission-plugins controls which built-in controllers are active. The current defaults include: NamespaceLifecycle, LimitRanger, ServiceAccount, TaintNodesByCondition, PodSecurity, Priority, DefaultTolerationSeconds, DefaultStorageClass, StorageObjectInUseProtection, PersistentVolumeClaimResize, RuntimeClass, CertificateApproval, CertificateSigning, CertificateSubjectRestriction, DefaultIngressClass, MutatingAdmissionWebhook, ValidatingAdmissionPolicy, ValidatingAdmissionWebhook, ResourceQuota.
-
-Critical controllers to understand:
-
-NodeRestriction — limits what a kubelet can modify via the API. A kubelet authenticated as system:node:my-node can only read/write objects for its own node and the pods assigned to it. Prevents a compromised node from poisoning other nodes' pod specs.
-
-ResourceQuota — enforces namespace-level resource limits. If a namespace has a ResourceQuota, every pod that lands in it must have resource requests set, because the quota system cannot count resources without requests.
-
-PodSecurity — enforces Pod Security Standards profiles based on namespace labels.
-
-LimitRanger — fills in default resource requests/limits when pods do not specify them. Requires a LimitRange object to exist in the namespace.
-
-ServiceAccount — injects the service account token. If serviceAccountName is not set, it uses the default service account. The token is projected into the pod at /var/run/secrets/kubernetes.io/serviceaccount/token with a configurable expiry (default 1 hour).
-
-MutatingAdmissionWebhook and ValidatingAdmissionWebhook — the extension points. Service meshes like Istio and Linkerd use MutatingAdmissionWebhook to inject sidecar containers. Security tools like Kyverno and Gatekeeper use ValidatingAdmissionWebhook to enforce custom policies.`,
-        image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
-      },
-      {
-        title: `Quick-fire Interview Q&A`,
-        description: `What is the difference between a MutatingAdmissionWebhook and a ValidatingAdmissionWebhook?
-Mutating webhooks run first and can modify the object (return a JSON Patch). Validating webhooks run second, in parallel, and can only accept or reject — they cannot modify the object. This ordering ensures that the object being validated is the final mutated form.
-
-What happens if an admission webhook is down?
-If failurePolicy is Fail (the default): the request is rejected. All resource creation matching the webhook's rules will fail. If failurePolicy is Ignore: the webhook is skipped and the request proceeds. Use Ignore only for convenience webhooks, never for security-critical policies.
-
-How does Istio inject its sidecar proxy?
-Istio registers a MutatingAdmissionWebhook that triggers on pod creation in namespaces with the istio-injection: enabled label. When a pod is created, Istio's istiod receives the AdmissionReview, adds the istio-proxy container and the istio-init init container to the pod spec, and returns a JSON Patch. The pod that runs has these containers injected without the user specifying them.
-
-What is ValidatingAdmissionPolicy and why is it better than Gatekeeper for simple cases?
-ValidatingAdmissionPolicy is a native Kubernetes resource (GA in 1.30) that lets you write policies in CEL expressions directly in the cluster. No webhook server needed — the API server evaluates CEL inline. Advantages: no latency from HTTP calls to an external webhook, no webhook server to manage or scale, no webhook timeout risk, no single point of failure. Gatekeeper remains better for complex Rego policies, audit mode reporting, and policy templates with parameters.
-
-How would you debug a pod that cannot be created but shows no obvious error?
-Run kubectl create -f pod.yaml -v=8 to see all API calls. If the error says admission webhook denied the request, look at the webhook's logs. If the error is connection refused or timeout, the webhook service is down — check the webhook pod and service. Run kubectl get validatingwebhookconfigurations and kubectl get mutatingwebhookconfigurations to list all registered webhooks and their selectors.`,
-        image: `/diagrams/devops/g1-k8s-arch.png`,
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: '🛡️ Admission Chain: Mutating then Validating',
@@ -35449,108 +34181,7 @@ Also set timeoutSeconds: 5 (maximum recommended). The default is 10 seconds, and
     color: '#0891b2',
     questions: 3,
     description: `RuntimeClass lets you select the container runtime for individual pods. Different workloads have different security and performance requirements — high-security workloads can use kernel-isolated runtimes like gVisor or kata-containers while standard workloads continue using containerd with runc. RuntimeClass makes this selection explicit in the pod spec rather than requiring node selector hacks.`,
-    visualizations: [
-      {
-        title: `🏃 Container Runtime Stack: runc, gVisor, kata-containers`,
-        description: `The Kubernetes container runtime stack has three layers: the kubelet, the high-level runtime (containerd or CRI-O), and the low-level runtime that actually creates the container process. RuntimeClass controls which low-level runtime is used.
-
-Layer 1 — CRI (Container Runtime Interface): The kubelet communicates with the high-level runtime over gRPC. The interface is defined by the CRI API. containerd (most common) and CRI-O both implement this interface.
-
-Layer 2 — High-level runtime (containerd): containerd manages image pulling, snapshotters for layers, and delegates actual container creation to a shim. Each shim corresponds to a low-level runtime.
-
-Layer 3 — Low-level runtime choices:
-  runc — the OCI default. Uses Linux namespaces and cgroups to isolate a regular process. Fastest. Shares the host kernel. Appropriate for trusted workloads.
-  gVisor (runsc) — user-space kernel from Google. The container process's system calls are intercepted by a Go process (Sentry) that implements a Linux-compatible syscall surface. The host kernel sees far fewer, simpler syscalls. Strong isolation but ~20% CPU overhead on syscall-heavy workloads.
-  kata-containers — lightweight VMs. Each container (or pod) gets its own VM with its own kernel via QEMU or Cloud Hypervisor. Strongest isolation. Longer startup time (200-500ms vs <10ms for runc). Required for multi-tenant environments where tenants cannot trust each other.
-  Wasm (wasmtime/WasmEdge) — experimental. Runs WebAssembly modules instead of Linux processes. Near-native speed, memory-safe, no kernel required for many operations.
-
-containerd configuration for multiple runtimes in /etc/containerd/config.toml:
-
-\`\`\`toml
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-  runtime_type = "io.containerd.runc.v2"
-
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.gvisor]
-  runtime_type = "io.containerd.runsc.v1"
-
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
-  runtime_type = "io.containerd.kata.v2"
-\`\`\`yaml
-
-The runtime_type string identifies the containerd shim binary. containerd-shim-runsc-v1 for gVisor, containerd-shim-kata-v2 for kata.`,
-        image: `/diagrams/devops/g1-k8s-arch.png`,
-      },
-      {
-        title: `RuntimeClass Object and Pod Selection`,
-        description: `A RuntimeClass object maps a name to a runtime handler configured in containerd. The handler name must match exactly what is configured in the containerd runtime configuration.
-
-\`\`\`yaml
-apiVersion: node.k8s.io/v1
-kind: RuntimeClass
-metadata:
-  name: gvisor
-handler: runsc
-scheduling:
-  nodeSelector:
-    runtime: gvisor
-  tolerations:
-    - effect: NoSchedule
-      key: runtime
-      value: gvisor
-      operator: Equal
-overhead:
-  podFixed:
-    memory: "120Mi"
-    cpu: "250m"
-\`\`\`
-
-Key fields:
-  handler: the handler name as configured in containerd's config.toml
-  scheduling.nodeSelector: automatically applied to pods using this RuntimeClass, ensuring they are scheduled on nodes that have the runtime installed
-  scheduling.tolerations: automatically applied to pods, allowing them to land on nodes tainted for that runtime
-  overhead.podFixed: resource overhead the scheduler adds to the pod's resource requests when computing node fitness — accounts for the VM memory or runsc process memory
-
-To use the RuntimeClass in a pod:
-
-\`\`\`yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: secure-workload
-spec:
-  runtimeClassName: gvisor
-  containers:
-    - name: app
-      image: nginx
-\`\`\`yaml
-
-The kubelet sees the runtimeClassName, looks up the RuntimeClass, finds the handler name, and passes it to containerd as the runtime handler for this sandbox. If the named RuntimeClass does not exist or the handler is not configured in containerd, the pod fails to start with a RuntimeClass not found or handler not found error.
-
-Multi-runtime cluster strategy: run nodes in multiple node pools — one pool with runc for standard workloads, one pool with gVisor for sensitive data processing, one pool with kata-containers for multi-tenant SaaS. Use RuntimeClass scheduling fields to route pods automatically.`,
-        image: `/diagrams/devops/g2-k8s-resources.png`,
-      },
-      {
-        title: `Quick-fire Interview Q&A`,
-        description: `What is the difference between containerd and runc?
-containerd is the high-level runtime that manages image pulling, storage, and pod lifecycle via the CRI gRPC API. runc is the low-level OCI runtime that actually creates the container process using Linux namespaces and cgroups. containerd delegates to runc (or another runtime) via a containerd shim process.
-
-Why would you use gVisor instead of runc?
-When you need stronger isolation than Linux namespaces provide but lighter weight than full VMs. gVisor intercepts syscalls in user space so the host kernel is exposed to far fewer attack surface vectors. Ideal for running untrusted third-party code, multi-tenant processing, or anything where a container escape to the host kernel is unacceptable.
-
-What is the performance tradeoff of kata-containers?
-Startup time: kata takes 200-500ms to start vs under 10ms for runc (VM boot overhead). Memory: each pod has a separate kernel consuming 40-80MB. CPU: near-native for compute-bound workloads after startup; slight overhead for I/O operations because the virtio I/O path adds a layer.
-
-What happens if you specify a runtimeClassName that does not exist?
-The pod is created in the API but remains in Pending state. The kubelet tries to start the pod, finds no RuntimeClass object with that name, and generates a FailedCreate event. The error message is RuntimeClass not found.
-
-How does RuntimeClass interact with node taints?
-The RuntimeClass scheduling.tolerations field automatically adds tolerations to all pods using that class. This is how you can taint nodes with runtime=kata:NoSchedule and have kata-class pods automatically tolerate the taint without users having to specify tolerations in every pod spec.
-
-What is SystemdCgroup and why does it matter?
-containerd's SystemdCgroup = true setting in config.toml makes containerd manage container cgroups through systemd rather than directly. The kubelet's cgroupDriver must match — both must use systemd or both must use cgroupfs. A mismatch causes kubelet to reject nodes or pods to fail with cgroup setup errors.`,
-        image: `/diagrams/devops/kubernetes-the-hard-way-arch.png`,
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: '🏃 Container Runtime Stack: runc, gVisor, kata-containers',
@@ -35693,96 +34324,7 @@ The handler name in the RuntimeClass spec must exactly match the key in the cont
     color: '#059669',
     questions: 3,
     description: `Native sidecar containers (stable in Kubernetes 1.29) solve a long-standing lifecycle problem: regular sidecar containers in the main containers list start and stop in an arbitrary order, causing proxy sidecars like Envoy to not be ready when the app starts, or log collectors to die before flushing the last batch. Native sidecars are init containers with restartPolicy: Always — they start before main containers and are guaranteed to terminate after them.`,
-    visualizations: [
-      {
-        title: `🔄 Sidecar Lifecycle: Old Pattern vs Native`,
-        description: `The lifecycle problem with traditional sidecar patterns is that Kubernetes provides no ordering guarantees between containers in the main containers list. All containers in a pod start roughly simultaneously, which causes two categories of failure:
-
-Startup ordering failure: A service mesh proxy (Envoy, Linkerd proxy) must be running before the application container can make outbound connections. With regular containers this is not guaranteed. Teams work around this with initContainers that sleep until the proxy socket is ready, or by having the app retry connections. Both are fragile.
-
-Shutdown ordering failure: A log collection sidecar (Fluent Bit, Filebeat) must keep running until the application has flushed its last log lines and the application container has exited. With regular containers the log sidecar may terminate first, losing the last log batch. This is why Kubernetes Jobs historically lost logs at completion.
-
-Native sidecar pattern (K8s 1.29+ stable):
-  Declare the sidecar as an initContainer with restartPolicy: Always
-  The kubelet starts all native sidecars before starting main containers
-  Native sidecars are kept running for the lifetime of the pod
-  The kubelet does not terminate the pod until all main containers have exited
-  Then the kubelet sends SIGTERM to the native sidecars
-  Native sidecars receive a graceful shutdown period to flush state
-
-\`\`\`yaml
-apiVersion: v1
-kind: Pod
-spec:
-  initContainers:
-    - name: log-collector
-      image: fluent/fluent-bit:latest
-      restartPolicy: Always
-      volumeMounts:
-        - name: varlog
-          mountPath: /var/log/app
-  containers:
-    - name: app
-      image: myapp:latest
-      volumeMounts:
-        - name: varlog
-          mountPath: /var/log/app
-\`\`\``,
-        image: `/diagrams/devops/g2-k8s-resources.png`,
-      },
-      {
-        title: `Service Mesh and Log Collector Use Cases`,
-        description: `The two primary use cases for native sidecars are service mesh proxies and log/metrics collectors. Both require the same lifecycle guarantees: start before main containers, terminate after main containers.
-
-Service mesh proxy use case (Istio/Linkerd):
-Without native sidecars, Istio injects istio-proxy as a regular container alongside the app. The app may try to make outbound HTTP calls before istio-proxy has opened its listening ports, causing connection refused errors at startup. Istio works around this with a hold_application_until_proxy_starts setting, but this is an application-specific workaround.
-
-With native sidecars, the proxy can be injected as an initContainer with restartPolicy: Always. The kubelet guarantees that the proxy's readinessProbe passes before starting the app container.
-
-\`\`\`yaml
-initContainers:
-  - name: istio-proxy
-    image: istio/proxyv2:1.22
-    restartPolicy: Always
-    readinessProbe:
-      httpGet:
-        path: /healthz/ready
-        port: 15021
-      initialDelaySeconds: 1
-      periodSeconds: 2
-\`\`\`yaml
-
-Log collector use case (Fluent Bit, Fluentd):
-Kubernetes Job pods historically lost their last log lines. The job container exits, Kubernetes terminates all containers, and the log collector is killed before it can flush the final buffer. With native sidecars the flow is: job container exits, kubelet sends SIGTERM to log collector, log collector flushes buffer, log collector exits, pod terminates.
-
-Metrics sidecar pattern:
-Sidecar containers that expose Prometheus metrics from a main app that does not natively expose metrics also benefit. The metrics exporter runs alongside the app and is ready before the app registers with the service mesh.
-
-Resource sizing note: native sidecars count toward the pod's resource requests. Include the sidecar's CPU and memory in capacity planning.`,
-        image: `/diagrams/devops/g1-k8s-arch.png`,
-      },
-      {
-        title: `Quick-fire Interview Q&A`,
-        description: `What is a native sidecar container in Kubernetes?
-An initContainer with restartPolicy: Always. Unlike regular init containers (which run to completion before any main containers start), a native sidecar starts before main containers, keeps running alongside them for the pod lifetime, and terminates after all main containers have exited.
-
-Before native sidecars, how did Istio handle proxy startup ordering?
-Workarounds: a postStart lifecycle hook on the proxy container that blocks the app container from starting, or the PILOT_HOLD_APPLICATION_UNTIL_PROXY_STARTS Istio feature flag, or custom init containers that sleep-poll the proxy socket. All are fragile. Native sidecars replace them cleanly.
-
-What is the key lifecycle difference between a regular initContainer and a native sidecar?
-Regular init containers: run sequentially, must exit successfully before the next one starts, all must complete before main containers start. Native sidecars: run like init containers during startup (start before main containers, in order), but have restartPolicy: Always so they are kept running for the pod's lifetime. They receive termination signals after all main containers have exited.
-
-How does a native sidecar affect resource scheduling?
-The kubelet includes the native sidecar's resource requests in the pod's effective resource request. The scheduler uses the pod's total effective request when finding a fitting node — you must budget CPU and memory for the sidecar.
-
-Can you have multiple native sidecars in one pod?
-Yes. Multiple initContainers with restartPolicy: Always start in order (waiting for each prior one's readiness probe to pass if a readinessProbe is defined), and all are running before any main container starts.
-
-When was native sidecar support stable in Kubernetes?
-Kubernetes 1.29 (released December 2023) moved native sidecar containers to beta. Kubernetes 1.31 (released 2024) made them stable. The feature gate SidecarContainers is enabled by default from 1.29+.`,
-        image: `/diagrams/devops/kubernetes-the-hard-way-flow.png`,
-      }
-    ],
+    visualizations: [],
     topics: [
       {
         title: '🔄 Sidecar Lifecycle: Old Pattern vs Native',
@@ -36202,6 +34744,92 @@ The single most important debugging habit: always start with kubectl describe po
     visualizations: [],
     topics: [
       {
+        title: 'Three probe types — livenessProbe, readinessProbe, startupProbe',
+        image: '/diagrams/devops/k8s-probes-flow.png',
+        content: `livenessProbe — "Is this container alive? If not, restart it."
+
+  On failure: kubelet sends SIGTERM to the container, waits terminationGracePeriodSeconds,
+              then SIGKILL. The container restarts according to the pod's restartPolicy.
+  Use for: deadlock detection, hung processes, memory leaks that cause the process to stop
+           responding without exiting.
+  Interview answer: "Liveness failure = container restart."
+
+readinessProbe — "Is this container ready to serve traffic? If not, remove it from the Service."
+
+  On failure: kubelet removes the pod's IP from the EndpointSlice that backs the Service.
+              The Service stops routing NEW requests to this pod. Existing connections may
+              continue. The pod is NOT restarted.
+  On recovery: kubelet re-adds the pod's IP to the EndpointSlice automatically.
+  Use for: database connection establishment, cache warmup, dependency availability checks.
+  Interview answer: "Readiness failure = removed from EndpointSlice, no restart."
+
+startupProbe — "Has the application finished starting up? Gates liveness and readiness."
+
+  On success: kubelet begins evaluating livenessProbe and readinessProbe.
+  On failure (exhausting failureThreshold): kubelet kills the container and restarts it.
+  While running: livenessProbe and readinessProbe are NOT evaluated at all.
+  Use for: slow-starting containers (JVM startup, Python loading large models) where a
+           fixed initialDelaySeconds on livenessProbe is brittle.
+  Interview answer: "startupProbe buys slow apps time to start without liveness killing them."
+
+Temporal ordering:
+  1. startupProbe runs first (if configured). livenessProbe and readinessProbe wait.
+  2. startupProbe succeeds → liveness and readiness begin.
+  3. livenessProbe and readinessProbe run independently on their own periodSeconds cadence.`,
+      },
+      {
+        title: 'Common mistakes and the EndpointSlice removal flow',
+        content: `Without startupProbe:
+\`\`\`yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 60    # brittle: too short kills app, too long delays failure detection
+  periodSeconds: 10
+  failureThreshold: 3
+\`\`\`
+
+Problem: Spring Boot apps can take 45-90 seconds to start. Setting initialDelaySeconds: 60
+works when the app starts in < 60s but kills it during a slow start (cold JVM, DB migrations).
+
+With startupProbe:
+\`\`\`yaml
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  failureThreshold: 30      # 30 × 10s = 300 second startup budget
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  periodSeconds: 10
+  failureThreshold: 3       # tight: fails fast once the app is up
+\`\`\`yaml
+
+startupProbe gives the app up to 300 seconds to become healthy. Once it does, livenessProbe
+takes over with tight thresholds — detecting actual hangs in 30 seconds (3 × 10s).
+
+ReadinessProbe and EndpointSlice:
+
+1. Pod starts → readinessProbe begins after initialDelaySeconds.
+2. readinessProbe fails → kubelet updates pod's Ready condition to False.
+3. Endpoint controller detects Ready=False → removes pod IP from the EndpointSlice.
+4. kube-proxy (or Cilium/Calico) updates iptables/eBPF rules — Service no longer routes to this pod.
+5. readinessProbe succeeds → Ready=True → pod IP re-added to EndpointSlice → Service resumes routing.
+
+This is the mechanism for zero-downtime rolling updates: new pods become Ready before old pods
+are terminated, so there is always at least one Ready pod serving traffic.
+
+Common readinessProbe mistake:
+  A readinessProbe that returns 200 always (trivial health endpoint) provides no signal.
+  The probe should check the application's actual ability to serve: database pool connected,
+  cache warmed, downstream service reachable. A readinessProbe that can't fail is useless.`,
+      },
+      {
         title: 'Three probe mechanisms — httpGet, tcpSocket, exec',
         content: `Each probe type (liveness/readiness/startup) can use any of three mechanisms:
 
@@ -36266,93 +34894,6 @@ Total startup budget calculation:
   initialDelaySeconds + (failureThreshold × periodSeconds) = maximum time before the probe acts.
   For a startupProbe: 0 + (30 × 10s) = 300s maximum startup time before container is killed.`,
       },
-      {
-        title: 'Three probe types — livenessProbe, readinessProbe, startupProbe',
-        image: '/diagrams/devops/k8s-probes-flow.png',
-        content: `livenessProbe — "Is this container alive? If not, restart it."
-
-  On failure: kubelet sends SIGTERM to the container, waits terminationGracePeriodSeconds,
-              then SIGKILL. The container restarts according to the pod's restartPolicy.
-  Use for: deadlock detection, hung processes, memory leaks that cause the process to stop
-           responding without exiting.
-  Interview answer: "Liveness failure = container restart."
-
-readinessProbe — "Is this container ready to serve traffic? If not, remove it from the Service."
-
-  On failure: kubelet removes the pod's IP from the EndpointSlice that backs the Service.
-              The Service stops routing NEW requests to this pod. Existing connections may
-              continue. The pod is NOT restarted.
-  On recovery: kubelet re-adds the pod's IP to the EndpointSlice automatically.
-  Use for: database connection establishment, cache warmup, dependency availability checks.
-  Interview answer: "Readiness failure = removed from EndpointSlice, no restart."
-
-startupProbe — "Has the application finished starting up? Gates liveness and readiness."
-
-  On success: kubelet begins evaluating livenessProbe and readinessProbe.
-  On failure (exhausting failureThreshold): kubelet kills the container and restarts it.
-  While running: livenessProbe and readinessProbe are NOT evaluated at all.
-  Use for: slow-starting containers (JVM startup, Python loading large models) where a
-           fixed initialDelaySeconds on livenessProbe is brittle.
-  Interview answer: "startupProbe buys slow apps time to start without liveness killing them."
-
-Temporal ordering:
-  1. startupProbe runs first (if configured). livenessProbe and readinessProbe wait.
-  2. startupProbe succeeds → liveness and readiness begin.
-  3. livenessProbe and readinessProbe run independently on their own periodSeconds cadence.`,
-      },
-      {
-        title: 'Common mistakes and the EndpointSlice removal flow',
-        image: '/diagrams/devops/k8s-probes-flow.png',
-        content: `Without startupProbe:
-\`\`\`yaml
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8080
-  initialDelaySeconds: 60    # brittle: too short kills app, too long delays failure detection
-  periodSeconds: 10
-  failureThreshold: 3
-\`\`\`
-
-Problem: Spring Boot apps can take 45-90 seconds to start. Setting initialDelaySeconds: 60
-works when the app starts in < 60s but kills it during a slow start (cold JVM, DB migrations).
-
-With startupProbe:
-\`\`\`yaml
-startupProbe:
-  httpGet:
-    path: /health
-    port: 8080
-  failureThreshold: 30      # 30 × 10s = 300 second startup budget
-  periodSeconds: 10
-
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8080
-  periodSeconds: 10
-  failureThreshold: 3       # tight: fails fast once the app is up
-\`\`\`yaml
-
-startupProbe gives the app up to 300 seconds to become healthy. Once it does, livenessProbe
-takes over with tight thresholds — detecting actual hangs in 30 seconds (3 × 10s).
-
-ReadinessProbe and EndpointSlice:
-
-1. Pod starts → readinessProbe begins after initialDelaySeconds.
-2. readinessProbe fails → kubelet updates pod's Ready condition to False.
-3. Endpoint controller detects Ready=False → removes pod IP from the EndpointSlice.
-4. kube-proxy (or Cilium/Calico) updates iptables/eBPF rules — Service no longer routes to this pod.
-5. readinessProbe succeeds → Ready=True → pod IP re-added to EndpointSlice → Service resumes routing.
-
-This is the mechanism for zero-downtime rolling updates: new pods become Ready before old pods
-are terminated, so there is always at least one Ready pod serving traffic.
-
-Common readinessProbe mistake:
-  A readinessProbe that returns 200 always (trivial health endpoint) provides no signal.
-  The probe should check the application's actual ability to serve: database pool connected,
-  cache warmed, downstream service reachable. A readinessProbe that can't fail is useless.`,
-      },
     ],
     introduction: `## Overview
 Container probes are the mechanism by which Kubernetes determines whether a container is healthy, ready to serve traffic, or still starting up. The three probe types map to three distinct kubelet actions: restart (liveness), EndpointSlice removal (readiness), and startup gating (startup). Most production incidents involving unexpected pod restarts or dropped traffic during rolling updates trace back to misconfigured probes — particularly missing startupProbes on slow-starting apps, or readinessProbes that are too aggressive during rolling updates.`,
@@ -36401,71 +34942,6 @@ Container probes are the mechanism by which Kubernetes determines whether a cont
     description: 'Systematic pod troubleshooting maps each status string (Pending, ContainerCreating, CrashLoopBackOff, ImagePullBackOff, OOMKilled) to its root cause and the exact kubectl command sequence to diagnose it. The Events-first pattern from kubectl describe is the universal starting point.',
     visualizations: [],
     topics: [
-      {
-        title: 'Debugging workflow — Events-first pattern',
-        content: `The universal Kubernetes pod debugging workflow:
-
-Step 1 — kubectl get pod (get the status string).
-
-\`\`\`bash
-kubectl get pod <name>
-kubectl get pods -n <namespace>    # check the STATUS column
-\`\`\`
-
-Step 2 — kubectl describe pod (read the Events section).
-
-\`\`\`bash
-kubectl describe pod <name>
-\`\`\`
-
-The Events section at the bottom is the most information-dense section:
-  Timestamp / Count / From (scheduler or kubelet) / Reason / Message
-  Most scheduling, image pull, and volume errors surface here before any log output.
-
-Step 3 — kubectl logs (read application output).
-
-\`\`\`bash
-kubectl logs <pod-name>
-kubectl logs <pod-name> --previous    # if CrashLoopBackOff — read crashed instance logs
-kubectl logs <pod-name> -c <container>  # multi-container pods
-\`\`\`
-
-Step 4 — kubectl exec (inspect the live container).
-
-\`\`\`bash
-kubectl exec -it <pod-name> -- sh
-# Inside: check env vars, file permissions, network connectivity, running processes
-env | grep DB_
-cat /etc/hosts
-wget -qO- http://my-service:8080/health
-\`\`\`
-
-Step 5 — Node-level inspection (when pod-level tools are insufficient).
-
-\`\`\`bash
-# SSH to the node (or use a debug pod on the node)
-kubectl debug node/<node-name> -it --image=busybox
-
-# On the node: use crictl (container runtime interface CLI)
-crictl ps                     # list containers (bypasses Docker)
-crictl logs <container-id>    # logs from a container by runtime ID
-crictl inspect <container-id> # full container inspect
-\`\`\`
-
-When to escalate to crictl:
-  Pod-level commands fail (kubectl exec returns error, kubectl logs returns nothing).
-  The kubelet itself is unresponsive or the pod is stuck in a terminal state.
-  Investigating a node-level issue (disk pressure, kubelet crash, containerd failure).
-
-One-liner diagnostic sequence for a broken pod:
-
-\`\`\`bash
-POD=myapp-abc123
-kubectl describe pod $POD | tail -20          # Events
-kubectl logs $POD --previous 2>/dev/null || kubectl logs $POD
-kubectl get pod $POD -o json | jq '.status.containerStatuses[0]'
-\`\`\``,
-      },
       {
         title: 'Pod status strings — causes and diagnostic commands',
         image: '/diagrams/devops/k8s-app-troubleshooting.png',
@@ -36550,6 +35026,71 @@ kubectl top pod <name>       # current usage (if pod is still Running)
 # Fix: increase memory limit, or profile the app for memory leaks
 \`\`\``,
       },
+      {
+        title: 'Debugging workflow — Events-first pattern',
+        content: `The universal Kubernetes pod debugging workflow:
+
+Step 1 — kubectl get pod (get the status string).
+
+\`\`\`bash
+kubectl get pod <name>
+kubectl get pods -n <namespace>    # check the STATUS column
+\`\`\`
+
+Step 2 — kubectl describe pod (read the Events section).
+
+\`\`\`bash
+kubectl describe pod <name>
+\`\`\`
+
+The Events section at the bottom is the most information-dense section:
+  Timestamp / Count / From (scheduler or kubelet) / Reason / Message
+  Most scheduling, image pull, and volume errors surface here before any log output.
+
+Step 3 — kubectl logs (read application output).
+
+\`\`\`bash
+kubectl logs <pod-name>
+kubectl logs <pod-name> --previous    # if CrashLoopBackOff — read crashed instance logs
+kubectl logs <pod-name> -c <container>  # multi-container pods
+\`\`\`
+
+Step 4 — kubectl exec (inspect the live container).
+
+\`\`\`bash
+kubectl exec -it <pod-name> -- sh
+# Inside: check env vars, file permissions, network connectivity, running processes
+env | grep DB_
+cat /etc/hosts
+wget -qO- http://my-service:8080/health
+\`\`\`
+
+Step 5 — Node-level inspection (when pod-level tools are insufficient).
+
+\`\`\`bash
+# SSH to the node (or use a debug pod on the node)
+kubectl debug node/<node-name> -it --image=busybox
+
+# On the node: use crictl (container runtime interface CLI)
+crictl ps                     # list containers (bypasses Docker)
+crictl logs <container-id>    # logs from a container by runtime ID
+crictl inspect <container-id> # full container inspect
+\`\`\`
+
+When to escalate to crictl:
+  Pod-level commands fail (kubectl exec returns error, kubectl logs returns nothing).
+  The kubelet itself is unresponsive or the pod is stuck in a terminal state.
+  Investigating a node-level issue (disk pressure, kubelet crash, containerd failure).
+
+One-liner diagnostic sequence for a broken pod:
+
+\`\`\`bash
+POD=myapp-abc123
+kubectl describe pod $POD | tail -20          # Events
+kubectl logs $POD --previous 2>/dev/null || kubectl logs $POD
+kubectl get pod $POD -o json | jq '.status.containerStatuses[0]'
+\`\`\``,
+      },
     ],
     introduction: `## Overview
 Kubernetes application troubleshooting follows a consistent pattern: status string → describe Events → logs (--previous for crashes) → exec (live inspection) → crictl on the node (when all else fails). Knowing which status string maps to which root cause — and which kubectl command to run next — is a core CKA/CKAD skill and comes up in every SRE and DevOps interview. CrashLoopBackOff with kubectl logs --previous and ImagePullBackOff with registry auth are the two most common real-world failure modes.`,
@@ -36599,6 +35140,55 @@ Kubernetes application troubleshooting follows a consistent pattern: status stri
     description: 'Local Kubernetes tools let you run a real cluster on your laptop for development and testing. minikube is best for local exploration with addons; kind (Kubernetes IN Docker) is the standard for CI pipelines and multi-node testing; k3d runs k3s in Docker for the fastest startup. Docker Desktop includes a built-in single-node cluster as a zero-setup option.',
     visualizations: [],
     topics: [
+      {
+        title: 'minikube — local exploration with VM or container driver',
+        image: '/diagrams/devops/k8s-local-setup.png',
+        content: `\`\`\`bash
+# Install (macOS)
+brew install minikube
+
+# Start with Docker driver (recommended, no VM needed)
+minikube start --driver=docker
+
+# Start with hyperkit (macOS VM, better isolation)
+minikube start --driver=hyperkit
+
+# Start with specific Kubernetes version
+minikube start --kubernetes-version=v1.30.0
+
+# Check status
+minikube status
+
+# Access the dashboard
+minikube dashboard
+
+# Enable addons
+minikube addons enable ingress
+minikube addons enable metrics-server
+minikube addons enable registry    # local registry at $(minikube ip):5000
+
+# Load a local image into minikube (avoids push to registry)
+minikube image load myapp:latest
+
+# Get the node IP (for NodePort access)
+minikube ip
+
+# Open a service URL in the browser
+minikube service myapp --url
+
+# Stop / delete
+minikube stop
+minikube delete
+\`\`\`yaml
+
+Drivers:
+  docker      — no VM; best performance on Linux; default on Linux
+  hyperkit    — lightweight macOS hypervisor (deprecated; replaced by qemu)
+  qemu        — cross-platform VM driver
+  virtualbox  — VirtualBox VM (slowest; full isolation)
+
+minikube is not suitable for multi-node testing — it creates exactly one node.`,
+      },
       {
         title: 'kind — multi-node clusters in Docker for CI',
         content: `kind (Kubernetes IN Docker) runs each Kubernetes node as a Docker container. It supports true multi-node clusters (multiple control planes, multiple workers) and is the standard tool for CI pipelines. GitHub Actions, CircleCI, and Buildkite all use kind for Kubernetes integration tests.
@@ -36704,55 +35294,6 @@ Interview answer for "how do you run Kubernetes locally?":
   "For CI I use kind because it runs as Docker containers with no VM overhead and supports
    multi-node clusters. For local development I prefer k3d for its fast startup and built-in
    port mapping. For learning and addon exploration I recommend minikube."`,
-      },
-      {
-        title: 'minikube — local exploration with VM or container driver',
-        image: '/diagrams/devops/k8s-local-setup.png',
-        content: `\`\`\`bash
-# Install (macOS)
-brew install minikube
-
-# Start with Docker driver (recommended, no VM needed)
-minikube start --driver=docker
-
-# Start with hyperkit (macOS VM, better isolation)
-minikube start --driver=hyperkit
-
-# Start with specific Kubernetes version
-minikube start --kubernetes-version=v1.30.0
-
-# Check status
-minikube status
-
-# Access the dashboard
-minikube dashboard
-
-# Enable addons
-minikube addons enable ingress
-minikube addons enable metrics-server
-minikube addons enable registry    # local registry at $(minikube ip):5000
-
-# Load a local image into minikube (avoids push to registry)
-minikube image load myapp:latest
-
-# Get the node IP (for NodePort access)
-minikube ip
-
-# Open a service URL in the browser
-minikube service myapp --url
-
-# Stop / delete
-minikube stop
-minikube delete
-\`\`\`yaml
-
-Drivers:
-  docker      — no VM; best performance on Linux; default on Linux
-  hyperkit    — lightweight macOS hypervisor (deprecated; replaced by qemu)
-  qemu        — cross-platform VM driver
-  virtualbox  — VirtualBox VM (slowest; full isolation)
-
-minikube is not suitable for multi-node testing — it creates exactly one node.`,
       },
     ],
     introduction: `## Overview

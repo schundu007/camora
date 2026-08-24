@@ -101,13 +101,29 @@ for (const t of topics) {
   }
 
   const payload = {};
-  const allSections = [...promoted.map((p) => ({ title: p.title, image: p.image, content: p.content })), ...sections];
-  if (allSections.length) payload.sections = [...(t.topics || []), ...allSections];
-  if (quickFire) payload.quickFire = [...(t.quickFire || []), ...quickFire];
-  // Figures promoted into chapters must leave visualizations, or the page
-  // shows the diagram twice.
-  if (promoted.length) payload.dropFigures = promoted.map((p) => p.image);
-  if (!payload.sections && !payload.quickFire) { skipped++; continue; }
+  const promotedImages = new Set(promoted.map((p) => p.image));
+  const newSections = [
+    ...promoted.map((p) => ({ title: p.title, image: p.image, content: p.content })),
+    ...sections,
+  ];
+  // Idempotent: never re-add a chapter this topic already has.
+  const have = new Set((t.topics || []).map((s2) => s2.title));
+  const fresh = newSections.filter((s2) => !have.has(s2.title));
+  if (fresh.length) payload.sections = [...(t.topics || []), ...fresh];
+
+  if (quickFire) {
+    const haveQ = new Set((t.quickFire || []).map((x) => x.q));
+    const freshQ = quickFire.filter((x) => !haveQ.has(x.q));
+    if (freshQ.length) payload.quickFire = [...(t.quickFire || []), ...freshQ];
+  }
+
+  // Rebuild visualizations: keep only genuine figures with a real caption.
+  // Promoted figures move into their chapter; essay entries are gone.
+  const keepViz = (t.visualizations || []).filter(
+    (v) => (v.image || v.svg || v.video) && !promotedImages.has(v.image));
+  if (keepViz.length !== (t.visualizations || []).length) payload.visualizations = keepViz;
+
+  if (!payload.sections && !payload.quickFire && !payload.visualizations) { skipped++; continue; }
 
   console.log(`${t.id}: ${sections.length} chapter(s)` +
     (quickFire ? `, ${quickFire.length} quick-fire` : '') +
