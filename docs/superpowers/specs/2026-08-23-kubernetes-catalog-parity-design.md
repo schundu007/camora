@@ -220,6 +220,39 @@ operating DRA on a cluster. It is a different page from the DRA hardening
 guide under `k8s-security` and from the DRA scheduling concept under
 `k8s-scheduling`; all three are separate pages and get separate topics.
 
+### Failure and error topics
+
+Four topics cover what actually breaks in production. They are the
+highest-value interview content in the category — this is what SREs get asked —
+and none of them existed:
+
+- **`k8s-apiserver-status-codes`** — what the API returns and why. 401 versus
+  403 (authentication versus authorization), 404 versus 403 when RBAC hides a
+  resource, **409 Conflict** and optimistic concurrency on `resourceVersion`,
+  422 on admission rejection, **429 with `Retry-After`** from API Priority and
+  Fairness, **410 Gone** on expired watch resourceVersions, 406 on
+  unsupported media types, and 500/503 from a degraded apiserver including
+  `etcdserver: request timed out`.
+- **`k8s-pod-failure-taxonomy`** — every Pod and container error state as one
+  map: `ImagePullBackOff` and `ErrImagePull`, `CreateContainerConfigError`,
+  `CrashLoopBackOff`, `OOMKilled` versus eviction, `Evicted` under
+  DiskPressure and MemoryPressure, `FailedScheduling` and `Unschedulable`,
+  `FailedMount` and `FailedAttachVolume`, `NodeNotReady`. For each: how to
+  tell it from its neighbours, and the first command to run.
+- **`k8s-ingress-5xx-debugging`** — 4xx and 5xx in the data path. 502 (upstream
+  refused) versus 503 (**no ready endpoints**) versus 504 (upstream timeout);
+  why a rolling update emits 502s without `preStop` and a correct
+  `terminationGracePeriodSeconds`; the Gateway API equivalents.
+- **`k8s-cluster-debugging`** — cluster-level triage: `crictl`, node health,
+  `kubectl debug node`, audit logs, and troubleshooting kubectl itself.
+
+**Why these were missing.** `k8s-doc-coverage.json` originally inventoried
+`/docs/concepts/` only. Operational content lives under `/docs/tasks/debug/`
+and status-code semantics under `/docs/reference/using-api/`, so parity with
+Concepts structurally could not produce an error taxonomy — no page was
+missing and the most operationally important material in the category was
+absent. The inventory now covers all three trees.
+
 **`k8s-baremetal` — Bare Metal & Production Setup**
 Existing: `kubeadm-provisioning` (rewrite), `kubernetes-the-hard-way`.
 New: **end-to-end bare-metal cluster build (capstone runbook)**; production-environment
@@ -257,6 +290,39 @@ them:
 Each step links to the topic that covers it in depth, so the runbook stays a
 spine rather than duplicating them. If it exceeds ~35 KB, split day 2 (step 10)
 into `k8s-baremetal-day-two`.
+
+**Managed bare-metal paths** get their own topic, `k8s-baremetal-managed`,
+because most organisations choose one rather than hand-rolling kubeadm:
+
+- **EKS Anywhere on bare metal** — Tinkerbell (Boots for DHCP/iPXE, Hegel,
+  Rufio for BMC power control, Tink for workflows) driving Cluster API from a
+  hardware inventory CSV plus a cluster YAML, via
+  `eksctl anywhere create cluster --hardware-csv`.
+- **AKS enabled by Azure Arc / AKS on bare metal** (preview) — Arc Resource
+  Bridge, Azure Policy and Monitor over on-premises clusters, and fully
+  offline operation for sovereign and disconnected sites.
+- **Distribution alternatives** — Talos, RKE2, k3s and Cluster API bare-metal
+  providers, with the trade-off each makes against kubeadm.
+
+**Practitioner findings the docs omit**, to be carried in the capstone and its
+storage and etcd topics — each corroborated across at least two independent
+authors per the Tier 3 rule:
+
+- etcd is deliberately sensitive to disk latency. A leader that cannot fsync
+  its Raft log in time loses leadership; past a threshold this becomes a leader
+  election storm where no leader holds the lease long enough to make progress.
+  Hanging `kubectl` on-premises points at etcd disk latency first. SSD/NVMe is
+  not optional.
+- MetalLB requires strict ARP when kube-proxy runs in IPVS mode. L2 mode is
+  the shortest path to working; BGP (FRR-K8s backend) is the scaling answer.
+  The common production split is kube-vip for the control-plane VIP and
+  MetalLB for Service LoadBalancers.
+- Rook/Ceph abstracts Ceph's surface but not its operational model — placement
+  groups, CRUSH maps, OSD tuning remain. It wants multiple nodes, multiple
+  disks, dedicated OSDs and fast networking; on small clusters it costs more
+  than it returns, and small-block low-latency workloads are where it
+  struggles most. Longhorn is faster on most measures except latency and
+  carries a newer-kernel requirement.
 
 **Why this topic is not derived from the doc tree.** `k8s-doc-coverage.json`
 guarantees parity with kubernetes.io, and kubernetes.io has no single
@@ -370,6 +436,36 @@ Per topic:
 Interview framing is retained: `quickFire` stays question-and-answer, and
 `topics[]` sections lead with the thing an interviewer probes. Docs parity
 governs *coverage*, not tone.
+
+### Source tiers
+
+kubernetes.io defines the API; it does not tell you how a real build goes. It
+will not tell you that etcd fsync latency is the leading cause of on-premises
+instability, that MetalLB needs strict ARP when kube-proxy runs in IPVS mode,
+or where Rook/Ceph stops being worth its complexity. Operational topics —
+above all the bare-metal capstone — need practitioner and vendor sources too.
+
+**Tier 1 — kubernetes.io.** Authoritative and *required* for every API fact:
+resource shapes, field names, defaults, feature-gate names, GA/beta/alpha
+status and version. A version claim may only come from here. Every topic keeps
+at least one Tier 1 reference.
+
+**Tier 2 — vendor documentation.** AWS, Azure, Google, Red Hat and the
+component projects (MetalLB, kube-vip, Cilium, Calico, Longhorn, Rook,
+Talos, RKE2). Authoritative for their own product, and the right source for
+managed and hybrid bare-metal paths. Named as such in the prose, because
+"AWS recommends X" and "Kubernetes requires X" are different claims.
+
+**Tier 3 — practitioner writing.** Medium, ITNEXT, engineering blogs,
+conference talks. The only source for the failure modes and hard-won numbers
+that documentation omits. Rules: never the sole support for a version or API
+claim; corroborate across two independent authors before stating something as
+general; prefer posts dated within two years, since bare-metal tooling moves;
+attribute by name in `references`.
+
+Where tiers disagree, Tier 1 wins on what the software does and Tier 3 wins on
+what actually happens in production — say so explicitly rather than silently
+picking one.
 
 ## Validation
 
