@@ -3256,6 +3256,78 @@ VXLAN kernel module missing: rare, but some stripped-down OS images lack the vxl
     questions: 5,
     description: 'Deliberately injecting failures into production-like systems to uncover weaknesses before they cause outages.',
     visualizations: [],
+    topics: [
+      {
+        title: 'The experiment is the point, not the breakage',
+        content: `Chaos engineering is routinely reduced to "randomly kill things in production", which is the part that makes a good conference talk and the part that gets programmes cancelled after the first self-inflicted outage. The discipline is narrower and more useful: **it is an experimental method for falsifying a belief you already hold about your system's resilience**.
+
+That framing has a sharp consequence. If you already know the system will break — there is a single database with no replica, the retry logic has no backoff, the runbook does not exist — **do not run an experiment**. You have learned nothing and broken something. Chaos experiments are for the cases where you believe the system will cope, because the value is entirely in the gap between your mental model and reality. "We think losing an AZ is transparent to users" is a hypothesis worth testing precisely because everyone believes it and nobody has seen it.
+
+The method has four parts and each has a common failure:
+
+**1. Define steady state as a business or user metric.** Orders per minute, successful checkouts, p99 latency on the login endpoint. The mistake is choosing a *system* metric — CPU, pod count, replica health — because those are supposed to change during the experiment. If your steady state is "three pods running" and you kill one, you have measured Kubernetes, not resilience.
+
+**2. Hypothesise that steady state holds during the fault.** State it in advance and in numbers: "checkout success rate stays above 99.5% while one AZ is unreachable". A hypothesis you write after seeing the results is not a hypothesis.
+
+**3. Inject the smallest fault that could test it,** and define the **abort condition before you start** — the metric threshold and the manual kill switch that stops the experiment. An experiment you cannot stop within seconds is not an experiment, it is an incident you scheduled.
+
+**4. Only run on a healthy system.** Injecting failure into an already-degraded system compounds a real problem and produces uninterpretable data — you cannot attribute the deviation to your fault.
+
+There is a prerequisite that sits underneath all four: **observability**. If you cannot detect a 2% error-rate deviation within a minute, you cannot run an experiment, because you have no way to know whether the hypothesis held. In practice most organisations' first chaos experiment discovers a monitoring gap rather than a resilience gap, and that is a legitimate and valuable result.
+
+Blast radius is the engineering discipline that makes the rest safe: start with one container in a dev namespace, graduate to staging, then to a small, bounded percentage of production traffic — and only then to a whole zone. Netflix's own automation platform is a good model of the endpoint; it runs experiments continuously against a small canary population and compares it against a control group, so a deviation is detected statistically rather than by someone squinting at a dashboard.`,
+      },
+      {
+        title: 'What to inject, and the faults nobody thinks to test',
+        content: `Most programmes start and stop at "kill a pod", which tests the one thing Kubernetes already handles well. The interesting failures are elsewhere, and this list is roughly in ascending order of what it teaches:
+
+**Process and instance termination.** The baseline. Validates replica counts, PodDisruptionBudgets, graceful shutdown (does the app actually handle SIGTERM and drain connections, or does it die mid-request?), and whether load balancer deregistration is faster than instance death.
+
+**Dependency latency — more valuable than dependency failure.** A dead dependency returns a connection error in milliseconds and your error handling fires. A dependency that answers in 30 seconds instead of 30 milliseconds holds every thread and connection in the pool, and the caller dies of resource exhaustion while its own health checks still say "fine". **Slow is harder than dead**, and it is the fault most systems have never been tested against. Injecting 500 ms of added latency into one dependency finds missing timeouts, missing circuit breakers and shared connection pools in a single experiment.
+
+**Resource exhaustion.** Fill a disk, saturate CPU, apply memory pressure. This finds the log file with no rotation, the container with no memory limit that takes its node down with it, and the QoS class you did not realise you were in.
+
+**Network faults.** Packet loss, partition, DNS failure. DNS is the underrated one: \`nodelocaldns\` failing or a CoreDNS pod being evicted degrades everything simultaneously, and most applications cache DNS in ways nobody has audited.
+
+**Clock skew and certificate expiry.** Both are ordinary scheduled events that behave like sophisticated attacks. Expiring a certificate in a test environment is a five-minute experiment that has prevented a great many multi-hour outages.
+
+**The failover mechanism itself.** This is the highest-value target and the least-tested. The standby database, the secondary region, the DR runbook — these are code paths that execute only during incidents, which means their first real execution is under maximum pressure. Failing over deliberately on a schedule converts an untested path into a routine one.
+
+At the service-mesh layer the injection can be entirely declarative, which is why Istio is often the easiest place to start:
+
+    apiVersion: networking.istio.io/v1
+    kind: VirtualService
+    spec:
+      hosts: ["payments"]
+      http:
+      - fault:
+          delay: { percentage: { value: 10 }, fixedDelay: 5s }
+          abort:  { percentage: { value: 2 },  httpStatus: 503 }
+        route:
+        - destination: { host: payments }
+
+That injects 5 seconds of delay into 10% of calls and a 503 into 2%, with no change to either application, and it is removed by deleting the resource. Elsewhere the toolchain has consolidated: **LitmusChaos and Chaos Mesh** are the CNCF-hosted Kubernetes-native options with CRD-driven experiments; **AWS Fault Injection Service** (renamed from "Fault Injection Simulator") injects at the infrastructure layer where nothing in-cluster can — real AZ power interruption, API throttling, Spot interruption — and integrates with CloudWatch alarms as native stop conditions; **Gremlin** is the commercial platform. Note that Netflix's **Simian Army is largely retired**; most of its components are archived, and Chaos Monkey survives as a standalone tool tied to Spinnaker. Citing it as current tooling dates a document immediately.`,
+      },
+      {
+        title: 'GameDays, and honest boundaries of the practice',
+        content: `A **GameDay** is a scheduled exercise where a realistic failure is injected and the on-call team responds as if it were real, while a facilitator observes. Its output is not "did the system survive" — it is a list of things that made the response slower than it should have been.
+
+What GameDays reliably surface, and automated experiments do not:
+
+- **Runbook rot.** The runbook references a dashboard that was renamed, a command that needs a permission the on-call engineer does not have, or a person who left.
+- **Alert quality.** Did anyone get paged? How long after the fault started? Was the alert's text enough to begin diagnosis, or did it say "high error rate" and nothing else?
+- **Access under pressure.** The break-glass credential nobody has used, the VPN that needs re-enrolment, the read-replica promotion that requires an approval from someone asleep.
+- **Coordination.** Who declares an incident, who talks to customers, who is allowed to decide on a rollback. These are social protocols and they only fail in practice.
+
+Run them with a written scenario, a facilitator who is not on the responding team, a defined abort, and a blameless review afterwards whose action items get tickets. A GameDay with no follow-up tickets was theatre.
+
+Two boundaries worth stating plainly, because the practice is often oversold.
+
+**Chaos engineering is not a substitute for design.** It finds the gap between belief and reality; it does not tell you what architecture to build, and it cannot make a single-instance database resilient. If the answer to an experiment is obvious in advance, spend the time on the fix.
+
+**It is one of three distinct disciplines that are often conflated.** *Load testing* explores the **capacity** dimension — what happens as demand rises, where the knee is, whether autoscaling reacts in time — under a healthy system. *Chaos engineering* explores the **failure** dimension — what happens when a component misbehaves under normal demand. *Penetration testing* explores the **adversary** dimension: an intelligent attacker deliberately seeking a path to privilege, which is a fundamentally different model from random or scheduled component failure. The most informative experiments often combine the first two — inject a fault while under realistic load — because most resilience mechanisms (retries, circuit breakers, autoscaling, failover) have capacity implications that only appear when the system is already busy. A failover that works at 10% load and collapses at 70% is the normal case, not the exception.`,
+      },
+    ],
     introduction: `## Overview
 Chaos Engineering is the practice of deliberately introducing failures into a system to build confidence in its ability to withstand turbulent conditions. Pioneered by Netflix with Chaos Monkey in 2011, the discipline has evolved into a rigorous experimental science: form a hypothesis about steady-state behavior, run a controlled experiment, observe deviations, and fix weaknesses before incidents find them first.
 
@@ -3327,13 +3399,15 @@ They are complementary. Load testing tells you where your capacity ceiling is. C
       },
     ],
     quickFire: [
-      { q: 'What company pioneered chaos engineering?', a: 'Netflix, with Chaos Monkey in 2011, which randomly terminated EC2 instances in production.' },
-      { q: 'What is a steady-state hypothesis?', a: 'A measurable description of normal system behavior that the chaos experiment hypothesizes will hold during failure injection.' },
-      { q: 'Name three CNCF chaos tools.', a: 'Litmus Chaos (incubating), Chaos Mesh, and Chaosblade. AWS Fault Injection Simulator is cloud-managed but not CNCF.' },
-      { q: 'What is blast radius in chaos engineering?', a: 'The scope of impact — how many users, services, or instances are affected by the experiment. Always start small and expand.' },
-      { q: 'How does Istio support fault injection?', a: 'Via VirtualService resources: httpFault.delay injects latency; httpFault.abort returns error codes. Applies to a percentage of matching requests.' },
-      { q: 'What is a GameDay?', a: 'A scheduled, announced chaos exercise where engineers inject a realistic failure while on-call responds, revealing runbook gaps and alert quality issues.' },
-      { q: 'What is the difference between chaos engineering and penetration testing?', a: 'Chaos engineering tests resilience to infrastructure and dependency failures. Penetration testing tests security vulnerabilities. Both are proactive, but different threat models.' },
+      { q: 'Who pioneered chaos engineering, and what is still current?', a: 'Netflix, with Chaos Monkey in 2011, later formalised in the "Principles of Chaos Engineering". Be careful citing the rest: the **Simian Army is largely retired** and most of its components are archived, with Chaos Monkey surviving as a standalone tool tied to Spinnaker. Netflix\'s current work is a continuous, canary-based automation platform that runs experiments against a small population and compares against a control group, which is a much better model of maturity than random instance termination.' },
+      { q: 'What is a steady-state hypothesis?', a: 'A measurable statement, written before the experiment, that a **user- or business-level** metric will remain within a stated bound while the fault is active — "checkout success rate stays above 99.5% with one AZ unreachable". The common mistake is choosing a system metric like pod count or CPU, which is supposed to change during the experiment; measuring that tells you about Kubernetes, not about resilience. A hypothesis formed after seeing the results is not a hypothesis.' },
+      { q: 'Name the main CNCF-hosted chaos tools.', a: '**LitmusChaos** and **Chaos Mesh** are the two CNCF-hosted, Kubernetes-native options: both define experiments as CRDs, so faults are version-controlled and reviewable like any other manifest, and both cover pod kills, network latency and loss, IO faults and stress. Outside CNCF, **AWS Fault Injection Service** (renamed from Fault Injection Simulator) injects at the infrastructure layer that in-cluster tools cannot reach — real AZ power interruption, API throttling, Spot interruption — with CloudWatch alarms as native stop conditions, and **Gremlin** is the main commercial platform.' },
+      { q: 'What is blast radius, and how do you control it?', a: 'The set of users, services and data an experiment can affect if the hypothesis is wrong. Control it by escalating deliberately — one container in a dev namespace, then staging, then a bounded percentage of production traffic, then a whole zone — and by defining an **abort condition before starting**: the metric threshold that stops the run automatically plus a manual kill switch that works in seconds. An experiment you cannot stop quickly is not an experiment, it is a scheduled incident. Never inject into an already-degraded system: it compounds a real problem and makes the results uninterpretable.' },
+      { q: 'How does Istio support fault injection?', a: 'Through `HTTPFaultInjection` in a `VirtualService`: `delay` adds a `fixedDelay` to a `percentage` of requests, and `abort` returns an `httpStatus` to a percentage. Because it happens in the sidecar, no application changes and no privileged access are needed, it is scoped precisely by host and route, and it is removed by deleting the resource. That makes it the easiest first experiment for a meshed service — and it is particularly good at the highest-value fault, added latency, which finds missing timeouts and shared connection pools.' },
+      { q: 'Why is injecting latency more valuable than injecting failure?', a: 'Because a dead dependency fails fast and your error handling fires as designed, while a **slow** dependency holds threads and connections for the full timeout — or forever, if no timeout was set. Resource exhaustion propagates to callers that never touch that dependency, and the failing service\'s own health checks often still report healthy while it serves nothing. Slow is harder than dead, and it is the fault most systems have never been tested against; 500 ms of injected latency typically surfaces missing timeouts, missing circuit breakers and shared pools in one experiment.' },
+      { q: 'What is a GameDay?', a: 'A scheduled exercise where a realistic failure is injected and the on-call team responds as though it were real, with a facilitator observing from outside the responding team. Its output is not "did the system survive" but the list of things that slowed the response: runbooks referencing renamed dashboards or commands the responder lacks permission for, alerts that fired late or said too little, break-glass access nobody has exercised, and unclear ownership of the decision to roll back. Run it with a written scenario, a defined abort, and a blameless review whose findings become tickets — without those, it was theatre.' },
+      { q: 'How does chaos engineering differ from load testing?', a: 'They explore different dimensions. Load testing varies **demand** against a healthy system to find the capacity knee and check that autoscaling reacts in time. Chaos engineering varies **component behaviour** under normal demand to check that failure handling works. The most informative experiments combine them — inject a fault while under realistic load — because retries, circuit breakers, autoscaling and failover all have capacity implications that only appear when the system is already busy. A failover that works at 10% load and collapses at 70% is the normal case.' },
+      { q: 'How does chaos engineering differ from penetration testing?', a: 'The threat model. Chaos assumes **indifferent** failure: components crash, links drop packets, disks fill, and nothing is choosing what to break next. Penetration testing assumes an **intelligent adversary** deliberately chaining weaknesses toward privilege or data, adapting to what it finds. That difference changes everything downstream — what you inject, what "passing" means, and who runs it. They are complements: a resilient system can still be trivially exploitable, and a hardened one can still fall over when a disk fills.' },
     ],
     references: [
       'https://principlesofchaos.org/',
@@ -3352,6 +3426,74 @@ They are complementary. Load testing tells you where your capacity ceiling is. C
     questions: 5,
     description: 'The practice of bringing financial accountability to the variable spend model of cloud computing through cross-functional collaboration.',
     visualizations: [],
+    topics: [
+      {
+        title: 'Allocation first: you cannot optimise a bill nobody owns',
+        content: `Every FinOps programme that fails, fails at the same place — not at optimisation, at **allocation**. A cloud bill arrives as a single number attributable to nobody, engineers who could reduce it have no visibility into it, and finance can see the number but not the levers. The Inform phase exists to close that loop, and it is unglamorous tagging work that has to be done first because every later step depends on it.
+
+The mechanism is enforcement at provisioning time, not reconciliation afterwards. Tags applied by a monthly clean-up script are always behind; tags a resource cannot be created without are always correct:
+
+    # Terraform: default_tags applies to every resource the provider creates
+    provider "aws" {
+      default_tags {
+        tags = {
+          team        = var.team
+          service     = var.service
+          environment = var.environment
+          cost-center = var.cost_center
+        }
+      }
+    }
+
+Back that with an AWS Service Control Policy or Azure Policy that denies creation of untagged resources, so the escape hatch closes. Two mechanical details bite: AWS **cost allocation tags must be explicitly activated** in the billing console before they appear in cost data, and activation is **not retrospective** — a tag activated today does not label last quarter's spend. And tag keys are case-sensitive in cost reports, so \`Team\`, \`team\` and \`TEAM\` become three separate dimensions in your dashboard.
+
+Some spend is structurally untaggable — a shared NAT gateway, a control plane, a network load balancer serving twenty services, a Kubernetes node running forty pods from six teams. This is the "unallocated" bucket, and it is the honest measure of a FinOps programme's maturity: getting it below about 5% of spend is a reasonable target, and where the residual cannot be attributed directly, split it by a defensible proxy (share of requests, of pod-hours, of data volume) and publish the rule.
+
+The industry has also standardised the data format, which is worth knowing because it changes the tooling question. **FOCUS** — the FinOps Open Cost and Usage Specification, whose 1.0 landed in 2024 — defines a vendor-neutral schema for billing exports, and AWS, Azure, GCP and others now publish FOCUS-conformant data. Before it, multi-cloud cost analysis meant maintaining a bespoke normalisation layer for each provider's idiosyncratic export; after it, one query works across all of them. If you are building cost reporting now, build it on FOCUS rather than on raw CUR.
+
+Finally, decide between **showback** and **chargeback** deliberately. Showback reports each team's cost without moving money — low friction, and usually enough, because visibility alone changes behaviour. Chargeback moves the cost onto the team's budget, which creates real incentive and real politics: teams start disputing allocation methodology, and you need the unallocated bucket small and the splitting rules defensible before you attempt it.`,
+      },
+      {
+        title: 'Where the money actually is: rate, usage, and the lines nobody reads',
+        content: `Cloud cost reduces to **rate × usage**, and the two are attacked with completely different tools. Rate optimisation is a finance exercise done once or twice a year; usage optimisation is an engineering exercise done continuously. Most organisations over-invest in the first because it is easier.
+
+**Rate: commitments.** Reserved Instances and Savings Plans on AWS, Committed Use Discounts on GCP, Reservations on Azure. Headline discounts of up to ~72% are real but describe the extreme case — three years, all upfront, one instance family. A realistic starting point, a **one-year no-upfront Compute Savings Plan, is nearer 20–30%**, and that is the number to plan with. The important structural distinction on AWS: an *EC2 Instance* Savings Plan gives the deepest discount but locks you to an instance family in a region; a *Compute* Savings Plan discounts less but is flexible across families, regions, and also covers **Fargate and Lambda** — which usually makes it the right default. Cover your genuine baseline (60–80% of steady-state usage), never your peak.
+
+When *not* to commit: a workload you are about to re-architect or migrate; anything whose baseline is genuinely unpredictable; and — the one people forget — immediately before a new instance generation ships, since a three-year commitment to current-generation hardware can leave you paying above the eventual on-demand price for something faster. Commitments are financial instruments, not settings: they cannot be cancelled, only partially traded on the RI marketplace.
+
+**Rate: Spot.** Up to ~90% off, in exchange for a two-minute interruption notice. Suited to anything interruptible and replayable: CI runners, batch and ETL, rendering, most stateless web capacity behind a queue or a load balancer, and ML training with checkpointing. Not suited to a stateful singleton or anything with a long, uninterruptible unit of work. Use a **capacity-optimised** allocation strategy rather than lowest-price — it draws from the deepest pools and interrupts far less — and diversify across instance types and AZs so a single pool draining does not take your whole fleet.
+
+**Usage: the Kubernetes case, where most of the waste is.** The key mechanism, and the one that surprises people: **cost is driven by resource *requests*, not by actual utilisation**, because requests are what the scheduler bin-packs on and therefore what determines how many nodes you run. A pod requesting 2 CPUs and using 0.2 costs the same as one using all 2. Typical clusters therefore run at 10–20% real CPU utilisation while being "full". So:
+
+- **Right-size requests, not just nodes.** VPA in recommendation mode, or Goldilocks, will tell you the p95 actual usage per workload. This is the single largest lever in most clusters.
+- **Then consolidate nodes.** Right-sizing requests saves nothing until fewer nodes run. Karpenter's consolidation (including spot-to-spot) actively repacks and terminates underutilised nodes; the older Cluster Autoscaler only scales up and removes empty nodes.
+- **Be careful with CPU limits.** A CPU limit causes CFS throttling — the container is stopped for the remainder of each 100 ms period once it exceeds its quota, producing latency spikes that look like application bugs. Common practice now is to set CPU *requests* without CPU limits, while setting memory limits equal to memory requests (memory is incompressible; exceeding it means the OOM killer, not throttling).
+- **Scale to zero what does not need to run.** Non-production namespaces overnight and at weekends is roughly a 70% saving on that portion with no capacity risk at all.
+
+**The lines nobody reads.** Cross-AZ data transfer at around $0.01/GB *each way* is invisible per-request and enormous at scale — a chatty microservice mesh spread across three AZs pays it on the majority of internal calls. Kubernetes topology-aware routing keeps traffic within a zone where possible and can remove most of it. Alongside that: NAT gateway *data processing* charges (often larger than the hourly charge; VPC endpoints for S3 and DynamoDB remove the biggest contributors), unattached EBS volumes and orphaned snapshots from instances deleted months ago, idle load balancers, gp2 volumes that should be gp3 (typically ~20% cheaper with better baseline performance), and logs retained at full fidelity forever when observability spend has quietly become a top-three line item.`,
+      },
+      {
+        title: 'Making it continuous: unit economics and cost in the developer loop',
+        content: `Inform and Optimize are projects. **Operate** is what makes savings persist, and its distinguishing feature is that cost feedback arrives *before* the spend, inside the workflow engineers already use.
+
+**Cost in the pull request.** Infracost reads a Terraform plan and comments the monthly delta on the PR — "this change adds $340/month" — at the moment the decision is being made and reversible. This is the same logic as shifting security left: a review comment costs minutes, while discovering the same thing in next month's bill costs a migration. Pair it with a policy threshold that requires explicit approval above some delta.
+
+**Cost as a first-class Kubernetes signal.** **OpenCost** is the CNCF specification and implementation for allocating cluster spend down to namespace, controller, label and pod, by joining resource allocation against the provider's actual rates including discounts and Spot pricing. **Kubecost** is the commercial product built on it (now part of IBM, following its 2024 acquisition), adding retention, multi-cluster views and recommendations. Either one converts "the cluster costs $80k/month" into "team X's namespace costs $6.2k, of which 71% is requested-but-unused CPU", which is a sentence someone can act on.
+
+**Unit economics** is the piece that keeps the programme honest, and it is the difference between a cost programme and a cost-cutting exercise. Total spend is a bad target because it *should* rise when the business grows. Cost per unit of value — per thousand API requests, per active user, per order, per inference call — separates growth from waste:
+
+| Signal | Total cost | Unit cost | Reading |
+| --- | --- | --- | --- |
+| Growth | up | flat | Healthy; scaling as intended |
+| Efficiency win | flat or up | down | Optimisation is working |
+| Regression | flat | up | **Something got less efficient — investigate now** |
+| Trouble | up | up | Growth is being outpaced by waste |
+
+The third row is the one only unit economics catches. A change that doubles the cost of serving a request is invisible in the total bill while traffic is low, and becomes a crisis two quarters later when traffic is not. This matters especially for LLM and GPU workloads, where cost per call varies by an order of magnitude with model choice, context length and caching, and where the bill can move faster than any monthly review cycle.
+
+Two organisational points close the loop. First, put an engineer on it: FinOps run purely from finance produces spreadsheets and requests; run purely from engineering it produces one-off cleanups that regress. The Foundation's framing of it as a **cross-functional practice** is not a platitude — the decisions require someone who can read a flame graph and someone who can read a contract. Second, treat efficiency the way you treat reliability: give it a target, review it on a cadence, and accept explicitly when you are choosing to spend for speed. "We are paying 30% more to ship this quarter" is a legitimate decision; making it silently is not.`,
+      },
+    ],
     introduction: `## Overview
 FinOps (Financial Operations) is a cloud financial management discipline that brings together engineering, finance, and product teams to make data-driven spending decisions. As cloud bills scale from thousands to millions of dollars per month, unmanaged cloud cost becomes a critical engineering problem — not just a finance problem.
 
@@ -3427,13 +3569,17 @@ The key mental model: RIs are "I commit to a specific SKU," Savings Plans are "I
       },
     ],
     quickFire: [
-      { q: 'What are the three FinOps phases?', a: 'Inform (visibility), Optimize (waste + right-size + commitments), Operate (embed cost governance in engineering workflow).' },
-      { q: 'What is the typical discount for a 1-year Savings Plan vs On-Demand?', a: 'Approximately 30-40% for Compute Savings Plans; up to 72% for 3-year standard Reserved Instances.' },
-      { q: 'What is Kubecost?', a: 'A Kubernetes cost monitoring tool that allocates cluster costs to namespaces, deployments, and pods based on resource requests and actual node pricing.' },
-      { q: 'What is OpenCost?', a: 'CNCF-incubating open specification and implementation for real-time cost monitoring of Kubernetes workloads. The open standard underlying Kubecost.' },
-      { q: 'What is Infracost?', a: 'A CLI and CI/CD integration that shows the cloud cost impact of Terraform changes in pull request comments before merge.' },
-      { q: 'When should you NOT buy Reserved Instances?', a: 'Before right-sizing — you risk committing to the wrong instance type. Buy only after 2-3 months of stable, right-sized utilization data.' },
-      { q: 'What workloads are best suited for Spot Instances?', a: 'Stateless, fault-tolerant workloads: CI runners, batch processing, ML training with checkpointing, stateless web servers with multiple replicas.' },
+      { q: 'What are the three FinOps phases?', a: '**Inform, Optimize, Operate** — and organisations iterate through them continuously rather than completing them in sequence. Inform is visibility and allocation: tagging, showback, shared-cost splitting. Optimize is action: eliminating waste, right-sizing, and buying commitments. Operate is governance embedded in the engineering workflow: cost in pull requests, unit-cost targets, anomaly alerting. Inform is the gate — every later phase depends on being able to attribute spend, which is why programmes that skip tagging stall.' },
+      { q: 'What discount should you actually expect from a Savings Plan?', a: 'The headline "up to 72%" describes a three-year, all-upfront, single-family commitment. A realistic starting point — a **one-year, no-upfront Compute Savings Plan — is nearer 20–30%**, and that is the number to plan with. Note the structural trade-off on AWS: an *EC2 Instance* Savings Plan discounts more deeply but locks you to an instance family in one region, while a *Compute* Savings Plan discounts less and stays flexible across families and regions and also covers Fargate and Lambda — usually the better default. Cover 60–80% of steady-state baseline, never peak.' },
+      { q: 'When should you NOT buy Reserved Instances or Savings Plans?', a: 'When the workload is about to be re-architected, containerised, or migrated; when its baseline is genuinely unpredictable, since you pay for the commitment whether you use it or not; when the discount comes from a family lock you are likely to outgrow; and immediately before a new instance generation ships, because a three-year commitment to current hardware can leave you paying more than the eventual on-demand price for something faster. These are financial instruments, not settings — they cannot be cancelled, only partially resold on the RI marketplace.' },
+      { q: 'What workloads suit Spot Instances, and how do you use them safely?', a: 'Anything interruptible and replayable, given the two-minute termination notice: CI runners, batch and ETL, rendering, ML training with checkpointing, and most stateless web capacity behind a queue or load balancer. Not stateful singletons or long uninterruptible units of work. Two operational rules matter more than the discount: use a **capacity-optimised** allocation strategy rather than lowest-price, because it draws from the deepest pools and interrupts far less often; and diversify across instance types and AZs so a single pool draining does not remove your whole fleet at once.' },
+      { q: 'Why is right-sizing Kubernetes requests the biggest lever?', a: 'Because **cost follows requests, not utilisation**. The scheduler bin-packs on requested resources, so requests determine how many nodes you run and therefore what you pay — a pod requesting 2 CPUs and using 0.2 costs exactly as much as one using all 2. That is why typical clusters sit at 10–20% real CPU utilisation while being "full". Use VPA in recommendation mode or Goldilocks to set requests from observed p95 usage, then let Karpenter consolidate: right-sizing requests saves nothing until fewer nodes are actually running.' },
+      { q: 'Should you set CPU limits on Kubernetes containers?', a: 'Often not. A CPU limit enforces CFS quota, so once a container exceeds it the kernel stops it for the remainder of each 100 ms period — producing latency spikes that look like application bugs and show up as `container_cpu_cfs_throttled_seconds`. The common modern practice is CPU *requests* without CPU limits (requests already guarantee a share under contention), while setting memory limits equal to memory requests, since memory is incompressible and exceeding it means the OOM killer rather than throttling. Limits are still appropriate where you must protect neighbours from a known-abusive workload.' },
+      { q: 'What is OpenCost and what is Kubecost?', a: '**OpenCost** is the CNCF specification and reference implementation for Kubernetes cost allocation: it joins each pod\'s resource allocation against the provider\'s actual rates — including committed-use discounts and Spot pricing — to attribute cluster spend down to namespace, controller, label and pod, including idle capacity. **Kubecost** is the commercial product built on the same core (now part of IBM after its 2024 acquisition), adding long retention, multi-cluster aggregation and recommendations. Either turns "the cluster costs $80k/month" into "this namespace costs $6.2k, 71% of it requested-but-unused CPU".' },
+      { q: 'What is Infracost and why does it belong in CI?', a: 'It reads a Terraform plan and posts the estimated monthly cost delta as a pull-request comment — "this change adds $340/month" — at the moment the decision is being made and is still cheap to reverse. It is the cost equivalent of shifting security left: a review comment costs minutes, whereas discovering the same instance type choice in next month\'s bill costs a migration. Pair it with a threshold policy requiring explicit approval above some delta, so large increases are chosen rather than noticed.' },
+      { q: 'What are unit economics and why do they matter more than total spend?', a: 'Cost per unit of business value — per thousand requests, per active user, per order, per inference call. Total spend is a poor target because it *should* rise as the business grows; unit cost separates growth from waste. Its unique value is catching an efficiency regression early: a change that doubles the cost of serving a request is invisible in the total bill while traffic is low and becomes a crisis two quarters later. This is particularly acute for LLM and GPU workloads, where cost per call varies by an order of magnitude with model choice, context length and caching.' },
+      { q: 'What is FOCUS and why does it change cost tooling?', a: 'The **FinOps Open Cost and Usage Specification** — a vendor-neutral schema for billing data, with 1.0 landing in 2024 and conformant exports now published by the major clouds. Before it, multi-cloud cost analysis meant maintaining a bespoke normalisation layer per provider, each with its own column names, granularity and discount semantics; with it, one set of queries and dashboards works across all of them. If you are building cost reporting today, build it on FOCUS exports rather than on raw CUR or its equivalents.' },
+      { q: 'Which cost lines are most often overlooked?', a: 'Cross-AZ data transfer (~$0.01/GB *each way*), which a chatty service mesh spread across three zones pays on most internal calls and which topology-aware routing largely removes; NAT gateway **data processing** charges, frequently larger than the hourly charge and mostly avoidable with VPC endpoints for S3 and DynamoDB; unattached EBS volumes and orphaned snapshots from instances long deleted; idle load balancers and unattached elastic IPs; gp2 volumes that should be gp3 (roughly 20% cheaper with better baseline performance); and observability spend — logs and metrics kept at full fidelity forever, which has quietly become a top-three line item at many organisations.' },
     ],
     references: [
       'https://www.finops.org/introduction/what-is-finops/',
@@ -3452,6 +3598,63 @@ The key mental model: RIs are "I commit to a specific SKU," Savings Plans are "I
     questions: 5,
     description: 'The SPACE framework for measuring developer productivity across Satisfaction, Performance, Activity, Communication, and Efficiency — beyond DORA metrics.',
     visualizations: [],
+    topics: [
+      {
+        title: 'Why single-metric productivity measurement fails, and what SPACE replaces it with',
+        content: `Every failed attempt to measure developer productivity fails the same way, and the mechanism is worth naming precisely because it is not "the metric was badly chosen". It is **Goodhart's Law**: when a measure becomes a target, it stops being a good measure. The moment a proxy is attached to evaluation, people optimise the proxy, and the correlation with the thing you actually cared about breaks — not through dishonesty, but because the proxy was only ever a correlate.
+
+Lines of code rewards verbosity and punishes deletion, which is often the highest-value change anyone makes that week. Commit counts reward splitting work into fragments. Story points, being a team's own estimate, inflate on request — measuring points delivered measures how the team estimates. Tickets closed rewards choosing small tickets and discourages the hard ones. In every case the metric moves and nothing improves.
+
+**SPACE** (Forsgren, Storey, Maddila, Zimmermann, Houck and Butler, 2021) is a response to that structural problem rather than a better metric. It proposes five dimensions and one rule, and the rule is the load-bearing part:
+
+- **S — Satisfaction and well-being.** Job satisfaction, burnout risk, perceived productivity. Necessarily survey-based, and a leading indicator: satisfaction drops before attrition and before delivery metrics do.
+- **P — Performance.** Outcomes rather than output. Did the change do what it was meant to? Reliability, change failure rate, customer impact. Hard to attribute to an individual, tractable at team level.
+- **A — Activity.** Counts of engineering actions: commits, PRs, reviews, deploys. Easy to collect and the most dangerous in isolation — this is where the historical failures live.
+- **C — Communication and collaboration.** Review turnaround, how discoverable knowledge is, onboarding time, meeting load.
+- **E — Efficiency and flow.** Doing work with minimal delay and interruption: wait time between steps, uninterrupted focus time, handoff count.
+
+**The rule: use at least three metrics from different dimensions, and include at least one perceptual (survey) measure.** The reason is that gaming or misreading one dimension shows up as a contradiction in another. PR throughput rising while satisfaction falls and change failure rate climbs is not a productivity gain — it is a team cutting corners under pressure, and a single-dimension dashboard would have reported success. The dimensions are cross-checks on each other, not a scorecard to sum.
+
+The second rule matters as much and is stated explicitly in the paper: **SPACE is for teams and systems, not for ranking individuals.** Individual attribution fails on the mechanics alone — the engineer who spends a week unblocking four colleagues produces almost no measurable activity — and, once people know they are ranked on it, Goodhart applies to the whole framework at once.`,
+      },
+      {
+        title: 'Instrumenting it: system signals, perceptual signals, and the gap between them',
+        content: `The practical technique that makes SPACE more than a taxonomy is **pairing a system metric with a perceptual one on the same question, and treating the disagreement as the finding.**
+
+| Question | System signal | Perceptual signal | What a gap means |
+| --- | --- | --- | --- |
+| Is CI fast enough? | p50/p95 pipeline duration | "How often does CI slow you down?" | Fast p50, bad experience → the p95 tail or flakiness is the real problem |
+| Is review a bottleneck? | Time from PR open to first review | "Do you wait on reviews?" | Good median, bad sentiment → a few PRs wait days, or one reviewer is a chokepoint |
+| Do people have focus time? | Calendar analysis of ≥2-hour blocks | "Can you get uninterrupted work done?" | Free calendar, no focus → interruptions are in chat and incidents, not meetings |
+| Is the codebase workable? | Build times, test flake rate | "How confident are you changing this service?" | Green metrics, low confidence → missing tests or unclear ownership |
+
+The right-hand column is the point. A dashboard alone tells you the median is fine; a survey alone tells you people are unhappy; **the contradiction tells you where to look**. Nearly every genuinely useful finding in a developer-experience programme comes from that gap.
+
+Two measurement practices keep this honest. **Measure waiting, not working.** In most organisations the dominant cost in lead time is queue time — waiting for a review, a CI runner, an environment, an approval, a security sign-off — and queue time is both far larger and far easier to fix than the time spent typing. Break lead time into its stages before optimising any of them. And **survey on a cadence with a stable instrument**: a short quarterly pulse with unchanged wording gives a trend, whereas a long annual survey rewritten each time gives an anecdote. Watch the trend, not the absolute number.
+
+**Cognitive load** deserves its own mention because it is the most common root cause behind poor scores in several dimensions at once. Borrowing from Sweller's model: *intrinsic* load is the inherent difficulty of the problem, *extraneous* load is everything imposed by the environment — a confusing deploy process, six ways to configure the same thing, undocumented tribal knowledge, twelve services one team is nominally on call for — and *germane* load is the effort of building useful mental models. Extraneous load is the only kind you can remove, and removing it is what platform engineering is for. Team Topologies makes the same argument from the organisational side: a team's responsibilities should be bounded by the cognitive load it can carry, and a team owning more services than it can hold in mind will show up as slow delivery, low satisfaction, and high change failure rate simultaneously — three dimensions moving together because they share one cause.`,
+      },
+      {
+        title: 'How the field has moved: DORA, DevEx and DX Core 4',
+        content: `Treating SPACE as the current state of the art dates a discussion. The frameworks are complementary layers, and knowing what each is for is more useful than knowing what any one stands for.
+
+**DORA** (four keys: deployment frequency, change lead time, change failure rate, failed deployment recovery time) measures the **delivery system**. Its strengths are that the signals come from systems rather than from people, they are comparable across teams, and they are backed by years of research. Its limit is scope: it says nothing about whether the work was worth doing or whether the people doing it are coping. In SPACE terms it lives in Performance and Efficiency and leaves Satisfaction and Collaboration untouched. Note also one naming update people still get wrong — the fourth key was **renamed from MTTR to failed deployment recovery time** in the 2023 report, because generic incident MTTR includes failures no deployment caused.
+
+**SPACE** (2021) widened the aperture to the human dimensions and supplied the multi-dimensional discipline.
+
+**DevEx** (Noda, Storey, Forsgren and Greiler, 2023) narrowed it again into something more directly actionable, on the argument that five dimensions are hard to act on. It names three:
+
+- **Feedback loops** — how fast you learn whether what you did worked (build, test, review, deploy, production signal).
+- **Cognitive load** — how much you must hold in your head to make a change.
+- **Flow state** — how often you get uninterrupted, meaningful work time.
+
+Each maps to a concrete intervention, which is why it has been adopted quickly: shorten the loop, remove the extraneous load, protect the block of time.
+
+**DX Core 4** (2024) is the most recent consolidation, unifying DORA, SPACE and DevEx into four dimensions — speed, effectiveness, quality and impact — with the explicit goal of giving executives a small number they can act on. It is worth knowing both because it is current and because its inclusion of a per-engineer throughput measure has been contentious for exactly the Goodhart reason above; the authors' position is that it is only safe alongside the other three dimensions, which is the same argument SPACE made in 2021.
+
+The background to all of this is a live and unusually sharp debate. A 2023 attempt by a major consultancy to publish a single "developer productivity" score drew strong public criticism from practitioners, and the substance of the objection is the one worth carrying into any measurement conversation: **these frameworks measure systems in order to improve them, and become actively harmful the moment they are used to rank people.** The defensible position is narrow and worth stating out loud when the question comes up — measure the system, use several dimensions including a perceptual one, watch trends rather than absolutes, aggregate at team level or above, and never attach any of it to individual performance review.`,
+      },
+    ],
     introduction: `## Overview
 Developer productivity is one of the most debated topics in engineering leadership. For decades, organizations tried to measure it with lines of code or tickets closed — proxies that incentivize the wrong behaviors. The SPACE framework (2021, from Microsoft Research and GitHub) provides a multidimensional model that captures the full complexity of productive developer work.
 
@@ -3517,12 +3720,14 @@ The key discipline: never report a single metric in isolation. Always show at le
       },
     ],
     quickFire: [
-      { q: 'What does SPACE stand for?', a: 'Satisfaction & well-being, Performance, Activity, Communication & collaboration, Efficiency & flow.' },
-      { q: 'Why should you use at least 3 SPACE dimensions together?', a: 'Single-dimension metrics are easily gamed (Goodhart\'s Law). Multiple dimensions from different quadrants create a system that\'s harder to optimize in isolation.' },
-      { q: 'Where do DORA metrics fit in SPACE?', a: 'Primarily in Performance (change failure rate, MTTR) and Efficiency (deployment frequency, lead time).' },
-      { q: 'What is cognitive load in the context of developer productivity?', a: 'The mental effort required to understand and operate a system. High cognitive load from internal platforms is the primary cause of low developer efficiency (Team Topologies concept).' },
-      { q: 'What does developer NPS measure?', a: 'How likely developers are to recommend an internal tool to a colleague — a rapid pulse measure of tool satisfaction in the Satisfaction dimension.' },
-      { q: 'What is Goodhart\'s Law?', a: 'When a measure becomes a target, it ceases to be a good measure. The core risk of single-dimension developer productivity metrics.' },
+      { q: 'What does SPACE stand for?', a: '**S**atisfaction and well-being, **P**erformance, **A**ctivity, **C**ommunication and collaboration, **E**fficiency and flow — from the 2021 paper by Forsgren, Storey, Maddila, Zimmermann, Houck and Butler. The dimensions are not a scorecard to sum; they exist so that metrics from different parts of the framework can contradict each other, which is how a false positive gets caught.' },
+      { q: 'Why must you use at least three SPACE dimensions together?', a: 'Because any single dimension can be gamed or misread, and the contradiction between dimensions is the signal. PR throughput rising while satisfaction falls and change failure rate climbs is not a productivity gain — it is a team cutting corners under deadline pressure — and a one-dimensional dashboard would have reported success. The framework also asks for **at least one perceptual (survey) measure** alongside system-derived ones, because system data can tell you the median is fine while everyone\'s actual experience is dominated by the tail.' },
+      { q: 'Where do DORA metrics fit within SPACE?', a: 'In Performance (change failure rate, failed deployment recovery time) and Efficiency and flow (deployment frequency, change lead time). DORA measures the delivery *system* from system-generated data, which makes it objective and comparable; SPACE adds the dimensions DORA structurally cannot see — whether people are coping, how well they collaborate, and whether the work was worth doing. One naming point that still trips people up: the fourth key was renamed from MTTR to **failed deployment recovery time** in the 2023 report, since generic incident MTTR includes failures no deployment caused.' },
+      { q: 'What is cognitive load in this context?', a: 'Following Sweller: **intrinsic** load is the inherent difficulty of the problem, **extraneous** load is everything the environment imposes — a confusing deploy process, several ways to configure one thing, undocumented tribal knowledge, more services on call than a team can hold in mind — and **germane** load is the effort of building useful mental models. Only extraneous load can be removed, and removing it is essentially the mission of platform engineering. It matters because it is the most common shared cause behind several dimensions degrading at once: an overloaded team shows slow delivery, low satisfaction and high change failure rate simultaneously.' },
+      { q: 'What does developer NPS measure, and what are its limits?', a: '"How likely are you to recommend working on this team/with this toolchain?" on a 0–10 scale, reduced to promoters minus detractors. Its value is as a cheap, stable trend line — a fall is a leading indicator that precedes attrition and delivery problems. Its limits are real: it compresses a rich answer into one number, it is sensitive to when you ask (run it a week after a painful incident and you measure the incident), and the absolute value is close to meaningless across organisations. Track direction, and always pair it with a free-text "what is the single biggest thing slowing you down?", which is where the actionable content is.' },
+      { q: 'What is Goodhart\'s Law and how does it apply here?', a: '"When a measure becomes a target, it ceases to be a good measure." The mechanism is that any productivity proxy is only a *correlate* of the thing you care about, and once it is attached to evaluation people optimise the proxy directly — breaking the correlation without anyone acting dishonestly. Lines of code rewards verbosity and punishes deletion; commit counts reward fragmentation; story points are the team\'s own estimate and inflate on demand; tickets closed rewards picking easy ones. This is why SPACE insists on multiple dimensions including a perceptual one, and why every one of these frameworks warns against individual-level ranking.' },
+      { q: 'What replaced or extended SPACE?', a: '**DevEx** (2023, Noda, Storey, Forsgren, Greiler) narrowed the five dimensions to three directly actionable ones — feedback loops, cognitive load and flow state — each mapping to a concrete intervention. **DX Core 4** (2024) then unified DORA, SPACE and DevEx into four dimensions — speed, effectiveness, quality, impact — aimed at giving leadership a small actionable set; its per-engineer throughput component is contentious for exactly the Goodhart reason, and its authors\' defence is that it is only safe alongside the other three. They are layers rather than replacements: DORA measures the delivery system, SPACE widens to the human dimensions, DevEx makes it actionable, DX Core 4 makes it reportable.' },
+      { q: 'What is the defensible position on measuring developer productivity?', a: 'Measure the **system**, not the people. Use several dimensions including at least one perceptual measure, pair each system signal with the matching survey question and treat the gap as the finding, watch trends rather than absolute values, aggregate at team level or above, and never attach any of it to individual performance review. Focus on waiting rather than working — queue time for reviews, CI runners, environments and approvals usually dominates lead time and is far easier to fix than the time spent typing. The public criticism that followed a 2023 attempt to publish a single per-developer productivity score is the cautionary case: these frameworks improve systems and do damage the moment they are used to rank individuals.' },
     ],
     references: [
       'https://queue.acm.org/detail.cfm?id=3454124',
@@ -3540,6 +3745,89 @@ The key discipline: never report a single metric in isolation. Always show at le
     questions: 5,
     description: 'Signing, verifying, and attesting software artifacts using Sigstore (Cosign, Fulcio, Rekor), SBOM, and SLSA to secure the software supply chain.',
     visualizations: [],
+    topics: [
+      {
+        title: 'Keyless signing: what problem it solves, and why "keyless" is a misnomer',
+        content: `Artifact signing has existed for thirty years and almost nobody did it. The reason was never cryptography — it was **key management**. A signing key has to be generated, stored somewhere an attacker cannot reach but CI can, rotated on a schedule, revoked when someone leaves, and audited. Every one of those steps is a project. The predictable result was a long-lived key sitting in a CI secret store, which is roughly the security posture of no key at all, since anyone who can run a pipeline can sign anything.
+
+Sigstore's contribution is to remove the key from the operator's hands entirely, using a mechanism that is worth understanding step by step:
+
+1. **Cosign generates an ephemeral keypair in memory**, existing only for this signing operation.
+2. **The workload proves its identity with an OIDC token.** In CI this is the platform's own workload identity — GitHub Actions issues a token whose claims include the repository, the workflow file, the ref and the trigger. No human and no stored credential is involved.
+3. **Fulcio**, a certificate authority, validates that token and issues an X.509 certificate binding the ephemeral public key to that identity. The certificate is valid for **ten minutes**.
+4. Cosign signs the artifact and **discards the private key**.
+5. The certificate, the signature and a timestamp are recorded in **Rekor**, an append-only, cryptographically verifiable transparency log modelled on Certificate Transparency.
+
+Rekor is what makes the ten-minute certificate work, and this is the part most summaries skip. Normally a signature made with an expired certificate is worthless — you cannot tell a signature made while the certificate was valid from one forged afterwards. Rekor resolves it by attesting *when* the signing happened: a verifier checks that the log entry's timestamp falls inside the certificate's validity window. So the key's brief life becomes a feature. There is nothing to steal after those ten minutes, nothing to rotate, and nothing to revoke.
+
+"Keyless" is therefore a marketing word rather than a technical one — keys very much exist, they are just ephemeral and machine-held. The genuine shift is **from protecting a secret to proving an identity**, which is the same move OIDC federation made for cloud credentials in CI.
+
+Two operational details matter in practice. First, where the signature lives: cosign stores it in the same OCI registry alongside the image, historically under a derived tag (\`sha256-<digest>.sig\`) and now increasingly via the OCI 1.1 **referrers** API, which models attachments properly. Second, and more important: signatures bind to a **digest**, never to a tag. A tag is a mutable pointer that can be repointed after your scan and your signature both passed — which is the underlying reason production deployments should reference \`image@sha256:...\`.`,
+      },
+      {
+        title: 'Verification is the whole value, and the identity check is the part people get wrong',
+        content: `A signature that nothing verifies is a checkbox. The single most common mistake in a Sigstore rollout is verifying that an image **is signed** rather than **who signed it** — and in a system where anyone with a Google or GitHub account can obtain a Fulcio certificate and sign anything, "it has a valid signature" carries almost no information.
+
+Verification must pin the identity:
+
+    cosign verify \\
+      --certificate-identity-regexp '^https://github\\.com/acme/api/\\.github/workflows/release\\.yml@refs/tags/v.*$' \\
+      --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \\
+      registry.example.com/api@sha256:abc...
+
+Both flags are mandatory in current cosign for exactly this reason. The identity regex should be as tight as you can make it — a specific repository, a specific workflow file, and ideally a ref pattern — because it is the actual authorisation decision. \`--certificate-identity-regexp '.*github.*'\` is not a policy.
+
+And verification belongs where it cannot be skipped: **admission control**, in the API server's request path. Kyverno's \`verifyImages\` rule and the Sigstore **policy-controller** both do this, rejecting any pod whose image does not carry a signature from the expected identity. CI-side verification is useful defence in depth but is bypassed by anyone with \`kubectl\`.
+
+    apiVersion: kyverno.io/v1
+    kind: ClusterPolicy
+    spec:
+      validationFailureAction: Enforce
+      rules:
+      - name: verify-signature
+        match: { any: [{ resources: { kinds: [Pod] } }] }
+        verifyImages:
+        - imageReferences: ["registry.example.com/*"]
+          mutateDigest: true          # pin the tag to the verified digest
+          attestors:
+          - entries:
+            - keyless:
+                issuer: "https://token.actions.githubusercontent.com"
+                subject: "https://github.com/acme/*/.github/workflows/release.yml@*"
+
+\`mutateDigest: true\` is a small setting doing important work: it rewrites the pod's tag reference to the digest that was actually verified, closing the window in which the tag could be repointed between admission and image pull.
+
+Rollout has an order that avoids an outage. Run the policy in \`Audit\` mode first and measure how much of your estate would be rejected; expect third-party images — ingress controllers, monitoring agents, database operators — to be unsigned or signed by identities you have not enumerated. Scope enforcement to your own registry namespace first, then widen. Enforcing cluster-wide on day one blocks the next deployment of something nobody remembered was running.`,
+      },
+      {
+        title: 'SBOM, SLSA and the honest limits of provenance',
+        content: `Three artifacts often get conflated. They answer different questions and none substitutes for the others:
+
+| Artifact | Question it answers | Format |
+| --- | --- | --- |
+| **SBOM** | *What is in this?* — every component and version | SPDX or CycloneDX |
+| **Provenance** | *Where did this come from?* — which source, which builder, which parameters | in-toto / SLSA predicate |
+| **Signature** | *Who vouches for this, and is it unmodified?* | Sigstore / cosign |
+
+**SLSA** ("salsa") grades provenance, and this is where most existing material is out of date. The widely-quoted **four levels L1–L4 come from the pre-1.0 draft**. **SLSA v1.0 (2023) restructured the specification into tracks and defined the Build track with three levels**, deferring the old L4's hermetic and reproducible-build requirements to future work:
+
+- **Build L1** — provenance exists and describes how the artifact was built.
+- **Build L2** — provenance is signed and generated by a hosted build platform, so it cannot be forged by a developer running a script locally.
+- **Build L3** — the build platform is hardened: builds are isolated from one another, and provenance is **non-falsifiable**, meaning the build process itself cannot forge its own provenance even if the build script is malicious.
+
+L2 remains the sensible first milestone, and on common platforms it is close to free: GitHub's \`actions/attest-build-provenance\` generates and signs SLSA provenance in a few lines, and npm publishes provenance for packages built in Actions. **In-toto** is the underlying attestation format — a signed statement of the form "subject X has property Y according to Z" — and SLSA provenance is one predicate type within it. The same envelope carries SBOM attestations, test results, and scan results, which is what lets you ask "was this image scanned, by what, and when" as a verifiable claim rather than a CI log.
+
+Now the honest limits, because this is where a good answer separates itself from a recited one.
+
+**Signing proves origin, not safety.** It proves this artifact came from that pipeline, from that source commit, unmodified. It says nothing about whether the source itself is benign. The **XZ Utils backdoor (CVE-2024-3094)** is the case that makes this concrete: the malicious code was introduced over two years by an apparently legitimate, trusted maintainer, and would have been signed by every mechanism described here, with perfect provenance and an impeccable transparency log entry. Supply-chain *integrity* was never violated. What failed was trust in a human, and no amount of cryptography addresses that; the countermeasures there are maintainer diversity, review of build scripts as carefully as source, reproducible builds that reveal a build artifact not matching its source, and reducing the number of dependencies you accept in the first place.
+
+Contrast that with **SolarWinds**, where the build system was compromised and the shipped binary did not correspond to the reviewed source. That is exactly the failure SLSA L3's non-falsifiable provenance is designed to detect, and it is why the two incidents are usually cited together but should be reasoned about separately.
+
+**Log4Shell** illustrates the third case, where signing is irrelevant and the SBOM is the entire answer: a genuine vulnerability in a legitimate, correctly-signed component. The value there is purely the ability to answer "which of our 400 services contains log4j-core, at what version" in minutes rather than a week — which requires SBOMs to be *stored and queryable*, not merely generated and attached to an image nobody indexes.
+
+Two more practical notes. The Sigstore public-good instance is free infrastructure operated by a nonprofit and subject to rate limits and availability like anything else — organisations with hard availability requirements or a policy against publishing artifact hashes to a public log run their own Fulcio and Rekor. And **verification should work offline**: cosign can bundle the certificate, signature and Rekor inclusion proof with the artifact, so an air-gapped cluster can verify without reaching the public log. If your admission controller requires internet access to admit a pod, you have added a dependency to your critical path.`,
+      },
+    ],
     introduction: `## Overview
 The software supply chain — every tool, dependency, build step, and artifact that contributes to your production software — is a major attack surface. The SolarWinds breach (2020), Log4Shell (2021), and XZ Utils backdoor (2024) demonstrated that attackers increasingly target the build and distribution process rather than the running application.
 
@@ -3604,13 +3892,16 @@ Why it's better: no key management, no key rotation, no key leakage risk. The id
       },
     ],
     quickFire: [
-      { q: 'What are the three Sigstore components?', a: 'Cosign (signing/verification tool), Fulcio (OIDC-based certificate authority), Rekor (immutable transparency log).' },
-      { q: 'What is an SBOM?', a: 'Software Bill of Materials — a machine-readable inventory of all components, packages, versions, and licenses in a software artifact. SPDX and CycloneDX are the dominant formats.' },
-      { q: 'What does SLSA L2 require?', a: 'Signed provenance generated by a CI system — proves the artifact was built by CI from the stated source, and the provenance cannot be forged by developers.' },
-      { q: 'How long are Fulcio certificates valid?', a: '10 minutes. Short lifetime eliminates the key management problem — the certificate expires before it can be meaningfully misused.' },
-      { q: 'What Kubernetes admission controller enforces image signing policies?', a: 'Kyverno (native Kubernetes, CNCF) or OPA/Gatekeeper (Rego policies). Both can reject images that lack a valid Cosign signature from a trusted signer.' },
-      { q: 'What is the difference between SBOM and SLSA?', a: 'SBOM lists what\'s in the artifact (components, versions). SLSA attests how the artifact was built (which CI system, which source commit, which build steps). Complementary, not competing.' },
-      { q: 'Name a tool to generate SBOMs from container images.', a: 'Syft (Anchore open-source) — generates SBOM in SPDX or CycloneDX format from container images, filesystems, or source directories.' },
+      { q: 'What are the three Sigstore components and what does each do?', a: '**Cosign** signs and verifies container images, blobs and attestations. **Fulcio** is a certificate authority that validates an OIDC identity token and issues a short-lived X.509 certificate binding an ephemeral public key to that identity. **Rekor** is an append-only, cryptographically verifiable transparency log recording every signing event. Rekor is what makes the short certificate lifetime workable: a verifier confirms the log entry\'s timestamp falls within the certificate\'s validity window, so a signature stays valid long after the certificate expires.' },
+      { q: 'How long are Fulcio certificates valid, and why so short?', a: '**Ten minutes.** The point is that there is nothing worth stealing: the private key is generated in memory, used once and discarded, so there is no key to protect, rotate or revoke — which removes the very key-management burden that stopped most teams signing anything. It works only because Rekor timestamps the signing event, letting a verifier prove the signature was made while the certificate was valid rather than forged afterwards.' },
+      { q: 'Is "keyless signing" actually keyless?', a: 'No — it is a marketing term. An ephemeral keypair is generated in memory for each signing operation and the private key is discarded immediately afterwards. The real change is architectural: **you prove an identity instead of protecting a secret**, using the CI platform\'s own OIDC workload identity rather than a stored credential. It is the same move OIDC federation made for cloud credentials in pipelines, and it removes the long-lived signing key that was previously the weakest link.' },
+      { q: 'What is the most common mistake when verifying signatures?', a: 'Verifying that an image is *signed* rather than *who signed it*. Anyone with a GitHub or Google account can get a Fulcio certificate and sign anything, so "has a valid signature" carries almost no information. Verification must pin both `--certificate-oidc-issuer` and `--certificate-identity-regexp`, scoped as tightly as possible to a specific repository, workflow file and ref — that regex *is* the authorisation decision. Current cosign requires both flags for exactly this reason.' },
+      { q: 'Which Kubernetes admission controllers enforce image signing?', a: '**Kyverno** (a `verifyImages` rule with keyless `attestors` naming the expected issuer and subject) and the Sigstore **policy-controller**; Connaisseur and Ratify with OPA Gatekeeper are alternatives. Admission is the right place because it sits in the API server\'s request path and cannot be bypassed by someone with `kubectl`, unlike a CI-side check. Set `mutateDigest: true` in Kyverno so the pod\'s tag reference is rewritten to the digest that was actually verified, closing the gap in which a tag could be repointed between admission and image pull. Roll out in `Audit` mode first — third-party images from ingress controllers, agents and operators are frequently unsigned.' },
+      { q: 'What does SLSA L2 require, and how many levels are there now?', a: 'Be careful here: the commonly quoted **L1–L4 is the pre-1.0 draft**. **SLSA v1.0 restructured into tracks, with the Build track defining three levels**, deferring hermetic and reproducible builds to future work. Build L1 is that provenance exists; **Build L2 is that provenance is signed and generated by a hosted build platform**, so a developer cannot forge it from a laptop; Build L3 additionally requires a hardened platform with isolated builds and non-falsifiable provenance the build script itself cannot forge. L2 is the usual first milestone and is nearly free on common platforms — `actions/attest-build-provenance` produces signed SLSA provenance in a few lines.' },
+      { q: 'What is the difference between an SBOM and SLSA provenance?', a: 'They answer different questions. An **SBOM** is an inventory — what components and versions are inside this artifact — in SPDX or CycloneDX, and it is what lets you answer "which services contain this vulnerable library" when a CVE drops. **SLSA provenance** is a lineage claim — which source commit, which builder, which parameters produced this artifact — expressed as an in-toto attestation, and it is what lets you detect a compromised build system shipping something that does not match reviewed source. You need both; neither implies the other.' },
+      { q: 'Name tools that generate SBOMs from container images.', a: '**Syft** (Anchore) is the most common, emitting SPDX or CycloneDX; **`trivy sbom`** does the same as part of a scanner you probably already run; Docker\'s `docker sbom`/BuildKit attestations generate one at build time, which is the most accurate place to do it because the build knows what it installed. Attach the result as an attestation with `cosign attest`, and — the part that is usually skipped — **store SBOMs somewhere queryable**. An SBOM attached to an image nobody indexes does not answer the "which services are affected" question any faster than rebuilding everything.' },
+      { q: 'Would Sigstore have prevented the XZ Utils backdoor?', a: 'No, and understanding why is the point. In XZ (CVE-2024-3094) the malicious code was introduced over roughly two years by an apparently legitimate, trusted maintainer, so it would have been signed correctly with perfect provenance and a clean transparency-log entry. Supply-chain *integrity* was never breached; trust in a human was. Signing and provenance prove that an artifact came from a given source unmodified — not that the source is benign. The countermeasures for the XZ class of attack are different: maintainer diversity, reviewing build scripts as carefully as source, reproducible builds that expose an artifact not matching its source, and reducing dependency count. Contrast SolarWinds, where the build system itself was compromised and the binary did not match reviewed source — that *is* what SLSA L3\'s non-falsifiable provenance is designed to catch.' },
+      { q: 'What should you know before relying on the Sigstore public instance?', a: 'It is free infrastructure run by a nonprofit, with rate limits and its own availability characteristics, and signing publishes artifact identifiers to a **public** transparency log — which some organisations cannot accept for unreleased or internal artifacts. Both concerns are addressed by running your own Fulcio and Rekor. Separately, make sure verification works **offline**: cosign can bundle the certificate, signature and Rekor inclusion proof with the artifact so an air-gapped or degraded cluster can verify locally. An admission controller that needs internet access to admit a pod has put a third party in your critical path.' },
     ],
     references: [
       'https://www.sigstore.dev/',
@@ -3629,6 +3920,80 @@ Why it's better: no key management, no key rotation, no key leakage risk. The id
     questions: 5,
     description: 'Running WebAssembly workloads on Kubernetes and serverless platforms for near-native performance, instant cold starts, and sandboxed multi-tenancy.',
     visualizations: [],
+    topics: [
+      {
+        title: 'What Wasm actually is on the server, and what the isolation is worth',
+        content: `A WebAssembly module is a compact binary for a **stack-based virtual machine with a strictly bounded memory model**. That model is the whole story server-side, and it is worth being precise about, because "sandboxed" means something different here than it does for a container.
+
+A Wasm instance can address exactly one region — its **linear memory**, a contiguous byte array — and every access is bounds-checked, at compile time where the runtime can prove safety and at runtime where it cannot. There are no raw pointers into host memory, no ambient file descriptors, no syscall table. A module cannot open a file, resolve a name or make a network connection unless the embedder explicitly hands it a capability to do so. **Compare with a container**, which is a Linux process with namespaces and cgroups around it: it has the full syscall interface available and its isolation depends on the kernel getting every one of those syscalls right, which is why container escapes are usually kernel bugs. Wasm's attack surface is the runtime's much smaller host interface instead.
+
+That is a genuinely different and, per-instance, stronger boundary — with two honest caveats. The runtime itself is now the trust boundary, and Wasm runtimes have had their own CVEs; and Wasm gives you memory-safety and capability isolation but **not resource isolation on its own** — CPU and memory quotas are the embedder's job (Wasmtime provides fuel metering and epoch interruption for exactly this), so a badly configured host still lets one module starve its neighbours.
+
+The performance properties follow from the same design. Modules are compiled ahead of time or JIT-compiled to native code, so steady-state throughput is typically within 10–50% of native depending on workload — good, but **not** "near-native" in the way marketing copy suggests, particularly for anything memory-bound, since bounds checks and the linear-memory indirection have a real cost. The dramatic advantage is elsewhere: **instantiation**. A precompiled module with copy-on-write memory initialisation starts in **microseconds to low milliseconds**, against roughly 100 ms to several seconds for a container, which needs an image pull (or at least a snapshot), namespace and cgroup setup, and a full process and runtime start.
+
+That single number is why the server-side interest exists at all. It makes genuine scale-to-zero viable — you can afford to have nothing running, because starting on the first request is not perceptible — and it makes per-request or per-tenant instantiation practical, which is a different architecture from "keep a warm pool of containers".`,
+      },
+      {
+        title: 'WASI, the Component Model, and the portability caveat',
+        content: `Bare Wasm cannot do anything useful on a server: no files, no sockets, no clock. **WASI** (the WebAssembly System Interface) supplies those as a standard, capability-based API, and "capability-based" is the operative part — a module receives a pre-opened directory handle or a socket, not a permission to open arbitrary paths. There is no \`open("/etc/passwd")\` to deny, because there is no ambient authority to name it with.
+
+The portability claim needs one large caveat that most write-ups omit. **WASI is versioned, and the versions are not compatible.**
+
+- **WASI Preview 1** (\`wasi_snapshot_preview1\`) is the version almost everything supports today — a flat, POSIX-ish set of function imports. It has no sockets in the base specification, which is why network access has historically been runtime-specific.
+- **WASI 0.2** (formerly Preview 2, released early 2024) is a redesign built on the **Component Model**, describing interfaces in WIT (WebAssembly Interface Types) with rich types, resources, and proper composition. It adds standardised \`wasi:sockets\`, \`wasi:http\` and \`wasi:filesystem\`.
+- The two are **not wire-compatible**. A p1 module runs on a 0.2 host only through an adapter, and toolchain support is uneven — some language toolchains target p1, others 0.2, and which one your runtime speaks matters.
+
+So "compile once, run anywhere" is directionally true and currently qualified: it is true within a WASI version, and the ecosystem is mid-migration. Ask which WASI version a runtime and a toolchain speak before assuming a module will run.
+
+The **Component Model** is the more consequential development in the medium term, and it is not just a nicer FFI. Components describe their imports and exports as typed interfaces, so a component written in Rust can call one written in Go with structured data — strings, records, lists, results — instead of both parties agreeing on a pointer-and-length convention over a shared linear memory. That makes genuine polyglot composition possible, which is what would let a plugin ecosystem exist without every plugin being written in the same language as the host.
+
+Language support is uneven and matters more than the runtime choice:
+
+| Language | Status |
+| --- | --- |
+| **Rust, C, C++, Zig** | First-class. No runtime to ship, small binaries, mature targets |
+| **Go** | Native \`GOOS=wasip1\` since **Go 1.21**; TinyGo produces far smaller binaries where size matters |
+| **C# / .NET** | Supported, ships a runtime, larger artifacts |
+| **Java, Kotlin, Dart** | Depend on **WasmGC** for a garbage-collected heap; browser support landed in 2023 but server runtime support lags |
+| **Python, Ruby, JavaScript** | Work by embedding an interpreter (componentize-py, Javy, SpiderMonkey builds) — multi-megabyte artifacts and a slower start, which erodes much of the reason to choose Wasm |
+
+The pattern is consistent: **languages that need a garbage collector or an interpreter pay a large size and startup tax**, which is precisely the advantage Wasm was chosen for. If your service is Python, Wasm is usually the wrong tool today.`,
+      },
+      {
+        title: 'Kubernetes integration, real use cases, and where it does not fit',
+        content: `Wasm reaches Kubernetes through the **containerd shim** interface, which is what makes it a first-class workload rather than a special case. The \`runwasi\` project provides shims for Wasmtime, WasmEdge and Spin; \`crun\` can also be built with WasmEdge support. A \`RuntimeClass\` selects the shim and the pod spec is otherwise ordinary:
+
+    apiVersion: node.k8s.io/v1
+    kind: RuntimeClass
+    handler: spin
+    metadata: { name: wasmtime-spin }
+    ---
+    spec:
+      runtimeClassName: wasmtime-spin
+      containers:
+        - name: app
+          image: registry.example.com/my-wasm-app:1.0   # OCI artifact, Wasm inside
+
+The module is distributed as an **OCI artifact**, so the entire existing supply chain applies unchanged — the same registry, the same \`cosign\` signature, the same admission policy, the same scanning. That reuse is a large part of why the Kubernetes integration path was viable at all. **SpinKube** packages this pattern as a CRD-driven way to run Spin applications on Kubernetes.
+
+Where Wasm earns its place today:
+
+- **Plugin and extension systems.** The strongest case, because it solves a problem nothing else solves well: running untrusted third-party code inside your process with a hard capability boundary and no separate deployment. Envoy's proxy-wasm ABI (surfaced by Istio's \`WasmPlugin\`) lets an HTTP filter be shipped without rebuilding or restarting the proxy. Note the honest trade-off — a Wasm filter is measurably slower than a native one, and the ABI has moved between versions.
+- **Policy evaluation.** OPA compiles Rego policies to Wasm modules, so a policy can be evaluated in-process from Go, Java, JavaScript or Rust with no network hop to a policy server and no per-language Rego interpreter. Same policy, verifiably identical semantics, evaluated wherever it is needed.
+- **Edge compute.** Fastly's Compute platform runs Wasmtime; Cloudflare Workers runs Wasm inside V8 isolates. Tiny artifacts and microsecond starts are exactly what you want on hundreds of small PoPs where keeping a warm container per tenant per location is uneconomic. (A common error worth correcting: **AWS Lambda does not run on Wasmtime** — Lambda's isolation is Firecracker microVMs.)
+- **Serverless and scale-to-zero**, where the cold-start difference changes what is architecturally affordable.
+
+Where it does not fit, stated plainly, because this is the part interviews probe:
+
+- **Threading and parallelism** are still maturing; \`wasi-threads\` and shared-everything threading are not where a container's \`pthread\` support is.
+- **Networking** only became standard in WASI 0.2, so anything relying on it inherits the version fragmentation above.
+- **No GPU access**, which rules out most of the current interesting inference work despite "edge inference" appearing on every Wasm slide deck.
+- **Persistent storage and long-running stateful services** are not the model; the sweet spot is short-lived and stateless.
+- **The ecosystem gap.** A container can run any binary that exists, with decades of tooling for debugging, profiling and observability. Wasm requires everything in the dependency chain to compile to Wasm, and the debugging and profiling story is markedly thinner.
+
+The accurate summary is that **Wasm is not competing with containers for general workloads and is unlikely to**. It is winning a specific set of niches — untrusted plugins, edge, policy, very short-lived functions — where its two distinctive properties, microsecond instantiation and capability-based isolation of untrusted code, are worth more than the ecosystem it gives up. Treating it as a container replacement is the error that produces disappointing pilots.`,
+      },
+    ],
     introduction: `## Overview
 WebAssembly (Wasm) was designed for the browser but its properties — compact binary format, near-native execution speed, sandboxed security model, and language agnosticism — make it increasingly attractive for server-side and cloud-native workloads.
 
@@ -3688,12 +4053,16 @@ The near-term model: Wasm for stateless edge handlers and plugin systems; contai
       },
     ],
     quickFire: [
-      { q: 'What is WASI?', a: 'WebAssembly System Interface — a capability-based API standard for Wasm modules to access OS resources (files, network) portably and securely without exposing the underlying OS.' },
-      { q: 'What is the cold start advantage of Wasm over containers?', a: 'Wasm modules initialize in microseconds (50–200µs). Containers take 100ms–1s. Critical for scale-to-zero serverless workloads.' },
-      { q: 'Name two CNCF Wasm projects.', a: 'WasmEdge (CNCF incubating runtime) and runwasi (containerd shims for Wasm runtimes).' },
-      { q: 'What is Spin by Fermyon?', a: 'A framework for building serverless Wasm microservices. Runs on Wasmtime with HTTP triggers, key-value storage, and SQLite bindings. Deployable to Kubernetes via SpinKube.' },
-      { q: 'How does OPA use WebAssembly?', a: 'OPA compiles Rego policies to Wasm for high-performance policy evaluation in Envoy sidecars and other latency-sensitive environments.' },
-      { q: 'Which languages compile best to WebAssembly?', a: 'Rust and C/C++ compile cleanly with minimal overhead. Go compiles but has larger binary size. Python and Java have significant runtime overhead making them impractical.' },
+      { q: 'What is WASI, and what is the version caveat?', a: 'The WebAssembly System Interface: a standard, **capability-based** API giving modules access to files, clocks, randomness and networking. Capability-based means a module is handed a pre-opened directory or socket rather than permission to open arbitrary paths — there is no ambient authority to abuse. The caveat: **WASI is versioned and the versions are not compatible.** Preview 1 (`wasi_snapshot_preview1`) is what most tooling supports and has no sockets in its base spec; **WASI 0.2** (2024) is a Component-Model-based redesign adding `wasi:sockets` and `wasi:http`, and a p1 module needs an adapter to run on it. Check which version your runtime and toolchain speak before assuming portability.' },
+      { q: 'What is the cold-start advantage of Wasm over containers?', a: 'A precompiled module with copy-on-write memory initialisation instantiates in **microseconds to low milliseconds**, against roughly 100 ms to several seconds for a container that must pull or snapshot an image, set up namespaces and cgroups, and start a process and language runtime. That difference changes what is architecturally affordable: genuine scale-to-zero becomes viable because starting on the first request is imperceptible, and per-request or per-tenant instantiation becomes practical instead of maintaining a warm pool.' },
+      { q: 'How does Wasm\'s isolation differ from a container\'s?', a: 'A container is a Linux process with namespaces and cgroups; the whole syscall interface is reachable and isolation depends on the kernel handling every syscall correctly — which is why container escapes are usually kernel bugs. A Wasm instance can address only its own bounds-checked linear memory and has **no ambient authority at all**: no file descriptors, no syscalls, nothing it was not explicitly handed. The attack surface is the runtime\'s much smaller host interface. Two caveats: the runtime becomes the trust boundary and has had its own CVEs, and Wasm gives memory-safety and capability isolation but **not** resource isolation — CPU and memory limits are the embedder\'s job (Wasmtime\'s fuel metering and epoch interruption exist for this).' },
+      { q: 'How does Wasm run on Kubernetes?', a: 'Through a **containerd shim**: `runwasi` provides shims for Wasmtime, WasmEdge and Spin, and `crun` can be built with WasmEdge support. A `RuntimeClass` names the handler, and a pod selects it with `runtimeClassName` — otherwise the pod spec is ordinary. The module ships as an **OCI artifact**, so the existing supply chain applies unchanged: same registry, same cosign signature, same admission policy, same scanning. SpinKube packages the whole pattern as a CRD-driven way to run Spin applications on a cluster.' },
+      { q: 'What is Spin?', a: 'Fermyon\'s application framework for building event-driven, HTTP-triggered Wasm microservices on top of Wasmtime. It handles the parts a bare runtime does not — routing requests to handler components, a manifest describing an application\'s components and triggers, key-value and SQL interfaces, and packaging as an OCI artifact — so a developer writes a handler function rather than an event loop. SpinKube is its Kubernetes integration.' },
+      { q: 'How does OPA use WebAssembly?', a: 'It compiles Rego policies to Wasm modules, so a policy can be evaluated **in-process** from Go, Java, JavaScript, Rust or C++ without a network call to a policy server and without a Rego interpreter for every host language. That gives low, predictable evaluation latency, removes a runtime dependency from the request path, and — the important property — guarantees the same policy has identical semantics wherever it runs, whether in an admission controller, a sidecar or an application.' },
+      { q: 'Which languages compile well to WebAssembly?', a: 'Rust, C, C++ and Zig are first-class: no runtime to ship, small binaries, mature targets. Go has had native `GOOS=wasip1` support since **Go 1.21**, with TinyGo producing much smaller binaries where size matters. C#/.NET works but ships a runtime. Java, Kotlin and Dart depend on **WasmGC** for a garbage-collected heap — browser support arrived in 2023, server runtime support lags. Python, Ruby and JavaScript work only by embedding an interpreter (componentize-py, Javy), producing multi-megabyte artifacts with slow startup, which erodes the very advantage you chose Wasm for. The pattern: **needing a GC or an interpreter costs you the size and startup benefit.**' },
+      { q: 'What is the Component Model and why does it matter?', a: 'An evolution beyond plain modules in which components declare typed imports and exports in WIT (WebAssembly Interface Types), so a Rust component can call a Go one passing structured data — strings, records, lists, results — instead of both sides agreeing on a pointer-and-length convention over shared linear memory. It is the foundation WASI 0.2 is built on, and it is what would make a genuine polyglot plugin ecosystem possible, where a host does not constrain plugins to its own language.' },
+      { q: 'Where does Wasm not fit today?', a: 'Threading and parallelism are immature relative to a container\'s `pthread` support; networking only became standard in WASI 0.2 and inherits that version fragmentation; there is **no GPU access**, which rules out most serious inference despite "edge inference" appearing on every slide; persistent storage and long-running stateful services are not the model; and the ecosystem gap is real — a container runs any binary that exists with decades of debugging, profiling and observability tooling, whereas Wasm requires the entire dependency chain to compile to Wasm and its tooling is thinner. The sweet spot is short-lived, stateless, latency-sensitive, or untrusted code.' },
+      { q: 'Which runtimes power which platforms — and what is the common misattribution?', a: '**Wasmtime** (Bytecode Alliance) powers Fastly\'s Compute platform and underpins Spin. **WasmEdge** is a CNCF-hosted runtime aimed at edge and cloud, integrated with `crun` and runwasi. **Cloudflare Workers** runs Wasm inside V8 isolates rather than a standalone Wasm runtime. The misattribution worth correcting: **AWS Lambda does not run on Wasmtime** — its isolation is Firecracker microVMs, an entirely different mechanism that achieves fast starts through lightweight virtual machines rather than through Wasm.' },
     ],
     references: [
       'https://wasi.dev/',
