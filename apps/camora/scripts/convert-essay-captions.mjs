@@ -28,6 +28,8 @@ const args = process.argv.slice(2);
 const dataFile = args[0];
 const dry = args.includes('--dry');
 const onlyArg = args.indexOf('--only');
+const CAPTION_MAX = 900;   // above this, a caption is really a chapter
+const LEAD_MAX = 420;      // a lead paragraph short enough to keep as caption
 const only = onlyArg !== -1 ? new Set(args[onlyArg + 1].split(',')) : null;
 if (!dataFile) { console.error('usage: convert-essay-captions.mjs <datafile> [--dry] [--only ids]'); process.exit(1); }
 
@@ -67,7 +69,6 @@ const { execFileSync } = await import('node:child_process');
 for (const t of topics) {
   if (only && !only.has(t.id)) continue;
   const essays = (t.visualizations || []).filter((v) => !v.image && !v.svg && !v.video && v.description);
-  if (!essays.length) { skipped++; continue; }
 
   const sections = [];
   let quickFire = null;
@@ -80,9 +81,32 @@ for (const t of topics) {
     }
   }
 
+  // A real figure whose "caption" runs to thousands of characters is a
+  // chapter with a picture at the top, not a caption. Deep Dive sections
+  // render their own diagram, so move the figure into the chapter it
+  // illustrates: the reader gets the diagram beside the prose explaining it,
+  // instead of a wall of text under a picture in a separate section.
+  const figures = (t.visualizations || []).filter((v) => v.image || v.svg || v.video);
+  const promoted = [];
+  for (const v of figures) {
+    const desc = v.description || '';
+    if (desc.length <= CAPTION_MAX) continue;          // a genuine caption
+    if (!v.image) continue;                             // only raster/vector refs move
+    const para = desc.indexOf('\n\n');
+    // Lead paragraph stays as the caption when it is short enough to read as
+    // one; the rest becomes the chapter body.
+    const caption = para > 0 && para <= LEAD_MAX ? desc.slice(0, para).trim() : '';
+    const rest = caption ? desc.slice(para).trim() : desc;
+    promoted.push({ title: v.title, image: v.image, content: rest, caption });
+  }
+
   const payload = {};
-  if (sections.length) payload.sections = [...(t.topics || []), ...sections];
+  const allSections = [...promoted.map((p) => ({ title: p.title, image: p.image, content: p.content })), ...sections];
+  if (allSections.length) payload.sections = [...(t.topics || []), ...allSections];
   if (quickFire) payload.quickFire = [...(t.quickFire || []), ...quickFire];
+  // Figures promoted into chapters must leave visualizations, or the page
+  // shows the diagram twice.
+  if (promoted.length) payload.dropFigures = promoted.map((p) => p.image);
   if (!payload.sections && !payload.quickFire) { skipped++; continue; }
 
   console.log(`${t.id}: ${sections.length} chapter(s)` +

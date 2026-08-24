@@ -25,13 +25,12 @@ export const nativeBuildTopics = [
     color: '#ea580c',
     questions: 5,
     description: 'How a translation unit becomes an object file and why the include graph, not the source line count, determines your build time. Covers the four compilation phases, the One Definition Rule, and the 2026 state of C++20 modules.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Four phases, translation units, and the include graph',
         image: '/diagrams/devops/nb-1-compilation-model.png',
-        description: `The gcc and clang drivers run a source file through up to four sequential stages, and every build problem you will ever debug belongs to exactly one of them. Knowing which stage failed narrows the search space immediately.
-
-Phase 1 — Preprocess (cpp, or the integrated preprocessor).
+        content: `Phase 1 — Preprocess (cpp, or the integrated preprocessor).
 Input: hello.cpp plus every header it reaches transitively. Output: hello.ii, a single flat token stream. The preprocessor is a text substitution engine with no knowledge of C++ grammar. It resolves #include by textual insertion, expands macros, evaluates #if / #ifdef, and emits line markers so later diagnostics can point back at the original file. Stop here with -E. This is the stage where a 40-line .cpp becomes 800,000 lines.
 
   g++ -E -std=c++20 hello.cpp | wc -l
@@ -69,7 +68,7 @@ A declaration tells the compiler a name exists and what its type is. A definitio
 Cutting the graph:
 
 Forward declaration works when you only need a pointer or reference to a type, not its layout. The pimpl idiom pushes an entire dependency subtree behind an opaque pointer, so changing a private member no longer recompiles every client. Explicit instantiation with extern template moves template code generation into one TU instead of all of them. Precompiled headers cache the parsed state of a stable header set. C++20 modules replace textual inclusion with a compiled interface artifact that is parsed once.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What exactly is a translation unit?', a: 'One source file plus every header the preprocessor textually inserted into it, after conditional compilation has been resolved. It is the unit the compiler actually processes and the unit that produces one object file. The compiler never sees the whole program, which is why cross-TU errors surface only at link time or not at all.' },
@@ -302,13 +301,12 @@ Would I adopt? For a greenfield project on a single pinned toolchain with CMake 
     color: '#ea580c',
     questions: 6,
     description: 'Symbol resolution semantics and link failure diagnosis: why archive order matters, what SONAME and RUNPATH actually control at load time, and how visibility and linker choice change both ABI surface and link speed.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Symbol resolution, archive semantics, and the dynamic load path',
         image: '/diagrams/devops/nb-2-linking.png',
-        description: `The linker has one job: make every undefined symbol point at exactly one definition, then patch the addresses. Everything confusing about linking follows from how it walks its inputs to do that.
-
-Symbol classes:
+        content: `Symbol classes:
 
 Defined (strong) — the object provides a body or initialized storage. Two strong definitions of the same name is a hard error: multiple definition of foo.
 Undefined — the object references a name it does not define. Must be satisfied or you get undefined reference to foo.
@@ -353,7 +351,7 @@ Runtime search order, exactly:
 5. /lib and /usr/lib (or the lib64 variants)
 
 The critical asymmetry: LD_LIBRARY_PATH beats RUNPATH but loses to RPATH. That is why modern toolchains default to --enable-new-dtags, emitting RUNPATH, so operators can still override with the environment.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does -lfoo have to come after the objects that use it?', a: 'Because the linker processes inputs left to right and searches an archive only once, extracting only members that satisfy symbols that are already undefined at that moment. If the archive is seen before anything references it, nothing is undefined yet, nothing gets extracted, and the archive is never revisited. Object files are unconditional so their order does not matter.' },
@@ -637,13 +635,12 @@ One more thing worth raising unprompted, because it is what actually happens whe
     color: '#ea580c',
     questions: 5,
     description: 'What the gcc driver actually runs, what each optimization and debug level enables, and the flags that silently change correctness or portability — march=native, -Ofast, -std defaults, and the libstdc++ versus libc++ split.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The driver, its subprocesses, and the flags that change semantics',
         image: '/diagrams/devops/nb-3-gcc-toolchain.png',
-        description: `gcc is not a compiler. It is a driver: a program that looks at file suffixes, decides which subprocesses to run in which order with which arguments, and runs them. The compiler proper is cc1 for C and cc1plus for C++; the assembler is as from binutils; the linker is invoked through collect2, which wraps ld to handle static constructors on targets that need it.
-
-Seeing the real command line:
+        content: `Seeing the real command line:
 
   gcc -v hello.c -o hello        # print each subprocess command AND execute it
   gcc -### hello.c -o hello      # print them, quoted, and execute nothing
@@ -675,7 +672,7 @@ Debug levels:
 Target selection:
 
 -march=X sets the instruction set the compiler may emit; the resulting binary may not run at all on anything older. -mtune=X only affects scheduling and cost model and emits nothing outside the base ISA. -march=X implies -mtune=X. -march=native detects the build machine's CPU and enables everything it supports, which is the single most common way to ship a binary that dies with SIGILL on a slightly older host.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between gcc -v and gcc -###?', a: 'Both print the subprocess command lines the driver will run. -v runs them; -### prints them quoted and runs nothing. -### is the safe way to inspect exactly what flags the driver injects, including the include paths, target triple, and startup files you never typed.' },
@@ -897,13 +894,12 @@ The retrofit is where the pain is. Adding the second compiler to a mature single
     color: '#ea580c',
     questions: 6,
     description: 'Why moving a fleet from GCC 9 to GCC 14 is a platform migration and not a version bump: the libstdc++ dual ABI, warnings promoted to errors, changed language defaults, and a staged rollout that does not strand production.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The five things that change when you change the compiler',
         image: '/diagrams/devops/nb-4-gcc-upgrades.png',
-        description: `A GCC upgrade is five independent changes wearing a single version number. Teams that plan it as one change stall for months, because every failure looks like every other failure. Separate the layers and each one becomes a bounded, testable task.
-
-Layer 1 — the default language standard.
+        content: `Layer 1 — the default language standard.
   GCC 6 moved C++ from gnu++98 to gnu++14. GCC 11 moved it to gnu++17.
   GCC 15 moved C from gnu17 to gnu23. Under C23, bool, true, false, nullptr and
   thread_local become reserved keywords, and a declaration of the form
@@ -970,7 +966,7 @@ is loud and cheap. A layer 3 mismatch is a link error that points at the wrong
 place. A layer 4 regression passes CI and fails at 3am. A layer 5 problem never
 reproduces on a developer laptop. Plan the rollout in that order of difficulty,
 not in the order the errors happen to appear.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the libstdc++ dual ABI and why does it exist?', a: 'GCC 5.1 needed to change the layout of std::string and std::list to conform to C++11, which is an ABI break. Instead of breaking every existing binary, libstdc++ ships both implementations: the conforming ones live in the inline namespace std::__cxx11 so they mangle to different symbols. The macro _GLIBCXX_USE_CXX11_ABI picks which set your headers declare, 1 for new and 0 for old, independently of the -std you compile with.' },
@@ -1267,13 +1263,12 @@ For the migration itself, the side-by-side setup is what makes the dual-build wi
     color: '#ea580c',
     questions: 5,
     description: 'The three C++ standard libraries, how glibc symbol versioning sets the minimum host your binary can run on, and the linking choices that decide whether your artifact is portable or pinned.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Where the symbols come from and who sets the version floor',
         image: '/diagrams/devops/nb-5-stdlib-abi.png',
-        description: `A dynamically linked C++ binary on Linux resolves its symbols from three layers, and each layer has its own compatibility rule.
-
-Layer 1 — your own objects and static libraries.
+        content: `Layer 1 — your own objects and static libraries.
   Symbol names come from the Itanium C++ ABI mangling scheme, which GCC and
   Clang both implement. _ZN3foo3barEi is foo::bar(int). Because mangling encodes
   parameter types, namespaces and cv-qualification, changing any of them changes
@@ -1334,7 +1329,7 @@ runtime, so getaddrinfo and getpwnam in a fully static glibc binary need the
 matching glibc shared objects present anyway. The linker warns about it. musl
 does not have that design and is the honest answer when you genuinely want one
 self-contained file.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does a binary built on a new distribution fail on an old one with a GLIBC version error?', a: 'glibc symbols carry version nodes. The linker binds to whatever default version exists on the build machine and records a requirement for it. glibc keeps old versions forever, so old binaries run on new glibc, but there is no forward compatibility: an older glibc simply does not have the node. GLIBC_2.34 is the common one because glibc 2.34 folded libpthread, libdl, librt and libanl into libc.so.6 and gave a huge set of symbols a new node at once.' },
@@ -1576,13 +1571,12 @@ Whichever route you take, pair it with an ABI check in CI. Run abidiff between t
     color: '#ea580c',
     questions: 6,
     description: 'The Windows native build stack end to end: cl.exe and link.exe, the developer environment, MSBuild versus CMake, the CRT variants and the mismatched-runtime crash, DLL exports, PDBs, and pinning a toolset in CI.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'From cl.exe to a shipped Windows binary',
         image: '/diagrams/devops/nb-6-msvc.png',
-        description: `The Windows toolchain looks superficially like the Unix one and differs in every detail that matters operationally.
-
-The environment comes first.
+        content: `The environment comes first.
   MSVC does not find its own headers and libraries. It reads PATH, INCLUDE, LIB,
   LIBPATH and around twenty more environment variables that are set by a batch
   file. That batch file is VsDevCmd.bat in Common7\\Tools, or one of the
@@ -1658,7 +1652,7 @@ Inspection.
   Dependency Walker is long dead; the modern replacement is Dependencies, which
   understands API sets (the api-ms-win-* virtual DLLs) that depends.exe reports
   as missing.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between /MT and /MD?', a: '/MT statically links the CRT into the image; /MD links to the shared CRT DLLs (ucrtbase.dll, vcruntime140.dll, msvcp140.dll). /MTd and /MDd are the debug variants. Every EXE and DLL in a process makes this choice independently, and mixing them means multiple CRTs with separate heaps in one process.' },
@@ -1927,13 +1921,12 @@ The check to add to CI so this never reaches a customer: run dumpbin /dependents
     color: '#ea580c',
     questions: 5,
     description: 'Where Win32 and POSIX genuinely diverge — process creation, threading, dynamic loading, paths, file semantics, sockets — and how to structure a codebase so platform code is isolated rather than scattered across ifdefs.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Win32 and POSIX side by side: the primitives that actually differ',
         image: '/diagrams/devops/nb-7-win-vs-posix.png',
-        description: `Most cross-platform C++ breakage is not language-level. The compilers agree far more than the operating systems do. The divergence lives in the system library layer, and it is concentrated in seven places.
-
-Process creation:
+        content: `Process creation:
 
 POSIX splits creation from execution. fork() clones the calling process, returning 0 in the child and the child PID in the parent; the child then calls one of the exec family (execve, execvp) to replace its image. Between the fork and the exec the child is a full copy of the parent, which is exactly where you set up redirection: dup2 the pipe ends onto fd 0/1/2, close what the child should not inherit, chdir, setuid. posix_spawn packages the common cases without an explicit fork.
 
@@ -1956,7 +1949,7 @@ Text mode, locking, and sockets:
 The Windows CRT opens files in text mode by default, translating LF to CRLF on write and CRLF to LF on read, and historically treating Ctrl+Z as end of file. Any binary read must pass "b" to fopen or call _setmode(fd, _O_BINARY); _fmode or _set_fmode changes the process default. POSIX has one mode. File locking differs even more consequentially for build tools: Windows share modes are mandatory, so an open handle without FILE_SHARE_DELETE blocks unlink and rename, while POSIX unlink always succeeds and the inode simply lives until the last descriptor closes. That is why a Windows build fails with "Access is denied" when an antivirus scanner or a stale compiler process still holds an output file, and why atomic replace on Windows means ReplaceFile or MoveFileEx with MOVEFILE_REPLACE_EXISTING rather than a plain rename over an open file.
 
 Sockets are BSD-shaped on Windows but not BSD. You must call WSAStartup before any socket call and WSACleanup after; a socket is a SOCKET, not an int, and INVALID_SOCKET is not -1; you close it with closesocket, not close; errors come from WSAGetLastError, not errno; and there is no reliable select on file descriptors that are not sockets. Time and locale diverge too: CLOCK_MONOTONIC versus QueryPerformanceCounter, gmtime_r versus gmtime_s with reversed argument order, and a Windows locale model that is not the POSIX one.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Windows has no fork. What is the practical consequence for a codebase that shells out?', a: 'You cannot write "set up the child state, then exec" as straight-line code. On Windows every child attribute — redirected handles, working directory, environment, inheritance set — must be assembled before the single CreateProcess call, in STARTUPINFO or STARTUPINFOEX. Anything you would have done between fork and exec has to become a parameter. In practice that means the process-spawn abstraction in your codebase must be a descriptor struct rather than a callback, because a callback has nowhere to run on Windows.' },
@@ -2214,13 +2207,12 @@ The decision rule to state in an interview: count the distinct capabilities, not
     color: '#ea580c',
     questions: 6,
     description: 'The dependency-graph and timestamp model that still underlies almost every C and C++ build, plus the rules, automatic variables, parallelism hazards, and debugging flags an interviewer expects you to know cold.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The make dependency graph: rules, automatic variables, and the rebuild decision',
         image: '/diagrams/devops/nb-8-make.png',
-        description: `make is a graph engine with one decision rule. Every target is a node, its prerequisites are edges, and a target is rebuilt when it does not exist or when any prerequisite has a newer modification time. Everything else in GNU Make — pattern rules, functions, variable flavors, parallelism — is machinery for describing that graph compactly.
-
-Rule forms:
+        content: `Rule forms:
 
 An explicit rule names its target and prerequisites literally. A pattern rule uses % as a stem: %.o: %.cpp matches any object file whose stem has a matching source. Implicit rules are the built-in catalogue make ships with (it already knows how to make .o from .c using CC and CFLAGS), which is convenient in toy makefiles and a source of surprise in real ones — a stray built-in rule can fire when your intended rule does not match, which is why serious makefiles run with MAKEFLAGS including -r to disable built-in rules and -R to disable built-in variables.
 
@@ -2276,7 +2268,7 @@ Debugging:
   --debug=b,v,i,j,m  selective debug: basic, verbose, implicit, jobs, makefile remaking
   --trace       print each recipe with the file and line that triggered it and why
   $(info ...) / $(warning ...) / $(error ...)   inline diagnostics during parsing`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What exactly makes make decide to rebuild a target?', a: 'The target does not exist, or at least one prerequisite has a newer modification time than the target. That is the whole rule. It is not content hashing, not a build ID, not a compiler-flag comparison. Consequences: changing CFLAGS does not trigger a rebuild, a clock skew or a restored-from-backup file with an old mtime silently skips work, and filesystems with coarse mtime granularity can miss a change made within the same tick.' },
@@ -2630,13 +2622,12 @@ The systemic fix once the immediate cause is found: add a CI step that runs make
     color: '#ea580c',
     questions: 6,
     description: 'Modern target-based CMake: usage requirements that propagate correctly, install and export so downstream projects get real imported targets, presets, generators, and the directory-scoped anti-patterns that still dominate legacy CMakeLists files.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Targets, usage requirements, and how they propagate to consumers',
         image: '/diagrams/devops/nb-9-cmake.png',
-        description: `CMake is a build-system generator, not a build system. It reads CMakeLists.txt, produces native build files for a chosen generator, and gets out of the way. Understanding modern CMake means understanding one idea: a target carries both what it needs to build itself and what its consumers need, and the second set propagates automatically.
-
-The unit is the target:
+        content: `The unit is the target:
 
 add_executable(app main.cpp) and add_library(core STATIC a.cpp b.cpp) create binary targets. add_library(headeronly INTERFACE) creates a target that compiles nothing but still carries requirements — the correct model for a header-only library. add_library(ns::core ALIAS core) creates a namespaced alias so that in-tree consumption and installed consumption use the identical name, which means the CMakeLists of a consumer does not change when the dependency moves from a subdirectory to a find_package.
 
@@ -2677,7 +2668,7 @@ find_package has two modes. MODULE mode looks for a Find<Name>.cmake script in C
 Presets:
 
 CMakePresets.json (checked in) and CMakeUserPresets.json (gitignored) replace ad-hoc shell wrappers. A configure preset names the generator, binaryDir, and cacheVariables; build, test, package, and workflow presets chain off it. Visual Studio, VS Code, and CLion all read them, and the same file drives CI, which is the point: one definition of "the debug build" instead of three.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the single biggest difference between modern and legacy CMake?', a: 'Legacy CMake sets state on directories — include_directories, link_directories, add_definitions — which applies to every target defined afterwards in that directory and its subdirectories, and to nothing else. Modern CMake sets state on targets, and the state propagates along the dependency graph. The consequence is that in modern CMake a consumer gets exactly what its dependencies declared and nothing more, and the same declarations work whether the dependency is a subdirectory or an installed package.' },
@@ -3040,13 +3031,12 @@ The framing to offer at the end: every one of these anti-patterns is global muta
     color: '#ea580c',
     questions: 5,
     description: 'Build, host, and target machines; GNU triples; what a sysroot actually contains; CMake toolchain files and the find_root_path knobs; and testing cross-built binaries under QEMU.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Three machines, one build: triples, sysroots, and toolchain files',
         image: '/diagrams/devops/nb-10-cross-compilation.png',
-        description: `Cross-compilation has exactly three machines in play, and almost every confused conversation about it comes from collapsing them into two.
-
-Build machine: where the compiler process actually executes. Your x86-64 Linux CI runner.
+        content: `Build machine: where the compiler process actually executes. Your x86-64 Linux CI runner.
 Host machine: where the thing you are producing will run. An aarch64 embedded board.
 Target machine: only meaningful when the thing you are producing is itself a compiler. If you are building GCC on x86-64 that runs on aarch64 and emits code for RISC-V, then build=x86_64, host=aarch64, target=riscv64. That is a Canadian cross, and it is the only case where "target" has a distinct meaning.
 
@@ -3086,7 +3076,7 @@ CMake loads the toolchain file very early, before compiler detection, via cmake 
 CMAKE_STAGING_PREFIX is the one people miss. CMAKE_INSTALL_PREFIX is always the runtime location on the target — /usr, say — because that path gets baked into config files and rpaths. CMAKE_STAGING_PREFIX is where the install tree actually lands on the build machine. Without it you either install into your own /usr or you break every path that was computed from the install prefix.
 
 The find_root_path knobs are the other half. CMAKE_FIND_ROOT_PATH prepends directories to every find_* search. The four mode variables then decide, per category, whether to look in those roots, in the host root, or both: ONLY searches only the re-rooted paths, NEVER ignores them and uses only the host system root, and BOTH searches both. The idiomatic block is PROGRAM set to NEVER (you need host-executable tools such as protoc, flex, and pkg-config) and LIBRARY, INCLUDE, and PACKAGE set to ONLY (you need target artifacts). Get this wrong and find_package(ZLIB) resolves to /usr/lib/x86_64-linux-gnu/libz.so, configure succeeds, and the link fails with "file in wrong format" — or on a bad day succeeds and the binary refuses to start on the board.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between build, host, and target?', a: 'Build is the machine running the compiler. Host is the machine the produced binary will run on. Target only exists when the produced binary is itself a compiler — it is the architecture that compiler will emit code for. For an ordinary application cross build there are only two machines and passing --target to configure accomplishes nothing. CMake calls the host machine CMAKE_SYSTEM_NAME and the build machine CMAKE_HOST_SYSTEM_NAME, which is the reverse of what most people expect on first read.' },
@@ -3379,13 +3369,12 @@ Publishing. Each matrix job uploads its artifact with the triple in the name, an
     color: '#ea580c',
     questions: 5,
     description: 'Qt from the build side: module structure, the moc/uic/rcc/qmlcachegen code generators and what they do to the build graph, qmake versus CMake in Qt 6, static builds, and LGPL as a build constraint.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Qt code generators and the build graph they create',
         image: '/diagrams/devops/nb-11-qt-development.png',
-        description: `Qt is not plain C++. It is C++ plus a code-generation step, and understanding that step is the entire difference between an app developer's view of Qt and a build engineer's view.
-
-The module structure:
+        content: `The module structure:
 Qt 6 splits into Essentials and Add-ons. The Essentials are Qt Core (core non-graphical classes used by other modules), Qt GUI (base classes for graphical user interface components), Qt Widgets (classes to extend Qt GUI with C++ widgets), Qt QML (classes for the QML and JavaScript languages), Qt Quick (a declarative framework for building highly dynamic applications with custom UIs), Qt Network (classes to make network programming easier and more portable), Qt Test (unit testing), and Qt D-Bus (inter-process communication over D-Bus).
 
 What linking each pulls in matters for deployment size and for what has to exist on the target. Qt6::Core alone gives you the object model, containers, event loop, file and string handling, and no windowing dependency at all — a headless service can link only Core. Qt6::Gui adds the Qt Platform Abstraction layer, which means it drags in a platform plugin requirement and, on Linux, an X11 or Wayland client stack. Qt6::Widgets adds the classic desktop widget set on top of Gui. Qt6::Quick is a separate universe: it pulls in Qt6::Qml, a JavaScript engine, and a scene graph that requires working GPU or software rasterisation. A team that links Widgets and Quick into the same binary is shipping two complete UI stacks.
@@ -3408,7 +3397,7 @@ moc constraints worth knowing because they surface as build failures: a class te
 
 qmake versus CMake:
 Qt 5 was qmake-first with a .pro file, and CMake support was a community-maintained afterthought. Qt 6 inverted this — Qt itself is built with CMake, the documentation leads with CMake, and the Qt-specific commands qt_add_executable, qt_add_library, qt_add_qml_module, qt_add_resources, and qt_add_translations are first-class. A build engineer joining a Qt 5 codebase should expect a qmake-to-CMake migration to be on the roadmap and should understand that qmake's implicit conventions (CONFIG += ..., automatic moc, automatic install paths) have to be made explicit in CMake.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What does moc actually do, and why does Qt need it?', a: 'moc reads headers, finds classes declaring Q_OBJECT, and generates a C++ file containing the QMetaObject for that class — the string tables and dispatch code that implement signals and slots, dynamic properties, and runtime introspection. Standard C++ has no reflection, so Qt generates the reflection data at build time instead. The output is moc_myclass.cpp from a header, or myfile.moc from a .cpp, and it must be compiled and linked with the rest of the project.' },
@@ -3642,13 +3631,12 @@ One trap worth naming: a component can be required at runtime without appearing 
     color: '#ea580c',
     questions: 5,
     description: 'Everything a Qt application needs at runtime beyond the executable: plugins, qt.conf, the deploy tools, platform installers, and why the platform-plugin error is the most common Qt shipping failure.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'What ships with a Qt application, and how it finds it',
         image: '/diagrams/devops/nb-12-qt-deployment.png',
-        description: `A Qt application is not a single binary. It is a binary plus shared libraries plus a plugin tree, and the runtime discovers that tree by a search algorithm you must either satisfy or override.
-
-The single most common Qt deployment failure:
+        content: `The single most common Qt deployment failure:
 
   This application failed to start because no Qt platform plugin could be initialized.
   Reinstalling the application may fix this problem.
@@ -3685,7 +3673,7 @@ macdeployqt copies Qt libraries into the bundle as private frameworks under Cont
 linuxdeployqt is community-maintained and produces an AppDir suitable for AppImage packaging. Linux has no single blessed answer, which is why AppImage, Flatpak, and native .deb/.rpm all remain in use.
 
 Qt 6 added a build-system-integrated path. qt_generate_deploy_app_script produces a script that you install(SCRIPT ...), and at install time it calls qt_deploy_runtime_dependencies, which on Windows and macOS drives windeployqt or macdeployqt underneath, and on Linux uses CMake's file(GET_RUNTIME_DEPENDENCIES) and additionally deploys non-Qt project libraries, excluding system directories by default. It accepts GENERATE_QT_CONF, plugin filters such as NO_PLUGINS, INCLUDE_PLUGIN_TYPES and EXCLUDE_PLUGIN_TYPES, and DEPLOY_TOOL_OPTIONS for passing platform tool flags through. This is the modern answer: deployment described in CMakeLists rather than in a shell script that drifts.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'An application starts on the build machine and fails on a clean machine with "no Qt platform plugin could be initialized". What happened?', a: 'The platforms plugin directory was not shipped, or was shipped in the wrong place. Qt requires the QPA plugin — qwindows.dll, libqcocoa.dylib, or libqxcb.so — in a platforms subdirectory of the distribution directory. On the build machine the application finds it through the Qt installation paths compiled into the library; on a clean machine those paths do not exist. The fix is running windeployqt, macdeployqt, or the CMake deploy script rather than copying DLLs by hand. Setting QT_DEBUG_PLUGINS to 1 prints every path Qt searched, which turns a guess into a diagnosis.' },
@@ -3948,11 +3936,12 @@ Finally, gate on artifact size. A sudden jump usually means a plugin category or
     color: '#ea580c',
     questions: 5,
     description: 'Why C++ never got a canonical package manager, and how Conan 2 and vcpkg manifest mode close the gap — package IDs, triplets, baselines, lockfiles, and binary caching at scale.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'From declaration to compile line — how Conan and vcpkg deliver a dependency',
         image: '/diagrams/devops/nb-13-conan-vcpkg.png',
-        description: `C++ has no canonical package manager for a structural reason, not a cultural one. In Python or Rust, a compiled artifact is portable across consumers because the language defines one ABI and one module system. In C++ the ABI is a product of compiler, compiler version, standard library, standard version, optimization and preprocessor flags, exception model, and CRT linkage. A libfoo.a built with GCC 11 libstdc++ and _GLIBCXX_USE_CXX11_ABI=1 is not interchangeable with one built by GCC 11 with the old string ABI, and neither is usable from an MSVC /MDd build. Any package manager for C++ must therefore model the build configuration as a first-class key, not just the version number.
+        content: `C++ has no canonical package manager for a structural reason, not a cultural one. In Python or Rust, a compiled artifact is portable across consumers because the language defines one ABI and one module system. In C++ the ABI is a product of compiler, compiler version, standard library, standard version, optimization and preprocessor flags, exception model, and CRT linkage. A libfoo.a built with GCC 11 libstdc++ and _GLIBCXX_USE_CXX11_ABI=1 is not interchangeable with one built by GCC 11 with the old string ABI, and neither is usable from an MSVC /MDd build. Any package manager for C++ must therefore model the build configuration as a first-class key, not just the version number.
 
 What teams did before, and how each fails:
 
@@ -3995,7 +3984,7 @@ vcpkg takes a different shape. Manifest mode puts direct dependencies in vcpkg.j
 Configure with -DCMAKE_TOOLCHAIN_FILE=<vcpkg-root>/scripts/buildsystems/vcpkg.cmake and vcpkg installs during the CMake configure step. Configuration lives in the triplet (x64-windows, x64-linux, arm64-osx, or a custom one), not in a profile. Versions are pinned by builtin-baseline, which is a commit SHA of the vcpkg registry that establishes the version floor for every port in the graph, refined by per-dependency "version>=" and hard "overrides".
 
 The right-hand side of the diagram is the part that pays for itself: binary caching. vcpkg computes an ABI hash over every file in the port directory, the triplet file contents and name, the C and C++ compiler executables, the selected features, the ABI hash of each dependency, the CMake version, and any variables listed in VCPKG_ENV_PASSTHROUGH. Conan computes the package ID. Both then look the artifact up in a remote before building anything. That is the whole value proposition at scale: a clean CI build of a 200-dependency graph goes from forty minutes of compiling Boost and Qt to three minutes of downloading.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why can npm ship one artifact per version but C++ package managers cannot?', a: 'Because a compiled C++ artifact is only usable by a consumer with a compatible ABI, and ABI in C++ is determined by compiler, compiler version, standard library, language standard, exception model, CRT linkage, and several flags. Package managers therefore key binaries on the full build configuration — Conan calls that the package ID, vcpkg calls it the ABI hash — and fall back to building from source when there is no matching binary.' },
@@ -4247,13 +4236,12 @@ The takeaway to state out loud: an ABI mismatch that reaches production means yo
     color: '#ea580c',
     questions: 5,
     description: 'Where C++ build time actually goes and how to get it back — measurement first, then ccache and sccache, distributed compilation, include-graph reduction, and the link step that refuses to parallelize.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Where the time goes — the C++ build pipeline and the lever at each stage',
         image: '/diagrams/devops/nb-14-build-performance.png',
-        description: `Almost every C++ build-time discussion starts in the wrong place, with someone enabling unity builds because a blog post said to. The pipeline has four cost centres and each responds to a different lever, so the first move is always measurement.
-
-Preprocessing. Every translation unit re-reads its entire include closure. A single file including <vector> and one company header can pull in three hundred files and half a million lines. Multiply by two thousand translation units and you are reading a billion lines per build. The lever is include-graph reduction, and the measurement is trivially available: -H on GCC and Clang prints the include tree, and clang -E -o /dev/null file.cpp timed against the full compile splits preprocessing from the rest.
+        content: `Preprocessing. Every translation unit re-reads its entire include closure. A single file including <vector> and one company header can pull in three hundred files and half a million lines. Multiply by two thousand translation units and you are reading a billion lines per build. The lever is include-graph reduction, and the measurement is trivially available: -H on GCC and Clang prints the include tree, and clang -E -o /dev/null file.cpp timed against the full compile splits preprocessing from the rest.
 
 Frontend, meaning parsing and template instantiation. This is where modern C++ actually spends its time. The same std::vector<std::string> instantiation happens independently in every translation unit that mentions it, and the linker throws away the duplicates at the end. Heavy metaprogramming, Eigen expression templates, and Boost.Spirit push this to the majority of build time. The lever is measurement via -ftime-trace (Clang 9 and later) or -ftime-report (GCC), then either reducing instantiations or accepting them and caching.
 
@@ -4288,7 +4276,7 @@ sccache covers the same ground for C, C++, Rust, CUDA, and HIP, and adds first-c
 Distribution. distcc ships preprocessed source to remote workers and is only correct when every worker has an identical compiler; icecream (icecc) improves on it with a scheduler and toolchain shipping. sccache offers icecream-style distributed compilation with toolchain packaging, authentication, and sandboxing. All of these distribute compilation only. Bazel and Buck2 remote execution is a different mechanism: it distributes any action in a hermetically declared graph and caches by action digest, which is stronger but requires that the build be hermetic in the first place — covered in the Bazel and Monorepo Build Systems topics.
 
 Link. mold is the current answer on Linux. Benchmarks on a 16-core machine linking debuginfo-enabled binaries: Clang 19 takes 42.07 seconds with GNU ld, 33.13 with gold, 5.20 with lld, and 1.35 with mold. Enable it with -fuse-ld=mold on Clang and GCC 12.1 or later, -B/usr/libexec/mold on older GCC, or wrap an existing build with mold -run make. lld is the portable fallback and works on macOS and Windows too.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Where does a large C++ build actually spend its time?', a: 'Usually template instantiation and header parsing in the compiler frontend, not codegen. Every translation unit re-parses its whole include closure and re-instantiates the same templates, then the linker discards the duplicates. Measure it with -ftime-trace plus ClangBuildAnalyzer, or -ftime-report on GCC, before touching anything.' },
@@ -4549,13 +4537,12 @@ Debug info is the dominant term in link memory. -gsplit-dwarf (with a linker tha
     color: '#ea580c',
     questions: 5,
     description: 'Getting an actionable backtrace out of a crash you did not witness — gdb on optimized builds, core dump capture in containers and CI, separate debug info, build-ids, and debuginfod.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'From crash to backtrace — the core dump and symbol pipeline',
         image: '/diagrams/devops/nb-15-gdb-coredumps.png',
-        description: `A crash in production gives you a process that no longer exists. Turning that into a stack trace with function names, file names, and line numbers requires three things to line up: a core file that was actually written, the exact binary that produced it, and debug information matching that binary. Each of those fails independently, and each has a specific fix.
-
-Getting a core written at all. Two gates must both pass. RLIMIT_CORE, set with ulimit -c unlimited, must be non-zero — although this is ignored when the kernel is piping the dump to a program. And /proc/sys/kernel/core_pattern must name a writable destination. The pattern supports format specifiers: %p for PID in the crashing process namespace, %P for PID in the initial namespace, %e for the executable comm value (truncated to 15 characters), %E for the full executable pathname, %t for timestamp, %h for hostname, %s for the signal number, %u and %g for real UID and GID, %i and %I for thread ID. If core_pattern begins with a pipe character, the rest is a program that receives the dump on stdin, which must be given as an absolute path and runs as root in the initial namespace — this is the mechanism systemd-coredump and apport use.
+        content: `Getting a core written at all. Two gates must both pass. RLIMIT_CORE, set with ulimit -c unlimited, must be non-zero — although this is ignored when the kernel is piping the dump to a program. And /proc/sys/kernel/core_pattern must name a writable destination. The pattern supports format specifiers: %p for PID in the crashing process namespace, %P for PID in the initial namespace, %e for the executable comm value (truncated to 15 characters), %E for the full executable pathname, %t for timestamp, %h for hostname, %s for the signal number, %u and %g for real UID and GID, %i and %I for thread ID. If core_pattern begins with a pipe character, the rest is a program that receives the dump on stdin, which must be given as an absolute path and runs as root in the initial namespace — this is the mechanism systemd-coredump and apport use.
 
 The kernel refuses to write a core in a long list of situations worth knowing: no write permission in the target directory, the directory does not exist, the filesystem is full or read-only, the binary is not readable, the process is setuid or setgid or has capabilities, RLIMIT_CORE or RLIMIT_FSIZE is zero, or core_pattern is empty with core_uses_pid at 0.
 
@@ -4582,7 +4569,7 @@ debuginfod removes the manual step entirely. It is an HTTP server distributing E
 Optimized builds. At -O2 a variable may be in a register, in different registers at different points, or eliminated entirely, and gdb prints <optimized out>. Inlined frames collapse. -Og exists for this: GCC documents it as "the optimization level of choice for the standard edit-compile-debug cycle," enabling variable tracking while disabling the passes that most damage debuggability. -g is orthogonal to -O and should be on for release builds too — you strip the result into a separate file rather than compiling without debug info.
 
 On Windows the shapes differ but the problem is identical: MiniDumpWriteDump produces a minidump, which is a subset of a full crash dump chosen for size, and reading it requires both the binaries and the matching PDB files. Symbols are matched by a GUID and age stamp rather than a build-id, and a symbol server plus _NT_SYMBOL_PATH plays the role debuginfod plays on Linux.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does gdb print <optimized out> and what do you do about it?', a: 'At -O2 the variable may live in a register that has been reused, may exist only at some program points, or may have been eliminated because its value is derivable. The compiler emits honest DWARF saying so. Options: rebuild the specific translation unit at -Og, which GCC documents as the level of choice for the edit-compile-debug cycle; read the value out of registers using the disassembly; or reconstruct it from other live state. Do not compile production at -O0 to make debugging easier — you change the timing and often the bug.' },
@@ -4869,11 +4856,12 @@ The framing to state: a crash in CI is the cheapest reproduction you will ever g
     color: '#ea580c',
     questions: 5,
     description: 'AddressSanitizer, UBSan, ThreadSanitizer and MemorySanitizer — what each instruments, what it costs, and where each belongs in a CI pipeline. Includes Valgrind memcheck as the no-rebuild fallback and how to read a sanitizer report.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Shadow memory, redzones, and the sanitizer cost matrix',
         image: '/diagrams/devops/nb-16-sanitizers.png',
-        description: `A sanitizer is a compiler instrumentation pass plus a runtime library. The compiler rewrites every memory access in your translation unit to consult a side table before it happens; the runtime library owns that side table, intercepts the allocator, and prints the report. Nothing about this is a debugger attaching after the fact — the checking is compiled into the binary, which is why you rebuild to change sanitizers and why an uninstrumented third-party .a is a hole in your coverage.
+        content: `A sanitizer is a compiler instrumentation pass plus a runtime library. The compiler rewrites every memory access in your translation unit to consult a side table before it happens; the runtime library owns that side table, intercepts the allocator, and prints the report. Nothing about this is a debugger attaching after the fact — the checking is compiled into the binary, which is why you rebuild to change sanitizers and why an uninstrumented third-party .a is a hole in your coverage.
 
 How AddressSanitizer works:
 
@@ -4892,7 +4880,7 @@ ThreadSanitizer detects data races using vector clocks and a shadow word per mem
 MemorySanitizer finds reads of uninitialized memory. It is the strictest and the hardest to deploy, because it needs every line of code instrumented including the C++ standard library — in practice you build libc++ with MSan. Cost is roughly 3x, and -fsanitize-memory-track-origins=2 adds another 1.5x to 2x on top while telling you where the uninitialized value was born, which is the difference between an actionable report and a mystery.
 
 Valgrind memcheck is the alternative that needs no rebuild at all. It runs the binary under dynamic binary translation, so it works on a stripped vendor library or a production binary you cannot recompile, and it finds uninitialized value use without an instrumented libc. The price is 10x to 30x slowdown, another 2x on top with --track-origins=yes, and a structural blind spot: memcheck sees only heap allocations, so stack buffer overflows and global overflows that ASan catches trivially are invisible to it.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why can you not run ASan and TSan in the same binary?', a: 'Both need to own the whole address space layout and both install allocator and libc interceptors. Their shadow mappings collide, so clang rejects -fsanitize=address,thread outright as an invalid combination. The practical answer is that they are separate build configurations and separate CI jobs — you never get one binary that is both.' },
@@ -5161,13 +5149,12 @@ Logic bugs. The obvious one people forget to say: ASan verifies memory safety, n
     color: '#ea580c',
     questions: 5,
     description: 'GoogleTest and GoogleMock, Catch2 and doctest, CTest as the runner, and coverage with gcov/lcov and llvm-cov. Covers test tiering, flake hunting, and coverage gates that are not trivially gamed.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'From TEST macro to CTest to a coverage report',
         image: '/diagrams/devops/nb-17-cpp-testing.png',
-        description: `A C++ test pipeline has three layers that are frequently conflated: the framework that defines assertions and fixtures, the runner that schedules and reports, and the coverage instrumentation that measures what was executed. They are independent choices, and most dysfunction in a C++ test suite comes from treating them as one thing.
-
-Layer one, the framework:
+        content: `Layer one, the framework:
 
 GoogleTest is the default choice in most large C++ codebases. TEST(Suite, Name) defines a standalone test. TEST_F(Fixture, Name) attaches to a fixture class derived from testing::Test, and the framework constructs a fresh fixture instance for every test, calls SetUp(), runs the body, calls TearDown(), and destroys it — per test, not per suite, which is the isolation guarantee people rely on without knowing they rely on it. Assertions come in pairs: ASSERT_ aborts the current function on failure, EXPECT_ records the failure and continues. Prefer EXPECT_ so one run reports every problem; use ASSERT_ when continuing would dereference null or read past the end.
 
@@ -5188,7 +5175,7 @@ The invocation flags that matter day to day: ctest -j for parallelism, --output-
 Layer three, coverage:
 
 Two toolchains. The GCC lineage: compile and link with --coverage, which emits a .gcno next to each object at compile time and writes a .gcda at process exit; gcov turns those into per-line counts, lcov aggregates into a .info file and genhtml renders it, with branch data behind --rc branch_coverage=1. The LLVM lineage: -fprofile-instr-generate -fcoverage-mapping, LLVM_PROFILE_FILE controlling raw profile paths with patterns like %p for pid and %Nm for a merge pool, llvm-profdata merge -sparse to index, then llvm-cov show, report or export. llvm-cov reports six metrics of increasing granularity — function, instantiation, line, region, branch, MC/DC — and -fcoverage-mcdc enables the last.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why gtest_discover_tests instead of a single add_test for the whole binary?', a: 'Granularity. One add_test means CTest sees one pass/fail for hundreds of tests, cannot parallelize inside it, cannot apply a per-test timeout, and a crash loses every result in that binary. gtest_discover_tests enumerates the binary\'s tests and registers each one, so you get per-test scheduling, timeouts, labels and reporting. The tradeoff is that discovery has to execute the test binary, which needs care when cross-compiling.' },
@@ -5475,13 +5462,12 @@ The one-sentence version: gate on diff coverage with branches enabled, verify th
     color: '#ea580c',
     questions: 5,
     description: 'Compiler warnings, clang-tidy, the clang static analyzer, cppcheck and the commercial tools — what each finds, how to roll analysis onto a legacy codebase without blocking everyone, and how SARIF and diff-scoped runs make it survivable.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The analysis ladder: warnings, clang-tidy, path-sensitive analysis, commercial',
         image: '/diagrams/devops/nb-18-static-analysis.png',
-        description: `Static analysis for C and C++ is a ladder, not a product choice. Each rung costs more time and finds a different class of defect, and a mature pipeline runs several rungs at different cadences.
-
-Rung one: compiler warnings. The cheapest analysis you will ever get, because the compiler already built the AST. The trap is believing -Wall -Wextra means all warnings. It does not. -Wall enables the constructions most people consider questionable — uninitialized use, unused variables, format string mismatches at level 1, missing braces, return type problems. -Wextra adds sign comparison, maybe-uninitialized, missing field initializers, unused parameters, type limits, implicit fallthrough. Neither enables -Wshadow, -Wconversion, -Wsign-conversion, -Wdouble-promotion, -Wformat=2, or the C++-specific -Wold-style-cast, -Wnon-virtual-dtor and -Wuseless-cast. -Wnull-dereference only works with optimization on, because it depends on the optimizer's path information.
+        content: `Rung one: compiler warnings. The cheapest analysis you will ever get, because the compiler already built the AST. The trap is believing -Wall -Wextra means all warnings. It does not. -Wall enables the constructions most people consider questionable — uninitialized use, unused variables, format string mismatches at level 1, missing braces, return type problems. -Wextra adds sign comparison, maybe-uninitialized, missing field initializers, unused parameters, type limits, implicit fallthrough. Neither enables -Wshadow, -Wconversion, -Wsign-conversion, -Wdouble-promotion, -Wformat=2, or the C++-specific -Wold-style-cast, -Wnon-virtual-dtor and -Wuseless-cast. -Wnull-dereference only works with optimization on, because it depends on the optimizer's path information.
 
 The ones people wrongly disable are predictable. -Wconversion and -Wsign-conversion are noisy on legacy code and are turned off in bulk, which removes an entire class of narrowing and signedness bugs. -Wmaybe-uninitialized has genuine false positives that vary by GCC version and optimization level, and gets disabled globally instead of suppressed locally. -Wshadow trips on constructor parameters that intentionally match member names and gets removed rather than addressed with a naming convention. -Wnon-virtual-dtor is the one that costs the most when ignored.
 
@@ -5496,7 +5482,7 @@ cppcheck sits alongside, valuable because it is independent: a different engine 
 Rung four: commercial. Coverity, PVS-Studio, Klocwork, Helix QAC. What you are buying is whole-program interprocedural analysis across translation unit boundaries, certified rule packs with traceability for MISRA, AUTOSAR, CERT and functional safety audits, and a triage database that remembers every previous decision so a finding dismissed last year does not reappear. What you pay is licence cost, multi-hour full scans that cannot run per-PR, and their own false positives.
 
 The two cross-cutting mechanisms that make any of this survivable in a large repo are diff scoping — analyze only what changed — and SARIF, the 2.1.0 interchange format that lets every tool feed one code-scanning surface that deduplicates results by partialFingerprints and annotates only the lines in the pull request.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does clang-tidy need compile_commands.json?', a: 'Because it is a real compiler front end, not a text linter. It has to parse the translation unit exactly as the build did — include paths, defines, standard version, target — and it gets those from the compilation database. Generate it with -DCMAKE_EXPORT_COMPILE_COMMANDS=ON and pass -p build. Without it clang-tidy guesses, fails to find headers, and reports parse errors that look like findings and destroy trust in the tool.' },
@@ -5756,11 +5742,12 @@ The framing I would close on: these tools sit on a curve of depth against speed.
     color: '#ea580c',
     questions: 5,
     description: 'Python as the language you write build tooling in, not web apps. Replacing untestable YAML and shell with a packaged, unit-tested CLI that every build agent runs at a pinned version.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'From YAML sprawl to a packaged, tested build CLI',
         image: '/diagrams/devops/nb-19-python-build-automation.png',
-        description: `Most build systems decay the same way. A pipeline starts as thirty lines of YAML. Someone needs a conditional, so a shell one-liner appears. Someone needs to parse a version out of a file, so an awk pipeline appears. Two years later the pipeline is 1,400 lines of YAML containing 300 lines of embedded bash, none of which can be run locally, none of which has a test, and all of which fails only in CI, ten minutes into a build.
+        content: `Most build systems decay the same way. A pipeline starts as thirty lines of YAML. Someone needs a conditional, so a shell one-liner appears. Someone needs to parse a version out of a file, so an awk pipeline appears. Two years later the pipeline is 1,400 lines of YAML containing 300 lines of embedded bash, none of which can be run locally, none of which has a test, and all of which fails only in CI, ten minutes into a build.
 
 The core argument for Python is short: YAML has no unit tests. Shell has no unit tests that anyone actually writes. Python does. When release logic lives in a Python package you can run it on a laptop, run it under pytest, type-check it with mypy, and pin the exact version every agent uses. The YAML shrinks back to what it is good at — declaring triggers, agents, and one command per step.
 
@@ -5789,7 +5776,7 @@ Output is the third. print writes to stdout with buffering that CI log collector
 Packaging is what makes the tooling reproducible. A pyproject.toml with a [project] table and a [project.scripts] entry point turns the package into a real command on PATH. A lockfile — uv.lock, or a fully hashed requirements file installed with --require-hashes — means agent A and agent B run byte-identical tooling. Without that pin the build tool is itself an unversioned dependency of your build, and "it worked yesterday" becomes an unanswerable question.
 
 Testing closes the loop. pytest with tmp_path gives each test a clean directory; monkeypatch.setenv and monkeypatch.chdir isolate environment assumptions and undo them at teardown; unittest.mock.patch on your run() wrapper lets you assert the exact argument vector a command would have received without executing anything. That is the test that catches a quoting regression before it ships.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why move build logic out of YAML into Python?', a: 'Because YAML has no unit tests, no local execution path, and no type checking, so every change is validated only by running the pipeline. Python build tooling runs on a laptop, is tested with pytest, checked with mypy, and pinned by version so every agent runs the same code. The YAML shrinks to triggers and one command per step, which is what declarative config is actually good at.' },
@@ -6178,13 +6165,12 @@ Cache and skip interaction. Skipping unchanged targets means their artifacts mus
     color: '#ea580c',
     questions: 6,
     description: 'The two languages mature build systems actually run on. Reading and maintaining legacy Perl without rewriting it, and writing PowerShell that fails loudly instead of silently on Windows agents.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Legacy Perl on Unix agents, PowerShell on Windows agents',
         image: '/diagrams/devops/nb-20-perl-powershell.png',
-        description: `These two languages sit at opposite ends of a build organisation. Perl is what the build system was written in fifteen years ago and still runs on. PowerShell is what drives every Windows agent in it. Neither is fashionable, both are load-bearing, and a job description that names both is describing a real build system rather than a greenfield one.
-
-Perl earned its place for three reasons that have not gone away. Its regular expression engine is still the reference implementation everyone else copied. Text munging — parsing compiler output, rewriting manifests, extracting versions — is the language's native register. And it is present on every Unix system by default, which mattered enormously when installing a language runtime on a build machine required a ticket.
+        content: `Perl earned its place for three reasons that have not gone away. Its regular expression engine is still the reference implementation everyone else copied. Text munging — parsing compiler output, rewriting manifests, extracting versions — is the language's native register. And it is present on every Unix system by default, which mattered enormously when installing a language runtime on a build machine required a ticket.
 
 The constructs you will actually meet when you open a 4,000-line legacy build script are a small set. Lexical variables with my, package globals with our, dynamic scoping with local. References, and the two ways to dereference them: the arrow form and the older circumfix form, which you will find mixed in the same file. Hashes of arrays, which is how Perl code represents targets and their flags. Regular expressions with captures feeding directly into a list assignment. Here-documents, where the quoting of the terminator decides interpolation — a double-quoted terminator interpolates, a single-quoted one does not, which is why a here-document emitting a Makefile is almost always the single-quoted form. Then @ARGV for arguments, Getopt::Long for real option parsing, and File::Find for directory walks.
 
@@ -6197,7 +6183,7 @@ The trap that produces most broken Windows CI is error handling. The ErrorAction
 Native executables are a second, separate trap. msbuild, git, and signtool are not cmdlets — they do not raise PowerShell errors at all. They set the last-exit-code variable. PowerShell 7.4 added a preference variable that makes a non-zero native exit code issue an error according to ErrorActionPreference, but its documented default is false. Until you opt in, every native tool invocation needs an explicit exit code check.
 
 The diagram maps this onto an agent fleet: Perl scripts still driving the Unix side of the build, PowerShell driving MSBuild, the Visual Studio developer shell, and signtool on the Windows side, with one orchestration layer calling into both.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why is Perl still in mature build systems?', a: 'Three reasons that predate every alternative. Its regular expression engine is the reference everyone else copied, so text munging — parsing compiler output, rewriting manifests, extracting versions — is native. It ships on essentially every Unix system, which mattered when installing a runtime on a build machine required a ticket. And the code works, so nobody has funded a rewrite. You inherit it, you do not choose it.' },
@@ -6628,13 +6614,12 @@ The genuine signing conversation is a different one: AllSigned combined with sig
     color: '#ea580c',
     questions: 5,
     description: 'Atlassian container-per-step CI: bitbucket-pipelines.yml structure, caches versus artifacts, the shared per-step memory ceiling people hit, self-hosted runners, deployments, OIDC, and an honest comparison to GitHub Actions and GitLab CI.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The container-per-step execution model and where its limits bite',
         image: '/diagrams/devops/nb-21-bitbucket-pipelines.png',
-        description: `Bitbucket Pipelines has one structural idea: every step runs in its own fresh Docker container, and nothing survives between steps except what you explicitly declare. Understand that and most of the surprising behaviour becomes predictable.
-
-The file lives at the repository root as bitbucket-pipelines.yml. At the top level you have image (the default container for every step), clone (depth and LFS behaviour), options (global settings such as max-time), definitions (reusable caches, services, and step anchors), and pipelines, which holds the actual triggers:
+        content: `The file lives at the repository root as bitbucket-pipelines.yml. At the top level you have image (the default container for every step), clone (depth and LFS behaviour), options (global settings such as max-time), definitions (reusable caches, services, and step anchors), and pipelines, which holds the actual triggers:
 
 \`\`\`yaml
 image: python:3.12-slim
@@ -6706,7 +6691,7 @@ Time limits round it out. The default maximum time for a pipeline step is 120 mi
 Runners are the escape hatch. When your toolchain cannot live in a cloud image — a licensed compiler, a macOS notarisation step, a Windows SDK — you register a self-hosted runner and target it with runs-on labels. A step runs on the next available runner that has all the listed labels; if none online matches every label, the step fails. Notably, you are not charged build minutes for work run on your own self-hosted runners.
 
 Deployments add the environment layer: a deployment property on a step marks it as targeting that environment, unlocks deployment-scoped variables, and populates the Deployments view with what is currently where. Combined with a manual trigger, that is the approval gate for production.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between a cache and an artifact?', a: 'Artifacts pass files between steps within one pipeline run — build in step one, consume in step two — and they are a correctness mechanism. Caches persist across pipeline runs to avoid re-downloading dependencies, and they are a speed optimisation that is explicitly best-effort. If your pipeline breaks when a cache is cold, you have used a cache where you needed an artifact.' },
@@ -7105,11 +7090,12 @@ The concluding judgement. If you are choosing greenfield with no Atlassian commi
     color: '#ea580c',
     questions: 5,
     description: 'Signing application binaries for Windows, macOS, and Linux: Authenticode and timestamping, hardware-backed keys after the 2023 CA/Browser Forum rules, codesign and notarization, and doing all of it in CI without a private key ever touching a build agent.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Three operating systems, three trust models, one signing service',
         image: '/diagrams/devops/nb-22-native-signing.png',
-        description: `Signing a container image and signing a native binary are different problems. A container signature is a detached attestation in a registry, verified by something you deployed and configured — an admission controller, a policy engine. Nothing in the operating system cares. A native binary signature is embedded in the file, and it is checked by the operating system itself, before your code runs, on a machine you do not administer. You cannot deploy a policy to your users' laptops. If the signature is wrong the user sees a frightening dialog or nothing happens at all, and you find out from support tickets.
+        content: `Signing a container image and signing a native binary are different problems. A container signature is a detached attestation in a registry, verified by something you deployed and configured — an admission controller, a policy engine. Nothing in the operating system cares. A native binary signature is embedded in the file, and it is checked by the operating system itself, before your code runs, on a machine you do not administer. You cannot deploy a policy to your users' laptops. If the signature is wrong the user sees a frightening dialog or nothing happens at all, and you find out from support tickets.
 
 Windows. Authenticode embeds a PKCS#7 signature in the certificate table of a PE file — executables, DLLs, drivers, MSIs, catalogs, and PowerShell scripts. signtool.exe from the Windows SDK does the work:
 
@@ -7135,7 +7121,7 @@ Stapling attaches the ticket to the artifact so Gatekeeper can verify offline. W
 Linux has no comparable OS-enforced model. Nothing checks the signature on an arbitrary ELF binary before executing it. Trust lives at the package layer: GPG-signed RPMs and DEBs, signed repository metadata, and clients configured to check signatures. IMA and EVM exist for kernel-enforced file integrity but are rare outside high-assurance deployments. The practical consequence is that on Linux your distribution channel is your trust boundary.
 
 The CI problem is common to all three. A signing key a build agent can read is a signing key any code running on that agent can use, including a compromised dependency. The pattern that holds up is a dedicated signing service: build agents produce unsigned artifacts and request a signature; the service holds keys in an HSM or KMS, authenticates the caller with short-lived federated credentials rather than a stored secret, applies policy about what may be signed, and writes an audit entry for every operation.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does signing a native binary differ from signing a container image?', a: 'A container signature is detached, stored in a registry, and verified by infrastructure you control — an admission controller you configured. A native signature is embedded in the file and verified by the operating system on a machine you do not administer, before your code runs. You cannot push policy to your users, so getting it wrong is a support incident rather than a deployment failure.' },

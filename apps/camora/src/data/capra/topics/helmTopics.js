@@ -16,13 +16,12 @@ export const helmTopics = [
     color: '#7c3aed',
     questions: 4,
     description: 'The kubectl-sprawl problem and the package management gap Helm fills. Positions Helm against raw manifests, Kustomize, and Terraform.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The manifest sprawl problem and what Helm solves',
         image: '/diagrams/devops/helm-1-why.png',
-        description: `Deploying a production-grade app to Kubernetes without tooling means maintaining dozens of YAML files: Deployment, Service, ConfigMap, Secret, HorizontalPodAutoscaler, PodDisruptionBudget, ServiceAccount, NetworkPolicy, Ingress. For three environments (dev/staging/prod) that is 150+ files with subtle per-environment differences.
-
-The kubectl-sprawl problem:
+        content: `The kubectl-sprawl problem:
   kubectl apply -f deployment.yaml
   kubectl apply -f service.yaml
   kubectl apply -f configmap-dev.yaml   # where is prod version?
@@ -49,7 +48,7 @@ Helm's position in the ecosystem:
   Helm vs Kustomize: Kustomize patches plain YAML (no templates, no packaging, no release tracking). Helm templates and packages. Production consensus: Helm for third-party software you consume; Kustomize for your own app overlays; hybrid when needed.
   Helm vs Terraform: Terraform owns infrastructure (VPCs, node groups, databases). Helm owns application workloads on Kubernetes. They compose: Terraform provisions the cluster, Helm deploys the apps.
   Helm vs Argo CD: Argo CD is a GitOps controller that can render Helm charts and apply them. They are complementary.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What problem does Helm solve that kubectl alone cannot?', a: 'Three problems. First, packaging — kubectl has no concept of a versioned artifact; Helm bundles all manifests into a chart archive. Second, parameterization — Helm templates let one chart render different YAML for dev/staging/prod via values files; kubectl requires maintaining separate manifest copies. Third, release lifecycle — helm install, upgrade, rollback, history, and uninstall form a coherent release model; kubectl apply is stateless and forward-only.' },
@@ -207,17 +206,12 @@ For platform engineers, the expected answer is pull-based GitOps with Argo CD or
     color: '#7c3aed',
     questions: 5,
     description: 'Getting Helm installed and mastering the core lifecycle commands: install, upgrade, rollback, uninstall, list, history, status, and template.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm CLI lifecycle commands and release state machine',
         image: '/diagrams/devops/helm-2-cli.png',
-        description: `Installation:
-  macOS:   brew install helm
-  Linux:   curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-  Windows: choco install kubernetes-helm  OR  winget install Helm.Helm
-  From source: go install helm.sh/helm/v4/cmd/helm@latest
-
-Verify: helm version
+        content: `Verify: helm version
 
 Core release lifecycle commands:
 
@@ -272,7 +266,7 @@ Release state machine:
   deployed -> pending-upgrade -> deployed or failed
   deployed -> uninstalled (helm uninstall)
   failed -> pending-rollback -> deployed or failed`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between helm install and helm upgrade --install?', a: 'helm install fails if the release already exists. helm upgrade --install is idempotent — it creates the release if absent or upgrades it if present. This is the standard CI/CD pattern: one command handles both first deploy and subsequent deploys.' },
@@ -471,13 +465,12 @@ For platform engineers: never give a Helm service account cluster-wide Secret ac
     color: '#7c3aed',
     questions: 5,
     description: 'Every file in a Helm chart and what it does. Chart.yaml metadata, values.yaml defaults, templates/, _helpers.tpl named templates, NOTES.txt, CRDs, and chart types.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm chart directory structure and file roles',
         image: '/diagrams/devops/helm-3-anatomy.png',
-        description: `helm create myapp generates this standard layout:
-
-  myapp/
+        content: `myapp/
   ├── Chart.yaml             # required: chart metadata
   ├── values.yaml            # required: default configuration values
   ├── values.schema.json     # optional: JSON Schema validation for values
@@ -528,7 +521,7 @@ crds/ directory rules:
   CRDs are NEVER deleted on helm uninstall (Kubernetes-wide protection).
   CRDs are NEVER reinstalled or upgraded automatically — manage them manually.
   If you need templated CRDs, install them via a separate chart or a pre-install hook.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between chart version and appVersion?', a: 'Chart version (the version field) is the version of the chart itself — the templates, values, and helpers. It must follow SemVer and must be bumped whenever the chart changes. appVersion is the version of the application the chart deploys — informational only, not used by Helm for logic. A chart at version 3.1.0 might deploy application version 2.4.1.' },
@@ -735,13 +728,12 @@ The generated chart is a learning scaffold, not a production-ready deployment. T
     color: '#7c3aed',
     questions: 6,
     description: 'The Go template engine that powers Helm charts: pipelines, built-in objects, control structures (if/with/range), named templates, tpl function, and whitespace control.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm Go template syntax reference',
         image: '/diagrams/devops/helm-4-templating.png',
-        description: `Built-in objects available in every template:
-
-  .Release.Name          # release name (from helm install <name>)
+        content: `.Release.Name          # release name (from helm install <name>)
   .Release.Namespace     # target namespace
   .Release.Service       # "Helm"
   .Release.Revision      # revision number (1 on first install)
@@ -819,7 +811,7 @@ Key Sprig functions:
   Encoding:  b64enc, b64dec, toYaml, fromYaml, toJson
   Math:      add, sub, mul, div, mod, max, min
   Logic:     and, or, not, eq, ne, lt, gt, le, ge`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between {{ include }} and {{ template }}?', a: '{{ template "name" . }} outputs directly and returns no value. {{ include "name" . }} returns a string that can be piped to functions like nindent and trim. Always use include in modern charts because nindent is almost always needed for correct YAML indentation.' },
@@ -1152,17 +1144,12 @@ Tuple for small lists:
     color: '#7c3aed',
     questions: 5,
     description: 'Layering values files and --set overrides, managing per-environment configuration cleanly, and validating inputs with values.schema.json.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Values layering, precedence, and schema validation',
         image: '/diagrams/devops/helm-5-values.png',
-        description: `Values precedence (lowest to highest):
-  1. values.yaml in the chart (chart defaults)
-  2. Parent chart values for sub-chart (when used as a dependency)
-  3. -f / --values files, applied left to right (last file wins per key)
-  4. --set, --set-string, --set-json, --set-file flags
-
-Example: layered values for three environments:
+        content: `Example: layered values for three environments:
   values.yaml          # chart defaults — safe for any environment
   values-dev.yaml      # dev overrides only what differs
   values-staging.yaml  # staging overrides
@@ -1204,7 +1191,7 @@ values.schema.json — JSON Schema validation:
     enum: [ClusterIP, NodePort, LoadBalancer]:   validates service type
     minimum / maximum:         numeric range for replica count or timeout
     pattern: "^[a-z][-a-z0-9]*$":  validates Kubernetes-safe names`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the highest precedence values source in Helm?', a: '--set (and --set-string, --set-json, --set-file) CLI flags have the highest precedence. They override everything — values.yaml and all -f files. In CI, --set image.tag=$CI_COMMIT_SHA is the standard pattern for injecting the build tag at deploy time.' },
@@ -1469,13 +1456,12 @@ For more than 2-3 overrides: use a values file instead of chaining --set flags. 
     color: '#7c3aed',
     questions: 4,
     description: 'Declaring and managing sub-chart dependencies in Chart.yaml, running helm dependency update, aliasing sub-charts, and conditionally enabling them.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm chart dependency model and sub-chart values',
         image: '/diagrams/devops/helm-6-dependencies.png',
-        description: `Declaring dependencies in Chart.yaml (apiVersion: v2 required):
-
-  dependencies:
+        content: `dependencies:
     - name: postgresql
       version: "13.2.0"
       repository: "oci://registry-1.docker.io/bitnamicharts"
@@ -1547,7 +1533,7 @@ Kubernetes object install order:
   All Kubernetes objects from parent + all sub-charts are aggregated, sorted by
   kind (Namespace -> RBAC -> CRD -> ConfigMap -> Secret -> Service -> Deployment),
   then applied in that order.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What does helm dependency update do?', a: 'Downloads all dependencies declared in Chart.yaml into the charts/ directory as .tgz files and writes Chart.lock with the exact resolved versions. Must be run before helm install ./chart when working with a chart locally. helm dependency build uses the lockfile to restore exact versions without resolving ranges.' },
@@ -1769,18 +1755,12 @@ For platform engineers: understanding the install order explains why Helm genera
     color: '#7c3aed',
     questions: 4,
     description: 'Classic HTTP chart repositories vs modern OCI registries (ECR, GHCR, ACR, GAR, Harbor). Pushing, pulling, and installing charts as OCI artifacts.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Classic chart repos vs OCI registry distribution',
         image: '/diagrams/devops/helm-7-oci.png',
-        description: `Classic chart repository (HTTP-based, legacy):
-  helm repo add stable https://charts.helm.sh/stable
-  helm repo add bitnami https://charts.bitnami.com/bitnami
-  helm repo update                          # refresh local index
-  helm search repo postgresql               # search across all added repos
-  helm install my-pg bitnami/postgresql --version 13.2.0
-
-  Repository structure: serves index.yaml (chart index) + .tgz chart archives over HTTP.
+        content: `Repository structure: serves index.yaml (chart index) + .tgz chart archives over HTTP.
   Helm caches the index.yaml locally. Classic repos require hosting infrastructure.
 
 OCI registry distribution (modern, GA in Helm 3.8):
@@ -1797,8 +1777,7 @@ OCI registry distribution (modern, GA in Helm 3.8):
 
   Authenticate:
     helm registry login ghcr.io -u $GITHUB_USER -p $GITHUB_TOKEN
-    helm registry login <account>.dkr.ecr.<region>.amazonaws.com \
-      -u AWS -p $(aws ecr get-login-password)
+    helm registry login <account>.dkr.ecr.<region>.amazonaws.com       -u AWS -p $(aws ecr get-login-password)
 
   Package:
     helm package ./mychart                   # produces mychart-1.4.2.tgz
@@ -1828,7 +1807,7 @@ OCI manifest structure for a Helm chart:
   layers:
     - application/vnd.cncf.helm.chart.content.v1.tar+gzip  (chart archive)
     - application/vnd.cncf.helm.chart.provenance.v1.prov   (signature, optional)`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What replaced classic chart repositories in modern Helm?', a: 'OCI registries. Since Helm 3.8, charts are pushed and pulled as OCI artifacts using the oci:// scheme. Any OCI-compliant registry (ECR, GHCR, ACR, GAR, Harbor, Docker Hub) can serve Helm charts. OCI support is GA and the recommended distribution method. Classic HTTP repos are still supported but require dedicated hosting (a web server serving index.yaml and .tgz files).' },
@@ -2027,13 +2006,12 @@ Note: for OCI dependencies, the repository is the registry path without the char
     color: '#7c3aed',
     questions: 5,
     description: 'Running ordered actions at specific lifecycle phases with hook annotations, controlling execution order with weights, cleaning up hooks with deletion policies, and validating deployments with helm test.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm hook lifecycle phases and annotations',
         image: '/diagrams/devops/helm-8-hooks.png',
-        description: `Helm hook lifecycle phases and their trigger points:
-
-  pre-install     after templates are rendered, before any resources are created
+        content: `pre-install     after templates are rendered, before any resources are created
   post-install    after all resources are loaded into Kubernetes
   pre-upgrade     after templates are rendered, before resources are updated
   post-upgrade    after all resources have been upgraded
@@ -2100,7 +2078,7 @@ test hook example:
         command: ['curl', '-f', 'http://{{ include "myapp.fullname" . }}:{{ .Values.service.port }}/health']
 
 Run test: helm test <release-name>`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the most common production use case for Helm hooks?', a: 'A pre-upgrade Job that runs database schema migrations before the new version of the application is deployed. This ensures the database schema is updated before the new application code starts running against it. The Job runs the migration, Helm waits for it to complete successfully, then applies the updated Deployment.' },
@@ -2377,27 +2355,18 @@ Preventive measures:
     color: '#7c3aed',
     questions: 6,
     description: 'Driving Helm through GitHub Actions and GitLab CI pipelines, integrating with Argo CD and Flux for GitOps, and using helm template for diff-based deployment workflows.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm in CI/CD pipelines and GitOps controllers',
         image: '/diagrams/devops/helm-9-cicd.png',
-        description: `Three deployment models:
-
-MODEL 1 — Push-based CI/CD (simple, non-GitOps):
+        content: `MODEL 1 — Push-based CI/CD (simple, non-GitOps):
   CI pipeline builds image -> runs tests -> helm upgrade --install
 
   GitHub Actions example:
     - name: Deploy
       run: |
-        helm upgrade --install myapp ./charts/myapp \
-          -f charts/myapp/values.yaml \
-          -f charts/myapp/values-prod.yaml \
-          --set image.tag=\${{ github.sha }} \
-          --namespace production \
-          --create-namespace \
-          --atomic \
-          --wait \
-          --timeout 5m
+        helm upgrade --install myapp ./charts/myapp           -f charts/myapp/values.yaml           -f charts/myapp/values-prod.yaml           --set image.tag=\${{ github.sha }}           --namespace production           --create-namespace           --atomic           --wait           --timeout 5m
 
   Pros: simple, no controller infrastructure
   Cons: cluster drift not detected; no continuous reconciliation
@@ -2466,7 +2435,7 @@ helm template in CI diff workflow:
   Or with helm diff plugin:
   helm plugin install https://github.com/databus23/helm-diff
   helm diff upgrade myapp ./chart -f values-prod.yaml`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the standard Helm command in a production CI deploy step?', a: 'helm upgrade --install <release> <chart> -f values.yaml -f values-${ENV}.yaml --set image.tag=$SHA --namespace $NS --create-namespace --atomic --wait --timeout 5m. The --atomic --wait combination ensures the pipeline only reports success when the deployment is fully healthy, and auto-rolls back on failure.' },
@@ -2788,13 +2757,12 @@ OIDC is the standard answer for 2026. If your cloud/cluster supports it, use it.
     color: '#7c3aed',
     questions: 6,
     description: 'Hardening charts and their distribution path: chart signing and provenance, RBAC scoping, secrets management with helm-secrets and External Secrets, and scanning charts and images.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm security layers — distribution, runtime, and secrets',
         image: '/diagrams/devops/helm-10-security.png',
-        description: `Supply chain security layers for Helm:
-
-LAYER 1 — Chart signing and provenance (GPG/PGP):
+        content: `LAYER 1 — Chart signing and provenance (GPG/PGP):
   Sign at package time:
     gpg --full-generate-key   # generate a signing key pair
     helm package ./mychart --sign --key "My Release Key" --keyring ~/.gnupg/secring.gpg
@@ -2858,7 +2826,7 @@ LAYER 4 — Image and chart scanning:
     checkov -d ./mychart --framework helm
 
   Integrate into CI: block merge/deploy if HIGH or CRITICAL CVEs found`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is a Helm provenance file and what does it prove?', a: 'A .prov file created by helm package --sign contains three things: the Chart.yaml content, a SHA256 checksum of the chart .tgz, and an OpenPGP signature over both. Together these prove: (1) the chart bytes match the checksum (integrity — not corrupted or tampered), and (2) the publisher who signed it is who they say they are (authenticity — assuming you trust their key). helm install --verify or helm pull --verify checks both.' },
@@ -3156,13 +3124,12 @@ For platform engineers: test Helm 4 in staging with SSA enabled, watch for field
     color: '#7c3aed',
     questions: 5,
     description: 'What changed in Helm 4 (November 2025): server-side apply, improved Secrets-based release storage, namespace isolation, and breaking changes for migrating from Helm 3.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helm 3 vs Helm 4 — key architectural changes',
         image: '/diagrams/devops/helm-11-migration.png',
-        description: `Helm 4 was released at KubeCon NA November 2025. Stable version 4.2.2 as of 2026.
-
-Key changes from Helm 3 to Helm 4:
+        content: `Key changes from Helm 3 to Helm 4:
 
 CHANGE 1 — Server-side apply (SSA) as the default:
   Helm 3: uses client-side apply (kubectl apply --client-side-apply logic)
@@ -3205,7 +3172,7 @@ Migration checklist from Helm 3 to Helm 4:
   [ ] Review CI commands for removed flags
   [ ] Test pre-upgrade hooks with SSA (hook Job field ownership)
   [ ] Upgrade one cluster at a time; run both Helm 3 and 4 in parallel during transition`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the biggest breaking change in Helm 4?', a: 'Server-side apply (SSA) as the default. Helm 4 uses SSA instead of client-side apply, meaning the Kubernetes API server handles field merge logic and tracks field ownership via managedFields. This creates field manager conflicts when another tool (kubectl edit, Argo CD, admission webhook) has set a field that Helm tries to own. Existing Helm 3 charts that set fields in a way that conflicts with SSA semantics need to be updated.' },
@@ -3439,16 +3406,12 @@ Interview framing: knowing that Helm 4 exists, what it changed (SSA), and what t
     color: '#7c3aed',
     questions: 6,
     description: 'Structuring Helm for real multi-service estates: Helmfile for multi-chart orchestration, umbrella charts, library charts, drift detection, and rollback strategy at scale.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Helmfile, umbrella charts, and library charts for production estates',
         image: '/diagrams/devops/helm-12-production.png',
-        description: `Pattern 1 — Helmfile (multi-release declarative orchestration):
-  Helmfile manages multiple Helm releases as a single unit.
-  Single YAML file declares all releases, their charts, versions, and values.
-  Commands: helmfile sync, helmfile apply (diff then apply), helmfile diff.
-
-  helmfile.yaml:
+        content: `helmfile.yaml:
     environments:
       production:
         values:
@@ -3534,7 +3497,7 @@ Rollback strategy:
   Multi-service: helmfile rollback (reverts all releases to last known good state)
   GitOps rollback: git revert the offending commit; controller reconciles
   Database-aware rollback: rollback application revision, then run reverse migration Job`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is Helmfile and when would you use it over plain Helm?', a: 'Helmfile is a declarative configuration tool for managing multiple Helm releases. A single helmfile.yaml declares all releases with their charts, versions, values, and ordering dependencies. helmfile sync deploys all releases, helmfile diff shows pending changes across all, and helmfile apply diffs then deploys. Use it when managing 5+ charts that are deployed together (an environment) and you want a single command to bring up or update the entire stack. Plain Helm is sufficient for individual services deployed independently.' },
