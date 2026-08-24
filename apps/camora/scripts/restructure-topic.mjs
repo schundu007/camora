@@ -119,7 +119,9 @@ const payload = JSON.parse(fs.readFileSync(payloadFile, 'utf8'));
 let src = fs.readFileSync(dataFile, 'utf8');
 
 // Locate the topic object: find its id line, then walk back to the `{` that opens it.
-const idRe = new RegExp(`\\n(\\s*)id: '${topicId.replace(/[.*+?^$()|[\]\\]/g, '\\$&')}',`);
+// Some entries quote the id with double quotes, so accept either.
+const idEsc = topicId.replace(/[.*+?^$()|[\]\\]/g, '\\$&');
+const idRe = new RegExp(`\\n(\\s*)id: ['"]${idEsc}['"],`);
 const idM = src.match(idRe);
 if (!idM) { console.error(`topic id not found: ${topicId}`); process.exit(1); }
 const idIdx = idM.index + 1;

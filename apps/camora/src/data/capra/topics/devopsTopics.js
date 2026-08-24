@@ -254,6 +254,44 @@ export const devopsTopicCategoryMap = {
 export const devopsTopics = [
   {
     id: "ci-self-hosted-runners",
+    topics: [
+      {
+        title: 'Why ephemeral, just-in-time runners are the only safe default',
+        content: `A self-hosted runner is an agent on your hardware that long-polls the forge over outbound HTTPS — no inbound ports, which is what makes it deployable inside a restricted network. It exists because hosted runners cannot reach an internal network, cannot mount shared artefact stores, have no specialist hardware, and reset every job. GPU, firmware and kernel pipelines need the opposite of every one of those properties.
+
+That inversion is also the security problem. A hosted runner is destroyed after each job; a naively deployed self-hosted runner is a **persistent machine that runs untrusted code**, and everything one job leaves behind is available to the next.
+
+The concrete cross-job risks: credentials cached by a package manager or cloud CLI; a poisoned build cache or a modified toolchain on disk; a background process left running that waits for the next job; and the container escape or root exploit that makes all of this permanent. On a public repository, a fork pull request can propose arbitrary code, and if it executes on your runner the attacker has code execution inside your network.
+
+The answer is **ephemeral, just-in-time runners**: one job per runner, then the runner and its machine are destroyed. The forge issues a short-lived registration token scoped to a single runner that deregisters automatically after one job, so there is no long-lived registration token sitting on a host and no reuse window. Combined with a fresh VM or pod per job, this restores the hosted-runner security model while keeping the network position and the hardware.
+
+The operational shape follows: a controller watches queue depth and creates a runner per queued job; the runner claims exactly one job; the instance terminates. On Kubernetes this is **actions-runner-controller**, where each job becomes a pod. The autoscaling signal must be **queue depth, not CPU** — CPU is a lagging proxy, and a queued job means a developer is already waiting.
+
+The trade-off is cold start, and it is paid on every job rather than amortised. Mitigations are the same ones a spot fleet uses: a warm pool of pre-booted, pre-imaged instances sized against arrival rate; images baked with the toolchain already present rather than installed per job; and a persistent, external cache — mounted read-only where possible — so that discarding the machine does not mean rebuilding the world. A cache that is writable by the job is a cross-job channel again, which is why read-only mounts and content-addressed caches matter here.`,
+      },
+      {
+        title: 'Isolating privileged work, and routing a heterogeneous fleet',
+        content: `**Signing and other privileged operations must never share a runner with untrusted code.** If a build step can execute arbitrary code on the machine that holds a signing key or can reach an HSM, then the key is effectively public — no amount of scanning changes that, because the attacker runs after the scan.
+
+The isolation pattern is a **separate, dedicated fleet** that untrusted code cannot reach, plus a strict handoff:
+
+- A **runner group** containing only the signing hosts, with access restricted to specific repositories and specific protected branches, so no fork or feature branch can target it.
+- The build job runs on the general fleet and produces an **unsigned artefact plus its digest**. It never touches key material.
+- A separate signing job, triggered only from a protected branch or a release event, pulls the artefact **by digest**, verifies it against the expected provenance, signs it, and publishes. It runs no code from the repository — its steps are pinned by SHA and it treats the artefact as opaque data.
+- Approval gates on that job (a protected environment with required reviewers) so a human authorises the transition from untrusted to trusted.
+- The key itself in an HSM or KMS that signs on request rather than releasing material, so even a compromise of the signing host yields signing during the compromise window rather than a stolen key.
+
+The general principle is that **the trust boundary is where untrusted code stops executing**, and every credential should sit on the far side of it.
+
+**Routing a heterogeneous fleet.** Once the fleet contains GPU boxes, big-memory builders and ordinary compute, jobs must land on hardware that can run them and must not squat on hardware they do not need — a lint job holding a GPU node is both slow and expensive.
+
+Use labels as capability declarations rather than machine names: label by what the host provides (gpu, rocm, large-memory, hsm, arch), and have jobs request capabilities. Naming a host in a workflow couples the pipeline to inventory and breaks the moment the machine is replaced. Keep the label vocabulary small and documented, because an unmanaged label set drifts into synonyms and jobs silently stop matching anything — which presents as a job queued forever with no error.
+
+Sizing follows measurement: watch queue depth **per label**, not in aggregate. An aggregate queue looks healthy while the four GPU jobs wait behind each other. Scale each pool on its own queue, and cap each so a runaway workflow cannot consume the entire budget.
+
+**When a runner shows online but never picks up a job**, the cause is almost always one of four things, in order of frequency: label mismatch between the job's request and the runner's labels; the runner being in a group the repository is not permitted to use; the job waiting on an environment approval rather than on a runner at all; or the runner being busy with a job the UI is not showing. Check the job's queued reason first, then compare requested labels against the runner's declared set — that pair resolves the overwhelming majority of cases without touching the host.`,
+      },
+    ],
     title: "Self-Hosted CI Runners at Scale",
     icon: "server",
     color: "#22c55e",
@@ -33880,6 +33918,51 @@ Hooks are the extensibility layer that DevOps teams use to enforce quality gates
 
   {
     id: 'ace-cicd-tbd-cd-adoption',
+    topics: [
+      {
+        title: 'Sequence the safety net before you shorten the branch',
+        content: `The reason trunk-based adoption fails is almost always ordering. A team is told to stop using long-lived branches, does so, and starts breaking main — because the branches were not the problem, they were the **compensating control** for a pipeline nobody trusted. Remove a compensating control before fixing what it compensates for and the underlying weakness becomes visible immediately, usually in production.
+
+The correct order is safety, then batch size, then release control. Concretely:
+
+**Stage 1 — make the build trustworthy.** A test suite that is slow, flaky or incomplete cannot gate anything. The targets are a pipeline fast enough that a developer waits for it rather than context-switching (single-digit minutes for the pre-merge gate) and a flake rate low enough that a red build is believed. **Flakiness is the binding constraint, not coverage:** a suite that fails 5% of the time for unrelated reasons trains everyone to re-run and merge, at which point the gate has been removed while appearing to exist. Quarantine flaky tests into a non-blocking suite with a named owner and a deadline, and track the quarantine list as debt.
+
+**Stage 2 — decouple deploy from release.** Feature flags are what let unfinished work merge safely, and without them "short branches" just means shipping half-built features. This stage also covers expand-and-contract for anything with a contract — schema, API, config — since a change that cannot be deployed independently of its consumers forces coordination, and coordination forces batching.
+
+**Stage 3 — shorten branch lifetime.** Now the mechanical change: branches measured in hours, pull requests small enough to review properly, merge daily at minimum. This is the step everyone starts with, and it is the step that only works once the first two are in place.
+
+**Stage 4 — automate the release.** Progressive delivery — canary or blue-green with automated rollback triggered by SLO burn — plus a merge queue if the contributor count justifies it. This is where continuous deployment becomes safe rather than brave.
+
+**Stage 5 — remove the manual gate.** The change-advisory board is replaced by policy-as-code checks that execute in seconds. Governance is preserved; the batching it imposed is not.
+
+The organisational changes that matter as much as the technical ones: shared on-call so the team that merges owns the consequences, a review SLA (a stated commitment, because trunk-based development makes review latency the binding constraint), and explicit leadership acceptance that the change-failure rate is a system property to be engineered rather than an individual's fault. Without the last one, the first broken main produces a new approval step and the whole programme reverses.`,
+      },
+      {
+        title: 'Feature flag debt, and migrations that survive continuous deployment',
+        content: `**Flag debt** is the predictable cost of stage 2 and it compounds quietly. Every flag is a branch in the runtime, so N live flags mean up to 2^N reachable configurations, only a handful of which anyone has tested. Left alone, flags outlive their features, nobody remembers which combinations are valid, and eventually a stale flag causes an incident that is very hard to reason about.
+
+Treat a flag as having a type and a lifetime:
+
+- **Release flags** are temporary by definition and should die within weeks of full rollout. Give every one an owner and an expiry date at creation, fail CI or raise a ticket when one passes its expiry, and make removal part of the feature's definition of done rather than a cleanup sprint.
+- **Operational kill switches** are permanent and legitimate — a circuit breaker for an expensive dependency — but they should be few, named, and tested, because an untested kill switch is not a control.
+- **Experiment flags** belong to an experimentation platform with a defined end date, not to the codebase indefinitely.
+- **Permission flags** are entitlements and should live in the authorisation system, not the flag system.
+
+The measurable discipline: track flag count and flag age as a metric, alert on the oldest, and cap the number of concurrently live release flags. A team that cannot say how many flags it has does not have a flag strategy.
+
+**Database migrations** are the other hard constraint, because a schema change cannot be rolled back the way code can. Under continuous deployment the old and new application versions run simultaneously during any rollout, so **every migration must be compatible with the version on either side of it.** That rules out the single-step rename or drop.
+
+The pattern is expand and contract, executed across separate deploys:
+
+1. **Expand** — add the new column, nullable, with no constraint. Deploy. Nothing reads it.
+2. **Backfill** — populate in batches, throttled, resumable, off the hot path. On a large table this is a background job, not a migration step, and it must be safe to stop and restart.
+3. **Dual-write** — the application writes both old and new. Deploy. Now both are current.
+4. **Migrate reads** — switch readers to the new column, ideally behind a flag so it can be reversed instantly. Deploy and observe.
+5. **Contract** — stop writing the old column, then drop it, in two further deploys.
+
+Each step is independently deployable and independently revertible, which is exactly the property continuous deployment requires. The specific traps on high-traffic systems: a migration that takes a lock — always check whether your engine rewrites the table for the operation in question, and prefer online DDL tooling where it does not; an unthrottled backfill that saturates replica IO and causes lag; and adding a NOT NULL column with a default on an engine that rewrites the whole table. The general rule is that **the deploy pipeline must never block on a long-running data operation** — separate the schema change from the data change, and let the data change run on its own clock.`,
+      },
+    ],
     title: 'Trunk-Based Development with Continuous Deployment',
     icon: 'gitMerge',
     color: '#3b82f6',
@@ -33926,6 +34009,48 @@ spec:
 
   {
     id: 'ace-cicd-cost-optimized-runner-fleet',
+    topics: [
+      {
+        title: 'Where CI money actually goes, and the fleet shape that follows',
+        content: `CI spend has two components and they pull in opposite directions. **Idle capacity** dominates off-hours: a fleet sized for the 09:00–18:00 peak sits mostly unused for two-thirds of the day and all weekend. **Cold-start latency** dominates during burst: scaling from zero means every developer waits for an instance to boot, pull images and warm caches, and that wait is paid by engineers, which is far more expensive per minute than the instance.
+
+Optimising either alone gives a bad answer. Scale to zero and CI feels terrible every morning. Keep the peak fleet warm and most of the bill is idle. The workable shape is a three-tier fleet:
+
+- **A small reserved baseline**, on committed-use or savings-plan pricing, sized to off-hours demand plus enough headroom to absorb a normal working-hours arrival without waiting. This is the tier that guarantees a job never waits for a machine to exist.
+- **A spot or preemptible bulk tier** carrying the working-hours load, at 60–90% off on-demand. This is where nearly all the volume runs and where nearly all the saving comes from.
+- **An on-demand overflow tier**, capped, that absorbs burst when spot capacity is unavailable. Without this tier a spot capacity event becomes a CI outage; with it, it becomes a temporary cost increase, which is the correct trade.
+
+**Warm pools** address cold start directly: keep a few instances pre-booted, pre-imaged and pre-cached rather than scaling from nothing. Size the pool against arrival rate, not fleet size — you need enough warm capacity to cover the boot time of the next tier, which is usually a much smaller number than intuition suggests.
+
+Beyond fleet shape, the largest remaining wins are in what the jobs do:
+
+- **Aggressive caching** of dependencies, build outputs and container layers. A cache hit is not just faster, it is a job that never allocated an instance in the first place.
+- **Right-sizing per job class.** A lint job on a 32-core box is pure waste; a link step on a small box is worse. Route by requirement.
+- **Not running what cannot have changed.** Build-graph-aware CI (Bazel, Nx, Turborepo) or a path filter avoids rebuilding untouched services, and on a monorepo this is usually the single biggest lever of all — bigger than instance pricing.
+- **Autoscaling on queue depth**, not CPU. Queue depth is the signal that a developer is waiting; CPU is a lagging proxy for it.`,
+      },
+      {
+        title: 'Surviving spot interruption, and keeping flaky tests off the trunk',
+        content: `Spot instances are reclaimed with little warning — commonly a two-minute notice, sometimes less — so the fleet must treat interruption as routine rather than exceptional.
+
+The mechanics that make it routine:
+
+- **Ephemeral, single-job runners.** A runner that takes one job and exits has a small blast radius: an interruption loses at most one job. It also removes cross-job contamination, which matters for security as much as for reliability.
+- **Handle the interruption notice.** Catch the signal, stop accepting new work, and either let the current job finish inside the window or fail it explicitly and fast. The failure mode to avoid is a job that dies silently and shows as a mysterious infrastructure error, because those train people to re-run everything and hide real failures.
+- **Automatic retry on interruption only.** Retrying an interrupted job is correct; retrying a failed job is how a flaky suite gets laundered into a green one. These must be distinguishable, which means the interruption path has to set a distinct exit status or annotation.
+- **Diversify.** Spread across instance types and availability zones — capacity events are usually specific to a type in a zone, so a fleet requesting one type in one zone is maximally fragile. Cross-region spreading adds arbitrage and resilience but costs egress and complicates artefact locality; it is worth it for large fleets and rarely for small ones.
+- **Keep long jobs off spot.** A four-hour job on a two-minute notice will not finish. Route jobs whose duration exceeds the interruption risk window to the on-demand tier, and treat "this job is too long for spot" as a signal to split it.
+- **Checkpoint** what is expensive to recompute, so an interruption resumes rather than restarts.
+
+**Flaky tests** are the other thing that blocks a trunk, and cost and flakiness are related: retries multiply spend while eroding trust. The discipline:
+
+- **Detect them systematically** — re-run the suite against an unchanged commit on a schedule, and record per-test pass/fail history. A test that fails on identical input is flaky by definition, and this is the only reliable way to identify them.
+- **Quarantine, do not ignore.** Move a flaky test to a non-blocking suite so it stops gating merges, but give it an owner and a deadline. An unowned quarantine becomes a graveyard, and the coverage it represented is gone.
+- **Fix the cause, which is usually one of a few things** — shared mutable state between tests, real time or timezone dependence, network or clock ordering assumptions, insufficient waiting in UI tests replaced by sleeps, or test-order coupling. Randomising test order surfaces the last of these immediately.
+- **Never auto-retry a test to green in the merge gate.** It converts a real intermittent bug into an invisible one, and intermittent production failures are exactly what those tests were meant to catch.
+- **Track flake rate as a first-class metric** with a budget, the same way error budgets work. If the rate exceeds the budget, fixing it takes priority over features — otherwise it is nobody's job and it only ever rises.`,
+      },
+    ],
     title: 'Cost-Optimized CI Runner Fleet',
     icon: 'server',
     color: '#f59e0b',
@@ -33952,6 +34077,45 @@ CI runner cost is dominated by idle capacity during off-hours and cold-start lat
 
   {
     id: 'ace-cicd-software-supply-chain-security',
+    topics: [
+      {
+        title: 'The threat model, and what SLSA levels actually require',
+        content: `Supply chain attacks bypass application security entirely by targeting what builds and what is built with. The recognised classes: a **dependency compromise** (a legitimate package publishing a malicious version, as with event-stream or the xz backdoor), **typosquatting** and **dependency confusion** (a public package shadowing an internal name), a **build system compromise** (SolarWinds — the source was clean, the build inserted the backdoor), and **artefact substitution** in transit or in a registry.
+
+The last two are the reason source-code scanning is insufficient. If the build system is the attacker, reviewing the source proves nothing about the binary, which is precisely the gap **provenance** closes.
+
+**SLSA** (Supply-chain Levels for Software Artifacts) is the framework, and its Build track defines escalating requirements:
+
+- **Level 1** — provenance exists. The build emits a signed statement of what it built, from what source, with which builder. It is not tamper-proof, but it makes the supply chain describable, and you cannot verify what you cannot describe.
+- **Level 2** — provenance is signed by a hosted build service, so it authenticates the builder rather than merely asserting it. Forging provenance now requires compromising the build platform.
+- **Level 3** — the build runs on hardened infrastructure with strong isolation between builds, and the signing material is inaccessible to the build steps themselves. This is what defeats the SolarWinds pattern: a compromised build step cannot mint provenance claiming to be a clean one.
+
+The practical instruction is that levels are per-artefact and incremental. Getting every artefact to Level 1 is worth far more than getting one to Level 3, because coverage is what makes verification enforceable.
+
+**Enforcement is the part that gets skipped.** Generating provenance and never checking it provides no security at all — it is an audit artefact, not a control. The control is admission-time verification: a policy engine (Sigstore policy-controller, Kyverno, OPA/Gatekeeper) that refuses to run an image whose signature or provenance does not verify against an expected identity. Until that gate exists and fails closed, everything upstream is documentation.`,
+      },
+      {
+        title: 'SBOM, provenance and pinning — what each one answers',
+        content: `The two attestation types are routinely conflated and they answer different questions.
+
+An **SBOM** answers *what is inside this artefact* — the dependency inventory, with versions and licences, in SPDX or CycloneDX. Its value is response speed: when the next critical CVE lands, an SBOM inventory turns "which of our 400 services ship this library" from a week of investigation into a query. Generate it at **build** time from the actual dependency graph, not by scanning the finished image afterwards — a post-hoc scan infers, whereas the build knows, and the difference shows up in vendored, statically-linked and multi-stage cases.
+
+**Provenance** answers *where did this artefact come from* — which source commit, which builder, which parameters, in the in-toto attestation format. It is the tamper-evidence that binds a binary to a repository state.
+
+Both are attestations about a subject digest and both should be signed. The practical answer is not to choose between them, and an inventory without provenance is a list you cannot trust the origin of.
+
+**Signing** is best done keylessly with Sigstore. cosign obtains a short-lived certificate bound to an OIDC identity (the workflow's own identity, in a CI context) and records the signature in the Rekor transparency log. That removes long-lived signing keys — the thing most likely to be stolen — and gives a public, append-only record that a signature existed at a point in time, which is what makes revocation and after-the-fact investigation possible.
+
+**Pinning** closes the dependency door:
+
+- **Lockfiles committed and verified**, so builds resolve to the same versions every time. A build that resolves floating ranges at build time cannot be reproduced, and cannot be reasoned about after an incident.
+- **Digest pinning for container base images.** A tag is mutable — FROM node:20 is a promise about a name, not about content. Pin the sha256 digest and update it deliberately.
+- **Pin CI actions by commit SHA, not by tag.** A tag on a third-party action can be moved to point at new code, and that is a live, exploited attack path: the action runs inside your build with your credentials.
+- **A private registry proxy** with an allowlist, which also mitigates dependency confusion by ensuring internal names never resolve publicly.
+
+**Where to put the controls in the pipeline**: dependency and secret scanning on pull request; SBOM generation, build, sign and attest at build; verification and policy at admission; and continuous re-scanning of the SBOM inventory afterwards, because an artefact that was clean at build time becomes vulnerable when a new CVE is published against something inside it. That last point is the one most pipelines miss — supply chain security is a standing inventory problem, not a build-time gate.`,
+      },
+    ],
     title: 'Software Supply Chain Security',
     icon: 'shield',
     color: '#ef4444',
@@ -33981,6 +34145,46 @@ Supply chain attacks target the build system and dependencies rather than the ap
 
   {
     id: 'ace-observability-alerting-pipeline-debug',
+    topics: [
+      {
+        title: 'Segment the pipeline and bisect it — the alert path has seven stages',
+        content: `A broken alerting pipeline is the worst class of failure because it is **silent**: the absence of alerts is indistinguishable from health, and it is discovered during an incident, when attention is least available. Debug it the way you would any pipeline — segment it, then determine at which stage the signal stops, rather than guessing.
+
+The stages, in order, each of which can fail independently:
+
+1. **Instrumentation** — the application emits the metric at all.
+2. **Collection** — an agent or scrape reaches the target and gets a response.
+3. **Ingestion and storage** — the backend accepts and retains the sample.
+4. **Rule evaluation** — the alerting rule runs, on schedule, and its query returns what you think.
+5. **Alert state and routing** — the rule fires, is grouped, and is matched by a route.
+6. **Notification delivery** — the notifier reaches the paging provider.
+7. **Paging and escalation** — the provider reaches a human, and the schedule has someone on it.
+
+Bisect rather than walk. Query the metric directly in the backend: if the data is there, stages 1–3 are fine and the fault is in 4–7; if it is not, the fault is upstream. That one query halves the search space immediately.
+
+Then the checks that resolve each half:
+
+**Upstream (no data).** Is the target listed and up in the scrape or agent status? Did a label change break discovery — a renamed job, a changed selector, a namespace move? Was the metric renamed or removed by a refactor, which is very common and produces exactly this signature? Did a relabelling or filter rule start dropping it? Is the collector itself dropping or refusing data — memory limits and queue-full counters are the usual cause, and they are silent by default.
+
+**Downstream (data present, no page).** Evaluate the alert expression by hand at the current time; a query that returns empty never fires, and an expression referencing a label that no longer exists returns empty rather than erroring. Check the rule is actually loaded — a YAML error can cause a whole rule group to be skipped while the rest of the config loads. Check for-duration and whether the condition has genuinely been continuous. Then check routing: a matcher that no longer matches sends the alert nowhere, and **inhibition and silences are the classic cause of a page that stopped arriving** — a silence created during a previous incident and never expired suppresses the same alert forever. Finally check the notifier's own error rate and the paging provider's status, then the on-call schedule itself: an empty rotation or a lapsed override delivers to nobody.
+
+Two systemic causes worth naming because they explain the majority of real cases: **a config change that was never validated** (promtool check rules or the equivalent belongs in CI, since the failure only manifests at evaluation time), and **a cardinality explosion** that caused the backend to start rejecting writes, which degrades alerting as a side effect of an unrelated deploy.`,
+      },
+      {
+        title: 'The dead man’s switch — the only end-to-end proof the pipeline works',
+        content: `Everything in the previous chapter is diagnosis after the fact. The control that turns a silent failure into a loud one is a **dead man's switch**, and it is worth understanding exactly why nothing else substitutes for it.
+
+The construction inverts the usual logic. Define an alert that is **always firing** — a rule whose condition is a constant, so it is continuously in the alerting state — and route it out of the alerting system to an external watchdog that expects to receive it on a regular interval. The watchdog alerts when the heartbeat **stops**.
+
+Why this is the only reliable end-to-end check: every other test verifies one stage. Scrape health checks stage 2. Rule unit tests check stage 4. A test notification checks stages 6 and 7. The dead man's switch traverses **every stage of the real production path** — evaluation, routing, notification, delivery — using the same rules, the same routes and the same notifiers as a genuine page. If any stage breaks, the heartbeat stops. And critically, it converts an absence of signal into a positive signal, which is the only way to detect silence.
+
+The essential property is **externality**. The watchdog must not depend on the system it is watching: a heartbeat monitor running inside the same cluster, on the same Prometheus, or behind the same network path fails at the same time as the thing it monitors and reports nothing. Use an independent service — a hosted heartbeat endpoint such as Dead Man's Snitch, Healthchecks.io, or a paging provider's own heartbeat feature — hosted outside your failure domain. Prometheus ships this alert by default, named Watchdog, and the number of installations that never wire it to anything is the point of this chapter.
+
+Practical configuration: set the heartbeat period comfortably shorter than the watchdog's grace period, so a single missed evaluation does not page; route it through the same Alertmanager receivers path as real alerts, not a special one, or you have tested a path that is not used; and make sure a silence-all or inhibition rule cannot suppress it, since that is precisely the failure it is meant to catch.
+
+**Complementary controls**, none of which replace it: rule syntax validation and unit tests in CI so a bad config never loads; alerting on the alerting system's own metrics — notification failure counts, evaluation errors, queue depth; monitoring for **absence** on critical series with expressions such as an absent() check, so a metric that disappears pages rather than silently resolving; and a quarterly game day that deliberately breaks one stage to confirm the switch fires. Testing the detection mechanism is the only way to know it works, and it is the thing least likely to have been tested.`,
+      },
+    ],
     title: 'Debugging a Broken Alerting Pipeline',
     icon: 'alertTriangle',
     color: '#f97316',
