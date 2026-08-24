@@ -54,7 +54,13 @@ sit with the prose that explains it rather than in a separate section.
    there is nothing left for them to do.
 2. **A `git` category** with 13 topics (`gitTopics.js`) was added and is
    finished. Leave it alone.
-3. **Batches 1–5 are complete** — do not rewrite these:
+3. **Batches 1–11 are complete — every topic now has chapters.**
+   `devops-review-status.mjs` reports **245 done / 245 total, 0 remaining**,
+   and `next-review-batch.mjs` returns an empty queue. Do not re-run the
+   "write chapters for topics that have none" pass; there is nothing left
+   for it to find.
+
+   Batches 1–5 (earlier sessions):
    - three-ways, westrum-calms-culture, value-stream-mapping, dora-metrics,
      team-topologies
    - dora-2024-capabilities, opentelemetry-collector-pipelines,
@@ -66,6 +72,45 @@ sit with the prose that explains it rather than in a separate section.
    - k8s-pod-networking, k8s-network-policy-guide, k8s-traffic-flow-deep,
      k8s-deployment-strategies-guide, k8s-pod-troubleshooting-guide
    - release-manifests-lkg, hardware-in-the-loop-ci (introduction split)
+
+   Batches 6–11 (all in `devopsTopicsExtra.js`):
+   - ansible-roles-vs-collections, ansible-project-structure,
+     terraform-cicd-pipeline, terraform-count-vs-for-each,
+     terraform-remote-state
+   - jenkins-controller-vs-agent, jenkinsfile-pipeline-code,
+     devsecops-pipeline-architecture, high-availability-system-design,
+     overlay-underlay-networking-deep
+   - chaos-engineering, finops-cloud-cost, developer-productivity-space,
+     sigstore-supply-chain-security, webassembly-cloud-native
+   - ai-augmented-devops, dev-containers-environments,
+     openfeature-feature-flags, cncf-landscape-navigation,
+     toil-reduction-automation
+   - internal-developer-platform, gitops-pull-model, slsa-supply-chain,
+     dora-metrics-advanced, karpenter-node-autoscaling
+   - crossplane-cloud-control, external-secrets-operator,
+     dora-four-keys-implementation, platform-engineering-idp-design,
+     grpc-protobuf-services
+
+## What a future pass could do instead
+
+The structural work is finished, so the next useful pass is qualitative
+rather than mechanical. Candidates, roughly in order of value:
+
+1. **Second-pass the topics written in batches 1–5**, which are shorter and
+   less consistently rewritten than 6–11.
+2. **Currency sweep.** Several topics now cite versions and statuses that
+   will age (Terraform `use_lockfile`, Karpenter v1, WASI 0.2, CNCF
+   maturity tiers, DORA report years). Re-check these annually.
+3. **Cross-topic duplication.** `dora-metrics`, `dora-metrics-advanced` and
+   `dora-four-keys-implementation` were deliberately given different angles
+   (concepts / measurement / implementation), as were
+   `internal-developer-platform` and `platform-engineering-idp-design`, and
+   `sigstore-supply-chain-security` and `slsa-supply-chain`. Keep them
+   distinct if any is edited.
+4. **Figures.** Most topics in batches 6–11 either have one real diagram or
+   none. Chapters that describe a mechanism in prose (VXLAN encapsulation,
+   the Jenkins controller/agent trust boundary, GitOps credential
+   direction) would benefit from a diagram attached to the chapter.
 
 ## Tools
 
@@ -119,6 +164,11 @@ Vercel auto-deploy from `main` is unreliable on this project, so after pushing
 the owner normally runs `vercel --prod` from the repo root. A cloud session will
 not have Vercel credentials — **push to `main` and state clearly in your final
 summary that `vercel --prod` still needs to be run locally.**
+
+> **Outstanding as of the batch 6–11 session:** batches 6–11 are pushed to
+> `main` but **have not been deployed**. `vercel --prod` still needs to be run
+> from the repo root for those 30 topics to appear on
+> camora.cariara.com.
 
 ## Notes
 
