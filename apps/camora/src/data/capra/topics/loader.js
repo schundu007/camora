@@ -158,29 +158,58 @@ export const HEAVY_TOPIC_LOADERS = {
   // CNCF Platform Whitepaper, SLSA, Sigstore). 11 sub-categories, ~56 topics.
   // Diagrams at /diagrams/devops/*.png from gen-devops-diagrams.py.
   devops: async () => {
-    const [mod, helmMod, fluxMod, cpMod, nbMod, extraMod, k8sMod, gitMod] = await Promise.all([
+    const [mod, helmMod, fluxMod, cpMod, nbMod, extraMod] = await Promise.all([
       import('./devopsTopics.js'),
       import('./helmTopics.js'),
       import('./fluxTopics.js'),
       import('./controlPlaneTopics.js'),
       import('./nativeBuildTopics.js'),
       import('./devopsTopicsExtra.js'),
-      import('./k8sTopics.js'),
-      import('./gitTopics.js'),
     ]);
-    return {
-      devopsCategories: mod.devopsCategories,
-      devopsTopicCategoryMap: {
-        ...mod.devopsTopicCategoryMap,
-        ...extraMod.devopsExtraTopicCategoryMap,
-        ...k8sMod.k8sTopicCategoryMap,
-        ...gitMod.gitTopicCategoryMap,
-      },
-      devopsTopics: [
+    const devopsTopicCategoryMap = {
+      ...mod.devopsTopicCategoryMap,
+      ...extraMod.devopsExtraTopicCategoryMap,
+    };
+    const categoryPriority = [
+      'foundations',
+      'cicd',
+      'delivery',
+      'cicdtools',
+      'containers',
+      'orchestration',
+      'iac',
+      'config',
+      'gitops',
+      'devsecops',
+      'cloudnative',
+      'datadevops',
+      'flux',
+      'helm',
+      'controlplane',
+      'nativebuild',
+    ];
+    const priority = new Map(categoryPriority.map((id, index) => [id, index]));
+    const topics = [
         ...mod.devopsTopics, ...helmMod.helmTopics, ...fluxMod.fluxTopics,
         ...cpMod.controlPlaneTopics, ...nbMod.nativeBuildTopics,
-        ...extraMod.devopsExtraTopics, ...k8sMod.k8sTopics, ...gitMod.gitTopics,
-      ],
+        ...extraMod.devopsExtraTopics,
+      ];
+    const orderedTopics = topics
+      .map((topic, index) => ({ topic, index }))
+      .sort((a, b) => (
+        (priority.get(devopsTopicCategoryMap[a.topic.id]) ?? Number.MAX_SAFE_INTEGER)
+        - (priority.get(devopsTopicCategoryMap[b.topic.id]) ?? Number.MAX_SAFE_INTEGER)
+        || a.index - b.index
+      ))
+      .map(({ topic }) => topic);
+
+    return {
+      devopsCategories: [...mod.devopsCategories].sort((a, b) => (
+        (priority.get(a.id) ?? Number.MAX_SAFE_INTEGER)
+        - (priority.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+      )),
+      devopsTopicCategoryMap,
+      devopsTopics: orderedTopics,
     };
   },
 
