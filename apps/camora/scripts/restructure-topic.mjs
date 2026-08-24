@@ -127,40 +127,34 @@ const objStart = src.lastIndexOf('{', idIdx);
 const objEnd = matchDelimiter(src, objStart, '{', '}');
 let obj = src.slice(objStart, objEnd);
 
-// ── visualizations: drop the image-less essay entries ──────────────────
-const vizKey = obj.indexOf('visualizations:');
+// ── visualizations ─────────────────────────────────────────────────────
+// The caller supplies the array it wants, rather than this script trying to
+// filter JS source elements in place. Element filtering was both fragile
+// (captions contain YAML keys that look like real ones) and non-idempotent
+// (a second run duplicated chapters). Rendering the desired array from JSON
+// makes the operation total and repeatable.
+function renderVisualizations(list) {
+  if (!list.length) return 'visualizations: []';
+  const body = list.map((v) => {
+    const keys = [`        title: ${jsString(v.title)},`];
+    if (v.description) keys.push(`        description: ${jsString(v.description)},`);
+    if (v.image) keys.push(`        image: ${jsString(v.image)},`);
+    if (v.svg) keys.push(`        svg: ${jsString(v.svg)},`);
+    if (v.video) keys.push(`        video: ${jsString(v.video)},`);
+    return `      {\n${keys.join('\n')}\n      }`;
+  }).join(',\n');
+  return `visualizations: [\n${body},\n    ]`;
+}
+
 let removed = 0, kept = 0;
-if (vizKey !== -1) {
-  const arrStart = obj.indexOf('[', vizKey);
-  const arrEnd = matchDelimiter(obj, arrStart, '[', ']');
-  const elements = splitElements(obj.slice(arrStart + 1, arrEnd - 1));
-  // Figures promoted into a chapter must not also remain here, or the page
-  // renders the same diagram twice.
-  const dropped = new Set(payload.dropFigures || []);
-  const keepers = elements.filter((el) => {
-    if (dropped.size) {
-      const m = stripStrings(el).match(/(^|\n)\s*image:/);
-      if (m) {
-        const src = el.slice(el.indexOf('image:', m.index)).match(/image:\s*'([^']*)'/);
-        if (src && dropped.has(src[1])) { removed++; return false; }
-      }
-    }
-    // A real figure declares image/svg/video as its OWN key. Testing the raw
-    // text is not enough: captions routinely contain YAML such as
-    // `image: postgres:15`, which matched and made an essay look like a
-    // figure — it was then copied into a chapter AND left in place, so the
-    // page showed the same prose twice. Blank the string literals first, so
-    // only actual keys survive to be matched.
-    const isFigure = /(^|\n)\s*(image|svg|video):/.test(stripStrings(el));
-    if (isFigure) kept++; else removed++;
-    return isFigure;
-  });
-  // arrEnd is just past `]`; the source comma that follows is preserved by
-  // the slice, so the rebuilt text must not carry one of its own.
-  const rebuilt = keepers.length
-    ? `visualizations: [${keepers.join(',').replace(/\s+$/, '')}\n    ]`
-    : 'visualizations: []';
-  obj = obj.slice(0, vizKey) + rebuilt + obj.slice(arrEnd);
+if (payload.visualizations) {
+  const vizKey = obj.indexOf('visualizations:');
+  if (vizKey !== -1) {
+    const arrStart = obj.indexOf('[', vizKey);
+    const arrEnd = matchDelimiter(obj, arrStart, '[', ']');
+    kept = payload.visualizations.length;
+    obj = obj.slice(0, vizKey) + renderVisualizations(payload.visualizations) + obj.slice(arrEnd);
+  }
 }
 
 // ── insert topics[] / quickFire[] ──────────────────────────────────────
