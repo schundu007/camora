@@ -608,6 +608,23 @@ function PricingCards() {
   return <SharedPricingCards variant="compact" showFree={false} />;
 }
 
+/**
+ * Header standfirst. A topic `description` doubles as the catalogue card
+ * blurb and the page subtitle, and many run to several sentences — those
+ * belong in the Overview section, not in the header strip. Returns the
+ * opening sentence for anything long, the whole string for a real one-liner.
+ */
+const STANDFIRST_MAX = 280;
+function standfirst(text) {
+  if (typeof text !== 'string' || text.length <= STANDFIRST_MAX) return text;
+  const cut = text.slice(0, STANDFIRST_MAX);
+  // Prefer a sentence boundary; fall back to the last word break.
+  const stop = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('? '), cut.lastIndexOf('! '));
+  if (stop > 80) return text.slice(0, stop + 1);
+  const space = cut.lastIndexOf(' ');
+  return `${text.slice(0, space > 80 ? space : STANDFIRST_MAX).trimEnd()}…`;
+}
+
 export default function TopicDetail({
   activePage, selectedTopic, topicDetails, pageConfig,
   completedTopics, starredTopics, toggleComplete, toggleStar,
@@ -748,7 +765,9 @@ export default function TopicDetail({
     const s = [];
     const trunc = (t, n = 32) => t && t.length > n ? t.slice(0, n) + '…' : t;
 
-    if (topicDetails.introduction) s.push({ id: 'overview', label: 'Overview' });
+    // SRE-style pages fall back to `description` for the Overview section,
+    // so the contents list has to agree or the entry goes missing.
+    if (topicDetails.introduction || (isSREStyle && topicDetails.description)) s.push({ id: 'overview', label: 'Overview' });
 
     // ── System Design — ordered by interview priority ──
     if (isSDStyle || activePage === 'low-level') {
@@ -932,7 +951,16 @@ export default function TopicDetail({
                 )}
               </div>
               {topicDetails.description && (
-                <p className="text-[14px] mt-1.5 landing-body leading-relaxed" style={{ color: 'var(--cam-strip-text)' }}>{fmtCloud(topicDetails.description)}</p>
+                /* The header strip is a standfirst, not a chapter. 79 devops
+                   topics carry their whole introduction in `description` (up
+                   to ~750 chars) because they have no `introduction` field —
+                   printed in full it turned the page header into a wall of
+                   text and left the body with no Overview. Long descriptions
+                   are trimmed to their opening sentence here and rendered in
+                   full as the Overview section instead. */
+                <p className="text-[14px] mt-1.5 landing-body leading-relaxed" style={{ color: 'var(--cam-strip-text)' }}>
+                  {fmtCloud(standfirst(topicDetails.description))}
+                </p>
               )}
               {topicDetails.subtitle && !topicDetails.difficulty && (
                 <p className="text-[12px] mt-1 landing-body" style={{ color: 'var(--cam-strip-text-muted)' }}>{fmtCloud(topicDetails.subtitle)}</p>
@@ -2902,8 +2930,13 @@ export default function TopicDetail({
           ────────────────────────────────────────────────────────────── */}
       {!isLocked && isSREStyle && (topicDetails.introduction || topicDetails.keyQuestions || topicDetails.visualizations?.length || topicDetails.topics?.length || topicDetails.quickFire?.length) && (() => {
         // Build the agenda — one entry per section that's actually present.
+        // 79 devops topics have no `introduction` and carry their opening
+        // prose in `description` instead, so the Overview slide never
+        // rendered and the page opened cold on a diagram. Treat description
+        // as the fallback overview — the header only shows its first sentence.
+        const overview = topicDetails.introduction || topicDetails.description;
         const agenda = [];
-        if (topicDetails.introduction)                                          agenda.push({ id: 'overview',       label: 'Overview' });
+        if (overview)                                                           agenda.push({ id: 'overview',       label: 'Overview' });
         if (topicDetails.topics?.length)                                        agenda.push({ id: 'topic-sections', label: 'Deep Dive' });
         if (topicDetails.visualizations?.length)                                agenda.push({ id: 'visual',         label: 'Visual Explanation' });
         if (topicDetails.whenToUse && (Array.isArray(topicDetails.whenToUse) ? topicDetails.whenToUse.length : true)) agenda.push({ id: 'when-to-use', label: 'When to Use' });
@@ -2959,12 +2992,12 @@ export default function TopicDetail({
 
 
           {/* ── 1 / Overview ── */}
-          {topicDetails.introduction && (
+          {overview && (
             <section id="overview" className="scroll-mt-24">
               <ContentHeading title="Overview" />
               <div className="pt-3">
                 <SlideCard>
-                  <FormattedContent content={topicDetails.introduction} color="blue" />
+                  <FormattedContent content={overview} color="blue" />
                 </SlideCard>
               </div>
             </section>
@@ -2986,6 +3019,27 @@ export default function TopicDetail({
                       </span>
                       <h4 className="text-[var(--accent)] font-bold text-[14px] leading-snug landing-display">{sec.title}</h4>
                     </div>
+                    {/* A Deep Dive section may name its own diagram. That
+                        image was silently dropped, so 18 sections explained a
+                        figure the reader could not see — the figure sat far
+                        below in Visual Explanation, if at all. Show it at the
+                        head of the section it belongs to. */}
+                    {sec.image && (
+                      <div style={{ background: 'white', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>
+                        <img
+                          src={sec.image}
+                          alt={sec.title}
+                          loading="lazy"
+                          style={/\.svg(\?|$)/i.test(sec.image)
+                            ? { display: 'block', margin: '0 auto', width: '100%', height: 'auto' }
+                            : {
+                                display: 'block', margin: '0 auto',
+                                maxWidth: '100%', maxHeight: '80vh',
+                                width: 'auto', height: 'auto', objectFit: 'contain',
+                              }}
+                        />
+                      </div>
+                    )}
                     <div className="px-5 py-4 prep-content">
                       {sec.content && <FormattedContent content={sec.content} />}
                       {sec.codeExample && (
