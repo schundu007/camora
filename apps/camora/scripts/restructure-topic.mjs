@@ -183,6 +183,24 @@ function replaceKey(source, key, rendered) {
   return source.slice(0, m.index + 1) + rendered.replace(/\n$/, '') + source.slice(end);
 }
 
+// ── introduction ───────────────────────────────────────────────────────
+// A string key, so it needs its own replacement: find the value and swap it,
+// leaving surrounding keys untouched.
+if (typeof payload.introduction === 'string') {
+  const m = obj.match(/\n(\s*)introduction: /);
+  if (m) {
+    const valStart = m.index + m[0].length;
+    const q = obj[valStart];
+    let end = valStart + 1;
+    while (end < obj.length) {
+      if (obj[end] === '\\') { end += 2; continue; }
+      if (obj[end] === q) { end++; break; }
+      end++;
+    }
+    obj = obj.slice(0, valStart) + jsString(payload.introduction) + obj.slice(end);
+  }
+}
+
 for (const [key, rendered] of [
   ['topics', payload.sections ? renderSections(payload.sections) : null],
   ['quickFire', payload.quickFire ? renderQuickFire(payload.quickFire) : null],
