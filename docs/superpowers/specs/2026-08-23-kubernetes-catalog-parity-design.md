@@ -111,14 +111,19 @@ category.
 | `k8s-architecture` | Architecture & the API | 3 | 10 | ~23 |
 | `k8s-workloads` | Workloads & Pods | 5 | 14 | ~36 |
 | `k8s-networking` | Networking & Service Discovery | 6 | 7 | ~13 |
-| `k8s-storage` | Storage | 1 | 9 | ~15 |
+| `k8s-storage` | Storage | 1 | 10 | ~15 |
 | `k8s-config-policy` | Configuration & Policies | 1 | 5 | ~7 |
 | `k8s-security` | Security | 4 | 12 | ~18 |
 | `k8s-scheduling` | Scheduling, Preemption & Eviction | 5 | 10 | ~18 |
 | `k8s-cluster-admin` | Cluster Administration & Operations | 4 | 11 | ~18 |
 | `k8s-baremetal` | Bare Metal & Production Setup | 2 | 7 | `/docs/setup/` |
 | `k8s-extending` | Extending Kubernetes | 2 | 6 | ~7 |
-| | **Total** | **33** | **91** | |
+| | **Total** | **33** | **92** | |
+
+Counts here are secondary to `k8s-doc-coverage.json`, which is the source of
+truth for what is covered. That file maps all 175 Concepts pages — 155 claimed
+by 97 topics, 20 excluded (12 section indexes, 7 Windows pages, PodSecurityPolicy).
+Where this table and the inventory disagree, the inventory wins.
 
 `helm-vs-kustomize` moves to the existing `helm` category rather than into a
 Kubernetes sub-category.
@@ -167,10 +172,13 @@ controllers; the cluster networking model; CNI and network plugins.
 **`k8s-storage` — Storage**
 Existing: `kubernetes-storage` (retarget as section overview).
 New: Volumes; PersistentVolumes and PVCs; StorageClasses and dynamic
-provisioning; volume snapshots, snapshot classes and CSI cloning; projected,
-ephemeral and local ephemeral volumes; VolumeAttributesClasses; storage
-capacity and node volume limits; volume health monitoring; CSI driver
-internals.
+provisioning; volume snapshots, snapshot classes and CSI cloning; volume
+populators and data sources; projected, ephemeral and local ephemeral volumes;
+VolumeAttributesClasses; storage capacity and node volume limits; volume
+health monitoring; CSI driver internals.
+
+`/docs/concepts/storage/volume-populators-and-data-sources/` is a separate
+page from CSI cloning (`volume-pvc-datasource`) and gets its own topic.
 
 **`k8s-config-policy` — Configuration & Policies**
 Existing: `kubernetes-secrets-management`.
