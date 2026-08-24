@@ -388,59 +388,42 @@ export const devopsTopics = [
         description: 'First Way: optimize value flow left-to-right (concept → production). Second Way: amplify feedback right-to-left (telemetry → development). Third Way: continual experimentation and learning.',
         image: '/diagrams/devops/a1-three-ways.png',
       },
+    ],
+    topics: [
       {
-        title: 'The Three Ways in practice — team habits, tooling, and metrics',
-        description: `Translating the Three Ways from philosophy to daily engineering practice.
+        title: 'The First Way — why batch size is the only lever that compounds',
+        content: `Flow is the one principle with a governing equation behind it, and knowing that equation changes what you optimise. Little's Law states that for any stable queueing system, average lead time equals average work-in-progress divided by average throughput. Written as **lead time = WIP / throughput**, it says something uncomfortable: if throughput is roughly fixed by team capacity, the only fast way to cut lead time is to cut WIP. Working harder does not appear anywhere in the equation. Starting more work makes every item slower.
 
-First Way — Systems Thinking in practice:
-  Visualize the entire value stream, not just your silo.
-  Use value stream maps to see where work waits between teams.
-  Own the pipeline end-to-end: dev writes Dockerfile, owns alerts, rotates on-call.
+This is why the First Way is expressed as batch size rather than as effort. A large batch inflates WIP by definition, and it degrades the system in three compounding ways. Feedback arrives later, because nothing is validated until the whole batch lands. Risk is bundled, so when the batch fails you cannot tell which of the forty changes caused it. And the failure is expensive to reverse, because rolling back the batch reverts thirty-nine changes that were fine.
 
-  Anti-pattern: "We do not deploy on Fridays" reveals a deployment problem to fix, not avoid.
-  Fix: Make deploys boring and reversible via feature flags, blue/green, automated rollback.
+Reinertsen's economic framing explains why teams resist small batches anyway: batch size settles at the point where holding cost balances transaction cost. If deploying takes a two-hour manual checklist and a change-approval board, batching is the rational response — you are amortising a genuinely expensive transaction. **This is the insight that makes CI/CD a flow practice rather than a tooling preference: automation attacks the transaction cost, and the small batches follow on their own.** Mandating small batches without lowering the cost of a deploy just moves the pain onto the engineers.
 
-Second Way — Feedback Loops in practice:
-  Measure mean time to detect (MTTD) and mean time to recover (MTTR).
-  Ship small PRs (less than 400 lines) — faster review, fewer merge conflicts, clearer deploys.
-  Require a monitoring alert alongside every new feature. "Feature + alert = done."
+The practical consequences are concrete. Keep pull requests under roughly 400 lines, which is where reviewer defect-detection measurably falls off. Impose an explicit WIP limit per person or per team and make it visible. Own the pipeline end to end — the team that writes the code writes its Dockerfile, its alerts, and takes the pager — because every handoff is a queue, and queues are where lead time actually accumulates.
 
-  Anti-pattern: Discovering production bugs from customer tickets, not dashboards.
-  Fix: Define SLOs, build error rate and latency dashboards before feature launch.
-
-Third Way — Continuous Experimentation in practice:
-  Blameless postmortems — five whys, systemic fixes, no scapegoating.
-  Game days and chaos engineering — inject failures before they find you.
-  Toil reduction: if you do it twice, automate it; if it is in a runbook, script it.
-
-Measurement framework:
-  Deployment frequency — how often do you ship to prod?
-  Lead time for changes — commit to prod in minutes, not weeks.
-  Change failure rate — less than 15% for elite teams.
-  MTTR — less than 1 hour for elite teams.`,
+Treat "we do not deploy on Fridays" as a diagnostic rather than a policy. It is a precise statement that the team does not trust its ability to detect and reverse a bad change, and the fix is to make deploys boring and reversible — progressive rollout, feature flags that decouple deploy from release, automated rollback triggered by SLO burn — not to avoid deploying.`,
       },
       {
-        title: 'Quick-fire interview answers — The Three Ways',
-        description: `Common interview questions on the Three Ways and how to answer them precisely.
+        title: 'The Second and Third Ways — feedback that closes, learning that compounds',
+        content: `The Second Way is about the cost curve of a defect. The cost of fixing a problem rises by roughly an order of magnitude at each stage it escapes: cheapest in the editor, more in code review, more again in CI, dramatically more in production, and most of all when a customer reports it before you notice. Every Second Way practice is an attempt to move detection one stage earlier, and that framing is what tells you where to invest — the highest-value feedback loop is always the earliest one that is currently leaking.
 
-Q: What is the First Way?
-A: Optimize the entire value stream from concept to production. The unit of optimization is the system, not individual silos. Reduce batch sizes, eliminate handoffs, surface and remove queues. Key practices: trunk-based development, CI/CD, infrastructure-as-code, pipeline-as-code. Measure with lead time for changes.
+A feedback loop only counts if it closes. Telemetry that nobody looks at is not feedback; it is storage. The test is blunt: when something breaks, does the system tell you before a human does? If production defects arrive as customer tickets rather than as alerts, the loop is open regardless of how many dashboards exist. Two disciplines close it. Define SLOs and alert on error-budget burn rate rather than on raw thresholds, so a page corresponds to a user-visible problem instead of a spiky graph. And treat "feature plus alert equals done" as a definition of done, so instrumentation ships with the change rather than after the first incident.
 
-Q: What is the Second Way?
-A: Amplify and shorten feedback loops from production back to development. Make defects visible while they are cheap to fix. Key practices: telemetry, observability (logs, metrics, traces), automated testing, fail-fast deployment gates, blameless postmortems. Measure with mean time to detect.
+The counterpart to fast feedback is the authority to act on it. Toyota's andon cord is the canonical example: any worker can halt the line, and the response is swarming help rather than blame. Its software equivalent is a red build that stops merges, or an error budget that halts feature launches. **A stop signal that people are punished for pulling is not a feedback loop — it is a trap, and teams quickly learn to route around it.** This is precisely where the Second Way stops being technical and becomes cultural.
 
-Q: What is the Third Way?
-A: Build a generative, high-trust culture that allocates time to daily-work improvement and treats failure as data. Key practices: blameless postmortems, game days, chaos engineering, communities of practice, retrospective follow-through. Measure by whether postmortem action items ship.
+The Third Way makes improvement compound rather than reset. Blameless postmortems are the mechanism, but the discipline is narrower than the ritual suggests: a postmortem that produces no owned, scheduled action item is a meeting, not a learning system, and the honest metric is what fraction of action items actually ship. Deliberate practice matters too — game days and chaos experiments inject failure while you are rested, staffed and watching, which is the opposite of how you normally meet failure. And toil reduction is the reinvestment loop: automating the work that recurs is what buys back the capacity to do any of this at all.
 
-Q: Why does the order matter?
-A: Flow first — you cannot improve what you cannot deliver. Feedback second — you cannot improve what you cannot see. Learning third — you cannot improve without acting on what you see. Skipping any one breaks the system.
-
-Q: What is the difference between the Three Ways and CALMS?
-A: The Three Ways are the organizing principles from The DevOps Handbook — philosophical. CALMS (Culture, Automation, Lean, Measurement, Sharing) is the operational prescription — practical. Westrum typology measures culture maturity. DORA metrics measure outcomes. All four frameworks describe facets of the same system.
-
-Q: Give an example of CI/CD mapped to the Three Ways.
-A: CI/CD is a First Way practice (it reduces batch size and increases flow). Automated tests in the pipeline are a Second Way practice (feedback loops catch defects at the earliest stage). Blameless postmortems on pipeline failures are a Third Way practice (learning from what goes wrong). The pipeline embodies all three.`,
+The ordering is not stylistic. Flow first, because you cannot improve what you cannot deliver. Feedback second, because you cannot improve what you cannot see. Learning third, because seeing without acting changes nothing. Teams that invert this — buying observability tooling before they can deploy weekly — end up with excellent visibility into a system they cannot change.`,
       },
+    ],
+    quickFire: [
+      { q: 'What is the First Way?', a: 'Optimise the whole value stream from concept to production. The unit of optimisation is the system, not the silo: reduce batch size, eliminate handoffs, surface and remove queues. Little’s Law (lead time = WIP / throughput) is why batch size, not effort, is the lever. Measure with lead time for changes.' },
+      { q: 'What is the Second Way?', a: 'Amplify and shorten feedback from production back to development, so defects are caught while they are still cheap. Telemetry, SLO burn-rate alerting, automated testing, fail-fast gates. Measure with mean time to detect — and check the loop actually closes: does the system tell you before a customer does?' },
+      { q: 'What is the Third Way?', a: 'Build a generative, high-trust culture that reserves time for improving daily work and treats failure as data. Blameless postmortems, game days, chaos engineering, communities of practice. The honest metric is the fraction of postmortem action items that actually ship.' },
+      { q: 'Why does the order matter?', a: 'Flow first — you cannot improve what you cannot deliver. Feedback second — you cannot improve what you cannot see. Learning third — seeing without acting changes nothing. Teams that buy observability before they can deploy weekly get excellent visibility into a system they cannot change.' },
+      { q: 'Why do teams batch changes even when they know small batches are better?', a: 'Because batch size settles where holding cost balances transaction cost (Reinertsen). If a deploy costs a two-hour checklist and an approval board, batching is rational. That is why CI/CD is a flow practice, not a tooling preference — it attacks the transaction cost, and small batches follow. Mandating small batches without lowering deploy cost just moves the pain onto engineers.' },
+      { q: 'What does "we do not deploy on Fridays" actually tell you?', a: 'That the team does not trust its ability to detect and reverse a bad change. It is a diagnostic, not a policy. The fix is progressive rollout, feature flags that decouple deploy from release, and automated rollback on SLO burn — not avoiding deploys.' },
+      { q: 'How do the Three Ways relate to CALMS, Westrum and DORA?', a: 'They are four views of one system. The Three Ways are the organising principles (philosophical). CALMS is the operational prescription. Westrum’s typology measures the cultural precondition. DORA measures the outcome. If DORA numbers are poor, Westrum usually explains why.' },
+      { q: 'Map CI/CD onto the Three Ways.', a: 'The pipeline embodies all three. Shipping in small increments is First Way (batch size, flow). Automated tests and fast build feedback are Second Way (detect at the earliest cheap stage). Blameless postmortems on pipeline failures, and the toil reduction that follows, are Third Way. A pipeline that only automates deployment is doing one third of the job.' },
     ],
     introduction: `## Overview
 The Three Ways are the foundational organizing principles of DevOps, articulated in The Phoenix Project (Kim, Behr, Spafford, 2013) and codified in The DevOps Handbook (Kim, Humble, Debois, Willis, 2016, 2nd ed. 2020). Every DevOps practice — CI/CD, observability, blameless postmortems, chaos engineering, error budgets — is an application of one or more of the Three Ways.
@@ -614,84 +597,66 @@ The diagnostic discipline: don\'t fix randomly. Identify which Way is blocking, 
         description: 'Westrum: Pathological → Bureaucratic → Generative organizational types. CALMS: Culture, Automation, Lean, Measurement, Sharing. Westrum diagnoses; CALMS treats.',
         image: '/diagrams/devops/a3-westrum-calms.png',
       },
+    ],
+    topics: [
       {
-        title: 'Westrum typology — diagnostic signals for each org type',
-        description: `Concrete behavioral signals that reveal where an organization sits on the Westrum spectrum.
+        title: 'Westrum — reading the culture from how information moves',
+        content: `Ron Westrum's typology (BMJ Quality and Safety, 2004) did not come from software. It came from studying why some aviation and medical organisations caught problems early and others did not, and its central claim is narrow and testable: **an organisation's culture can be read from how information flows through it, particularly bad information.** Westrum's insight was that this is not a matter of individual virtue. The same engineer behaves differently in a pathological org than in a generative one, because the two systems reward opposite things.
 
-Pathological signals (power-oriented):
-  "We figured out who was responsible for the outage" — scapegoating, not learning.
-  Incident postmortems are private or not published.
-  Engineers fear raising problems because it reflects badly on their team.
-  Cross-team contact requires management approval.
-  New ideas are killed before they reach leadership.
-  On-call rotation is adversarial — ops blames dev for bad code.
-  Information about production issues is withheld until forced.
+The typology has three types, defined by what leadership optimises for. Pathological organisations are power-oriented: information is a political asset, so it is hoarded and messengers are shot. Bureaucratic organisations are rule-oriented: information travels through official channels, and the goal is defensible procedure rather than outcome. Generative organisations are performance-oriented: information is routed to whoever can act on it, because the mission wins.
 
-Bureaucratic signals (rule-oriented):
-  "We followed the change-advisory-board process, so it is not our fault" — rules over mission.
-  Postmortems produce no action items because nothing is "clearly against policy."
-  Teams share information only through official channels and ticketing systems.
-  A known broken process cannot be changed because "that is how it has always been done."
-  Cross-team improvements require six months of approvals.
+Westrum operationalised this as six characteristics of information flow — cooperation across boundaries, how messengers are treated, how responsibility is shared, whether bridging between units is encouraged, how failure is handled, and whether novelty is welcomed or crushed. That matters practically, because it means culture is measurable. Accelerate (Forsgren, Humble and Kim, 2018) used Westrum's Likert instrument directly and found the generative score predicts software delivery performance at statistical significance — and separately predicts lower burnout and higher job satisfaction. **Culture is not a soft prelude to the technical work; in the data it is the limiting variable.**
 
-Generative signals (performance-oriented):
-  Postmortems are published org-wide and produce shipped action items.
-  Engineers can DM any team and get a response the same day.
-  Bad news surfaces quickly because the messenger is valued, not punished.
-  Failure is treated as data — "what can the system learn?" not "who did this?"
-  Teams share tooling, runbooks, and on-call experience across org boundaries.
-  The question after an incident is "what systemic fix prevents recurrence?"
+The fastest diagnostic is a single question asked in one-to-ones: "what happens here when something goes wrong?" The answer sorts the organisation almost immediately.
 
-Assessment method:
-  Ask engineers in 1:1s: "What happens here when something goes wrong?"
-  Pathological: "We find out who screwed up."
-  Bureaucratic: "We review whether procedure was followed."
-  Generative: "We run a blameless postmortem and ship action items."
+Pathological — power-oriented:
+- "We figured out who was responsible for the outage" — scapegoating rather than learning.
+- Postmortems are private, or not written at all.
+- Engineers hesitate to raise problems because it reflects badly on their team.
+- Cross-team contact needs management approval, and new ideas die before reaching leadership.
+- On-call is adversarial: ops blames dev for the code, dev blames ops for the platform.
 
-Accelerate (Forsgren, Humble, Kim, 2018):
-  Generative culture score predicts DORA metrics with statistical significance.
-  Culture is not a soft concern — it is the limiting factor for delivery performance.`,
+Bureaucratic — rule-oriented:
+- "We followed the change-advisory-board process, so it is not our fault."
+- Postmortems produce no action items because nothing was clearly against policy.
+- Information moves only through tickets and official channels.
+- A known-broken process survives because changing it is someone else's mandate.
+
+Generative — performance-oriented:
+- Postmortems are published org-wide and produce action items that actually ship.
+- An engineer can message any team and get an answer the same day.
+- Bad news travels fast, because the messenger is valued rather than punished.
+- The question after an incident is what systemic fix prevents recurrence, not who did it.
+
+Two cautions worth carrying into a real assessment. First, measure it rather than assert it — the Westrum instrument is a short survey, and leadership's self-assessment is reliably more generous than the engineers'. Second, culture is local: a generative team can survive inside a bureaucratic org, and a single pathological director can hollow out a generative one. Assess the blast radius you actually work in.`,
       },
       {
-        title: 'CALMS — five pillars mapped to concrete practices and anti-patterns',
-        description: `CALMS operationalized: what each pillar looks like when working, and what it looks like when broken.
+        title: 'CALMS — the prescription, and what each pillar looks like when it breaks',
+        content: `If Westrum tells you where you are, CALMS tells you what to change. It began as CAMS — Damon Edwards and John Willis, Velocity 2010 — and Jez Humble later added the L, because the Lean lineage of DevOps was being under-credited. The value of CALMS is diagnostic rather than aspirational: each pillar has a recognisable broken state, and the broken states are what you are actually looking for.
 
-C — Culture (shared accountability):
-  Working: dev and ops share the same on-call rotation; production incidents are everyone's problem.
-  Working: "You build it, you run it" (Werner Vogels, AWS, 2006) is the operating model.
-  Broken: dev ships code and throws it over the wall; ops fires alerts back at dev via tickets.
-  Broken: separate quarterly OKRs for dev (features shipped) and ops (uptime) with no shared metric.
-  Fix: shared on-call, shared error-budget SLOs, co-located dev and ops in the same team.
+**C — Culture: shared accountability.** Working, dev and ops share one on-call rotation and a production incident is everybody's problem — "you build it, you run it", as Werner Vogels put it in 2006. Broken, dev throws code over the wall and ops fires alerts back as tickets; the tell is separate OKRs, features shipped for one group and uptime for the other, with no metric they share. The fix is structural, not exhortative: one rotation, one error budget, one team.
 
-A — Automation (eliminate manual repetition):
-  Working: CI/CD pipeline builds, tests, and deploys on every commit; humans approve at release.
-  Working: infrastructure provisioned via Terraform or Pulumi; no manual console clicks.
-  Working: toil capped at 50% of on-call engineer time (SRE model); excess toil is a bug.
-  Broken: "we will automate that eventually" runbooks that never become scripts.
-  Broken: environment provisioning via ticket to a separate team; PR cycle for a config change.
-  Fix: instrument toil, set a toil budget, treat automation investment as capacity planning.
+**A — Automation: eliminate manual repetition.** Working, the pipeline builds, tests and deploys on every commit, infrastructure comes from Terraform or Pulumi rather than console clicks, and toil is capped — the SRE model puts the ceiling at 50% of an engineer's time and treats anything above it as a bug to be fixed. Broken, runbooks describe manual steps that were always going to be automated "eventually", and provisioning an environment means opening a ticket against another team. The fix begins with instrumenting toil, because an unmeasured toil budget is never defended.
 
-L — Lean (continuous improvement, small batches):
-  Working: PRs merged within 24 hours; small, reviewable changesets under 400 lines.
-  Working: value stream map done quarterly; largest bottleneck attacked each quarter.
-  Broken: features built in six-week sprints and released in quarterly "big bang" deploys.
-  Broken: WIP unlimited; every engineer has 5 concurrent feature branches and 3 incidents.
-  Fix: WIP limits, Kanban pull model, small-batch releases, Theory of Constraints applied to the pipeline.
+**L — Lean: small batches and continuous improvement.** Working, pull requests merge within a day, changesets stay reviewable, and the largest bottleneck in the value stream is attacked deliberately each quarter. Broken, work is built in six-week sprints and released in quarterly big-bang deploys, and WIP is unlimited — every engineer holding five branches and three incidents. The fix is WIP limits and a pull model; Theory of Constraints applies directly, in that improving anything other than the current bottleneck improves nothing.
 
-M — Measurement (outcomes, not vanity metrics):
-  Working: DORA four keys measured and reviewed quarterly with leadership.
-  Working: SLOs defined per service; error budgets drive prioritization of reliability work.
-  Broken: measuring lines of code shipped, story points completed, hours worked.
-  Broken: "our uptime is 99.9%" without defining what a minute of downtime costs the business.
-  Fix: DORA metrics as the engineering dashboard; customer satisfaction + error budgets as the outcomes layer.
+**M — Measurement: outcomes, not activity.** Working, the DORA four keys are tracked and reviewed with leadership, and per-service SLOs give error budgets that decide when reliability work outranks features. Broken, the dashboard counts lines of code, story points or hours; or it reports 99.9% uptime without anyone knowing what a minute of downtime costs. The fix is to separate the engineering layer (DORA) from the outcome layer (customer satisfaction, error budgets) and stop conflating them.
 
-S — Sharing (knowledge across org boundaries):
-  Working: postmortems published org-wide; engineers from other teams can read and learn.
-  Working: communities of practice meet monthly; tooling and runbooks are open-source internally.
-  Broken: each team reinvents the observability stack, the deploy system, the alert playbook.
-  Broken: lessons from a major incident live in one team's private Confluence space.
-  Fix: internal TechDocs platform, postmortem library, open-source culture for internal tooling.`,
+**S — Sharing: knowledge across boundaries.** Working, postmortems are readable org-wide, communities of practice meet, and internal tooling is treated as internal open source. Broken, every team rebuilds its own observability stack and deploy system, and the lessons of a major incident live in one team's private wiki. The fix is a real docs platform and a postmortem library — sharing fails for want of a searchable destination far more often than for want of goodwill.
+
+Used together the two frameworks close the loop: Westrum locates you, CALMS gives the intervention, and DORA tells you whether the intervention worked. A CALMS programme with no Westrum baseline and no DORA outcome is a list of good intentions.`,
       },
+    ],
+    quickFire: [
+      { q: 'What are the three Westrum organisational types?', a: 'Pathological (power-oriented — information is a political asset, messengers are shot), Bureaucratic (rule-oriented — information moves through official channels, defensible procedure beats outcome), and Generative (performance-oriented — information is routed to whoever can act, because the mission wins).' },
+      { q: 'What is the fastest way to assess Westrum type?', a: 'Ask engineers in one-to-ones: "what happens here when something goes wrong?" Pathological answers name a person. Bureaucratic answers cite whether procedure was followed. Generative answers describe a blameless postmortem and shipped action items. Then measure it properly — the Westrum instrument is a short Likert survey, and leadership self-assessment is reliably more generous than the engineers’.' },
+      { q: 'What did Accelerate prove about culture?', a: 'It used Westrum’s instrument directly and found the generative-culture score predicts software delivery performance at statistical significance, and separately predicts lower burnout and higher job satisfaction. Culture is not a soft prelude to the technical work — in the data it is the limiting variable.' },
+      { q: 'What does CALMS stand for and where did it come from?', a: 'Culture, Automation, Lean, Measurement, Sharing. It began as CAMS (Damon Edwards and John Willis, Velocity 2010); Jez Humble added Lean because the Lean lineage of DevOps was being under-credited.' },
+      { q: 'How do Westrum, CALMS and DORA fit together?', a: 'Westrum locates you, CALMS gives the intervention, DORA tells you whether the intervention worked. A CALMS programme with no Westrum baseline and no DORA outcome is a list of good intentions.' },
+      { q: 'What is the tell that Culture is broken, as opposed to just imperfect?', a: 'Separate OKRs with no shared metric — features shipped for dev, uptime for ops. That structure guarantees the wall, and no amount of collaboration messaging fixes it. The remedy is one rotation, one error budget, one team.' },
+      { q: 'What is a concrete toil target?', a: 'The SRE model caps toil at 50% of an engineer’s time and treats anything above as a bug. The prerequisite is instrumenting toil at all — an unmeasured toil budget is never defended, and "we will automate it eventually" is what that sounds like.' },
+      { q: 'Why does improving a non-bottleneck stage not help?', a: 'Theory of Constraints: throughput is set by the constraint, so optimising anything else just builds inventory in front of it. This is why Lean prescribes value stream mapping first — you have to know which stage is the constraint before choosing what to improve.' },
+      { q: 'Can a team be generative inside a bureaucratic organisation?', a: 'Yes — culture is local. A generative team can survive inside a bureaucratic org, and one pathological director can hollow out a generative one. Assess the blast radius you actually work in rather than the company’s stated values.' },
     ],
     introduction: `## Overview
 Two frameworks every senior DevOps engineer should be able to discuss precisely:
@@ -908,73 +873,64 @@ Interview-ready summary: Westrum tells you where you are. CALMS tells you what t
         description: 'Map every step from idea to running-in-production: code, review, build, test, deploy. For each: lead time + process time + wait time. The biggest gap is the bottleneck.',
         image: '/diagrams/devops/a5-value-stream.png',
       },
+    ],
+    topics: [
       {
-        title: 'VSM worked example — 4-month to 3-day lead time transformation',
-        description: `A realistic VSM exercise showing how to find and eliminate bottlenecks.
+        title: 'The three numbers, and why flow efficiency is the one that matters',
+        content: `Value stream mapping rests on three measurements per step, and the discipline is in keeping them distinct. **Lead time** is wall-clock time from work arriving at a step to leaving it, waiting included. **Process time** is hands-on work only. **Wait time** is the difference — the queue. Teams that track only one number almost always track process time, which is why estimates feel accurate while delivery stays slow: the estimate describes the work, and the calendar is dominated by the waiting.
 
-Current-state map (typical enterprise before DevOps transformation):
+The ratio of the two is **flow efficiency** (PT / LT), and it is the single most diagnostic number in the exercise. In most software value streams it lands between 5% and 15%, meaning 85–95% of elapsed time is queueing. That figure reframes every improvement conversation. Hiring faster engineers moves process time, which is the small term. Removing a queue moves wait time, which is the large one.
 
-  Step              Lead Time   Process Time   Wait Time   PT/LT ratio
-  Code              2 weeks     2 weeks        0           100%
-  Code review       3 weeks     30 min         ~3 weeks    0.3%
-  QA queue          4 weeks     3 days         ~3.5 weeks  10%
-  Stage deploy      1 week      15 min         ~1 week     0.4%
-  UAT               2 weeks     2 days         ~1.5 weeks  14%
-  Prod approval     3 weeks     1 hour         ~3 weeks    0.1%
-  Prod deploy       1 week      30 min         ~1 week     0.6%
+A fourth number is worth collecting and is routinely skipped: **percent complete and accurate** (%C&A), from Martin and Osterling's mapping method — the share of work items arriving at a step that are usable without rework. A step with 60% %C&A silently doubles the load on every upstream step, and rework loops are invisible on a map that only records forward flow. If a stage keeps sending work backwards, fixing its queue achieves nothing.
 
-  Total lead time: ~16 weeks
-  Total process time: ~3 days
-  Overall PT/LT ratio: 2.7%
+Little's Law explains why this all coheres: lead time equals WIP divided by throughput. Queues are simply WIP that is waiting, so removing a queue reduces WIP and therefore lead time directly, with no change in how fast anyone works. **This is the mechanism behind the whole practice — VSM is a technique for locating WIP.**
 
-Diagnosis:
-  Largest wait: prod approval (3 weeks). Root cause: change-advisory-board meets monthly.
-  Second largest: QA queue (4 weeks). Root cause: separate QA team, 6:1 dev-to-QA ratio.
-  Third largest: code review (3 weeks). Root cause: single senior engineer approves all PRs.
-
-Future-state map (after targeted fixes):
-
-  Step              Lead Time   Process Time   Fix Applied
-  Code              0.5 days    0.5 days       Trunk-based dev, small PRs
-  Code review       4 hours     30 min         Review SLA, distributed CODEOWNERS
-  Automated tests   15 min      15 min         Shift-left, in-team QA, automated suite
-  Stage deploy      5 min       5 min          IaC, automated environment provisioning
-  Prod approval     5 min       5 min          Policy-as-code, SLO-gated auto-approval
-  Prod deploy       10 min      10 min         Canary rollout, automated
-
-  Total lead time: ~1 day
-  Total process time: ~2 hours
-  Overall PT/LT ratio: 25%
-
-  Result: lead time from 16 weeks to 1 day. DORA band: Low to Elite.
-
-Key lesson:
-  The improvement did not come from coding faster. It came from eliminating wait.
-  85-95% of lead time in most value streams is waiting, not working.
-  VSM identifies where the waiting is; targeted practice changes remove it.`,
+Two cautions about running the exercise. Map one specific, recently completed item rather than the average case, because averages hide the queue that hurts. And gather the numbers by interviewing the people who did the work, not from the ticket tool — ticket timestamps record when someone remembered to move a card, which systematically understates waiting.`,
       },
       {
-        title: 'Quick-fire interview answers — Value Stream Mapping',
-        description: `Common VSM interview questions with precise, interview-ready answers.
+        title: 'A worked map — sixteen weeks to one day, without anyone coding faster',
+        content: `The current-state map below is a realistic enterprise value stream before a delivery transformation. Read the flow-efficiency column first.
 
-Q: What is a value stream?
-A: The full sequence of activities required to deliver value to a customer. For software: idea, design, code, review, build, test, stage, deploy, run, learn. Every value stream has waste — handoffs, queues, rework — that can be measured and reduced.
+| Step | Lead time | Process time | Wait time | Flow efficiency |
+| --- | --- | --- | --- | --- |
+| Code | 2 weeks | 2 weeks | 0 | 100% |
+| Code review | 3 weeks | 30 min | ~3 weeks | 0.3% |
+| QA queue | 4 weeks | 3 days | ~3.5 weeks | 10% |
+| Stage deploy | 1 week | 15 min | ~1 week | 0.4% |
+| UAT | 2 weeks | 2 days | ~1.5 weeks | 14% |
+| Prod approval | 3 weeks | 1 hour | ~3 weeks | 0.1% |
+| Prod deploy | 1 week | 30 min | ~1 week | 0.6% |
 
-Q: What are the three numbers in VSM?
-A: Lead Time (LT) — wall-clock time from arriving at a step to leaving it, including waiting. Process Time (PT) — actual hands-on work time. Wait Time (WT) — LT minus PT, the time spent in queues. The key ratio is PT/LT. In most software value streams this is 5-15%, meaning 85-95% of lead time is waiting.
+Totals: **~16 weeks lead time against ~3 days of process time — 2.7% flow efficiency.** Coding is the only step operating at anything like full efficiency, and it is also the only step most organisations try to speed up.
 
-Q: How do you run a VSM workshop?
-A: Six steps. First, pick a specific value stream and a recent concrete example (a feature shipped last month). Second, list every step from idea to value delivered. Third, gather LT, PT, and WT for each step by interviewing the people who did the work. Fourth, compute totals and the PT/LT ratio. Fifth, identify the step with the largest wait time — that is the bottleneck. Sixth, design a future-state map with targeted fixes for the bottleneck: smaller PRs, automated testing, IaC, policy-as-code for approvals.
+The diagnosis follows the wait column, largest first. Production approval costs three weeks because the change-advisory board meets monthly, so the expected wait is half a cycle regardless of how trivial the change is. The QA queue costs four weeks because QA is a separate team at a 6:1 developer-to-tester ratio — a capacity constraint, not a diligence problem. Code review costs three weeks because a single senior engineer approves every pull request, which is a bus-factor risk wearing the costume of a quality gate.
 
-Q: How does VSM relate to DORA Lead Time for Changes?
-A: DORA Lead Time is the sum of lead times across your value stream — VSM in a single number. VSM tells you where the time is going; DORA tracks whether your fixes are working over time. Use them together: measure DORA monthly, run VSM workshops when DORA lead time regresses.
+Each fix targets a queue rather than the work:
 
-Q: What is a common anti-pattern when doing VSM?
-A: Mapping at too high a level. "Development takes 2 weeks" is not useful. You need to see the sub-steps: coding, waiting for review, responding to comments, waiting for CI, waiting for staging. The waste is in the transitions between steps, not inside the steps. Granular mapping reveals the actual bottleneck.
+| Step | New lead time | Fix applied |
+| --- | --- | --- |
+| Code | 0.5 days | Trunk-based development, small PRs |
+| Code review | 4 hours | Review SLA plus distributed CODEOWNERS |
+| Automated tests | 15 min | Shift-left, in-team QA, automated suite |
+| Stage deploy | 5 min | IaC, automated environment provisioning |
+| Prod approval | 5 min | Policy-as-code, SLO-gated auto-approval |
+| Prod deploy | 10 min | Canary rollout, automated |
 
-Q: What is the PT/LT ratio for world-class teams?
-A: Elite DORA teams have lead times under one day for the whole stream. If coding takes 4 hours, review takes 2 hours, and deploy takes 10 minutes, the PT/LT ratio is over 90% — waiting is nearly eliminated. The typical enterprise starts at 2-5%.`,
+The future state is roughly one day of lead time against two hours of process time — about 25% flow efficiency, and a move from the DORA low band to elite.
+
+**The improvement did not come from writing code faster.** Process time barely moved; nearly all of the gain came from deleting queues. That is the general result, and it is why value stream mapping precedes tool selection: until you know which queue dominates, any investment is a guess. Note too that the approval queue was not removed by abolishing governance — it was removed by expressing the policy as code so the check runs in seconds rather than waiting for a monthly meeting. Governance was preserved; the batch was not.`,
       },
+    ],
+    quickFire: [
+      { q: 'What is a value stream?', a: 'The full sequence of activities that turns an idea into delivered value — design, code, review, build, test, stage, deploy, run, learn. Every value stream carries waste in the form of handoffs, queues and rework, all of which can be measured.' },
+      { q: 'What are the three numbers in VSM?', a: 'Lead time (wall clock through a step, waiting included), process time (hands-on work only) and wait time (the difference). The ratio PT/LT is flow efficiency, typically 5–15% in software — meaning 85–95% of elapsed time is queueing.' },
+      { q: 'Why is flow efficiency the most diagnostic number?', a: 'Because it tells you which term to attack. Hiring faster engineers moves process time, the small term. Removing a queue moves wait time, the large one. At 2.7% flow efficiency, doubling engineering speed changes lead time by about one percent.' },
+      { q: 'What is %C&A and why does it matter?', a: 'Percent complete and accurate — the share of items arriving at a step that are usable without rework (Martin and Osterling). A step at 60% %C&A doubles the load on everything upstream. Rework loops are invisible on a map that records only forward flow, so a stage that keeps sending work backwards will not be fixed by shortening its queue.' },
+      { q: 'How do you run a VSM workshop?', a: 'Pick one value stream and one specific recently-shipped item, not an average. List every step from idea to value delivered. Gather LT, PT and WT per step by interviewing the people who did the work. Compute totals and flow efficiency. Attack the largest wait, then design the future state around that fix.' },
+      { q: 'Why not pull the numbers from Jira?', a: 'Ticket timestamps record when someone remembered to move a card, which systematically understates waiting. Interviews recover the real queue — the two days a ticket sat "in review" before anyone opened it.' },
+      { q: 'What is the connection to Little’s Law?', a: 'Lead time = WIP / throughput. A queue is just WIP that is waiting, so deleting a queue lowers WIP and therefore lead time with no change in how fast anyone works. VSM is a technique for locating WIP.' },
+      { q: 'How does VSM relate to DORA lead time for changes?', a: 'DORA lead time is the sum of the value stream in one number. VSM tells you where the time goes; DORA tells you whether the fix held. Track DORA continuously and run a VSM workshop when it regresses or plateaus.' },
+      { q: 'How do you remove an approval queue without removing governance?', a: 'Express the policy as code so the check executes in seconds instead of waiting for a monthly board, and gate risky changes on SLO burn rather than on a meeting. The control is preserved; the batching is what gets deleted.' },
     ],
     introduction: `## Overview
 Value Stream Mapping (VSM) is a Lean-manufacturing technique adapted by Toyota in the 1990s and now standard in software DevOps. Verbatim from The DevOps Handbook (Ch 4): "A value stream is the sequence of activities that an organization undertakes to deliver upon a customer request."
@@ -1237,68 +1193,50 @@ The key insight: VSM is the diagnostic tool that tells you what to fix. DORA met
         description: 'Deployment Frequency × Lead Time for Changes × Change Failure Rate × MTTR. Elite teams: multiple deploys/day, < 1 day lead time, < 15% failure, < 1 hour MTTR.',
         image: '/diagrams/devops/a2-dora-metrics.png',
       },
+    ],
+    topics: [
       {
-        title: 'DORA metric instrumentation — how to actually collect the four keys',
-        description: `Automated instrumentation is mandatory. Survey-based DORA measurement consistently over-reports performance by one band. Instrument from systems, not from people.
+        title: 'The four keys — what they are, what they are not, and how the names changed',
+        content: `The four keys split cleanly into two clusters, and holding that split in mind prevents most of the misuse. **Deployment frequency** and **change lead time** measure throughput. **Change failure rate** and **failed deployment recovery time** measure stability. The central finding of the DORA programme is that these two clusters move together rather than trading off — the same practices that make delivery fast are the ones that make it safe, because small, frequent, reversible changes are both quicker to ship and cheaper to diagnose.
 
-Deployment Frequency:
-  Source: CI/CD pipeline events. Tag every successful deploy-to-production job.
-  In GitHub Actions, a workflow run that completes the production deploy step.
-  In Argo CD or Flux, a GitOps sync event completing for the production cluster.
-  Granularity: per service, not per org. Roll up to org level separately.
-  Tools: Google Four Keys (open source), Sleuth, LinearB, Faros AI, Allstacks.
+One naming point matters in an interview and in a dashboard. The fourth key was originally MTTR, and was **renamed to failed deployment recovery time** in the 2023 report precisely because MTTR had become ambiguous. General MTTR covers every incident, including a cloud provider outage that no deployment caused. The DORA metric is narrower: how long it takes to recover from a failure *introduced by a change*. If you report generic incident MTTR and call it DORA, you are measuring your provider as much as your delivery process. A related clean-up: reliability was separated out as its own operational-performance outcome rather than being folded into the four, so "are we meeting our SLOs" is tracked alongside, not inside, the keys.
 
-  Common trap: counting every pipeline run including staging. Only production deploys count.
+Treat the published bands as a moving reference rather than fixed constants — the elite thresholds have shifted between annual reports as the industry has moved, and the change failure rate band in particular has tightened. The shape is stable even when the numbers move:
 
-Lead Time for Changes:
-  Source: the commit SHA that is part of a deployment, correlated with its commit timestamp.
-  Algorithm: for each production deploy, identify all commits it contains that were not in the prior deploy. Lead Time per commit = deploy_timestamp minus commit_timestamp. Median across commits for the period.
-  Tools: GitHub Deployments API gives per-SHA deploy timestamps. LinearB instruments this automatically.
+| Metric | Elite | Low |
+| --- | --- | --- |
+| Deployment frequency | On demand, multiple per day | Fewer than once per month |
+| Change lead time | Less than one day | More than one month |
+| Change failure rate | Around 5%, historically quoted up to 15% | Above 40% |
+| Failed deployment recovery | Less than one hour | More than one week |
 
-  Common trap: measuring from PR open, not from first commit. The first commit is when work started.
-
-Change Failure Rate:
-  Source: incidents or hotfix deploys correlated to the deploy that caused them.
-  Method 1: PagerDuty/OpsGenie incidents tagged "deploy-related: true" divided by total deploys.
-  Method 2: hotfix deployments (tagged in CI) divided by total deployments.
-  Method 3: automated rollbacks as a fraction of total deploys.
-
-  Common trap: under-tagging incidents as deploy-related. Leads to artificially low CFR.
-
-Mean Time to Restore (MTTR):
-  Source: incident management system. incident_resolved_at minus incident_detected_at, filtered to service-impacting incidents.
-  Only "deploy-related" incidents if you want MTTR in the DORA sense. All incidents if you want SRE MTTR.
-  Tools: PagerDuty analytics, Grafana Incident, Rootly, Blameless.
-
-  Common trap: measuring time to merge a hotfix, not time to service restoration. Restoration matters.
-
-Cadence and reporting:
-  Compute trailing 28-day or trailing 90-day windows. Do not report single-week numbers — too noisy.
-  Review quarterly with engineering leadership. Treat sustained regression in any metric as an incident.
-  Celebrate improvements; do not punish low starting points.`,
+Two failure modes are worth naming. The first is using the keys to compare teams or individuals: they are context-dependent — a payments service and an internal dashboard have legitimately different deployment cadences — and the moment they are attached to performance review, Goodhart's law applies and the numbers stop describing reality. Track a team against its own trend. The second is optimising a key directly: splitting one deploy into five raises deployment frequency without delivering anything. **The metrics are a thermometer, not a control surface** — you move them by changing batch size, test feedback and rollback capability, and they follow.`,
       },
       {
-        title: 'Quick-fire interview answers — DORA Metrics',
-        description: `The questions every DevOps interview asks, with precise answers.
+        title: 'Instrumenting the four keys from systems, not from people',
+        content: `Automated instrumentation is not a refinement here, it is a correctness requirement. **Survey-based DORA measurement consistently over-reports performance by roughly one band**, because people remember the smooth releases. Every number below should come out of a system that has no opinion about how the quarter went.
 
-Q: Name the four DORA metrics.
-A: Deployment Frequency — how often production receives a successful release. Lead Time for Changes — time from code committed to code running in production. Change Failure Rate — percentage of deployments causing a failure in production. Mean Time to Restore (MTTR) — time to restore service after an incident. A fifth metric, Reliability, was added in 2021: does the service meet its SLOs?
+**Deployment frequency** comes from CI/CD pipeline events: tag every job that successfully completes a production deploy. In GitHub Actions that is a workflow run reaching the production deploy step; under Argo CD or Flux it is a sync event completing against the production cluster. Measure per service and roll up to the organisation separately, because a single org-wide number averages away the service that deploys quarterly. The common trap is counting every pipeline run, staging included — only production deploys count.
 
-Q: What are the elite-tier thresholds?
-A: Deployment Frequency: multiple deploys per day. Lead Time: less than one day. Change Failure Rate: 0-15%. MTTR: less than one hour. These come from the 2024 State of DevOps Report.
+**Change lead time** requires correlating commits to the deployment that carried them. For each production deploy, find the commits it contains that were not in the previous deploy; lead time per commit is deploy timestamp minus commit timestamp, and you report the median for the period. Use the median rather than the mean, since one long-lived branch will drag an average anywhere. The GitHub Deployments API gives per-SHA deploy timestamps, which is usually the cleanest source. The common trap is measuring from pull-request open instead of from first commit — work started at the first commit, and the gap between the two is often where the queue lives.
 
-Q: Why is "speed vs stability" a false trade-off?
-A: Accelerate (Forsgren, Humble, Kim, 2018) found a strong positive correlation between velocity metrics and stability metrics across thousands of teams. Faster-deploying teams have lower failure rates because small deploys have smaller blast radii; if something breaks, fewer changes are in scope for the rollback. Also, teams that deploy frequently have battle-tested pipelines, runbooks, and rollback paths — their processes are practiced and reliable.
+**Change failure rate** is the hardest to instrument honestly, because it depends on correctly attributing incidents to deploys. Three practical sources, in rough order of reliability: automated rollbacks as a fraction of total deploys; hotfix deployments, tagged in CI, over total deployments; and incidents tagged deploy-related in PagerDuty or OpsGenie over total deploys. All three under-count when tagging discipline slips, and **an implausibly low change failure rate is nearly always an under-tagging problem rather than an achievement** — treat a sub-1% CFR as a data-quality alert.
 
-Q: How would you start measuring DORA for a team that has never done it?
-A: Start with Deployment Frequency — easiest to instrument from CI/CD events. Add Lead Time next using the commit-to-deploy correlation. Add CFR by tagging incidents as deploy-related in the incident tool. Add MTTR last from incident timestamps. Use trailing 90-day windows. Bucket into the four bands honestly. Pick the worst metric and invest there.
+**Failed deployment recovery time** comes from the incident system: resolved-at minus detected-at, filtered to service-impacting incidents that a change caused. The trap is measuring time to merge the hotfix rather than time to restore service. Users experience restoration; a merged fix that has not rolled out yet has restored nothing. Note also that a team that recovers by rolling back will score very differently from one that recovers by rolling forward, which is itself the useful signal.
 
-Q: A team has a 30% Change Failure Rate despite 99% test coverage. What is wrong?
-A: Several possibilities: the tests are wrong (high coverage, low assertion quality), the tests run too late (after merge, not on PR), production differs from staging in ways tests cannot see, there is no progressive delivery (100% blast radius on each deploy), or observability is insufficient to detect regressions before customers do. The fix is usually progressive delivery (canary, feature flags, automated rollback) before adding more tests.
-
-Q: What is the fifth DORA metric?
-A: Reliability — added in 2021. Asks whether the service meets customer expectations as expressed by SLOs. Bridges the DORA framework to SRE's SLO model. A team can have elite velocity and stability metrics and still have users who are unhappy if the SLOs are poorly defined or not met.`,
+On cadence: compute trailing 28-day or 90-day windows and never report single weeks, which are dominated by noise. Review quarterly with engineering leadership, and treat a sustained regression in any key as an incident with an owner rather than a line on a slide. Finally, be careful what the reporting rewards — celebrate the trend, not the absolute, or teams inheriting a legacy estate will simply learn not to measure.`,
       },
+    ],
+    quickFire: [
+      { q: 'Name the four DORA metrics.', a: 'Deployment frequency, change lead time, change failure rate, and failed deployment recovery time. The first two measure throughput, the second two stability. Reliability — are you meeting your SLOs — is tracked as a separate operational-performance outcome rather than as a fifth key.' },
+      { q: 'Why was MTTR renamed?', a: 'Because MTTR was ambiguous. General MTTR covers every incident including provider outages no deployment caused; the DORA metric is specifically recovery from a failure introduced by a change. The 2023 report renamed it failed deployment recovery time to make that scope explicit.' },
+      { q: 'What are the elite bands?', a: 'On-demand deploys, lead time under a day, change failure rate around 5% (historically quoted up to 15%), and recovery under an hour. Treat these as a moving reference — thresholds have shifted between annual reports, and the change-failure band in particular has tightened.' },
+      { q: 'Why is speed versus stability a false trade-off?', a: 'Because the same practices drive both. Small, frequent, reversible changes are faster to ship and cheaper to diagnose, so throughput and stability move together in the data rather than against each other. Teams that are slow are usually also unstable.' },
+      { q: 'Why must DORA be instrumented rather than surveyed?', a: 'Survey-based measurement consistently over-reports by about one band, because people remember the smooth releases. Every key should come from a system with no opinion about how the quarter went.' },
+      { q: 'What does an implausibly low change failure rate tell you?', a: 'That tagging is broken, not that delivery is flawless. CFR depends on attributing incidents to deploys, and every collection method under-counts when discipline slips. Treat sub-1% CFR as a data-quality alert.' },
+      { q: 'What is the most common lead-time instrumentation error?', a: 'Measuring from pull-request open rather than first commit, and using a mean instead of a median. Work started at the first commit — the gap between commit and PR is often exactly where the queue lives — and one long-lived branch will drag an average anywhere.' },
+      { q: 'Why should DORA metrics never be used to compare teams?', a: 'They are context-dependent: a payments service and an internal dashboard have legitimately different cadences. Attaching them to performance review triggers Goodhart’s law — splitting one deploy into five raises deployment frequency while delivering nothing. Track a team against its own trend.' },
+      { q: 'A team has 99% test coverage but a 30% change failure rate. What is wrong?', a: 'Coverage measures lines executed, not behaviour verified, and says nothing about integration, configuration, data migrations or rollout mechanics — which is where most change failures originate. Look at what the failures actually were, then invest in the missing feedback stage: contract tests, staged rollout, and automated rollback on SLO burn.' },
     ],
     introduction: `## Overview
 DORA (DevOps Research and Assessment) is a research program founded by Nicole Forsgren, Jez Humble, and Gene Kim in ~2014, acquired by Google in 2018 and now run as part of Google Cloud. The annual State of DevOps Report has 9+ years of survey data from tens of thousands of respondents across every industry.
@@ -1540,67 +1478,50 @@ Honesty check: when you have the numbers, the answer to "are we Elite?" is almos
         description: 'Stream-aligned (build the product) + Enabling (consult) + Platform (self-service) + Complicated Subsystem (specialist). Interactions: collaboration, X-as-a-Service, facilitating.',
         image: '/diagrams/devops/a4-team-topologies.png',
       },
+    ],
+    topics: [
       {
-        title: 'Team Topologies anti-patterns — how orgs get it wrong',
-        description: `The book names four anti-patterns explicitly. Recognizing them in interviews shows depth of understanding.
+        title: 'Cognitive load is the design constraint, not team size',
+        content: `Team Topologies rests on a claim borrowed from instructional psychology: a team, like a person, has a finite working capacity, and most organisational dysfunction is that capacity being exceeded. John Sweller's cognitive load theory (1988) splits the load three ways, and the distinction is what makes the framework actionable rather than merely descriptive.
 
-Anti-pattern 1: "DevOps Team"
-  What it looks like: leadership creates a team called "DevOps" to handle deployments, pipelines, and ops.
-  Why it fails: recreates the dev/ops silo under a new name. The DevOps team becomes a gatekeeper.
-    Dev teams still throw work over the wall. Ownership does not change.
-  What to do instead: embed DevOps capability into stream-aligned teams. Use a Platform team for shared tooling.
-    Use an Enabling team to teach DevOps practices, then withdraw.
+**Intrinsic load** is the inherent difficulty of the domain — payments really are harder than a settings page, and no reorganisation removes that. **Extraneous load** is incidental complexity imposed by the environment: hand-rolled deploy scripts, a bespoke observability stack, chasing three teams to provision a database. **Germane load** is the effort that goes into building expertise, the load you actually want people spending capacity on. The design goal follows directly: **drive extraneous load towards zero so that intrinsic and germane load have room.**
 
-Anti-pattern 2: "Pet Platform"
-  What it looks like: a Platform team builds internal tooling that nobody actually uses.
-  Why it fails: Platform team does not treat itself as a product team. No user research, no internal SLAs.
-    The "platform" is a technical hobby project. Stream-aligned teams build shadow alternatives.
-  What to do instead: run the Platform team like a product team. Define internal customers.
-    Run user research. Have a roadmap. Publish internal SLAs. Measure adoption.
+This reframes what a platform team is for. A stream-aligned team owning fifteen services, a shared database, its own Kubernetes cluster and the pager is not badly staffed — it is carrying extraneous load that belongs elsewhere. So the platform team's success metric is *how much extraneous load it removes from stream-aligned teams*, not how many features the platform ships. Those two numbers diverge quickly, and a platform measured on features reliably drifts into building things nobody adopts.
 
-Anti-pattern 3: "Shadow IT"
-  What it looks like: stream-aligned teams secretly build their own internal tools because the official platform is too slow or too poor.
-  Why it fails: duplication of effort, inconsistent security posture, fragmented knowledge.
-  What to do instead: treat shadow IT emergence as a signal that the Platform team is failing its customers.
-    Investigate what the stream-aligned team needed that they could not get. Fix the platform.
+The complementary heuristic is the **thinnest viable platform**: build the smallest thing that removes the load, which is sometimes a wiki page of golden paths rather than a service. Platform scope should be pulled by demand, not pushed by ambition.
 
-Anti-pattern 4: Permanent Collaboration
-  What it looks like: two teams are "collaborating" indefinitely on a shared service.
-  Why it fails: two teams in indefinite collaboration have blurry ownership, unclear decision authority,
-    and high cognitive load for both. Integration mode is expensive; it should be time-bounded.
-  What to do instead: collaboration is meant to solve a hard problem and produce a shared service or platform.
-    Once the problem is solved, one team owns the outcome; the other returns to their stream.
-    If collaboration is permanent, the teams should probably be merged.
+Team size is a constraint too, but a downstream one. Team Topologies takes Dunbar's tiers seriously — a team of roughly five to nine can hold a shared mental model and a trust relationship; beyond that, coordination cost grows and the group fragments informally anyway. But size is a symptom. **A team that keeps growing is usually a team whose cognitive load grew first**, and splitting it without moving load simply produces two overloaded teams and a new interface between them.
 
-Cognitive load capacity planning:
-  The book recommends assessing cognitive load before restructuring.
-  Team cognitive load = intrinsic load (problem complexity) + extraneous load (bad tooling) + germane load (expertise).
-  A stream-aligned team that owns 15 services, a shared database, the K8s cluster, AND on-call has too much extraneous load.
-  Platform teams absorb extraneous load. The Platform team success metric is how much it reduces
-  the extraneous load of stream-aligned teams, not how many features the platform has.`,
+Boundaries should follow what the book calls fracture planes — natural seams such as business domain, regulatory boundary, risk profile, or change cadence. A boundary drawn along a technology layer instead (a "front-end team" and a "back-end team") guarantees that every user-visible change requires two teams, which is the handoff the whole model exists to remove.`,
       },
       {
-        title: 'Quick-fire interview answers — Team Topologies',
-        description: `Core Team Topologies questions with crisp, informed answers.
+        title: 'The four anti-patterns, and what each one is really telling you',
+        content: `The book names four failure modes explicitly. Each is worth reading as a diagnostic signal rather than a mistake to scold, because each points at a specific missing capability.
 
-Q: Name the four team types.
-A: Stream-aligned: aligned to one valuable stream of work, owns design, build, deploy, operate end-to-end, roughly 80% of teams in a healthy org. Enabling: specialists who teach a stream-aligned team a capability then withdraw — time-boxed, not permanent operators. Complicated Subsystem: specialists who own a subsystem requiring deep specialist knowledge (ML, video encoding, payments), absorbs cognitive load that stream-aligned teams should not carry. Platform: provides internal services as a self-service product, treated as a product team with internal customers, roadmap, and SLAs.
+**The "DevOps team".** Leadership creates a team called DevOps to own deployments, pipelines and operations. It fails because it recreates the dev/ops silo under a friendlier name — the new team becomes a gatekeeper, work still goes over a wall, and ownership has not moved an inch. What it is telling you is that stream-aligned teams lack a capability. The remedy is a combination: embed the capability in the stream-aligned teams, provide shared tooling through a platform team, and use an **enabling** team to teach the practice and then withdraw. The withdrawal is the part that gets skipped, and skipping it turns the enabling team into a permanent operations team.
 
-Q: Name the three interaction modes.
-A: Collaboration: two teams work closely for a defined period to solve a hard problem, high cognitive load, time-boxed. X-as-a-Service: one team consumes another's self-service capability, low cognitive load, the standard pattern for Platform teams. Facilitating: an Enabling team helps a stream-aligned team build a capability, time-boxed knowledge transfer.
+**The pet platform.** A platform team builds internal tooling that nobody uses. It fails because the team is not behaving like a product team — no internal customers named, no user research, no roadmap, no published SLAs, no adoption metric. The tell is stream-aligned teams quietly building alternatives. Run the platform as a product, and treat adoption as the primary measure of success; a platform with a mandate but no adoption is not a platform, it is a tax.
 
-Q: What is Conway's Law and how does it affect architecture?
-A: Conway's Law (1968): organizations which design systems are constrained to produce designs which are copies of their communication structures. In practice: your microservice boundaries will mirror your team boundaries. If three teams own a service together, it will have three architecturally incoherent sections. The Inverse Conway Maneuver — restructure teams first, then re-architect — is the correct sequence for any major architectural transformation.
+**Shadow IT.** Stream-aligned teams build their own internal tooling because the official platform is too slow or too poor. The costs are real — duplicated effort, inconsistent security posture, fragmented operational knowledge — but the important move is to read it as feedback. **Shadow IT is the clearest available signal that the platform is failing its customers**, and it names precisely which need went unmet. Investigate what the team could not get, then fix the platform. Banning it removes the signal and not the cause.
 
-Q: When should an org create a Platform team?
-A: When multiple stream-aligned teams are reinventing the same capability, when cognitive load from shared infrastructure is overwhelming stream-aligned teams, and when the capability can be run as a product with explicit customers. The Platform team needs a roadmap, internal SLAs, and user research. Without product discipline, it becomes a "pet platform" nobody uses.
+**Permanent collaboration.** Two teams collaborate indefinitely on a shared service. Collaboration is one of the three interaction modes and it is genuinely valuable — it is how you discover an interface that nobody knew how to specify yet — but it is expensive: blurred ownership, unclear decision authority, and elevated cognitive load for both teams. It is meant to be time-boxed, running for weeks or a few months, and to *end* in a shared service or a clear interface. Once the problem is solved, one team owns the outcome and the other returns to its stream, converting the relationship to **X-as-a-Service**. If a collaboration has no end date, either it should convert or the two teams should merge.
 
-Q: Why is a "DevOps team" usually the wrong answer?
-A: Because it recreates the dev/ops silo under a new name. The DevOps team becomes a gatekeeper for deployments and infrastructure. Stream-aligned teams still throw work over the wall. The right answer is to embed DevOps capability into stream-aligned teams (each team owns its CI/CD, its on-call) and create a Platform team for shared tooling. An Enabling team can teach DevOps practices org-wide and then withdraw.
+The three interaction modes are the other half of the framework and are frequently ignored. Collaboration is high-bandwidth and temporary, for discovery. X-as-a-Service is low-bandwidth and durable, for consumption through a stable interface. Facilitating is an enabling team helping another team improve, and is also temporary by design. **Specifying which mode governs each pair of teams is as much of the design as the team types are** — most organisations name the boundaries and leave the interactions to chance, which is where the load quietly reappears.
 
-Q: What is "cognitive load" in the Team Topologies context?
-A: The total mental effort a team must sustain to do their work. Includes intrinsic load (problem complexity), extraneous load (bad tooling and processes), and germane load (expertise-building). Teams have a finite cognitive bandwidth. Overloaded stream-aligned teams slow down or cut corners. Platform teams absorb extraneous load. The goal is to keep stream-aligned teams within their cognitive bandwidth so they can deliver fast.`,
+Underneath all of it sits Conway's Law (1967): systems mirror the communication structures of the organisations that build them. The Inverse Conway Manoeuvre takes that seriously and runs it deliberately — choose the architecture you want, then shape teams and their interaction modes to match, and let the system follow. It works, but it is a slow instrument: the architecture follows the org over quarters, not sprints, and a reorganisation without a target architecture just reshuffles the same coupling.`,
       },
+    ],
+    quickFire: [
+      { q: 'Name the four team types.', a: 'Stream-aligned — owns one valuable stream end to end, design through operate, and should be most teams in a healthy org. Enabling — specialists who teach a capability then withdraw. Complicated-subsystem — owns a part needing deep specialist knowledge (ML, video encoding, payments) so stream-aligned teams do not carry it. Platform — provides internal services as a self-service product with internal customers, a roadmap and SLAs.' },
+      { q: 'What are the three interaction modes?', a: 'Collaboration (high-bandwidth, temporary, for discovering an interface nobody can yet specify), X-as-a-Service (low-bandwidth, durable, consumption through a stable interface), and Facilitating (an enabling team helping another improve, also temporary). Specifying the mode for each pair of teams is as much of the design as the team types.' },
+      { q: 'What are the three kinds of cognitive load?', a: 'Intrinsic — inherent difficulty of the domain. Extraneous — incidental complexity from the environment, such as bespoke deploy scripts or provisioning by ticket. Germane — effort spent building expertise. The design goal is to drive extraneous load towards zero so intrinsic and germane load have room.' },
+      { q: 'What is the right success metric for a platform team?', a: 'How much extraneous load it removes from stream-aligned teams — not how many features it ships. Those numbers diverge fast, and a platform measured on features drifts into building things nobody adopts. Adoption is the honest proxy.' },
+      { q: 'Why is a "DevOps team" an anti-pattern?', a: 'It recreates the dev/ops silo under a new name: the team becomes a gatekeeper, work still crosses a wall, ownership does not move. It is telling you stream-aligned teams lack a capability. Embed the capability, provide shared tooling via a platform, and use an enabling team to teach it and then withdraw — the withdrawal being the part that usually gets skipped.' },
+      { q: 'How should you react to shadow IT?', a: 'As feedback, not misconduct. It is the clearest signal that the platform is failing its customers, and it names exactly which need went unmet. Find what the team could not get and fix the platform; banning it removes the signal and leaves the cause.' },
+      { q: 'When should collaboration mode end?', a: 'When the hard problem is solved and an interface exists — typically weeks to a few months. It then converts to X-as-a-Service, with one team owning the outcome. Indefinite collaboration means blurred ownership and doubled cognitive load; if it will not convert, the teams should probably merge.' },
+      { q: 'When should an organisation create a platform team?', a: 'When multiple stream-aligned teams are independently solving the same extraneous-load problem — each running its own CI, observability or provisioning. Start with the thinnest viable platform, which may be documented golden paths rather than a service, and let scope be pulled by demand.' },
+      { q: 'What is the Inverse Conway Manoeuvre and what is its limitation?', a: 'Conway’s Law says systems mirror the communication structures that build them; the inverse manoeuvre chooses the target architecture first and shapes teams and interaction modes to match. The limitation is timescale — the architecture follows the org over quarters, not sprints — and a reorg without a target architecture just reshuffles the same coupling.' },
+      { q: 'Should you split a team that has grown past nine people?', a: 'Only after moving load. Growth is usually a symptom of cognitive load that grew first, so splitting without offloading produces two overloaded teams plus a new interface. Draw the new boundary along a fracture plane — domain, risk, regulatory scope, change cadence — never along a technology layer, which guarantees every user-visible change needs two teams.' },
     ],
     introduction: `## Overview
 Team Topologies (Matthew Skelton & Manuel Pais, 2019; 2nd ed. updates ongoing) is the canonical organizational design framework for DevOps-aligned teams. It builds on Conway\'s Law and the cognitive-load research of Eduardo Salas et al. The book is the most-cited org-design text in modern DevOps.
