@@ -1,9 +1,11 @@
 {
   "_comment": "Coverage inventory for the Kubernetes catalog. Every kubernetes.io Concepts page maps to the topic id that claims it, or to an object stating why it is excluded. Validation check 5 in docs/superpowers/specs/2026-08-23-kubernetes-catalog-parity-design.md asserts every named topic id resolves to a real topic. A topic may claim several pages; a page is claimed by exactly one topic. Topics with no page here (etcd operations, bare-metal provisioning) are legitimate — this maps pages to topics, not the reverse.",
-  "_source": "https://kubernetes.io/docs/concepts/ navigation tree, fetched 2026-08-24",
-  "_pageCount": 175,
+  "_source": "https://kubernetes.io/docs/concepts/, /docs/tasks/debug/ and /docs/reference/using-api/ navigation trees, fetched 2026-08-24",
+  "_pageCount": 198,
   "pages": {
-    "/docs/concepts/overview/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/overview/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/overview/components/": "kubernetes-architecture",
     "/docs/concepts/overview/working-with-objects/": "k8s-objects-and-identity",
     "/docs/concepts/overview/working-with-objects/object-management/": "k8s-objects-and-identity",
@@ -18,8 +20,9 @@
     "/docs/concepts/overview/working-with-objects/storage-version/": "k8s-api-and-versioning",
     "/docs/concepts/overview/kubernetes-api/": "k8s-api-and-versioning",
     "/docs/concepts/overview/kubectl/": "kubectl-cli-reference",
-
-    "/docs/concepts/architecture/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/architecture/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/architecture/nodes/": "k8s-nodes-and-lifecycle",
     "/docs/concepts/architecture/control-plane-node-communication/": "k8s-control-plane-communication",
     "/docs/concepts/architecture/controller/": "k8s-controllers-and-leases",
@@ -29,15 +32,17 @@
     "/docs/concepts/architecture/self-healing/": "k8s-garbage-collection-and-self-healing",
     "/docs/concepts/architecture/garbage-collection/": "k8s-garbage-collection-and-self-healing",
     "/docs/concepts/architecture/mixed-version-proxy/": "k8s-api-and-versioning",
-
-    "/docs/concepts/containers/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/containers/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/containers/images/": "k8s-container-images",
     "/docs/concepts/containers/container-environment/": "k8s-node-runtime-and-cgroups",
     "/docs/concepts/containers/cri/": "k8s-node-runtime-and-cgroups",
     "/docs/concepts/containers/runtime-class/": "kubernetes-runtime-class",
     "/docs/concepts/containers/container-lifecycle-hooks/": "k8s-container-lifecycle-hooks",
-
-    "/docs/concepts/workloads/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/workloads/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/workloads/pods/": "k8s-core-resources",
     "/docs/concepts/workloads/management/": "k8s-core-resources",
     "/docs/concepts/workloads/controllers/": "k8s-core-resources",
@@ -73,8 +78,9 @@
     "/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/": "kubernetes-autoscaling",
     "/docs/concepts/workloads/autoscaling/vertical-pod-autoscale/": "kubernetes-autoscaling",
     "/docs/concepts/workloads/resource-managers/": "k8s-node-resource-managers",
-
-    "/docs/concepts/services-networking/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/services-networking/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/services-networking/service/": "kubernetes-services",
     "/docs/concepts/services-networking/service-traffic-policy/": "k8s-topology-aware-routing",
     "/docs/concepts/services-networking/topology-aware-routing/": "k8s-topology-aware-routing",
@@ -86,9 +92,12 @@
     "/docs/concepts/services-networking/dns-pod-service/": "k8s-dns-for-services-and-pods",
     "/docs/concepts/services-networking/dual-stack/": "k8s-dual-stack-and-clusterip-allocation",
     "/docs/concepts/services-networking/cluster-ip-allocation/": "k8s-dual-stack-and-clusterip-allocation",
-    "/docs/concepts/services-networking/windows-networking/": { "excluded": "Windows out of scope" },
-
-    "/docs/concepts/storage/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/services-networking/windows-networking/": {
+      "excluded": "Windows out of scope"
+    },
+    "/docs/concepts/storage/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/storage/volumes/": "k8s-volumes",
     "/docs/concepts/storage/persistent-volumes/": "k8s-persistent-volumes",
     "/docs/concepts/storage/storage-classes/": "k8s-storage-classes-and-provisioning",
@@ -104,16 +113,22 @@
     "/docs/concepts/storage/storage-capacity/": "k8s-storage-capacity-and-limits",
     "/docs/concepts/storage/storage-limits/": "k8s-storage-capacity-and-limits",
     "/docs/concepts/storage/volume-health-monitoring/": "k8s-volume-health-monitoring",
-    "/docs/concepts/storage/windows-storage/": { "excluded": "Windows out of scope" },
-
-    "/docs/concepts/configuration/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/storage/windows-storage/": {
+      "excluded": "Windows out of scope"
+    },
+    "/docs/concepts/configuration/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/configuration/configmap/": "k8s-configmaps",
     "/docs/concepts/configuration/secret/": "kubernetes-secrets-management",
     "/docs/concepts/configuration/manage-resources-containers/": "k8s-resource-requests-and-limits",
     "/docs/concepts/configuration/organize-cluster-access-kubeconfig/": "k8s-kubeconfig",
-    "/docs/concepts/configuration/windows-resource-management/": { "excluded": "Windows out of scope" },
-
-    "/docs/concepts/security/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/configuration/windows-resource-management/": {
+      "excluded": "Windows out of scope"
+    },
+    "/docs/concepts/security/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/security/cloud-native-security/": "k8s-cloud-native-security",
     "/docs/concepts/security/pod-security-standards/": "k8s-pod-security-standards",
     "/docs/concepts/security/pod-security-admission/": "k8s-pod-security-admission",
@@ -130,15 +145,21 @@
     "/docs/concepts/security/linux-kernel-security-constraints/": "k8s-linux-kernel-security",
     "/docs/concepts/security/security-checklist/": "k8s-security-checklists",
     "/docs/concepts/security/application-security-checklist/": "k8s-security-checklists",
-    "/docs/concepts/security/pod-security-policy/": { "excluded": "PodSecurityPolicy removed in v1.25; superseded by Pod Security Admission, which has its own topic. Mentioned there as prior art." },
-    "/docs/concepts/security/windows-security/": { "excluded": "Windows out of scope" },
-
-    "/docs/concepts/policy/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/security/pod-security-policy/": {
+      "excluded": "PodSecurityPolicy removed in v1.25; superseded by Pod Security Admission, which has its own topic. Mentioned there as prior art."
+    },
+    "/docs/concepts/security/windows-security/": {
+      "excluded": "Windows out of scope"
+    },
+    "/docs/concepts/policy/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/policy/limit-range/": "k8s-limitrange-and-resourcequota",
     "/docs/concepts/policy/resource-quotas/": "k8s-limitrange-and-resourcequota",
     "/docs/concepts/policy/pid-limiting/": "k8s-pid-limits",
-
-    "/docs/concepts/scheduling-eviction/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/scheduling-eviction/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/scheduling-eviction/kube-scheduler/": "k8s-kube-scheduler",
     "/docs/concepts/scheduling-eviction/assign-pod-node/": "k8s-assigning-pods-to-nodes",
     "/docs/concepts/scheduling-eviction/taint-and-toleration/": "k8s-taints-and-tolerations",
@@ -157,8 +178,9 @@
     "/docs/concepts/scheduling-eviction/pod-overhead/": "k8s-scheduler-tuning",
     "/docs/concepts/scheduling-eviction/pod-scheduling-readiness/": "k8s-scheduler-tuning",
     "/docs/concepts/scheduling-eviction/node-declared-features/": "k8s-scheduler-tuning",
-
-    "/docs/concepts/cluster-administration/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/cluster-administration/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/cluster-administration/node-shutdown/": "k8s-node-shutdown-and-swap",
     "/docs/concepts/cluster-administration/swap-memory-management/": "k8s-node-shutdown-and-swap",
     "/docs/concepts/cluster-administration/node-autoscaling/": "k8s-node-and-cluster-autoscaling",
@@ -177,18 +199,55 @@
     "/docs/concepts/cluster-administration/proxies/": "k8s-control-plane-communication",
     "/docs/concepts/cluster-administration/compatibility-version/": "k8s-api-and-versioning",
     "/docs/concepts/cluster-administration/coordinated-leader-election/": "k8s-controllers-and-leases",
-
-    "/docs/concepts/windows/": { "excluded": "Windows out of scope" },
-    "/docs/concepts/windows/intro/": { "excluded": "Windows out of scope" },
-    "/docs/concepts/windows/user-guide/": { "excluded": "Windows out of scope" },
-
-    "/docs/concepts/extend-kubernetes/": { "excluded": "section index; content covered by child pages" },
+    "/docs/concepts/windows/": {
+      "excluded": "Windows out of scope"
+    },
+    "/docs/concepts/windows/intro/": {
+      "excluded": "Windows out of scope"
+    },
+    "/docs/concepts/windows/user-guide/": {
+      "excluded": "Windows out of scope"
+    },
+    "/docs/concepts/extend-kubernetes/": {
+      "excluded": "section index; content covered by child pages"
+    },
     "/docs/concepts/extend-kubernetes/compute-storage-net/": "k8s-compute-storage-network-extensions",
     "/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/": "k8s-cni-network-plugins",
     "/docs/concepts/extend-kubernetes/compute-storage-net/device-plugins/": "k8s-device-plugins",
     "/docs/concepts/extend-kubernetes/api-extension/": "k8s-custom-resources",
     "/docs/concepts/extend-kubernetes/api-extension/custom-resources/": "k8s-custom-resources",
     "/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/": "kubernetes-api-aggregation",
-    "/docs/concepts/extend-kubernetes/operator/": "operators-and-crds"
+    "/docs/concepts/extend-kubernetes/operator/": "operators-and-crds",
+    "_section_tasks_debug": "Operational content lives outside /docs/concepts/. Parity with Concepts alone produces no error taxonomy, which is how 4xx/5xx and Pod failure states went missing. These trees are inventoried too.",
+    "/docs/tasks/debug/": {
+      "excluded": "section index; content covered by child pages"
+    },
+    "/docs/tasks/debug/logging/": "k8s-logging-architecture",
+    "/docs/tasks/debug/monitoring/": "k8s-system-metrics",
+    "/docs/tasks/debug/debug-application/": "kubernetes-app-troubleshooting",
+    "/docs/tasks/debug/debug-application/debug-pods/": "k8s-pod-failure-taxonomy",
+    "/docs/tasks/debug/debug-application/determine-reason-pod-failure/": "k8s-pod-failure-taxonomy",
+    "/docs/tasks/debug/debug-application/debug-init-containers/": "k8s-init-and-ephemeral-containers",
+    "/docs/tasks/debug/debug-application/debug-service/": "k8s-ingress-5xx-debugging",
+    "/docs/tasks/debug/debug-application/debug-statefulset/": "k8s-statefulsets",
+    "/docs/tasks/debug/debug-application/debug-running-pod/": "kubernetes-app-troubleshooting",
+    "/docs/tasks/debug/debug-application/get-shell-running-container/": "kubernetes-app-troubleshooting",
+    "/docs/tasks/debug/debug-cluster/": "k8s-cluster-debugging",
+    "/docs/tasks/debug/debug-cluster/troubleshoot-kubectl/": "k8s-cluster-debugging",
+    "/docs/tasks/debug/debug-cluster/monitor-node-health/": "k8s-cluster-debugging",
+    "/docs/tasks/debug/debug-cluster/crictl/": "k8s-cluster-debugging",
+    "/docs/tasks/debug/debug-cluster/kubectl-node-debug/": "k8s-cluster-debugging",
+    "/docs/tasks/debug/debug-cluster/audit/": "k8s-cluster-debugging",
+    "/docs/tasks/debug/debug-cluster/resource-metrics-pipeline/": "k8s-system-metrics",
+    "/docs/tasks/debug/debug-cluster/resource-usage-monitoring/": "k8s-system-metrics",
+    "/docs/tasks/debug/debug-cluster/topology/": "k8s-node-resource-managers",
+    "/docs/tasks/debug/debug-cluster/local-debugging/": {
+      "excluded": "third-party telepresence workflow, not core Kubernetes"
+    },
+    "/docs/tasks/debug/debug-cluster/windows/": {
+      "excluded": "Windows out of scope"
+    },
+    "_section_reference": "API error semantics. Status codes are reference material, not a concept page, so Concepts parity never reached them.",
+    "/docs/reference/using-api/api-concepts/": "k8s-apiserver-status-codes"
   }
 }
