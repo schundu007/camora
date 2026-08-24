@@ -26,11 +26,12 @@ export const fluxTopics = [
     color: '#4f46e5',
     questions: 5,
     description: 'Why push-based CI deployment breaks down at scale, the four OpenGitOps principles Flux implements, and where Flux sits against Argo CD, plain CI pipelines, and Kustomize or Helm on their own.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Push-based CI delivery versus Flux pull-based reconciliation',
         image: '/diagrams/devops/flux-1-why.png',
-        description: `The diagram contrasts two delivery topologies. The top half is the conventional push model: a CI runner builds an image, then runs kubectl apply or helm upgrade against the cluster API server from outside the cluster. The bottom half is the Flux pull model: controllers running inside the cluster poll a Git repository or OCI registry on an interval, fetch the desired state, and apply it themselves. Nothing outside the cluster ever holds cluster credentials.
+        content: `The diagram contrasts two delivery topologies. The top half is the conventional push model: a CI runner builds an image, then runs kubectl apply or helm upgrade against the cluster API server from outside the cluster. The bottom half is the Flux pull model: controllers running inside the cluster poll a Git repository or OCI registry on an interval, fetch the desired state, and apply it themselves. Nothing outside the cluster ever holds cluster credentials.
 
 What the push model forces you to accept:
 
@@ -62,7 +63,7 @@ The reconciliation loop in practice:
   notification-controller emits the outcome to Slack, Teams, or a Git commit status, and accepts inbound webhooks so a push can trigger reconciliation immediately instead of waiting for the interval.
 
 The credential inversion is the part interviewers push on. In the pull model the blast radius of a compromised CI system is limited to publishing bad artifacts, which still have to pass whatever review and policy gates guard the repository. In the push model a compromised CI system is a compromised cluster.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the single strongest argument for GitOps over a CI pipeline that runs kubectl apply?', a: 'Continuous reconciliation. A pipeline applies once and stops observing. Flux runs a loop that re-reads desired state from Git on spec.interval and re-applies it, so manual cluster edits are reverted rather than accumulating as invisible drift. The security argument is second but almost as strong: with Flux, no cluster credentials live in CI, because the controllers pull from inside the cluster using their own ServiceAccounts.' },
@@ -331,13 +332,12 @@ Practical migration guidance. Do not try to convert in place. Stand up Flux v2 o
     color: '#4f46e5',
     questions: 5,
     description: 'How flux bootstrap differs from flux install, why committing Flux own manifests to Git makes it self-managing, and the operational lifecycle: auth choices, cluster path layout, upgrades, air-gapped installs, and uninstall.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'What flux bootstrap does and the cluster path it generates',
         image: '/diagrams/devops/flux-2-bootstrap.png',
-        description: `The diagram traces the bootstrap sequence and the repository layout it produces. Bootstrap is one command that performs four distinct actions, and understanding that it is four actions rather than an installer is the whole point.
-
-The four actions:
+        content: `The four actions:
 
 1. Install the controllers. The CLI renders the GitOps Toolkit manifests for the requested version and applies them to the cluster, creating the flux-system namespace, the CRDs, the controller Deployments, and the RBAC.
 
@@ -401,7 +401,7 @@ Multi-cluster layout. --path is what scopes a cluster. One repository holds ever
 Each cluster reconciles only its own path, so a change under prod-eu cannot reach prod-us. Shared platform configuration lives outside clusters/ and is pulled in by Kustomizations each cluster path chooses to declare, which is how you get common baselines with per-cluster opt-in.
 
 The contrast with flux install: flux install applies the same controllers and stops. Nothing is written to Git, no GitRepository or Kustomization is created, and Flux does not manage itself. It is appropriate for a throwaway test cluster or as a manifest generator via flux install --export. It is not appropriate for anything you intend to keep.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between flux install and flux bootstrap?', a: 'flux install deploys the controllers into the cluster and stops — nothing is written to Git, and Flux does not manage itself. flux bootstrap installs the controllers, commits the same manifests to a Git repository under --path, and creates a GitRepository and Kustomization pointing back at that path so Flux reconciles its own installation. Bootstrap is idempotent and is the supported production path; flux install is for throwaway clusters and for generating manifests with --export.' },
@@ -807,13 +807,12 @@ The related operation worth mentioning as a contrast: flux suspend kustomization
     color: '#4f46e5',
     questions: 6,
     description: 'The command families that actually get used in production: reconcile, suspend, resume, trace, diff, build, check, logs, events, tree, stats, and the export-then-commit workflow that keeps the CLI GitOps-correct.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The flux command families and what each one touches',
         image: '/diagrams/devops/flux-3-cli.png',
-        description: `The flux binary is a thin client. It has no daemon, no server component, and no state of its own. Every subcommand either writes a Flux custom resource to the Kubernetes API, reads one back, annotates one, or renders manifests locally. Understanding which of those four things a command does is the difference between using Flux correctly and fighting it.
-
-Commands that change the cluster directly (use sparingly in a GitOps setup):
+        content: `Commands that change the cluster directly (use sparingly in a GitOps setup):
 
   flux bootstrap github|gitlab|bitbucket-server|git ...
     Installs the GitOps Toolkit controllers, commits the component manifests into a
@@ -897,7 +896,7 @@ Commands for debugging:
   flux events --for HelmRelease/podinfo --types warning -w
 
 The mental model to carry into an interview: flux create and flux delete are imperative escape hatches; flux reconcile, suspend, and resume are annotations, not applies; flux build and flux diff are local renderers; and flux trace, tree, logs, events, and stats are the read path you live in during an incident.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Does flux reconcile push new manifests to the cluster?', a: 'No. It writes the annotation reconcile.fluxcd.io/requestedAt with a fresh timestamp onto the target object and then polls until the object reports Ready. The controller does the work. Nothing in the reconcile command carries manifest content.' },
@@ -1290,13 +1289,12 @@ Two habits worth mentioning. Add flux stats -A when the whole cluster feels slow
     color: '#4f46e5',
     questions: 5,
     description: 'How source-controller fetches, verifies, and republishes external content as an in-cluster artifact, and how GitRepository, OCIRepository, HelmRepository, and Bucket differ in auth, verification, and scale characteristics.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'source-controller, the artifact model, and the four source kinds',
         image: '/diagrams/devops/flux-4-sources.png',
-        description: `source-controller has exactly one job: acquire content from somewhere outside the cluster, optionally verify it, and republish it inside the cluster as an immutable artifact that other controllers can consume over plain HTTP. Every other GitOps Toolkit controller — kustomize-controller, helm-controller, and anything reading an ExternalArtifact — is a consumer of that artifact, never a client of Git or of a registry.
-
-The artifact model:
+        content: `The artifact model:
 
   1. On each spec.interval tick, source-controller contacts the remote (Git, OCI registry,
      Helm repository, or object store) and computes the current revision.
@@ -1363,7 +1361,7 @@ spec.ignore field overrides both and is the auditable place to put exclusions, s
 lives in the CRD rather than in the content being fetched. What survives exclusion is what
 ends up in the tarball, so trimming aggressively is how you keep source-controller memory
 and its storage volume under control on large monorepos.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Do kustomize-controller and helm-controller talk to Git?', a: 'No. They only read artifacts from source-controller over in-cluster HTTP. That separation is the whole point: credentials for Git and registries exist in exactly one controller, fetching happens once regardless of how many consumers there are, and the consumers can be scaled and secured independently.' },
@@ -1790,13 +1788,12 @@ flux reconcile kustomization podinfo --with-source
     color: '#4f46e5',
     questions: 6,
     description: 'The Kustomization CRD is the apply engine of Flux: it builds manifests from a Source, substitutes variables, decrypts secrets, server-side applies with field ownership, health-checks the result, and prunes what Git removed.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The kustomize-controller reconciliation loop, field ownership, and the inventory',
         image: '/diagrams/devops/flux-5-kustomization.png',
-        description: `The Kustomization is a custom resource in the kustomize.toolkit.fluxcd.io/v1 API group. It does not fetch anything itself. A source-controller object (GitRepository, OCIRepository, Bucket, or ExternalArtifact) produces an artifact; the Kustomization consumes it via sourceRef and turns it into applied cluster state.
-
-Naming collision that trips up candidates:
+        content: `Naming collision that trips up candidates:
 
   kustomization.kustomize.toolkit.fluxcd.io   -> the Flux CRD (when and how to apply)
   kustomization.kustomize.config.k8s.io       -> the kustomize.yaml overlay file (what to apply)
@@ -1871,7 +1868,7 @@ Escape hatches applied as annotations on individual resources inside your manife
   kustomize.toolkit.fluxcd.io/decrypt: disabled
 
 And spec.ignore for surgical drift exemptions using RFC 6901 JSON Pointers, where a literal slash inside a key is escaped as ~1.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Is a Flux Kustomization the same as a kustomization.yaml?', a: 'No. The Flux Kustomization is a CRD in kustomize.toolkit.fluxcd.io/v1 that describes when and how to reconcile a directory of manifests. The kustomization.yaml is the kustomize overlay file in kustomize.config.k8s.io that describes what resources and transformers make up the build. The Flux CR points at the directory containing the file. Flux can also generate a kustomization.yaml automatically if the path holds only plain YAML.' },
@@ -2198,13 +2195,12 @@ Remote clusters are the natural extension. spec.kubeConfig with a secretRef, or 
     color: '#4f46e5',
     questions: 6,
     description: 'The HelmRelease CRD turns Helm into a controller-driven, continuously reconciled resource with automated remediation, drift correction, and post-render patching — replacing helm upgrade in CI.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'HelmRelease anatomy, remediation state machine, and drift detection',
         image: '/diagrams/devops/flux-6-helmrelease.png',
-        description: `The HelmRelease is a custom resource in helm.toolkit.fluxcd.io/v2, reconciled by helm-controller. The controller embeds the Helm SDK and drives the same actions the CLI would: install, upgrade, test, rollback, uninstall. The difference is that the desired state lives in a Kubernetes object rather than in a pipeline invocation, so it is continuously reconciled instead of applied once.
-
-Lineage: Flux v1 shipped the Helm Operator with the HelmRelease CRD in helm.fluxcd.io/v1. Flux v2 replaced it with helm-controller as part of the GitOps Toolkit, and the API moved through v2beta1 and v2beta2 to the stable helm.toolkit.fluxcd.io/v2. The concept survived; the implementation and the API group did not. Both the v1 Helm Operator and the v2beta APIs are retired, so writing helm.fluxcd.io/v1 in an interview dates you by several years.
+        content: `Lineage: Flux v1 shipped the Helm Operator with the HelmRelease CRD in helm.fluxcd.io/v1. Flux v2 replaced it with helm-controller as part of the GitOps Toolkit, and the API moved through v2beta1 and v2beta2 to the stable helm.toolkit.fluxcd.io/v2. The concept survived; the implementation and the API group did not. Both the v1 Helm Operator and the v2beta APIs are retired, so writing helm.fluxcd.io/v1 in an interview dates you by several years.
 
 Where the chart comes from — two mutually exclusive fields:
 
@@ -2299,7 +2295,7 @@ Other fields that carry weight in production:
   suspend                    Freeze reconciliation without deleting the object.
 
 Status conditions to read when triaging: Ready is the overall verdict, Released reports whether the last Helm action succeeded, TestSuccess reports chart tests, and Remediated reports that a rollback or uninstall was performed. status.lastAttemptedRevision versus status.lastAppliedRevision tells you whether the current chart version ever succeeded.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'chart or chartRef — which do you use?', a: 'They are mutually exclusive and exactly one is required. spec.chart templates an implicit HelmChart resource and takes a sourceRef of kind HelmRepository, GitRepository, or Bucket. spec.chartRef points directly at an existing OCIRepository, HelmChart, or ExternalArtifact. For OCI-hosted charts, chartRef with an OCIRepository is the current recommendation because the OCIRepository handles semver resolution, digest pinning, and cosign verification independently of the release.' },
@@ -2626,13 +2622,12 @@ If the patch is needed across many releases, the same kustomize patch can live o
     color: '#4f46e5',
     questions: 5,
     description: 'How Flux closes the loop from container registry back to Git: image-reflector-controller scans tags, image-automation-controller commits the winning tag into your manifests, and the cluster converges from that commit.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Registry scan to Git commit — the two image controllers and the setter marker',
         image: '/diagrams/devops/flux-7-image-automation.png',
-        description: `Image update automation is the only part of Flux that writes to Git rather than reading from it. It is delivered by two separate controllers, and keeping them straight is the first thing an interviewer checks.
-
-image-reflector-controller is the read side. It owns two CRDs, both on image.toolkit.fluxcd.io/v1. ImageRepository is a registry scanner: give it an image address without a scheme and an interval, and it lists the tags in that repository and caches them in status.lastScanResult (latestTags, tagCount, scanTime). ImagePolicy is a selector: it reads a cached tag list via imageRepositoryRef and computes which single tag wins, publishing it to status.latestRef (image, tag, and optionally digest). Neither CRD ever touches Git or the cluster workloads.
+        content: `image-reflector-controller is the read side. It owns two CRDs, both on image.toolkit.fluxcd.io/v1. ImageRepository is a registry scanner: give it an image address without a scheme and an interval, and it lists the tags in that repository and caches them in status.lastScanResult (latestTags, tagCount, scanTime). ImagePolicy is a selector: it reads a cached tag list via imageRepositoryRef and computes which single tag wins, publishing it to status.latestRef (image, tag, and optionally digest). Neither CRD ever touches Git or the cluster workloads.
 
 image-automation-controller is the write side. It owns ImageUpdateAutomation, which clones the GitRepository named in spec.sourceRef, walks the directory in spec.update.path, finds setter marker comments in the YAML, replaces the adjacent value with the tag published by the matching ImagePolicy, commits, and pushes.
 
@@ -2738,7 +2733,7 @@ digest: sha256:aaaa...       # {"$imagepolicy": "flux-system:app:digest"}
 Two fields means namespace:policy-name and the controller replaces the entire image reference. Three fields adds a component selector — name, tag, or digest — and the controller replaces only that portion. The namespace is the namespace of the ImagePolicy object, not of the workload. Get it wrong and nothing happens: no error, no event, just a manifest that never changes.
 
 The default and only update strategy is Setters. It is a structured YAML rewrite from kyaml, not a text substitution, so comments, key order, and indentation survive the commit. That is what makes the diffs reviewable.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Which controller does what?', a: 'image-reflector-controller scans registries and evaluates policies — it owns ImageRepository and ImagePolicy, and it never writes anywhere. image-automation-controller owns ImageUpdateAutomation and is the only Flux controller that pushes commits to Git. Neither one applies anything to the cluster.' },
@@ -2992,13 +2987,12 @@ Finally, the answer an interviewer wants to hear volunteered: image automation i
     color: '#4f46e5',
     questions: 5,
     description: 'notification-controller runs in both directions: outbound Providers and Alerts push reconciliation events to Slack, PagerDuty and Git commit status, while inbound Receivers accept webhooks that cut git-to-cluster lag from minutes to seconds.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Two directions through notification-controller — Provider, Alert, Receiver',
         image: '/diagrams/devops/flux-8-notifications.png',
-        description: `notification-controller is the only Flux controller that talks to the outside world in both directions, and the cleanest way to hold it in your head is as two independent pipelines that happen to share a Deployment.
-
-Outbound. Every Flux controller emits events through the fluxcd/pkg/runtime/events library to an internal endpoint served by notification-controller. An event carries involvedObject (apiVersion, kind, name, namespace, uid), severity, reason, message, reportingController, timestamp, and a metadata map that usually holds the revision. notification-controller matches each event against the Alert objects in the cluster, and for every match it dispatches through the Provider that Alert references.
+        content: `Outbound. Every Flux controller emits events through the fluxcd/pkg/runtime/events library to an internal endpoint served by notification-controller. An event carries involvedObject (apiVersion, kind, name, namespace, uid), severity, reason, message, reportingController, timestamp, and a metadata map that usually holds the revision. notification-controller matches each event against the Alert objects in the cluster, and for every match it dispatches through the Provider that Alert references.
 
 \`\`\`
 kustomize-controller / helm-controller / source-controller / image-*
@@ -3063,7 +3057,7 @@ spec:
 \`\`\`
 
 spec.type selects payload validation and event filtering: github and bitbucket verify HMAC on X-Hub-Signature, gitlab checks X-Gitlab-Token, nexus checks X-Nexus-Webhook-Signature, harbor checks Authorization, acr, dockerhub, quay and gcr parse their native payloads, cdevents filters on event type, generic accepts anything, generic-hmac verifies X-Signature, and generic-oidc validates an OIDC token and needs no Secret at all. spec.resourceFilter takes a CEL expression over req and res for finer targeting, which is how a monorepo webhook fires only the Kustomizations whose paths changed.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What are the three notification CRDs and which direction does each go?', a: 'Provider and Alert are outbound — Alert is the routing rule, Provider is the destination. Receiver is inbound — it accepts a webhook and triggers reconciliation. All three are owned by notification-controller.' },
@@ -3412,13 +3406,12 @@ The general principle to state: the Receiver path is unguessable, but obscurity 
     color: '#4f46e5',
     questions: 5,
     description: 'The four documented Flux repository layouts and their tradeoffs, plus the tenant isolation model built on service account impersonation and cross-namespace reference lockdown.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Monorepo layout, reconciliation ordering, and the tenant isolation boundary',
         image: '/diagrams/devops/flux-9-repo-structure.png',
-        description: `The Flux repository-structure guide documents four patterns. The monorepo is the recommended starting point and the one most interview answers should default to:
-
-  ├── apps
+        content: `├── apps
   │   ├── base
   │   ├── production
   │   └── staging
@@ -3481,7 +3474,7 @@ Repo per app puts manifests next to source code in the application repository (d
 The tenant isolation boundary:
 
 Namespace-per-tenant is the model. A tenant gets one or more namespaces, a ServiceAccount inside them, and a RoleBinding. Their Kustomization sets spec.serviceAccountName, and kustomize-controller impersonates that account for every apply. The controller itself still runs privileged, but the API server evaluates the tenant's RBAC, not the controller's — so a tenant cannot apply a ClusterRoleBinding they were not granted. Combined with --no-cross-namespace-refs, --no-remote-bases, and --default-service-account, that is the documented lockdown.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What goes in clusters/ versus apps/ versus infrastructure/?', a: 'clusters/<name>/ contains only Flux Kustomization and source objects — it is the entry point that a given cluster bootstraps against and it decides which other directories that cluster consumes. infrastructure/ holds addons and CRDs that must exist first (ingress, cert-manager, external-dns). apps/ holds workloads as base plus per-environment overlays. The split exists so you can put a dependsOn edge between infrastructure and apps.' },
@@ -3813,13 +3806,12 @@ The answer that signals experience: name the enforcement point rather than listi
     color: '#4f46e5',
     questions: 6,
     description: 'How to put secrets in Git without putting secrets in Git — SOPS, Sealed Secrets, External Secrets — plus signed-commit and cosign artifact verification, controller RBAC, and workload identity.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The GitOps secrets problem and the three answers, plus the supply chain trust chain',
         image: '/diagrams/devops/flux-10-security.png',
-        description: `GitOps says the repository is the source of truth for cluster state. Secrets are cluster state. Git is a distributed, replicated, permanently-retained, frequently-cloned datastore with no access revocation. Those two facts are in direct conflict, and every Flux secrets pattern is an attempt to resolve it.
-
-The Flux docs enumerate the option space:
+        content: `The Flux docs enumerate the option space:
 
 Plain Kubernetes Secrets. Used during bootstrap for the Git deploy key or token, stored in etcd either plaintext or encrypted depending on your cluster's encryption-at-rest configuration. The docs are unambiguous that storing plain-text secrets in your desired state is not recommended beyond this initial authentication step. Base64 is encoding, not encryption.
 
@@ -3881,7 +3873,7 @@ Decryption protects confidentiality. Verification protects integrity — it answ
 On success the source-controller sets a SourceVerified condition to True; a failed verification leaves the source not-Ready, and every Kustomization depending on it stops reconciling. That is the enforcement — an unsigned commit does not become a partial rollout, it becomes a stalled one with a clear condition message.
 
 Keyless cosign is the modern default for CI-produced artifacts. There is no key to store or rotate; the signature is bound to an OIDC identity recorded in a transparency log, and Flux matches it with regular expressions against issuer and subject.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why can you not just commit a Kubernetes Secret to Git?', a: 'Because base64 is encoding, not encryption — anyone with read access to the repository has the value in plaintext. Git makes it worse than a leaked file: history is permanent, every clone is a full copy, and there is no revocation. Rotating the credential is the only remediation, and you have to assume it already leaked.' },
@@ -4246,13 +4238,12 @@ The point worth making explicitly in an interview: the GitOps model turns every 
     color: '#4f46e5',
     questions: 6,
     description: 'The Flux observability stack — Prometheus metrics, Kubernetes events, and controller logs — plus a systematic playbook for diagnosing a Kustomization or HelmRelease that will not go Ready.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The Flux observability stack and where each signal comes from',
         image: '/diagrams/devops/flux-11-monitoring.png',
-        description: `Flux emits three independent signal types, and knowing which one answers which question is most of the debugging skill.
-
-1. Prometheus metrics — controller-exported, port 8080, path /metrics
+        content: `1. Prometheus metrics — controller-exported, port 8080, path /metrics
 
 Every GitOps Toolkit controller serves a Prometheus endpoint on container port 8080 (named http-prom in the Deployment) at /metrics. The controller-exported families are:
 
@@ -4330,7 +4321,7 @@ flux logs --kind=Kustomization --name=podinfo --namespace=default --since=10m
 \`\`\`
 
 The mental model: metrics tell you something is wrong and for how long. Events tell you what the controller decided and against which revision. Logs tell you the exact error string from git, kustomize, the API server, or Helm.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'A Kustomization has been Ready=False for an hour. What are your first three commands?', a: 'flux check to confirm the controllers themselves are healthy and CRDs are at the expected version. flux get all -A --status-selector ready=false to see whether this is one object or a whole dependency chain. flux events --for Kustomization/my-app -n flux-system to read the actual failure Reason and Message. Only after that do I reach for logs.' },
@@ -4633,13 +4624,12 @@ The design decision behind the answer: if a field is genuinely owned by another 
     color: '#4f46e5',
     questions: 6,
     description: 'Moving to Flux v2 from Flux v1, the Helm Operator, or an imperative CI pipeline — then the operational patterns that keep Flux healthy at hundreds of clusters: sharding, concurrency tuning, webhooks, self-upgrade, and disaster recovery.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Migration paths into Flux v2 and the production scaling levers',
         image: '/diagrams/devops/flux-12-migration.png',
-        description: `Part one — where teams migrate from.
-
-Flux v1 to Flux v2. This is a model change, not a version bump. Flux v1 was a single daemon configured by command line flags on its own Deployment, driving behaviour through annotations on your workloads (fluxcd.io/automated, fluxcd.io/tag.container, fluxcd.io/ignore). Flux v2 is a set of controllers configured by custom resources. Every v1 flag has become a field on a CRD.
+        content: `Flux v1 to Flux v2. This is a model change, not a version bump. Flux v1 was a single daemon configured by command line flags on its own Deployment, driving behaviour through annotations on your workloads (fluxcd.io/automated, fluxcd.io/tag.container, fluxcd.io/ignore). Flux v2 is a set of controllers configured by custom resources. Every v1 flag has become a field on a CRD.
 
   v1 deployment flag --git-url / --git-branch  ->  GitRepository spec.url / spec.ref.branch
   v1 flag --git-path                           ->  Kustomization spec.path
@@ -4703,7 +4693,7 @@ patches:
 The main controllers are patched with --watch-label-selector=!sharding.fluxcd.io/key so they ignore anything claimed by a shard. Resources opt in by carrying the sharding.fluxcd.io/key label; for HelmReleases the label must also be propagated to the generated HelmChart via spec.chart.metadata.labels. source-controller, kustomize-controller and helm-controller support sharding; notification-controller does not.
 
 Latency last. Lower intervals cost API and Git traffic on every object; a notification-controller Receiver costs nothing until a push arrives. The production shape is a long interval as the safety net and a webhook for responsiveness.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the single biggest conceptual change from Flux v1 to v2?', a: 'Configuration moved from daemon flags and workload annotations to custom resources. In v1 the unit of configuration was the Flux Deployment itself; in v2 it is a GitRepository plus a Kustomization, which means multiple sources, multiple paths, per-object suspend, and per-object RBAC all become possible. The second-biggest change is atomic server-side validated apply — one invalid manifest blocks the whole set.' },

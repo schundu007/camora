@@ -23,13 +23,12 @@ export const controlPlaneTopics = [
     color: '#475569',
     questions: 6,
     description: 'The subset of Go that matters when you are writing controllers, admission webhooks, and platform APIs — context propagation, the error model, concurrency failure modes, and production diagnostics.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'What a Go control-plane service is actually made of',
         image: '/diagrams/devops/cp-1-go.png',
-        description: `Every piece of infrastructure you touch on a Kubernetes platform is a Go binary: kube-apiserver, kubelet, etcd, containerd, Prometheus, Envoy control planes, Terraform, Vault, Consul, Helm, Argo CD, Flux. That is not fashion. It is four properties that happen to line up exactly with what a control-plane process needs.
-
-Static binaries. CGO_ENABLED=0 go build produces one file with no dynamic linker dependency. That file goes into a FROM scratch or FROM gcr.io/distroless/static container image of a few megabytes. There is no interpreter to install, no virtualenv, no glibc version skew between the build host and the node. Cross-compilation is a pair of environment variables: GOOS=linux GOARCH=arm64 go build. For a controller that ships as a container image to clusters you do not own, this removes an entire class of deployment failure.
+        content: `Static binaries. CGO_ENABLED=0 go build produces one file with no dynamic linker dependency. That file goes into a FROM scratch or FROM gcr.io/distroless/static container image of a few megabytes. There is no interpreter to install, no virtualenv, no glibc version skew between the build host and the node. Cross-compilation is a pair of environment variables: GOOS=linux GOARCH=arm64 go build. For a controller that ships as a container image to clusters you do not own, this removes an entire class of deployment failure.
 
 Compile speed and a single toolchain. go build on a mid-size controller is a few seconds. go vet, go test, gofmt, the race detector, the profiler, and the module system all ship in the same distribution. There is no separate build tool, formatter war, or dependency resolver to argue about. On a platform team where six people rotate through the same repo, that uniformity is worth more than any individual language feature.
 
@@ -53,7 +52,7 @@ Panic is not control flow. A panic in a reconcile goroutine kills the process un
 Interfaces are small and defined at the point of use. The Go convention is accept interfaces, return structs: a function takes the narrowest interface it needs (io.Reader, client.Reader) and returns a concrete type. Interfaces are satisfied implicitly, so you can define a two-method interface in your package that the upstream controller-runtime client already satisfies, and now your reconciler is testable with a fake without either side knowing about the other.
 
 Struct tags carry the serialization contract. A CRD API type is a plain struct whose fields carry \`json:"..."\` tags; controller-gen reads those tags plus // +kubebuilder: marker comments to emit the OpenAPI schema in the CRD YAML. Get the omitempty wrong and you will ship a required field you meant to be optional.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does infrastructure tooling overwhelmingly ship in Go rather than Python or Java?', a: 'Static single-file binaries with trivial cross-compilation, so distribution is a container image with no runtime to install. Compile times measured in seconds, which keeps the edit-test loop tight. Goroutines that make the watch-plus-worker-pool shape of a controller cheap. And a standard library that already covers HTTP, TLS, x509, and JSON, so a webhook can have almost no third-party dependencies.' },
@@ -445,13 +444,12 @@ The one structural rule that buys the most: no package-level mutable state. Glob
     color: '#475569',
     questions: 6,
     description: 'Authoring an operator with kubebuilder and controller-runtime: the Manager/Cache/Client architecture, idempotent level-triggered reconciliation, finalizers, status conditions, RBAC markers, and envtest.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'controller-runtime architecture and the path of a single reconcile',
         image: '/diagrams/devops/cp-2-operators.png',
-        description: `An operator is a Go process running the controller-runtime Manager. Understanding what that Manager owns is the difference between writing a controller and copying one.
-
-Manager. The top-level object. It owns the shared Cache, the Client, the Scheme, the metrics listener, the health probes, leader election, the webhook server, and the lifecycle of every Runnable registered with it. mgr.Start(ctx) blocks until ctx is cancelled, then stops everything in order. Because the Cache and Client are shared across every controller in the process, one binary running five controllers opens one set of watches, not five.
+        content: `Manager. The top-level object. It owns the shared Cache, the Client, the Scheme, the metrics listener, the health probes, leader election, the webhook server, and the lifecycle of every Runnable registered with it. mgr.Start(ctx) blocks until ctx is cancelled, then stops everything in order. Because the Cache and Client are shared across every controller in the process, one binary running five controllers opens one set of watches, not five.
 
 Scheme. A runtime.Scheme maps Go types to GroupVersionKinds and back. Your generated api/v1/groupversion_info.go registers your types via AddToScheme, and main.go calls utilruntime.Must(myv1.AddToScheme(scheme)). Forget that and every client call for your type fails with "no kind is registered for the type" — a first-day error worth recognizing on sight.
 
@@ -480,7 +478,7 @@ ownerReferences do double duty. controllerutil.SetControllerReference stamps one
 Result and requeue. Returning a non-nil error requeues with exponential backoff (5ms doubling to 1000s by default) and increments controller_runtime_reconcile_errors_total. Returning ctrl.Result{RequeueAfter: 30 * time.Second} requeues at a fixed delay with no error recorded — that is the right form for "I am waiting on something external to become ready", because backoff on a poll is not what you want and a stream of errors on a normal wait poisons your alerting.
 
 Around all of this sit the generated artifacts: CRD YAML and RBAC ClusterRoles emitted by controller-gen from // +kubebuilder: markers in your Go source, a Kustomize tree under config/, and a Makefile that ties make manifests, make install, make run, and make deploy together.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does Reconcile receive only a NamespacedName instead of the changed object?', a: 'Because reconciliation is level-triggered. The workqueue deduplicates by key, so N rapid events collapse into one reconcile, and your code must read current state rather than react to a delta. Handing you the object would encourage edge-triggered logic that breaks after a missed event, a controller restart, or a periodic resync.' },
@@ -845,13 +843,12 @@ Beyond those: set resource requests and limits with GOMEMLIMIT aligned to the me
     color: '#475569',
     questions: 6,
     description: 'Vault as a system: seal and unseal, Raft storage and HA, the secret engines and auth methods that matter on Kubernetes, policy design, leases, and what happens to your applications when Vault is unavailable.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Vault architecture: seal, storage, engines, auth, and the path into a pod',
         image: '/diagrams/devops/cp-3-vault.png',
-        description: `Vault is a server with a barrier. Everything below the barrier is ciphertext; everything above it requires an authenticated token carrying policies. Understanding the layering is what makes the operational behaviour predictable.
-
-The encryption layers. Data is encrypted with a keyring. The keyring is encrypted with the root key. The root key is encrypted with the unseal key. Vault starts sealed: the process is running and answering /sys/health, but it cannot decrypt anything, so every API call fails. Unsealing is the act of reconstructing the unseal key so Vault can decrypt the root key and read the keyring.
+        content: `The encryption layers. Data is encrypted with a keyring. The keyring is encrypted with the root key. The root key is encrypted with the unseal key. Vault starts sealed: the process is running and answering /sys/health, but it cannot decrypt anything, so every API call fails. Unsealing is the act of reconstructing the unseal key so Vault can decrypt the root key and read the keyring.
 
 Shamir versus auto-unseal. By default vault operator init splits the unseal key with Shamir's Secret Sharing into N shares with a threshold of K (5 and 3 by default). Operators feed shares in one at a time until the threshold is reached. This distributes trust, and it means a restarted Vault stays sealed until humans show up — which is exactly wrong for a Kubernetes-native deployment where pods restart on node drains. Auto-unseal delegates the unwrap to a cloud KMS: AWS KMS, Azure Key Vault, GCP KMS, or an HSM over PKCS#11. Vault calls the KMS at startup, decrypts the root key, and unseals itself. The tradeoff is a hard dependency — if that KMS key is deleted or the IAM permission is revoked, Vault cannot unseal and the data is unrecoverable. Auto-unseal deployments still generate recovery keys, which serve the same quorum role for operations like generating a new root token.
 
@@ -870,7 +867,7 @@ PKI issues X.509 certificates from a CA Vault holds, with short TTLs and per-rol
 Auth methods are the mirror image: they turn some existing identity into a Vault token with policies attached. On Kubernetes, the kubernetes method takes the pod's ServiceAccount JWT, validates it against the cluster's TokenReview API, and matches it against a role bound by bound_service_account_names and bound_service_account_namespaces. AppRole is the machine-identity method for workloads outside Kubernetes, splitting a role_id from a secret_id. JWT/OIDC covers CI systems and human SSO. The cloud IAM methods authenticate an instance or workload identity directly.
 
 Policies are HCL granting capabilities on paths, deny by default, with deny always winning. Every token gets a lease and a TTL; every dynamic secret gets a lease you can renew or revoke. Audit devices log every request and response with sensitive strings HMACed — and if no enabled audit device can write, Vault refuses to serve requests, which is a deliberate availability-for-auditability trade you must plan for.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between unseal keys and the root token?', a: 'Unseal keys reconstruct the key that decrypts Vault\'s root key, which is what lets Vault read its own storage at all. The root token is an authentication credential carrying the root policy. You need unseal keys to make Vault operational and a token to do anything with it. Best practice is to revoke the initial root token after configuring an auth method and regenerate one from a quorum only when needed.' },
@@ -1234,13 +1231,12 @@ The progression to state in an interview: KV is better than a Kubernetes Secret,
     color: '#475569',
     questions: 6,
     description: 'If-this-then-that for infrastructure. StackStorm sensors, triggers, rules, actions and Orquesta workflows, how the model compares to Event-Driven Ansible and to a Kubernetes operator, and the safety machinery that stops an automation storm from amplifying the incident it was meant to fix.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'From external event to completed remediation: the StackStorm object model',
         image: '/diagrams/devops/cp-4-event-driven.png',
-        description: `Event-driven automation is one sentence with a lot of engineering behind it: when this happens out there, run that in here. StackStorm is the reference implementation of that sentence, and its object model is worth knowing precisely because every competing tool is a rearrangement of the same five pieces.
-
-Sensors are the inbound edge. A sensor is a Python plugin that either polls something on an interval or holds a long-lived connection and waits. It watches a message queue, tails an API, listens on a socket, or subscribes to a webhook. Its only job is to notice that something happened and hand it to StackStorm. Sensors are the part you write when no integration exists yet, and they are the part that fails silently if you do not monitor them.
+        content: `Sensors are the inbound edge. A sensor is a Python plugin that either polls something on an interval or holds a long-lived connection and waits. It watches a message queue, tails an API, listens on a socket, or subscribes to a webhook. Its only job is to notice that something happened and hand it to StackStorm. Sensors are the part you write when no integration exists yet, and they are the part that fails silently if you do not monitor them.
 
 Triggers are the internal representation of what a sensor noticed. A trigger has a reference like core.st2.webhook or a pack-specific one, and every occurrence produces a trigger instance carrying a payload. Two triggers are generic and cover most real use: the webhook trigger, which turns an HTTP POST into an event, and the timer triggers (IntervalTimer with unit and delta, CronTimer with year through second, DateTimer with a one-shot date), which turn the passage of time into an event. Everything else comes from a pack.
 
@@ -1306,7 +1302,7 @@ Packs are the deployment unit. A pack is a directory containing actions, sensors
 The datastore is the shared key-value store. st2 key set writes, st2 key get reads, --encrypt stores a secret that templates decrypt with the decrypt_kv filter, and --ttl expires a key after N seconds. That TTL is not a convenience feature — it is the standard way to build a throttle, because a key that exists means "we already did this recently."
 
 ChatOps closes the loop. An action alias maps a chat phrase to an action through a formats list, with ack and result blocks controlling what gets said back into the channel. The remediation announces itself where humans are already looking.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between a trigger and a trigger instance?', a: 'A trigger is the type — a named event shape with a payload schema, such as a webhook or a CronTimer or a pack-provided integration event. A trigger instance is one occurrence of it, with a concrete payload and a timestamp. Rules match against trigger instances. When you debug "my rule did not fire", st2 trigger-instance list tells you whether the event arrived at all, which separates a sensor problem from a criteria problem.' },
@@ -1540,13 +1536,12 @@ The reason interviewers press: a system that changes production without a defens
     color: '#475569',
     questions: 6,
     description: 'Operations in a shared channel, where the transcript is the audit log. The Slack platform mechanics a platform engineer actually needs, how to design a release bot that maps a chat identity to a real authorization decision, and why a bot that can deploy is a production credential living inside a chat application.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The path of one slash command: ack, verify, authorize, execute, report',
         image: '/diagrams/devops/cp-5-chatops.png',
-        description: `A ChatOps deploy looks like one line of text and is actually five distinct systems with a hard latency budget across the first hop.
-
-The command arrives. A user types /deploy checkout to staging. Slack POSTs an application/x-www-form-urlencoded body to your configured Request URL with the fields that matter: command (the slash command itself), text (everything after the first space, unparsed), user_id and channel_id and team_id for context, api_app_id identifying which app received it, response_url (a temporary webhook for later replies), and trigger_id (short-lived, and the only thing that lets you open a modal). The token field is a deprecated verification artifact and must not be used for anything.
+        content: `The command arrives. A user types /deploy checkout to staging. Slack POSTs an application/x-www-form-urlencoded body to your configured Request URL with the fields that matter: command (the slash command itself), text (everything after the first space, unparsed), user_id and channel_id and team_id for context, api_app_id identifying which app received it, response_url (a temporary webhook for later replies), and trigger_id (short-lived, and the only thing that lets you open a modal). The token field is a deprecated verification artifact and must not be used for anything.
 
 Verification comes before parsing. Every request from Slack carries X-Slack-Request-Timestamp and X-Slack-Signature. You take the raw, undeserialized body, build the base string v0:timestamp:body, HMAC-SHA256 it with your app's signing secret, hex-encode, prefix with v0=, and compare against the header using a constant-time comparison. Reject if the timestamp is more than five minutes old, which is the replay window. Two implementation traps live here and both are common: any middleware that parses the body before you capture it destroys the bytes you need to sign, and comparing signatures with a plain string equality leaks timing information.
 
@@ -1559,7 +1554,7 @@ Transport is a deployment choice, not a feature choice. A public HTTPS Request U
 Tokens are the part people get wrong. A bot token (xoxb-) is the app's own identity and carries the scopes you requested; a user token (xoxp-) acts as a specific human and inherits their access. A release bot should hold a bot token with the narrowest scope set — commands for the slash command, chat:write to post — and nothing that reads channel history it has no business reading. The app-level token for Socket Mode is a third, separate credential.
 
 And then the part that has nothing to do with Slack. The payload gives you a user_id, which is an identifier in a directory you do not control. Turning that into permission to deploy checkout to production is your authorization system's job: resolve the Slack user to a corporate identity, look up group membership or an entitlement, and decide. Never the display name, which is user-settable. Never a hardcoded list of user IDs. The bot then executes with its own scoped credential against your deployment API and streams progress back into the thread.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why is three seconds the number, and what do you do about it?', a: 'Slack requires an HTTP 200 within three seconds or the invoker sees operation_timeout. Nothing real finishes in three seconds, so you ack immediately, enqueue the work, and post results later via the response_url that arrived in the payload. The failure mode when people get this wrong is the worst kind: the user sees a timeout, retries, and now two deploys are running.' },
@@ -1781,11 +1776,12 @@ The strategic version, which is what a staff-level interviewer is listening for:
     color: '#475569',
     questions: 6,
     description: 'The Model Context Protocol as a control-plane API surface: the JSON-RPC foundation, tools versus resources versus prompts, transports, why tool design is API design, OAuth 2.1 authorization for remote servers, and the security surface that comes with letting a model call your infrastructure.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'MCP as an API surface: participants, layers, primitives, and one tool call end to end',
         image: '/diagrams/devops/cp-6-mcp.png',
-        description: `MCP exists to solve an integration arithmetic problem. M AI applications wanting to reach N systems is M times N bespoke integrations, each with its own auth, its own schema conventions, and its own maintenance burden. A protocol in the middle turns that into M plus N: every application learns one client, every system exposes one server, and anything speaks to anything. It is the same argument as the Language Server Protocol, and the same argument as USB — a standard connector is worth more than any individual connection.
+        content: `MCP exists to solve an integration arithmetic problem. M AI applications wanting to reach N systems is M times N bespoke integrations, each with its own auth, its own schema conventions, and its own maintenance burden. A protocol in the middle turns that into M plus N: every application learns one client, every system exposes one server, and anything speaks to anything. It is the same argument as the Language Server Protocol, and the same argument as USB — a standard connector is worth more than any individual connection.
 
 The participants are three, and precision here matters because the words look interchangeable and are not. The host is the AI application — Claude Code, an IDE, an agent runtime. The host creates one client per server it connects to, and each client maintains a dedicated connection to its server. The server is a program that exposes context and capabilities, running either locally as a subprocess or remotely behind HTTP. Server does not mean remote; a filesystem server launched as a child process is still a server.
 
@@ -1818,7 +1814,7 @@ Every field is load-bearing. The name is the identifier the model reasons about.
 Connection setup has changed, and knowing both eras is worth points. Revisions through 2025-11-25 established a connection-scoped session with an initialize request carrying protocolVersion, clientInfo, and clientCapabilities, answered by the server's capabilities, then an initialized notification. Protocol revision 2026-07-28 made MCP stateless: every request carries its protocol version, client identity, and capabilities in _meta fields under the io.modelcontextprotocol namespace, and servers advertise themselves through a mandatory server/discover request that is optional to call and cacheable with ttlMs. Change notifications became opt-in through a long-lived subscriptions/listen stream. Implementations detect the counterpart's era and fall back.
 
 Authorization applies to HTTP transports. The MCP server is an OAuth 2.1 resource server; the client is an OAuth 2.1 client. An unauthenticated request gets 401 with a WWW-Authenticate header naming a resource_metadata URL; the client fetches Protected Resource Metadata (RFC 9728), discovers the authorization server, runs an authorization code flow with PKCE, and includes a resource parameter (RFC 8707) naming the canonical server URI on both the authorization and token requests. The server then validates that the token's audience is itself and refuses everything else — token passthrough is explicitly forbidden. Stdio servers do not do this; they take credentials from the environment.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What problem does MCP actually solve?', a: 'The M times N integration explosion. Every AI application needing every data source and tool means a bespoke integration per pair, each with its own auth and schema conventions. MCP standardizes the connector so it becomes M plus N. It is deliberately narrow in scope: it standardizes context exchange between an application and a system, and says nothing about how the application uses an LLM or manages context.' },
@@ -2094,11 +2090,12 @@ The architecture I would argue for: your REST or gRPC API remains the system of 
     color: '#475569',
     questions: 6,
     description: 'How a machine with no operating system becomes a cluster node: the network boot chain, out-of-band management, discovery and inspection, imaging, and the tool landscape from Ironic and MAAS to Tinkerbell and Metal3.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The network boot chain, out-of-band control, and the provisioning state machine',
         image: '/diagrams/devops/cp-7-bare-metal.svg',
-        description: `A bare-metal server at rest is a box with firmware and empty disks. Everything a provisioning system does is built on two independent channels: an in-band channel over the production NIC that the machine can only use after it boots something, and an out-of-band channel to the baseboard management controller that works even when the machine is powered off. Almost every bare-metal failure story is a story about one of those two channels.
+        content: `A bare-metal server at rest is a box with firmware and empty disks. Everything a provisioning system does is built on two independent channels: an in-band channel over the production NIC that the machine can only use after it boots something, and an out-of-band channel to the baseboard management controller that works even when the machine is powered off. Almost every bare-metal failure story is a story about one of those two channels.
 
 The network boot chain, in order:
 
@@ -2115,7 +2112,7 @@ Discovery and inspection is the step that makes a rack knowable. The provisionin
 Imaging then takes one of two shapes. Full-disk image writes a prepared raw or qcow2 image directly to the target disk and grows the filesystem — fast, byte-identical across the fleet, and the only sane choice at scale. Scripted installation runs the distribution installer with an answer file: kickstart on RHEL derivatives, preseed on older Debian and Ubuntu, autoinstall/cloud-init on modern Ubuntu. It is slower and less reproducible because it resolves packages from a repository at install time, but it handles per-machine variation the image cannot. Either way cloud-init or Ignition runs on first boot to inject SSH keys, hostname, and network configuration.
 
 The state machine is the abstraction every tool converges on. Ironic names the stable states enroll, manageable, available, active, and error, with transitional states verifying, inspecting, cleaning, deploying, deleting, and servicing, driven by the verbs manage, provide, inspect, clean, deploy, undeploy, abort, rebuild, and adopt. Metal3 wraps this in a BareMetalHost CRD whose states are registering, inspecting, preparing, available, provisioning, provisioned, deprovisioning, and deleting. MAAS calls the same arc New, Commissioning, Ready, Allocated, Deploying, Deployed, Releasing, and Broken. Learn one and you can read all of them.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Walk me through what happens between pressing power and an OS being installed.', a: 'The BMC applies power. NIC firmware sends DHCP with an architecture identifier; the server replies with an address plus option 66 and 67 pointing at a bootfile. The machine TFTPs an iPXE binary, iPXE re-DHCPs with user-class iPXE, and this time gets an HTTP URL to a per-MAC boot script. That script boots a provisioning ramdisk, which inspects the hardware, reports inventory, writes the OS image to disk, and reboots. The BMC then sets the boot device back to disk so the machine does not net-boot again.' },
@@ -2385,13 +2382,12 @@ How to present it to a cloud-native audience. Do not argue against elasticity; r
     color: '#475569',
     questions: 6,
     description: 'Replacing the one shared staging environment with a disposable environment per pull request: isolation models from namespaces to vclusters, the data problem, dependencies you cannot clone, TTLs and cost, and parity measured rather than assumed.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'From shared staging to per-PR environments: isolation models, lifecycle, and the data problem',
         image: '/diagrams/devops/cp-8-ephemeral-envs.png',
-        description: `A single long-lived staging environment rots, and it rots for structural reasons rather than because a team was careless.
-
-It drifts. Someone hotfixes a config value at 2am to unblock a demo and never lands it in git. Someone bumps a dependency by hand. Six months later staging and production differ in dozens of ways nobody has written down, and no single person knows the full list.
+        content: `It drifts. Someone hotfixes a config value at 2am to unblock a demo and never lands it in git. Someone bumps a dependency by hand. Six months later staging and production differ in dozens of ways nobody has written down, and no single person knows the full list.
 
 It is contended. Three teams merge to the same branch to test. A failing test could be any of the three changes. So the first move is to ask who else is deploying, which converts an engineering problem into a scheduling negotiation and adds hours of latency to every change.
 
@@ -2420,7 +2416,7 @@ Data is the hard part, and it is where these projects actually fail. The options
 Then there are dependencies you cannot clone per PR: a third-party payment API with a single sandbox and rate limits, a hardware bench, licensed software with per-seat entitlement. These get a shared pool with leasing, a mock, or contract-tested service virtualization. Naming which of your dependencies is in this category, and how each is handled, is what separates a design that works from a diagram.
 
 And finally, parity. It is a measured property, not an aspiration. You maintain an explicit list of accepted deltas from production — one replica instead of twenty, no CDN, a smaller database, mocked payment provider — and everything not on that list is a bug in the environment. The list is reviewed, it is short, and it is the thing you consult first when the environment passes and production fails.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why does a single shared staging environment always degrade?', a: 'Four structural reasons. It drifts, because manual fixes never get back into git. It is contended, so a failure cannot be attributed to one change. It has no owner, so fixing it is nobody specific job. And once its failures are mostly noise, its verdict stops blocking anything, which means the environment no longer does the one thing it exists for.' },
@@ -2729,11 +2725,12 @@ The framing that lands in an interview: preview environments are not a smaller p
     color: '#475569',
     questions: 6,
     description: 'Arbitrating scarce, non-fungible resources — a GPU zone, a hardware bench, a test cluster — with time-bounded leases: why leases must expire, fencing tokens, queueing and fairness, preemption, and modelling the whole thing as a CRD plus controller.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Lease lifecycle, fencing tokens, and the queue in front of a scarce resource',
         image: '/diagrams/devops/cp-9-lease-reservation.png',
-        description: `The problem is specific. You have a resource that is scarce and non-fungible: one GPU zone with eight accelerators wired for NVLink, one hardware bench with a particular board on it, one test cluster running the exact Kubernetes version an upgrade must be validated against. More consumers want it than can have it, and they are not interchangeable with a cloud instance — you cannot pay to make another one appear this afternoon. So something has to decide who gets it, for how long, and what happens when someone wants it more.
+        content: `The problem is specific. You have a resource that is scarce and non-fungible: one GPU zone with eight accelerators wired for NVLink, one hardware bench with a particular board on it, one test cluster running the exact Kubernetes version an upgrade must be validated against. More consumers want it than can have it, and they are not interchangeable with a cloud instance — you cannot pay to make another one appear this afternoon. So something has to decide who gets it, for how long, and what happens when someone wants it more.
 
 A lease is time-bounded ownership. Not a lock — a lock is held until released, and that is precisely the property that breaks. The holder crashes. The pod is evicted. The CI job is cancelled with SIGKILL and its deferred cleanup never runs. The laptop closes. In every one of those cases a lock is held forever by something that no longer exists, and the resource is stranded until a human notices and clears it by hand. A lease expires on its own, so the failure of the holder is a bounded event rather than a permanent one. The holder renews while it is alive and healthy; when renewals stop, ownership lapses.
 
@@ -2756,7 +2753,7 @@ In front of the lease sits the queue, and the queue is where the policy lives. F
 Preemption is what makes a fixed pool usable. Without it, a low-priority batch job that grabbed the GPU zone for six hours blocks a production incident investigation, and the pool sits allocated while the urgent work waits. With it, the incident preempts the batch. The cost is that preemption must not corrupt in-flight work: the preempted holder needs a signal, a grace period, and somewhere to checkpoint, and the workload has to be written to resume. Preemption without checkpointing is just cancellation, and teams learn to avoid the system that keeps eating their six-hour runs.
 
 Modelled as a CRD plus controller, all of this becomes declarative and auditable: a ResourceLease custom resource with a requester, a resource selector, a requested duration and a priority; a controller that admits, grants, renews, expires, and preempts; and status carrying the grant, the expiry, and the queue position. Every request is an API object with an owner, a timestamp, and a full audit trail, and self-service becomes a kubectl create rather than a message in a channel.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Why must a lease expire? Why not just a lock that gets released?', a: 'Because the holder will die without releasing. A crashed process, an evicted pod, a SIGKILLed CI job, a closed laptop — none of them run their cleanup. A lock held by something that no longer exists strands the resource until a human clears it by hand, and on a resource with one instance that is an outage. Expiry converts holder failure from permanent to bounded.' },
@@ -3035,13 +3032,12 @@ The framing to close on: the lease control plane is not just an allocator, it is
     color: '#475569',
     questions: 6,
     description: 'Managing Kubernetes clusters as Kubernetes objects: the Cluster, Machine, MachineSet, MachineDeployment and MachineHealthCheck CRDs, the three-provider model, ClusterClass topologies, rolling upgrades, the bootstrap paradox, and when the complexity actually pays for itself.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The Cluster API object model: management cluster, providers, and the Machine controllers',
         image: '/diagrams/devops/cp-10-cluster-api.png',
-        description: `Cluster API is a Kubernetes SIG Cluster Lifecycle project with one central idea: if Kubernetes is good at reconciling declarative resources toward a desired state, then clusters themselves should be declarative resources. You do not run a provisioning tool that creates a cluster; you create an object that describes a cluster and a controller makes reality match it, continuously, forever.
-
-Two cluster roles. A management cluster is an ordinary Kubernetes cluster that hosts the Cluster API controllers and their providers. A workload cluster is a cluster whose lifecycle those controllers manage. The management cluster never runs your applications; its job is to hold the API objects and reconcile them. Everything an operator does — create, scale, upgrade, delete a cluster — is kubectl against the management cluster.
+        content: `Two cluster roles. A management cluster is an ordinary Kubernetes cluster that hosts the Cluster API controllers and their providers. A workload cluster is a cluster whose lifecycle those controllers manage. The management cluster never runs your applications; its job is to hold the API objects and reconcile them. Everything an operator does — create, scale, upgrade, delete a cluster — is kubectl against the management cluster.
 
 The CRDs deliberately mirror core Kubernetes workload semantics, and the mapping is the fastest way to understand them:
 
@@ -3078,7 +3074,7 @@ Upgrades are rolling replacements, not in-place mutations. Templates are immutab
 ClusterClass and managed topologies attack the boilerplate. A ClusterClass bundles the infrastructure, control-plane and worker templates, declares variables, and applies patches to those templates based on variable values. A Cluster then carries a spec.topology block naming the class, the Kubernetes version and the worker machine deployments, and Cluster API expands it. Fleet-wide changes become a change to one ClusterClass. The mechanism is a feature behind the ClusterTopology feature gate and it is deliberately powerful: a careless edit to a shared class rolls every cluster that references it.
 
 MachineHealthCheck closes the loop on node failure. It selects Machines, watches node conditions such as Ready being False or Unknown for longer than a timeout, and marks the Machine unhealthy so its owner replaces it. Safeguards short-circuit remediation when too many machines are unhealthy at once, on the theory that a control-plane or network outage should not trigger a fleet-wide reprovision. Only Machines owned by a MachineSet or a KubeadmControlPlane are remediated, and control-plane remediation additionally refuses to act if it would break etcd quorum.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the difference between a management cluster and a workload cluster?', a: 'The management cluster runs the Cluster API controllers and the provider controllers, and holds the Cluster, Machine and MachineDeployment objects. A workload cluster is one described by those objects — the thing that actually runs applications. Operators only ever talk to the management cluster; the workload cluster kubeconfig is produced as a Secret in the management cluster.' },
@@ -3371,13 +3367,12 @@ The sensible adoption path: run explicit per-cluster objects first until you act
     color: '#475569',
     questions: 6,
     description: 'What PCI-DSS and SOC 2 actually demand of a platform team, why scoping and segmentation is the highest-leverage decision you make, and how the requirements map onto Kubernetes primitives you already run.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'Two frameworks, one cluster: scope, controls, and where the evidence comes from',
         image: '/diagrams/devops/cp-11-pci-soc2.png',
-        description: `These two frameworks are asked about together and are structurally opposite, so the first thing worth being precise about is what each one is.
-
-PCI-DSS is a prescriptive control standard published by the PCI Security Standards Council. It applies to any entity that stores, processes or transmits cardholder data or sensitive authentication data, or that could affect the security of the cardholder data environment. It tells you what to do. Version 4.0 was published in 2022 and v4.0.1 is the current maintenance revision; a set of future-dated requirements became mandatory on 31 March 2025. The structure is six goals over twelve requirements:
+        content: `PCI-DSS is a prescriptive control standard published by the PCI Security Standards Council. It applies to any entity that stores, processes or transmits cardholder data or sensitive authentication data, or that could affect the security of the cardholder data environment. It tells you what to do. Version 4.0 was published in 2022 and v4.0.1 is the current maintenance revision; a set of future-dated requirements became mandatory on 31 March 2025. The structure is six goals over twelve requirements:
 
   Build and maintain a secure network and systems
     1. Install and maintain network security controls
@@ -3407,7 +3402,7 @@ Scope is the decision that dominates everything else. For PCI, the cardholder da
 Segmentation options on Kubernetes, weakest to strongest: namespace plus NetworkPolicy in a shared cluster; dedicated node pools with taints and PodSecurity enforcement; a dedicated cluster in a dedicated VPC or subscription; a dedicated cluster in a dedicated account with no network path except an audited egress. The stronger options cost more to run and are dramatically cheaper to prove. Most organizations that have been through a PCI assessment end up with a separate cluster, because arguing NetworkPolicy semantics with an assessor every year is worse than paying for isolation.
 
 Where the two frameworks converge on Kubernetes is the control set itself, and it is a familiar list: default-deny NetworkPolicy, TLS everywhere including inside the cluster, encryption at rest for etcd through an EncryptionConfiguration backed by a KMS provider, RBAC bound to SSO groups with MFA and short-lived credentials rather than static kubeconfigs, admission control as a preventive gate, image scanning with an enforced patch SLA, and API server audit logging shipped off-cluster with a retention period. What differs is the burden of proof. PCI asks whether the control matches the requirement text. SOC 2 asks whether the control you claimed to have was operating on every day of the period — which turns evidence collection from an annual project into a continuous system property.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'What is the fundamental difference between PCI-DSS and SOC 2?', a: 'PCI-DSS is prescriptive and tells you what controls to implement across twelve requirements for anything touching cardholder data. SOC 2 is an attestation against the AICPA Trust Services Criteria where you define the controls and a CPA firm tests whether they are designed well and operating. PCI compliance is pass or fail against a fixed standard; a SOC 2 report is an opinion plus a list of exceptions.' },
@@ -3666,13 +3661,12 @@ The mindset shift worth articulating: compliance evidence is a product of the sy
     color: '#475569',
     questions: 6,
     description: 'Where AI coding tools genuinely help infrastructure work and where they reliably fail, context engineering as the actual skill, reviewing generated infrastructure code, the governance a platform team must settle, and honest measurement.',
-    visualizations: [
+    visualizations: [],
+    topics: [
       {
         title: 'The tool landscape, the failure modes, and where the engineering judgment lives',
         image: '/diagrams/devops/cp-12-ai-assisted.png',
-        description: `The tools have converged on three shapes, and the shape determines both the value and the risk.
-
-Inline completion. GitHub Copilot is the canonical example: the model sees the current file and some nearby context and proposes the next few lines as you type. The interaction loop is sub-second, the unit of work is a line or a block, and you accept or reject continuously. Value is highest on mechanical code where the intent is already obvious from the surrounding text — the second and third cases of a switch, the boilerplate half of a struct, the test that mirrors the one above it. The risk is low per suggestion and non-trivial in aggregate, because accepting hundreds of small suggestions a day is a lot of code you skimmed rather than wrote.
+        content: `Inline completion. GitHub Copilot is the canonical example: the model sees the current file and some nearby context and proposes the next few lines as you type. The interaction loop is sub-second, the unit of work is a line or a block, and you accept or reject continuously. Value is highest on mechanical code where the intent is already obvious from the surrounding text — the second and third cases of a switch, the boilerplate half of a struct, the test that mirrors the one above it. The risk is low per suggestion and non-trivial in aggregate, because accepting hundreds of small suggestions a day is a lot of code you skimmed rather than wrote.
 
 IDE-integrated agents. Cursor and the IDE surfaces of Copilot and Claude Code sit one level up: multi-file context, a chat interface, and the ability to propose edits across a change set that you review as a diff. The unit of work is a task rather than a line. Value comes from the model seeing enough of the repository to be consistent with it. The review burden shifts from watching a cursor to reading a diff, which is a skill teams already have.
 
@@ -3697,7 +3691,7 @@ Where they reliably fail:
   Anything where the failure is silent. A misconfigured PodDisruptionBudget, a probe with the wrong path, a policy that does not enforce. Code that crashes tells you it is wrong; configuration that quietly does nothing does not.
 
 The asymmetry that governs everything: these tools produce output whose surface quality is uniformly high and whose correctness is variable. Human code carries signals — awkward naming, hesitant structure, a comment saying "not sure about this" — that reviewers subconsciously use to allocate attention. Generated code carries none. Every line looks equally confident, so a reviewer's usual triage instinct is actively misleading, and the compensation is to review generated infrastructure code with more rigor, not less.`,
-      }
+      },
     ],
     quickFire: [
       { q: 'Where do these tools genuinely help an infrastructure engineer?', a: 'High-volume, low-novelty work where correctness is checkable: operator and controller boilerplate, translating between IaC languages, large mechanical refactors across many manifests, test generation, and reading unfamiliar codebases. The common thread is that the transformation is known and the result can be verified by running something.' },

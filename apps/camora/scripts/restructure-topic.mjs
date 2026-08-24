@@ -81,6 +81,27 @@ function splitElements(body) {
   return out;
 }
 
+/** Replace every string/template literal body with spaces, preserving length. */
+function stripStrings(src) {
+  const out = src.split('');
+  let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (c === '\\') { i += 2; continue; }
+    if (c === "'" || c === '"' || c === '`') {
+      const q = c; i++;
+      while (i < src.length) {
+        if (src[i] === '\\') { out[i] = ' '; out[i + 1] = ' '; i += 2; continue; }
+        if (src[i] === q) { i++; break; }
+        out[i] = ' '; i++;
+      }
+      continue;
+    }
+    i++;
+  }
+  return out.join('');
+}
+
 /** Render a JS string literal, preferring a template literal for prose. */
 function jsString(s) {
   if (s.includes('\n')) {
@@ -113,9 +134,24 @@ if (vizKey !== -1) {
   const arrStart = obj.indexOf('[', vizKey);
   const arrEnd = matchDelimiter(obj, arrStart, '[', ']');
   const elements = splitElements(obj.slice(arrStart + 1, arrEnd - 1));
+  // Figures promoted into a chapter must not also remain here, or the page
+  // renders the same diagram twice.
+  const dropped = new Set(payload.dropFigures || []);
   const keepers = elements.filter((el) => {
-    // `image:` or `svg:` at the entry's own level means it is a real figure.
-    const isFigure = /(^|\n)\s*(image|svg|video):/.test(el);
+    if (dropped.size) {
+      const m = stripStrings(el).match(/(^|\n)\s*image:/);
+      if (m) {
+        const src = el.slice(el.indexOf('image:', m.index)).match(/image:\s*'([^']*)'/);
+        if (src && dropped.has(src[1])) { removed++; return false; }
+      }
+    }
+    // A real figure declares image/svg/video as its OWN key. Testing the raw
+    // text is not enough: captions routinely contain YAML such as
+    // `image: postgres:15`, which matched and made an essay look like a
+    // figure — it was then copied into a chapter AND left in place, so the
+    // page showed the same prose twice. Blank the string literals first, so
+    // only actual keys survive to be matched.
+    const isFigure = /(^|\n)\s*(image|svg|video):/.test(stripStrings(el));
     if (isFigure) kept++; else removed++;
     return isFigure;
   });
@@ -130,7 +166,9 @@ if (vizKey !== -1) {
 // ── insert topics[] / quickFire[] ──────────────────────────────────────
 function renderSections(sections) {
   const body = sections.map((s) =>
-    `      {\n        title: ${jsString(s.title)},\n        content: ${jsString(s.content)},\n      }`).join(',\n');
+    `      {\n        title: ${jsString(s.title)},` +
+    (s.image ? `\n        image: ${jsString(s.image)},` : '') +
+    `\n        content: ${jsString(s.content)},\n      }`).join(',\n');
   return `    topics: [\n${body},\n    ],\n`;
 }
 function renderQuickFire(qf) {
