@@ -505,7 +505,7 @@ What you pay is tooling. A monorepo demands, at minimum: **build-graph-aware CI*
 
 **Choosing.** The question is not repository layout, it is **how often changes cross the boundary**. If a typical change touches two components together, a boundary between them will be paid for on every change, in coordination and in version skew — that argues for one repository. If components genuinely release independently, on different cadences, to different consumers, separate repositories with real versioned interfaces are simpler and the boundary is doing useful work.
 
-Two things not to do. Do not adopt a monorepo without the build tooling, because the CI cost arrives immediately and the benefits arrive slowly. And do not use submodules as a poor substitute for a package manager — if the dependency has releases and a version number, depend on it as a package.`,
+Two things not to do. Do not adopt a monorepo without the build tooling, because the CI cost arrives immediately and the benefits arrive slowly. And do not use submodules as a poor substitute for a package manager — if the dependency has releases and a version number, depend on it as a package. The operational side of submodules — the gitlink and .gitmodules split, recursive CI checkout, removing one cleanly, and the migrations out — is covered separately under Submodules and Vendoring.`,
       },
     ],
     quickFire: [
@@ -1311,6 +1311,129 @@ This topic mirrors that structure level by level and states the concept behind e
       'https://www.atlassian.com/git/tutorials/comparing-workflows',
       'https://git-scm.com/docs/gitrevisions',
       'https://git-scm.com/docs/git-push#Documentation/git-push.txt-ltrefspecgt82308203',
+    ],
+  },
+
+  // ── 14 ───────────────────────────────────────────────────────────────
+  {
+    id: 'git-submodules-and-vendoring',
+    title: 'Submodules and Vendoring — the Gitlink Model in Practice',
+    icon: 'package',
+    color: '#0d9488',
+    questions: 11,
+    description: 'Submodules break in the same few ways every time, and all of them follow from where the three pieces of state live. The gitlink, .gitmodules and .git/config; init, update and --remote; recursive CI checkout with private credentials; removing one cleanly; and the migrations out.',
+    introduction: `## Overview
+A submodule is one repository pinned inside another **at an exact commit**. That pin is the whole feature and the whole problem: it gives byte-exact reproducibility of a composition, and it means the parent repository tracks a SHA rather than a branch, which is not what most people assume when they first use one.
+
+Nearly every submodule failure — the empty directory after clone, the commit that vanished, the stale pointer merged into main, the URL change that did nothing — comes from the same root cause: **the state is split across three places, and updating one does not update the others.** Learn where those three live and the rest of the topic becomes mechanical.
+
+Submodules also carry a reputation they only partly deserve. They are genuinely awkward for a co-developed dependency that changes daily. They are the correct tool, with no real alternative, when a build must pin an exact source revision — firmware, OS images, vendored code with no package manager, or a licence boundary that forbids copying code into the parent tree.`,
+    topics: [
+      {
+        title: 'Three places the state lives — and every consequence that follows',
+        content: `**1. The gitlink.** In the parent's tree there is an entry with mode **160000** whose value is a commit SHA in the child repository. This is not a file and not a directory — it is a pointer, and it is what git commit in the parent records. Running git ls-tree HEAD shows it plainly, and it is worth doing once because seeing mode 160000 next to a bare SHA explains most submodule behaviour immediately.
+
+**2. .gitmodules.** A tracked file at the root of the parent, mapping a submodule name to its path, its URL, and optionally a branch. Because it is tracked, it is shared with everyone who clones — it is the *declaration*.
+
+**3. .git/config.** Your clone's local configuration, which is what git actually uses to fetch. It is populated from .gitmodules by git submodule init, and it is **not** shared.
+
+The consequences follow directly:
+
+**A fresh clone leaves submodule directories empty.** Cloning the parent gets the gitlink and .gitmodules but does not fetch the child. Either clone with --recurse-submodules, or afterwards:
+
+    git submodule update --init --recursive
+
+The --recursive matters when submodules nest; --init copies .gitmodules into .git/config for any submodule not yet initialised.
+
+**Changing a URL in .gitmodules appears to do nothing.** Because your clone fetches using .git/config, which still holds the old URL. The command that copies the new value across is:
+
+    git submodule sync --recursive
+
+This is the answer to "we moved the repo and everyone is still hitting the old host", and it is not discoverable from the error message.
+
+**A submodule sits in detached HEAD, by design.** git submodule update checks out the exact recorded SHA, which is a commit, not a branch. Work committed inside a submodule without first checking out a branch is therefore unreferenced the moment you switch away, and this is the most common way people genuinely lose work with submodules. Always git switch to a branch inside the submodule before committing. (If it does happen, the commit is still in the submodule's reflog — see recovery.)
+
+**Updating is two commits in two repositories.** Commit in the child, push it, then in the parent stage the moved gitlink and commit that. Skipping the child push produces the classic broken state: the parent references a SHA nobody else can fetch, so every other clone fails with a fetch error naming a commit that appears not to exist.
+
+**git submodule update vs --remote.** Plain update moves the working tree *to the SHA the parent already records* — it is how you get to the pinned state. **--remote** ignores the recorded SHA, fetches the configured branch (submodule.<name>.branch in .gitmodules, defaulting to the remote's HEAD) and checks out its tip. That leaves the gitlink modified in the parent, which you must then commit; without that commit nothing has actually been updated for anyone else. Confusing these two accounts for most "I updated it and it reverted" reports.
+
+**Configuration worth setting**, because the defaults are unhelpful:
+
+    git config --global submodule.recurse true        # switch/pull/checkout move submodules too
+    git config --global status.submoduleSummary true  # parent status shows a moved submodule
+    git config --global diff.submodule log            # show commits, not two raw SHAs
+    git config --global push.recurseSubmodules check  # refuse a push whose child commits are unpushed
+
+The last one is the single highest-value setting: **push.recurseSubmodules=check** makes Git refuse to push a parent commit whose submodule SHA has not been pushed, which prevents the broken-reference state entirely. Use on-demand instead if you want Git to push the child for you.
+
+Without submodule.recurse, switching branches in the parent leaves the submodule at the old commit, so the working tree is a mix of two revisions and git status reports a modified submodule you did not touch — the second most common confusion after detached HEAD.`,
+      },
+      {
+        title: 'CI, clean removal, and the migrations out',
+        content: `**CI checkout.** The default checkout in most CI systems does **not** fetch submodules, so a build that works locally fails in CI with missing files. In GitHub Actions:
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+For a **private** submodule the credential is the real problem: the job's default token is scoped to the current repository only, so a private sibling fails to authenticate. The options, roughly in order of preference, are a GitHub App installation token scoped to both repositories, a deploy key per submodule, or a PAT stored as a secret. Note also that submodule URLs are commonly SSH while CI authenticates over HTTPS; rather than editing .gitmodules, rewrite at fetch time:
+
+    git config --global url."https://x-access-token:$TOKEN@github.com/".insteadOf "git@github.com:"
+
+**Shallow submodules** cut checkout time when history is not needed:
+
+    git submodule update --init --recursive --depth 1
+
+with the same caveat as any shallow clone — bisect and blame inside the submodule stop working, so do not use it on a job that has to investigate history.
+
+**Removing a submodule cleanly** is a four-step sequence, and skipping the last step is why a re-added submodule at the same path fails with "already exists in the index":
+
+    git submodule deinit -f path/to/sub     # clear it from .git/config, empty the working tree
+    git rm -f path/to/sub                   # remove the gitlink and the .gitmodules entry
+    rm -rf .git/modules/path/to/sub         # the child repo's real storage lives here
+    git commit -m "Remove submodule"
+
+Git keeps each submodule's actual repository under .git/modules, not inside the submodule directory — the directory contains only a .git *file* pointing there. That indirection is why deleting the folder achieves nothing, and why the stale metadata blocks re-adding later.
+
+**The breakages you will actually meet:**
+
+- **Empty directory after clone** — nobody ran --init. The fix is the clone flag or submodule update --init --recursive.
+- **Fetch fails on a commit that does not exist** — a parent commit references a child SHA that was never pushed. Fix in the child, and prevent it with push.recurseSubmodules=check.
+- **Modified submodule you did not touch** — a parent branch switch without submodule.recurse. Run git submodule update to bring it back to the recorded commit.
+- **A commit vanished inside the submodule** — committed on detached HEAD. Recover it from the submodule's own reflog and put a branch on it.
+- **A stale pointer merged to main** — someone committed the parent while their submodule was behind. status.submoduleSummary and a CI check that the recorded SHA is reachable on the child's main branch both catch this.
+- **Merge conflict on the gitlink itself** — two branches moved the submodule to different commits. Git cannot merge a pointer, so resolve it by choosing: check out the intended commit inside the submodule, then git add the path in the parent.
+
+**Migrating out.** Two destinations, both one-way in practice:
+
+- **To subtree.** git subtree add --prefix=path <url> <ref> --squash copies the content into the parent's tree. Consumers then need no special commands and no init step at all, which is the main appeal; the cost is that pulling upstream changes later is a manual git subtree pull and the histories intertwine. Suits vendoring something you rarely update.
+- **To a monorepo.** Use git-filter-repo with --to-subdirectory-filter on the child to rewrite its history under the target path, then merge it into the parent with --allow-unrelated-histories. This preserves the child's history, which a plain copy does not, and it is the right move when the two repositories are genuinely co-developed.
+
+**When to keep them.** Submodules remain correct where the requirement is an exact, auditable source pin: firmware and OS image builds, a vendored dependency with no package manager, a licence boundary that forbids mixing trees, or large assets kept out of the main repository. **What they should not be is a substitute for a package manager** — if the dependency has releases and a version number, depend on it as a package and let the resolver do the work.`,
+      },
+    ],
+    quickFire: [
+      { q: 'Where does a submodule store its state?', a: 'Three places: the gitlink (a tree entry with mode 160000 holding the child commit SHA), .gitmodules (tracked — name, path, URL, optional branch, shared with everyone), and .git/config (local, populated by submodule init, and what Git actually fetches with). Nearly every submodule problem is one of these being out of step with the others.' },
+      { q: 'Why is the submodule directory empty after cloning?', a: 'A clone fetches the gitlink and .gitmodules but not the child repository. Use git clone --recurse-submodules, or afterwards git submodule update --init --recursive — --init copies .gitmodules into .git/config, --recursive handles nesting.' },
+      { q: 'You changed a submodule URL in .gitmodules and nothing happened. Why?', a: 'Git fetches using .git/config, which still holds the old URL. git submodule sync --recursive copies the new value across. This is the fix for "we moved the repo and everyone still hits the old host", and the error message does not hint at it.' },
+      { q: 'Why is a submodule in detached HEAD, and why does that matter?', a: 'Because submodule update checks out an exact recorded commit, not a branch. Anything committed there is unreferenced as soon as you switch away, which is the most common way work is genuinely lost with submodules. Switch to a branch inside the submodule before committing; if you forget, the commit is still in the submodule’s reflog.' },
+      { q: 'Difference between git submodule update and --remote?', a: 'Plain update moves the working tree to the SHA the parent already records — it gets you to the pinned state. --remote ignores that, fetches the configured branch (submodule.<name>.branch, defaulting to the remote HEAD) and checks out its tip, leaving the gitlink modified so you must commit it in the parent. Confusing the two produces "I updated it and it reverted".' },
+      { q: 'What is the single most valuable submodule setting?', a: 'push.recurseSubmodules=check — Git refuses to push a parent commit whose submodule SHA has not been pushed, which prevents the broken state where the parent references a commit nobody else can fetch. Use on-demand if you want Git to push the child for you.' },
+      { q: 'Why does the parent show a modified submodule you never touched?', a: 'A branch switch in the parent moved the gitlink but not the submodule working tree, because submodule.recurse is not enabled. Set submodule.recurse=true so switch, pull and checkout move submodules too; git submodule update restores the recorded commit in the meantime.' },
+      { q: 'How do you remove a submodule properly?', a: 'Four steps: git submodule deinit -f <path>, git rm -f <path>, rm -rf .git/modules/<path>, then commit. The child repository actually lives under .git/modules — the submodule folder holds only a .git file pointing there — so skipping the third step leaves metadata that blocks re-adding the same path later.' },
+      { q: 'A private submodule fails to authenticate in CI. What are the options?', a: 'The default job token is scoped to the current repository only. Use a GitHub App installation token scoped to both repos, a per-submodule deploy key, or a PAT secret. Also note submodule URLs are often SSH while CI uses HTTPS — rewrite with url.<https>.insteadOf at fetch time rather than editing .gitmodules.' },
+      { q: 'How do you resolve a conflict on the gitlink itself?', a: 'Git cannot merge a pointer, so there is nothing to merge — decide which commit is correct, check that commit out inside the submodule, then git add the submodule path in the parent to record the choice.' },
+      { q: 'When are submodules the right tool, and when are they not?', a: 'Right when you need an exact auditable source pin: firmware and OS image builds, vendored code with no package manager, a licence boundary that forbids mixing trees, or large assets kept out of the main repo. Wrong as a substitute for a package manager — if the dependency has releases and a version number, depend on it as a package.' },
+    ],
+    references: [
+      'https://git-scm.com/book/en/v2/Git-Tools-Submodules',
+      'https://git-scm.com/docs/git-submodule',
+      'https://git-scm.com/docs/gitmodules',
+      'https://git-scm.com/docs/git-config#Documentation/git-config.txt-pushrecurseSubmodules',
+      'https://github.com/actions/checkout#checkout-submodules',
+      'https://git-scm.com/docs/git-subtree',
+      'https://www.atlassian.com/git/tutorials/git-submodule',
     ],
   },
 ];
