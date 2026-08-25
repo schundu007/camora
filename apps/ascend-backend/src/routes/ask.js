@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { query } from '../config/database.js';
-import { retrieveForAsk, formatContext, getCandidateBackground } from '../services/askRetrieval.js';
+import { retrieveForAsk, formatContext, getCandidateBackground, createCitationStripper } from '../services/askRetrieval.js';
 import { r2, R2_BUCKET } from '../lib/r2.js';
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -695,6 +695,10 @@ router.post('/stream', async (req, res) => {
     const isReview = isCode && (hasImages || CODE_SNIPPET_RE.test(effectiveMessage));
     let system = isReview ? SYS_CODE_REVIEW : isCode ? SYS_CODE : SYS_GENERAL;
     if (hasImages) system += VISION_ADDENDUM;
+    // Backstop for citation markers the model emits despite being told not to
+    // ("[Ref 3]"). Stateful because SSE tokens split mid-marker; every write
+    // site below goes through it, and `full` stores what the candidate saw.
+    const cite = createCitationStripper();
     const userId = req.user?.id;
     const dbContent = message?.trim() || '📷 Screenshot';
 
@@ -793,7 +797,8 @@ router.post('/stream', async (req, res) => {
               const raw = line.slice(6).trim();
               if (raw === '[DONE]') continue;
               try {
-                const text = JSON.parse(raw).candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const delta = JSON.parse(raw).candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const text = cite.push(delta);
                 if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
               } catch {}
             }
@@ -933,8 +938,8 @@ router.post('/stream', async (req, res) => {
           for await (const evt of stream) {
             if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
               sent = true;
-              full += evt.delta.text;
-              res.write(`data: ${JSON.stringify({ text: evt.delta.text })}\n\n`);
+              const text = cite.push(evt.delta.text);
+              if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
             }
           }
         } catch (err) {
@@ -963,7 +968,7 @@ router.post('/stream', async (req, res) => {
           generationConfig: { maxOutputTokens: 8000, ...NO_THINKING },
         });
         for await (const chunk of _stream.stream) {
-          const token = chunk.text();
+          const token = cite.push(chunk.text());
           if (token) {
             full += token;
             res.write(`data: ${JSON.stringify({ text: token })}\n\n`);
@@ -982,6 +987,12 @@ router.post('/stream', async (req, res) => {
         return;
       }
     }
+
+    // Release anything the citation filter was still holding (a trailing
+    // fragment that turned out not to be a marker). Without this the last few
+    // characters of an answer can go missing.
+    const tail = cite.flush();
+    if (tail) { full += tail; res.write(`data: ${JSON.stringify({ text: tail })}\n\n`); }
 
     // Persist assistant reply
     if (userId && convId && full) {

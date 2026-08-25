@@ -144,11 +144,98 @@ export async function getCandidateBackground(userId, { maxChars = 6000 } = {}) {
   }
 }
 
-/** Render retrieved chunks as a prompt block. Returns '' when there's nothing. */
+/**
+ * Render retrieved chunks as a prompt block.
+ *
+ * Chunks are labelled by TITLE, never by number. They used to be numbered
+ * `[1]`…`[6]`, with the prompt telling the model not to cite them — and Gemini
+ * complied with the letter of that by renaming the index and printing it
+ * anyway, so live answers came out carrying "[Ref 3]" and "[Ref 6]". A
+ * candidate reading that out loud says a number that refers to nothing.
+ *
+ * Removing the index removes the thing there is to cite. `createCitationStripper`
+ * is the backstop for whatever the model invents instead.
+ */
 export function formatContext(chunks) {
   if (!chunks || chunks.length === 0) return '';
   const body = chunks
-    .map((c, i) => `[${i + 1}] ${c.topic_title || c.source} — ${c.section}\n${c.content}`)
+    .map((c) => {
+      const label = [c.topic_title || c.source, c.section].filter(Boolean).join(' — ');
+      return `SOURCE — ${label}\n${c.content}`;
+    })
     .join('\n\n');
-  return `\n\nReference material retrieved for this question. Use it when relevant and prefer its specifics (names, numbers, PR references) over your own recollection. Ignore any entry that does not bear on the question, and never mention this block or cite it by number to the user.\n\n${body}`;
+  return `\n\nReference material retrieved for this question. Treat it as your own knowledge: prefer its specifics (names, numbers, commands, versions) over your own recollection, and ignore any entry that does not bear on the question.
+
+The candidate reads your answer out loud in a live interview. Anything they cannot say is a defect. So write every line as plain speech carrying NO citation markers of any kind — no "[Ref 3]", no "[3]", no "(source)", no "SOURCE —", and no mention that reference material was supplied to you. A fact worth using is stated directly, as something you know.\n\n${body}`;
+}
+
+/*
+ * Citation markers the model may still emit despite the instruction above.
+ * Deliberately narrow: the label word is REQUIRED, so a bare `[3]` — an array
+ * index, a markdown footnote in the candidate's own pasted code — is never
+ * touched. Only a labelled, numbered bracket or paren is.
+ */
+const CITE_RE = /[[(](?:refs?|references?|sources?|citations?|docs?|kb|context)\s*[:#]?\s*\d+(?:\s*(?:,|;|&|and|-|–)\s*\d+)*[\])][ \t]?/gi;
+
+/* Could the tail of the buffer be the front of a marker that has not finished
+ * arriving? An open `[` followed only by letters, then optional separators,
+ * then optional digits. `arr[3]` closes in the same chunk and never reaches
+ * this test; `[Ref ` does. */
+const PARTIAL_RE = /^\[[A-Za-z]{0,12}[\s:#]{0,4}[\d\s,;&–-]{0,16}$/;
+
+/* Give up holding after this many characters so a stray `[` can never stall
+ * the stream — longer than any real marker. */
+const MAX_HOLD = 40;
+
+/**
+ * Strip citation markers from a token stream without eating content.
+ *
+ * SSE tokens split anywhere, so "[Ref" and " 3]" routinely arrive in separate
+ * chunks and a per-chunk `.replace()` would miss every one of them. This holds
+ * back only the trailing fragment that could still become a marker, emits
+ * everything before it, and re-tests on the next token.
+ *
+ * Usage: `const strip = createCitationStripper()` per request, then
+ * `strip.push(token)` at each write site and `strip.flush()` before [DONE].
+ */
+export function createCitationStripper() {
+  let buf = '';
+  return {
+    push(chunk) {
+      if (!chunk) return '';
+      buf += chunk;
+      let out = '';
+      let cut = 0;      // everything before this is resolved
+      let hold = -1;    // index the buffer must be kept from, or -1
+      CITE_RE.lastIndex = 0;
+      for (let m = CITE_RE.exec(buf); m; m = CITE_RE.exec(buf)) {
+        // A match touching the end of the buffer is not final: the space the
+        // pattern optionally eats may be the next token. Wait one character
+        // rather than emit "manifest.  Then" with the gap left behind.
+        if (m.index + m[0].length === buf.length) { hold = m.index; break; }
+        out += buf.slice(cut, m.index);
+        cut = m.index + m[0].length;
+      }
+      if (hold === -1) {
+        // Nothing matched at the end — but the tail may still be growing into
+        // a marker, so keep it back if it could be one.
+        const rest = buf.slice(cut);
+        const open = rest.lastIndexOf('[');
+        if (open !== -1 && rest.indexOf(']', open) === -1) {
+          const tail = rest.slice(open);
+          if (tail.length <= MAX_HOLD && PARTIAL_RE.test(tail)) hold = cut + open;
+        }
+      }
+      out += buf.slice(cut, hold === -1 ? buf.length : hold);
+      buf = hold === -1 ? '' : buf.slice(hold);
+      return out;
+    },
+
+    /** Release whatever is still held. Safe to call more than once. */
+    flush() {
+      const out = buf.replace(CITE_RE, '');
+      buf = '';
+      return out;
+    },
+  };
 }
