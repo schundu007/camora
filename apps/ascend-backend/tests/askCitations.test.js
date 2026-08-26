@@ -8,8 +8,11 @@
  * Two defences, both pinned here: the prompt no longer carries an index to
  * cite, and a stream filter removes labelled markers the model invents anyway.
  */
-import { describe, it, expect } from 'vitest';
-import { formatContext, createCitationStripper } from '../src/services/askRetrieval.js';
+import { describe, it, expect, vi } from 'vitest';
+import { formatContext, createCitationStripper, getCandidateBackground } from '../src/services/askRetrieval.js';
+import { query } from '../src/config/database.js';
+
+vi.mock('../src/config/database.js', () => ({ query: vi.fn() }));
 
 const chunks = [
   { source: 'capra-devops', topic_title: 'Release Manifests', section: 'keyConcepts', content: 'A manifest pins a SHA per repo.' },
@@ -97,5 +100,85 @@ describe('createCitationStripper', () => {
     const strip = createCitationStripper();
     expect(drain(strip, answer.split('')))
       .toBe('"Promote-on-green" moves the manifest. Then build.');
+  });
+});
+
+/**
+ * The JD used to live inside the "this is who I am" block, so Sona told a live
+ * interviewer "at Intuit, we set SLOs on critical dependency metrics" — for a
+ * candidate who has never worked at Intuit and was sitting in their interview.
+ */
+describe('getCandidateBackground', () => {
+  const prepState = (doc) => ({
+    rows: [{ data: { activeCompany: 'Intuit', data: { Intuit: doc } } }],
+  });
+
+  // No mockReset between tests: vitest 4 re-surfaces a reset mock's thrown
+  // error as an unhandled rejection even when the caller catches it. Every
+  // test below sets its own implementation, so a reset buys nothing.
+
+  it('keeps the target company out of the identity block', async () => {
+    query.mockResolvedValue(prepState({
+      resume: 'Staff SRE at Acme. Cut p99 from 900ms to 210ms.',
+      jd: 'Intuit is hiring an SRE to own SLOs for payment services.',
+    }));
+    const out = await getCandidateBackground('u1');
+
+    const identity = out.slice(out.indexOf('CANDIDATE BACKGROUND'), out.indexOf('TARGET ROLE'));
+    expect(identity).toContain('Staff SRE at Acme');
+    expect(identity).not.toContain('Intuit is hiring');
+
+    const target = out.slice(out.indexOf('TARGET ROLE'));
+    expect(target).toContain('Intuit is hiring');
+    expect(target).toContain("INTERVIEWER'S company, NOT an employer");
+    expect(target).toContain('never worked there');
+    expect(target).toContain('Never write "at Intuit, we…"');
+  });
+
+  it('groups the cover letter with the resume, not the JD', async () => {
+    query.mockResolvedValue(prepState({
+      resume: 'Staff SRE at Acme.',
+      coverLetter: 'I led the on-call rotation at Acme.',
+      jd: 'Intuit SRE role.',
+    }));
+    const out = await getCandidateBackground('u1');
+    const identity = out.slice(0, out.indexOf('TARGET ROLE'));
+    expect(identity).toContain('I led the on-call rotation at Acme.');
+  });
+
+  it('emits no target-role block when there is no JD', async () => {
+    query.mockResolvedValue(prepState({ resume: 'Staff SRE at Acme.' }));
+    const out = await getCandidateBackground('u1');
+    expect(out).toContain('CANDIDATE BACKGROUND');
+    expect(out).not.toContain('TARGET ROLE');
+  });
+
+  it('frames the JD as requirements, not as work already done', async () => {
+    query.mockResolvedValue(prepState({ resume: 'Staff SRE at Acme.', jd: 'Owns SLOs for payments.' }));
+    const target = (await getCandidateBackground('u1')).split('TARGET ROLE')[1];
+    expect(target).toContain('REQUIREMENTS the role is asking for');
+    expect(target).toContain('NOT a record of work the candidate has done');
+  });
+
+  it('emits no identity block when only a JD was uploaded', async () => {
+    // The failure this prevents: with no resume, the JD was the ONLY material
+    // under "this is who I am" — every first-person claim came from the
+    // interviewer's own job posting.
+    query.mockResolvedValue(prepState({ jd: 'Intuit SRE role.' }));
+    const out = await getCandidateBackground('u1');
+    expect(out).not.toContain('CANDIDATE BACKGROUND — this is who');
+    expect(out).toContain('TARGET ROLE');
+    // …and it must not point at a background block that isn't there.
+    expect(out).not.toContain('out of the CANDIDATE BACKGROUND above');
+  });
+
+  it('answers ungrounded rather than throwing when prep state is missing', async () => {
+    query.mockResolvedValue({ rows: [] });
+    expect(await getCandidateBackground('u1')).toBe('');
+  });
+
+  it('answers ungrounded rather than throwing when the DB is down', async () => {
+    query.mockImplementation(async () => { throw new Error('db down'); });
+    expect(await getCandidateBackground('u1')).toBe('');
   });
 });
