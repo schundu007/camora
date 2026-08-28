@@ -669,22 +669,19 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   }, [addImage]);
   const detectedIdRef = useRef(0);
 
-  // Hands-free auto-answer. ON by default — in a live interview the user's eyes
-  // are on the interviewer, and tapping every question is the one thing they
-  // can least afford to do. Only lines clearing shouldAutoAnswer() fire
-  // automatically; softer prompts still land in the tap list, so the noisy-room
-  // flood 45d885ae fixed stays fixed. Persisted so the choice survives a reload
-  // mid-interview.
-  // The in-rail switch is gone (the rail is a Q&A window and nothing else), so
-  // this is now read-only: whatever was last persisted, defaulting to on.
-  const AUTO_ANSWER_KEY = 'lumora_behavioral_autoanswer_v1';
-  const [autoAnswer] = useState<boolean>(() => {
-    try { return localStorage.getItem(AUTO_ANSWER_KEY) !== '0'; } catch { return true; }
-  });
-  // submitCoalesced's flush runs from a timer that captured its closure when the
-  // window opened; a ref keeps the decision honest.
-  const autoAnswerRef = useRef(autoAnswer);
-  useEffect(() => { autoAnswerRef.current = autoAnswer; }, [autoAnswer]);
+  // Hands-free auto-answer is UNCONDITIONAL. In a live interview the user's eyes
+  // are on the interviewer, and tapping every question is the one thing they can
+  // least afford to do. Only lines clearing shouldAutoAnswer() fire automatically;
+  // softer prompts still land in the tap list, so the noisy-room flood 45d885ae
+  // fixed stays fixed.
+  //
+  // There is deliberately no flag here any more. a02eefef removed the in-rail
+  // switch AND the localStorage writer but left the reader behind, so a '0'
+  // persisted by any build before it became permanently unreachable — auto-answer
+  // stuck off for the rest of that browser profile's life, with no UI to undo it
+  // and no symptom except Sona silently parking every question in the tap list.
+  // A setting nothing can write and nothing can clear is not a setting; it is a
+  // trap. The switch is gone, so the behaviour is gone with it.
   // Last auto-asked utterance. ask() only dedupes while a stream is in flight,
   // so without this a question repeated across two quiet windows (interviewer
   // rephrasing, same line via mic + loopback) burns a second LLM call.
@@ -965,7 +962,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       // can never become the hole that lets the 2026-06-29 garbage flood back in.
       if (!full) return;
       if (!passesNoiseFilter(full)) { noteHeard(full, 'ignored — filler, noise or not a question'); return; }
-      if (autoAnswerRef.current && shouldAutoAnswer(full)) {
+      if (shouldAutoAnswer(full)) {
         // ask() dedupes against the active + last-queued question only while a
         // stream is in flight; guard the idle case too.
         if (isDuplicateQuestion(full, lastAutoAskedRef.current)) {
