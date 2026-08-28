@@ -159,12 +159,60 @@ const OVERLAY_ENABLED = process.env.CAMORA_OVERLAY === '1' || app.isPackaged;
 // window controls render. This is the missing piece that made the DMG ship broken.
 if (OVERLAY_ENABLED) process.env.CAMORA_OVERLAY = '1';
 
-// Electron 40+ regression: setDisplayMediaRequestHandler with
-// audio:'loopback' returns a silent stream when Chromium routes through
-// CoreAudio Tap (the default on macOS 14.2+). Force the legacy
-// ScreenCaptureKit loopback path so interviewer audio actually has
-// signal. See electron/electron#49607.
-app.commandLine.appendSwitch('disable-features', 'MacCatapLoopbackAudioForScreenShare');
+// ── System-audio loopback path ──────────────────────────────────────────────
+//
+// macOS has two ways to hand us the system audio that `audio:'loopback'` asks
+// for, and they fail in opposite directions:
+//
+//   'sck'   — legacy ScreenCaptureKit. Attaches to the SHARED SYSTEM OUTPUT
+//             DEVICE. Reliable signal, but because it grabs the device other
+//             apps are playing through, it can stall/stutter a live Teams or
+//             Zoom call for as long as we are listening.
+//
+//   'catap' — CoreAudio Tap, the modern path and Chromium's default on macOS
+//             14.2+. Taps per-process, so it does not disturb anyone else's
+//             audio. But under electron/electron#49607 it could hand back a
+//             SILENT stream, which means Sona hears nothing at all.
+//
+// ab646447 forced 'sck' unconditionally to fix that silent-stream bug. On macOS
+// 26 + Electron 41 that trade may no longer be worth paying — a stuttering
+// interview call is its own failure — but flipping it blind risks trading a
+// stutter for total deafness, which is worse. So the choice is a setting, not a
+// guess: Audio menu → System audio path, or CAMORA_LOOPBACK_MODE=catap|sck for
+// a one-off run. Default is unchanged ('sck').
+//
+// Chromium reads command-line switches once, before any renderer spawns, so a
+// change only takes effect on relaunch. The menu handler relaunches for you.
+const LOOPBACK_MODE_FILE = path.join(app.getPath('userData'), 'audio-mode.json');
+const LOOPBACK_MODES = ['sck', 'catap'];
+
+function loadLoopbackMode() {
+  // The env var wins so a one-off test never overwrites the saved choice.
+  const env = String(process.env.CAMORA_LOOPBACK_MODE || '').trim().toLowerCase();
+  if (LOOPBACK_MODES.includes(env)) return env;
+  try {
+    const saved = JSON.parse(fs.readFileSync(LOOPBACK_MODE_FILE, 'utf8'));
+    if (LOOPBACK_MODES.includes(saved?.loopbackMode)) return saved.loopbackMode;
+  } catch { /* no file yet, or unreadable — fall through to the default */ }
+  return 'sck';
+}
+
+function saveLoopbackMode(mode) {
+  if (!LOOPBACK_MODES.includes(mode)) return;
+  try {
+    fs.writeFileSync(LOOPBACK_MODE_FILE, JSON.stringify({ loopbackMode: mode }, null, 2));
+  } catch (err) {
+    console.error('[loopback] could not persist audio mode:', err?.message || err);
+  }
+}
+
+const LOOPBACK_MODE = loadLoopbackMode();
+if (LOOPBACK_MODE === 'sck') {
+  app.commandLine.appendSwitch('disable-features', 'MacCatapLoopbackAudioForScreenShare');
+}
+console.log(`[loopback] system-audio path: ${LOOPBACK_MODE}` +
+  (LOOPBACK_MODE === 'catap' ? ' (CoreAudio Tap — does not grab the shared output device)'
+                             : ' (ScreenCaptureKit — grabs the shared output device)'));
 
 // ── Single instance ─────────────────────────────────────────────────────
 if (!app.requestSingleInstanceLock()) { app.quit(); }
@@ -643,8 +691,56 @@ function createWindow() {
   }, { useSystemPicker: false });
 }
 
+// ── Audio menu ──────────────────────────────────────────────────────────────
+//
+// Lets the user switch the system-audio path (see LOOPBACK_MODE above) without a
+// terminal or a rebuild. Chromium only reads switches at startup, so each item
+// saves the choice and relaunches — the labels say so, and there is no
+// confirmation step precisely because a surprise relaunch mid-interview would be
+// worse than an explicit one the user just clicked.
+//
+// Appended to the DEFAULT application menu rather than replacing it, so the
+// standard Edit/Window roles (copy, paste, select-all) survive. Built exactly
+// once; the checkmark shows the mode this launch is actually running.
+function installAudioMenu() {
+  if (process.platform !== 'darwin') return;
+  const menu = Menu.getApplicationMenu();
+  if (!menu) return;
+
+  const pick = (mode) => () => {
+    if (mode === LOOPBACK_MODE) return;
+    saveLoopbackMode(mode);
+    app.relaunch();
+    app.exit(0);
+  };
+
+  try {
+    menu.append(new MenuItem({
+      label: 'Audio',
+      submenu: [
+        { label: `System audio path — now: ${LOOPBACK_MODE}`, enabled: false },
+        { type: 'separator' },
+        {
+          label: `${LOOPBACK_MODE === 'sck' ? '✓ ' : ''}ScreenCaptureKit — reliable, can stall Teams/Zoom`,
+          click: pick('sck'),
+        },
+        {
+          label: `${LOOPBACK_MODE === 'catap' ? '✓ ' : ''}CoreAudio Tap — leaves other apps alone`,
+          click: pick('catap'),
+        },
+        { type: 'separator' },
+        { label: 'Switching relaunches Camora', enabled: false },
+      ],
+    }));
+    Menu.setApplicationMenu(menu);
+  } catch (err) {
+    console.error('[loopback] could not install the Audio menu:', err?.message || err);
+  }
+}
+
 // ── Lifecycle ───────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
+  installAudioMenu();
   // Clear the HTTP cache on every launch. Electron caches index.html and
   // hashed asset chunks aggressively, which means a Vercel deploy that
   // changed a chunk hash often serves the OLD HTML pointing at a chunk
