@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { CodingSonaSidebar, CodingSonaSidebarToggle } from '../../components/lumora/shell/CodingSonaSidebar';
 import { AICompanionPanel } from '../../components/lumora/shell/AICompanionPanel';
 import { dispatchTranscript } from '../../lib/voice-router';
+import { isCandidateSelfVoice } from '../../lib/speaker-attribution';
 import { SessionPanel } from '../../components/lumora/session/SessionPanel';
 import { LumoraDocsPanel } from '../../components/lumora/shell/LumoraDocsPanel';
 import { PracticePanel } from '../../components/lumora/shell/PracticePanel';
@@ -280,32 +281,33 @@ export const LumoraShellPage = () => {
   const codingProblemRef = useRef<((text: string) => void) | null>(null);
   const designProblemRef = useRef<((text: string) => void) | null>(null);
 
-  // True once the interviewer stream has delivered a real transcript on the
-  // CURRENT connection — the gate for suppressing the candidate mic in
-  // behavioral mode (see handleTranscription). Cleared whenever that stream
-  // goes down so a reconnected stream must prove itself again, and the mic
-  // stays the question source in the meantime.
-  const interviewerHeardRef = useRef(false);
-  const speakerActive = useSessionStore(s => s.speakerAudio.active);
-  useEffect(() => {
-    if (speakerActive) return;
-    // Clear the proof only after a grace period, not the instant the stream goes
-    // inactive. Two things stop it briefly and legitimately: pressing Ask (which
-    // pauses the interviewer stream so the two don't both feed Sona, then
-    // resumes it) and the gesture-free reconnect paths (~1-2s). Clearing
-    // immediately would un-suppress the mic for those few seconds — exactly
-    // while the candidate is talking — and their own answer would come back as
-    // the next question. A stream that is genuinely dead stays down past the
-    // grace period and correctly hands the ear back to the mic.
-    const id = setTimeout(() => { interviewerHeardRef.current = false; }, 8000);
-    return () => clearTimeout(id);
-  }, [speakerActive]);
+  // True once a DEDICATED interviewer stream (loopback / tab-share / virtual-mic
+  // — not room-mic, which hears everyone) has delivered a real transcript at any
+  // point this session. Latched: it is never cleared while the page is mounted.
+  //
+  // It used to be cleared 8s after the stream went inactive, so the candidate mic
+  // could take over as the question source whenever the interviewer stream
+  // stalled. That fallback is what put the candidate's own answers into the
+  // question panel: a loopback that goes quiet (wrong output sink, meeting audio
+  // on another device, ScreenCaptureKit dropping signal) looks exactly like a
+  // stream that "died", and the mic — which hears the candidate loud and close —
+  // silently became the interviewer. The interviewer's actual questions kept
+  // arriving on the real stream at the same time, so BOTH voices were typed and
+  // the coalescer fused them into one unanswerable blob.
+  //
+  // Latching trades that away deliberately: once a dedicated stream has proven it
+  // can hear, the candidate mic is never a question source again for the rest of
+  // the session. A genuinely dead stream is now recovered by the user, not by
+  // silently repurposing their own microphone — SilentStreamBanner (rendered
+  // below, on this tab) already surfaces both the dead and the live-but-silent
+  // case with a reconnect button. Manual mic presses are unaffected.
+  const dedicatedInterviewerHeardRef = useRef(false);
 
   const handleCodingSubmitRouted = useCallback((problem: string, language?: string, options?: { bypassCache?: boolean; starterCode?: string }) => {
     return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit]);
 
-  const handleTranscription = useCallback((text: string, opts?: { manual?: boolean; source?: 'interviewer' }) => {
+  const handleTranscription = useCallback((text: string, opts?: { manual?: boolean; source?: 'interviewer' | 'room' }) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const tab = activeTabRef.current;
@@ -332,55 +334,18 @@ export const LumoraShellPage = () => {
       // gate to the COMPLETE text — gating here, per-fragment, drops questions
       // before they can be reassembled. Manual presses skip the coalescer entirely.
       if (isWhisperHallucination(trimmed)) return;
-      // Speaker attribution. In behavioral mode the QUESTION source must be the
-      // INTERVIEWER, never the candidate. Two streams reach this handler:
-      //   • the interviewer's dedicated stream (desktop loopback / shared tab /
-      //     virtual mic) — tagged source:'interviewer' at the provider, and
-      //   • the candidate's own mic (ScreenshotStrip AudioCapture, locked) —
-      //     untagged.
-      // While a separate interviewer stream is CURRENTLY LIVE
-      // (speakerAudio.active), the candidate mic's AUTO transcripts are the
-      // candidate ANSWERING — they used to be dispatched as "questions",
-      // polluting the panel and making Sona answer the candidate's own voice
-      // (the "captures my voice, misses 90% of the interviewer" bug). Drop them.
-      //
-      // Keyed on `active` (live now), NOT `everConnected` (ever, this session):
-      // when the interviewer stream DIES mid-interview (share picker stops, tab
-      // closes, loopback drops) the mic must become the fallback question
-      // source again — otherwise Sona goes permanently deaf after one Q&A. The
-      // gesture-free methods auto-reconnect within ~1-2s, so the un-suppressed
-      // window is tiny; during it the mic may leak one candidate utterance as a
-      // question — an acceptable trade vs. total silence, and the reconnect
-      // banner tells the user to restore the interviewer stream.
-      // Manual mic presses (deliberate "ask Sona this") always go through. When
-      // no separate stream ever connected (mic-only fallback) the mic IS the
-      // interviewer source, so nothing is suppressed.
+      // Speaker attribution — the full rule, and why it is absolute, lives in
+      // lib/speaker-attribution.ts alongside its tests. Latch the proof here:
+      // once a DEDICATED interviewer stream has been heard this session, the
+      // candidate's own mic is never an automatic question source again.
       const isManual = opts?.manual === true;
-      const fromInterviewer = opts?.source === 'interviewer';
-      if (fromInterviewer) interviewerHeardRef.current = true;
-      // Suppress the candidate mic ONLY once the interviewer stream has PROVEN
-      // it can hear — i.e. it has delivered at least one transcript on the
-      // current connection.
-      //
-      // `active` alone was not enough. A loopback / tab-share can sit `active`
-      // forever while carrying pure silence (wrong output device shared, meeting
-      // audio on another sink, share started before the call). Every chunk comes
-      // back no_speech_prob=1.00, so the interviewer stream produces NOTHING —
-      // and because it is nominally `active`, the mic (which CAN hear the room,
-      // including the interviewer through the speakers) was dropped on every
-      // utterance. Result: Sona goes silently, totally deaf. No questions, no
-      // answers, no error — the failure this whole path exists to prevent.
-      //
-      // Proving-it keeps the original fix intact: once the interviewer stream
-      // has been heard once, the mic stays suppressed for the rest of that
-      // connection, so the candidate's own answers never come back as questions.
-      // The flag resets on disconnect (see the effect below), so a stream that
-      // dies and reconnects has to prove itself again.
-      if (!isManual && !fromInterviewer
-          && useSessionStore.getState().speakerAudio.active
-          && interviewerHeardRef.current) {
-        return;
-      }
+      const source = opts?.source;
+      if (source === 'interviewer') dedicatedInterviewerHeardRef.current = true;
+      if (isCandidateSelfVoice({
+        manual: isManual,
+        source,
+        dedicatedInterviewerHeard: dedicatedInterviewerHeardRef.current,
+      })) return;
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: isManual } }));
       return;
     }
@@ -410,8 +375,15 @@ export const LumoraShellPage = () => {
     setScreenshots(prev => prev.filter(s => s.id !== id));
   }, []);
 
+  // Tag by RESOLVED capture method, not blanket 'interviewer'. room-mic is one
+  // microphone hearing the whole room, so its transcripts carry the candidate too
+  // and must not inherit the trust a dedicated stream gets.
   return (
-    <SpeakerAudioProvider onTranscription={(text) => handleTranscription(text, { source: 'interviewer' })}>
+    <SpeakerAudioProvider
+      onTranscription={(text, meta) =>
+        handleTranscription(text, { source: meta?.method === 'room-mic' ? 'room' : 'interviewer' })
+      }
+    >
     {/* Audio setup wizard — only mounted on live-interview tabs where
         we actually need audio. The wizard auto-opens on first session
         until the user finishes setup, then stays out of the way. */}

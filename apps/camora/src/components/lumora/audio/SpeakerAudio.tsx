@@ -43,7 +43,17 @@ export const SpeakerAudioProvider = ({
   onTranscription,
   children,
 }: {
-  onTranscription?: (text: string) => void;
+  /** `method` is the RESOLVED capture method that produced this text. The
+   *  consumer needs it because attribution differs per method: a dedicated
+   *  stream (loopback / tab-share / virtual-mic) IS the interviewer by
+   *  construction, while `room-mic` is one microphone hearing the whole room —
+   *  interviewer AND candidate — so nothing at the stream level can tell them
+   *  apart. Passing the method up keeps that distinction honest instead of
+   *  labelling every capture "interviewer". */
+  onTranscription?: (
+    text: string,
+    meta: { method: Exclude<CaptureMethod, 'auto'> | null },
+  ) => void;
   children: React.ReactNode;
 }) => {
   const { token } = useAuth();
@@ -100,7 +110,7 @@ export const SpeakerAudioProvider = ({
           console.warn('[SpeakerAudio] empty transcription', { result });
           return;
         }
-        onTranscriptionRef.current?.(text);
+        onTranscriptionRef.current?.(text, { method: resolvedMethodRef.current });
       } catch (err) {
         console.error('[SpeakerAudio] transcription failed', err);
       }
