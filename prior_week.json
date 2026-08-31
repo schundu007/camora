@@ -1,6 +1,6 @@
 {
-  "date": "2026-08-24",
-  "note": "PageSpeed API returned 429 RESOURCE_EXHAUSTED for all calls (quota_limit_value=0 on project 583797351490). No scores recorded — fourth consecutive week with same error (first: 2026-07-06, second: 2026-07-13, third: 2026-08-17).",
+  "date": "2026-08-31",
+  "note": "PageSpeed API returned 429 RESOURCE_EXHAUSTED for all calls (quota_limit_value=0 on project 583797351490). No scores recorded — fifth consecutive week with same error (first: 2026-07-06, second: 2026-07-13, third: 2026-08-17, fourth: 2026-08-24).",
   "homepage": {
     "mobile": null,
     "desktop": null
