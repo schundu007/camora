@@ -28,7 +28,10 @@ const SUMMARY_MODEL = process.env.CLAUDE_MODEL || 'claude-haiku-4-5-20251001';
 // org slug (we hit the public REST API). Both are optional; one is
 // enough to produce a useful briefing.
 export const COMPANY_SOURCES = {
-  NVIDIA: { eng: 'https://developer.nvidia.com/blog/', github: 'NVIDIA', docs: 'https://docs.nvidia.com/isaac/' },
+  // docs was docs.nvidia.com/isaac/ (robotics). NVIDIA interview surface has
+  // moved to DGX Cloud / AI-factory infrastructure, so point the watchlist
+  // crawl at the cloud-native stack — GPU Operator, KubeVirt, device plugins.
+  NVIDIA: { eng: 'https://developer.nvidia.com/blog/', github: 'NVIDIA', docs: 'https://docs.nvidia.com/datacenter/cloud-native/' },
   Google: { eng: 'https://blog.google/technology/research/', github: 'google', docs: 'https://cloud.google.com/docs' },
   Meta: { eng: 'https://engineering.fb.com/', github: 'facebook' },
   Apple: { eng: 'https://developer.apple.com/news/', github: 'apple' },
