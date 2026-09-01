@@ -96,7 +96,14 @@ export async function retrieveForAsk(question, { limit = 6 } = {}) {
     let sourceClause = '';
     if (sources) {
       params.push(sources);
-      sourceClause = 'WHERE source = ANY($3)';
+      // The bias is over STUDY DECKS only. Narrowing to the three capra decks
+      // used to exclude everything else in the KB, including the web-watchlist
+      // rows keyed by company name (source='NVIDIA') that Prep writes for the
+      // company you are actually interviewing at — so "how does the GPU
+      // Operator work" matched CI_HINTS and then searched everything EXCEPT
+      // the NVIDIA docs just indexed for that question. Keep other companies'
+      // capra-* decks out; let non-deck sources through.
+      sourceClause = "WHERE (source = ANY($3) OR source NOT LIKE 'capra-%')";
     }
     const sql = `SELECT source, topic_title, section, content, embedding <=> $1::vector AS distance FROM lumora_kb_chunks ${sourceClause} ORDER BY embedding <=> $1::vector LIMIT $2`;
     const r = await query(sql, params);
