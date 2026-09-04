@@ -101,18 +101,29 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
     return false;
   };
 
-  // Active = solid gold-leaf fill with dark text (matches PillToggle).
-  // Inactive = subtle capsule sitting on the charcoal rail — themed
-  // borders/hover so the rail reads as neutral chrome with navy + gold
-  // reserved for accents (matches the global Charcoal + Navy Accent rule).
+  // Active = accent-tinted capsule with an accent border and accent icon.
+  //
+  // It used to fill with --lum-accent-bg, which in the dark theme is #001129
+  // sitting on a --lum-surface rail of #161d26: two near-black navies about
+  // one step apart. The selected tab was, in practice, not marked at all —
+  // you clicked Ask Sona and nothing on the rail changed, which is the whole
+  // "chips are not highlighted when clicked" report. The icon did shift to
+  // --lum-accent-sm, but that is a hairline colour change on an 18px stroke
+  // glyph and reads as nothing.
+  //
+  // A tint plus a border carries at a glance and matches the interview
+  // toolbar's on-state (.lum-tool-chip.is-on), so selection looks the same
+  // wherever it appears in the shell.
   const itemStyle = (active: boolean): React.CSSProperties => ({
-    color: active ? 'var(--lum-accent-sm)' : 'var(--lum-text-2)',
-    background: active ? 'var(--lum-accent-bg)' : 'transparent',
-    border: '1px solid transparent',
+    color: active ? 'var(--lum-accent)' : 'var(--lum-text-2)',
+    background: active
+      ? 'color-mix(in oklab, var(--lum-accent) 18%, transparent)'
+      : 'transparent',
+    border: `1px solid ${active ? 'color-mix(in oklab, var(--lum-accent) 55%, transparent)' : 'transparent'}`,
     borderRadius: 'var(--lum-radius)',
     boxShadow: 'none',
     fontWeight: active ? 700 : 500,
-    transition: 'background-color 200ms, color 200ms, box-shadow 200ms, transform 150ms',
+    transition: 'background-color 200ms, color 200ms, border-color 200ms, transform 150ms',
   });
 
   const [expanded, setExpanded] = useState(false);
@@ -202,6 +213,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
               to={item.path}
               className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
+              aria-current={active ? "page" : undefined}
               data-tip={expanded ? undefined : item.label}
             >
               {item.icon}
@@ -228,6 +240,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
               to={item.path}
               className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
               style={itemStyle(active)}
+              aria-current={active ? "page" : undefined}
               data-tip={expanded ? undefined : item.label}
             >
               {item.icon}
@@ -310,6 +323,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
                 to={item.path}
                 className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
                 style={itemStyle(active)}
+              aria-current={active ? "page" : undefined}
                 data-tip={expanded ? undefined : item.label}
               >
                 {item.icon}
@@ -331,6 +345,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
                 to={item.path}
                 className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
                 style={itemStyle(active)}
+              aria-current={active ? "page" : undefined}
                 data-tip={expanded ? undefined : item.label}
               >
                 {item.icon}

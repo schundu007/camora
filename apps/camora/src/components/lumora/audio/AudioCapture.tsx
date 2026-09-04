@@ -620,10 +620,23 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
           } else {
             consecutiveFilteredRef.current += 1;
             const ratio = result.interviewer_ratio;
-            // After N consecutive drops, the filter is stuck. Auto-
-            // disable so the user isn't left wondering why no voice
-            // is recorded. They can re-enable from VoiceEnrollment.
-            if (consecutiveFilteredRef.current >= STUCK_FILTER_THRESHOLD && shouldFilterVoice) {
+            // After N consecutive drops the filter may be stuck — auto-disable
+            // so the user isn't left wondering why no voice is recorded. They
+            // can re-enable from VoiceEnrollment.
+            //
+            // NEVER on behavioral (`locked`). There, this mic exists to hear
+            // the INTERVIEWER and the candidate's voice is meant to be dropped
+            // — so a candidate answering one question produces far more than
+            // five consecutive drops, and the valve fired on the filter doing
+            // precisely its job. Enrol, speak for twenty seconds, and the chip
+            // silently flipped itself to "Filter off"; the visible state then
+            // said the opposite of the truth, and (since Ask reads the same
+            // flag) Ask started transcribing the candidate too. A safety valve
+            // whose trigger is the feature working is not a safety valve.
+            //
+            // It stays for coding/design, where this mic IS how you talk to
+            // Sona and a permanently-filtering mic really is a dead end.
+            if (!locked && consecutiveFilteredRef.current >= STUCK_FILTER_THRESHOLD && shouldFilterVoice) {
               setVoiceFilterEnabled(false);
               consecutiveFilteredRef.current = 0;
               setStatus('warn', `Filter dropped ${STUCK_FILTER_THRESHOLD}+ chunks in a row — auto-disabled. Re-enroll if your voice profile is stale.`);
