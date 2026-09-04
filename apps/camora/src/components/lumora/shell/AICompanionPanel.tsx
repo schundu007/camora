@@ -577,7 +577,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   }, [isResizing]);
 
   // Auto-scroll
-  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages, streamText, isOpen]);
+  // Hold the view at the TOP. The newest answer renders first now, directly
+  // under the composer, so chasing scrollHeight would walk the candidate's
+  // eyes down the screen on every question — the thing that makes reading
+  // during a call look like reading during a call.
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [messages, streamText, isOpen]);
   useEffect(() => { if (isOpen) setTimeout(() => inputRef.current?.focus(), 100); }, [isOpen]);
 
   // FIFO queue of questions captured while Sona is streaming. All questions
@@ -1458,7 +1462,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               {!streaming && !liveTranscript && detectedQuestions.length === 0 &&
                 messages.filter(m => m.role === 'user').length === 0 && (
                 <p className="text-[12px] px-1 py-2" style={{ color: 'var(--text-muted)' }}>
-                  Questions land here — ask one below, or let Sona pick them up from the call.
+                  Questions land here — ask one above, or let Sona pick them up from the call.
                 </p>
               )}
               {/* Live preview — shows each Whisper chunk immediately as it
@@ -1613,14 +1617,58 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               from line to line — that was the actual readability
               failure, not a color choice. */}
           <div className="flex-1 flex flex-col min-w-0">
-          <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto p-3 sm:p-4 md:p-5 min-w-0">
+          {composer}
+          <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto p-3 sm:p-4 md:p-5 min-w-0 lumora-companion-answers" data-embedded={embedded ? 'true' : 'false'}>
             {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
               <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
-                <p className="text-sm md:text-xs px-4 text-center">Answers appear here — type a question below, or let Sona pick them up from the call.</p>
+                <p className="text-sm md:text-xs px-4 text-center">Answers appear here — type a question above, or let Sona pick them up from the call.</p>
               </div>
             ) : (
               <div className="space-y-3 sm:space-y-4 mx-auto w-full" style={{ maxWidth: 880 }}>
-                {messages.map((msg, i) => msg.role !== 'ai' ? null : (
+                {streaming && (
+                  <div
+                    className="rounded-lg overflow-hidden"
+                    style={{
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                      boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)',
+                    }}
+                  >
+                    <div
+                      className="flex items-center gap-2 px-4 py-2"
+                      style={{
+                        background: 'var(--cam-hero-strip)',
+                        borderBottom: '1px solid var(--cam-gold-leaf)',
+                      }}
+                    >
+                      <SonaAvatar size={16} active />
+                      <span className="font-display text-[12px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>
+                        Sona is answering…
+                      </span>
+                    </div>
+                    <div className="p-4 sm:p-5">
+                      {streamText ? (
+                        <div className="answer-flow">
+                          <AnswerView text={cleanTags(streamText)} streaming />
+                          <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} />
+                        </div>
+                      ) : (
+                        <span className="animate-pulse text-xs" style={{ color: 'var(--text-muted)' }}>Thinking...</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {/* Newest answer first, directly under the composer.
+
+                    The index is carried through the reverse rather than taken
+                    from it: deleteQAPair(i) addresses `messages`, so mapping
+                    over a reversed copy would delete a different Q&A than the
+                    one whose bin you clicked. */}
+                {messages
+                  .map((msg, i) => ({ msg, i }))
+                  .filter(({ msg }) => msg.role === 'ai')
+                  .reverse()
+                  .map(({ msg, i }) => (
                   <div
                     key={i}
                     id={`sona-answer-${i}`}
@@ -1677,44 +1725,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       )}
                     </div>
                   </div>
-                ))}
-                {streaming && (
-                  <div
-                    className="rounded-lg overflow-hidden"
-                    style={{
-                      background: 'var(--bg-surface)',
-                      border: '1px solid var(--border)',
-                      boxShadow: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(15,23,42,0.10)',
-                    }}
-                  >
-                    <div
-                      className="flex items-center gap-2 px-4 py-2"
-                      style={{
-                        background: 'var(--cam-hero-strip)',
-                        borderBottom: '1px solid var(--cam-gold-leaf)',
-                      }}
-                    >
-                      <SonaAvatar size={16} active />
-                      <span className="font-display text-[12px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>
-                        Sona is answering…
-                      </span>
-                    </div>
-                    <div className="p-4 sm:p-5">
-                      {streamText ? (
-                        <div className="answer-flow">
-                          <AnswerView text={cleanTags(streamText)} streaming />
-                          <span className="inline-block w-1.5 h-3 ml-0.5 animate-pulse rounded-sm" style={{ background: 'var(--cam-gold-leaf)' }} />
-                        </div>
-                      ) : (
-                        <span className="animate-pulse text-xs" style={{ color: 'var(--text-muted)' }}>Thinking...</span>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  ))}
               </div>
             )}
           </div>
-          {composer}
           </div>
         </div>
       ) : (
