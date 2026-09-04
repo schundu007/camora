@@ -690,28 +690,55 @@ export const AskLayout = () => {
     }
   }, [sentHistory, histIdx, applyHistory]);
 
-  // Single-stroke shortcut: Space toggles dictation when you're not mid-typing
-  // (composer empty or focus outside it). Esc stops an active dictation. Plain
-  // Space still types a space when the composer already has text.
+  // Single-stroke shortcuts — ONE KEY PER AUDIO SOURCE, which is the whole
+  // point of the split:
+  //
+  //   `      → the interviewer chip. Arms/disarms listening to their stream.
+  //   Space  → your own dictation mic.
+  //
+  // Space used to be the only key here, so what it did depended on which
+  // control happened to be live — the ambiguity this removes. The two chips
+  // are different intents ("listen to them" / "listen to me") and now each has
+  // its own key, so neither can be pressed by accident while reaching for the
+  // other.
+  //
+  // ` is the same key the behavioral and coding surfaces already use for their
+  // audio control (AudioCapture.SHORTCUTS.TOGGLE_MIC_CODE), so it stays "the
+  // audio key" across the shell. Those handlers suppress themselves when their
+  // tab is inactive, so nothing double-fires while Ask is on screen.
+  //
+  // Both keys share one focus rule so the pair behaves identically: fire from
+  // the page background or an empty composer, never mid-typing. Plain Space
+  // still types a space, and ` still types a backtick, once there is a draft.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+      const isSpace = e.code === 'Space';
+      // Shift+` is ~, a character someone may genuinely want. Only bare ` binds.
+      const isTick = e.code === 'Backquote' && !e.shiftKey;
+      if ((!isSpace && !isTick) || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
       const el = e.target as HTMLElement | null;
       const tag = el?.tagName;
       const inEmptyComposer = el === inputRef.current && !input.trim();
-      // Don't hijack Space where it has a native meaning: typing in a field, or
-      // activating a focused button/link. Fire from empty composer or plain
-      // page background only.
+      // Don't hijack either key where it has a native meaning: typing in a
+      // field, or activating a focused button/link.
       const interactive = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' ||
         tag === 'A' || tag === 'SELECT' || !!el?.isContentEditable || el?.getAttribute('role') === 'button';
-      if (!interactive || inEmptyComposer) {
+      if (interactive && !inEmptyComposer) return;
+      if (isTick) {
+        // No interviewer stream means no chip on screen. Toggling a control the
+        // user cannot see is the invisible-state failure, so leave the key
+        // alone and let ` type normally.
+        if (listenSource !== 'interviewer') return;
         e.preventDefault();
-        setMicToggle(n => n + 1);
+        setListening(v => !v);
+        return;
       }
+      e.preventDefault();
+      setMicToggle(n => n + 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [input]);
+  }, [input, listenSource]);
 
   return (
     <div className="flex flex-row h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -860,7 +887,8 @@ export const AskLayout = () => {
                     it works in both web and the Electron desktop app). The
                     transcript is appended after whatever was already typed.
                     Space toggles it (single-stroke) when not mid-typing. */}
-                {/* BOTH controls, never one instead of the other.
+                {/* BOTH controls, never one instead of the other, and one key
+                    each — ` for the interviewer, Space for the mic.
                     Swapping the mic out for the listen button whenever a
                     dedicated stream was live silently removed dictation: with
                     the desktop loopback auto-starting, there was no way left to

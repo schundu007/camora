@@ -28,8 +28,8 @@ export const InterviewerListenButton = ({ listening, onToggle, disabled = false 
     onClick={onToggle}
     disabled={disabled}
     data-tip={listening
-      ? 'Listening to the interviewer — each question is sent to Sona as it finishes. Click to stop.'
-      : 'Listen to the interviewer — their questions go straight to Sona. Your own voice is not on this stream.'}
+      ? 'Listening to the interviewer — each question is sent to Sona as it finishes. Click or press ` to stop.'
+      : 'Listen to the interviewer (`) — their questions go straight to Sona. Your own voice is not on this stream.'}
     aria-label={listening ? 'Stop listening to the interviewer' : 'Listen to the interviewer'}
     aria-pressed={listening}
     className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
