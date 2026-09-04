@@ -1419,6 +1419,15 @@
 }
 .lum-tool-meter i.is-lit { background: var(--cam-gold-leaf); }
 
+/* In overlay mode the window is translucent, so a control's edge can land on
+   a bright desktop photo. A light hairline disappears there. Pairing it with a
+   dark outer ring gives every edge one side that contrasts no matter what is
+   behind the window — the same trick native translucent chrome uses. */
+html[data-overlay='on'] .lum-tool-group,
+html[data-overlay='on'] .lum-tool-chip {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.38);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lum-tool-btn,
   .lum-tool-chip,
@@ -2266,10 +2275,19 @@ html[data-overlay='on'] {
   --bg-app:             #0f141a;
 
   --lum-bg:             transparent;
-  --lum-surface:        color-mix(in srgb, #161d26 72%, transparent);
-  --lum-surface-hover:  color-mix(in srgb, #1b232d 72%, transparent);
-  --lum-border:         rgba(255,255,255,0.16);
-  --lum-border-strong:  rgba(255,255,255,0.30);
+  --lum-surface:        color-mix(in srgb, #161d26 82%, transparent);
+  --lum-surface-hover:  color-mix(in srgb, #1b232d 82%, transparent);
+  /* Overlay borders sit over WHATEVER is behind the window — a bright desktop
+     photo as often as a dark IDE. A 16% white hairline vanishes completely on
+     a light backdrop, which is the "I can't see the border lines" report, and
+     it gets worse as the opacity slider comes down. These are roughly doubled,
+     and .lumora-shell-root pairs them with a dark outer ring (below) so an
+     edge reads against a light backdrop as well as a dark one.
+     --border/--border-hover are the Fluent equivalents and move with them. */
+  --lum-border:         rgba(255,255,255,0.32);
+  --lum-border-strong:  rgba(255,255,255,0.52);
+  --border:             rgba(255,255,255,0.28);
+  --border-hover:       rgba(255,255,255,0.42);
   --lum-text:           #FFFFFF;
   --lum-text-2:         #ebebf0;
   --lum-accent:         #75cfff;
@@ -2374,8 +2392,11 @@ html[data-overlay='on'][data-theme='light'] .lumora-shell-root {
   --bg-elevated: #232b37;
   --bg-primary: #1b232d;
   --bg-secondary: #232b37;
-  --border: rgba(255, 255, 255, 0.10);
-  --border-hover: rgba(255, 255, 255, 0.16);
+  /* Matches the overlay borders above. At 0.10 these were a rumour of a line
+     on a bright backdrop — invisible in exactly the case this block exists
+     for, a light-theme user running the overlay over their desktop. */
+  --border: rgba(255, 255, 255, 0.28);
+  --border-hover: rgba(255, 255, 255, 0.42);
   --accent: #42b4ff; --accent-hover: #75cfff; --accent-text: #42b4ff;
   --accent-subtle: rgba(66, 180, 255, 0.16);
   --accent-secondary-text: #FF9900;
