@@ -760,44 +760,32 @@ export const AskLayout = () => {
       {/* Main column */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
 
-      {/* Top bar — navy strip with gold-leaf border */}
-      <div className="flex items-center justify-between px-5 h-12 shrink-0 lumora-winctl-safe" style={{ background: 'var(--lum-accent)', borderBottom: '1px solid var(--lum-accent-sm)' }}>
-        <div className="flex items-center gap-2">
-          {hasMessages && (
-            <button onClick={startNew} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-white/20" style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.45)', ...sans }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-              New
-            </button>
-          )}
-        </div>
-        <span className="text-[12px] uppercase tracking-widest font-bold" style={{ color: '#FFFFFF', ...sans }}>Ask Sona</span>
-        {/* Single-click chip: opens the left History sidebar (collapse lives
-            inside the sidebar). Hidden while the sidebar is open so there's one
-            unambiguous control at a time. */}
-        {!showHistory && (
-          <button
-            onClick={() => setShowHistory(true)}
-            data-tip="Show conversation history"
-            className="flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-medium transition-colors"
-            style={{ color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.45)', ...sans }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-            History ({history.length})
+
+      {/* ONE strip: New, the composer, and History on a single row.
+
+          It was two full-height bands stacked — a navy header carrying a
+          centred "ASK SONA" title, then the composer beneath it — which spent
+          about 100px of vertical space to say something the icon rail already
+          says by highlighting the active tab. On a surface you read while a
+          camera is pointed at you, that is the most expensive space on screen:
+          every pixel of chrome at the top pushes the answer further down, and
+          looking down is the whole thing we are trying to avoid.
+
+          The title goes (the rail marks where you are). New and History flank
+          the composer instead of owning a row of their own. Items align to the
+          TOP so the two chips stay level with the composer's first line as it
+          grows into a long question rather than drifting to its middle. */}
+      <div
+        className="shrink-0 flex items-start gap-2 px-3 py-2 lumora-winctl-safe"
+        style={{ borderBottom: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}
+      >
+        {hasMessages && (
+          <button onClick={startNew} className="shrink-0 mt-[5px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            New
           </button>
         )}
-      </div>
-
-      {/* Composer — pinned ABOVE the conversation.
-
-          Not a style preference. On camera, every glance further down the
-          screen reads as looking something up, and a bottom composer put the
-          one thing you type into at the furthest point from the webcam. It
-          sits under the header now, with the newest answer immediately below
-          it, so typing and reading happen in the same band near the lens.
-          The rule moves to the bottom edge for the same reason it was on top
-          before: it separates the composer from what it produces. */}
-      <div className="shrink-0 px-4 pb-3 pt-3" style={{ borderBottom: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}>
-        <div style={{ maxWidth: 780, margin: '0 auto' }}>
+        <div className="flex-1 min-w-0">
           {/* Provider toggle removed: Ask runs on ascend-backend, which does not
               spend Anthropic keys (Claude belongs to lumora-backend), so the
               Claude chip offered a model the service will never call — the same
@@ -928,6 +916,17 @@ export const AskLayout = () => {
             </div>
           </div>
         </div>
+        {!showHistory && (
+          <button
+            onClick={() => setShowHistory(true)}
+            data-tip="Show conversation history"
+            className="shrink-0 mt-[5px] flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-[var(--lum-surface-hover)]"
+            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+            History ({history.length})
+          </button>
+        )}
       </div>
 
       {/* Messages / empty state.
