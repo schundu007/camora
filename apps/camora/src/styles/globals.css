@@ -1438,6 +1438,52 @@ html[data-overlay='on'] .lum-tool-chip {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.38);
 }
 
+/* ── Overlay edges: pure white, 2px ──────────────────────────────────────
+   Requested directly, and it is the right call for this surface. The overlay
+   frost is dark graphite in BOTH themes (see the remap further up: a light
+   ramp cannot survive a translucent window, so [data-theme="light"] runs the
+   dark tokens there). That is why raising the light-theme border tokens did
+   nothing for anyone actually running the overlay — those tokens are not the
+   ones in play. White is the only colour guaranteed to separate from a dark
+   frost no matter what desktop shows through behind it.
+
+   Width has to be forced. Nearly every panel in the shell writes
+   `border: 1px solid var(--lum-border…)` as an inline style, so the colour
+   follows the token but the 1px does not — only a rule can widen it. The
+   attribute selector matches exactly those inline declarations; the dark ring
+   above still rides underneath, so each edge keeps a contrasting side even
+   against a white backdrop. */
+html[data-overlay='on'] .lumora-shell-root {
+  --lum-border:         #ffffff;
+  --lum-border-strong:  #ffffff;
+  --border:             #ffffff;
+  --border-hover:       #ffffff;
+}
+html[data-overlay='on'] .lumora-shell-root [style*="1px solid"] {
+  border-width: 2px !important;
+}
+html[data-overlay='on'] .lum-tool-group,
+html[data-overlay='on'] .lum-tool-chip,
+html[data-overlay='on'] .lumora-shell-root input,
+html[data-overlay='on'] .lumora-shell-root textarea {
+  border-width: 2px;
+}
+
+/* Plain light theme, overlay OFF. Same 2px, opposite colour: these surfaces
+   really are white, so a white border would be the invisible one. The tokens
+   stay the darkened navy-greys set on the light ramp. Scoped with
+   :not([data-overlay='on']) so the white rule above owns the overlay case
+   rather than the two fighting on specificity. */
+html:not([data-overlay='on'])[data-theme='light'] .lumora-shell-root [style*="1px solid"] {
+  border-width: 2px !important;
+}
+html:not([data-overlay='on'])[data-theme='light'] .lum-tool-group,
+html:not([data-overlay='on'])[data-theme='light'] .lum-tool-chip,
+html:not([data-overlay='on'])[data-theme='light'] .lumora-shell-root input,
+html:not([data-overlay='on'])[data-theme='light'] .lumora-shell-root textarea {
+  border-width: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lum-tool-btn,
   .lum-tool-chip,
