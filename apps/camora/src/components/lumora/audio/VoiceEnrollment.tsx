@@ -258,18 +258,8 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
           onClick={handleEnroll}
           disabled={isEnrolling || disabled}
           aria-label={isRecording ? 'Recording voice' : isEnrolling ? 'Processing voice' : 'Enroll my voice'}
-          className={`flex items-center justify-center gap-2 h-8 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0 ${iconOnly ? 'w-8 px-0' : 'px-3'}`}
-          style={isLight ? {
-            fontSize: '12px',
-            color: '#ffffff',
-            background: isRecording ? 'var(--danger)' : 'var(--cam-primary-dk)',
-            border: '1px solid var(--border)',
-          } : {
-            fontSize: '12px',
-            color: isRecording ? 'var(--accent)' : 'var(--text-muted)',
-            background: isRecording ? 'var(--accent-subtle)' : 'transparent',
-            border: '1px solid var(--border)',
-          }}
+          className="lum-tool-chip"
+          style={iconOnly ? { width: 32, padding: 0 } : undefined}
           data-tip={enrollTip}
         >
           {isRecording ? (
@@ -302,49 +292,40 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
   return (
     <div className={isLight ? 'flex flex-row items-center gap-2 shrink-0 flex-wrap' : 'flex items-center gap-1 shrink-0'}>
       {error && <span className="text-xs max-w-[180px] truncate" style={{ color: 'var(--danger)' }} data-tip={error}>{error}</span>}
+      {/* A toggle, so it says what it does and which way it currently is.
+          It was a solid navy button that outweighed Ask — the control you
+          actually press mid-interview — for a setting you touch once a
+          session. On is now a tint, not a fill. */}
       <button
         onClick={handleToggleFilter}
         disabled={disabled}
-        className="flex items-center justify-center gap-2 font-bold rounded-lg transition-[background-color,border-color,box-shadow,opacity,transform] active:scale-[0.98] shrink-0"
-        style={isLight ? {
-          fontSize: '12px',
-          height: 32,
-          padding: '0 14px',
-          color: voiceFilterEnabled ? '#ffffff' : 'var(--text-primary)',
-          background: voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--bg-elevated)',
-          border: `1px solid ${voiceFilterEnabled ? 'var(--cam-primary-dk)' : 'var(--border)'}`,
-        } : {
-          fontSize: '12px',
-          padding: '4px 8px',
-          color: voiceFilterEnabled ? 'var(--accent)' : 'var(--text-muted)',
-          background: voiceFilterEnabled ? 'var(--accent-subtle)' : 'transparent',
-          border: '1px solid var(--border)',
-        }}
-        data-tip={voiceFilterEnabled ? 'Voice filter active — only speaker is transcribed' : 'Voice filter disabled'}
+        role="switch"
+        aria-checked={voiceFilterEnabled}
+        className={`lum-tool-chip ${voiceFilterEnabled ? 'is-on' : ''}`}
+        data-tip={voiceFilterEnabled
+          ? 'On — your own voice is filtered out, so only the interviewer is transcribed. Click to turn off.'
+          : 'Off — everything the mic hears is transcribed, including you. Click to filter your voice out.'}
       >
-        <VoiceIcon filled={voiceFilterEnabled} />
-        <span>{voiceFilterEnabled ? 'Filter On' : 'Filter Off'}</span>
+        <FilterIcon active={voiceFilterEnabled} />
+        <span>{voiceFilterEnabled ? 'Filter on' : 'Filter off'}</span>
       </button>
       <button
         onClick={handleUnenroll}
         disabled={isEnrolling || disabled}
-        className="font-bold rounded-lg transition-[background-color,border-color,color,opacity,transform] active:scale-[0.98]"
-        style={isLight ? {
-          fontSize: '12px',
-          height: 32,
-          padding: '0 14px',
-          color: 'var(--danger)',
-          background: 'transparent',
-          border: '1.5px solid var(--danger)',
-        } : {
-          fontSize: '12px',
-          padding: '4px 6px',
-          color: 'var(--text-secondary)',
-          border: '1px solid var(--border)',
-        }}
-        data-tip="Remove voice enrollment"
+        /* Destructive AND rare. At rest it was a red-outlined button — the
+           loudest thing in a toolbar you use during a live interview, for an
+           action you take roughly never. It stays fully visible (never a
+           hover-reveal), but earns its red on hover and focus instead of
+           claiming it permanently. */
+        className="lum-tool-chip is-danger"
+        data-tip="Delete your voice print. You'll need to record it again to filter your voice."
       >
-        {isLight ? 'Remove Enrollment' : <XIcon />}
+        {isLight ? (
+          <>
+            <PersonMinusIcon />
+            <span>Remove enrollment</span>
+          </>
+        ) : <PersonMinusIcon />}
       </button>
     </div>
   );
@@ -354,24 +335,45 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
 // signals "enroll YOUR voice" in a single glyph for the compact toolbar chip.
 const PersonVoiceIcon = () => {
   return (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-      <circle cx="9" cy="7" r="3.2" />
-      <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
-      <path d="M17.5 8.5a4 4 0 0 1 0 7" />
-      <path d="M20 6a7 7 0 0 1 0 12" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20a6 6 0 0 1 12 0" />
+      <path d="M17.5 9a4 4 0 0 1 0 6" />
+      <path d="M20 6.5a7.5 7.5 0 0 1 0 11" />
     </svg>
   );
 }
 
-const VoiceIcon = ({ filled = false }: { filled?: boolean }) => {
-  return (
-    <svg className="w-3.5 h-3.5" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-      {filled && <circle cx="12" cy="12" r="2" />}
-    </svg>
-  );
-}
+/* A funnel with a voice passing through it.
+   This control used to wear a filled microphone, which at 14px collapsed
+   into an opaque blob that said "microphone", not "filter" — and it sat two
+   chips away from Ask, which is also a microphone. A funnel is the one
+   shape that means filter on sight; the wave entering it is the voice being
+   sorted. Filled throat when on, hollow when off, so state survives even if
+   you can't resolve the colour. */
+const FilterIcon = ({ active = false }: { active?: boolean }) => (
+  <svg
+    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"
+    aria-hidden="true" className="shrink-0"
+  >
+    <path d="M3 5h18l-7 8v6l-4 2v-8z" fill={active ? 'currentColor' : 'none'} />
+  </svg>
+);
+
+/* A person with a minus — "take this voice off the account". Reads as
+   removal without the shouting a red outline does. */
+const PersonMinusIcon = () => (
+  <svg
+    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"
+    aria-hidden="true" className="shrink-0"
+  >
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3 20a6 6 0 0 1 12 0" />
+    <path d="M17 12h5" />
+  </svg>
+);
 
 const RecordingIcon = () => {
   return (
@@ -386,14 +388,6 @@ const Spinner = () => {
     <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-    </svg>
-  );
-}
-
-const XIcon = () => {
-  return (
-    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-      <path d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
 }

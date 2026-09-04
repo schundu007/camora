@@ -325,13 +325,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
       {/* SHORT / DETAILED — behavioral tab only */}
       {surface === 'behavioral' && (
-        <div
-          className="flex items-center gap-0.5 shrink-0 h-8 px-1 rounded-lg"
-          style={{
-            background: 'var(--cam-strip-icon-bg)',
-            border: '1px solid var(--cam-strip-icon-border)',
-          }}
-        >
+        <div className="lum-tool-group" data-overlay-keep>
           {(['short', 'detailed'] as const).map(mode => (
             <button
               key={mode}
@@ -339,11 +333,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
               data-tip={mode === 'short' ? 'Short — concise bullet points' : 'Detailed — comprehensive explanations'}
               aria-label={mode === 'short' ? 'Short answers' : 'Detailed answers'}
               aria-pressed={answerMode === mode}
-              className="flex items-center justify-center w-6 h-6 rounded-md transition-[background-color,color]"
-              style={{
-                color: answerMode === mode ? 'var(--cam-chip-active-text)' : 'var(--cam-strip-text)',
-                background: answerMode === mode ? 'var(--cam-chip-active-bg)' : 'transparent',
-              }}
+              className="lum-tool-btn"
             >
               {mode === 'short' ? <ShortIcon /> : <DetailedIcon />}
             </button>
@@ -353,39 +343,32 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 
       {/* Sona panel actions — behavioral only, lifted from AICompanionPanel header */}
       {surface === 'behavioral' && (sonaExport || sonaClear || sonaClose) && (
-        <div
-          className="flex items-center gap-0.5 shrink-0 h-8 px-1 rounded-lg"
-          style={{
-            background: 'var(--cam-strip-icon-bg)',
-            border: '1px solid var(--cam-strip-icon-border)',
-          }}
-        >
+        <div className="lum-tool-group" data-overlay-keep>
           <button
             onClick={sonaExport ?? undefined}
             disabled={!sonaHasMessages}
             data-tip="Export session (.md)"
-            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] disabled:opacity-35 disabled:cursor-not-allowed"
-            style={{ color: 'var(--cam-strip-text)' }}
+            aria-label="Export session"
+            className="lum-tool-btn"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+            <ExportIcon />
           </button>
           <button
             onClick={sonaClear ?? undefined}
             disabled={!sonaHasMessages}
             data-tip="Reset — clear this interview's Q&A"
             aria-label="Reset interview"
-            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)] disabled:opacity-35 disabled:cursor-not-allowed"
-            style={{ color: 'var(--cam-strip-text)' }}
+            className="lum-tool-btn"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
+            <ResetIcon />
           </button>
           <button
             onClick={sonaClose ?? undefined}
             data-tip="Close Sona"
-            className="flex items-center justify-center w-6 h-6 rounded-md transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]"
-            style={{ color: 'var(--cam-strip-text)' }}
+            aria-label="Close Sona"
+            className="lum-tool-btn"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            <CloseIcon />
           </button>
         </div>
       )}
@@ -393,12 +376,7 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       {/* AudioCapture + VoiceEnrollment — behavioral only.
           Coding and Design already have Sona; mic controls don't belong there. */}
       {onTranscription && surface === 'behavioral' && (
-        <div
-          className="flex items-center gap-1.5 px-1.5 h-8 rounded-lg shrink-0"
-          style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
-        >
-          <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={surface === 'behavioral'} />
-        </div>
+        <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={surface === 'behavioral'} />
       )}
 
       {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" iconOnly />}
@@ -414,9 +392,15 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
   );
 }
 
-// Short answers — a single terse line over a blank one (a brief, clipped reply).
+/* Toolbar glyphs. One size (14px) and one weight (1.75) across the whole
+   strip — the row previously mixed 11, 12, 14, 15 and 16px at strokes from
+   2 to 2.2, which is why the icons looked unrelated to each other and the
+   small ones looked muddy. At 14px a 2.2 stroke fills in its own counters. */
+const ICON = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
+
+// Short answers — one full line over a short one (a brief, clipped reply).
 const ShortIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+  <svg {...ICON} aria-hidden="true">
     <path d="M5 9h14" />
     <path d="M5 15h6" />
   </svg>
@@ -424,9 +408,32 @@ const ShortIcon = () => (
 
 // Detailed answers — full stacked lines (a long, comprehensive reply).
 const DetailedIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+  <svg {...ICON} aria-hidden="true">
     <path d="M4 7h16" />
     <path d="M4 12h16" />
     <path d="M4 17h11" />
+  </svg>
+);
+
+// Export — a page leaving downward into a tray.
+const ExportIcon = () => (
+  <svg {...ICON} aria-hidden="true">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
+// Reset — counter-clockwise arrow, the universal "start this over".
+const ResetIcon = () => (
+  <svg {...ICON} aria-hidden="true">
+    <polyline points="1 4 1 10 7 10" />
+    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg {...ICON} aria-hidden="true">
+    <path d="M18 6L6 18M6 6l12 12" />
   </svg>
 );

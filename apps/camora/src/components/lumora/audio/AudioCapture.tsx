@@ -1433,7 +1433,13 @@ const UnifiedMicButton = ({
       {/* Ask — momentary, in your OWN voice. ONE click: it records and
           auto-sends to Sona when you pause (VAD). Styled as a BUTTON (not a
           switch) so it can't be mistaken for a second toggle. No ASK→SEND
-          morph — while recording it just shows the live state. */}
+          morph — while recording it just shows the live state.
+
+          This is the only FILLED control in the strip, deliberately: it is
+          the one thing pressed mid-answer with an interviewer waiting, so it
+          gets the row's entire visual budget. It also used to be mono
+          uppercase tracked out to 0.14em, which rendered three letters as
+          "A S K" — a word spaced far enough apart to stop being a word. */}
       {locked && (
         <button
           type="button"
@@ -1442,63 +1448,56 @@ const UnifiedMicButton = ({
           data-tip={isAsking
             ? 'Recording your question — it sends to Sona automatically when you pause (or press ` / click to send now).'
             : 'Ask in your own voice — press ` (or click), speak, and it sends to Sona when you pause.'}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-bold uppercase tracking-[0.14em] transition-colors shrink-0"
-          style={{
-            color: isAsking ? 'var(--cam-accent-fill-text)' : 'var(--cam-strip-text)',
-            background: isAsking ? 'var(--cam-accent-fill)' : 'transparent',
-            border: `1px solid ${isAsking ? 'var(--accent)' : 'var(--cam-strip-icon-border)'}`,
-            fontFamily: 'var(--font-mono)',
-          }}
+          className={`lum-tool-chip ${isAsking ? 'is-live' : 'is-primary'}`}
         >
           {isAsking ? (
             <>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', animation: 'mic-pulse 1.4s ease-out infinite' }} />
-              Recording…
+              {/* currentColor, so the dot inherits the chip's near-black label
+                  colour instead of the blue it used to hardcode — which sat on
+                  amber at roughly the contrast of a bruise. */}
+              <span aria-hidden="true" className="w-2 h-2 rounded-full shrink-0" style={{ background: 'currentColor', animation: 'mic-pulse 1.4s ease-out infinite' }} />
+              Recording
             </>
           ) : (
             <>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-14 0m7 7v4m0-4a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z" />
-              </svg>
+              <MicIcon />
               Ask
               {/* Key hint on the control itself — a shortcut nobody can see is a
                   shortcut nobody uses, and this one exists precisely so you
                   don't have to look down mid-answer to find the button. */}
-              <span aria-hidden="true" className="opacity-60" style={{ fontSize: 12, lineHeight: 1 }}>`</span>
+              <kbd aria-hidden="true" className="lum-tool-kbd">`</kbd>
             </>
           )}
         </button>
       )}
 
-      {/* Audio-level meter — labelled, because five unlit bars on their own
-          read as a second blank chip whenever Sona isn't capturing. */}
+      {/* Input level. The mic glyph that used to label this is gone: it sat
+          directly beside Ask, whose icon is also a mic, so the pair read as
+          two microphones rather than one control and one readout. Rising
+          bars are already the universal shape for a level meter, and the
+          tooltip carries the rest. */}
       <div
-        className="flex items-center gap-1 shrink-0 px-1.5 py-0.5 rounded"
-        style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
+        className="lum-tool-group"
+        data-overlay-keep
+        role="img"
+        aria-label={(listenOn || isAsking) ? 'Input level' : 'Input level — not capturing'}
         data-tip={(listenOn || isAsking)
           ? 'Input level — the bars move when Sona hears audio. Flat bars mean no sound is reaching it.'
           : 'Input level — flat because Sona is not capturing right now.'}
+        style={{ padding: '0 8px' }}
       >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" style={{ color: 'var(--cam-strip-text-muted)' }} aria-hidden="true">
-          <path d="M12 2a3 3 0 013 3v6a3 3 0 01-6 0V5a3 3 0 013-3z" />
-          <path d="M19 11a7 7 0 01-14 0M12 18v3" />
-        </svg>
-        <div className="flex items-end gap-[3px]" aria-hidden="true">
-        {[0, 1, 2, 3, 4].map((i) => {
-          const lit = meterLevel > i * 0.02;
-          return (
-            <div
-              key={i}
-              className="w-[3px] rounded-full transition-all duration-75"
-              style={{
-                height: `${8 + i * 2}px`,
-                background: lit ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-icon-border)',
-                opacity: lit ? 1 : 0.6,
-              }}
-            />
-          );
-        })}
-        </div>
+        <span className="lum-tool-meter" aria-hidden="true">
+          {[0, 1, 2, 3, 4].map((i) => {
+            const lit = meterLevel > i * 0.02;
+            return (
+              <i
+                key={i}
+                className={lit ? 'is-lit' : undefined}
+                style={{ height: `${6 + i * 2.5}px`, opacity: lit ? 1 : 0.5 }}
+              />
+            );
+          })}
+        </span>
       </div>
 
     </>
@@ -1527,3 +1526,25 @@ const UnifiedMicButton = ({
     </div>
   );
 }
+
+/* Ask's glyph. 14px at stroke 1.75, matching every other icon in the
+   interview strip — it was 12px at stroke 2, which made it both smaller and
+   heavier than its neighbours and read as a different icon set. */
+const MicIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.75}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    className="shrink-0"
+  >
+    <rect x="9" y="2" width="6" height="11" rx="3" />
+    <path d="M19 11v1a7 7 0 0 1-14 0v-1" />
+    <path d="M12 19v2" />
+  </svg>
+);

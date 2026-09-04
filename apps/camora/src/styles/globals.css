@@ -1248,6 +1248,185 @@
   --accent-subtle: color-mix(in oklab, var(--topic-accent) 12%, transparent);
 }
 
+/* ── Lumora interview toolbar ────────────────────────────────────────────
+   The strip above the behavioral panel. Every control there used to carry
+   its own inline geometry, and it showed: four radii (999 / 8 / 6 / 4), six
+   icon sizes (11–16px), three heights, and mono uppercase tracked out to
+   0.14em so ASK rendered as "A S K". Read as a row of unrelated parts.
+
+   One scale for the whole row: 32px shells, 26px targets inside them, 8px
+   radius outside / 6px inside, 14px icons, 12px labels in sentence case.
+
+   Hierarchy is spent in exactly one place. Ask is the only filled control
+   because it is the only one pressed mid-answer, with an interviewer waiting.
+   Everything else — view density, export, reset, close, the voice filter —
+   sits on the quiet strip surface. Remove enrollment stays fully visible but
+   earns its red on hover, not at rest: it is destructive AND rare, and at
+   rest it was the loudest thing in the toolbar. */
+.lum-tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  padding: 0 3px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: var(--cam-strip-icon-bg);
+  border: 1px solid var(--cam-strip-icon-border);
+}
+
+/* Icon-only target inside a group. 26px keeps a comfortable hit area inside
+   a 32px shell without the icon rattling around in it. */
+.lum-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  color: var(--cam-strip-text);
+  background: transparent;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.lum-tool-btn:hover:not(:disabled):not([aria-pressed='true']) {
+  background: color-mix(in oklab, var(--text-primary) 12%, transparent);
+  color: var(--cam-strip-heading);
+}
+.lum-tool-btn:active:not(:disabled) { transform: scale(0.96); }
+.lum-tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.lum-tool-btn[aria-pressed='true'] {
+  background: var(--cam-chip-active-bg);
+  color: var(--cam-chip-active-text);
+}
+
+/* Standalone labelled control. Same 32px shell as a group, so the row reads
+   as one horizontal band rather than a staircase. */
+.lum-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--cam-strip-text);
+  background: transparent;
+  border: 1px solid var(--cam-strip-icon-border);
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.lum-tool-chip:hover:not(:disabled) {
+  background: var(--cam-strip-icon-bg);
+  color: var(--cam-strip-heading);
+}
+.lum-tool-chip:active:not(:disabled) { transform: scale(0.98); }
+.lum-tool-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* The one loud control in the row.
+
+   Text is --cam-chip-active-text (#0f141a), NOT --cam-accent-fill-text. The
+   latter resolves to --cam-primary-dk (#0078D4) and this fill resolves to
+   --cam-gold-leaf (#FFB900): blue on amber lands near 2.5:1, which is not a
+   label at 12px, it is a rumour. Near-black on the same amber is ~11:1.
+   --cam-chip-active-bg / --cam-chip-active-text is the pairing the rest of
+   the app already uses for an amber chip; this just stops mixing the two
+   token families. */
+.lum-tool-chip.is-primary,
+.lum-tool-chip.is-live {
+  color: #0a0e1a;
+  background: var(--lum-accent, var(--accent));
+  border-color: var(--lum-accent, var(--accent));
+}
+.lum-tool-chip.is-primary:hover:not(:disabled) {
+  color: #0a0e1a;
+  background: var(--lum-accent, var(--accent));
+  filter: brightness(1.08);
+}
+
+/* Ask while it is recording. Same fill as its resting state — the control
+   must not appear to move or change size the instant you press it, mid
+   sentence, with someone watching. The pulsing dot carries the state. */
+/* .is-live shares .is-primary's fill above — pressing Ask must not make the
+   control appear to change size or weight mid-sentence. */
+
+/* Key hint riding inside a chip. Reads as a key, not as punctuation that
+   wandered into the label. */
+.lum-tool-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+  color: inherit;
+  /* A light plate, not a tint of currentColor. On the filled Ask chip
+     currentColor is near-black, so a tint of it put a dark glyph on a
+     darker square — a key you could only find if you knew it was there. */
+  background: color-mix(in oklab, #ffffff 34%, transparent);
+}
+
+/* On, but not shouting.
+
+   A TINT, never the fill. --cam-chip-active-bg and --cam-accent-fill both
+   resolve to the same amber, so making this solid would put two identical
+   amber slabs in one short row and Ask would stop being the thing your eye
+   goes to. Same hue, a sixth of the weight: unmistakably on, clearly
+   subordinate. The border carries most of the signal. */
+.lum-tool-chip.is-on {
+  color: var(--lum-accent, var(--accent));
+  background: color-mix(in oklab, var(--lum-accent, var(--accent)) 14%, transparent);
+  border-color: color-mix(in oklab, var(--lum-accent, var(--accent)) 50%, transparent);
+}
+.lum-tool-chip.is-on:hover:not(:disabled) {
+  color: var(--lum-accent, var(--accent));
+  background: color-mix(in oklab, var(--lum-accent, var(--accent)) 22%, transparent);
+}
+
+/* Destructive: quiet at rest, unmistakable the moment you go near it. */
+.lum-tool-chip.is-danger:hover:not(:disabled),
+.lum-tool-chip.is-danger:focus-visible {
+  color: var(--danger);
+  background: color-mix(in oklab, var(--danger) 14%, transparent);
+  border-color: var(--danger);
+}
+
+/* Level meter. No mic glyph: it sits next to Ask, whose icon is already a
+   mic, and two mics side by side read as two microphones rather than one
+   control and one readout. The bars ARE the readout. */
+.lum-tool-meter {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.lum-tool-meter i {
+  display: block;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--cam-strip-icon-border);
+  transition: height 75ms linear, background-color 75ms linear, opacity 75ms linear;
+}
+.lum-tool-meter i.is-lit { background: var(--cam-gold-leaf); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lum-tool-btn,
+  .lum-tool-chip,
+  .lum-tool-meter i { transition: none; }
+  .lum-tool-btn:active,
+  .lum-tool-chip:active { transform: none; }
+}
+
 /* ── ContentHeading ──────────────────────────────────────────────────────
    Default = the navy-strip + gold-leaf chrome, preserved on docs and every
    other surface (moved off inline styles so the reading view can override). */
