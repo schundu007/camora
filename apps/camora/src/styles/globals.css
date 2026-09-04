@@ -1430,43 +1430,34 @@
 .lum-tool-meter i.is-lit { background: var(--cam-gold-leaf); }
 
 /* In overlay mode the window is translucent, so a control's edge can land on
-   a bright desktop photo. A light hairline disappears there. Pairing it with a
-   dark outer ring gives every edge one side that contrasts no matter what is
-   behind the window — the same trick native translucent chrome uses. */
+   a bright desktop photo. A soft dark drop shadow keeps the white hairline
+   readable there. This used to be a hard `0 0 0 1px` ring, which stacked
+   directly outside the border and made every control read as a 2px double
+   line — half of the "borders are too thick" report. */
 html[data-overlay='on'] .lum-tool-group,
 html[data-overlay='on'] .lum-tool-chip {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
-/* ── Overlay edges: pure white, 2px ──────────────────────────────────────
-   Requested directly, and it is the right call for this surface. The overlay
-   frost is dark graphite in BOTH themes (see the remap further up: a light
-   ramp cannot survive a translucent window, so [data-theme="light"] runs the
-   dark tokens there). That is why raising the light-theme border tokens did
-   nothing for anyone actually running the overlay — those tokens are not the
-   ones in play. White is the only colour guaranteed to separate from a dark
-   frost no matter what desktop shows through behind it.
+/* ── Overlay edges: pure white, 1px ──────────────────────────────────────
+   The overlay frost is dark graphite in BOTH themes (see the remap further up:
+   a light ramp cannot survive a translucent window, so [data-theme="light"]
+   runs the dark tokens there). That is why raising the light-theme border
+   tokens did nothing for anyone actually running the overlay — those tokens
+   are not the ones in play. White is the only colour guaranteed to separate
+   from a dark frost no matter what desktop shows through behind it.
 
-   Width has to be forced. Nearly every panel in the shell writes
-   `border: 1px solid var(--lum-border…)` as an inline style, so the colour
-   follows the token but the 1px does not — only a rule can widen it. The
-   attribute selector matches exactly those inline declarations; the dark ring
-   above still rides underneath, so each edge keeps a contrasting side even
-   against a white backdrop. */
+   Colour carries this on its own. Pure white on graphite is already the
+   highest-contrast edge on the surface, so it does not also need extra width;
+   forcing every inline `1px solid` to 2px turned the rail buttons, the chips
+   and the ask strip into an outlined wireframe. Widths are now left exactly as
+   each panel declares them, and the window's own frame comes from the inset
+   ring on .lumora-shell-root (further down) so all four edges close. */
 html[data-overlay='on'] .lumora-shell-root {
   --lum-border:         #ffffff;
   --lum-border-strong:  #ffffff;
   --border:             #ffffff;
   --border-hover:       #ffffff;
-}
-html[data-overlay='on'] .lumora-shell-root [style*="1px solid"] {
-  border-width: 2px !important;
-}
-html[data-overlay='on'] .lum-tool-group,
-html[data-overlay='on'] .lum-tool-chip,
-html[data-overlay='on'] .lumora-shell-root input,
-html[data-overlay='on'] .lumora-shell-root textarea {
-  border-width: 2px;
 }
 
 /* Plain light theme, overlay OFF. Same 2px, opposite colour: these surfaces
@@ -2311,7 +2302,12 @@ html[data-overlay='on'] .lumora-shell-root {
      genuinely transparent now — the meeting shows through the tint, blurred here. */
   backdrop-filter: blur(14px) saturate(1.4) !important;
   -webkit-backdrop-filter: blur(14px) saturate(1.4) !important;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.055), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
+  /* Window frame. `fixed inset-0`, so this inset ring is the overlay's only
+     edge on all four sides — without it the shell reads as framed on the top
+     and left (the ask strip and the icon rail draw their own borders) and
+     open on the bottom and right. 0.055 was invisible; 0.45 closes the box
+     at a single pixel. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 /* ── Lumora shell on glass ─────────────────────────────────────────────────
