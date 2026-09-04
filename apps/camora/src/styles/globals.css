@@ -313,8 +313,14 @@
     --lum-bg: #f2f3f3;
     --lum-surface: #ffffff;
     --lum-surface-hover: #e8f2fb;
-    --lum-border: #c8d9ed;
-    --lum-border-strong: #9eb9d6;
+    /* Light-theme borders were #c8d9ed / #9eb9d6 — 1.44:1 and 2.03:1 against
+       the #ffffff surface they sit on. At 1.44:1 a hairline is not a subtle
+       border, it is an invisible one, so every panel, composer and chip edge
+       in light mode simply had no edge. WCAG asks 3:1 for a UI boundary that
+       carries meaning; these now clear it at the strong end and sit close
+       enough at the default that a box reads as a box. */
+    --lum-border: #8da5c1;          /* 2.53:1 on #ffffff */
+    --lum-border-strong: #6b87a8;   /* 3.71:1 on #ffffff */
     --lum-text: #0f141a;
     --lum-text-2: #424650;
     --lum-accent: #006ce0;
@@ -343,9 +349,13 @@
     --bg-secondary: var(--bg-elevated);
     --bg-overlay:  rgba(0,0,0,0.20);
 
-    /* Fluent light theme: cool blue-tinted surfaces and hairline borders. */
-    --border: #EDEBE9;
-    --border-hover: #C8C6C4;
+    /* Fluent light theme: cool blue-tinted surfaces and hairline borders.
+       --border was #EDEBE9, which is 1.19:1 against the #FFFFFF it borders —
+       not a hairline, an absence. Anything that relied on it for structure
+       (cards, inputs, dividers, table rules) had no visible edge in light
+       mode at all. */
+    --border: #B3B0AD;        /* 2.16:1 on #FFFFFF */
+    --border-hover: #8A8886;  /* 3.29:1 on #FFFFFF */
     --border-focus: #0078D4;
 
     --text-primary: #323130;
