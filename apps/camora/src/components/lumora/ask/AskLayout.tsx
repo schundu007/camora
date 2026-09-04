@@ -315,7 +315,8 @@ export const AskLayout = () => {
   const draftRef = useRef('');
 
   const inputRef  = useRef<HTMLTextAreaElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
   const dictationBaseRef = useRef(''); // input text captured when dictation starts
   // Sending bumps submitSeq. A dictation session records the seq it started
   // under, so the late-arriving Whisper final (it lands ~1s after you stop the
@@ -382,9 +383,18 @@ export const AskLayout = () => {
     }
   }, [snapping]);
 
+  // Hold the view at the TOP, where the newest answer now renders. This used
+  // to chase the bottom of the list, which is the correct instinct for a chat
+  // app and the wrong one for something you read while a camera is pointed at
+  // you: it walked the text further down the screen on every exchange.
+  //
+  // Only while a stream is in flight or a message lands — never on every
+  // render, or scrolling back through history would yank you forward mid-read.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, streamText]);
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [messages.length, streaming]);
 
   // Load conversation history on mount
   useEffect(() => {
@@ -777,80 +787,16 @@ export const AskLayout = () => {
         )}
       </div>
 
-      {/* Messages / empty state */}
-      {hasMessages ? (
-        <div className="flex-1 min-h-0 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 390px))', paddingRight: 'max(1rem, calc(50% - 390px))' }}>
-          {messages.map((m, i) => (
-            <div key={i} className={`mb-6 ${m.role === 'user' ? 'flex justify-end' : ''}`}>
-              {m.role === 'user' ? (
-                <div className="max-w-[75%] flex flex-col items-end gap-2">
-                  {!!m.images?.length && (
-                    <div className="flex flex-wrap gap-2 justify-end">
-                      {m.images.map((im, k) => (
-                        <img
-                          key={k}
-                          src={im.url || im.dataUrl}
-                          alt="attachment"
-                          className="rounded-lg max-h-40 object-cover"
-                          style={{ border: '1px solid var(--lum-border-strong)' }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  {m.content && (
-                    <div className="px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--lum-accent)', border: '1px solid var(--lum-accent-sm)', color: '#FFFFFF', ...sans }}>
-                      {m.content}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <AskResponse content={m.content} />
-              )}
-            </div>
-          ))}
-          {streaming && (
-            <div className="mb-6">
-              {streamText ? (
-                <>
-                  <AskResponse content={streamText} />
-                  <span className="inline-block w-1.5 h-4 animate-pulse ml-0.5 align-middle rounded-sm" style={{ background: 'var(--lum-accent)' }} />
-                </>
-              ) : (
-                <div className="flex items-center gap-1.5 mt-2">
-                  {[0, 150, 300].map(d => (
-                    <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: 'var(--lum-accent)', animationDelay: `${d}ms` }} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          <div ref={bottomRef} />
-        </div>
-      ) : (
-        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6 overflow-y-auto">
-          <h1 className="text-[26px] font-semibold mb-8 text-center" style={{ color: 'var(--text-primary)', ...sans }}>
-            Hey <span style={{ color: 'var(--lum-accent)' }}>{firstName}</span>, what's on your mind?
-          </h1>
-          <div className="flex flex-col gap-2 mb-6 w-full" style={{ maxWidth: 640 }}>
-            {SUGGESTIONS.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => handleSubmit(s)}
-                className="flex items-center gap-3 text-left px-4 py-3 rounded-xl transition-all hover:bg-[var(--bg-elevated)] active:scale-[0.99]"
-                style={{ color: 'var(--text-secondary)', fontSize: 13, background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', ...sans }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--lum-accent)', flexShrink: 0 }}>
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                </svg>
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Composer — pinned ABOVE the conversation.
 
-      {/* Input bar */}
-      <div className="shrink-0 px-4 pb-4 pt-3" style={{ borderTop: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}>
+          Not a style preference. On camera, every glance further down the
+          screen reads as looking something up, and a bottom composer put the
+          one thing you type into at the furthest point from the webcam. It
+          sits under the header now, with the newest answer immediately below
+          it, so typing and reading happen in the same band near the lens.
+          The rule moves to the bottom edge for the same reason it was on top
+          before: it separates the composer from what it produces. */}
+      <div className="shrink-0 px-4 pb-3 pt-3" style={{ borderBottom: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}>
         <div style={{ maxWidth: 780, margin: '0 auto' }}>
           {/* Provider toggle removed: Ask runs on ascend-backend, which does not
               spend Anthropic keys (Claude belongs to lumora-backend), so the
@@ -983,6 +929,87 @@ export const AskLayout = () => {
           </div>
         </div>
       </div>
+
+      {/* Messages / empty state.
+
+          NEWEST FIRST, directly under the composer. This is a live-interview
+          surface: the candidate is on camera, and a conversation that grows
+          downward makes them drop their eyes further with every exchange —
+          which is exactly what reads as "looking at notes" to an interviewer.
+          Everything you type and everything you need to read now sits in the
+          top band of the window, closest to the webcam, and the history
+          scrolls away beneath it instead of pushing the live answer down. */}
+      {hasMessages ? (
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 390px))', paddingRight: 'max(1rem, calc(50% - 390px))' }}>
+          <div ref={topRef} />
+          {streaming && (
+            <div className="mb-6">
+              {streamText ? (
+                <>
+                  <AskResponse content={streamText} />
+                  <span className="inline-block w-1.5 h-4 animate-pulse ml-0.5 align-middle rounded-sm" style={{ background: 'var(--lum-accent)' }} />
+                </>
+              ) : (
+                <div className="flex items-center gap-1.5 mt-2">
+                  {[0, 150, 300].map(d => (
+                    <span key={d} className="w-2 h-2 rounded-full animate-bounce" style={{ background: 'var(--lum-accent)', animationDelay: `${d}ms` }} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {[...messages].reverse().map((m, i) => (
+            <div key={i} className={`mb-6 ${m.role === 'user' ? 'flex justify-end' : ''}`}>
+              {m.role === 'user' ? (
+                <div className="max-w-[75%] flex flex-col items-end gap-2">
+                  {!!m.images?.length && (
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {m.images.map((im, k) => (
+                        <img
+                          key={k}
+                          src={im.url || im.dataUrl}
+                          alt="attachment"
+                          className="rounded-lg max-h-40 object-cover"
+                          style={{ border: '1px solid var(--lum-border-strong)' }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  {m.content && (
+                    <div className="px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--lum-accent)', border: '1px solid var(--lum-accent-sm)', color: '#FFFFFF', ...sans }}>
+                      {m.content}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <AskResponse content={m.content} />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6 overflow-y-auto">
+          <h1 className="text-[26px] font-semibold mb-8 text-center" style={{ color: 'var(--text-primary)', ...sans }}>
+            Hey <span style={{ color: 'var(--lum-accent)' }}>{firstName}</span>, what's on your mind?
+          </h1>
+          <div className="flex flex-col gap-2 mb-6 w-full" style={{ maxWidth: 640 }}>
+            {SUGGESTIONS.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => handleSubmit(s)}
+                className="flex items-center gap-3 text-left px-4 py-3 rounded-xl transition-all hover:bg-[var(--bg-elevated)] active:scale-[0.99]"
+                style={{ color: 'var(--text-secondary)', fontSize: 13, background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', ...sans }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--lum-accent)', flexShrink: 0 }}>
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       </div>{/* /Main column */}
     </div>
   );

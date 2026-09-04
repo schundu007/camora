@@ -3232,12 +3232,19 @@ img { max-width: 100%; height: auto; }
    Embedded (Behavioral fullscreen) on mobile must clear the LumoraShell
    bottom-nav (fixed, 56px + safe-area). md+ has no bottom-nav, drop to
    a tighter 12px. Floating (data-embedded="false") always uses 12px. */
+/* The composer sits ABOVE the answers now (see AICompanionPanel — on camera,
+   a bottom composer puts the thing you type into at the furthest point from
+   the webcam). The tall bottom pad here existed only to clear the fixed
+   mobile nav when this row was the last thing in the panel; at the top it is
+   a dead 68px gap between the input and the answer it produces. The scroll
+   column below it now owns that clearance. */
 .lumora-companion-input-row { padding-bottom: 12px; }
-.lumora-companion-input-row[data-embedded="true"] {
+.lumora-companion-input-row[data-embedded="true"] { padding-bottom: 10px; }
+.lumora-companion-answers[data-embedded="true"] {
   padding-bottom: calc(68px + env(safe-area-inset-bottom));
 }
 @media (min-width: 768px) {
-  .lumora-companion-input-row[data-embedded="true"] { padding-bottom: 12px; }
+  .lumora-companion-answers[data-embedded="true"] { padding-bottom: 12px; }
 }
 
 /* ── Mobile readability override (≤ 768px) ──
