@@ -11,6 +11,10 @@ import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
 import cpp from 'react-syntax-highlighter/dist/esm/languages/hljs/cpp';
 import bash from 'react-syntax-highlighter/dist/esm/languages/hljs/bash';
 import { StreamingMicButton } from './StreamingMicButton';
+import { InterviewerListenButton } from './InterviewerListenButton';
+import { useSpeakerAudio } from '@/components/lumora/audio/SpeakerAudio';
+import { useSessionStore } from '@/stores/session-store';
+import { resolveAskListenSource } from '@/lib/lumora/ask-listen-source';
 import { snapRegion } from '@/lib/lumora/snapCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
 
@@ -29,6 +33,13 @@ SyntaxHighlighter.registerLanguage('bash', bash);
 SyntaxHighlighter.registerLanguage('sh', bash);
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
+
+// Quiet window that closes an interviewer question while listening to the
+// shared stream. The capture emits one chunk per VAD segment, so "Tell me about
+// a time you disagreed with your manager" can arrive in two or three pieces;
+// submitting each piece would ask Sona three half-questions. Same value the
+// behavioral panel coalesces on.
+const LISTEN_COALESCE_MS = 1200;
 
 interface MsgImage { url?: string; dataUrl?: string }
 interface Msg { role: 'user' | 'assistant'; content: string; images?: MsgImage[]; }
@@ -512,6 +523,113 @@ export const AskLayout = () => {
     }
   }, [input, pending, messages, streaming, provider, convId]);
 
+  /* ── Listening to the interviewer ──────────────────────────────────────
+   *
+   * The mic button opens no microphone while a stream that carries the
+   * interviewer — and not the candidate — is live. It subscribes the composer
+   * to the shell's shared capture instead, which LumoraShellPage forwards as
+   * `lumora:ask-question`.
+   *
+   * Why: the dictation mic is one microphone in the room. In an interview it
+   * heard the interviewer through the candidate's speakers AND the candidate
+   * answering, and because an utterance only ended after 2s of true silence —
+   * which a live interview never gives you — the recording never closed. Both
+   * voices landed in the composer and went out as one question, and nothing
+   * auto-sent. See lib/lumora/ask-listen-source.ts for which streams qualify.
+   */
+  const speaker = useSpeakerAudio();
+  const { voiceEnrolled, voiceFilterEnabled } = useSessionStore();
+  const listenSource = resolveAskListenSource({
+    speakerActive: speaker.active,
+    method: speaker.method,
+    voiceFilterActive: voiceEnrolled && voiceFilterEnabled,
+  });
+  const [listening, setListening] = useState(false);
+
+  // Questions that arrived while Sona was still answering the previous one.
+  // handleSubmit drops a call outright when `streaming` is true, so without
+  // this an interviewer asking a follow-up mid-answer would be silently lost —
+  // the same "it didn't submit" symptom, in a different place. Mirrors the FIFO
+  // drain in AICompanionPanel.
+  const askQueueRef = useRef<string[]>([]);
+  // Coalescing: the capture emits one chunk per VAD segment, so a single spoken
+  // question can arrive as two or three fragments. Each fragment restarts the
+  // quiet window; the assembled question is submitted once it closes.
+  const coalesceRef = useRef('');
+  const coalesceTimerRef = useRef<number | null>(null);
+  // What we last wrote into the composer, so a preview only ever overwrites our
+  // own preview — never something the user typed.
+  const listenPreviewRef = useRef('');
+  const inputMirrorRef = useRef('');
+  useEffect(() => { inputMirrorRef.current = input; }, [input]);
+
+  // `streaming` read inside the coalesce timer would be the value captured when
+  // the timer was armed — which is exactly when it was still false. Declared
+  // before its reader: const has a temporal dead zone.
+  const streamingRef = useRef(streaming);
+  useEffect(() => { streamingRef.current = streaming; }, [streaming]);
+
+  // handleSubmit is rebuilt on every keystroke (it closes over `input`,
+  // `messages`, `pending`…). Reaching it through a ref is not a style choice:
+  // if the listener effect below depended on its identity, every preview write
+  // would tear the effect down, and the cleanup would wipe the half-assembled
+  // question and cancel its flush timer — the very "it never submits" bug this
+  // whole change exists to fix, rebuilt one layer up.
+  const submitRef = useRef(handleSubmit);
+  useEffect(() => { submitRef.current = handleSubmit; }, [handleSubmit]);
+
+  const submitOrQueue = useCallback((text: string) => {
+    if (streamingRef.current) { askQueueRef.current.push(text); return; }
+    submitRef.current(text);
+  }, []);
+
+  useEffect(() => {
+    if (!streaming && askQueueRef.current.length > 0) {
+      const next = askQueueRef.current.shift()!;
+      submitRef.current(next);
+    }
+  }, [streaming]);
+
+  // A stream that stops, drops, or loses its voice filter mid-session must not
+  // leave the button claiming to listen to something that is no longer there.
+  useEffect(() => {
+    if (listenSource !== 'interviewer') setListening(false);
+  }, [listenSource]);
+
+  useEffect(() => {
+    if (!listening || listenSource !== 'interviewer') return;
+    const flush = () => {
+      coalesceTimerRef.current = null;
+      const full = coalesceRef.current.trim();
+      coalesceRef.current = '';
+      listenPreviewRef.current = '';
+      if (full) submitOrQueue(full);
+    };
+    const handler = (e: Event) => {
+      const text = (e as CustomEvent<{ text?: string }>).detail?.text?.trim();
+      if (!text) return;
+      const buf = coalesceRef.current;
+      const norm = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+      // The same utterance arriving twice must not be appended to itself.
+      if (!buf) coalesceRef.current = text;
+      else if (!norm(buf).includes(norm(text))) coalesceRef.current = `${buf} ${text}`;
+      // Show what Sona is hearing, but never clobber a draft the user typed.
+      if (inputMirrorRef.current === listenPreviewRef.current) {
+        listenPreviewRef.current = coalesceRef.current;
+        setInput(coalesceRef.current);
+      }
+      if (coalesceTimerRef.current) clearTimeout(coalesceTimerRef.current);
+      coalesceTimerRef.current = window.setTimeout(flush, LISTEN_COALESCE_MS);
+    };
+    window.addEventListener('lumora:ask-question', handler);
+    return () => {
+      window.removeEventListener('lumora:ask-question', handler);
+      if (coalesceTimerRef.current) { clearTimeout(coalesceTimerRef.current); coalesceTimerRef.current = null; }
+      coalesceRef.current = '';
+      listenPreviewRef.current = '';
+    };
+  }, [listening, listenSource, submitOrQueue]);
+
   const startNew = () => {
     askAbortRef.current?.abort();
     setStreaming(false);
@@ -578,12 +696,15 @@ export const AskLayout = () => {
         tag === 'A' || tag === 'SELECT' || !!el?.isContentEditable || el?.getAttribute('role') === 'button';
       if (!interactive || inEmptyComposer) {
         e.preventDefault();
-        setMicToggle(n => n + 1);
+        // Same stroke, whichever source the button is currently on — the user
+        // presses Space to "start listening", not to pick a capture path.
+        if (listenSource === 'interviewer') setListening(v => !v);
+        else setMicToggle(n => n + 1);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [input]);
+  }, [input, listenSource]);
 
   return (
     <div className="flex flex-row h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -808,6 +929,12 @@ export const AskLayout = () => {
                     it works in both web and the Electron desktop app). The
                     transcript is appended after whatever was already typed.
                     Space toggles it (single-stroke) when not mid-typing. */}
+                {listenSource === 'interviewer' ? (
+                  <InterviewerListenButton
+                    listening={listening}
+                    onToggle={() => setListening(v => !v)}
+                  />
+                ) : (
                 <StreamingMicButton
                   toggleSignal={micToggle}
                   onStart={() => {
@@ -839,6 +966,7 @@ export const AskLayout = () => {
                   }}
                   disabled={streaming}
                 />
+                )}
                 <button
                   onClick={() => handleSubmit()}
                   disabled={(!input.trim() && pending.length === 0) || streaming}

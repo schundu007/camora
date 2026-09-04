@@ -307,7 +307,7 @@ export const LumoraShellPage = () => {
     return handleCodingSubmit(problem, language as any, options);
   }, [handleCodingSubmit]);
 
-  const handleTranscription = useCallback((text: string, opts?: { manual?: boolean; source?: 'interviewer' | 'room' }) => {
+  const handleTranscription = useCallback((text: string, opts?: { manual?: boolean; source?: 'interviewer' | 'room'; filtered?: boolean }) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     const tab = activeTabRef.current;
@@ -349,6 +349,28 @@ export const LumoraShellPage = () => {
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: isManual } }));
       return;
     }
+    if (tab === 'ask') {
+      // Ask Sona sources questions from the DEDICATED interviewer stream only.
+      // Its own mic button is a dictation mic — one microphone in the room —
+      // and during an interview that mic heard the interviewer through the
+      // candidate's speakers AND the candidate answering, fusing both into one
+      // submitted "question". Routing the dedicated stream here removes the
+      // candidate's voice by construction; see lib/lumora/ask-listen-source.ts.
+      //
+      // A room-mic gets in only when `filtered` says the backend actually ran
+      // the enrolled voice filter on this chunk and took the candidate out of
+      // it — the same mechanism behavioral relies on for room-mic setups. An
+      // unfiltered room-mic carries both voices, which is the bug itself.
+      const fromInterviewer =
+        opts?.source === 'interviewer' ||
+        (opts?.source === 'room' && opts?.filtered === true);
+      if (!fromInterviewer) return;
+      if (isWhisperHallucination(trimmed)) return;
+      // AskLayout only acts on this while the user has armed listening, so an
+      // open Ask tab during a live stream stays quiet until they ask for it.
+      window.dispatchEvent(new CustomEvent('lumora:ask-question', { detail: { text: trimmed } }));
+      return;
+    }
     // Interview tab: gate on isQuestion() so background noise doesn't fire the LLM.
     // Manual presses bypass the shape check but never the hallucination filter.
     if (isWhisperHallucination(trimmed)) return;
@@ -381,14 +403,22 @@ export const LumoraShellPage = () => {
   return (
     <SpeakerAudioProvider
       onTranscription={(text, meta) =>
-        handleTranscription(text, { source: meta?.method === 'room-mic' ? 'room' : 'interviewer' })
+        handleTranscription(text, {
+          source: meta?.method === 'room-mic' ? 'room' : 'interviewer',
+          filtered: meta?.filtered === true,
+        })
       }
     >
     {/* Audio setup wizard — only mounted on live-interview tabs where
         we actually need audio. The wizard auto-opens on first session
         until the user finishes setup, then stays out of the way. */}
     {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
-    {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <SilentStreamBanner />}
+    {/* 'ask' is in this list but not the wizard's: Ask Sona now takes its
+        questions from the interviewer stream, so a stream that died mid-session
+        makes the mic button look broken. The banner is the reconnect path. The
+        wizard stays out — it auto-opens, and Ask is also a read-and-type
+        surface people use outside an interview. */}
+    {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design' || activeTab === 'ask') && <SilentStreamBanner />}
     <div
       className="fixed inset-0 w-full flex overflow-hidden lumora-shell-root"
       style={{

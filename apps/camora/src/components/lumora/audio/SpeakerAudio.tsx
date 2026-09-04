@@ -28,6 +28,11 @@ type Ctx = {
   isSupported: boolean;
   level: number;
   error: string | null;
+  /** The capture method this stream actually resolved to, or null before it
+   *  starts. Consumers need it to tell a DEDICATED interviewer stream
+   *  (electron-loopback / tab-share / virtual-mic) from room-mic, which hears
+   *  the candidate too — see lib/lumora/ask-listen-source.ts. */
+  method: Exclude<CaptureMethod, 'auto'> | null;
   /** The stream died on its own (share picker stopped / tab closed / loopback
    *  dropped) and has not recovered yet. Gesture-free methods auto-reconnect
    *  and clear this within a second or two; tab-share stays true until the
@@ -52,7 +57,15 @@ export const SpeakerAudioProvider = ({
    *  labelling every capture "interviewer". */
   onTranscription?: (
     text: string,
-    meta: { method: Exclude<CaptureMethod, 'auto'> | null },
+    meta: {
+      method: Exclude<CaptureMethod, 'auto'> | null;
+      /** This chunk was transcribed with `filter_user_voice: true`, so the
+       *  backend removed the candidate's voice from it. Only ever true for
+       *  room-mic (the dedicated methods never carried the candidate), and only
+       *  while a voice print is enrolled and the filter is switched on.
+       *  Reported rather than re-derived downstream so the two cannot drift. */
+      filtered: boolean;
+    },
   ) => void;
   children: React.ReactNode;
 }) => {
@@ -110,7 +123,10 @@ export const SpeakerAudioProvider = ({
           console.warn('[SpeakerAudio] empty transcription', { result });
           return;
         }
-        onTranscriptionRef.current?.(text, { method: resolvedMethodRef.current });
+        onTranscriptionRef.current?.(text, {
+          method: resolvedMethodRef.current,
+          filtered: filterUserVoice,
+        });
       } catch (err) {
         console.error('[SpeakerAudio] transcription failed', err);
       }
@@ -144,6 +160,7 @@ export const SpeakerAudioProvider = ({
     isSupported,
     error,
     audioLevel,
+    resolvedMethod,
     startCapture,
     stopCapture,
   } = useSpeakerCapture({
@@ -204,11 +221,12 @@ export const SpeakerAudioProvider = ({
       isSupported,
       level: audioLevel,
       error,
+      method: resolvedMethod,
       droppedUnexpectedly,
       start: startCapture,
       stop,
     }),
-    [isCapturing, isSupported, audioLevel, error, droppedUnexpectedly, startCapture, stop],
+    [isCapturing, isSupported, audioLevel, error, resolvedMethod, droppedUnexpectedly, startCapture, stop],
   );
 
   return (
@@ -221,7 +239,7 @@ export const useSpeakerAudio = (): Ctx  => {
   if (!ctx) {
     // Fall back to a stub so components rendered outside the provider
     // (e.g. legacy DesignLayout / CodingLayout entry points) don't crash.
-    return { active: false, isSupported: false, level: 0, error: null, droppedUnexpectedly: false, start: async () => {}, stop: () => {} };
+    return { active: false, isSupported: false, level: 0, error: null, method: null, droppedUnexpectedly: false, start: async () => {}, stop: () => {} };
   }
   return ctx;
 }

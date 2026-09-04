@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { transcriptionAPI } from '@/lib/api-client';
+import { loadAudioPrefs } from '@/lib/audio-preferences';
 
 interface Props {
   onStart?: () => void;
@@ -43,6 +44,14 @@ const SILENCE_MS = 2000;
 // Never heard a word — release the mic instead of recording an empty room
 // forever (mic opened by accident, wrong input device, muted hardware).
 const NO_SPEECH_TIMEOUT_MS = 12000;
+// Hard ceiling on one dictated utterance. SILENCE_MS alone is not a bound: it
+// needs 2s where EVERY frame is under SPEECH_RMS, and a room with people still
+// talking in it never provides that — so the recording ran on indefinitely,
+// swallowing whatever else was said and never auto-sending. Every other capture
+// path in the app has this ceiling (45s in useAudioCapture, 12s in
+// useSpeakerCapture); this one had none. Ending here counts as a silence stop,
+// because speech was heard and there is a real transcript to send.
+const MAX_UTTERANCE_MS = 30000;
 // RMS above which a frame counts as speech. Well clear of room tone.
 const SPEECH_RMS = 0.015;
 const VAD_TICK_MS = 100;
@@ -134,6 +143,15 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
         // Never spoke at all → just stop. Nothing to send, so no onSilenceStop.
         if (!heardSpeechRef.current && now - startedAt > NO_SPEECH_TIMEOUT_MS) {
           vadActiveRef.current = false;
+          stopRef.current?.();
+          return;
+        }
+        // Spoke, and the room never went quiet long enough to close the
+        // utterance. Close it ourselves and send what we have rather than
+        // recording until the user notices nothing was submitted.
+        if (heardSpeechRef.current && now - startedAt > MAX_UTTERANCE_MS) {
+          vadActiveRef.current = false;
+          onSilenceStop?.();
           stopRef.current?.();
         }
       }, VAD_TICK_MS);
@@ -258,7 +276,20 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     onStart?.();
     let stream: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Record from the mic the user actually chose in the Audio Setup wizard,
+      // the same canonical preference useAudioCapture / useCalibration read.
+      // `audio: true` took the OS default input instead — and on a machine set
+      // up for interviews that default is often a loopback or aggregate device
+      // (BlackHole, Multi-Output, VoiceMeeter), so dictation was recording the
+      // meeting rather than the person dictating.
+      //
+      // `ideal`, not `exact`: a device unplugged or re-enumerated after a USB
+      // replug falls back to the system default instead of throwing
+      // OverconstrainedError mid-interview. Mirrors useAudioCapture.
+      const micDeviceId = loadAudioPrefs().micDeviceId;
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: micDeviceId ? { deviceId: { ideal: micDeviceId } } : true,
+      });
       streamRef.current = stream;
     } catch { return; }
 
