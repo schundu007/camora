@@ -50,9 +50,14 @@ const SESSION_KEY = 'lumora_audio_wizard_dismissed';
 export const AudioSetupWizard = ({
   forceOpen,
   onClose,
+  autoPrompt = true,
 }: {
   forceOpen?: boolean;
   onClose?: () => void;
+  /** Open itself when setup looks incomplete. False on tabs where audio is not
+   *  the job — the wizard still mounts there so the rail's Audio Check button
+   *  has something listening, it just waits to be asked. */
+  autoPrompt?: boolean;
 }) => {
   const speaker = useSpeakerAudio();
   const { token } = useAuth();
@@ -138,7 +143,15 @@ export const AudioSetupWizard = ({
 
   /* ── visibility ─────────────────────────────────────────────────── */
   const open = useMemo(() => {
+    // An explicit request always opens it, on any tab. This is what the rail's
+    // "Audio Check" button fires, and it must outrank autoPrompt: the button
+    // exists precisely so you can reach setup from wherever you are.
     if (forceOpen || externalForceOpen) return true;
+    // autoPrompt=false → mounted purely to listen for that request. The wizard
+    // now mounts on every Lumora tab (it used to mount on four, so the button
+    // was a no-op everywhere else — nothing was listening), but it should not
+    // ambush someone reading Prep Kit or editing their profile.
+    if (!autoPrompt) return false;
     if (sessionDismissed) return false;
     // Mic-only never sets `everConnected` (no second stream), so trust
     // setupCompleted on its own. For other methods we want a live
