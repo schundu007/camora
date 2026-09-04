@@ -412,7 +412,14 @@ export const LumoraShellPage = () => {
     {/* Audio setup wizard — only mounted on live-interview tabs where
         we actually need audio. The wizard auto-opens on first session
         until the user finishes setup, then stays out of the way. */}
-    {(activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design') && <AudioSetupWizard />}
+    {/* Mounted on EVERY tab. The icon rail's "Audio Check" button is on every
+        tab too, and it works by dispatching lumora:open-audio-wizard — so on
+        the tabs where this was not mounted, nothing was listening and the
+        button did nothing at all. autoPrompt keeps the ambush behaviour
+        limited to the surfaces where audio is actually the job. */}
+    <AudioSetupWizard
+      autoPrompt={activeTab === 'session' || activeTab === 'behavioral' || activeTab === 'coding' || activeTab === 'design'}
+    />
     {/* 'ask' is in this list but not the wizard's: Ask Sona now takes its
         questions from the interviewer stream, so a stream that died mid-session
         makes the mic button look broken. The banner is the reconnect path. The
