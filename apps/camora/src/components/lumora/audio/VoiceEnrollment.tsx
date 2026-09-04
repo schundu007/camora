@@ -53,20 +53,56 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
 
   const RECORDING_DURATION = 5000;
 
-  // Restore enrollment from localStorage on mount — no backend call.
-  // Only enable the filter once per page session (not on every tab-switch remount)
-  // so a deliberate user toggle of "Filter Off" survives navigation.
+  // Restore enrollment from localStorage for an instant paint, then RECONCILE
+  // against the server — the voice print lives on ai-services, not here.
+  //
+  // localStorage alone was a lie waiting to happen, and it happened: the print
+  // is a file under /data/embeddings in the ai-services container, so any
+  // restart or redeploy loses it, while this flag persisted forever. The UI
+  // then showed "Filter On / Remove Enrollment" while /speaker/diarize, finding
+  // no embedding, returned should_transcribe:true with interviewer_ratio 1.0 —
+  // indistinguishable from a healthy "it's all interviewer" verdict. Net effect:
+  // the candidate's own voice was transcribed and answered back at them in
+  // behavioral, with nothing anywhere reporting the mismatch.
+  //
+  // speakerAPI.getStatus() had been written for exactly this and never called.
+  //
+  // Only enable the filter once per page session (not on every tab-switch
+  // remount) so a deliberate user toggle of "Filter Off" survives navigation.
   useEffect(() => {
-    const enrolled = localStorage.getItem(LS_KEY) === 'true';
-    setVoiceEnrolled(enrolled);
-    if (enrolled && !filterRestoredThisSession) {
+    const cached = localStorage.getItem(LS_KEY) === 'true';
+    setVoiceEnrolled(cached);
+    if (cached && !filterRestoredThisSession) {
       filterRestoredThisSession = true;
       setVoiceFilterEnabled(true);
     }
     // Clear any stuck isEnrolling flag from a previous interrupted session
     if (useSessionStore.getState().isEnrolling) setIsEnrolling(false);
+
+    if (!token) return;
+    let cancelled = false;
+    speakerAPI.getStatus(token)
+      .then((res) => {
+        if (cancelled) return;
+        const enrolled = res?.enrolled === true;
+        // The route reports `service_unavailable` when it cannot reach
+        // ai-services and degrades to enrolled:false. Do NOT clear a real
+        // enrollment on an outage — that would nag the user into re-recording
+        // during an interview over a transient blip. Leave the flag alone and
+        // let the filter's own status line carry the problem.
+        if ((res as { service_unavailable?: boolean })?.service_unavailable) return;
+        if (enrolled === cached) return;
+        localStorage.setItem(LS_KEY, String(enrolled));
+        setVoiceEnrolled(enrolled);
+        if (!enrolled) {
+          setVoiceFilterEnabled(false);
+          setStatus('warn', 'Voice print not found on the server — re-enroll to filter your voice');
+        }
+      })
+      .catch(() => { /* offline / aborted — keep the cached value */ });
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
   const cleanup = useCallback(() => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
@@ -186,12 +222,23 @@ export const VoiceEnrollment = ({ disabled, variant = 'dark', iconOnly = false }
     return () => window.removeEventListener('lumora:start-voice-enrollment', onExternalStart);
   }, [handleEnroll]);
 
+  // Clear the print on the SERVER, not just the local flag. This used to be
+  // localStorage-only, which was survivable while nothing ever asked the server
+  // — but the mount effect now reconciles against it, so a server-side print
+  // left behind would report enrolled:true and silently undo the removal on the
+  // next mount. Local state clears immediately either way: the user pressed
+  // Remove and must see it removed, even if the call fails.
   const handleUnenroll = useCallback(() => {
     if (isEnrolling) return;
     localStorage.removeItem(LS_KEY);
     setVoiceEnrolled(false);
     setVoiceFilterEnabled(false);
     setStatus('ready', 'Voice enrollment cleared');
+    const t = tokenRef.current;
+    if (!t) return;
+    speakerAPI.unenroll(t).catch(() => {
+      setStatus('warn', 'Voice print cleared here, but the server copy could not be removed');
+    });
   }, [isEnrolling, setVoiceEnrolled, setVoiceFilterEnabled, setStatus]);
 
   const handleToggleFilter = useCallback(() => {
