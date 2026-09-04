@@ -1471,11 +1471,16 @@ const UnifiedMicButton = ({
         </button>
       )}
 
-      {/* Input level. The mic glyph that used to label this is gone: it sat
-          directly beside Ask, whose icon is also a mic, so the pair read as
-          two microphones rather than one control and one readout. Rising
-          bars are already the universal shape for a level meter, and the
-          tooltip carries the rest. */}
+      {/* Input level.
+
+          The mic glyph that labelled this is gone — it sat directly beside
+          Ask, whose icon is also a mic, so the pair read as two microphones
+          rather than one control and one readout. But dropping the label
+          outright reintroduced the exact problem the label was added for:
+          with nothing arriving, five flat bars read as an empty broken chip.
+          A waveform mark carries the meaning without duplicating Ask's mic,
+          and a floor of one lit bar while capturing says "listening, hearing
+          nothing" rather than "not working". */}
       <div
         className="lum-tool-group"
         data-overlay-keep
@@ -1486,9 +1491,14 @@ const UnifiedMicButton = ({
           : 'Input level — flat because Sona is not capturing right now.'}
         style={{ padding: '0 8px' }}
       >
+        <WaveIcon />
         <span className="lum-tool-meter" aria-hidden="true">
           {[0, 1, 2, 3, 4].map((i) => {
-            const lit = meterLevel > i * 0.02;
+            // Bar 0 lights whenever anything is capturing, even in a silent
+            // room. Its old threshold was `> 0`, and a room that is merely
+            // quiet reads as exactly 0 through a 5-bit RMS — so the meter sat
+            // completely dark and looked broken rather than idle.
+            const lit = i === 0 ? (listenOn || isAsking) : meterLevel > i * 0.02;
             return (
               <i
                 key={i}
@@ -1546,5 +1556,25 @@ const MicIcon = () => (
     <rect x="9" y="2" width="6" height="11" rx="3" />
     <path d="M19 11v1a7 7 0 0 1-14 0v-1" />
     <path d="M12 19v2" />
+  </svg>
+);
+
+/* Level-meter mark. Deliberately NOT a microphone: this chip sits next to
+   Ask, which already carries one, and two mics in a row read as two
+   controls. A waveform says "signal" without repeating it. */
+const WaveIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.75}
+    strokeLinecap="round"
+    aria-hidden="true"
+    className="shrink-0"
+    style={{ color: 'var(--cam-strip-text-muted)' }}
+  >
+    <path d="M3 12h2.5L8 6l4 12 3-9 2 3h4" />
   </svg>
 );

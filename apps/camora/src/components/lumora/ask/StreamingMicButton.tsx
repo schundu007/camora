@@ -15,6 +15,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { transcriptionAPI } from '@/lib/api-client';
 import { loadAudioPrefs } from '@/lib/audio-preferences';
+import { useSessionStore } from '@/stores/session-store';
 
 interface Props {
   onStart?: () => void;
@@ -59,6 +60,22 @@ const WS_BASE = (import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.c
 
 export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = false, toggleSignal, onSilenceStop }: Props) => {
   const { token } = useAuth();
+  /* When the candidate has enrolled a voice print AND switched the filter on,
+     that is a standing instruction — "do not turn my own voice into text" —
+     and it has to hold on THIS mic too, not just the behavioral one.
+     Ask's dictation path hardcoded filter_user_voice:false, so with no
+     dedicated interviewer stream to fall back to, Ask happily transcribed the
+     candidate while the Filter chip two controls away said it was on.
+
+     The trade is real and belongs to the user, which is why it rides on a
+     switch they can see: while the filter is on you cannot dictate your own
+     question to Sona here — that is the same voice being removed. Turn the
+     filter off to dictate. */
+  const filterMyVoice = useSessionStore(
+    (s) => s.voiceEnrolled && s.voiceFilterEnabled,
+  );
+  const filterMyVoiceRef = useRef(filterMyVoice);
+  useEffect(() => { filterMyVoiceRef.current = filterMyVoice; }, [filterMyVoice]);
   const [recording, setRecording] = useState(false);
   const [busy, setBusy] = useState(false);
   const recordingRef = useRef(false);
@@ -193,8 +210,13 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     if (blob.size < 1200) return;
     if (!isFinal) inFlightRef.current = true;
     try {
-      const { text } = await transcriptionAPI.transcribe(token, blob, 'ask-dictation.webm', false);
-      const clean = (text || '').trim();
+      const filtered = filterMyVoiceRef.current;
+      const res = await transcriptionAPI.transcribe(token, blob, 'ask-dictation.webm', filtered);
+      // A filtered chunk that was ALL the candidate comes back skipped. That is
+      // the filter working, not a failure — drop it rather than committing an
+      // empty string over text already in the composer.
+      if (res.skipped) { if (!isFinal) return; }
+      const clean = (res.text || '').trim();
       if (seq !== seqRef.current && !isFinal) return;
       if (isFinal) onFinal(clean);
       else if (clean) onInterim(clean);
@@ -293,6 +315,12 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
       streamRef.current = stream;
     } catch { return; }
 
+    // The Deepgram socket streams raw audio straight from the browser, so
+    // nothing on that path can remove the candidate's voice — the live interim
+    // would type out the very words the filter exists to drop. When the filter
+    // is on, take the Groq path, which goes through our backend and can.
+    if (filterMyVoiceRef.current) { startGroq(stream); return; }
+
     // Try Deepgram WS first; fall back to Groq if it doesn't become ready.
     let settled = false;
     let ws: WebSocket | null = null;
@@ -370,7 +398,9 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
       disabled={disabled || busy}
       data-tip={active
         ? 'Listening — stop talking and it sends by itself. Click to stop without sending.'
-        : 'Talk instead of typing — it sends automatically when you stop.'}
+        : filterMyVoice
+          ? 'Listening with your voice filtered out — only other voices become text. Turn the voice filter off if you want to dictate your own question.'
+          : 'Talk instead of typing — it sends automatically when you stop.'}
       aria-label={active ? 'Stop dictation' : 'Start dictation'}
       className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
       style={{ background: active ? 'var(--danger, var(--danger))' : 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}
