@@ -706,15 +706,12 @@ export const AskLayout = () => {
         tag === 'A' || tag === 'SELECT' || !!el?.isContentEditable || el?.getAttribute('role') === 'button';
       if (!interactive || inEmptyComposer) {
         e.preventDefault();
-        // Same stroke, whichever source the button is currently on — the user
-        // presses Space to "start listening", not to pick a capture path.
-        if (listenSource === 'interviewer') setListening(v => !v);
-        else setMicToggle(n => n + 1);
+        setMicToggle(n => n + 1);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [input, listenSource]);
+  }, [input]);
 
   return (
     <div className="flex flex-row h-full overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -863,15 +860,25 @@ export const AskLayout = () => {
                     it works in both web and the Electron desktop app). The
                     transcript is appended after whatever was already typed.
                     Space toggles it (single-stroke) when not mid-typing. */}
-                {listenSource === 'interviewer' ? (
+                {/* BOTH controls, never one instead of the other.
+                    Swapping the mic out for the listen button whenever a
+                    dedicated stream was live silently removed dictation: with
+                    the desktop loopback auto-starting, there was no way left to
+                    speak your own question to Sona at all. They are different
+                    intents — "listen to them" and "listen to me" — and the app
+                    cannot infer which you want, so it offers both. */}
+                {listenSource === 'interviewer' && (
                   <InterviewerListenButton
                     listening={listening}
                     onToggle={() => setListening(v => !v)}
                   />
-                ) : (
+                )}
                 <StreamingMicButton
                   toggleSignal={micToggle}
                   onStart={() => {
+                    // Talking to Sona yourself supersedes listening to the
+                    // room; two sources filling one composer would interleave.
+                    setListening(false);
                     dictationSeqRef.current = submitSeqRef.current;
                     dictationBaseRef.current = input;
                     autoSendRef.current = false;
@@ -900,7 +907,6 @@ export const AskLayout = () => {
                   }}
                   disabled={streaming}
                 />
-                )}
                 <button
                   onClick={() => handleSubmit()}
                   disabled={(!input.trim() && pending.length === 0) || streaming}
