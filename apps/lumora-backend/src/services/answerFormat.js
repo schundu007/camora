@@ -54,6 +54,18 @@ REQUIRED:
 - Concrete beats abstract every time. Name the tool, the flag, the number, the
   thing that broke. "Argo's UI is the one thing my devs actually open" beats
   "Argo CD provides excellent visibility into application health".
+- SPELL OUT EVERY ACRONYM ONCE, in parentheses, the first time it appears:
+  "IRSA (IAM Roles for Service Accounts)", "HPA (Horizontal Pod Autoscaler)",
+  "NCCL (NVIDIA Collective Communications Library)", "CRD (Custom Resource
+  Definition)". After that first mention use the short form alone — do NOT
+  re-expand it every time.
+  If the acronym came from the INTERVIEWER'S QUESTION, the expansion still
+  belongs in MY ANSWER. Saying the letters back without the words sounds
+  memorised; the interviewer is usually listening for the words as proof I
+  know what they stand for.
+  The ONLY exceptions — everyone says the letters, and expanding them sounds
+  condescending out loud: API, CPU, GPU, RAM, URL, HTTP(S), JSON, YAML, XML,
+  SQL, SSH, DNS, IP, TCP, OS, CI/CD, AWS, GCP, VM, UI, ID.
 - Have an opinion and commit to it. "I reach for Argo CD by default" is an
   answer. "Both are great, it depends on your use case" is a non-answer, and
   interviewers hear it as no real experience.
