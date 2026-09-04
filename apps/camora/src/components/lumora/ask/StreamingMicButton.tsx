@@ -397,10 +397,10 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
       onClick={onClick}
       disabled={disabled || busy}
       data-tip={active
-        ? 'Listening — stop talking and it sends by itself. Click to stop without sending.'
+        ? 'Listening to you — stop talking and it sends by itself. Click or press Space to stop without sending.'
         : filterMyVoice
           ? 'Listening with your voice filtered out — only other voices become text. Turn the voice filter off if you want to dictate your own question.'
-          : 'Talk instead of typing — it sends automatically when you stop.'}
+          : 'Talk instead of typing (Space) — it sends automatically when you stop.'}
       aria-label={active ? 'Stop dictation' : 'Start dictation'}
       className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
       style={{ background: active ? 'var(--danger, var(--danger))' : 'var(--bg-app)', border: '1px solid var(--cam-gold-leaf-dk)' }}
