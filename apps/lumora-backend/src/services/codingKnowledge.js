@@ -245,26 +245,70 @@ function tokenize(text) {
     .filter((w) => w.length > 2);
 }
 
+/*
+ * Words that carry no algorithmic signal — container and type nouns, the
+ * language, the word "code". They appear in almost every request, so a match on
+ * one says nothing about which problem this is.
+ *
+ * Why this exists: "reverse a list in python" scored 6 against Reverse Linked
+ * List (list +2, reverse +2, title +2) and was injected as "the exact contract
+ * to follow" — so a request to reverse a Python list came back as pointer
+ * surgery on a linked list. The shared word was "list", which is precisely the
+ * word that does not distinguish the two. Same failure shape as RULE #0 in the
+ * coding prompt, one layer earlier.
+ *
+ * These are scored at zero rather than dropped from tokenize(), because
+ * tokenize() also feeds callers where a bare noun is legitimate content.
+ */
+const GENERIC_TOKENS = new Set([
+  'list', 'lists', 'array', 'arrays', 'string', 'strings',
+  'number', 'numbers', 'integer', 'integers', 'value', 'values',
+  'item', 'items', 'element', 'elements', 'data', 'result', 'results',
+  'code', 'program', 'programs', 'function', 'functions', 'method', 'methods',
+  'python', 'java', 'javascript', 'typescript', 'golang', 'rust', 'ruby',
+  'write', 'using', 'given', 'return', 'returns', 'implement', 'solve',
+  // Bare cardinals. "two" alone carried "add two numbers" to Two Sum II at
+  // exactly the threshold; it says how many, never which problem.
+  'one', 'two', 'three', 'four',
+]);
+
+/*
+ * A single incidental hit used to be enough: the gate was `score > 0`, so one
+ * shared generic word injected a full reference solution for a different
+ * problem. Four is one distinctive keyword (+2) plus its echo in the title
+ * (+1) and pattern tag (+1) — i.e. an entry that actually names the thing being
+ * asked about, rather than one that happens to share a noun with it.
+ */
+const MIN_EXEMPLAR_SCORE = 4;
+
 function lexicalScore(problemText, entry) {
   const toks = new Set(tokenize(problemText));
+  const hit = (t) => toks.has(t) && !GENERIC_TOKENS.has(t);
   let score = 0;
   for (const kw of entry.keywords) {
-    if (toks.has(kw)) score += 2;
+    if (hit(kw)) score += 2;
   }
   for (const t of tokenize(entry.title)) {
-    if (toks.has(t)) score += 1;
+    if (hit(t)) score += 1;
   }
   for (const t of tokenize(entry.patternTag)) {
-    if (toks.has(t)) score += 1;
+    if (hit(t)) score += 1;
   }
   return score;
 }
 
-/** Rank the curated set lexically; returns the best `k` entries (score > 0). */
+/**
+ * Rank the curated set lexically; returns the best `k` entries.
+ *
+ * Returning nothing is a perfectly good answer here — the caller skips
+ * injection, and the model solves the problem as written. A weak match is worse
+ * than no match, because an exemplar is presented to the model as the contract
+ * to follow.
+ */
 export function lexicalRetrieve(problemText, k = 2) {
   return CODING_KB
     .map((e) => ({ e, s: lexicalScore(problemText, e) }))
-    .filter((x) => x.s > 0)
+    .filter((x) => x.s >= MIN_EXEMPLAR_SCORE)
     .sort((a, b) => b.s - a.s)
     .slice(0, k)
     .map((x) => x.e);
