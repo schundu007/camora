@@ -800,27 +800,31 @@ export const AskLayout = () => {
           strip.
 
           They used to flank it, and on the desktop app that was expensive in a
-          way it does not look: `lumora-winctl-safe` already reserves 120px on
-          the right for the window controls (188px in overlay), and the History
-          chip sat inside that reserve — so the composer gave up that padding
-          plus the chip's own width before it started. The chip line costs about
-          24px of height once and hands all of it back.
+          way it does not look: the whole band carried `lumora-winctl-safe`,
+          which reserves 120px on the right for the window controls (188px in
+          overlay), and the History chip sat inside that reserve — so the
+          composer gave up the padding plus the chip's own width before it
+          started.
 
-          Chips are CENTRED over the composer, not pinned to either end. The
-          right end of this row is the window-control reserve on desktop, so
-          anything parked there gets pushed around by the controls and, in
-          overlay, the transparency slider. Centring is measured inside the
-          padded column, which is the same box the composer lives in — so the
-          chips sit over the middle of the input, not the middle of the window. */}
+          The reserve now sits on the CHIP LINE, not the band. The control
+          cluster is `position:fixed; top:3px; right:6px` and about 20px tall,
+          so it only ever overlaps the top row here — the composer, one line
+          down, was dodging something that was never beside it. Freed of it the
+          input box runs the full width of the strip, out to the right border.
+
+          The chip line uses the centring variant, which mirrors the reserve
+          onto both sides: the chips stay on the true centre instead of drifting
+          left by half of it, and still clear the cluster. On that row the left
+          padding costs nothing, because the row is empty space either side. */}
       <div
-        className="shrink-0 flex items-start gap-2 px-3 py-2 lumora-winctl-safe"
+        className="shrink-0 flex items-start gap-2 px-3 py-2"
         style={{ borderBottom: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}
       >
         <div className="flex-1 min-w-0">
           {/* Chip line. Rendered only when it has something in it, so an empty
               conversation with the history pane already open costs no height. */}
           {(hasMessages || !showHistory) && (
-            <div className="flex items-center justify-center gap-2 pb-1.5">
+            <div className="flex items-center justify-center gap-2 pb-1.5 lumora-winctl-safe-center">
               {hasMessages && (
                 <button onClick={startNew} className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>

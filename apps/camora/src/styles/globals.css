@@ -2518,6 +2518,20 @@ body.electron-desktop .lumora-winctl-safe {
 html[data-overlay='on'] .lumora-winctl-safe {
   padding-right: 188px !important;
 }
+/* Centring variant. Same reserve, mirrored onto BOTH sides, so a row that is
+   centred inside it stays on the true centre instead of drifting left by half
+   the reserve. For a row that is mostly empty space — Ask's New/History chip
+   line — the left padding costs nothing and the row clears the control cluster.
+   Use .lumora-winctl-safe when content is left-aligned and only the right end
+   needs protecting; use this when the content is centred. */
+body.electron-desktop .lumora-winctl-safe-center {
+  padding-left: 120px !important;
+  padding-right: 120px !important;
+}
+html[data-overlay='on'] .lumora-winctl-safe-center {
+  padding-left: 188px !important;
+  padding-right: 188px !important;
+}
 /* The grip drives a JS drag (see DesktopWindowControls) since macOS blocks
    -webkit-app-region:drag on transparent windows. Keep everything no-drag so the
    grip's mousedown actually fires. */
