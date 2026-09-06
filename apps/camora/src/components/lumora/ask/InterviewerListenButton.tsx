@@ -20,14 +20,22 @@ interface Props {
   listening: boolean;
   onToggle: () => void;
   disabled?: boolean;
+  /** Why this cannot be used right now. Set = rendered disabled, and the
+   *  tooltip says the reason instead of describing what the button does.
+   *  The button used to be hidden outright when the interviewer stream was
+   *  not an interviewer stream, which is why "the chip is missing" was a bug
+   *  report rather than something the UI answered on its own. */
+  unavailableReason?: string | null;
 }
 
-export const InterviewerListenButton = ({ listening, onToggle, disabled = false }: Props) => (
+export const InterviewerListenButton = ({ listening, onToggle, disabled = false, unavailableReason = null }: Props) => (
   <button
     type="button"
     onClick={onToggle}
-    disabled={disabled}
-    data-tip={listening
+    disabled={disabled || !!unavailableReason}
+    data-tip={unavailableReason
+      ? unavailableReason
+      : listening
       ? 'Listening to the interviewer — each question is sent to Sona as it finishes. Click or press ` to stop.'
       : 'Listen to the interviewer (`) — their questions go straight to Sona. Your own voice is not on this stream.'}
     aria-label={listening ? 'Stop listening to the interviewer' : 'Listen to the interviewer'}

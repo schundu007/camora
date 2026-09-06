@@ -556,6 +556,17 @@ export const AskLayout = () => {
   });
   const [listening, setListening] = useState(false);
 
+  /* Why the interviewer chip cannot be armed, in the user's terms. Mirrors
+   * resolveAskListenSource's branches — if that says 'mic', exactly one of
+   * these explains it. */
+  const listenUnavailableReason = !speaker.active
+    ? 'Interviewer audio is not connected. Connect it from the speaker pill in the toolbar.'
+    : speaker.method === 'room-mic'
+    ? 'Room mic carries you as well as the interviewer, so Sona will not treat it as their stream until your voice print is enrolled and the filter is on.'
+    : speaker.method === 'mic-only'
+    ? 'This setup has no separate interviewer stream — mic-only captures one microphone. Switch capture method in Audio settings.'
+    : 'The connected audio is not a dedicated interviewer stream, so listening would pick up your voice too.';
+
   // Questions that arrived while Sona was still answering the previous one.
   // handleSubmit drops a call outright when `streaming` is true, so without
   // this an interviewer asking a follow-up mid-answer would be silently lost —
@@ -929,12 +940,18 @@ export const AskLayout = () => {
                     speak your own question to Sona at all. They are different
                     intents — "listen to them" and "listen to me" — and the app
                     cannot infer which you want, so it offers both. */}
-                {listenSource === 'interviewer' && (
-                  <InterviewerListenButton
-                    listening={listening}
-                    onToggle={() => setListening(v => !v)}
-                  />
-                )}
+                {/* Always rendered. It used to be gated on
+                    `listenSource === 'interviewer'`, so when the capture was
+                    connected but not an interviewer source — room-mic with the
+                    voice print unenrolled or the filter off, or a mic-only
+                    setup — the chip simply vanished. From the outside that is
+                    indistinguishable from a broken build, and it was reported
+                    as one. Now it stays put and says what is wrong. */}
+                <InterviewerListenButton
+                  listening={listening}
+                  onToggle={() => setListening(v => !v)}
+                  unavailableReason={listenSource === 'interviewer' ? null : listenUnavailableReason}
+                />
                 <StreamingMicButton
                   toggleSignal={micToggle}
                   onStart={() => {
