@@ -1100,9 +1100,27 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // is hidden on screens <md and accessible via a hamburger in the header.
   // Auto-closes when a question is tapped from the drawer so the user
   // returns to the answer view immediately.
-  const [mobileRailOpen, setMobileRailOpen] = useState(false);
+  // The rail collapses on EVERY size now, not just mobile. It used to be a
+  // permanent 280px column on md+, which spent a fifth of the panel on a list
+  // that mostly repeated what the answers column was already showing. What is
+  // genuinely live — the transcript coming in and the tap-to-answer queue —
+  // moved into the answers column, so what is left in here (the Heard log, the
+  // jump list of past questions) is reference material you open when you need
+  // it. Same shape as Ask Sona's history sidebar, and closed by default.
+  const [railOpen, setRailOpen] = useState(false);
+
+  /* The question an answer belongs to: the nearest user message before it.
+   * The answers column filters to role === 'ai', so without this the question
+   * exists nowhere in it. */
+  const questionFor = (aiIndex: number): string | null => {
+    for (let j = aiIndex - 1; j >= 0; j--) {
+      if (messages[j].role === 'user') return messages[j].text;
+    }
+    return null;
+  };
+
   const [liveTranscript, setLiveTranscript] = useState('');
-  useEffect(() => { if (!embedded) setMobileRailOpen(false); }, [embedded]);
+  useEffect(() => { if (!embedded) setRailOpen(false); }, [embedded]);
 
   // Minimized = floating icon button. Draggable: shares the same
   // `position` state as the open panel so wherever the user parks it
@@ -1337,12 +1355,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         <div className="flex items-center gap-0.5">
           {embedded ? (
             <button
-              onClick={() => setMobileRailOpen(v => !v)}
-              className="md:hidden p-2 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]"
-              style={{ color: 'var(--cam-strip-text)' }}
-              data-tip="Questions"
-              aria-label="Open questions panel"
-              aria-expanded={mobileRailOpen}
+              onClick={() => setRailOpen(v => !v)}
+              className="p-2 rounded-md transition-colors hover:bg-[var(--cam-strip-icon-bg)]"
+              style={{ color: railOpen ? 'var(--cam-gold-leaf)' : 'var(--cam-strip-text)' }}
+              data-tip="Heard log and past questions"
+              aria-label="Toggle the heard log and past questions"
+              aria-expanded={railOpen}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
             </button>
@@ -1412,27 +1430,31 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       {embedded ? (
         <div className="flex-1 flex min-h-0 overflow-hidden relative">
           {/* Mobile scrim — taps anywhere outside the drawer to close it. */}
-          {mobileRailOpen && (
+          {railOpen && (
             <div
               className="md:hidden absolute inset-0 z-30"
               style={{ background: 'rgba(0,0,0,0.4)' }}
-              onClick={() => setMobileRailOpen(false)}
+              onClick={() => setRailOpen(false)}
               aria-hidden="true"
             />
           )}
-          {/* Left: stories + questions. Subtle bg-elevated tint so it
-              reads as chrome/navigation; the main reading area stays on
-              bg-surface (white) so answer cards have somewhere to lift
-              off from.
+          {/* Left: the Heard log and the jump list of past questions. Subtle
+              bg-elevated tint so it reads as chrome; the reading column stays
+              on bg-surface so answer cards have somewhere to lift off from.
 
-              Mobile: rendered as a slide-over drawer (≤md) keyed off
-              mobileRailOpen; on md+ it stays a fixed 280px column. */}
+              Gated on railOpen so it leaves the LAYOUT when closed, not merely
+              the viewport. The translate classes alone only slid it off screen
+              on mobile — on md+ it stayed `static` and kept its 280px, which is
+              the space this was supposed to give back.
+
+              Mobile: still a slide-over drawer over the reading column. */}
+          {railOpen && (
           <div
-            className={`shrink-0 flex flex-col overflow-hidden border-r transition-transform md:translate-x-0
-              ${mobileRailOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            className={`shrink-0 flex flex-col overflow-hidden border-r transition-transform
+              translate-x-0 shadow-[0_10px_30px_rgba(0,0,0,0.25)] md:shadow-none
               md:relative md:w-[280px] md:max-w-none
               absolute md:static inset-y-0 left-0 z-40 w-[82vw] max-w-[320px]`}
-            style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)', boxShadow: mobileRailOpen ? '0 10px 30px rgba(0,0,0,0.25)' : undefined }}
+            style={{ borderColor: 'var(--border)', background: 'var(--bg-elevated)' }}
           >
             {/* Mobile-only header inside the drawer with a close button so
                 touch users have an obvious dismiss. The scrim handles taps
@@ -1440,7 +1462,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             <div className="md:hidden shrink-0 flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'var(--border)' }}>
               <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--text-primary)' }}>Menu</span>
               <button
-                onClick={() => setMobileRailOpen(false)}
+                onClick={() => setRailOpen(false)}
                 className="p-2 rounded-md"
                 style={{ color: 'var(--text-muted)' }}
                 aria-label="Close menu"
@@ -1462,21 +1484,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               {!streaming && !liveTranscript && detectedQuestions.length === 0 &&
                 messages.filter(m => m.role === 'user').length === 0 && (
                 <p className="text-[12px] px-1 py-2" style={{ color: 'var(--text-muted)' }}>
-                  Questions land here — ask one above, or let Sona pick them up from the call.
+                  Past questions land here once you have asked one. Live ones show in the answers column.
                 </p>
               )}
               {/* Live preview — shows each Whisper chunk immediately as it
                   arrives, before the accumulation flush fires. Clears
                   automatically when the question is sent. */}
-              {liveTranscript && (
-                <div className="px-3 py-2.5 md:py-2 rounded-lg text-[14px] font-medium flex items-start gap-2 animate-pulse"
-                  style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', color: 'var(--text-secondary)', opacity: 0.85 }}>
-                  <div className="flex-1 min-w-0">
-                    <p className="break-words">{liveTranscript}</p>
-                    <span className="text-[12px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
-                  </div>
-                </div>
-              )}
               {/* What Sona heard and what it did with it. Every one of these
                   outcomes used to be a silent return, which made "never heard
                   you", "heard you and ignored it" and "answering but nothing on
@@ -1493,43 +1506,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       <span className="text-[12px] font-bold uppercase tracking-wide" style={{ color: h.outcome === 'answering' ? 'var(--cam-gold-leaf)' : 'var(--text-muted)' }}>
                         {h.outcome} · {h.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {/* Pending detected questions (behavioral tap-to-answer). These are
-                  the transcribed lines that did NOT clear shouldAutoAnswer() —
-                  softer or ambiguous prompts the user taps to answer. With
-                  auto-answer off, every detected line lands here. */}
-              {embedded && detectedQuestions.length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[12px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>Tap to answer</span>
-                    <button onClick={() => setDetectedQuestions([])} className="text-[12px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear all detected questions">Clear</button>
-                  </div>
-                  {[...detectedQuestions].reverse().map(q => (
-                    <div
-                      key={q.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => { setDetectedQuestions(prev => prev.filter(x => x.id !== q.id)); ask(q.text); setMobileRailOpen(false); }}
-                      className="group flex items-start gap-2 px-3 py-2.5 md:py-2 rounded-lg cursor-pointer transition-colors"
-                      style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--text-primary)' }}
-                      data-tip="Answer this with Sona"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="break-words text-[13px] md:text-[12px] font-medium">{q.text}</p>
-                        <span className="text-[12px] mt-1 block font-bold uppercase tracking-wide" style={{ color: 'var(--cam-gold-leaf)' }}>tap to answer · {q.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDetectedQuestions(prev => prev.filter(x => x.id !== q.id)); }}
-                        className="shrink-0 p-1 rounded-md transition-colors"
-                        style={{ color: 'var(--text-muted)' }}
-                        data-tip="Dismiss (don't answer)"
-                        aria-label="Dismiss question"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
                     </div>
                   ))}
                 </div>
@@ -1554,7 +1530,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                     if (aiIdx >= 0) {
                       document.getElementById(`sona-answer-${aiIdx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
-                    setMobileRailOpen(false);
+                    setRailOpen(false);
                   }}
                   className="group px-3 py-2.5 md:py-2 rounded-lg text-[14px] font-medium flex items-start gap-2 cursor-pointer transition-colors"
                   style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
@@ -1609,6 +1585,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               ))}
             </div>
           </div>
+          )}
           {/* Right: answers. Cards are width-capped at 880px (≈80-char
               line length, the typographic sweet spot for sustained
               reading) and centered in the available space. Without the
@@ -1619,8 +1596,74 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
           <div className="flex-1 flex flex-col min-w-0">
           {composer}
           <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto p-3 sm:p-4 md:p-5 min-w-0 lumora-companion-answers" data-embedded={embedded ? 'true' : 'false'}>
+            {/* Pinned ABOVE the ternary on purpose. Inside the else-branch it
+                only rendered once an answer existed, so the first detected
+                question of a call — the one arriving into an empty panel — had
+                nowhere to show. That is the moment it matters most. */}
+            {(liveTranscript || detectedQuestions.length > 0) && (
+              <div className="space-y-3 sm:space-y-4 mx-auto w-full mb-3 sm:mb-4" style={{ maxWidth: 880 }}>
+                {/* Live state, pinned above the newest answer.
+
+                    These two used to live in the left rail. They are not
+                    navigation — the transcript is arriving right now and a
+                    tap-to-answer card is a question waiting on one tap — and
+                    putting them in a column you had to look sideways at, in a
+                    live interview, is where they got missed. They sit where
+                    Ask Sona puts its composer: top of the reading column,
+                    above everything, never scrolled away. */}
+                  {liveTranscript && (
+                    <div className="px-3 py-2.5 md:py-2 rounded-lg text-[14px] font-medium flex items-start gap-2 animate-pulse"
+                      style={{ background: 'var(--bg-surface)', border: '1px solid var(--cam-primary)', color: 'var(--text-secondary)', opacity: 0.85 }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="break-words">{liveTranscript}</p>
+                        <span className="text-[12px] mt-1 block" style={{ color: 'var(--cam-primary)' }}>listening…</span>
+                      </div>
+                    </div>
+                  )}
+                  {/* Pending detected questions (behavioral tap-to-answer). These are
+                      the transcribed lines that did NOT clear shouldAutoAnswer() —
+                      softer or ambiguous prompts the user taps to answer. With
+                      auto-answer off, every detected line lands here. */}
+                  {embedded && detectedQuestions.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-[12px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--cam-gold-leaf)', fontFamily: 'var(--font-mono)' }}>Tap to answer</span>
+                        <button onClick={() => setDetectedQuestions([])} className="text-[12px] font-bold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }} data-tip="Clear all detected questions">Clear</button>
+                      </div>
+                      {[...detectedQuestions].reverse().map(q => (
+                        <div
+                          key={q.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => { setDetectedQuestions(prev => prev.filter(x => x.id !== q.id)); ask(q.text); setRailOpen(false); }}
+                          className="group flex items-start gap-2 px-3 py-2.5 md:py-2 rounded-lg cursor-pointer transition-colors"
+                          style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--text-primary)' }}
+                          data-tip="Answer this with Sona"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="break-words text-[13px] md:text-[12px] font-medium">{q.text}</p>
+                            <span className="text-[12px] mt-1 block font-bold uppercase tracking-wide" style={{ color: 'var(--cam-gold-leaf)' }}>tap to answer · {q.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDetectedQuestions(prev => prev.filter(x => x.id !== q.id)); }}
+                            className="shrink-0 p-1 rounded-md transition-colors"
+                            style={{ color: 'var(--text-muted)' }}
+                            data-tip="Dismiss (don't answer)"
+                            aria-label="Dismiss question"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+              </div>
+            )}
             {messages.filter(m => m.role === 'ai').length === 0 && !streaming ? (
-              <div className="flex items-center justify-center h-full" style={{ color: 'var(--text-muted)' }}>
+              <div
+                className="flex items-center justify-center"
+                style={{ color: 'var(--text-muted)', height: (liveTranscript || detectedQuestions.length > 0) ? undefined : '100%', paddingBlock: (liveTranscript || detectedQuestions.length > 0) ? '2rem' : undefined }}
+              >
                 <p className="text-sm md:text-xs px-4 text-center">Answers appear here — type a question above, or let Sona pick them up from the call.</p>
               </div>
             ) : (
@@ -1692,8 +1735,19 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                       }}
                     >
                       <SonaAvatar size={16} />
-                      <span className="font-display text-[12px] font-bold tracking-[0.12em] uppercase" style={{ color: 'var(--cam-strip-heading)' }}>Sona</span>
-                      <span className="ml-auto flex items-center gap-1">
+                      {/* The QUESTION, not the word "Sona". Every card carried
+                          the same title, which told you nothing and left the
+                          answer detached from what was asked — the only place
+                          the question appeared was the left rail, which is
+                          exactly why the rail could not close. */}
+                      <span
+                        className="font-display text-[12px] font-bold tracking-[0.06em] min-w-0 flex-1 truncate"
+                        style={{ color: 'var(--cam-strip-heading)' }}
+                        title={questionFor(i) || undefined}
+                      >
+                        {questionFor(i) || 'Sona'}
+                      </span>
+                      <span className="shrink-0 flex items-center gap-1">
                         <button
                           onClick={() => navigator.clipboard.writeText(msg.text)}
                           className="p-1 rounded-md transition-colors"
