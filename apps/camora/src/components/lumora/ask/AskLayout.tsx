@@ -785,7 +785,7 @@ export const AskLayout = () => {
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
 
 
-      {/* ONE strip: New, the composer, and History on a single row.
+      {/* ONE strip: a thin chip line, then the composer. No header band.
 
           It was two full-height bands stacked — a navy header carrying a
           centred "ASK SONA" title, then the composer beneath it — which spent
@@ -795,21 +795,48 @@ export const AskLayout = () => {
           every pixel of chrome at the top pushes the answer further down, and
           looking down is the whole thing we are trying to avoid.
 
-          The title goes (the rail marks where you are). New and History flank
-          the composer instead of owning a row of their own. Items align to the
-          TOP so the two chips stay level with the composer's first line as it
-          grows into a long question rather than drifting to its middle. */}
+          The title goes (the rail marks where you are). New and History sit on
+          a thin chip line ABOVE the composer, so the input box spans the whole
+          strip.
+
+          They used to flank it, and on the desktop app that was expensive in a
+          way it does not look: `lumora-winctl-safe` already reserves 120px on
+          the right for the window controls (188px in overlay), and the History
+          chip sat inside that reserve — so the composer gave up that padding
+          plus the chip's own width before it started. The chip line costs about
+          24px of height once and hands all of it back.
+
+          Chips align LEFT for the same reason: the right end of this row is
+          reserved space on desktop, and anything parked there is pushed around
+          by the window controls and, in overlay, the transparency slider. */}
       <div
         className="shrink-0 flex items-start gap-2 px-3 py-2 lumora-winctl-safe"
         style={{ borderBottom: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}
       >
-        {hasMessages && (
-          <button onClick={startNew} className="shrink-0 mt-[5px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-            New
-          </button>
-        )}
         <div className="flex-1 min-w-0">
+          {/* Chip line. Rendered only when it has something in it, so an empty
+              conversation with the history pane already open costs no height. */}
+          {(hasMessages || !showHistory) && (
+            <div className="flex items-center gap-2 pb-1.5">
+              {hasMessages && (
+                <button onClick={startNew} className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                  New
+                </button>
+              )}
+              {!showHistory && (
+                <button
+                  onClick={() => setShowHistory(true)}
+                  data-tip="Show conversation history"
+                  className="shrink-0 flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-[var(--lum-surface-hover)]"
+                  style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+                  History ({history.length})
+                </button>
+              )}
+            </div>
+          )}
           {/* Provider toggle removed: Ask runs on ascend-backend, which does not
               spend Anthropic keys (Claude belongs to lumora-backend), so the
               Claude chip offered a model the service will never call — the same
@@ -950,17 +977,6 @@ export const AskLayout = () => {
             </div>
           </div>
         </div>
-        {!showHistory && (
-          <button
-            onClick={() => setShowHistory(true)}
-            data-tip="Show conversation history"
-            className="shrink-0 mt-[5px] flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg font-medium transition-colors hover:bg-[var(--lum-surface-hover)]"
-            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-            History ({history.length})
-          </button>
-        )}
       </div>
 
       {/* Messages / empty state.
