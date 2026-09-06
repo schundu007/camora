@@ -806,9 +806,12 @@ export const AskLayout = () => {
           plus the chip's own width before it started. The chip line costs about
           24px of height once and hands all of it back.
 
-          Chips align LEFT for the same reason: the right end of this row is
-          reserved space on desktop, and anything parked there is pushed around
-          by the window controls and, in overlay, the transparency slider. */}
+          Chips are CENTRED over the composer, not pinned to either end. The
+          right end of this row is the window-control reserve on desktop, so
+          anything parked there gets pushed around by the controls and, in
+          overlay, the transparency slider. Centring is measured inside the
+          padded column, which is the same box the composer lives in — so the
+          chips sit over the middle of the input, not the middle of the window. */}
       <div
         className="shrink-0 flex items-start gap-2 px-3 py-2 lumora-winctl-safe"
         style={{ borderBottom: '1px solid var(--lum-border)', background: 'var(--lum-surface)' }}
@@ -817,7 +820,7 @@ export const AskLayout = () => {
           {/* Chip line. Rendered only when it has something in it, so an empty
               conversation with the history pane already open costs no height. */}
           {(hasMessages || !showHistory) && (
-            <div className="flex items-center gap-2 pb-1.5">
+            <div className="flex items-center justify-center gap-2 pb-1.5">
               {hasMessages && (
                 <button onClick={startNew} className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors hover:bg-[var(--lum-surface-hover)]" style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)', ...sans }}>
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
