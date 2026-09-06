@@ -244,6 +244,194 @@ export const looksLikeCodeTask = (text = '', { hasImages = false } = {}) => {
   return !CONCEPT_RE.test(text) || ATTACHED_REF_RE.test(text);
 };
 
+/* ── Web grounding ─────────────────────────────────────────────────────────
+ *
+ * Sona answered a GitHub Actions question with `uses: actions/setup-cpp@v1`.
+ * The action is real; the owner is not — it is `aminya/setup-cpp`. The model
+ * held the name and lost the owner, then filled the gap with the commonest
+ * marketplace prefix. No format instruction reaches that, because the model
+ * does not know it is wrong.
+ *
+ * Gemini answering the same question inside Google Search got it right, and the
+ * only difference between the two is that one of them looked it up.
+ *
+ * So: hand the model Google Search on the turns where the answer hinges on a
+ * fact that lives outside it — an action's owner, a package name, a flag, which
+ * GCC ships on which runner. Those are the turns that came back wrong.
+ *
+ * Everything else stays as fast as it is today. Grounding puts a search round
+ * trip in front of the first token while the candidate sits mid-interview
+ * waiting to speak; spending that on "tell me about a time you had a conflict"
+ * buys nothing and costs the thing this path is tuned for.
+ */
+
+/* Behavioral and personal turns NEVER ground, whatever else they match. The
+ * answer lives in the candidate's own résumé, and the open web can only pull it
+ * somewhere they cannot honestly follow. */
+const NO_GROUND_RE = /\b(tell me about (yourself|a time|your)|walk me through your|your (background|experience|resume|résumé|strengths?|weakness(?:es)?)|about a time|why (do you want|are you (interested|leaving))|greatest (strength|weakness)|describe a (time|situation|conflict)|salary|notice period)\b/i;
+
+/* "Is this still true?" — the training cut-off is the whole problem. */
+const CURRENCY_RE = /\b(latest|newest|most recent|currently|nowadays|these days|as of|still (?:supported|maintained|works?|valid)|deprecated|end[- ]of[- ]life|EOL|which version|what version|new in|changed in|since version|up[- ]?to[- ]?date)\b/i;
+
+/* A name something else has to resolve — a registry, a package manager, a
+ * marketplace. This is where the setup-cpp error lived, and it is the
+ * highest-value signal in the set. */
+const REGISTRY_RE = /\b(uses:\s*\S+|github actions?|gh actions?|actions?\/[\w-]+|marketplace|workflow file|\.github\/workflows|helm chart|npm (?:install|package)|pip3? install|apt(?:-get)? install|yum install|dnf install|brew install|go get|cargo add|docker (?:image|hub|pull)|image tag|crates\.io|pypi|maven central|nuget|terraform (?:provider|module|registry)|operatorhub|krew|plugin)\b/i;
+
+/* A version-shaped token: gcc-14, Python 3.12, @v4, 1.31. */
+const VERSION_TOKEN_RE = /(?:^|[\s([\/@"'`])(?:v\d+|\d+\.\d+(?:\.\d+)?|[a-z][\w+]*-\d{1,3})(?:$|[\s)\],."'`;:])/i;
+
+/* "How do I actually do X" — the turns that end in a command, a flag or a
+ * config key, where a near-miss is unusable. */
+const OPERATIONAL_RE = /\b(how (?:do|would|can) (?:i|you|we)|how to|steps? to|set ?up|configure|install|upgrade|migrate|enable|integrate|pin|bump|troubleshoot|which (?:tool|flag|option)|what (?:tool|flag|option|command))\b/i;
+
+/* "Name me the thing that does X." A recommendation turn is nothing but
+ * identifiers, and a plausible-sounding wrong one is the entire failure mode —
+ * this is the shape of "any other equivalent tools to clang-tidy". */
+const RECOMMEND_RE = /\b(looking for|recommend|suggest|alternatives?|equivalents?|similar to|instead of|other tools?|any tools?|which tools?|what tools?|options for|tools? like|tooling for)\b/i;
+
+/* Single-word product names a shape rule cannot see: "cppcheck", "terraform"
+ * and "kubernetes" read as ordinary words. Deliberately not exhaustive — the
+ * shape rule below is what carries the names nobody thought to list. */
+const TOOL_NAMES_RE = /\b(gcc|g\+\+|clang|llvm|cmake|ninja|bazel|meson|gradle|maven|cppcheck|valgrind|gdb|sonarqube|sonarcloud|semgrep|snyk|checkov|trivy|kubernetes|k8s|kubectl|helm|kustomize|argocd|flux|istio|envoy|terraform|ansible|packer|vault|consul|nomad|docker|podman|containerd|jenkins|gitlab|github|circleci|prometheus|grafana|loki|jaeger|datadog|splunk|elasticsearch|kafka|redis|postgres(?:ql)?|mysql|mongodb|nginx|haproxy|traefik|systemd|slurm|nvidia|cuda|pytorch|tensorflow|numpy|python|nodejs|golang|rust|ubuntu|debian|rhel|centos|alpine|eks|ec2|gke|aks|lambda)\b/i;
+
+/* Hyphenations that are ordinary English, not product names. Without this,
+ * "how would you handle trade-offs" reads as a tooling question and pays for a
+ * search it has no use for. */
+const PLAIN_HYPHEN_RE = /^(?:trade-?offs?|end-of-life|up-to-date|real-time|long-term|short-term|day-to-day|state-of-the-art|out-of-the-box|end-to-end|high-level|low-level|well-known|read-only|write-only|hands-on|follow-ups?|off-the-shelf|open-source|third-party|cross-platform|multi-tenant|non-functional|self-hosted|fine-grained|coarse-grained|use-cases?|best-practices?|so-called|on-call)$/i;
+
+/* A token shaped like a product rather than an English word: hyphenated
+ * lowercase (clang-tidy, cert-manager, setup-cpp) or internally capitalised
+ * (SonarCloud, ArgoCD, OpenTelemetry). Shape-based on purpose — a hard-coded
+ * vendor list goes stale the week after it is written. */
+const HYPHEN_TOOL_RE = /\b[a-z]+(?:-[a-z0-9+]+){1,3}\b/g;
+const CAMEL_TOOL_RE = /\b(?:[a-z]+[A-Z]|[A-Z][a-z]+[A-Z])[A-Za-z]*\b/;
+
+function looksLikeToolName(text) {
+  if (TOOL_NAMES_RE.test(text)) return true;
+  if (CAMEL_TOOL_RE.test(text)) return true;
+  HYPHEN_TOOL_RE.lastIndex = 0;
+  for (let m = HYPHEN_TOOL_RE.exec(text); m; m = HYPHEN_TOOL_RE.exec(text)) {
+    if (!PLAIN_HYPHEN_RE.test(m[0])) return true;
+  }
+  return false;
+}
+
+/**
+ * Should this prose turn be answered with Google Search grounding?
+ *
+ * Biased toward grounding: a false positive costs the candidate a second of
+ * latency, a false negative costs them a wrong package name said out loud in
+ * front of an interviewer. Only the behavioral veto is absolute.
+ */
+export const needsWebGrounding = (text = '') => {
+  const t = (text || '').trim();
+  if (!t) return false;
+  if (NO_GROUND_RE.test(t)) return false;
+  if (CURRENCY_RE.test(t)) return true;
+  if (REGISTRY_RE.test(t)) return true;
+  if (!looksLikeToolName(t)) return false;
+  return OPERATIONAL_RE.test(t) || RECOMMEND_RE.test(t) || VERSION_TOKEN_RE.test(t);
+};
+
+/* The grounded lookup is a SEPARATE call from the one that writes the answer,
+ * and this is why. Handing `google_search` to the answering call does fix the
+ * facts, and it also flattens the house format: measured over repeated runs on
+ * the reported question, the tool-enabled call dropped every anchor line and the
+ * mandatory "### If they push" closer, ran 3x long in generic Gemini prose, and
+ * on one run returned nothing at all. The tool call wins over the system prompt.
+ *
+ * So the search runs first and answers to nobody's format — it just collects
+ * identifiers — and the answering call stays exactly as it is today, with the
+ * findings injected as context. Same shape the KB path already uses.
+ */
+const WEB_FACTS_SYSTEM = `You are a lookup step, not an author. Search, then report only what you found.
+
+List the concrete, checkable specifics the question turns on:
+- exact package / action / chart / image names, WITH the owner or namespace
+- exact commands, flags and config keys
+- version numbers, defaults, and what ships where
+- anything commonly stated wrong about this, and the correction
+
+Rules:
+- Every name must be in the form someone would paste. An action is owner/name.
+- If sources disagree, say which is current and when it changed.
+- No preamble, no advice, no formatting flourish. Short lines of fact.
+- If the search finds nothing solid, reply exactly: NONE
+- Front-load the names. Length is capped below the model, so whatever comes
+  first is what survives.`;
+
+/* Wrap the findings for the answering call. Mirrors formatContext's contract:
+ * the model treats this as its own knowledge and speaks it plainly, because the
+ * candidate reads the result out loud and cannot say a citation marker. */
+function formatWebFacts(facts) {
+  if (!facts) return '';
+  return `\n\nLooked up for this question just now. Treat it as your own knowledge and prefer its specifics — names, owners, versions, flags, commands — over your own recollection, which is older than this.
+
+Say it plainly: no citation markers, no "[1]", no links, no "according to the docs", and no mention that anything was looked up. If it contradicts the premise of the question, say so in one line and give the thing that works.\n\n${facts}\n\nThis block is source material, not a template. Every format rule above still applies in full — the anchor words, the line budget, and the mandatory "### If they push" close. Measured: without this reminder Flash dropped that closer on two thirds of grounded turns, because a block of findings at the end of the prompt pushes the tail of the contract out of reach.`;
+}
+
+/**
+ * One grounded Gemini call that returns facts, not prose. Timeout-bounded and
+ * always resolves: a failed or slow lookup yields null and the turn answers
+ * from the model alone, exactly as it does today.
+ */
+async function fetchWebFacts(message, geminiKey, timeoutMs = 7000) {
+  if (!geminiKey) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_GENERAL_MODEL}:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: WEB_FACTS_SYSTEM }] },
+          contents: [{ role: 'user', parts: [{ text: message }] }],
+          tools: [{ google_search: {} }],
+          generationConfig: {
+            // The real length limit, and a latency setting rather than a
+            // quality one: generateContent does not stream, so the answer waits
+            // on the LAST token of this lookup. Under a tool call the model
+            // only loosely follows the word limit in the prompt above, so the
+            // cap is what actually holds. Measured on the reported questions:
+            // ~1.5s of that is the search itself, the rest is generation, and
+            // 350 lands the whole step near 3s. Truncation is fine — this is
+            // context, not prose anyone reads.
+            maxOutputTokens: 350,
+            temperature: 0,
+            ...SEARCH_THINKING,
+          },
+        }),
+      }
+    );
+    if (!resp.ok) {
+      // Search grounding is billable and can be off on the key. Log it and let
+      // the turn answer ungrounded rather than failing the whole request.
+      console.warn(`[Ask/web] lookup ${resp.status} — answering ungrounded:`, (await resp.text().catch(() => '')).slice(0, 200));
+      return null;
+    }
+    const data = await resp.json();
+    const cand = data.candidates?.[0];
+    const text = (cand?.content?.parts || []).map((pt) => pt?.text || '').join('').trim();
+    if (!text || text === 'NONE') return null;
+    const sources = [];
+    const seen = new Set();
+    for (const g of cand?.groundingMetadata?.groundingChunks || []) {
+      const uri = g?.web?.uri;
+      if (uri && !seen.has(uri)) { seen.add(uri); sources.push({ source: 'web', title: g.web.title || uri, url: uri }); }
+    }
+    return { text, sources };
+  } catch (err) {
+    if (err.name !== 'AbortError') console.warn('[Ask/web] lookup error:', err.message);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Match the model IDs every other Gemini call site in both backends uses. The
 // previous values were dated `-preview-05-06` / `-preview-05-20` aliases; a
 // retired preview 404s, and the handler then silently pays a second full round
@@ -255,6 +443,19 @@ const GEMINI_GENERAL_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 // grounded explain/fix turn and costs seconds of dead air before the first
 // token. Same setting lumora-backend's coding route already uses.
 const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } };
+
+// The web lookup below gets its own budget, and it is also 0 by default. That
+// was measured, not assumed: on the GitHub Actions question that started this,
+// switching thinking on cost roughly 3 extra seconds and changed nothing —
+// three lookups at budget 0 named twelve GitHub Actions between them and every
+// one resolved 200. A model reading search results copies the name rather than
+// recalling it, so there is nothing for thinking to reconcile.
+//
+// Kept as a knob rather than a constant so the budget can be raised from
+// Railway without a deploy if a harder class of question turns up.
+const SEARCH_THINKING = {
+  thinkingConfig: { thinkingBudget: Number(process.env.ASK_SEARCH_THINKING_BUDGET) || 0 },
+};
 
 const SYS_GENERAL = `You are Sona, a live interview assistant. The candidate is in an active job interview right now.
 
@@ -753,7 +954,14 @@ router.post('/stream', async (req, res) => {
 
     let full = '';
 
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY;
+    // Same order as getGenAI() above and every other Gemini call site in this
+    // service: admin config, then GOOGLE_AI_API_KEY, then GEMINI_API_KEY. This
+    // line alone had the last two reversed, and in production GEMINI_API_KEY is
+    // a stale key that 400s — so every fast path below burned a failed round
+    // trip and dropped to the generic fallback at the bottom of the handler.
+    // Nothing looked broken because the fallback answers; it is just slower,
+    // skips the per-turn model routing, and would have skipped search grounding.
+    const geminiKey = getApiKey('gemini') || process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY || '';
     // With Anthropic disabled for this service, the client's `provider` field no
     // longer selects a vendor — every turn takes a Gemini branch. It still picks
     // the MODEL: code turns get 2.5 Pro, prose turns get Flash, exactly as the
@@ -836,9 +1044,16 @@ router.post('/stream', async (req, res) => {
     // and the KB is impersonal study material, so injecting it into a review of
     // the user's own snippet only adds text the model has to ignore.
     if (!isCode) {
-      const [bgResult, kbResult] = await Promise.allSettled([
+      // The web lookup joins the two reads that already block here rather than
+      // queueing behind them, so a grounded turn costs max(), not sum(). The KB
+      // and the résumé answer "what does this candidate know"; the web answers
+      // "what is this thing actually called", and only the third one is gated —
+      // see needsWebGrounding.
+      const wantsWeb = needsWebGrounding(effectiveMessage);
+      const [bgResult, kbResult, webResult] = await Promise.allSettled([
         getCandidateBackground(userId),
         retrieveForAsk(effectiveMessage),
+        wantsWeb ? fetchWebFacts(effectiveMessage, geminiKey) : Promise.resolve(null),
       ]);
       if (bgResult.status === 'fulfilled') {
         if (bgResult.value) finalSystem += bgResult.value;
@@ -853,6 +1068,16 @@ router.post('/stream', async (req, res) => {
         }
       } else {
         console.error('[Ask] KB grounding skipped:', kbResult.reason?.message || kbResult.reason);
+      }
+      // Fails open by construction: fetchWebFacts resolves to null on a timeout,
+      // a billing error or an empty result, and the turn answers ungrounded.
+      if (webResult.status === 'fulfilled' && webResult.value) {
+        finalSystem += formatWebFacts(webResult.value.text);
+        if (webResult.value.sources.length) {
+          res.write(`data: ${JSON.stringify({ sources: webResult.value.sources })}\n\n`);
+        }
+      } else if (webResult.status === 'rejected') {
+        console.error('[Ask] web lookup skipped:', webResult.reason?.message || webResult.reason);
       }
     }
 
@@ -874,6 +1099,9 @@ router.post('/stream', async (req, res) => {
     }
 
     // ── Non-coding Gemini path (provider toggle in UI) ─────────────────────────
+    // No `tools` here on purpose. The search already ran, above, and its
+    // findings are in finalSystem; attaching google_search to THIS call is what
+    // collapsed the house format. See WEB_FACTS_SYSTEM.
     if (!isCode && useGemini && geminiKey) {
       let geminiOk = false;
       try {
@@ -911,7 +1139,10 @@ router.post('/stream', async (req, res) => {
               const raw = line.slice(6).trim();
               if (raw === '[DONE]') continue;
               try {
-                const text = JSON.parse(raw).candidates?.[0]?.content?.parts?.[0]?.text || '';
+                // Join every part, not parts[0]: a longer reply can split its
+                // text across several, and taking only the first drops the rest.
+                const text = (JSON.parse(raw).candidates?.[0]?.content?.parts || [])
+                  .map((pt) => pt?.text || '').join('');
                 if (text) { full += text; res.write(`data: ${JSON.stringify({ text })}\n\n`); }
               } catch {}
             }

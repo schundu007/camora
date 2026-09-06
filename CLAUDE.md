@@ -214,6 +214,11 @@ module a call site imports from.
 - `RAG_AUTO_WEB_SEARCH` — optional `'true'`. Auto-enables web search when retrieval returns low-confidence chunks (without the user toggling the search button).
 - `RAG_USE_GRADING` — optional `'true'`. Enables CRAG-style chunk relevance grading via Haiku before prompt injection. Off by default. Adds ~50ms per request (parallel grading, 300ms budget, fails open).
 - `OPENROUTER_API_KEY` — optional. Enables Qwen-2.5-72B and DeepSeek-V3 as fallback providers in `provider-stream.js`.
+- `ASK_SEARCH_THINKING_BUDGET` — optional, default `0`. Thinking budget for Ask
+  Sona's Google Search lookup (`fetchWebFacts` in `routes/ask.js`). The lookup is
+  a separate grounded call whose findings are injected into the answering call's
+  system prompt; the answering call gets NO `tools`, because attaching
+  `google_search` to it collapses the house format.
 
 ## Conventions
 
