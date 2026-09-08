@@ -558,10 +558,13 @@ ${starterCode
   ? `- Return the COMPLETE filled-in file — no line-count limit; preserve all surrounding boilerplate, class definitions, imports, and test harness EXACTLY as given`
   : `- TARGET: 10-30 lines for most problems, 40 lines MAX for complex problems`}
 - Use the LATEST modern idioms and built-in features of ${language}
-- Combine operations where possible
+- Combine operations ONLY while the combined line still reads aloud in one
+  breath. Concise means "no scaffolding the problem never asked for" — it is
+  NOT a licence to golf. Two plain lines beat one dense line (see RULE #3.6)
 - NO helper functions unless absolutely required for recursion/DP
 - NO unnecessary imports - prefer built-ins. Every import must be USED.
-- NO intermediate variables if you can inline
+- NO intermediate variables that only restate the expression — but KEEP the one
+  that gives a value the name the reviewer needs to follow the line
 - NO comments, NO debug prints
 - NO defensive try/except blocks unless the problem explicitly requires error handling
 - NO pagination unless the problem says "handle multiple pages" — a single page=1 fetch is fine
@@ -630,7 +633,7 @@ Your solution is scored on four axes. Satisfy ALL:
    list / n==0 that the algorithm itself needs) is REQUIRED. Input VALIDATION belongs
    only where input is read.
 ${inputTrust === 'adversarial'
-    ? '   • Input may be malformed (hidden/destructive tests). Validate at the point input ENTERS your code and, on bad input, produce a DEFINED failure output (a sentinel value or the problem\'s specified error string) — never an uncaught exception/traceback. If RULE #2.7 applies (no driver — a pure function), do this validation INSIDE the function and RETURN the defined failure value; do NOT add input()/print()/a driver to satisfy this rule.'
+    ? '   • Input may be malformed (hidden/destructive tests). Validate at the point input ENTERS your code and, on bad input, produce a DEFINED failure output (a sentinel value or the problem\'s specified error string) — never an uncaught exception/traceback. Validation is an explicit check on a value (an if on a length, a membership test), NEVER a try/except wrapped around the driver and NEVER a handler for an exception the promised input cannot raise. If RULE #2.7 applies (no driver — a pure function), do this validation INSIDE the function and RETURN the defined failure value; do NOT add input()/print()/a driver to satisfy this rule.'
     : '   • Input is guaranteed well-formed by the stated constraints. Do NOT add validation guards for cases the constraints exclude — they are unreachable DEAD CODE and cost quality points. State the boundary handling in edgeScenarios instead.'}
 
 2. EVERY EXCEPTION HANDLER MUST BE REACHABLE.
@@ -697,7 +700,17 @@ BASH-SPECIFIC (only when the starter is a bash script):
 4. Conditions: ALWAYS use if [[ ... ]]; then ... fi — NEVER [[ ]] && (( )) (set -e aborts on exit 1)
 5. Arithmetic: var=\$(( expr )) only — never standalone (( var += n ))`
   : `CRITICAL CODE STRUCTURE / EXECUTION CONTRACT for ${language}:
-The test runner PARSES each example's "input" into arguments, CALLS your
+${ioContract === 'stdin-print' ? `THIS PROBLEM STATES ITS OWN I/O FORMAT — it has an Input Format / Sample Input
+section, or says "the first line contains". So the stdin+print contract below is
+THE contract for this problem, NOT an exception to weigh up: write the COMPLETE
+program that reads the input exactly as the Input Format describes it, computes,
+and prints exactly what the Output Format asks for. Each example's "input" is
+RAW STDIN and its "expected" is RAW STDOUT. EVERY solution on the ladder uses
+this same shape — never one solution that prints and another that returns a
+formatted string. Read the pure-function contract below only to understand what
+you are NOT doing here.
+
+` : ''}The test runner PARSES each example's "input" into arguments, CALLS your
 top-level function with those arguments, and compares the function's RETURN
 VALUE to that example's "expected". Follow this contract exactly:
 - Write ONE function (or a class Solution method) whose PARAMETERS are the
@@ -738,6 +751,87 @@ Example of correct HTTP call:
   req = urllib.request.Request(url, headers={'Accept': 'application/json', 'User-Agent': 'app'})
   with urllib.request.urlopen(req) as r:
       data = json.loads(r.read())` : ''}
+
+##############################################################################
+# RULE #3.6: WRITE THE SOLUTION THE INTERVIEWER ALREADY RECOGNISES
+##############################################################################
+A human grades this on HackerRank, CodeSignal, CoderPad or Glider, usually while
+the candidate talks over it. It must look like the ACCEPTED COMMUNITY SOLUTION
+for this problem — the one in the discussions tab, in the editorial, on
+GeeksforGeeks. Familiar beats clever every single time. A reviewer who has to
+decode a line reads it as showing off, and a candidate who cannot dictate their
+own line out loud has already lost the round. Correct but unfamiliar code loses
+interviews; that is the exact failure this rule exists to stop.
+
+1. READ THE INPUT THE WAY THE STATEMENT DESCRIBES IT.
+   The "Input Format" section is a specification, not a hint — mirror it line for
+   line. "The first line contains the integer n. The next n lines each contain a
+   word" means: read one integer, then read n lines. Do NOT slurp the whole
+   stream and slice it back apart. Splitting all of stdin on whitespace and then
+   taking a window out of the middle rewrites the stated contract, and it breaks
+   outright the moment a line contains a space. Read the whole stream at once
+   ONLY when the statement itself says stdin, or when the stated bounds make
+   line-by-line reading too slow — and then say why in the approach text.
+
+2. NO DRIVER WRAPPED IN try/except. The grader feeds exactly the input the
+   statement promises, so there is no end-of-file to catch. A handler that can
+   never fire is false resilience — it scores WORSE than no handler at all.
+
+3. USE THE PLAIN BUILT-IN WHEN IT ALREADY DOES THE JOB. An import earns its
+   place only when the built-in genuinely cannot do it. The standard interview
+   vocabulary (a counter, a deque, a heap, binary-search helpers) is welcome
+   when it IS the accepted answer — never to dodge writing three plain lines,
+   and never a module the language has since folded into a built-in.
+
+4. PREFER THE FORM A CANDIDATE CAN SAY OUT LOUD. When two forms are equally
+   correct, emit the one that reads aloud in one breath. An explicit if/else is
+   not "worse" than a chained one-liner; it is what most accepted solutions
+   actually look like. A nested comprehension carrying an assignment inside it
+   is not.
+
+5. PRINT WHAT THE OUTPUT FORMAT ASKS FOR, WHERE IT ASKS FOR IT. On a
+   stdin/print problem, print from the driver, in the order and spacing the
+   Output Format states. Do NOT build one big string with embedded newlines,
+   return it from a function, and call that the answer — the platform compares
+   stdout, and a returned blob leaves the candidate hunting for the print.
+
+WORKED CONTRAST — problem: read n, then n words; print the distinct count on one
+line and each word's occurrence count on the next, in first-seen order.
+
+REJECTED (correct, and still a failed interview):
+    from collections import OrderedDict
+    def solve(n, words_input):
+        counts = OrderedDict()
+        for w in words_input:
+            counts[w] = counts.get(w, 0) + 1
+        return f"{len(counts)}" + chr(10) + " ".join(map(str, counts.values()))
+  Three separate tells: OrderedDict for something the plain built-in mapping has
+  done for years, a function that RETURNS a formatted blob for a problem whose
+  Output Format says print, and parameters invented for a driver the statement
+  never described.
+
+ACCEPTED (what the reviewer expects to see):
+    n = int(input())
+    words = []
+    for i in range(n):
+        words.append(input())
+    word_dict = {}
+    for word in words:
+        if word in word_dict:
+            word_dict[word] += 1
+        else:
+            word_dict[word] = 1
+    print(len(word_dict))
+    for word in word_dict:
+        print(word_dict[word], end=" ")
+  Longer by four lines, and it is the right answer: every line maps to a
+  sentence in the statement, and the candidate can narrate it without pausing.
+  Wrapping this in a named function called from an if-main block is equally
+  accepted. RULE #1 does NOT override this — line count never buys unfamiliarity.
+
+This applies to EVERY solution on the ladder, brute force included, and to every
+language: emit the shape a working engineer in that language would recognise on
+sight, not the shape that shows off the newest feature.
 
 ##############################################################################
 # RULE #4: PLAIN TEXT IN EXPLANATIONS - NO CODE BLOCKS
@@ -1402,6 +1496,16 @@ function inferIoContract(problem, starterCode) {
   return 'unknown';
 }
 
+// A pasted statement keeps its markdown: "**Constraints:**", "### Constraints",
+// "- Constraints :". Anchoring on a bare "constraints" line missed every one of
+// them, so a problem that DID state its bounds fell through to 'adversarial' and
+// the model added a validation guard (and, at worst, a try/except around the
+// driver) for input the statement had already guaranteed.
+const CONSTRAINTS_HEADER = /(^|\n)[ \t>*_#-]*constraints[ \t*_]*:?[ \t*_]*(\n|$)/i;
+// Bounds are written with ASCII <= or the Unicode signs the platforms paste in
+// ("1≤ n≤ 10^5"). Require a digit on one side so prose comparisons do not match.
+const STATED_BOUND = /(\d\s*(?:<=?|\u2264)\s*[A-Za-z_(])|([A-Za-z_)\]]\s*(?:<=?|\u2264)\s*\d)/;
+
 /**
  * Does the grader feed well-formed input (LeetCode-style: constraints guarantee
  * shape) or adversarial/malformed input (HackerRank hidden/destructive suites)?
@@ -1413,7 +1517,7 @@ function inferIoContract(problem, starterCode) {
 function inferInputTrust(problem, starterCode) {
   const t = typeof problem === 'string' ? problem : '';
   if (/\bclass\s+Solution\b/.test(t)) return 'guaranteed';
-  if (/(^|\n)\s*constraints\s*:?\s*(\n|$)/i.test(t) && /\d+\s*<=?\s*\w/.test(t)) return 'guaranteed';
+  if (CONSTRAINTS_HEADER.test(t) && STATED_BOUND.test(t)) return 'guaranteed';
   return 'adversarial';
 }
 
