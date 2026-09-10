@@ -222,7 +222,12 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
           allowpopups: 'true',
           // Present a standard desktop-Chrome UA so Google doesn't reject sign-in
           // with "this browser may not be secure" (its embedded-webview block).
-          useragent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+          // The UA string is only half the identity: Google also reads the
+          // Sec-CH-UA client hints, which this attribute cannot touch and which
+          // still name Electron. main.js rewrites both on this partition's
+          // session — keep this version in step with SAFE_UA there, or Google
+          // sees one Chrome in the string and another in the hints.
+          useragent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
           // Keep it mounted but let the parent's display:none hide it when the
           // tab is inactive — reloading on every switch would drop the chat.
           style: { width: '100%', height: '100%', display: isActive ? 'inline-flex' : 'inline-flex' },

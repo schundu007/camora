@@ -785,9 +785,8 @@ app.whenReady().then(async () => {
 
   // Google's sign-in flow classifies our default UA (which carries "Electron/41")
   // as an embedded browser and serves the degraded `GeneralOAuthLite` flow, which
-  // ends in "This browser or app may not be secure". Login is a same-window
-  // navigation (window.location.href = oauthUrl), so it happens right here in
-  // mainWindow. Present a plain Chrome identity to Google's sign-in hosts only.
+  // ends in "This browser or app may not be secure". Present a plain Chrome
+  // identity to Google's hosts only.
   //
   // Chromium advertises the browser in TWO independent channels and Google reads
   // both: the legacy `User-Agent` string AND the User-Agent Client Hints
@@ -810,26 +809,47 @@ app.whenReady().then(async () => {
   // a genuine Chrome always sends one, and its absence is itself a fingerprint.
   const SAFE_CH_UA = '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"';
   const SAFE_CH_UA_FULL = '"Google Chrome";v="131.0.0.0", "Chromium";v="131.0.0.0", "Not_A Brand";v="24.0.0.0"';
-  const GOOGLE_SIGNIN_HOSTS = /^(accounts\.google\.com|accounts\.youtube\.com)$/i;
-  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    try {
-      if (GOOGLE_SIGNIN_HOSTS.test(new URL(details.url).hostname)) {
-        const h = details.requestHeaders;
-        h['User-Agent'] = SAFE_UA;
-        // Overwrite only the hint headers Chromium actually emits, matching the
-        // request's original casing so we don't create a duplicate header.
-        for (const key of Object.keys(h)) {
-          const lk = key.toLowerCase();
-          if (lk === 'sec-ch-ua') h[key] = SAFE_CH_UA;
-          else if (lk === 'sec-ch-ua-full-version-list') h[key] = SAFE_CH_UA_FULL;
-          else if (lk === 'sec-ch-ua-full-version') h[key] = '"131.0.0.0"';
+  // Sign-in hosts plus the Google properties the tabs embed, so one session never
+  // shows Google two different Chrome versions across a single flow.
+  const GOOGLE_HOSTS = /^(accounts\.google\.com|accounts\.youtube\.com|aistudio\.google\.com|gemini\.google\.com)$/i;
+
+  // webRequest handlers are registered PER SESSION, and every <webview partition>
+  // is its own session. mainWindow's login (a same-window navigation) rides
+  // defaultSession; the Claude tab rides persist:claude and the Gemini tab
+  // persist:gemini — a handler on defaultSession alone never sees their requests.
+  // That is why the Gemini tab still hit "This browser or app may not be secure"
+  // after the 2026-07 fix: its sign-in sent the `useragent=` attribute's Chrome
+  // string with Electron's real Sec-CH-UA brand list — the exact half-disguise
+  // that block exists to catch. Install the rewrite on every session that can
+  // reach Google, including the popup child windows, which inherit the opening
+  // guest's session.
+  const spoofChromeForGoogle = (sess) => {
+    sess.webRequest.onBeforeSendHeaders((details, callback) => {
+      try {
+        if (GOOGLE_HOSTS.test(new URL(details.url).hostname)) {
+          const h = details.requestHeaders;
+          h['User-Agent'] = SAFE_UA;
+          // Overwrite only the hint headers Chromium actually emits, matching the
+          // request's original casing so we don't create a duplicate header.
+          for (const key of Object.keys(h)) {
+            const lk = key.toLowerCase();
+            if (lk === 'sec-ch-ua') h[key] = SAFE_CH_UA;
+            else if (lk === 'sec-ch-ua-full-version-list') h[key] = SAFE_CH_UA_FULL;
+            else if (lk === 'sec-ch-ua-full-version') h[key] = '"131.0.0.0"';
+          }
         }
+      } catch {
+        // non-URL scheme (devtools://, blob:) — leave headers untouched
       }
-    } catch {
-      // non-URL scheme (devtools://, blob:) — leave headers untouched
-    }
-    callback({ requestHeaders: details.requestHeaders });
-  });
+      callback({ requestHeaders: details.requestHeaders });
+    });
+  };
+  spoofChromeForGoogle(session.defaultSession);
+  // These names must stay in step with the <webview partition="..."> attributes in
+  // ClaudePanel.tsx and GeminiPanel.tsx; a typo here fails silently as a login that
+  // only ever reports "this browser may not be secure".
+  spoofChromeForGoogle(session.fromPartition('persist:claude'));
+  spoofChromeForGoogle(session.fromPartition('persist:gemini'));
 
   // Guard: `activate` may have already created the window if the user
   // clicked the Dock while the async cache-clear / mic-prompt was running.
