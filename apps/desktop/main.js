@@ -579,13 +579,15 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  // The embedded claude.ai <webview> (Claude tab) is a separate webContents. Let
-  // its sign-in/OAuth popups open as real in-app child windows so login can
-  // complete without bouncing to the system browser (which wouldn't share the
-  // webview's persist:claude session). Anything unrelated still opens externally.
+  // The embedded <webview>s (Claude tab = claude.ai, Gemini tab =
+  // aistudio.google.com) are separate webContents. Let their sign-in/OAuth
+  // popups open as real in-app child windows so login can complete without
+  // bouncing to the system browser (which wouldn't share the webview's
+  // persist:claude / persist:gemini session). Anything unrelated still opens
+  // externally.
   mainWindow.webContents.on('did-attach-webview', (_e, guest) => {
     guest.setWindowOpenHandler(({ url }) => {
-      if (/accounts\.google\.com|claude\.ai|anthropic\.com|login|oauth|auth/i.test(url)) {
+      if (/accounts\.google\.com|aistudio\.google\.com|claude\.ai|anthropic\.com|login|oauth|auth/i.test(url)) {
         return { action: 'allow' };
       }
       if (url.startsWith('http')) shell.openExternal(url);

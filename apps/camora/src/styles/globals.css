@@ -2487,12 +2487,13 @@ html[data-overlay='on'] .lumora-shell-root .lumora-book-label {
   color: rgba(255, 255, 255, 0.82) !important;
 }
 
-/* The embedded Claude webview renders claude.ai's own opaque page on a SEPARATE
-   surface, so the parent's overlay tint can't reach it — it stays a solid block
-   while the rest of the overlay is see-through. Tie its element opacity to the
-   SAME slider so it matches: solid at 0.9 (default), see-through as you drag down.
-   Only in overlay mode; docked stays fully solid/readable. */
-html[data-overlay='on'] .claude-webview {
+/* The embedded Claude and AI Studio webviews render their own opaque page on a
+   SEPARATE surface, so the parent's overlay tint can't reach them — they stay a
+   solid block while the rest of the overlay is see-through. Tie element opacity
+   to the SAME slider so they match: solid at 0.9 (default), see-through as you
+   drag down. Only in overlay mode; docked stays fully solid/readable. */
+html[data-overlay='on'] .claude-webview,
+html[data-overlay='on'] .gemini-webview {
   opacity: var(--overlay-opacity, 0.9);
   background-color: transparent !important;
   transition: opacity 150ms ease;

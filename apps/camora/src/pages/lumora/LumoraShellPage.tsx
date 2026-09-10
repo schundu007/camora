@@ -36,6 +36,7 @@ const CodingLayout = lazy(() => import('../../components/lumora/coding/CodingLay
 const DesignLayout = lazy(() => import('../../components/lumora/design/DesignLayout').then(m => ({ default: m.DesignLayout })));
 const CoFixLayout = lazy(() => import('../../components/lumora/cofix/CoFixLayout').then(m => ({ default: m.CoFixLayout })));
 const ClaudePanel = lazy(() => import('../../components/lumora/claude/ClaudePanel').then(m => ({ default: m.ClaudePanel })));
+const GeminiPanel = lazy(() => import('../../components/lumora/gemini/GeminiPanel').then(m => ({ default: m.GeminiPanel })));
 const AskSonaPanel = lazy(() => import('../../components/lumora/ask/AskSonaPanel').then(m => ({ default: m.AskSonaPanel })));
 
 export const LumoraShellPage = () => {
@@ -121,6 +122,7 @@ export const LumoraShellPage = () => {
     location.pathname.includes('/fix') ? 'cofix' :
     location.pathname.includes('/behavioral') ? 'behavioral' :
     location.pathname.includes('/claude') ? 'claude' :
+    location.pathname.includes('/gemini') ? 'gemini' :
     location.pathname.includes('/ask') ? 'ask' :
     location.pathname.includes('/practice') ? 'practice' :
     location.pathname.includes('/prepkit') ? 'prepkit' :
@@ -732,6 +734,19 @@ export const LumoraShellPage = () => {
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Claude" />}>
                   <ClaudePanel isActive={activeTab === 'claude'} />
+                </Suspense>
+              </ErrorBoundary>
+            </div>
+          )}
+
+          {/* Gemini tab — Google AI Studio embedded in a webview (desktop).
+              Same keep-alive contract as Claude: a remount would reload
+              AI Studio and drop both the login and the prompt in progress. */}
+          {mountedTabs.has('gemini') && (
+            <div style={{ display: activeTab === 'gemini' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
+              <ErrorBoundary>
+                <Suspense fallback={<TabLoading label="Gemini" />}>
+                  <GeminiPanel />
                 </Suspense>
               </ErrorBoundary>
             </div>
