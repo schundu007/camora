@@ -1479,6 +1479,31 @@ function hasExampleEvidence(problem) {
 }
 
 /**
+ * Does this starter code already handle the program's input and output?
+ *
+ * The distinction that matters is NOT "is there starter code" — HackerRank
+ * pre-fills the editor for stdin/print problems as well as call-and-return
+ * ones. It is whether the stub itself invokes the solution and emits the
+ * result:
+ *
+ *   - `if __name__ == '__main__':`, usually with fptr.write to OUTPUT_PATH —
+ *     the platform's own driver. The candidate fills in a function and RETURNS.
+ *   - `class Solution` — LeetCode shape; the grader calls the method directly.
+ *   - a top-level print/write already in the stub.
+ *
+ * A stub with none of those (`def solve(): pass`) leaves the I/O to the
+ * candidate, so the problem statement decides the contract.
+ */
+function starterDrivesIo(starter) {
+  return /^\s*if\s+__name__\s*==/m.test(starter)
+    || /\bclass\s+Solution\b/.test(starter)
+    || /\bOUTPUT_PATH\b/.test(starter)
+    || /^\s*(?:fptr|sys\.stdout)\.write\s*\(/m.test(starter)
+    || /^print\s*\(/m.test(starter)
+    || /^\s*(?:console\.log|System\.out\.print)/m.test(starter);
+}
+
+/**
  * Classify how the generated program will be invoked and graded.
  *
  * 'unknown' is the important one. It means we have NO evidence of an I/O
@@ -1488,10 +1513,25 @@ function hasExampleEvidence(problem) {
  * contract is a Wrong Answer the candidate cannot see.
  */
 function inferIoContract(problem, starterCode) {
-  if (typeof starterCode === 'string' && starterCode.trim()) return 'template';
   const t = typeof problem === 'string' ? problem : '';
+  const starter = typeof starterCode === 'string' ? starterCode : '';
+  const hasStarter = !!starter.trim();
+
+  // A starter that ALREADY DRIVES THE I/O settles it: the platform reads the
+  // input and consumes the return value, so a print in the solution is noise
+  // at best and doubled output at worst.
+  if (hasStarter && starterDrivesIo(starter)) return 'template';
+
+  // Otherwise the statement's own I/O format outranks a bare stub. Starter code
+  // used to win here unconditionally, which was wrong: HackerRank pre-fills a
+  // stub for stdin/print problems too, so every one of them came back as
+  // 'template' — suppressing the stdin-print prompt branch and then running the
+  // answer through stripModuleLevelPrints. The rendered solution read input,
+  // computed, and printed nothing, while /execute still looked green because
+  // its harness supplies its own print.
   if (/\bclass\s+Solution\b/.test(t)) return 'pure-function';
   if (hasStdinEvidence(t)) return 'stdin-print';
+  if (hasStarter) return 'template';
   if (hasExampleEvidence(t)) return 'pure-function';
   return 'unknown';
 }
