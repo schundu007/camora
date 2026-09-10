@@ -74,9 +74,48 @@ describe('hasExampleEvidence', () => {
 });
 
 describe('inferIoContract', () => {
-  it('starter code always wins', () => {
+  // Starter code used to win outright, before the statement was ever read.
+  // HackerRank pre-fills a stub for stdin/print problems too, so every one of
+  // them classified as 'template' — which suppressed the stdin-print prompt
+  // branch AND ran the answer through stripModuleLevelPrints. The rendered
+  // solution read input, computed, and printed nothing; /execute still looked
+  // green because its harness supplies its own print. The discriminator is not
+  // "is there starter code" but "does the starter already drive the I/O".
+  it('a starter that already drives the I/O wins', () => {
     expect(inferIoContract(BARE_PROBLEM, "if __name__ == '__main__':\n    n = int(input())")).toBe('template');
-    expect(inferIoContract(HACKERRANK_PROBLEM, 'def solve():\n    pass')).toBe('template');
+  });
+
+  it("HackerRank's full stub wins even over a stated Input Format", () => {
+    // The stub reads stdin and writes the RETURN VALUE to OUTPUT_PATH itself.
+    // Printing here would double the output — a Wrong Answer the candidate
+    // cannot see.
+    const fullStub = [
+      "#!/bin/python3",
+      "import os",
+      "",
+      "def arraySum(n, arr):",
+      "    # Write your code here",
+      "",
+      "if __name__ == '__main__':",
+      "    fptr = open(os.environ['OUTPUT_PATH'], 'w')",
+      "    result = arraySum(n, arr)",
+      "    fptr.write(str(result) + '\\n')",
+    ].join('\n');
+    expect(inferIoContract(HACKERRANK_PROBLEM, fullStub)).toBe('template');
+  });
+
+  it('a class Solution starter wins — the platform calls the method', () => {
+    expect(inferIoContract(LEETCODE_PROBLEM, 'class Solution:\n    def twoSum(self, nums, target):\n        pass')).toBe('template');
+  });
+
+  it('THE REGRESSION: a bare stub does NOT outrank a stated Input Format', () => {
+    // Nothing in this stub consumes a return value, so the candidate owns the
+    // I/O and the prints are the thing being graded.
+    expect(inferIoContract(HACKERRANK_PROBLEM, 'def solve():\n    pass')).toBe('stdin-print');
+  });
+
+  it('a bare stub still wins when the statement states no I/O format', () => {
+    expect(inferIoContract(BARE_PROBLEM, 'def solve():\n    pass')).toBe('template');
   });
   it('class Solution means pure function', () => {
     expect(inferIoContract('class Solution:\n    def twoSum(self, nums, target):')).toBe('pure-function');
