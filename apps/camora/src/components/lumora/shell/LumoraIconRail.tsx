@@ -8,7 +8,7 @@ import { requestAudioSetup } from '@/lib/audio-preferences';
 import { useStealth, useSyncStealthOnLaunch } from '../../../lib/stealth';
 import { isElectron } from '../../../lib/overlayMode';
 
-export type LumoraTab = 'session' | 'coding' | 'design' | 'cofix' | 'behavioral' | 'claude' | 'ask' | 'practice' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits';
+export type LumoraTab = 'session' | 'coding' | 'design' | 'cofix' | 'behavioral' | 'claude' | 'gemini' | 'ask' | 'practice' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits';
 
 interface LumoraIconRailProps {
   activeTab: LumoraTab;
@@ -64,6 +64,7 @@ const TOOL_ITEMS = [
   { id: 'design', label: 'Design', path: '/lumora/design', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M9 21V9" /></svg> },
   { id: 'cofix', label: 'CoFix', path: '/lumora/fix', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2-2 2.6-2.6z" /></svg> },
   { id: 'claude', label: 'Claude', path: '/lumora/claude', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.6 1.9 5 5.5 5.5C13.9 8 12.5 9.4 12 13c-.5-3.6-1.9-5-5.5-5.5C10.1 7 11.5 5.6 12 2zM18.5 12c.3 2.2 1.1 3 3.3 3.3-2.2.3-3 1.1-3.3 3.3-.3-2.2-1.1-3-3.3-3.3 2.2-.3 3-1.1 3.3-3.3zM6 14c.2 1.5.8 2.1 2.3 2.3C6.8 16.5 6.2 17.1 6 18.6c-.2-1.5-.8-2.1-2.3-2.3C5.2 16.1 5.8 15.5 6 14z" /></svg> },
+  { id: 'gemini', label: 'Gemini', path: '/lumora/gemini', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.9 5.1 4 8.2 9.1 9.1-5.1.9-8.2 4-9.1 9.1-.9-5.1-4-8.2-9.1-9.1C8 10.2 11.1 7.1 12 2z" /></svg> },
 ];
 
 export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange, onBack, onOpenContext }: LumoraIconRailProps) => {
@@ -221,10 +222,11 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
         {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
-        {/* Claude tab embeds claude.ai in a webview, which only works in the
-            Electron desktop app — hide it in the web build. */}
+        {/* Claude and Gemini embed claude.ai / aistudio.google.com in a webview,
+            which only works in the Electron desktop app — hide both in the web
+            build. */}
         {TOOL_ITEMS
-          .filter(item => item.id !== 'claude' || isElectron())
+          .filter(item => (item.id !== 'claude' && item.id !== 'gemini') || isElectron())
           .map(item => {
           const active = activeTab === item.id;
           return (
