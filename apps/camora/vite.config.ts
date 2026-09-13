@@ -68,6 +68,13 @@ export default defineConfig({
             const m = id.match(/\/topics\/([^/]+?)(?:\.\w+)?$/);
             if (m) return `topic-data-${m[1]}`;
           }
+          // Python curriculum chapters — same rationale as topic data above:
+          // per-chapter chunks so editing one chapter does not invalidate
+          // the cached bytes for the other six.
+          if (id.includes('/data/python/')) {
+            const m = id.match(/\/data\/python\/([^/]+?)(?:\.\w+)?$/);
+            if (m && /^\d\d-/.test(m[1])) return `python-${m[1]}`;
+          }
           if (id.includes('/data/capra/companies/')) return 'company-data';
           // Heavy vendors that aren't on the critical path
           if (id.includes('node_modules/cytoscape')) return 'vendor-cytoscape';
