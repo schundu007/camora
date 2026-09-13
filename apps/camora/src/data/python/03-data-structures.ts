@@ -96,7 +96,7 @@ print(original, new_list)     # Output: [3, 1, 2] [1, 2, 3]`,
     title: 'Tuples',
     chapter: 'data-structures',
     track: 'beginner',
-    estimatedMins: 15,
+    estimatedMins: 30,
     summary: `An ordered collection that cannot be changed once built, which is exactly why it can be a dictionary key when a list cannot — the difference interviewers probe with the list-versus-tuple question.`,
     intro: `A tuple holds a fixed sequence of values. You read it exactly like a list, with indexes and slices and loops, but you cannot add, remove or replace anything after it exists. That one restriction is what makes tuples useful: Python can hash them, so they work as dictionary keys and set members, and a reader can see at a glance that the data was never meant to move.`,
     sections: [
@@ -117,15 +117,13 @@ print(type(empty), len(empty))  # Output: <class 'tuple'> 0`,
       },
       {
         heading: 'Immutable means the tuple, not what is inside it',
-        body: `A tuple freezes which objects it holds. It does not freeze those objects. If one of them is a list, that list can still be appended to, and the tuple is perfectly happy because it still points at the same list. This is why a tuple containing a list cannot be hashed and cannot be a dictionary key: Python checks every item, and a list has no stable hash. A tuple whose items are all immutable, all the way down, is hashable.`,
+        body: `A tuple freezes which objects it holds. It does not freeze those objects. If one of them is a list, that list can still be appended to, and the tuple is perfectly happy because it still points at the same list. This is why a tuple containing a list cannot be hashed and cannot be a dictionary key: Python checks every item, and a list has no stable hash. A tuple is hashable only if every item in it is hashable too.`,
         code: `t = (1, [2, 3])
 t[1].append(4)               # the list inside is still mutable
 print(t)                     # Output: (1, [2, 3, 4])
+print(len(t))                # Output: 2   the tuple still holds the same two items
 
-# hash(t)  -> TypeError: unhashable type: 'list'
-
-safe = (1, (2, 3))           # immutable all the way down
-print(hash(safe) == hash((1, (2, 3))))   # Output: True`,
+# hash(t)  -> TypeError: unhashable type: 'list'`,
       },
       {
         heading: 'Packing and unpacking',
@@ -141,7 +139,7 @@ print(head, tail)                # Output: 1 [2, 3, 4]`,
       },
       {
         heading: 'Hashable, so it can be a dictionary key',
-        body: `A hash is a number Python derives from a value so it can find that value again instantly in a dict or a set. The rule is that the hash must never change while the object is in use, which is why only immutable objects are hashable. A tuple of immutable items qualifies, so a coordinate pair, a (row, column) cell or a (function, args) cache key all work as dictionary keys. A list never does, because appending to it would change its hash and lose the entry.`,
+        body: `A hash is a number Python derives from a value so it can find that value again instantly in a dict or a set. The rule is that the hash must stay the same for as long as the object is in use. Immutability is the easiest way to guarantee that, which is why the immutable built-ins are hashable and a list is not — but immutability is not itself the rule. A tuple holding a list is immutable and still unhashable, and a class you write is hashable by identity even while you mutate its attributes, unless it defines __eq__ without __hash__. So a tuple of hashable items qualifies, and a coordinate pair, a (row, column) cell or a (function, args) cache key all work as dictionary keys. A list never does, because appending to it would change its hash and lose the entry.`,
         code: `grid = {(0, 0): "start", (1, 2): "treasure"}
 print(grid[(1, 2)])          # Output: treasure
 
@@ -252,45 +250,35 @@ print(point)             # Output: (3, 4)   the original is unchanged`,
     ],
     examples: [
       {
-        label: 'Packing & unpacking',
-        code: `person = "Ada", 36, "London"     # packing — no parentheses needed
-print(person)                    # Output: ('Ada', 36, 'London')
+        label: 'Unpacking in real code',
+        code: `# A function that produces several related values returns one tuple,
+# and the caller splits it open on the same line.
+def stats(nums):
+    return min(nums), max(nums), sum(nums) / len(nums)
 
-name, age, city = person         # unpacking
-print(name, city)                # Output: Ada London
+low, high, avg = stats([4, 1, 9, 6])
+print(low, high, avg)              # Output: 1 9 5.0
 
-a, b = 1, 2
-a, b = b, a                      # swap with no temp variable
-print(a, b)                      # Output: 2 1
+# Looping over a dict gives you a (key, value) tuple each time
+scores = {"ada": 91, "linus": 78}
+for name, score in scores.items():
+    print(name, score)
+# Output: ada 91
+# Output: linus 78
 
-head, *tail = (1, 2, 3, 4)       # star takes everything left over
-print(head, tail)                # Output: 1 [2, 3, 4]
+# enumerate() hands you an (index, item) tuple
+for rank, name in enumerate(["gold", "silver"], start=1):
+    print(rank, name)
+# Output: 1 gold
+# Output: 2 silver
 
-(x, y), z = (1, 2), 3            # unpacking can nest
-print(x, y, z)                   # Output: 1 2 3
+# Records sort by first item, then second, with no extra work
+people = [("ada", 36), ("linus", 24), ("grace", 45)]
+print(sorted(people, key=lambda p: p[1]))
+# Output: [('linus', 24), ('ada', 36), ('grace', 45)]
 
-def min_max(nums):
-    return min(nums), max(nums)  # returning two values returns one tuple
-
-lo, hi = min_max([4, 1, 9])
-print(lo, hi)                    # Output: 1 9`,
-      },
-      {
-        label: 'The trailing comma',
-        code: `not_a_tuple = (5)
-print(type(not_a_tuple))        # Output: <class 'int'>
-
-one = (5,)
-print(type(one), len(one))      # Output: <class 'tuple'> 1
-
-also_one = 5,                   # parentheses are optional
-print(also_one)                 # Output: (5,)
-
-empty = ()
-print(type(empty), len(empty))  # Output: <class 'tuple'> 0
-
-print(("hi"))                   # Output: hi        just a string in brackets
-print(("hi",))                  # Output: ('hi',)   a one-item tuple`,
+oldest_name, oldest_age = max(people, key=lambda p: p[1])
+print(oldest_name, oldest_age)     # Output: grace 45`,
       },
       {
         label: 'Tuples as keys',
@@ -317,57 +305,56 @@ print(cache)                     # Output: {(2, 3): 5}
 # cache[[2, 3]] = 5  -> TypeError, a list is unhashable`,
       },
       {
-        label: 'No tuple comprehension',
-        code: `squares_list = [n * n for n in range(5)]
-print(squares_list)              # Output: [0, 1, 4, 9, 16]
-
-gen = (n * n for n in range(5))  # parentheses give a GENERATOR, not a tuple
-print(type(gen))                 # Output: <class 'generator'>
-
-squares_tuple = tuple(n * n for n in range(5))
-print(squares_tuple)             # Output: (0, 1, 4, 9, 16)
-
-# A generator is single-use
-g = (n for n in range(3))
-print(list(g))                   # Output: [0, 1, 2]
-print(list(g))                   # Output: []   already exhausted`,
-      },
-      {
-        label: 'namedtuple',
+        label: 'A record with named fields',
         code: `from collections import namedtuple
 
-Point = namedtuple("Point", ["x", "y"])
-p = Point(3, 4)
+# Before: nothing tells the reader what row[1] holds.
+rows = [("ada", 36, "London"), ("linus", 24, "Helsinki")]
+for row in rows:
+    print(row[0], "is", row[1])
+# Output: ada is 36
+# Output: linus is 24
 
-print(p.x, p.y)              # Output: 3 4
-print(p[0])                  # Output: 3   still indexable like a tuple
-print(p)                     # Output: Point(x=3, y=4)
+# After: same tuple, but the positions have names.
+Person = namedtuple("Person", ["name", "age", "city"])
+people = [Person(*r) for r in rows]
 
-x, y = p                     # still unpacks
-print(x, y)                  # Output: 3 4
+for p in people:
+    print(p.name, "lives in", p.city)
+# Output: ada lives in London
+# Output: linus lives in Helsinki
 
-moved = p._replace(x=10)     # returns a NEW Point; p is untouched
-print(moved, p)              # Output: Point(x=10, y=4) Point(x=3, y=4)
-print(p._asdict())           # Output: {'x': 3, 'y': 4}
-print(isinstance(p, tuple))  # Output: True`,
+oldest = max(people, key=lambda p: p.age)
+print(oldest)                # Output: Person(name='ada', age=36, city='London')
+
+moved = oldest._replace(city="Paris")   # a NEW record; the original is untouched
+print(moved.city, oldest.city)          # Output: Paris London
+print(oldest._asdict())                 # Output: {'name': 'ada', 'age': 36, 'city': 'London'}`,
       },
       {
-        label: 'Immutable only at the top',
-        code: `t = (1, [2, 3])
-t[1].append(4)               # the list inside is still mutable
-print(t)                     # Output: (1, [2, 3, 4])
-
-# The famous one: this both raises AND succeeds
+        label: 'The tuple that changed anyway',
+        code: `# += on a list reached through a tuple index runs the in-place add first,
+# then fails to store the result back. You get the error AND the change.
 t = ([1, 2],)
 try:
     t[0] += [3]
 except TypeError as e:
     print("TypeError:", e)
     # Output: TypeError: 'tuple' object does not support item assignment
-print(t)                     # Output: ([1, 2, 3],)   the list changed anyway
+print(t)                     # Output: ([1, 2, 3],)   it changed regardless
 
-safe = (1, (2, 3))           # immutable all the way down
-print(hash(safe) == hash((1, (2, 3))))   # Output: True`,
+# .extend() makes the same edit with no error at all
+t[0].extend([4])
+print(t)                     # Output: ([1, 2, 3, 4],)
+
+# Which is why this tuple can never be a dictionary key
+try:
+    hash(t)
+except TypeError as e:
+    print("TypeError:", e)   # Output: TypeError: unhashable type: 'list'
+
+frozen = (1, (2, 3))         # hashable all the way down
+print(hash(frozen) == hash((1, (2, 3))))   # Output: True`,
       },
     ],
     cheatSheet: [
@@ -379,7 +366,7 @@ print(hash(safe) == hash((1, (2, 3))))   # Output: True`,
       { call: 't * 3',                   does: 'Repeats the items three times in a new tuple.',                                       returns: 'tuple' },
       { call: 'x in t',                  does: 'Checks membership by scanning the tuple, so it costs time proportional to length.',   returns: 'bool' },
       { call: 'sorted(t)',               does: 'Sorts the items. It always hands back a list, so wrap it in tuple() if you need one.', returns: 'list' },
-      { call: 'hash(t)',                 does: 'Computes the hash. Raises TypeError if any item inside is mutable.',                   returns: 'int' },
+      { call: 'hash(t)',                 does: 'Computes the hash. Raises TypeError if any item inside is unhashable.',                   returns: 'int' },
       { call: 'namedtuple(name, fields)', does: 'Creates a tuple subclass whose positions also have names.',                          returns: 'type' },
       { call: 'p._replace(x=9)',         does: 'Returns a new namedtuple with one field changed. The original is untouched.',         returns: 'namedtuple' },
       { call: 'p._asdict()',             does: 'Converts a namedtuple into a plain dictionary of field to value.',                    returns: 'dict' },
@@ -422,7 +409,7 @@ print(hash(safe) == hash((1, (2, 3))))   # Output: True`,
     edgeCases: [
       `(5) is the integer 5, not a tuple. Only the comma builds one: (5,) or 5,. The empty tuple () is the sole exception.`,
       `A tuple has exactly two methods, count and index. t.append("x") raises AttributeError: 'tuple' object has no attribute 'append'.`,
-      `Unpacking must match the length. a, b = (1, 2, 3) raises ValueError: too many values to unpack (expected 2, got 3). Use a, *rest to absorb the remainder.`,
+      `Unpacking must match the length. a, b = (1, 2, 3) raises a ValueError saying there are too many values to unpack. Use a, *rest to absorb the remainder.`,
       `A tuple holding a list is unhashable, so it cannot be a dictionary key or a set member even though the tuple itself cannot be reassigned.`,
       `t + (4,) builds a whole new tuple every time. Concatenating in a loop is quadratic work — collect into a list and call tuple() once at the end.`,
       `Comparison runs item by item from the left, so (1, 2) < (1, 3) is True and sorting a list of tuples sorts by first item, then second.`,
