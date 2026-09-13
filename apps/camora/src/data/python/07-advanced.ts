@@ -185,7 +185,7 @@ print(counter)   # Output: 500000  (correct — no race condition)`,
     chapter: 'advanced',
     track: 'advanced',
     estimatedMins: 12,
-    summary: `Optional annotations that document expected argument and return types for readers and tools like mypy, without Python enforcing them at runtime.`,
+    summary: `Annotations that state what a function expects and returns, which interviewers ask about to check you know the interpreter never enforces them, so a separate checker like mypy is the only thing that catches the mistake.`,
     intro: `Type hints are optional annotations that document what types a function expects and returns. Python ignores them at runtime — their value is for human readers and static analysis tools like mypy and pyright.`,
     cleanCode: `from typing import Optional
 

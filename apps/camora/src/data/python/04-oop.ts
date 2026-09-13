@@ -100,7 +100,7 @@ print(c3.id)           # Output: 3`,
     chapter: 'oop',
     track: 'advanced',
     estimatedMins: 15,
-    summary: `The dataclass decorator that generates the constructor, repr, and equality methods from field declarations, cutting the boilerplate of hand-written classes.`,
+    summary: `The decorator that writes __init__, __repr__ and __eq__ for you from the field declarations, which interviewers use to check that you know what those generated methods actually do and why a mutable default is rejected outright.`,
     intro: `The @dataclass decorator automatically writes __init__, __repr__, and __eq__ from the field declarations in your class body. It cuts boilerplate while keeping all the power of a normal class.`,
     cleanCode: `from dataclasses import dataclass, field
 

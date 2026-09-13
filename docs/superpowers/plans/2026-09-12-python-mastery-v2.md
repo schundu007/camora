@@ -35,6 +35,18 @@
 - `sections[].body` may contain blank lines; they render as separate paragraphs
   (Ruling 8). Before that ruling a blank line silently collapsed into one run-on
   paragraph.
+- Promoting a topic to the full schema means revisiting `cleanCode`, `walkthrough`,
+  `edgeCases`, `gotcha` and `tip` too — not just adding `sections`, `keyTerms`,
+  `cheatSheet`, `interviewQs` and `references`. The additive-only rule in Task 3
+  existed to prove the split was faithful; it is not a licence to leave the
+  original fields at their old depth. `variables` shipped in Phase 1 with six deep
+  sections and ten key terms sitting above a Reference Code card that explained
+  that quotes make a string, and that cliff in the middle of the page is exactly
+  the "very basic and hard to read" complaint this project exists to fix. A topic
+  is promoted when every one of its cards reads at the same level, not when the
+  new fields are non-empty. The `THIN_LEGACY` list in `curriculum.test.ts` is the
+  register of topics not yet promoted; deleting an id from it is the last step of
+  promoting that topic, and the full bar then applies automatically.
 - Never stage `apps/camora/src/components/lumora/gemini/GeminiPanel.tsx` or `apps/desktop/main.js` — both carry unrelated uncommitted work.
 
 ---
