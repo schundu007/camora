@@ -746,7 +746,7 @@ export const LumoraShellPage = () => {
             <div style={{ display: activeTab === 'gemini' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
                 <Suspense fallback={<TabLoading label="Gemini" />}>
-                  <GeminiPanel />
+                  <GeminiPanel isActive={activeTab === 'gemini'} />
                 </Suspense>
               </ErrorBoundary>
             </div>
