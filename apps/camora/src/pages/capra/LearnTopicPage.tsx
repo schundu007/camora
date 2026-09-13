@@ -346,8 +346,8 @@ export default function LearnTopicPage() {
   const level    = searchParams.get('level')    || searchParams.get('difficulty') || 'beginner';
   const count    = searchParams.get('count')    || '';
 
-  const backPath  = source === 'codesignal' ? '/capra/learn/codesignal' : '/capra/learn/programiz';
-  const backLabel = source === 'codesignal' ? 'CodeSignal Learn' : 'Programiz Python';
+  const backPath  = '/capra/learn/programiz';
+  const backLabel = 'Programiz Python';
 
   const [content, setContent]     = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -464,7 +464,7 @@ export default function LearnTopicPage() {
 
         <div className="flex items-center gap-2 mt-1">
           <p className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>
-            {source === 'programiz' ? 'Python Programming' : 'CodeSignal Learn'} · Learning guide
+            Python Programming · Learning guide
           </p>
           {fromCache && (
             <Chip variant="success">cached</Chip>

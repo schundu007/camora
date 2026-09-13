@@ -10,9 +10,8 @@ function getGeminiModel() {
   return new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: GEMINI_MODEL });
 }
 
-function buildPrompt({ title, source, category, level, count }) {
-  if (source === 'programiz') {
-    return `Create a comprehensive Python learning guide for: "${title}".
+function buildPrompt({ title, category, level }) {
+  return `Create a comprehensive Python learning guide for: "${title}".
 Level: ${level} | Category: ${category}
 
 Structure your response with these exact headings:
@@ -40,36 +39,6 @@ One concrete hands-on exercise with a clear problem statement.
 
 Keep code clean and idiomatic Python. Be specific to "${title}".
 Wrap ALL code in triple-backtick code blocks with "python" as the language (e.g., \`\`\`python ... \`\`\`). Never write bare code lines without backticks.`;
-  }
-
-  return `Create a comprehensive learning guide for the programming course path: "${title}".
-Difficulty: ${level} | Focus area: ${category}${count ? ` | ${count} practice tasks` : ''}
-
-Structure your response with these exact headings:
-
-## Course Overview
-What this course covers, who it is for, and why it matters for interview prep.
-
-## Core Topics Covered
-Bullet list of the main subjects and skills taught (6–8 items).
-
-## Learning Path Workflow
-Step-by-step breakdown of how to progress through this course — what to learn in what order.
-Use ### subheadings (e.g. ### Phase 1: Fundamentals) for each phase or stage. Never use **bold** as a heading substitute.
-
-## Key Skills You'll Build
-Specific technical competencies and patterns you'll develop.
-
-## Sample Problem Types
-3–4 representative problem types. For each, include a brief description and a Code Sketch wrapped in a triple-backtick code block with the language name (e.g., \`\`\`python ... \`\`\`).
-
-## Prerequisites
-What to know before starting, and what you can tackle after completing this path.
-
-## Interview Relevance
-How mastery of this path translates to technical interview performance.
-
-IMPORTANT: Wrap ALL code — every example, snippet, and code sketch — in triple-backtick code blocks (e.g., \`\`\`python ... \`\`\`). Never write bare code lines without backticks.`;
 }
 
 // GET /api/v1/learn/topic/:slug — cache lookup only
@@ -83,7 +52,7 @@ router.get('/:slug', async (req, res) => {
 // POST /api/v1/learn/topic/:slug — stream + auto-save on first generation
 router.post('/:slug', async (req, res) => {
   const { slug } = req.params;
-  const { title = slug, source = 'programiz', category = '', level = 'beginner', count = '' } = req.body;
+  const { title = slug, source = 'programiz', category = '', level = 'beginner' } = req.body;
 
   // Check cache first — if already cached, stream it directly as SSE so the
   // frontend doesn't need separate code paths.
@@ -107,7 +76,7 @@ router.post('/:slug', async (req, res) => {
   try {
     const model = getGeminiModel();
     const geminiStream = await model.generateContentStream(
-      buildPrompt({ title, source, category, level, count }),
+      buildPrompt({ title, category, level }),
     );
 
     for await (const chunk of geminiStream.stream) {
