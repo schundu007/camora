@@ -279,12 +279,6 @@ const icons = {
       <path d="M3.5 8h3M3.5 11h3M13.5 8h3M13.5 11h3"/>
     </svg>
   ),
-  /* CodeSignal — lightning bolt */
-  bolt: (
-    <svg {...S} viewBox="0 0 20 20">
-      <path d="M11 2L4 11h7l-2 7 9-10h-7z"/>
-    </svg>
-  ),
   /* Must Do — checkmark circle */
   check: (
     <svg {...S} viewBox="0 0 20 20">
@@ -343,7 +337,6 @@ const sections: NavSection[] = [
     title: 'Learn',
     items: [
       { label: 'Python', path: '/capra/learn/python', icon: icons.python },
-      { label: 'CodeSignal', path: '/capra/learn/codesignal', icon: icons.bolt },
       { label: 'Programiz', path: '/capra/learn/programiz', icon: icons.python },
     ],
   },
