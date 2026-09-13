@@ -192,7 +192,7 @@ print(type(loaded))           # Output: <class 'dict'>`,
     chapter: 'errors-files',
     track: 'advanced',
     estimatedMins: 15,
-    summary: `The with-statement protocol behind resources like files and connections, and how to build custom setup and teardown logic with a context manager.`,
+    summary: `The __enter__ and __exit__ pair that every with statement calls, which interviewers ask about to see whether you can guarantee cleanup on the error path and not just the happy one.`,
     intro: `A context manager runs setup code before a block and teardown code after, automatically — even if an exception is raised inside. The with statement is how you use one. File I/O is the most common example.`,
     cleanCode: `# Built-in: file — f.close() called automatically
 with open("data.txt", "w") as f:

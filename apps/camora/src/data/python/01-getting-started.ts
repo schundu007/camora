@@ -43,7 +43,7 @@ print(0.1 + 0.2)                          # Output: 0.30000000000000004`,
       },
       {
         heading: 'Mutable versus immutable',
-        body: `A mutable object can be changed in place after it is created. An immutable object cannot, so every apparent change actually builds a new object and rebinds the name. Mutable built-ins are list, dict, set and bytearray. Immutable ones are int, float, complex, bool, str, tuple, frozenset, bytes, range and None. The split matters in three places. Most immutable built-ins are hashable, so they work as dictionary keys and set members while a list, dict or set does not — immutability is the usual reason for that rather than the rule itself, and the Hashable entry in Key Terms gives the precise version. A mutable object handed to a function can be changed by that function, and the caller sees the change. And s += "x" on a string quietly builds a new string, while nums += [1] on a list edits the one you already had.`,
+        body: `A mutable object can be changed in place after it is created. An immutable object cannot, so every apparent change actually builds a new object and rebinds the name. Mutable built-ins are list, dict, set and bytearray. Immutable ones are int, float, complex, bool, str, tuple, frozenset, bytes, range and None. The split matters in three places. Most immutable built-ins are hashable, so they work as dictionary keys and set members while a list, dict or set does not. Immutability is the usual reason for that rather than the rule itself: what Python actually requires of a key is a hash that stays the same for as long as the object is in use. That is why a tuple holding a list is immutable and still unhashable, and why a class you write is hashable by identity even while you mutate its attributes. A mutable object handed to a function can be changed by that function, and the caller sees the change. And s += "x" on a string quietly builds a new string, while nums += [1] on a list edits the one you already had.`,
         code: `s = "hello"
 first_id = id(s)
 s += " world"                  # builds a NEW string object
@@ -110,38 +110,69 @@ print(area("ab", 3))    # Output: ababab   hints are not checked at runtime`,
       { term: 'Hashable',       meaning: 'Has a hash that stays the same for as long as the object lives, so it can be a dictionary key or a set member. Immutable built-ins such as int, str, bytes and frozenset qualify. A tuple qualifies only if every item in it does. A class you write is hashable by identity whether or not it is mutable, unless it defines __eq__ without __hash__.' },
       { term: 'NoneType',       meaning: 'The type of None, the single object meaning no value. Test for it with x is None, not x == None.' },
     ],
-    cleanCode: `name = "Alice"        # text (string)
-age  = 30             # whole number (int)
-height = 5.9          # decimal (float)
-is_student = False    # True or False (bool)
+    cleanCode: `name = "Alice"              # a name bound to a str object
+age  = 30                   # no type keyword, no declaration
 
-print(name)           # Output: Alice
-print(type(age))      # Output: <class 'int'>
-print(isinstance(age, int))  # Output: True`,
+print(name, age)            # Output: Alice 30
+print(type(age))            # Output: <class 'int'>
+print(isinstance(age, int)) # Output: True
+
+age = "thirty"              # the SAME name, now a str — this is legal
+print(type(age))            # Output: <class 'str'>
+
+a, b = 1, 2                 # multiple assignment
+a, b = b, a                 # swap: the right side is evaluated first
+print(a, b)                 # Output: 2 1
+
+scores = [90, 85]
+alias  = scores             # a second NAME for one list, not a copy
+alias.append(78)
+print(scores)               # Output: [90, 85, 78]  changed through alias
+print(scores is alias)      # Output: True
+
+total = 0
+total += 1                  # int is immutable, so this rebinds total
+print(total)                # Output: 1`,
     walkthrough: [
       {
         code: `name = "Alice"`,
-        explain: `Creates a variable called name and stores the text "Alice". Quotes (single or double) make something a string.`,
+        explain: `Assignment does two things: it makes sure the object on the right exists, then it ties the name on the left to that object. Nothing is copied and nothing is declared. Quotes, single or double, are what make the value a str rather than a name Python would go looking for.`,
       },
       {
         code: `age = 30`,
-        explain: `Stores the integer 30. No quotes needed for numbers.`,
-      },
-      {
-        code: `height = 5.9`,
-        explain: `Decimals are called floats (floating-point numbers) and work the same as integers.`,
-      },
-      {
-        code: `is_student = False`,
-        explain: `Booleans hold only two values: True or False. Capital F is required — false (lowercase) causes a NameError.`,
+        explain: `No type keyword, because the type belongs to the object and not to the name. Python never asks you to say int here, and it never stores int against the name age. 30 has a size limit of whatever memory allows, so factorials and cryptographic keys need no special type.`,
       },
       {
         code: `type(age)`,
-        explain: `The built-in type() function tells you what kind of value a variable holds. Useful for debugging.`,
+        explain: `Reports the exact class of the object the name currently points at, which is how you check what you actually have rather than what you assumed. It prints as <class 'int'> because type() hands back the class object itself, not its name as text.`,
       },
       {
         code: `isinstance(age, int)`,
-        explain: `Returns True if age is an int. Preferred over type() for checks because it handles inheritance — isinstance(True, int) correctly returns True since bool is a subclass of int.`,
+        explain: `The one you want for checks, because it accepts subclasses. isinstance(True, int) is True since bool subclasses int, while type(True) is int is False. It also takes a tuple, so isinstance(x, (int, float)) covers both numeric cases in one call.`,
+      },
+      {
+        code: `age = "thirty"`,
+        explain: `Rebinding. The name now points at a str and the integer 30 is left alone, to be reclaimed once nothing refers to it. This is dynamic typing, and it is why a type hint is documentation rather than a guarantee. It is also why reusing one name for two meanings makes code hard to follow.`,
+      },
+      {
+        code: `a, b = 1, 2`,
+        explain: `The right-hand side packs into a tuple, then unpacks across the names left to right. The counts must match or Python raises ValueError, unless a starred name such as first, *rest soaks up the remainder as a list.`,
+      },
+      {
+        code: `a, b = b, a`,
+        explain: `The entire right side is evaluated before any name is rebound, so both old values are captured before either is overwritten. That is why the swap needs no temporary variable and why it is not two statements in disguise.`,
+      },
+      {
+        code: `alias = scores`,
+        explain: `This is the line that surprises people. It binds a second name to the very same list; it does not copy anything. The is operator confirms it: scores is alias is True because there is only one list object. Use scores.copy() or scores[:] when you want an independent one, and copy.deepcopy(scores) when the list holds other mutable objects.`,
+      },
+      {
+        code: `alias.append(78)`,
+        explain: `A list is mutable, so append edits the one object both names point at, and the change is visible through either. A function you pass the list to can do the same thing, which is how a caller ends up with modified data it never assigned.`,
+      },
+      {
+        code: `total += 1`,
+        explain: `On an int this is not an edit. Integers are immutable, so Python computes a new object and rebinds total to it. The same += on a list edits in place instead, which is why id() changes after += on a number or a string but stays put after += on a list.`,
       },
     ],
     examples: [
@@ -334,13 +365,18 @@ except ValueError as e:
       { label: 'PEP 8 — Naming Conventions',         url: 'https://peps.python.org/pep-0008/#naming-conventions' },
     ],
     edgeCases: [
-      `True and False must be capitalized. true or false causes a NameError.`,
-      `Variable names cannot start with a digit. 2fast = True is a SyntaxError. fast2 = True is fine.`,
-      `Python is case-sensitive: name and Name are two different variables.`,
-      `bool is a subclass of int. True == 1 and False == 0, so True + True evaluates to 2.`,
+      `True and False must be capitalized. true or false is read as a name Python has never heard of, so you get a NameError rather than a syntax complaint.`,
+      `Variable names cannot start with a digit. 2fast = True is a SyntaxError; fast2 = True is fine. Underscores are allowed anywhere, including first.`,
+      `Python is case-sensitive: name, Name and NAME are three different variables, and mixing them is a silent bug rather than an error.`,
+      `bool is a subclass of int. True == 1 and False == 0, so True + True evaluates to 2 and sum([True, False, True]) counts the True values as 2.`,
+      `x = y = [] binds BOTH names to one empty list, not to two. Appending through x shows up through y. Chained assignment is safe only for immutable values.`,
+      `Use is only for None, True, False and your own sentinel objects. It compares identity, and Python reuses some small int and short str objects behind the scenes, so an accidental is between two equal numbers can come out True on one expression and False on another. Compare values with ==.`,
+      `float is binary, so 0.1 + 0.2 does not land exactly on 0.3 and == between computed floats is unreliable. Use math.isclose for comparison, or Decimal from the decimal module when the exact figures matter, as they do for money.`,
+      `Shadowing a built-in is legal. Writing list = [1, 2] or id = 5 makes that built-in unreachable for the rest of the scope, and the failure shows up later as a confusing TypeError. del the name to get the built-in back.`,
+      `del name removes the name, not the object. The object survives for as long as any other name still points at it, and is only then reclaimed.`,
     ],
-    gotcha: `b = a on a mutable object (list, dict) does NOT copy it — both names point at one object. Changes through b are visible through a. Use b = a.copy() or b = a[:] for an independent copy.`,
-    tip: `Use descriptive names: user_age is clearer than x. Python style (PEP 8) uses snake_case — words joined by underscores, all lowercase.`,
+    gotcha: `b = a on a mutable object does not copy it — both names point at one object, so b.append(4) is visible through a. Use b = a.copy() or b = a[:] for an independent copy, and copy.deepcopy(a) when the list holds other mutable objects, because a shallow copy still shares those inner ones. The same rule bites through function calls: a list you pass in can be changed by the function and the caller sees it, which is also why a mutable default argument like def f(items=[]) keeps its changes between calls. Immutable values never have this problem, because every apparent change builds a new object instead.`,
+    tip: `Name things for what they hold, not for their type: user_age beats x and beats age_int. PEP 8 (Python Enhancement Proposal 8) asks for snake_case on variables and functions, SCREAMING_SNAKE_CASE on constants, and a leading underscore on anything internal. Three habits save most of the debugging here: test for nothing with x is None rather than x == None, check types with isinstance rather than type(x) ==, and never reuse the name of a built-in such as list, dict, id, type or sum.`,
   },
 
   {

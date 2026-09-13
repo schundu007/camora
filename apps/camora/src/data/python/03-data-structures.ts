@@ -237,7 +237,7 @@ print(point)             # Output: (3, 4)   the original is unchanged`,
       },
       {
         code: `x, y = point`,
-        explain: `Unpacking pairs each name on the left with each item on the right. The counts have to match, or Python raises ValueError: too many values to unpack.`,
+        explain: `Unpacking pairs each name on the left with each item on the right, and the counts have to match. Both mismatches raise ValueError, with different wording depending on which side is short: more items than names gives too many values to unpack, and fewer items than names gives not enough values to unpack. Marking one name with a star, as in x, *rest = point, absorbs whatever is left over and never raises.`,
       },
       {
         code: `point[0] = 9`,
