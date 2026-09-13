@@ -38,12 +38,14 @@ const EMPTY_HINT = [
   'Answers come back interview-shaped: the answer first, then bullets you can expand out loud.',
 ];
 
-export const GeminiPanel = () => {
+export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [streamText, setStreamText] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Bumped by the ` shortcut; StreamingMicButton toggles on each new value.
+  const [micToggle, setMicToggle] = useState(0);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -105,6 +107,45 @@ export const GeminiPanel = () => {
     if (!last) return;
     navigator.clipboard?.writeText(last.content).then(() => setCopied(true)).catch(() => { /* clipboard denied */ });
   }, [messages]);
+
+  // ` toggles the mic. It is already the audio key everywhere else in the shell
+  // — AudioCapture binds it on the behavioral/coding/design surfaces and Sona's
+  // sidebar binds it too — so the tab that is on screen owns it and the meaning
+  // stays the same wherever you are.
+  //
+  // Gated on isActive because this tab is kept MOUNTED while hidden (so a
+  // conversation survives tab switches). Without the gate the listener would
+  // still be live behind the Coding tab and one ` would toggle two mics.
+  // AudioCapture's handler runs on the capture phase and stops propagation, but
+  // it returns early when its own tab is inactive — so while Gemini is on
+  // screen the key reaches this listener untouched.
+  useEffect(() => {
+    if (!isActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      // Shift+` is ~, a character someone may genuinely want to type.
+      if (e.code !== 'Backquote' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      // In this composer ` binds only while it is empty, so a backtick-quoted
+      // snippet types normally once a question is under way. In any other
+      // editable or clickable target the key keeps its native meaning.
+      if (el === inputRef.current) {
+        if (input.trim()) return;
+      } else if (
+        el?.isContentEditable ||
+        el?.tagName === 'INPUT' ||
+        el?.tagName === 'TEXTAREA' ||
+        el?.tagName === 'BUTTON' ||
+        el?.tagName === 'A' ||
+        el?.tagName === 'SELECT'
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setMicToggle(n => n + 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isActive, input]);
 
   const send = useCallback(async (override?: string) => {
     // Dictation calls this on the same tick as setInput, before `input` state
@@ -259,6 +300,7 @@ export const GeminiPanel = () => {
             style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}
           />
           <StreamingMicButton
+            toggleSignal={micToggle}
             onStart={() => {
               dictationSeqRef.current = convSeqRef.current;
               dictationBaseRef.current = input;
