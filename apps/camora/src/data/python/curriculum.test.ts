@@ -32,6 +32,22 @@ const EXISTING_IDS = [
   'async', 'concurrency', 'type-hints', 'performance',
 ];
 
+/** Topics written to the full schema, with every optional card filled in. */
+const FULLY_WRITTEN: string[] = ['variables', 'tuples'];
+
+describe('fully written topics', () => {
+  it.each(FULLY_WRITTEN)('%s carries every optional field', (id) => {
+    const t = PYTHON_TOPICS.find(x => x.id === id);
+    expect(t, `missing topic ${id}`).toBeDefined();
+    expect(t!.sections?.length,    `${id}: sections`).toBeGreaterThanOrEqual(2);
+    expect(t!.keyTerms?.length,    `${id}: keyTerms`).toBeGreaterThanOrEqual(3);
+    expect(t!.cheatSheet?.length,  `${id}: cheatSheet`).toBeGreaterThanOrEqual(3);
+    expect(t!.interviewQs?.length, `${id}: interviewQs`).toBeGreaterThanOrEqual(3);
+    expect(t!.examples.length,     `${id}: examples`).toBeGreaterThanOrEqual(3);
+    expect(t!.references?.length,  `${id}: references`).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe('PYTHON_TOPICS', () => {
   it('carries all 22 pre-existing topics across the split', () => {
     const ids = new Set(PYTHON_TOPICS.map(t => t.id));
