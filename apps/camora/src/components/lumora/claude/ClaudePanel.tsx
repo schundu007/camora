@@ -1,237 +1,361 @@
-// Embedded Claude — loads claude.ai INSIDE Lumora so the user never leaves the app.
+// Claude tab — Claude answering in Lumora's own UI, not claude.ai embedded in it.
 //
-// Desktop (Electron): renders a real <webview> — a separate top-level browsing
-// context, so claude.ai's `frame-ancestors 'none'` CSP / X-Frame-Options (which
-// block a normal <iframe>) do NOT apply. Login persists via a `persist:claude`
-// partition, and the webview inherits the window's content-protection, so when
-// stealth is on the embedded Claude is hidden from screen share too.
+// This replaces an Electron <webview> pointed at claude.ai/new. That approach
+// carried four problems, and all four are structural rather than fixable:
 //
-// Web (browser build): claude.ai cannot be iframed, so we show a one-click card
-// that opens it in a real browser tab instead.
-import { createElement, useCallback, useEffect, useRef, useState } from 'react';
-import { isElectron } from '../../../lib/overlayMode';
+//   - It only existed on desktop. claude.ai sends `frame-ancestors 'none'`, so
+//     the web build could not embed it at all and showed an "open in a browser
+//     tab" card instead — on web the tab was simply missing.
+//   - Fitting someone else's app into a narrow panel meant injecting CSS against
+//     class names generated at their build time, which drift without notice.
+//     That upkeep is inherent to restyling an app you do not own.
+//   - The interview framing was seeded as a first chat turn via /new?q=<text> —
+//     a message the user can scroll past, edit, or lose. It is now a real system
+//     prompt, server-side, in routes/claude.js.
+//   - Nothing inside a sandboxed browsing context can be dictated into. The
+//     point of this surface is answering while the interviewer is still talking,
+//     which wants a mic and an auto-send, not a text box we cannot reach.
+//
+// So this is the Gemini tab's treatment applied to Claude, deliberately: same
+// layout, same streaming reader, same dictation wiring, same ` shortcut. Two
+// second-opinion tabs that behave identically are one thing to learn, not two.
+//
+// The one real difference is which backend answers. Anthropic is Lumora's key
+// to spend and ascend-backend must never hold it, so this talks to
+// lumora-backend (VITE_LUMORA_API_URL) while the Gemini tab talks to ascend
+// (VITE_CAPRA_API_URL). See the LLM Provider Separation section of CLAUDE.md —
+// pointing this at the Capra URL would read as correct and be wrong.
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AskResponse } from '../ask/AskLayout';
+// Ask Sona's dictation button, reused as-is. It already carries the two things
+// this tab needs — the Deepgram-realtime-with-Groq-fallback path, and the
+// distinction between "I clicked stop" and "I stopped talking" — and the panel
+// already imports its renderer from ../ask, so this follows an existing seam
+// rather than opening a new one.
+import { StreamingMicButton } from '../ask/StreamingMicButton';
+import { useAuth } from '@/contexts/AuthContext';
 
-const CLAUDE_URL = 'https://claude.ai/new';
+// lumora-backend, not Capra — see the note above about which key each service
+// is allowed to spend.
+const API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
 
-// Opening prompt for "Interview mode". claude.ai has no system-prompt hook we
-// can reach from outside, but /new?q=<text> seeds the first turn — which is the
-// one stable, documented way to frame the conversation without touching its DOM.
-// Written for a LIVE interview: the answer is read at a glance, mid-sentence.
-const INTERVIEW_SEED = [
-  'You are supporting me during a live technical interview. I will paste or dictate',
-  'questions as they are asked, so answer for someone reading you while speaking.',
-  '',
-  'Every answer:',
-  '- Lead with the answer in one sentence. No preamble, no restating the question.',
-  '- Then at most 4 short bullets I can expand out loud.',
-  '- Coding: give the approach first, then code, then time and space complexity.',
-  '- System design: start with the constraint that drives the design, then components.',
-  '- Behavioral: use STAR, and keep the Result concrete and quantified.',
-  '- If the question is ambiguous, state the assumption you made and answer anyway.',
-  '  Do not ask me clarifying questions — there is no time to relay them.',
-  '',
-  'Acknowledge in one line, then wait for my first question.',
-].join('\n');
+type Role = 'user' | 'assistant';
+type Msg = { role: Role; content: string };
 
-// Injected into the webview to fit claude.ai into a panel far narrower than a
-// browser window. HIDE-ONLY BY DESIGN: claude.ai's class names are generated at
-// build time and change without notice, so these selectors are brittle. Keeping
-// every rule to display/width means a stale selector degrades to "the sidebar
-// came back" — never to a broken or blank panel. Expect occasional upkeep; that
-// is inherent to restyling someone else's app, not a bug in this file.
-const PANEL_CSS = `
-  /* Conversation sidebar and recents — the panel is too narrow to spare it. */
-  aside,
-  [data-testid*="sidebar" i],
-  nav[aria-label*="sidebar" i],
-  nav[aria-label*="conversation" i] { display: none !important; }
-
-  /* Marketing and upsell strips waste vertical space we do not have. */
-  [class*="banner" i],
-  [data-testid*="upgrade" i] { display: none !important; }
-
-  /* Reclaim the gutters the sidebar used to occupy. */
-  main { padding-left: 0 !important; padding-right: 0 !important; max-width: 100% !important; }
-
-  /* Match the shell: never let the embed scroll sideways inside the panel. */
-  html, body { overflow-x: hidden !important; }
-`;
-
-const ZOOM_MIN = -3;
-const ZOOM_MAX = 2;
+const EMPTY_HINT = [
+  'Ask anything mid-interview — a definition, a design trade-off, a coding problem.',
+  'Answers come back interview-shaped: the answer first, then bullets you can expand out loud.',
+  'Press ` to ask out loud; stop talking and the question sends itself.',
+];
 
 export function ClaudePanel({ isActive }: { isActive: boolean }) {
-  const webviewRef = useRef<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
-  const [zoom, setZoom] = useState(0);
-  const desktop = isElectron();
+  const { token } = useAuth();
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [input, setInput] = useState('');
+  const [streamText, setStreamText] = useState('');
+  const [streaming, setStreaming] = useState(false);
+  const [copied, setCopied] = useState(false);
+  // Bumped by the ` shortcut; StreamingMicButton toggles on each new value.
+  const [micToggle, setMicToggle] = useState(0);
 
-  // Wire webview lifecycle events (Electron only). did-finish-load hides the
-  // spinner; did-fail-load surfaces a retry. Guard every access — the element
-  // only exists in the Electron build.
+  const abortRef = useRef<AbortController | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Whatever was already typed when dictation started, so speaking appends to a
+  // half-written question instead of erasing it.
+  const dictationBaseRef = useRef('');
+  // Set only when recording ended because the speaker went quiet — that is the
+  // signal to send. Clicking the mic off deliberately leaves the text to edit.
+  const autoSendRef = useRef(false);
+  // Dictation is async and the composer can be reset underneath it (New chat,
+  // or a send). Stamping the conversation at onStart and re-checking on each
+  // callback stops a finished utterance from landing in — and auto-sending to —
+  // a conversation the user has already moved on from.
+  const convSeqRef = useRef(0);
+  const dictationSeqRef = useRef(0);
+
+  // Abort in flight work on unmount. The shell keeps this tab mounted while it
+  // is inactive, so this only fires on a real teardown — but an interview
+  // produces plenty of superseded questions and each is billed until cut off.
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Follow the tail while an answer streams, but only when the user is already
+  // at the bottom — yanking the viewport away from something they scrolled back
+  // to read is worse than a missed line.
   useEffect(() => {
-    if (!desktop) return;
-    const wv = webviewRef.current;
-    if (!wv) return;
-    const onStart = () => { setLoading(true); setFailed(false); };
-    const onStop = () => setLoading(false);
-    const onFail = (e: any) => {
-      // -3 (ABORTED) fires on normal in-app navigations — ignore it.
-      if (e?.errorCode === -3) return;
-      setLoading(false);
-      setFailed(true);
+    const el = scrollRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (nearBottom) el.scrollTop = el.scrollHeight;
+  }, [messages, streamText]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  const stop = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }, []);
+
+  const newChat = useCallback(() => {
+    stop();
+    convSeqRef.current += 1;
+    dictationBaseRef.current = '';
+    autoSendRef.current = false;
+    setMessages([]);
+    setStreamText('');
+    setStreaming(false);
+    setInput('');
+    inputRef.current?.focus();
+  }, [stop]);
+
+  const copyLast = useCallback(() => {
+    const last = [...messages].reverse().find(m => m.role === 'assistant');
+    if (!last) return;
+    navigator.clipboard?.writeText(last.content).then(() => setCopied(true)).catch(() => { /* clipboard denied */ });
+  }, [messages]);
+
+  // ` toggles the mic. It is already the audio key everywhere else in the shell
+  // — AudioCapture binds it on the behavioral/coding/design surfaces and Sona's
+  // sidebar binds it too — so the tab that is on screen owns it and the meaning
+  // stays the same wherever you are.
+  //
+  // Gated on isActive because this tab is kept MOUNTED while hidden (so a
+  // conversation survives tab switches). Without the gate the listener would
+  // still be live behind the Coding tab and one ` would toggle two mics.
+  // AudioCapture's handler runs on the capture phase and stops propagation, but
+  // it returns early when its own tab is inactive — so while Gemini is on
+  // screen the key reaches this listener untouched.
+  useEffect(() => {
+    if (!isActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      // Shift+` is ~, a character someone may genuinely want to type.
+      if (e.code !== 'Backquote' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      // In this composer ` binds only while it is empty, so a backtick-quoted
+      // snippet types normally once a question is under way. In any other
+      // editable or clickable target the key keeps its native meaning.
+      if (el === inputRef.current) {
+        if (input.trim()) return;
+      } else if (
+        el?.isContentEditable ||
+        el?.tagName === 'INPUT' ||
+        el?.tagName === 'TEXTAREA' ||
+        el?.tagName === 'BUTTON' ||
+        el?.tagName === 'A' ||
+        el?.tagName === 'SELECT'
+      ) {
+        return;
+      }
+      e.preventDefault();
+      setMicToggle(n => n + 1);
     };
-    // claude.ai is an SPA: a single injection at first load is lost the moment
-    // it navigates. Re-apply on every navigation, and swallow failures — the
-    // panel must work whether or not the styling lands.
-    const applyCss = () => { try { wv.insertCSS?.(PANEL_CSS); } catch { /* styling is best-effort */ } };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isActive, input]);
 
-    wv.addEventListener('did-start-loading', onStart);
-    wv.addEventListener('did-stop-loading', onStop);
-    wv.addEventListener('did-finish-load', onStop);
-    wv.addEventListener('did-fail-load', onFail);
-    wv.addEventListener('dom-ready', applyCss);
-    wv.addEventListener('did-navigate', applyCss);
-    wv.addEventListener('did-navigate-in-page', applyCss);
-    return () => {
-      wv.removeEventListener('did-start-loading', onStart);
-      wv.removeEventListener('did-stop-loading', onStop);
-      wv.removeEventListener('did-finish-load', onStop);
-      wv.removeEventListener('did-fail-load', onFail);
-      wv.removeEventListener('dom-ready', applyCss);
-      wv.removeEventListener('did-navigate', applyCss);
-      wv.removeEventListener('did-navigate-in-page', applyCss);
-    };
-  }, [desktop]);
+  const send = useCallback(async (override?: string) => {
+    // Dictation calls this on the same tick as setInput, before `input` state
+    // has committed — so it passes the text explicitly rather than letting this
+    // closure read the pre-dictation value and send the wrong thing.
+    const text = (override ?? input).trim();
+    // Returning here while an answer streams leaves a dictated question sitting
+    // in the box rather than dropping it: the candidate sees it and can send it
+    // themselves once the current answer lands.
+    if (!text || streaming) return;
 
-  const reload = useCallback(() => {
-    setFailed(false);
-    try { webviewRef.current?.reload?.(); } catch { /* not ready */ }
-  }, []);
-  const goHome = useCallback(() => {
-    try { webviewRef.current?.loadURL?.(CLAUDE_URL); } catch { /* not ready */ }
-  }, []);
-  const goBack = useCallback(() => {
-    try { if (webviewRef.current?.canGoBack?.()) webviewRef.current.goBack(); } catch { /* not ready */ }
-  }, []);
-  const startInterviewChat = useCallback(() => {
-    try { webviewRef.current?.loadURL?.(`${CLAUDE_URL}?q=${encodeURIComponent(INTERVIEW_SEED)}`); } catch { /* not ready */ }
-  }, []);
-  const stepZoom = useCallback((delta: number) => {
-    setZoom(prev => {
-      const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, prev + delta));
-      try { webviewRef.current?.setZoomLevel?.(next); } catch { /* not ready */ }
-      return next;
-    });
-  }, []);
+    convSeqRef.current += 1;
+    dictationBaseRef.current = '';
+    const next: Msg[] = [...messages, { role: 'user', content: text }];
+    setMessages(next);
+    setInput('');
+    setStreamText('');
+    setStreaming(true);
 
-  // ── Web build — no embedding possible, offer to open in a browser tab ──
-  if (!desktop) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-        <h2 className="text-lg font-bold" style={{ color: 'var(--lum-text)' }}>Open Claude</h2>
-        <p className="text-sm max-w-md" style={{ color: 'var(--lum-text-2)' }}>
-          Claude can be embedded directly inside the Camora <strong>desktop app</strong>. In the
-          browser, claude.ai blocks embedding, so it opens in a new tab instead.
-        </p>
-        <a
-          href={CLAUDE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary px-5 py-2.5 rounded-lg text-sm font-bold"
-          style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)' }}
-        >
-          Open claude.ai ↗
-        </a>
-      </div>
-    );
-  }
+    const controller = new AbortController();
+    abortRef.current = controller;
+    let full = '';
 
-  const strip = 'flex items-center justify-center w-7 h-7 rounded hover:bg-[var(--lum-surface-hover)] transition-colors';
+    try {
+      const resp = await fetch(`${API_URL}/api/v1/claude/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // lumora-backend authenticates on the Bearer token; the SSO cookie
+          // alone is not enough here, unlike the Capra-served Gemini tab.
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ messages: next }),
+        signal: controller.signal,
+      });
+      if (!resp.ok || !resp.body) throw new Error(`stream failed (${resp.status})`);
 
-  // ── Desktop build — embed claude.ai in a webview ──
+      const reader = resp.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        // The last element is a partial line — hold it until the next chunk
+        // completes it, or a token gets split across reads and is lost.
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.text) { full += parsed.text; setStreamText(full); }
+            if (parsed.error) full = full || `Error: ${parsed.error}`;
+          } catch { /* a partial frame — the next read completes it */ }
+        }
+      }
+
+      // Superseded mid-flight (New chat, or unmount) — don't append into a
+      // conversation that no longer exists.
+      if (abortRef.current !== controller) return;
+      setMessages(prev => [...prev, { role: 'assistant', content: full || 'No response received. Please try again.' }]);
+    } catch (err: any) {
+      if (err?.name === 'AbortError' || abortRef.current !== controller) return;
+      // A partial answer is still worth keeping — the candidate may already be
+      // reading it out loud.
+      setMessages(prev => [...prev, { role: 'assistant', content: full || 'Something went wrong. Please try again.' }]);
+    } finally {
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+        setStreaming(false);
+        setStreamText('');
+        inputRef.current?.focus();
+      }
+    }
+  }, [input, streaming, messages, token]);
+
+  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter sends; Shift+Enter is a newline. Mid-interview the common case by
+    // far is a single pasted question, so Enter should not cost a reach.
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      void send();
+    }
+  }, [send]);
+
+  const strip = 'flex items-center gap-1.5 px-2 h-7 rounded hover:bg-[var(--lum-surface-hover)] transition-colors text-[12px] font-semibold';
+  const hasAnswer = messages.some(m => m.role === 'assistant');
+
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
-      {/* Slim control strip: back / reload / new chat / interview mode / zoom. */}
       <div
         className="flex items-center gap-1 px-2 h-9 shrink-0"
         style={{ background: 'var(--lum-surface)', borderBottom: '1px solid var(--lum-border)' }}
       >
-        <button type="button" onClick={goBack} data-tip="Back" aria-label="Back"
+        <button type="button" onClick={newChat} data-tip="Start a new chat" aria-label="New chat"
           className={strip} style={{ color: 'var(--lum-text-2)' }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-        </button>
-        <button type="button" onClick={reload} data-tip="Reload" aria-label="Reload"
-          className={strip} style={{ color: 'var(--lum-text-2)' }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6M1 20v-6h6" /><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" /></svg>
-        </button>
-        <button type="button" onClick={goHome} data-tip="New chat" aria-label="New chat"
-          className="flex items-center gap-1.5 px-2 h-7 rounded hover:bg-[var(--lum-surface-hover)] transition-colors text-[12px] font-semibold"
-          style={{ color: 'var(--lum-text-2)' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
           New chat
         </button>
-
-        {/* Seeds the first turn so answers come back interview-shaped: answer
-            first, four bullets, complexity for code, STAR for behavioral. */}
-        <button type="button" onClick={startInterviewChat}
-          data-tip="New chat framed for a live interview" aria-label="New interview chat"
-          className="flex items-center gap-1.5 px-2 h-7 rounded transition-colors text-[12px] font-semibold"
-          style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" /><path d="M19 10v2a7 7 0 01-14 0v-2" /></svg>
-          Interview mode
+        <button type="button" onClick={copyLast} disabled={!hasAnswer}
+          data-tip="Copy the last answer" aria-label="Copy answer"
+          className={strip} style={{ color: 'var(--lum-text-2)', opacity: hasAnswer ? 1 : 0.4 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+          {copied ? 'Copied' : 'Copy answer'}
         </button>
-
         <div className="ml-auto flex items-center gap-1">
-          <button type="button" onClick={() => stepZoom(-0.5)} disabled={zoom <= ZOOM_MIN}
-            data-tip="Zoom out" aria-label="Zoom out"
-            className={strip} style={{ color: 'var(--lum-text-2)', opacity: zoom <= ZOOM_MIN ? 0.4 : 1 }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M8 11h6M20 20l-3.5-3.5" /></svg>
-          </button>
-          <button type="button" onClick={() => stepZoom(0.5)} disabled={zoom >= ZOOM_MAX}
-            data-tip="Zoom in" aria-label="Zoom in"
-            className={strip} style={{ color: 'var(--lum-text-2)', opacity: zoom >= ZOOM_MAX ? 0.4 : 1 }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M8 11h6M11 8v6M20 20l-3.5-3.5" /></svg>
-          </button>
-          <span className="text-[12px] font-mono tabular-nums pl-1" style={{ color: 'var(--lum-text-2)' }}>claude.ai</span>
+          <span className="text-[12px] font-mono tabular-nums pl-1" style={{ color: 'var(--lum-text-2)' }}>claude</span>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 relative">
-        {loading && !failed && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10" style={{ color: 'var(--lum-text-2)' }}>
-            <span className="text-sm">Loading Claude…</span>
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3">
+        {!messages.length && !streaming && (
+          <div className="h-full flex flex-col items-center justify-center gap-1.5 text-center px-6">
+            {EMPTY_HINT.map((line, i) => (
+              <p key={i} className="text-[13px] leading-relaxed" style={{ color: 'var(--lum-text-2)' }}>{line}</p>
+            ))}
           </div>
         )}
-        {failed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10" style={{ background: 'var(--lum-bg)' }}>
-            <p className="text-sm" style={{ color: 'var(--lum-text-2)' }}>Couldn’t reach claude.ai.</p>
-            <button type="button" onClick={reload} className="px-4 py-2 rounded text-sm font-semibold"
-              style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)' }}>Retry</button>
-          </div>
-        )}
-        {/* <webview> is an Electron intrinsic element not in React's JSX types —
-            create it via createElement. The persist:claude partition keeps the
-            Claude login across restarts; allowpopups lets Google OAuth open. */}
-        {createElement('webview', {
-          ref: webviewRef,
-          src: CLAUDE_URL,
-          className: 'claude-webview',
-          partition: 'persist:claude',
-          allowpopups: 'true',
-          // Present a standard desktop-Chrome UA so Google doesn't reject sign-in
-          // with "this browser may not be secure" (its embedded-webview block).
-          // The UA string is only half the identity: Google also reads the
-          // Sec-CH-UA client hints, which this attribute cannot touch and which
-          // still name Electron. main.js rewrites both on this partition's
-          // session — keep this version in step with SAFE_UA there, or Google
-          // sees one Chrome in the string and another in the hints.
-          useragent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          // Keep it mounted but let the parent's display:none hide it when the
-          // tab is inactive — reloading on every switch would drop the chat.
-          style: { width: '100%', height: '100%', display: isActive ? 'inline-flex' : 'inline-flex' },
-        })}
+
+        <div className="flex flex-col gap-3">
+          {messages.map((m, i) => (
+            m.role === 'user' ? (
+              <div key={i} className="rounded px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
+                style={{ background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}>
+                {m.content}
+              </div>
+            ) : (
+              <div key={i}><AskResponse content={m.content} /></div>
+            )
+          ))}
+
+          {/* The in-flight answer renders through the same markdown path as a
+              finished one, so nothing reflows the moment the stream closes. */}
+          {streaming && (
+            streamText
+              ? <AskResponse content={streamText} />
+              : <p className="text-[13px]" style={{ color: 'var(--lum-text-2)' }}>Thinking…</p>
+          )}
+        </div>
+      </div>
+
+      <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)', borderTop: '1px solid var(--lum-border)' }}>
+        <div className="flex items-end gap-2">
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKeyDown}
+            rows={2}
+            placeholder="Ask Claude…  (Enter to send, Shift+Enter for a new line, ` for the mic)"
+            className="flex-1 resize-none rounded px-2.5 py-2 text-[13px] leading-relaxed outline-none"
+            style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}
+          />
+          <StreamingMicButton
+            toggleSignal={micToggle}
+            onStart={() => {
+              dictationSeqRef.current = convSeqRef.current;
+              dictationBaseRef.current = input;
+              autoSendRef.current = false;
+            }}
+            onInterim={(t) => {
+              if (dictationSeqRef.current !== convSeqRef.current) return;
+              const base = dictationBaseRef.current.trim();
+              setInput(base && t ? base + ' ' + t : (t || base));
+            }}
+            // Going quiet IS the send. One press, ask the question out loud,
+            // done — rather than press mic, press mic again, press Send, while
+            // an interviewer waits.
+            onSilenceStop={() => { autoSendRef.current = true; }}
+            onFinal={(t) => {
+              const auto = autoSendRef.current;
+              autoSendRef.current = false;
+              if (dictationSeqRef.current !== convSeqRef.current) return;
+              const base = dictationBaseRef.current.trim();
+              const nextText = base && t ? base + ' ' + t : (t || base);
+              setInput(nextText);
+              dictationBaseRef.current = nextText;
+              if (auto && nextText.trim()) void send(nextText);
+            }}
+          />
+          {streaming ? (
+            <button type="button" onClick={stop}
+              className="px-3 h-9 rounded text-[12px] font-semibold shrink-0"
+              style={{ background: 'var(--lum-surface-hover)', color: 'var(--lum-text-2)' }}>
+              Stop
+            </button>
+          ) : (
+            <button type="button" onClick={() => void send()} disabled={!input.trim()}
+              className="px-3 h-9 rounded text-[12px] font-semibold shrink-0"
+              style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', opacity: input.trim() ? 1 : 0.4 }}>
+              Send
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

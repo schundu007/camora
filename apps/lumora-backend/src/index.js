@@ -499,6 +499,7 @@ import documentsRouter from './routes/documents.js';
 import transcriptionRouter from './routes/transcription.js';
 import speakerRouter from './routes/speaker.js';
 import diagramRouter from './routes/diagram.js';
+import claudeRouter from './routes/claude.js';
 import reactionsRouter from './routes/reactions.js';
 import analyticsRouter from './routes/analytics.js';
 import usageRouter from './routes/usage.js';
@@ -553,6 +554,10 @@ app.use('/api/v1/usercode', apiLimiter, authenticate, usercodeRouter);
 app.use('/api/v1/transcribe', transcriptionLimiter, authenticate, requirePaidSubscription, transcriptionRouter);
 app.use('/api/v1/speaker', transcriptionLimiter, authenticate, requirePaidSubscription, speakerRouter);
 app.use('/api/v1/diagram', aiLimiter, authenticate, requirePaidSubscription, diagramRouter);
+// Claude tab — the embedded claude.ai webview, replaced by a real streaming
+// endpoint. Anthropic is Lumora's key to spend, so this lives here rather than
+// beside the Gemini tab's route in ascend-backend (see CLAUDE.md).
+app.use('/api/v1/claude', aiLimiter, authenticate, requirePaidSubscription, claudeRouter);
 
 // Non-AI routes — open to authenticated users. Apply `authenticate`
 // at the mount point so an accidentally-added route inside any of
