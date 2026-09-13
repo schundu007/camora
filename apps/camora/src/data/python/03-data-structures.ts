@@ -92,6 +92,348 @@ print(original, new_list)     # Output: [3, 1, 2] [1, 2, 3]`,
   },
 
   {
+    id: 'tuples',
+    title: 'Tuples',
+    chapter: 'data-structures',
+    track: 'beginner',
+    estimatedMins: 15,
+    summary: `An ordered collection that cannot be changed once built, which is exactly why it can be a dictionary key when a list cannot — the difference interviewers probe with the list-versus-tuple question.`,
+    intro: `A tuple holds a fixed sequence of values. You read it exactly like a list, with indexes and slices and loops, but you cannot add, remove or replace anything after it exists. That one restriction is what makes tuples useful: Python can hash them, so they work as dictionary keys and set members, and a reader can see at a glance that the data was never meant to move.`,
+    sections: [
+      {
+        heading: 'The comma makes the tuple, not the parentheses',
+        body: `This is the single most common tuple mistake. Writing (5) is just the number 5 with brackets around it, because the brackets here mean grouping, the same as in 2 * (3 + 4). What creates a tuple is the comma. So a one-item tuple is (5,) with a trailing comma, and 5, on its own is a tuple too. The empty tuple is the one exception, written () or tuple(), since there is nothing for a comma to separate. If a function is quietly receiving a string where you expected a one-item tuple, this is almost always why.`,
+        code: `not_a_tuple = (5)
+print(type(not_a_tuple))        # Output: <class 'int'>
+
+one = (5,)                      # the trailing comma is the tuple
+print(type(one), len(one))      # Output: <class 'tuple'> 1
+
+also_one = 5,                   # parentheses are optional
+print(also_one)                 # Output: (5,)
+
+empty = ()
+print(type(empty), len(empty))  # Output: <class 'tuple'> 0`,
+      },
+      {
+        heading: 'Immutable means the tuple, not what is inside it',
+        body: `A tuple freezes which objects it holds. It does not freeze those objects. If one of them is a list, that list can still be appended to, and the tuple is perfectly happy because it still points at the same list. This is why a tuple containing a list cannot be hashed and cannot be a dictionary key: Python checks every item, and a list has no stable hash. A tuple whose items are all immutable, all the way down, is hashable.`,
+        code: `t = (1, [2, 3])
+t[1].append(4)               # the list inside is still mutable
+print(t)                     # Output: (1, [2, 3, 4])
+
+# hash(t)  -> TypeError: unhashable type: 'list'
+
+safe = (1, (2, 3))           # immutable all the way down
+print(hash(safe) == hash((1, (2, 3))))   # Output: True`,
+      },
+      {
+        heading: 'Packing and unpacking',
+        body: `Listing values separated by commas builds a tuple, and that is called packing. Going the other way, putting several names on the left of an assignment splits a tuple back out, which is unpacking. The counts must match or Python raises ValueError, unless you mark one name with a star to soak up whatever is left over as a list. Unpacking is everywhere in normal Python, often without parentheses in sight: returning two values from a function, swapping with a, b = b, a, and the i, value pair that enumerate() hands you on each loop are all tuple unpacking.`,
+        code: `person = "Ada", 36, "London"     # packing — parentheses are optional
+print(person)                    # Output: ('Ada', 36, 'London')
+
+name, age, city = person         # unpacking
+print(name, city)                # Output: Ada London
+
+head, *tail = (1, 2, 3, 4)       # a starred name takes the rest, as a list
+print(head, tail)                # Output: 1 [2, 3, 4]`,
+      },
+      {
+        heading: 'Hashable, so it can be a dictionary key',
+        body: `A hash is a number Python derives from a value so it can find that value again instantly in a dict or a set. The rule is that the hash must never change while the object is in use, which is why only immutable objects are hashable. A tuple of immutable items qualifies, so a coordinate pair, a (row, column) cell or a (function, args) cache key all work as dictionary keys. A list never does, because appending to it would change its hash and lose the entry.`,
+        code: `grid = {(0, 0): "start", (1, 2): "treasure"}
+print(grid[(1, 2)])          # Output: treasure
+
+seen = {(1, 2), (3, 4), (1, 2)}
+print(len(seen))             # Output: 2   the duplicate is dropped
+
+print(hash((1, 2)) == hash((1, 2)))   # Output: True
+
+# hash([1, 2])  -> TypeError: unhashable type: 'list'`,
+      },
+      {
+        heading: 'There is no tuple comprehension',
+        body: `Python has list, dict and set comprehensions, but not a tuple one, and the reason is syntax rather than principle: parentheses were already taken. Writing (n * n for n in range(5)) gives you a generator expression, which produces values lazily one at a time instead of building a collection. That is a genuinely useful thing to have, so Python kept it. When you want a real tuple, wrap the same expression in tuple(). Remember a generator is single-use: once you have walked it, it is empty.`,
+        code: `squares_list = [n * n for n in range(5)]
+print(squares_list)              # Output: [0, 1, 4, 9, 16]
+
+gen = (n * n for n in range(5))  # parentheses give a GENERATOR, not a tuple
+print(type(gen))                 # Output: <class 'generator'>
+
+squares_tuple = tuple(n * n for n in range(5))
+print(squares_tuple)             # Output: (0, 1, 4, 9, 16)
+
+g = (n for n in range(3))
+print(list(g))                   # Output: [0, 1, 2]
+print(list(g))                   # Output: []   already exhausted`,
+      },
+      {
+        heading: 'namedtuple gives the positions names',
+        body: `The weakness of a plain tuple is that p[0] tells a reader nothing. collections.namedtuple builds a tuple subclass whose positions also have names, so you can write p.x while everything that worked before still works: indexing, unpacking, comparison, hashing and use as a dictionary key. It costs no more memory than a plain tuple. Since it is still immutable, _replace() returns a new instance rather than editing the old one, and _asdict() hands you a plain dictionary. If you want the same readability with defaults and type hints, typing.NamedTuple is the modern spelling of the same idea.`,
+        code: `from collections import namedtuple
+
+Point = namedtuple("Point", ["x", "y"])
+p = Point(3, 4)
+
+print(p.x, p.y)              # Output: 3 4
+print(p[0])                  # Output: 3   still indexable like a tuple
+print(p)                     # Output: Point(x=3, y=4)
+print(isinstance(p, tuple))  # Output: True`,
+      },
+      {
+        heading: 'Tuple or list: how to choose',
+        body: `Ask one question: will this collection grow, shrink or change? If yes, use a list. If no, use a tuple. A fixed set of weekday labels, a coordinate, a colour channel triple and a function returning two values are all tuples. A shopping basket, a queue of jobs and a buffer of readings are all lists. There is a small performance edge too — a tuple takes slightly less memory and builds a little faster, because Python does not have to leave room for growth — but that is rarely the reason to pick one. The real reason is that a tuple documents intent and makes accidental modification a loud TypeError instead of a silent bug.`,
+        code: `DAYS = ("Mon", "Tue", "Wed")     # a fixed set of labels — tuple
+scores = [90, 85]                # this will grow — list
+
+scores.append(78)
+print(scores)                    # Output: [90, 85, 78]
+print(hasattr(DAYS, "append"))   # Output: False
+print(hasattr(scores, "append")) # Output: True
+
+config = {("db", "host"): "localhost"}   # a tuple key works
+print(config[("db", "host")])            # Output: localhost`,
+      },
+    ],
+    keyTerms: [
+      { term: 'Immutable',     meaning: 'Cannot be changed after creation. A tuple has no append, no remove, no sort and no item assignment.' },
+      { term: 'Packing',       meaning: 'Building a tuple by writing values separated by commas, with or without parentheses.' },
+      { term: 'Unpacking',     meaning: 'Splitting a tuple across several names in one assignment. The counts must match unless a name is starred.' },
+      { term: 'Trailing comma', meaning: 'The comma that makes a one-item tuple. (5,) is a tuple; (5) is just the number 5.' },
+      { term: 'Hashable',      meaning: 'Has a hash that never changes, so it can be a dictionary key or a set member. A tuple is hashable only if every item is.' },
+      { term: 'Generator expression', meaning: 'What parentheses around a comprehension actually produce. It yields values one at a time instead of building a tuple.' },
+      { term: 'namedtuple',    meaning: 'A tuple subclass from the collections module whose positions also have names, so p.x works alongside p[0].' },
+      { term: 'Shallow immutability', meaning: 'A tuple fixes which objects it holds, but not the contents of any mutable object among them.' },
+    ],
+    cleanCode: `point = (3, 4)
+
+print(point[0])          # Output: 3
+print(point[-1])         # Output: 4
+print(len(point))        # Output: 2
+
+x, y = point             # unpacking: one name per item
+print(x, y)              # Output: 3 4
+
+# point[0] = 9           -> TypeError: 'tuple' object does not support item assignment
+
+bigger = point + (5,)    # concatenation builds a NEW tuple
+print(bigger)            # Output: (3, 4, 5)
+print(point)             # Output: (3, 4)   the original is unchanged`,
+    walkthrough: [
+      {
+        code: `point = (3, 4)`,
+        explain: `Creates a tuple of two items. The comma is what makes it a tuple; the parentheses only group it. point = 3, 4 builds exactly the same object.`,
+      },
+      {
+        code: `point[0]`,
+        explain: `Indexing works just as it does on a list. Python counts from 0, so index 0 is the first item. Slicing works too, and a slice of a tuple is another tuple.`,
+      },
+      {
+        code: `point[-1]`,
+        explain: `Negative indexes count from the end, so -1 is the last item and -2 the one before it.`,
+      },
+      {
+        code: `len(point)`,
+        explain: `How many items the tuple holds. Unlike a list, that number can never change for the life of the object.`,
+      },
+      {
+        code: `x, y = point`,
+        explain: `Unpacking pairs each name on the left with each item on the right. The counts have to match, or Python raises ValueError: too many values to unpack.`,
+      },
+      {
+        code: `point[0] = 9`,
+        explain: `Not allowed. It raises TypeError: 'tuple' object does not support item assignment. There is no append, remove, insert or sort either — a tuple has exactly two methods, count and index.`,
+      },
+      {
+        code: `point + (5,)`,
+        explain: `Concatenation builds a new tuple and leaves both originals untouched. Note the trailing comma in (5,): without it Python sees the integer 5 and raises TypeError, because you cannot concatenate an int to a tuple.`,
+      },
+    ],
+    examples: [
+      {
+        label: 'Packing & unpacking',
+        code: `person = "Ada", 36, "London"     # packing — no parentheses needed
+print(person)                    # Output: ('Ada', 36, 'London')
+
+name, age, city = person         # unpacking
+print(name, city)                # Output: Ada London
+
+a, b = 1, 2
+a, b = b, a                      # swap with no temp variable
+print(a, b)                      # Output: 2 1
+
+head, *tail = (1, 2, 3, 4)       # star takes everything left over
+print(head, tail)                # Output: 1 [2, 3, 4]
+
+(x, y), z = (1, 2), 3            # unpacking can nest
+print(x, y, z)                   # Output: 1 2 3
+
+def min_max(nums):
+    return min(nums), max(nums)  # returning two values returns one tuple
+
+lo, hi = min_max([4, 1, 9])
+print(lo, hi)                    # Output: 1 9`,
+      },
+      {
+        label: 'The trailing comma',
+        code: `not_a_tuple = (5)
+print(type(not_a_tuple))        # Output: <class 'int'>
+
+one = (5,)
+print(type(one), len(one))      # Output: <class 'tuple'> 1
+
+also_one = 5,                   # parentheses are optional
+print(also_one)                 # Output: (5,)
+
+empty = ()
+print(type(empty), len(empty))  # Output: <class 'tuple'> 0
+
+print(("hi"))                   # Output: hi        just a string in brackets
+print(("hi",))                  # Output: ('hi',)   a one-item tuple`,
+      },
+      {
+        label: 'Tuples as keys',
+        code: `from collections import Counter
+
+# Counting pairs: the pair itself is the key
+moves = [("a", "b"), ("b", "c"), ("a", "b")]
+print(Counter(moves))
+# Output: Counter({('a', 'b'): 2, ('b', 'c'): 1})
+
+# A tuple of arguments makes a natural cache key
+cache = {}
+
+def slow_add(a, b):
+    key = (a, b)
+    if key not in cache:
+        cache[key] = a + b
+    return cache[key]
+
+print(slow_add(2, 3))            # Output: 5
+print(cache)                     # Output: {(2, 3): 5}
+
+# A list cannot be a key at all:
+# cache[[2, 3]] = 5  -> TypeError, a list is unhashable`,
+      },
+      {
+        label: 'No tuple comprehension',
+        code: `squares_list = [n * n for n in range(5)]
+print(squares_list)              # Output: [0, 1, 4, 9, 16]
+
+gen = (n * n for n in range(5))  # parentheses give a GENERATOR, not a tuple
+print(type(gen))                 # Output: <class 'generator'>
+
+squares_tuple = tuple(n * n for n in range(5))
+print(squares_tuple)             # Output: (0, 1, 4, 9, 16)
+
+# A generator is single-use
+g = (n for n in range(3))
+print(list(g))                   # Output: [0, 1, 2]
+print(list(g))                   # Output: []   already exhausted`,
+      },
+      {
+        label: 'namedtuple',
+        code: `from collections import namedtuple
+
+Point = namedtuple("Point", ["x", "y"])
+p = Point(3, 4)
+
+print(p.x, p.y)              # Output: 3 4
+print(p[0])                  # Output: 3   still indexable like a tuple
+print(p)                     # Output: Point(x=3, y=4)
+
+x, y = p                     # still unpacks
+print(x, y)                  # Output: 3 4
+
+moved = p._replace(x=10)     # returns a NEW Point; p is untouched
+print(moved, p)              # Output: Point(x=10, y=4) Point(x=3, y=4)
+print(p._asdict())           # Output: {'x': 3, 'y': 4}
+print(isinstance(p, tuple))  # Output: True`,
+      },
+      {
+        label: 'Immutable only at the top',
+        code: `t = (1, [2, 3])
+t[1].append(4)               # the list inside is still mutable
+print(t)                     # Output: (1, [2, 3, 4])
+
+# The famous one: this both raises AND succeeds
+t = ([1, 2],)
+try:
+    t[0] += [3]
+except TypeError as e:
+    print("TypeError:", e)
+    # Output: TypeError: 'tuple' object does not support item assignment
+print(t)                     # Output: ([1, 2, 3],)   the list changed anyway
+
+safe = (1, (2, 3))           # immutable all the way down
+print(hash(safe) == hash((1, (2, 3))))   # Output: True`,
+      },
+    ],
+    cheatSheet: [
+      { call: 't.count(x)',              does: 'Counts how many times x appears in the tuple.',                                       returns: 'int' },
+      { call: 't.index(x)',              does: 'Finds the position of the first x. Raises ValueError if x is not there.',             returns: 'int' },
+      { call: 'len(t)',                  does: 'Reports how many items the tuple holds.',                                             returns: 'int' },
+      { call: 'tuple(iterable)',         does: 'Builds a tuple from any iterable, including a generator expression or a string.',      returns: 'tuple' },
+      { call: 't + other',               does: 'Joins two tuples into a new one. Neither original changes.',                          returns: 'tuple' },
+      { call: 't * 3',                   does: 'Repeats the items three times in a new tuple.',                                       returns: 'tuple' },
+      { call: 'x in t',                  does: 'Checks membership by scanning the tuple, so it costs time proportional to length.',   returns: 'bool' },
+      { call: 'sorted(t)',               does: 'Sorts the items. It always hands back a list, so wrap it in tuple() if you need one.', returns: 'list' },
+      { call: 'hash(t)',                 does: 'Computes the hash. Raises TypeError if any item inside is mutable.',                   returns: 'int' },
+      { call: 'namedtuple(name, fields)', does: 'Creates a tuple subclass whose positions also have names.',                          returns: 'type' },
+      { call: 'p._replace(x=9)',         does: 'Returns a new namedtuple with one field changed. The original is untouched.',         returns: 'namedtuple' },
+      { call: 'p._asdict()',             does: 'Converts a namedtuple into a plain dictionary of field to value.',                    returns: 'dict' },
+    ],
+    interviewQs: [
+      {
+        q: 'Differentiate between a list and a tuple.',
+        a: `A list is mutable and a tuple is not. That single difference drives everything else. A list has append, remove, insert, sort and item assignment; a tuple has only count and index. A tuple is hashable when its items are, so it can be a dictionary key or a set member, while a list can never be either. A tuple uses slightly less memory and builds a little faster because Python does not reserve room for growth. Syntax is square brackets versus parentheses, though the comma is what actually makes a tuple. In practice I reach for a list when the collection will change, and a tuple for fixed records like a coordinate or a function returning two values.`,
+      },
+      {
+        q: 'Is tuple comprehension possible? If yes how, if not why?',
+        a: `No, there is no tuple comprehension. Putting a comprehension in parentheses gives you a generator expression instead, because that syntax was already claimed and generators are too useful to give up. So (n * n for n in range(5)) is a generator, not a tuple. To get an actual tuple you wrap it: tuple(n * n for n in range(5)). Nothing is lost, since the generator is consumed once to build the tuple. It also fits the type: a comprehension builds a collection up piece by piece, which is a mutable operation, so the natural result is a list.`,
+      },
+      {
+        q: 'How do you create a tuple with a single element?',
+        a: `With a trailing comma: (5,) or just 5,. The comma is what makes a tuple, not the parentheses, so (5) is simply the number 5 in grouping brackets. The empty tuple is the exception, written () or tuple(), because there is nothing to separate. This bites most often when a function returns (value) and the caller expects a one-item tuple.`,
+      },
+      {
+        q: 'Why can a tuple be a dictionary key when a list cannot?',
+        a: `Because a dictionary finds entries by hash, and a hash has to stay the same for as long as the key is in the dictionary. A tuple is immutable, so its hash is fixed and the entry stays findable. A list can be appended to, which would change its hash and strand the entry, so Python refuses to hash a list at all. The rule is per instance: a tuple that contains a list is itself unhashable, because hashing it means hashing the list inside.`,
+      },
+      {
+        q: 'Are tuples always immutable?',
+        a: `The tuple is, but its contents may not be. A tuple fixes which objects it points at, not what those objects contain. So in t = (1, [2, 3]) you cannot replace either item, but you can call t[1].append(4) and the tuple now prints as (1, [2, 3, 4]). There is a well-known consequence: t[0] += [3] on a tuple holding a list raises TypeError and still modifies the list, because the in-place add runs first and the failed assignment comes second.`,
+      },
+      {
+        q: 'When would you choose a tuple over a list in real code?',
+        a: `When the collection is a fixed record rather than a growing container. Coordinates, colour triples, database rows, a fixed set of labels, and anything used as a dictionary key or a set member. I also return a tuple from a function that produces two or three related values, because the caller unpacks it in one line. The immutability is documentation: a reader knows nothing will reassign it, and an accidental modification fails loudly instead of corrupting data quietly.`,
+      },
+      {
+        q: 'What is a namedtuple and why would you use one?',
+        a: `It is a tuple subclass from the collections module whose positions also have names, so you read p.x instead of p[0]. It is still a tuple underneath: it indexes, unpacks, compares, hashes and costs the same memory. It is the cheapest way to make a small record readable without writing a class, and _replace() gives you a changed copy while keeping immutability. For defaults and type hints I would use typing.NamedTuple, and for something mutable with behaviour a dataclass is the better fit.`,
+      },
+    ],
+    references: [
+      { label: 'Programiz — Python Tuple',                 url: 'https://www.programiz.com/python-programming/tuple' },
+      { label: 'Python docs — Sequence Types',             url: 'https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range' },
+      { label: 'Python docs — collections.namedtuple',     url: 'https://docs.python.org/3/library/collections.html#collections.namedtuple' },
+    ],
+    edgeCases: [
+      `(5) is the integer 5, not a tuple. Only the comma builds one: (5,) or 5,. The empty tuple () is the sole exception.`,
+      `A tuple has exactly two methods, count and index. t.append("x") raises AttributeError: 'tuple' object has no attribute 'append'.`,
+      `Unpacking must match the length. a, b = (1, 2, 3) raises ValueError: too many values to unpack (expected 2, got 3). Use a, *rest to absorb the remainder.`,
+      `A tuple holding a list is unhashable, so it cannot be a dictionary key or a set member even though the tuple itself cannot be reassigned.`,
+      `t + (4,) builds a whole new tuple every time. Concatenating in a loop is quadratic work — collect into a list and call tuple() once at the end.`,
+      `Comparison runs item by item from the left, so (1, 2) < (1, 3) is True and sorting a list of tuples sorts by first item, then second.`,
+      `sorted() on a tuple returns a list, not a tuple. tuple(sorted(t)) gives you a tuple back.`,
+      `A slice of a tuple is a tuple, so t[1:] on a three-item tuple gives a two-item tuple, never a list.`,
+    ],
+    gotcha: `t[0] += [3] on a tuple holding a list raises TypeError and modifies the list anyway. Python runs the in-place add on the list first, which succeeds, and only then tries to store the result back into the tuple, which fails. You end up with an error message and a changed list. Avoid in-place operators on anything reached through a tuple index.`,
+    tip: `Let unpacking do the work. Return several values as one tuple and the caller reads lo, hi = min_max(nums) in a single line. Inside loops, for i, value in enumerate(items) and for key, value in d.items() are both tuple unpacking. When the positions start needing a comment to explain them, switch to namedtuple.`,
+  },
+
+  {
     id: 'dicts-sets',
     title: 'Dictionaries & Sets',
     chapter: 'data-structures',
