@@ -222,11 +222,11 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
         {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
-        {/* Claude and Gemini embed claude.ai / aistudio.google.com in a webview,
-            which only works in the Electron desktop app — hide both in the web
-            build. */}
+        {/* The Claude tab embeds claude.ai in a webview, which only works in the
+            Electron desktop app — hide it in the web build. Gemini is not a
+            webview (it streams from our backend), so it stays visible on web. */}
         {TOOL_ITEMS
-          .filter(item => (item.id !== 'claude' && item.id !== 'gemini') || isElectron())
+          .filter(item => item.id !== 'claude' || isElectron())
           .map(item => {
           const active = activeTab === item.id;
           return (
