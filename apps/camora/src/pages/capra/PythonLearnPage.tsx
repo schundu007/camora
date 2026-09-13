@@ -2,8 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
-import { PYTHON_TOPICS, type Topic } from '../../data/python';
+import { PYTHON_TOPICS, CHAPTERS, type Topic } from '../../data/python';
 import Chip from '@/components/shared/ui/Chip';
+import ChapterNav, { TopicButton } from '@/components/capra/python/ChapterNav';
+import ConceptSections from '@/components/capra/python/ConceptSections';
+import KeyTermsTable from '@/components/capra/python/KeyTermsTable';
+import CheatSheetTable from '@/components/capra/python/CheatSheetTable';
+import InterviewQuestions from '@/components/capra/python/InterviewQuestions';
+import ReferenceLinks from '@/components/capra/python/ReferenceLinks';
 
 const CodeBlock = ({ code }: { code: string }) => {
   const [copied, setCopied] = useState(false);
@@ -28,37 +34,6 @@ const CodeBlock = ({ code }: { code: string }) => {
   );
 };
 
-const TopicButton = ({ topic, active, onClick }: { topic: Topic; active: boolean; onClick: () => void }) => (
-  <button onClick={onClick} className="w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center justify-between gap-2"
-    style={{
-      background: active ? 'color-mix(in oklab, var(--cam-gold-leaf) 12%, var(--bg-elevated))' : 'transparent',
-      border: active ? '1px solid color-mix(in oklab, var(--cam-gold-leaf) 40%, transparent)' : '1px solid transparent',
-    }}
-    onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-elevated)'; }}
-    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
-    <span className={`text-[13px] ${active ? 'font-semibold' : 'font-medium'}`}
-      style={{ color: active ? 'var(--cam-gold-leaf-dk)' : 'var(--text-secondary)' }}>
-      {topic.title}
-    </span>
-    <span className="font-mono text-[12px] shrink-0" style={{ color: 'var(--text-muted)' }}>{topic.estimatedMins}m</span>
-  </button>
-);
-
-const TopicGroup = ({ label, topics, selectedId, onSelect, accent }: {
-  label: string; topics: Topic[]; selectedId: string; onSelect: (id: string) => void; accent: string;
-}) => (
-  <div>
-    <div className="flex items-center gap-2 mb-2 px-1">
-      <div className="w-1.5 h-1.5 rounded-full" style={{ background: accent }} />
-      <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: accent }}>{label}</span>
-      <span className="font-mono text-[12px]" style={{ color: 'var(--text-muted)' }}>{topics.length}</span>
-    </div>
-    <div className="space-y-0.5">
-      {topics.map(t => <TopicButton key={t.id} topic={t} active={t.id === selectedId} onClick={() => onSelect(t.id)} />)}
-    </div>
-  </div>
-);
-
 const TopicView = ({ topic }: { topic: Topic }) => {
   const [activeExample, setActiveExample] = useState(0);
   useEffect(() => setActiveExample(0), [topic.id]);
@@ -75,9 +50,16 @@ const TopicView = ({ topic }: { topic: Topic }) => {
           <span className="font-mono text-[12px]" style={{ color: 'var(--text-muted)' }}>~{topic.estimatedMins} min</span>
         </div>
         <div className="px-6 py-5">
+          <p className="text-[13px] leading-relaxed mb-3 font-medium" style={{ color: 'var(--text-primary)' }}>{topic.summary}</p>
           <p className="text-[15px] leading-relaxed text-[var(--text-secondary)]">{topic.intro}</p>
         </div>
       </div>
+
+      {/* Concept */}
+      <ConceptSections sections={topic.sections} />
+
+      {/* Key Terms */}
+      <KeyTermsTable terms={topic.keyTerms} />
 
       {/* Reference Code */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
@@ -131,6 +113,9 @@ const TopicView = ({ topic }: { topic: Topic }) => {
         </div>
       </div>
 
+      {/* Cheat Sheet */}
+      <CheatSheetTable rows={topic.cheatSheet} />
+
       {/* Edge Cases */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, var(--warning) 20%, var(--border))' }}>
         <div className="px-6 py-3" style={{ background: 'color-mix(in oklab, var(--warning) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--warning) 15%, var(--border))' }}>
@@ -145,6 +130,9 @@ const TopicView = ({ topic }: { topic: Topic }) => {
           ))}
         </ul>
       </div>
+
+      {/* Interview Questions */}
+      <InterviewQuestions questions={topic.interviewQs} />
 
       {/* Gotcha + Tip */}
       <div className="grid grid-cols-2 gap-4">
@@ -161,6 +149,9 @@ const TopicView = ({ topic }: { topic: Topic }) => {
           <p className="px-5 py-4 text-[13px] leading-relaxed text-[var(--text-secondary)]">{topic.tip}</p>
         </div>
       </div>
+
+      {/* Go Deeper */}
+      <ReferenceLinks references={topic.references} />
     </article>
   );
 };
@@ -180,12 +171,16 @@ export default function PythonLearnPage() {
   }, []);
 
   const selected = useMemo(() => PYTHON_TOPICS.find(t => t.id === selectedId) || PYTHON_TOPICS[0], [selectedId]);
-  const beginnerTopics = useMemo(() => PYTHON_TOPICS.filter(t => t.track === 'beginner'), []);
-  const advancedTopics = useMemo(() => PYTHON_TOPICS.filter(t => t.track === 'advanced'), []);
   const filtered = useMemo(() => {
     if (!search.trim()) return null;
     const q = search.toLowerCase();
-    return PYTHON_TOPICS.filter(t => t.title.toLowerCase().includes(q) || t.intro.toLowerCase().includes(q));
+    return PYTHON_TOPICS.filter(t =>
+      t.title.toLowerCase().includes(q) ||
+      t.summary.toLowerCase().includes(q) ||
+      t.intro.toLowerCase().includes(q) ||
+      (t.keyTerms    ?? []).some(k => k.term.toLowerCase().includes(q)) ||
+      (t.interviewQs ?? []).some(iq => iq.q.toLowerCase().includes(q))
+    );
   }, [search]);
 
   const totalMins = PYTHON_TOPICS.reduce((s, t) => s + t.estimatedMins, 0);
@@ -216,11 +211,12 @@ export default function PythonLearnPage() {
             <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--cam-gold-leaf)' }}>Learning Library</span>
           </div>
           <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--cam-strip-heading)' }}>Python <span style={{ color: 'var(--cam-gold-leaf-lt)' }}>Mastery</span></h1>
-          <p className="text-sm mb-5" style={{ color: 'var(--cam-strip-text)' }}>From variables to async — {PYTHON_TOPICS.length} topics, ~{Math.round(totalMins / 60)}h of material</p>
+          <p className="text-sm mb-5" style={{ color: 'var(--cam-strip-text)' }}>
+            {PYTHON_TOPICS.length} topics across {CHAPTERS.filter(c => PYTHON_TOPICS.some(t => t.chapter === c.id)).length} chapters — ~{Math.round(totalMins / 60)}h of material
+          </p>
           <div className="flex items-center gap-3 flex-wrap">
             {[
-              { label: `${beginnerTopics.length} Beginner Topics`, variant: 'success' as const },
-              { label: `${advancedTopics.length} Advanced Topics`, variant: 'gold' as const },
+              { label: 'Real Interview Questions', variant: 'gold' as const },
               { label: 'Real-world Examples', variant: 'default' as const },
               { label: 'Google · Netflix · NVIDIA', variant: 'default' as const },
             ].map(b => (
@@ -251,10 +247,7 @@ export default function PythonLearnPage() {
                 {filtered.length === 0 && <p className="text-xs text-[var(--text-muted)] px-2">No topics match</p>}
               </div>
             ) : (
-              <div className="space-y-4">
-                <TopicGroup label="Beginner" topics={beginnerTopics} selectedId={selectedId} onSelect={setTopic} accent="var(--cam-primary)" />
-                <TopicGroup label="Advanced" topics={advancedTopics} selectedId={selectedId} onSelect={setTopic} accent="var(--cam-gold-leaf)" />
-              </div>
+              <ChapterNav topics={PYTHON_TOPICS} selectedId={selectedId} onSelect={setTopic} />
             )}
           </aside>
 
