@@ -87,8 +87,6 @@ const FlyerPage = lazy(() => import('./pages/FlyerPage'));
 const MobileAuthPage = lazy(() => import('./pages/MobileAuthPage'));
 const PythonLearnPage = lazy(() => import('./pages/capra/PythonLearnPage'));
 const K8sPathPage = lazy(() => import('./pages/capra/K8sPathPage'));
-const ProgramizLearnPage = lazy(() => import('./pages/capra/ProgramizLearnPage'));
-const LearnTopicPage = lazy(() => import('./pages/capra/LearnTopicPage'));
 const PlaygroundPage = lazy(() => import('./pages/PlaygroundPage'));
 const AdminPlaygroundObservePage = lazy(() => import('./pages/admin/AdminPlaygroundObservePage'));
 const AdminApiKeysPage = lazy(() => import('./pages/admin/AdminApiKeysPage'));
@@ -485,8 +483,6 @@ const RouteTitle = () => {
       ['/capra/library', 'Problem Library — Camora'],
       ['/capra/problems', 'Problem — Camora'],
       ['/capra/learn/python', 'Python — Learning Library — Camora'],
-      ['/capra/learn/programiz', 'Programiz Python — Camora'],
-      ['/capra/learn/topic', 'Learn — Camora'],
       ['/capra/onboarding', 'Get Started — Camora'],
       ['/jobs', 'Jobs — Camora'],
       ['/profile', 'Profile — Camora'],
@@ -653,8 +649,7 @@ export const App = () => {
           <Route path="/capra/flashcards"   element={<ShellRoute><FlashcardsPage /></ShellRoute>} />
           <Route path="/capra/k8s" element={<ShellRoute><K8sPathPage /></ShellRoute>} />
           <Route path="/capra/learn/python" element={<ShellRoute><PythonLearnPage /></ShellRoute>} />
-          <Route path="/capra/learn/programiz" element={<ShellRoute><ProgramizLearnPage /></ShellRoute>} />
-          <Route path="/capra/learn/topic/:slug" element={<ShellRoute><LearnTopicPage /></ShellRoute>} />
+          <Route path="/capra/learn/programiz" element={<Navigate to="/capra/learn/python" replace />} />
           <Route path="/playground" element={<ShellRoute><ProtectedRoute><PlaygroundPage /></ProtectedRoute></ShellRoute>} />
           <Route path="/capra/playground" element={<Navigate to="/playground?tab=vm" replace />} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
