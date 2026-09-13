@@ -2,7 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { PYTHON_TOPICS } from './index';
 import { CHAPTERS, CHAPTER_IDS, type Topic } from './types';
 
-const MD_BOLD   = /\*\*\S[\s\S]*?\S\*\*/;
+// Markdown bold never has an alphanumeric immediately outside either
+// delimiter, whereas Python's power operator always does on at least one
+// side. The negative lookbehind kills `3**2`; the negative lookahead kills
+// a trailing `**kwargs`.
+const MD_BOLD   = /(?<![A-Za-z0-9])\*\*(?=\S)[^\n]*?(?<=\S)\*\*(?![A-Za-z0-9])/;
 const MD_FENCE  = /```/;
 const MD_HEAD   = /^#{1,6}\s/m;
 const EMOJI     = /\p{Extended_Pictographic}/u;
@@ -78,6 +82,15 @@ describe('PYTHON_TOPICS', () => {
         expect(MD_HEAD.test(s),  `${t.id}: markdown heading in "${s.slice(0, 60)}"`).toBe(false);
         expect(EMOJI.test(s),    `${t.id}: emoji in "${s.slice(0, 60)}"`).toBe(false);
       }
+    }
+  });
+
+  it('does not mistake Python operators for markdown bold', () => {
+    for (const s of ['3**2 is 9 and 2**9 is 512', 'a**b then c**d', 'Use *args and **kwargs', 'x ** 2', 'dict(**a, **b)']) {
+      expect(MD_BOLD.test(s), `false positive on "${s}"`).toBe(false);
+    }
+    for (const s of ['This is **bold** text', '**bold**', 'ends with **bold**']) {
+      expect(MD_BOLD.test(s), `missed real bold in "${s}"`).toBe(true);
     }
   });
 

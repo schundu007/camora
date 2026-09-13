@@ -152,7 +152,7 @@ while line := buf.readline():
     ],
     edgeCases: [
       `-7 // 2 is -4, not -3. Floor division rounds toward negative infinity, not toward zero.`,
-      `2 ** 3 ** 2 equals 512, not 64. ** is right-associative: it evaluates as 2 ** (3 ** 2) = 2 ** 9.`,
+      `2 ** 3 ** 2 equals 512, not 64. ** is right-associative: it evaluates as 2 ** (3**2) = 2**9.`,
       `and and or return one of their operands, not True/False. 'hello' or 'fallback' returns 'hello'.`,
     ],
     gotcha: `x / y always returns a float. If you need an integer for indexing or range(), use x // y or int(x / y).`,
