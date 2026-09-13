@@ -11,11 +11,23 @@ const MD_FENCE  = /```/;
 const MD_HEAD   = /^#{1,6}\s/m;
 const EMOJI     = /\p{Extended_Pictographic}/u;
 
+// There is deliberately NO italic (*...*) and NO underscore-bold (__...__)
+// check here, and adding one is a mistake that looks like a fix.
+// __init__, __hash__, __enter__, __exit__, __new__ and *args appear all over
+// this curriculum as ordinary prose, and any naive rule fires on every one of
+// them. The bold rule above survives only because it demands a doubled
+// asterisk with no alphanumeric immediately outside either delimiter, which
+// no dunder name and no *args can satisfy. A single-asterisk or underscore
+// rule has no such escape hatch. Leave it out.
+
+/** Every field that renders as a plain text node and so must carry no markup. */
 function proseOf(t: Topic): string[] {
   return [
     t.summary, t.intro, t.gotcha, t.tip,
     ...t.edgeCases,
     ...t.walkthrough.map(w => w.explain),
+    ...t.examples.map(e => e.label),
+    ...(t.references  ?? []).map(r => r.label),
     ...(t.sections    ?? []).flatMap(s => [s.heading, s.body]),
     ...(t.keyTerms    ?? []).flatMap(k => [k.term, k.meaning]),
     ...(t.interviewQs ?? []).flatMap(q => [q.q, q.a]),
@@ -39,19 +51,54 @@ const EXISTING_IDS = [
   'async', 'concurrency', 'type-hints', 'performance',
 ];
 
-/** Topics written to the full schema, with every optional card filled in. */
-const FULLY_WRITTEN: string[] = ['variables', 'tuples'];
+/**
+ * Topics still carrying their pre-refactor depth, exempt from the full bar
+ * below until they are promoted.
+ *
+ * This list is an EXEMPTION, not an opt-in. The full bar applies to every
+ * topic that is not named here, so a new topic is checked the moment it
+ * exists and forgetting to write it properly fails instead of passing.
+ *
+ * It only ever shrinks. Promoting a topic means revisiting cleanCode,
+ * walkthrough, edgeCases, gotcha and tip alongside the new fields (see the
+ * plan's Global Constraints), and then deleting its id from here.
+ */
+const THIN_LEGACY: string[] = [
+  'operators', 'control-flow', 'loops',
+  'functions', 'closures', 'decorators',
+  'lists', 'dicts-sets', 'strings', 'comprehensions',
+  'oop-basics', 'dataclasses', 'generators',
+  'errors', 'file-io', 'context-managers', 'modules',
+  'async', 'concurrency', 'type-hints', 'performance',
+];
 
-describe('fully written topics', () => {
-  it.each(FULLY_WRITTEN)('%s carries every optional field', (id) => {
-    const t = PYTHON_TOPICS.find(x => x.id === id);
-    expect(t, `missing topic ${id}`).toBeDefined();
-    expect(t!.sections?.length,    `${id}: sections`).toBeGreaterThanOrEqual(2);
-    expect(t!.keyTerms?.length,    `${id}: keyTerms`).toBeGreaterThanOrEqual(3);
-    expect(cheatRowCount(t!),      `${id}: cheatSheet rows`).toBeGreaterThanOrEqual(3);
-    expect(t!.interviewQs?.length, `${id}: interviewQs`).toBeGreaterThanOrEqual(3);
-    expect(t!.examples.length,     `${id}: examples`).toBeGreaterThanOrEqual(3);
-    expect(t!.references?.length,  `${id}: references`).toBeGreaterThanOrEqual(1);
+describe('topic completeness', () => {
+  it('exempts only topics that still exist', () => {
+    const ids = new Set(PYTHON_TOPICS.map(t => t.id));
+    for (const id of THIN_LEGACY) {
+      expect(ids.has(id), `THIN_LEGACY names ${id}, which is not a topic any more`).toBe(true);
+    }
+  });
+
+  const promoted = PYTHON_TOPICS.filter(t => !THIN_LEGACY.includes(t.id));
+
+  it('has at least one promoted topic to check', () => {
+    expect(promoted.length).toBeGreaterThan(0);
+  });
+
+  it.each(promoted.map(t => t.id))('%s meets the full bar', (id) => {
+    const t = PYTHON_TOPICS.find(x => x.id === id)!;
+    expect(t.sections?.length,    `${id}: sections`).toBeGreaterThanOrEqual(2);
+    expect(t.keyTerms?.length,    `${id}: keyTerms`).toBeGreaterThanOrEqual(3);
+    expect(cheatRowCount(t),      `${id}: cheatSheet rows`).toBeGreaterThanOrEqual(3);
+    expect(t.interviewQs?.length, `${id}: interviewQs`).toBeGreaterThanOrEqual(3);
+    expect(t.examples.length,     `${id}: examples`).toBeGreaterThanOrEqual(3);
+    expect(t.references?.length,  `${id}: references`).toBeGreaterThanOrEqual(1);
+    // The two that a topic can pass without, while still reading as a cliff:
+    // variables shipped "fully written" with four beginner edge cases under
+    // six deep sections. These are the floor for the older fields.
+    expect(t.edgeCases.length,    `${id}: edgeCases`).toBeGreaterThanOrEqual(5);
+    expect(t.walkthrough.length,  `${id}: walkthrough`).toBeGreaterThanOrEqual(4);
   });
 });
 

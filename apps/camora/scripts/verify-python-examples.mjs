@@ -22,12 +22,21 @@
  * it is not one-to-one either, so a full run currently reports those alongside
  * the genuinely wrong ones. Use --only to check the topic you are writing.
  *
+ * EVERY block is executed, whether or not it asserts anything. A block that
+ * raises SyntaxError or NameError is a failure even with no "# Output:" comment
+ * on it — reporting that as "skipped" reads like success, which is how broken
+ * code shipped green. Only the output COMPARISON is conditional on there being
+ * a comment; such a block is reported as "ran, no assertions".
+ *
  * Comparison rule: a block's "# Output:" comments, read top to bottom, must
  * line up one-for-one with the lines the block prints, and each comment must
- * START WITH the printed line. The house style appends a short explanation
- * after the value, as in `# Output: [1, 2, 3, 4]  <- a changed too!`, so an
- * exact match would reject correct content. A block with no "# Output:" comment
- * at all asserts nothing and is skipped.
+ * either equal the printed line exactly or continue it after a SPACE. The house
+ * style appends a short explanation after the value, as in
+ * `# Output: [1, 2, 3, 4]  <- a changed too!`, so an exact match would reject
+ * correct content. A bare prefix test is too loose in the other direction: it
+ * lets a printed `1` satisfy a comment claiming `12`. Requiring the separating
+ * space keeps the house style and still rejects a wrong number. Containers get
+ * this for free from their closing bracket; bare scalars did not.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -71,9 +80,6 @@ function checkBlock(python, code) {
     .filter(Boolean)
     .map(m => m[1].trimEnd());
 
-  // A block with no "# Output:" comment makes no claim to check.
-  if (expected.length === 0) return { skipped: true };
-
   // Run in a throwaway directory. Some topics (file-io) write real files, and
   // they must never land in the repo.
   const sandbox = mkdtempSync(path.join(os.tmpdir(), 'camora-py-verify-'));
@@ -88,6 +94,10 @@ function checkBlock(python, code) {
     return { problem: `block raised an error:\n      ${(run.stderr || '').trim().split('\n').slice(-3).join('\n      ')}` };
   }
 
+  // The block ran clean. With no "# Output:" comment there is nothing to
+  // compare, but "it ran" is itself worth knowing and worth reporting honestly.
+  if (expected.length === 0) return { unasserted: true };
+
   const actual = run.stdout.replace(/\n$/, '');
   const printed = actual.length === 0 ? [] : actual.split('\n');
 
@@ -95,8 +105,12 @@ function checkBlock(python, code) {
     return { problem: `printed ${printed.length} line(s) but has ${expected.length} "# Output:" comment(s)` };
   }
   for (let i = 0; i < printed.length; i++) {
-    if (!expected[i].startsWith(printed[i])) {
-      return { problem: `line ${i + 1}: printed ${JSON.stringify(printed[i])}, comment claims ${JSON.stringify(expected[i])}` };
+    const claim = expected[i];
+    const real = printed[i];
+    // Exact, or the real value followed by a space and the house-style note.
+    // Not a bare prefix: `1` must not satisfy a comment claiming `12`.
+    if (claim !== real && !claim.startsWith(real + ' ')) {
+      return { problem: `line ${i + 1}: printed ${JSON.stringify(real)}, comment claims ${JSON.stringify(claim)}` };
     }
   }
   return { verified: expected.length };
@@ -147,34 +161,29 @@ if (onlyIds) {
 console.log(`Verifying Python examples with ${python.version}\n`);
 
 let totalBlocks = 0;
-let totalSkipped = 0;
+let totalUnasserted = 0;
 const failures = [];
 
 for (const topic of topics) {
-  let checked = 0;
-  let skipped = 0;
+  let ran = 0;
+  let unasserted = 0;
   const bad = [];
 
   for (const block of blocksOf(topic)) {
     const result = checkBlock(python.exe, block.code);
-    if (result.skipped) {
-      skipped++;
-    } else if (result.problem) {
-      checked++;
-      bad.push({ ...block, problem: result.problem });
-    } else {
-      checked++;
-    }
+    ran++;
+    if (result.unasserted) unasserted++;
+    if (result.problem) bad.push({ ...block, problem: result.problem });
   }
 
-  totalBlocks += checked;
-  totalSkipped += skipped;
+  totalBlocks += ran;
+  totalUnasserted += unasserted;
 
-  const note = skipped ? ` (${skipped} block(s) assert no output)` : '';
+  const note = unasserted ? ` (${unasserted} ran, no assertions)` : '';
   if (bad.length === 0) {
-    console.log(`  PASS  ${topic.id.padEnd(18)} ${checked} block(s)${note}`);
+    console.log(`  PASS  ${topic.id.padEnd(18)} ${ran} block(s)${note}`);
   } else {
-    console.log(`  FAIL  ${topic.id.padEnd(18)} ${checked} block(s), ${bad.length} wrong${note}`);
+    console.log(`  FAIL  ${topic.id.padEnd(18)} ${ran} block(s), ${bad.length} wrong${note}`);
     for (const b of bad) {
       console.log(`        ${b.where}: ${b.problem}`);
       failures.push(`${topic.id} / ${b.where}`);
@@ -183,12 +192,12 @@ for (const topic of topics) {
 }
 
 console.log(
-  `\n${topics.length} topic(s), ${totalBlocks} block(s) verified, ` +
-  `${totalSkipped} skipped, ${failures.length} failure(s).`
+  `\n${topics.length} topic(s), ${totalBlocks} block(s) executed, ` +
+  `${totalUnasserted} ran with no assertions, ${failures.length} failure(s).`
 );
 
 if (failures.length > 0) {
-  console.error('\nWrong output comments:');
+  console.error('\nBlocks that failed to run or whose output comments are wrong:');
   for (const f of failures) console.error(`  - ${f}`);
   process.exit(1);
 }
