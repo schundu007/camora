@@ -598,13 +598,24 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     //     alone turns it on — the separate toggle is about the room-mic setup
     //     path, and leaving it off should not mean "quote me back to myself".
     //
-    //   MANUAL (Ask) — the candidate is deliberately speaking their own
-    //     question. Filtering here deleted exactly the thing they pressed the
-    //     button to say, and the status line said "Your voice detected -
-    //     filtering..." while the question vanished. Never filter Ask.
-    const shouldFilterVoice = isLiveMode
-      && voiceEnrolled
-      && (voiceFilterEnabled || !!locked);
+    //   MANUAL (Ask) on coding/design — the candidate is deliberately speaking
+    //     their own question. Filtering here deleted exactly the thing they
+    //     pressed the button to say, and the status line said "Your voice
+    //     detected - filtering..." while the question vanished. Never filter.
+    //
+    //   MANUAL (Ask) on behavioral (`locked`) — the opposite, and for the same
+    //     reason AUTO already filters there: on this surface the mic is standing
+    //     in as the INTERVIEWER source, so the candidate's voice is never the
+    //     question. Pressing Ask mid-answer while your own voice is still going
+    //     into it means your answer comes back as the next question to answer.
+    //     Unlike AUTO, this needs the switch actually ON rather than enrolment
+    //     alone: turning the filter off stays the escape hatch for dictating a
+    //     question to Ask by hand, and it should keep working.
+    const shouldFilterVoice = voiceEnrolled && (
+      isLiveMode
+        ? (voiceFilterEnabled || !!locked)
+        : (!!locked && voiceFilterEnabled)
+    );
 
     if (isLiveMode) {
       // LIVE MODE: accumulate chunks, detect question completion
@@ -680,10 +691,13 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         dlog('chunk_error', { msg: err?.message });
       }
     } else {
-      // MANUAL MODE: send entire recording as one question. shouldFilterVoice
-      // is always false here by construction — Ask is the candidate speaking on
-      // purpose — so the status never mentions speaker analysis.
-      setStatus('transcribe', 'Transcribing...');
+      // MANUAL MODE: send entire recording as one question. On behavioral with
+      // the filter on, shouldFilterVoice is true and the candidate's own voice
+      // is dropped server-side — the `result.skipped` branch below then reports
+      // it and returns WITHOUT calling onTranscription, so nothing is asked and
+      // no answer is generated. Everywhere else this is still false and the
+      // status never mentions speaker analysis.
+      setStatus('transcribe', shouldFilterVoice ? 'Analyzing speakers...' : 'Transcribing...');
       try {
         const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
