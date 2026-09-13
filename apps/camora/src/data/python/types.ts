@@ -33,7 +33,31 @@ export interface Example         { label: string; code: string }
 export interface Section  { heading: string; body: string; code?: string }
 export interface KeyTerm  { term: string; meaning: string }
 export interface CheatRow { call: string; does: string; returns: string }
-export interface InterviewQ { q: string; a: string }
+
+/**
+ * One table inside the Cheat Sheet card. A topic may carry several.
+ *
+ * The three CheatRow keys are named for a method table, but most reference
+ * tables this curriculum needs are not method tables: file modes, truthiness,
+ * the 35 keywords, regex metacharacters, and the two-way comparisons (list vs
+ * tuple, is vs ==, threads vs processes). `columns` relabels the header so
+ * those read correctly — a regex metacharacter is not a "call" and returns
+ * nothing. Omit `columns` for an actual method table and the header falls back
+ * to Call / Does / Returns.
+ */
+export interface CheatTable {
+  title?: string;
+  columns?: [string, string, string];
+  rows: CheatRow[];
+}
+
+export interface InterviewQ {
+  q: string;
+  a: string;
+  /** Optional snippet shown under the prose answer. Many standard asks are
+   *  "write me a decorator that ..." and cannot be answered in prose alone. */
+  code?: string;
+}
 export interface Reference  { label: string; url: string }
 
 export interface Topic {
@@ -50,7 +74,7 @@ export interface Topic {
   cleanCode: string;
   walkthrough: WalkthroughStep[];
   examples: Example[];
-  cheatSheet?: CheatRow[];
+  cheatSheet?: CheatTable[];
   interviewQs?: InterviewQ[];
   references?: Reference[];
   edgeCases: string[];
