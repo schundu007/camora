@@ -21,6 +21,12 @@
 // build too.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AskResponse } from '../ask/AskLayout';
+// Ask Sona's dictation button, reused as-is. It already carries the two things
+// this tab needs — the Deepgram-realtime-with-Groq-fallback path, and the
+// distinction between "I clicked stop" and "I stopped talking" — and the panel
+// already imports its renderer from ../ask, so this follows an existing seam
+// rather than opening a new one.
+import { StreamingMicButton } from '../ask/StreamingMicButton';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -42,6 +48,19 @@ export const GeminiPanel = () => {
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Whatever was already typed when dictation started, so speaking appends to a
+  // half-written question instead of erasing it.
+  const dictationBaseRef = useRef('');
+  // Set only when recording ended because the speaker went quiet — that is the
+  // signal to send. Clicking the mic off deliberately leaves the text to edit.
+  const autoSendRef = useRef(false);
+  // Dictation is async and the composer can be reset underneath it (New chat,
+  // or a send). Stamping the conversation at onStart and re-checking on each
+  // callback stops a finished utterance from landing in — and auto-sending to —
+  // a conversation the user has already moved on from.
+  const convSeqRef = useRef(0);
+  const dictationSeqRef = useRef(0);
 
   // Abort in flight work on unmount. The shell keeps this tab mounted while it
   // is inactive, so this only fires on a real teardown — but an interview
@@ -71,6 +90,9 @@ export const GeminiPanel = () => {
 
   const newChat = useCallback(() => {
     stop();
+    convSeqRef.current += 1;
+    dictationBaseRef.current = '';
+    autoSendRef.current = false;
     setMessages([]);
     setStreamText('');
     setStreaming(false);
@@ -84,10 +106,18 @@ export const GeminiPanel = () => {
     navigator.clipboard?.writeText(last.content).then(() => setCopied(true)).catch(() => { /* clipboard denied */ });
   }, [messages]);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
+  const send = useCallback(async (override?: string) => {
+    // Dictation calls this on the same tick as setInput, before `input` state
+    // has committed — so it passes the text explicitly rather than letting this
+    // closure read the pre-dictation value and send the wrong thing.
+    const text = (override ?? input).trim();
+    // Returning here while an answer streams leaves a dictated question sitting
+    // in the box rather than dropping it: the candidate sees it and can send it
+    // themselves once the current answer lands.
     if (!text || streaming) return;
 
+    convSeqRef.current += 1;
+    dictationBaseRef.current = '';
     const next: Msg[] = [...messages, { role: 'user', content: text }];
     setMessages(next);
     setInput('');
@@ -227,6 +257,33 @@ export const GeminiPanel = () => {
             placeholder="Ask Gemini…  (Enter to send, Shift+Enter for a new line)"
             className="flex-1 resize-none rounded px-2.5 py-2 text-[13px] leading-relaxed outline-none"
             style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}
+          />
+          <StreamingMicButton
+            onStart={() => {
+              dictationSeqRef.current = convSeqRef.current;
+              dictationBaseRef.current = input;
+              autoSendRef.current = false;
+            }}
+            onInterim={(t) => {
+              if (dictationSeqRef.current !== convSeqRef.current) return;
+              const base = dictationBaseRef.current.trim();
+              setInput(base && t ? base + ' ' + t : (t || base));
+            }}
+            // Going quiet IS the send. One press, ask the question out loud,
+            // done — rather than press mic, press mic again, press Send, while
+            // an interviewer waits.
+            onSilenceStop={() => { autoSendRef.current = true; }}
+            onFinal={(t) => {
+              const auto = autoSendRef.current;
+              autoSendRef.current = false;
+              if (dictationSeqRef.current !== convSeqRef.current) return;
+              const base = dictationBaseRef.current.trim();
+              const nextText = base && t ? base + ' ' + t : (t || base);
+              setInput(nextText);
+              dictationBaseRef.current = nextText;
+              if (auto && nextText.trim()) void send(nextText);
+            }}
+            disabled={streaming}
           />
           {streaming ? (
             <button type="button" onClick={stop}
