@@ -361,6 +361,9 @@ except ValueError as e:
     ],
     references: [
       { label: 'Programiz — Variables & Data Types', url: 'https://www.programiz.com/python-programming/variables-datatypes' },
+      { label: 'Programiz — Python Introduction',    url: 'https://www.programiz.com/python-programming/introduction' },
+      { label: 'Programiz — Python Input/Output',    url: 'https://www.programiz.com/python-programming/input-output-import' },
+      { label: 'Programiz — Type Conversion',        url: 'https://www.programiz.com/python-programming/type-conversion-and-casting' },
       { label: 'Python docs — Built-in Types',       url: 'https://docs.python.org/3/library/stdtypes.html' },
       { label: 'PEP 8 — Naming Conventions',         url: 'https://peps.python.org/pep-0008/#naming-conventions' },
     ],
@@ -446,6 +449,9 @@ while line := buf.readline():
 # Output: hello
 #         world`,
       },
+    ],
+    references: [
+      { label: 'Programiz — Python Operators', url: 'https://www.programiz.com/python-programming/operators' },
     ],
     edgeCases: [
       `-7 // 2 is -4, not -3. Floor division rounds toward negative infinity, not toward zero.`,
@@ -534,6 +540,9 @@ if items:
 x = 5
 print(1 < x < 10)     # Output: True`,
       },
+    ],
+    references: [
+      { label: 'Programiz — Python if...elif...else', url: 'https://www.programiz.com/python-programming/if-elif-else' },
     ],
     edgeCases: [
       `Once one branch runs, Python skips ALL remaining elif/else. It is not like separate if statements checked independently.`,
@@ -629,6 +638,12 @@ for n in range(5):
 else:
     print("10 not found in range")  # Output: 10 not found in range`,
       },
+    ],
+    references: [
+      { label: 'Programiz — Python for Loop',       url: 'https://www.programiz.com/python-programming/for-loop' },
+      { label: 'Programiz — Python while Loop',     url: 'https://www.programiz.com/python-programming/while-loop' },
+      { label: 'Programiz — break and continue',    url: 'https://www.programiz.com/python-programming/break-continue' },
+      { label: 'Programiz — pass Statement',        url: 'https://www.programiz.com/python-programming/pass-statement' },
     ],
     edgeCases: [
       `range(5, 0) produces nothing (empty). To count down: range(5, 0, -1) gives 5, 4, 3, 2, 1.`,

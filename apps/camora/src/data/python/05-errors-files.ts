@@ -85,6 +85,9 @@ def withdraw(balance, amount):
     return balance - amount`,
       },
     ],
+    references: [
+      { label: 'Programiz — Exception Handling', url: 'https://www.programiz.com/python-programming/exception-handling' },
+    ],
     edgeCases: [
       `Bare except: (no exception type) catches everything including KeyboardInterrupt and SystemExit, making the program impossible to stop. Always name the exception type.`,
       `else: after except runs only when NO exception occurred. finally: runs always — with or without an exception.`,
@@ -176,6 +179,9 @@ print(loaded["name"])         # Output: Alice
 print(loaded["scores"])       # Output: [95, 87, 91]
 print(type(loaded))           # Output: <class 'dict'>`,
       },
+    ],
+    references: [
+      { label: 'Programiz — File I/O', url: 'https://www.programiz.com/python-programming/file-operation' },
     ],
     edgeCases: [
       `Opening a file in 'r' mode that does not exist raises FileNotFoundError. Check with os.path.exists('file.txt') first, or use a try/except.`,
@@ -353,6 +359,9 @@ print(PI)           # Output: 3.14159
 if __name__ == "__main__":
     print("Running utils.py directly")`,
       },
+    ],
+    references: [
+      { label: 'Programiz — Python Modules', url: 'https://www.programiz.com/python-programming/modules' },
     ],
     edgeCases: [
       `from math import * imports everything and can cause name clashes with your own functions. Avoid it in production code.`,

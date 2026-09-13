@@ -85,6 +85,14 @@ print(c2.id)           # Output: 2
 print(c3.id)           # Output: 3`,
       },
     ],
+    references: [
+      { label: 'Programiz — OOP in Python',              url: 'https://www.programiz.com/python-programming/object-oriented-programming' },
+      { label: 'Programiz — Python Classes & Objects',    url: 'https://www.programiz.com/python-programming/class' },
+      { label: 'Programiz — Python Inheritance',          url: 'https://www.programiz.com/python-programming/inheritance' },
+      { label: 'Programiz — Multiple Inheritance',        url: 'https://www.programiz.com/python-programming/multiple-inheritance' },
+      { label: 'Programiz — Operator Overloading',        url: 'https://www.programiz.com/python-programming/operator-overloading' },
+      { label: 'Programiz — Python @property',            url: 'https://www.programiz.com/python-programming/property' },
+    ],
     edgeCases: [
       `Forgetting self. inside __init__ (writing name = name instead of self.name = name) means the value is a local variable that disappears. The object has no name attribute.`,
       `self is just a convention — you could name it anything — but do not. Every Python developer expects it to be self.`,
@@ -256,6 +264,10 @@ data = "hello\n\nworld\n"
 pipeline = uppercase(filter_non_empty(read_lines(data)))
 print(list(pipeline))  # Output: ['HELLO', 'WORLD']`,
       },
+    ],
+    references: [
+      { label: 'Programiz — Python Generators', url: 'https://www.programiz.com/python-programming/generator' },
+      { label: 'Programiz — Python Iterators',  url: 'https://www.programiz.com/python-programming/iterator' },
     ],
     edgeCases: [
       `A generator can only be iterated ONCE. After it is exhausted, all subsequent next() calls raise StopIteration. Call the function again to get a fresh generator.`,
