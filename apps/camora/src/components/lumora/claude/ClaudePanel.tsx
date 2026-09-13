@@ -33,6 +33,8 @@ import { AskResponse } from '../ask/AskLayout';
 // already imports its renderer from ../ask, so this follows an existing seam
 // rather than opening a new one.
 import { StreamingMicButton } from '../ask/StreamingMicButton';
+import { InterviewerListenButton } from '../ask/InterviewerListenButton';
+import { useInterviewerListen } from '../shared/useInterviewerListen';
 import { useAuth } from '@/contexts/AuthContext';
 
 // lumora-backend, not Capra — see the note above about which key each service
@@ -45,7 +47,7 @@ type Msg = { role: Role; content: string };
 const EMPTY_HINT = [
   'Ask anything mid-interview — a definition, a design trade-off, a coding problem.',
   'Answers come back interview-shaped: the answer first, then bullets you can expand out loud.',
-  'Press ` to ask out loud; stop talking and the question sends itself.',
+  'Press ` to let the interviewer\u2019s questions come straight here, or Space to ask in your own voice.',
 ];
 
 export function ClaudePanel({ isActive }: { isActive: boolean }) {
@@ -55,7 +57,7 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
   const [streamText, setStreamText] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [copied, setCopied] = useState(false);
-  // Bumped by the ` shortcut; StreamingMicButton toggles on each new value.
+  // Bumped by the Space shortcut; StreamingMicButton toggles on each new value.
   const [micToggle, setMicToggle] = useState(0);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -118,45 +120,6 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
     if (!last) return;
     navigator.clipboard?.writeText(last.content).then(() => setCopied(true)).catch(() => { /* clipboard denied */ });
   }, [messages]);
-
-  // ` toggles the mic. It is already the audio key everywhere else in the shell
-  // — AudioCapture binds it on the behavioral/coding/design surfaces and Sona's
-  // sidebar binds it too — so the tab that is on screen owns it and the meaning
-  // stays the same wherever you are.
-  //
-  // Gated on isActive because this tab is kept MOUNTED while hidden (so a
-  // conversation survives tab switches). Without the gate the listener would
-  // still be live behind the Coding tab and one ` would toggle two mics.
-  // AudioCapture's handler runs on the capture phase and stops propagation, but
-  // it returns early when its own tab is inactive — so while Gemini is on
-  // screen the key reaches this listener untouched.
-  useEffect(() => {
-    if (!isActive) return;
-    const onKey = (e: KeyboardEvent) => {
-      // Shift+` is ~, a character someone may genuinely want to type.
-      if (e.code !== 'Backquote' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat) return;
-      const el = e.target as HTMLElement | null;
-      // In this composer ` binds only while it is empty, so a backtick-quoted
-      // snippet types normally once a question is under way. In any other
-      // editable or clickable target the key keeps its native meaning.
-      if (el === inputRef.current) {
-        if (input.trim()) return;
-      } else if (
-        el?.isContentEditable ||
-        el?.tagName === 'INPUT' ||
-        el?.tagName === 'TEXTAREA' ||
-        el?.tagName === 'BUTTON' ||
-        el?.tagName === 'A' ||
-        el?.tagName === 'SELECT'
-      ) {
-        return;
-      }
-      e.preventDefault();
-      setMicToggle(n => n + 1);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isActive, input]);
 
   const send = useCallback(async (override?: string) => {
     // Dictation calls this on the same tick as setInput, before `input` state
@@ -247,6 +210,58 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
     }
   }, [send]);
 
+  // Interviewer listening — the same subscription Ask Sona has, so a question
+  // asked out loud arrives here without anyone touching a key. Nothing on this
+  // path opens a microphone: it rides the dedicated capture stream the shell
+  // already transcribes, which the candidate is not on. That is what keeps
+  // their own answers from being sent back as questions.
+  const listen = useInterviewerListen({
+    onQuestion: (t) => { void send(t); },
+    onPreview: setInput,
+    draft: input,
+    enabled: isActive,
+  });
+  // Destructured because the hook returns a fresh object each render; binding
+  // the effect below to that object would re-register the listener every time.
+  const { toggle: toggleListen } = listen;
+
+  // Two audio keys, matching Ask Sona so the pair means the same thing on every
+  // surface:
+  //   `      → arm/disarm interviewer listening
+  //   Space  → the dictation mic, for asking something in your own voice
+  //
+  // Gated on isActive because this tab is kept MOUNTED while hidden (so a
+  // conversation survives tab switches). Without the gate the listener would
+  // still be live behind the Coding tab and one key would drive two panels.
+  useEffect(() => {
+    if (!isActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      // Shift+` is ~, a character someone may genuinely want to type.
+      const isTick = e.code === 'Backquote' && !e.shiftKey;
+      const isSpace = e.code === 'Space' && !e.shiftKey;
+      if ((!isTick && !isSpace) || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      const inEmptyComposer = el === inputRef.current && !input.trim();
+      // Typing wins: in any editable target both keys keep their native
+      // meaning. The empty composer is the exception — there is nothing there
+      // to type over yet.
+      const editable = tag === 'INPUT' || tag === 'TEXTAREA' ||
+        !!el?.isContentEditable || !!el?.closest?.('.monaco-editor');
+      if (editable && !inEmptyComposer) return;
+      // Space activates a focused button or link. ` activates nothing, so only
+      // Space has to yield to them — and treating the two alike is exactly what
+      // made ` dead here before: you reach this panel by CLICKING its tab, so
+      // focus is sitting on that button when you press the key.
+      if (isSpace && (tag === 'BUTTON' || tag === 'A' || tag === 'SELECT' ||
+          el?.getAttribute('role') === 'button')) return;
+      e.preventDefault();
+      if (isTick) toggleListen(); else setMicToggle(n => n + 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isActive, input, toggleListen]);
+
   const strip = 'flex items-center gap-1.5 px-2 h-7 rounded hover:bg-[var(--lum-surface-hover)] transition-colors text-[12px] font-semibold';
   const hasAnswer = messages.some(m => m.role === 'assistant');
 
@@ -311,9 +326,14 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
             rows={2}
-            placeholder="Ask Claude…  (Enter to send, Shift+Enter for a new line, ` for the mic)"
+            placeholder="Ask Claude…  (Enter sends, ` listens to the interviewer, Space is the mic)"
             className="flex-1 resize-none rounded px-2.5 py-2 text-[13px] leading-relaxed outline-none"
             style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}
+          />
+          <InterviewerListenButton
+            listening={listen.listening}
+            onToggle={listen.toggle}
+            unavailableReason={listen.unavailableReason}
           />
           <StreamingMicButton
             toggleSignal={micToggle}
