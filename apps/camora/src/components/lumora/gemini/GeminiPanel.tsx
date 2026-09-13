@@ -272,38 +272,10 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3">
-        {!messages.length && !streaming && (
-          <div className="h-full flex flex-col items-center justify-center gap-1.5 text-center px-6">
-            {EMPTY_HINT.map((line, i) => (
-              <p key={i} className="text-[13px] leading-relaxed" style={{ color: 'var(--lum-text-2)' }}>{line}</p>
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {messages.map((m, i) => (
-            m.role === 'user' ? (
-              <div key={i} className="rounded px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
-                style={{ background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}>
-                {m.content}
-              </div>
-            ) : (
-              <div key={i}><AskResponse content={m.content} /></div>
-            )
-          ))}
-
-          {/* The in-flight answer renders through the same markdown path as a
-              finished one, so nothing reflows the moment the stream closes. */}
-          {streaming && (
-            streamText
-              ? <AskResponse content={streamText} />
-              : <p className="text-[13px]" style={{ color: 'var(--lum-text-2)' }}>Thinking…</p>
-          )}
-        </div>
-      </div>
-
-      <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)', borderTop: '1px solid var(--lum-border)' }}>
+      {/* Composer on TOP. The answer is the thing being read mid-interview,
+          so it grows downward from a fixed point instead of pushing the box
+          you are typing in around as it streams. */}
+      <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)', borderBottom: '1px solid var(--lum-border)' }}>
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
@@ -362,6 +334,37 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
           )}
         </div>
       </div>
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3">
+        {!messages.length && !streaming && (
+          <div className="h-full flex flex-col items-center justify-center gap-1.5 text-center px-6">
+            {EMPTY_HINT.map((line, i) => (
+              <p key={i} className="text-[13px] leading-relaxed" style={{ color: 'var(--lum-text-2)' }}>{line}</p>
+            ))}
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3">
+          {messages.map((m, i) => (
+            m.role === 'user' ? (
+              <div key={i} className="rounded px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
+                style={{ background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}>
+                {m.content}
+              </div>
+            ) : (
+              <div key={i}><AskResponse content={m.content} /></div>
+            )
+          ))}
+
+          {/* The in-flight answer renders through the same markdown path as a
+              finished one, so nothing reflows the moment the stream closes. */}
+          {streaming && (
+            streamText
+              ? <AskResponse content={streamText} />
+              : <p className="text-[13px]" style={{ color: 'var(--lum-text-2)' }}>Thinking…</p>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 };
