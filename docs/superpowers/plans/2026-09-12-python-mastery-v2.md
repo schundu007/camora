@@ -13,7 +13,10 @@
 ## Global Constraints
 
 - Run all commands from `apps/camora/`. Tests: `npx vitest run <path>`. There is no `test` script in `package.json`; invoke vitest directly.
-- `npx vite build` must pass before every commit that touches `.ts`/`.tsx`. This is a type-level refactor of a shared interface, so a green build is the real gate.
+- `npx tsc --noEmit && npx vite build` must both pass before every commit that touches `.ts`/`.tsx`.
+  The `build` script is a bare `vite build`, which strips types WITHOUT checking them — so
+  `vite build` alone is not a type gate. `tsc --noEmit` is. Baseline verified clean (exit 0)
+  before any of this work began, so any error is ours.
 - Prose fields render as plain text nodes. No markdown syntax (`**bold**`, `#` headings, fenced blocks) and no emoji in `summary`, `intro`, `gotcha`, `tip`, `edgeCases[]`, `sections[].body`, `keyTerms[].meaning`, `interviewQs[].a`, or `walkthrough[].explain`. Code fields (`cleanCode`, `examples[].code`, `sections[].code`) are exempt.
 - New cards reuse the card pattern already on the page: `rounded-2xl`, `background: var(--bg-surface)`, `border: 1px solid var(--border)`, and a header strip of `background: color-mix(in oklab, var(--cam-primary) 8%, var(--bg-surface))` with `font-mono text-[12px] font-bold uppercase tracking-widest` label in `var(--cam-primary)`.
 - Minimum font size is 12px. No inline Tailwind colour literals — use CSS custom properties.
@@ -410,8 +413,11 @@ import { PYTHON_TOPICS, type Topic } from '../../data/python-curriculum';
 with:
 
 ```ts
-import { PYTHON_TOPICS, CHAPTERS, type Topic } from '../../data/python';
+import { PYTHON_TOPICS, type Topic } from '../../data/python';
 ```
+
+`CHAPTERS` is deliberately NOT imported here — nothing uses it until Task 8,
+and the repo runs eslint-plugin-unused-imports. Task 8 adds it.
 
 Then:
 
@@ -421,7 +427,7 @@ git rm apps/camora/src/data/python-curriculum.ts
 
 - [ ] **Step 6: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python/ && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python/ && npx tsc --noEmit && npx vite build`
 Expected: PASS, 7 tests. Build succeeds. Confirm no remaining references:
 `grep -rn "python-curriculum" apps/camora/src` returns nothing.
 
@@ -1115,7 +1121,7 @@ return PYTHON_TOPICS.filter(t =>
 
 - [ ] **Step 6: Run the suite and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python src/components/capra/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python src/components/capra/python && npx tsc --noEmit && npx vite build`
 Expected: all PASS, build succeeds. Grep for dead code: `grep -n "TopicGroup\|beginnerTopics\|advancedTopics" src/pages/capra/PythonLearnPage.tsx` returns nothing.
 
 - [ ] **Step 7: Commit**
@@ -1217,7 +1223,7 @@ Fill `variables` with the five optional fields and add the `tuples` object to `D
 
 - [ ] **Step 4: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python && npx tsc --noEmit && npx vite build`
 Expected: PASS. Build succeeds.
 
 - [ ] **Step 5: Commit**
@@ -1277,7 +1283,7 @@ Follow the spec's Chapter 1 table for what each must cover. Keep `estimatedMins`
 
 - [ ] **Step 4: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python && npx tsc --noEmit && npx vite build`
 Expected: PASS. Build succeeds.
 
 - [ ] **Step 5: Commit**
@@ -1317,7 +1323,7 @@ Follow the spec's Chapter 2 table. `functions` must carry the mutable-default-ar
 
 - [ ] **Step 4: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python && npx tsc --noEmit && npx vite build`
 Expected: PASS. Build succeeds.
 
 - [ ] **Step 5: Commit**
@@ -1370,7 +1376,7 @@ Follow the spec's Chapter 3 table. `copying` must include the nested-structure a
 
 - [ ] **Step 4: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python && npx tsc --noEmit && npx vite build`
 Expected: PASS. Build succeeds.
 
 - [ ] **Step 5: Commit**
@@ -1420,7 +1426,7 @@ Follow the spec's Chapter 4 table. `inheritance-mro` must show `__mro__` output 
 
 - [ ] **Step 4: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python && npx tsc --noEmit && npx vite build`
 Expected: PASS. Build succeeds.
 
 - [ ] **Step 5: Commit**
@@ -1460,7 +1466,7 @@ Follow the spec's Chapter 5 table. `errors` must add custom exception classes, `
 
 - [ ] **Step 4: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python && npx tsc --noEmit && npx vite build`
 Expected: PASS. Build succeeds.
 
 - [ ] **Step 5: Commit**
@@ -1525,7 +1531,7 @@ const selectedId = LEGACY_TOPIC_IDS[rawId] ?? rawId;
 
 - [ ] **Step 4: Run tests and build**
 
-Run: `cd apps/camora && npx vitest run src/data/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python && npx tsc --noEmit && npx vite build`
 Expected: PASS, including `reaches the full 50-topic curriculum`. Build succeeds.
 
 - [ ] **Step 5: Commit**
@@ -1548,11 +1554,21 @@ Safe only now that all 50 topics exist. The slug-coverage test is written first 
 - Delete: `apps/camora/public/learn-content/programiz/` (37 files)
 - Modify: `apps/camora/src/App.tsx:88-ish, 490, 657`
 - Modify: `apps/camora/src/components/layout/Sidebar.tsx:347`
-- Modify: `apps/camora/src/pages/capra/LearnTopicPage.tsx:344, 349, 467`
+- Delete: `apps/camora/src/pages/capra/LearnTopicPage.tsx`
+- Delete: `apps/camora/public/learn-content/` (now empty of both sources)
 
 **Interfaces:**
 - Consumes: `PYTHON_TOPICS` and its `references` field.
-- Produces: nothing new. `LearnTopicPage` keeps working for CodeSignal.
+- Produces: nothing new.
+
+> **Amended by Ruling 3 (preflight).** The spec said "LearnTopicPage.tsx stays —
+> CodeSignal depends on it." That stopped being true before this plan ran:
+> CodeSignal was retired in commit `15328b38`, and `LearnTopicPage`'s only
+> remaining consumer is `ProgramizLearnPage.tsx` plus its own route. Retiring
+> Programiz therefore leaves it with zero consumers, so it is deleted outright
+> rather than re-defaulted. Verify before deleting:
+> `grep -rn "learn/topic" apps/camora/src` should show only `App.tsx` and
+> `ProgramizLearnPage.tsx`, both of which this task removes.
 
 - [ ] **Step 1: Write the slug-coverage test**
 
@@ -1657,22 +1673,14 @@ In `App.tsx`: delete the `ProgramizLearnPage` lazy import and the `['/capra/lear
 
 In `Sidebar.tsx:347`, delete the Programiz nav entry.
 
-In `LearnTopicPage.tsx`, change the three Programiz references to default to CodeSignal, its only remaining consumer:
-
-```tsx
-const source    = searchParams.get('source') || 'codesignal';
-const backPath  = '/capra/learn/codesignal';
-const backLabel = 'CodeSignal Learn';
-```
-
-and at line 467 replace the ternary with the plain `CodeSignal Learn · Learning guide` label.
+Delete `LearnTopicPage.tsx`, its lazy import, its `['/capra/learn/topic', 'Learn — Camora']` title entry, and its `/capra/learn/topic/:slug` route. Per Ruling 3 it has no consumers left once `ProgramizLearnPage.tsx` goes. Also remove the now-empty `apps/camora/public/learn-content/` directory.
 
 - [ ] **Step 7: Verify nothing dangles**
 
 Run: `cd /Users/chundu/camora && grep -rni "programiz" apps/camora/src apps/camora/public`
 Expected: only the `programiz.com` URLs inside `references` and the slug map in the test file. No imports, no routes, no nav entries.
 
-Run: `cd apps/camora && npx vitest run src/data/python src/components/capra/python && npx vite build`
+Run: `cd apps/camora && npx vitest run src/data/python src/components/capra/python && npx tsc --noEmit && npx vite build`
 Expected: PASS. Build succeeds.
 
 - [ ] **Step 8: Commit**
