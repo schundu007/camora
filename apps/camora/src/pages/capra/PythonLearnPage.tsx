@@ -114,7 +114,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       </div>
 
       {/* Cheat Sheet */}
-      <CheatSheetTable rows={topic.cheatSheet} />
+      <CheatSheetTable tables={topic.cheatSheet} />
 
       {/* Edge Cases */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, var(--warning) 20%, var(--border))' }}>
@@ -174,12 +174,18 @@ export default function PythonLearnPage() {
   const filtered = useMemo(() => {
     if (!search.trim()) return null;
     const q = search.toLowerCase();
+    // Topic depth lives in sections[].body, not intro, since the schema change.
+    // Searching intro alone quietly stopped finding most of the curriculum.
+    // t.id is in here so an acronym that only appears as a slug — "gil" finding
+    // concurrency — still resolves.
     return PYTHON_TOPICS.filter(t =>
+      t.id.toLowerCase().includes(q) ||
       t.title.toLowerCase().includes(q) ||
       t.summary.toLowerCase().includes(q) ||
       t.intro.toLowerCase().includes(q) ||
+      (t.sections    ?? []).some(s => s.body.toLowerCase().includes(q)) ||
       (t.keyTerms    ?? []).some(k => k.term.toLowerCase().includes(q)) ||
-      (t.interviewQs ?? []).some(iq => iq.q.toLowerCase().includes(q))
+      (t.interviewQs ?? []).some(iq => iq.q.toLowerCase().includes(q) || iq.a.toLowerCase().includes(q))
     );
   }, [search]);
 

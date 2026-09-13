@@ -30,13 +30,19 @@ export default function InterviewQuestions({ questions }: { questions?: Intervie
                   {item.q}
                 </span>
               </button>
-              <p
-                hidden={!isOpen}
-                className="px-6 pb-4 pl-[3.1rem] text-[13px] leading-relaxed"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                {item.a}
-              </p>
+              <div hidden={!isOpen} className="px-6 pb-4 pl-[3.1rem]">
+                <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  {item.a}
+                </p>
+                {item.code && (
+                  <pre
+                    className="mt-3 px-4 py-3 rounded-xl overflow-x-auto text-[12px] leading-relaxed"
+                    style={{ fontFamily: 'var(--font-mono)', background: '#0d1117', color: '#e6edf3', margin: 0 }}
+                  >
+                    <code>{item.code}</code>
+                  </pre>
+                )}
+              </div>
             </li>
           );
         })}

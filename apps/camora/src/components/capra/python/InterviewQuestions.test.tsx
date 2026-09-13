@@ -38,6 +38,25 @@ describe('InterviewQuestions', () => {
     expect(screen.getByText(QS[0].a)).not.toBeVisible();
     expect(btn).toHaveAttribute('aria-expanded', 'false');
   });
+
+  it('renders the optional code snippet inside the opened answer', async () => {
+    const user = userEvent.setup();
+    const snippet = 'def timer(fn):\n    ...';
+    // Keep the newline: the default matcher collapses whitespace, which would
+    // hide whether the snippet reached the DOM intact.
+    const asWritten = { normalizer: (s: string) => s };
+    render(<InterviewQuestions questions={[
+      { q: 'Write a decorator that times a function.', a: 'Wrap it and record the clock either side.', code: snippet },
+    ]} />);
+    expect(screen.getByText(snippet, asWritten)).not.toBeVisible();
+    await user.click(screen.getByRole('button', { name: /decorator/i }));
+    expect(screen.getByText(snippet, asWritten)).toBeVisible();
+  });
+
+  it('renders no code block when an answer has no code', () => {
+    const { container } = render(<InterviewQuestions questions={[QS[0]]} />);
+    expect(container.querySelector('pre')).toBeNull();
+  });
 });
 
 describe('ReferenceLinks', () => {

@@ -19,9 +19,16 @@ function proseOf(t: Topic): string[] {
     ...(t.sections    ?? []).flatMap(s => [s.heading, s.body]),
     ...(t.keyTerms    ?? []).flatMap(k => [k.term, k.meaning]),
     ...(t.interviewQs ?? []).flatMap(q => [q.q, q.a]),
-    ...(t.cheatSheet  ?? []).flatMap(c => [c.does, c.returns]),
+    ...(t.cheatSheet  ?? []).flatMap(tbl => [
+      ...(tbl.title ? [tbl.title] : []),
+      ...(tbl.columns ?? []),
+      ...tbl.rows.flatMap(r => [r.does, r.returns]),
+    ]),
   ];
 }
+
+/** Total cheat-sheet rows across a topic's tables. */
+const cheatRowCount = (t: Topic) => (t.cheatSheet ?? []).reduce((n, tbl) => n + tbl.rows.length, 0);
 
 const EXISTING_IDS = [
   'variables', 'operators', 'control-flow', 'loops',
@@ -41,7 +48,7 @@ describe('fully written topics', () => {
     expect(t, `missing topic ${id}`).toBeDefined();
     expect(t!.sections?.length,    `${id}: sections`).toBeGreaterThanOrEqual(2);
     expect(t!.keyTerms?.length,    `${id}: keyTerms`).toBeGreaterThanOrEqual(3);
-    expect(t!.cheatSheet?.length,  `${id}: cheatSheet`).toBeGreaterThanOrEqual(3);
+    expect(cheatRowCount(t!),      `${id}: cheatSheet rows`).toBeGreaterThanOrEqual(3);
     expect(t!.interviewQs?.length, `${id}: interviewQs`).toBeGreaterThanOrEqual(3);
     expect(t!.examples.length,     `${id}: examples`).toBeGreaterThanOrEqual(3);
     expect(t!.references?.length,  `${id}: references`).toBeGreaterThanOrEqual(1);
