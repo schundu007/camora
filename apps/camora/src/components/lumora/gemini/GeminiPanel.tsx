@@ -283,7 +283,6 @@ export const GeminiPanel = () => {
               dictationBaseRef.current = nextText;
               if (auto && nextText.trim()) void send(nextText);
             }}
-            disabled={streaming}
           />
           {streaming ? (
             <button type="button" onClick={stop}
