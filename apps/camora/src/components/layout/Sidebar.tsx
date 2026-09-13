@@ -337,7 +337,6 @@ const sections: NavSection[] = [
     title: 'Learn',
     items: [
       { label: 'Python', path: '/capra/learn/python', icon: icons.python },
-      { label: 'Programiz', path: '/capra/learn/programiz', icon: icons.python },
     ],
   },
   {
