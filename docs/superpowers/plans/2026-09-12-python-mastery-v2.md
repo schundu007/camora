@@ -22,6 +22,19 @@
 - Minimum font size is 12px. No inline Tailwind colour literals — use CSS custom properties.
 - Do not restructure existing cards in `PythonLearnPage.tsx`. Additive changes only.
 - Commit to `main`. Do not push without explicit approval.
+- Every code example must be runnable as written and every `# Output:` comment must
+  match real stdout. Verify with `node scripts/verify-python-examples.mjs` (added by
+  Ruling 9) before each content commit. It executes every `cleanCode`,
+  `sections[].code` and `examples[].code` string under python3 and diffs the asserted
+  output against the real one. It is a script, not a vitest test, because it shells
+  out to python3 and a suite that fails on a missing interpreter is worse than none.
+- Never assert output that is true on one machine but not universally: `id()` values,
+  hash values, set iteration order, small-integer interning boundaries, or exception
+  message wording (Python 3.14 reworded the dict-key `TypeError`, for one). Quote only
+  version-stable text.
+- `sections[].body` may contain blank lines; they render as separate paragraphs
+  (Ruling 8). Before that ruling a blank line silently collapsed into one run-on
+  paragraph.
 - Never stage `apps/camora/src/components/lumora/gemini/GeminiPanel.tsx` or `apps/desktop/main.js` — both carry unrelated uncommitted work.
 
 ---
