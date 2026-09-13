@@ -6,7 +6,7 @@ export const GETTING_STARTED_TOPICS: Topic[] = [
     title: 'Variables & Data Types',
     chapter: 'getting-started',
     track: 'beginner',
-    estimatedMins: 15,
+    estimatedMins: 35,
     summary: `How Python stores values without type declarations, and why mutable and immutable types behave so differently when you assign them.`,
     intro: `In Python you create a variable by writing name = value — no type declaration, no keyword like var or let. Python figures out the type from the value on the right. The same name can hold different types at different times.`,
     sections: [
@@ -22,9 +22,9 @@ print(x, y)             # Output: 20 10`,
       },
       {
         heading: 'The built-in types you will be asked to name',
-        body: `Python ships a fixed set of built-in types, and interviewers ask you to list them. Numbers come in three: int for whole numbers of any size, float for 64-bit decimals, and complex for a real part plus an imaginary one. Text is str. Truth values are bool, which is a subclass of int, so True + True is 2. Sequences are list, tuple and range. The mapping type is dict. Sets come as set and frozenset. Binary data is bytes, bytearray and memoryview. None is the single value of NoneType and means nothing here yet. One caveat worth saying out loud: a float is a binary approximation, so 0.1 + 0.2 does not land exactly on 0.3. When exactness matters, use Decimal from the standard library decimal module.`,
+        body: `Python ships a fixed set of built-in types, and interviewers ask you to list them. Numbers come in three: int for whole numbers of any size, float for 64-bit binary floating point, and complex for a real part plus an imaginary one. Text is str. Truth values are bool, which is a subclass of int, so True + True is 2. Sequences are list, tuple and range. The mapping type is dict. Sets come as set and frozenset. Binary data is bytes, bytearray and memoryview. None is the single value of NoneType and means nothing here yet. One caveat worth saying out loud: a float is a binary approximation, so 0.1 + 0.2 does not land exactly on 0.3. When exactness matters, use Decimal from the standard library decimal module.`,
         code: `count   = 7                 # int       whole numbers, no size limit
-ratio   = 0.5               # float     64-bit decimal
+ratio   = 0.5               # float     64-bit binary floating point
 signal  = 2 + 3j            # complex   real + imaginary
 label   = "on"              # str       text
 active  = True              # bool      a subclass of int
@@ -43,7 +43,7 @@ print(0.1 + 0.2)                          # Output: 0.30000000000000004`,
       },
       {
         heading: 'Mutable versus immutable',
-        body: `A mutable object can be changed in place after it is created. An immutable object cannot, so every apparent change actually builds a new object and rebinds the name. Mutable built-ins are list, dict, set and bytearray. Immutable ones are int, float, complex, bool, str, tuple, frozenset, bytes, range and None. The split matters in three places. Immutable objects are hashable, so only they can be dictionary keys or set members. A mutable object handed to a function can be changed by that function, and the caller sees the change. And s += "x" on a string quietly builds a new string, while nums += [1] on a list edits the one you already had.`,
+        body: `A mutable object can be changed in place after it is created. An immutable object cannot, so every apparent change actually builds a new object and rebinds the name. Mutable built-ins are list, dict, set and bytearray. Immutable ones are int, float, complex, bool, str, tuple, frozenset, bytes, range and None. The split matters in three places. Most immutable built-ins are hashable, so they work as dictionary keys and set members while a list, dict or set does not — immutability is the usual reason for that rather than the rule itself, and the Hashable entry in Key Terms gives the precise version. A mutable object handed to a function can be changed by that function, and the caller sees the change. And s += "x" on a string quietly builds a new string, while nums += [1] on a list edits the one you already had.`,
         code: `s = "hello"
 first_id = id(s)
 s += " world"                  # builds a NEW string object
@@ -107,7 +107,7 @@ print(area("ab", 3))    # Output: ababab   hints are not checked at runtime`,
       { term: 'Immutable',      meaning: 'Cannot be changed after creation. int, float, str, tuple, frozenset, bytes and None are immutable.' },
       { term: 'Aliasing',       meaning: 'Two names pointing at one mutable object, so a change made through one name is visible through the other.' },
       { term: 'Rebinding',      meaning: 'Pointing a name at a different object. It affects only that name, never the object it used to point at.' },
-      { term: 'Hashable',       meaning: 'Has a hash value that never changes, so it can be a dictionary key or a set member. The immutable built-ins are hashable.' },
+      { term: 'Hashable',       meaning: 'Has a hash that stays the same for as long as the object lives, so it can be a dictionary key or a set member. Immutable built-ins such as int, str, bytes and frozenset qualify. A tuple qualifies only if every item in it does. A class you write is hashable by identity whether or not it is mutable, unless it defines __eq__ without __hash__.' },
       { term: 'NoneType',       meaning: 'The type of None, the single object meaning no value. Test for it with x is None, not x == None.' },
     ],
     cleanCode: `name = "Alice"        # text (string)
@@ -187,6 +187,7 @@ print(type({1, 2}))          # Output: <class 'set'>
 print(type(frozenset([1])))  # Output: <class 'frozenset'>
 print(type(b"bytes"))        # Output: <class 'bytes'>
 print(type(bytearray(3)))    # Output: <class 'bytearray'>
+print(type(memoryview(b"ab")))  # Output: <class 'memoryview'>
 print(type(None))            # Output: <class 'NoneType'>`,
       },
       {
@@ -215,9 +216,10 @@ MAX_RETRIES = 3            # SCREAMING_SNAKE_CASE — reads as a constant
 _cache = {}                # leading underscore — internal by convention
 total2 = 0                 # digits are fine, just not in first position
 
-# 2fast = 1     -> SyntaxError: a name cannot start with a digit
-# class = "A"   -> SyntaxError: class is a reserved keyword
-# my-var = 1    -> SyntaxError: hyphens are not allowed in names
+# Each of these is a SyntaxError. The message Python actually prints:
+# 2fast = 1     -> SyntaxError: invalid decimal literal
+# class = "A"   -> SyntaxError: invalid syntax
+# my-var = 1    -> SyntaxError: cannot assign to expression here. Maybe you meant '==' instead of '='?
 
 # Shadowing a built-in is legal and painful:
 list = [1, 2]              # the built-in list() is now unreachable here
@@ -266,7 +268,7 @@ except ValueError as e:
       },
       {
         q: 'What is the difference between a mutable and an immutable data type?',
-        a: `A mutable object can be changed in place; an immutable one cannot, so every change builds a new object and rebinds the name. list, dict, set and bytearray are mutable. int, float, complex, bool, str, tuple, frozenset, bytes and None are immutable. It matters for three reasons. Only immutable objects are hashable, so only they can be dictionary keys or set members. A mutable object passed into a function can be modified by that function and the caller sees it. And two names bound to one mutable object are aliases, so a change through one name shows up through the other.`,
+        a: `A mutable object can be changed in place; an immutable one cannot, so every change builds a new object and rebinds the name. list, dict, set and bytearray are mutable. int, float, complex, bool, str, tuple, frozenset, bytes and None are immutable. It matters for three reasons. The immutable built-ins are hashable, so they work as dictionary keys and set members while a list or a set does not — though I would not say only immutable objects are hashable, because a class I write is hashable by identity even when it is mutable, and a tuple holding a list is immutable and still unhashable. A mutable object passed into a function can be modified by that function and the caller sees it. And two names bound to one mutable object are aliases, so a change through one name shows up through the other.`,
       },
       {
         q: 'What actually happens when you write x = 5? Is that a declaration?',
