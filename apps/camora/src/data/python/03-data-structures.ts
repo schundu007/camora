@@ -82,6 +82,10 @@ new_list = sorted(original)
 print(original, new_list)     # Output: [3, 1, 2] [1, 2, 3]`,
       },
     ],
+    references: [
+      { label: 'Programiz — Python List',              url: 'https://www.programiz.com/python-programming/list' },
+      { label: 'Programiz — Python Matrix & 2D Arrays', url: 'https://www.programiz.com/python-programming/matrix' },
+    ],
     edgeCases: [
       `Accessing colors[3] on a 3-item list raises IndexError: list index out of range. Valid indexes are 0, 1, 2.`,
       `colors[1:10] does NOT raise an error even if there is no index 10 — it returns everything up to the end.`,
@@ -516,6 +520,10 @@ unique = list(set(names))
 print(sorted(unique))   # Output: ['Alice', 'Bob', 'Carol']`,
       },
     ],
+    references: [
+      { label: 'Programiz — Python Dictionary', url: 'https://www.programiz.com/python-programming/dictionary' },
+      { label: 'Programiz — Python Set',        url: 'https://www.programiz.com/python-programming/set' },
+    ],
     edgeCases: [
       `Dictionary keys must be immutable. You cannot use a list as a key — it raises TypeError. Use a tuple instead.`,
       `Empty curly braces {} create a dict, not a set. To create an empty set write set() (not {}).`,
@@ -603,6 +611,10 @@ print(poem)
 # Violets are blue.`,
       },
     ],
+    references: [
+      { label: 'Programiz — Regular Expressions', url: 'https://www.programiz.com/python-programming/regular-expression' },
+      { label: 'Programiz — Python String',       url: 'https://www.programiz.com/python-programming/string' },
+    ],
     edgeCases: [
       `msg[0] = "h" raises TypeError. Strings are immutable — you cannot change a character in place. Build a new string instead.`,
       `"5" + 5 raises TypeError. You cannot add a string and a number. Use str(5) or an f-string.`,
@@ -685,6 +697,9 @@ numbers = [2, 4, 6, 8, 10]
 print(all(n % 2 == 0 for n in numbers))   # Output: True
 print(any(n > 9 for n in numbers))         # Output: True`,
       },
+    ],
+    references: [
+      { label: 'Programiz — List Comprehension', url: 'https://www.programiz.com/python-programming/list-comprehension' },
     ],
     edgeCases: [
       `Nested comprehensions read left to right matching outer to inner loops. [[row[i] for row in matrix] for i in range(3)] transposes a 3-column matrix.`,

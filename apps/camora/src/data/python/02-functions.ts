@@ -74,6 +74,14 @@ words.sort(key=lambda w: len(w))
 print(words)     # Output: ['apple', 'banana', 'cherry']`,
       },
     ],
+    references: [
+      { label: 'Programiz — Python Functions',              url: 'https://www.programiz.com/python-programming/function' },
+      { label: 'Programiz — Function Arguments',             url: 'https://www.programiz.com/python-programming/function-argument' },
+      { label: 'Programiz — Global, Local & Nonlocal',       url: 'https://www.programiz.com/python-programming/global-local-nonlocal-variables' },
+      { label: 'Programiz — Anonymous/Lambda Functions',     url: 'https://www.programiz.com/python-programming/anonymous-lambda-function' },
+      { label: 'Programiz — Namespace & Scope',              url: 'https://www.programiz.com/python-programming/namespace' },
+      { label: 'Programiz — Python Recursion',               url: 'https://www.programiz.com/python-programming/recursion' },
+    ],
     edgeCases: [
       `Parameters without defaults are required. Calling greet() with no argument raises TypeError: greet() missing 1 required positional argument: 'name'.`,
       `Default values are evaluated ONCE when def runs, not each call. def append_to(item, lst=[]) reuses the same list across all calls. Use lst=None and create a fresh list inside.`,
@@ -152,6 +160,9 @@ def make_func(n):
 funcs = [make_func(i) for i in range(3)]
 print([f() for f in funcs])  # Output: [0, 1, 2]`,
       },
+    ],
+    references: [
+      { label: 'Programiz — Python Closures', url: 'https://www.programiz.com/python-programming/closure' },
     ],
     edgeCases: [
       `To ASSIGN to a variable in the enclosing scope (not just read it), declare it with nonlocal: nonlocal count before the assignment.`,
@@ -257,6 +268,9 @@ def flaky_request():
         raise ConnectionError("timeout")
     return "success"`,
       },
+    ],
+    references: [
+      { label: 'Programiz — Python Decorators', url: 'https://www.programiz.com/python-programming/decorator' },
     ],
     edgeCases: [
       `Without @wraps(func), the wrapped function loses its __name__ and __doc__. Logging, debugging, and help() all rely on __name__ — always add @wraps.`,

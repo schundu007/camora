@@ -102,6 +102,82 @@ describe('topic completeness', () => {
   });
 });
 
+/**
+ * The 37 retired /capra/learn/programiz slugs, mapped to the curriculum
+ * topic id that now carries that article's Programiz link in `references`.
+ * See .superpowers/sdd/2026-09-12-python-mastery-v2/programiz-merge-map.md
+ * for the full placement rationale, including which of these sit on an
+ * INTERIM stand-in topic pending a later phase.
+ */
+const PROGRAMIZ_ABSORBED: Record<string, string> = {
+  'pz-namespace': 'functions',
+  'pz-function-arguments': 'functions',
+  'pz-recursion': 'functions',
+  'pz-lambda': 'functions',
+  'pz-global-local': 'functions',
+  'pz-functions': 'functions',
+  'pz-iterators': 'generators',
+  'pz-generators': 'generators',
+  'pz-matrix': 'lists',
+  'pz-list': 'lists',
+  'pz-inheritance': 'oop-basics',
+  'pz-multiple-inheritance': 'oop-basics',
+  'pz-operator-overloading': 'oop-basics',
+  'pz-property': 'oop-basics',
+  'pz-oop': 'oop-basics',
+  'pz-class': 'oop-basics',
+  'pz-regex': 'strings',
+  'pz-string': 'strings',
+  'pz-introduction': 'variables',
+  'pz-input-output': 'variables',
+  'pz-type-conversion': 'variables',
+  'pz-variables-datatypes': 'variables',
+  'pz-closures': 'closures',
+  'pz-list-comprehension': 'comprehensions',
+  'pz-if-elif-else': 'control-flow',
+  'pz-decorators': 'decorators',
+  'pz-dictionary': 'dicts-sets',
+  'pz-set': 'dicts-sets',
+  'pz-exceptions': 'errors',
+  'pz-file-io': 'file-io',
+  'pz-for-loop': 'loops',
+  'pz-while-loop': 'loops',
+  'pz-break-continue': 'loops',
+  'pz-pass-statement': 'loops',
+  'pz-modules': 'modules',
+  'pz-operators': 'operators',
+  'pz-tuple': 'tuples',
+};
+
+describe('PROGRAMIZ_ABSORBED', () => {
+  it('carries exactly 37 slugs', () => {
+    expect(Object.keys(PROGRAMIZ_ABSORBED).length).toBe(37);
+  });
+
+  it('points every slug at a topic that still exists', () => {
+    const ids = new Set(PYTHON_TOPICS.map(t => t.id));
+    for (const [slug, topicId] of Object.entries(PROGRAMIZ_ABSORBED)) {
+      expect(ids.has(topicId), `${slug} -> ${topicId}, which is not a topic`).toBe(true);
+    }
+  });
+
+  it('gives every absorbing topic at least one programiz.com reference', () => {
+    const targetIds = new Set(Object.values(PROGRAMIZ_ABSORBED));
+    for (const topicId of targetIds) {
+      const t = PYTHON_TOPICS.find(x => x.id === topicId)!;
+      const hasProgramiz = (t.references ?? []).some(r => r.url.includes('programiz.com'));
+      expect(hasProgramiz, `${topicId}: no programiz.com reference`).toBe(true);
+    }
+  });
+
+  it('never duplicates a url within one topic\'s references', () => {
+    for (const t of PYTHON_TOPICS) {
+      const urls = (t.references ?? []).map(r => r.url);
+      expect(new Set(urls).size, `${t.id}: duplicate reference url`).toBe(urls.length);
+    }
+  });
+});
+
 describe('PYTHON_TOPICS', () => {
   it('carries all 22 pre-existing topics across the split', () => {
     const ids = new Set(PYTHON_TOPICS.map(t => t.id));
