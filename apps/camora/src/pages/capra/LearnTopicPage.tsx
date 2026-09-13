@@ -324,6 +324,15 @@ function renderMarkdown(text: string) {
   return <>{elements}</>;
 }
 
+const LEVEL_COLORS: Record<string, { bg: string; text: string }> = {
+  beginner:     { bg: 'color-mix(in oklab,var(--success) 15%,var(--bg-elevated))', text: 'var(--success)' },
+  intermediate: { bg: 'color-mix(in oklab,var(--warning) 15%,var(--bg-elevated))', text: 'var(--warning)' },
+  advanced:     { bg: 'color-mix(in oklab,var(--danger) 15%,var(--bg-elevated))', text: 'var(--danger)' },
+  easy:         { bg: 'color-mix(in oklab,var(--success) 15%,var(--bg-elevated))', text: 'var(--success)' },
+  medium:       { bg: 'color-mix(in oklab,var(--warning) 15%,var(--bg-elevated))', text: 'var(--warning)' },
+  hard:         { bg: 'color-mix(in oklab,var(--danger) 15%,var(--bg-elevated))', text: 'var(--danger)' },
+};
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LearnTopicPage() {
@@ -344,6 +353,8 @@ export default function LearnTopicPage() {
   const [streaming, setStreaming] = useState(false);
   const [fromCache, setFromCache] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  const levelChip = LEVEL_COLORS[level] ?? LEVEL_COLORS.beginner;
 
   useEffect(() => {
     if (!slug) return;
