@@ -19,7 +19,21 @@ function proseOf(t: Topic): string[] {
   ];
 }
 
+const EXISTING_IDS = [
+  'variables', 'operators', 'control-flow', 'loops',
+  'functions', 'closures', 'decorators',
+  'lists', 'dicts-sets', 'strings', 'comprehensions',
+  'oop-basics', 'dataclasses', 'generators',
+  'errors', 'file-io', 'context-managers', 'modules',
+  'async', 'concurrency', 'type-hints', 'performance',
+];
+
 describe('PYTHON_TOPICS', () => {
+  it('carries all 22 pre-existing topics across the split', () => {
+    const ids = new Set(PYTHON_TOPICS.map(t => t.id));
+    for (const id of EXISTING_IDS) expect(ids.has(id), `lost topic ${id}`).toBe(true);
+  });
+
   it('has unique topic ids', () => {
     const ids = PYTHON_TOPICS.map(t => t.id);
     expect(new Set(ids).size).toBe(ids.length);

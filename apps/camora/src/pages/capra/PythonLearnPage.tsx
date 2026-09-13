@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
-import { PYTHON_TOPICS, type Topic } from '../../data/python-curriculum';
+import { PYTHON_TOPICS, type Topic } from '../../data/python';
 import Chip from '@/components/shared/ui/Chip';
 
 const CodeBlock = ({ code }: { code: string }) => {
