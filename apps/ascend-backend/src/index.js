@@ -58,6 +58,7 @@ import http from 'http';
 import net from 'net';
 import { verifyToken } from './lib/shared-auth.js';
 import { askRouter } from './routes/ask.js';
+import { geminiRouter } from './routes/gemini.js';
 import { tryHandleDictateUpgrade } from './services/dictateLive.js';
 import { playgroundSessionsRouter } from './routes/playgroundSessions.js';
 import { k8sPathRouter } from './routes/k8sPath.js';
@@ -1500,6 +1501,9 @@ app.use('/api/analyze', authenticate, hourBudgetGate, aiLimiter, analyzeRouter);
 app.use('/api/fetch', authenticate, apiLimiter, fetchRouter);
 app.use('/api/run', authenticate, apiLimiter, runRouter);
 app.use('/api/v1/ask', authenticate, aiLimiter, askRouter);
+// Gemini tab — a second opinion beside Ask Sona, answered by Gemini directly
+// (replaces the embedded AI Studio webview Google's sign-in block made unusable).
+app.use('/api/v1/gemini', authenticate, aiLimiter, geminiRouter);
 app.use('/api/fix', authenticate, hourBudgetGate, aiLimiter, fixRouter);
 app.use('/api/transcribe', authenticate, hourBudgetGate, aiLimiter, transcribeRouter);
 app.use('/api/ascend/prep', authenticate, hourBudgetGate, apiLimiter, ascendPrepRouter);

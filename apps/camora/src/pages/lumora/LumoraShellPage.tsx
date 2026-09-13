@@ -739,9 +739,9 @@ export const LumoraShellPage = () => {
             </div>
           )}
 
-          {/* Gemini tab — Google AI Studio embedded in a webview (desktop).
-              Same keep-alive contract as Claude: a remount would reload
-              AI Studio and drop both the login and the prompt in progress. */}
+          {/* Gemini tab — streams from our own backend, no webview. Kept
+              mounted like the others so switching tabs mid-interview does not
+              throw away the conversation. */}
           {mountedTabs.has('gemini') && (
             <div style={{ display: activeTab === 'gemini' ? 'flex' : 'none' }} className="flex-1 flex flex-col min-h-0 absolute inset-0">
               <ErrorBoundary>
