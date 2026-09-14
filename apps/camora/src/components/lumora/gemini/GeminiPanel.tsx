@@ -29,6 +29,7 @@ import { AskResponse } from '../ask/AskLayout';
 import { StreamingMicButton } from '../ask/StreamingMicButton';
 import { InterviewerListenButton } from '../ask/InterviewerListenButton';
 import { useInterviewerListen } from '../shared/useInterviewerListen';
+import { QuestionBlock } from '../shared/QuestionBlock';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -346,10 +347,7 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
         <div className="flex flex-col gap-3">
           {messages.map((m, i) => (
             m.role === 'user' ? (
-              <div key={i} className="rounded px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
-                style={{ background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}>
-                {m.content}
-              </div>
+              <QuestionBlock key={i}>{m.content}</QuestionBlock>
             ) : (
               <div key={i}><AskResponse content={m.content} /></div>
             )

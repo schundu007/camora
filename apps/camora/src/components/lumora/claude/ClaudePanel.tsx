@@ -35,6 +35,7 @@ import { AskResponse } from '../ask/AskLayout';
 import { StreamingMicButton } from '../ask/StreamingMicButton';
 import { InterviewerListenButton } from '../ask/InterviewerListenButton';
 import { useInterviewerListen } from '../shared/useInterviewerListen';
+import { QuestionBlock } from '../shared/QuestionBlock';
 import { useAuth } from '@/contexts/AuthContext';
 
 // lumora-backend, not Capra — see the note above about which key each service
@@ -362,10 +363,7 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
         <div className="flex flex-col gap-3">
           {messages.map((m, i) => (
             m.role === 'user' ? (
-              <div key={i} className="rounded px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap"
-                style={{ background: 'var(--lum-surface)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}>
-                {m.content}
-              </div>
+              <QuestionBlock key={i}>{m.content}</QuestionBlock>
             ) : (
               <div key={i}><AskResponse content={m.content} /></div>
             )
