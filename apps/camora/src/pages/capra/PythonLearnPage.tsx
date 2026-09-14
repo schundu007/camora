@@ -78,8 +78,8 @@ const TopicView = ({ topic }: { topic: Topic }) => {
         </div>
         <div className="divide-y divide-[var(--border)]/40">
           {topic.walkthrough.map((step, i) => (
-            <div key={i} className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-              <div className="px-4 py-3" style={{ background: '#0d1117', borderRight: '1px solid color-mix(in oklab, var(--cam-primary) 15%, transparent)' }}>
+            <div key={i} className="grid grid-cols-1 md:grid-cols-2">
+              <div className="px-4 py-3 border-b md:border-b-0 md:border-r" style={{ background: '#0d1117', borderColor: 'color-mix(in oklab, var(--cam-primary) 15%, transparent)' }}>
                 <pre className="text-[12px] leading-relaxed overflow-x-auto" style={{ fontFamily: 'var(--font-mono)', color: '#e6edf3', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}><code>{step.code}</code></pre>
               </div>
               <div className="px-5 py-3 flex items-start gap-2.5">
@@ -135,7 +135,7 @@ const TopicView = ({ topic }: { topic: Topic }) => {
       <InterviewQuestions questions={topic.interviewQs} />
 
       {/* Gotcha + Tip */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid color-mix(in oklab, var(--danger) 20%, var(--border))' }}>
           <div className="px-5 py-3" style={{ background: 'color-mix(in oklab, var(--danger) 8%, var(--bg-surface))', borderBottom: '1px solid color-mix(in oklab, var(--danger) 15%, var(--border))' }}>
             <span className="font-mono text-[12px] font-bold uppercase tracking-widest" style={{ color: 'var(--danger)' }}>Common Gotcha</span>
@@ -236,10 +236,10 @@ export default function PythonLearnPage() {
       </section>
 
       <div className="page-wrap pt-8 pb-20 flex-1 w-full">
-        <div className="flex gap-8 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
 
           {/* Sidebar */}
-          <aside className="w-64 shrink-0 sticky top-6">
+          <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-6">
             <div className="relative mb-4">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search topics…"
@@ -253,7 +253,28 @@ export default function PythonLearnPage() {
                 {filtered.length === 0 && <p className="text-xs text-[var(--text-muted)] px-2">No topics match</p>}
               </div>
             ) : (
-              <ChapterNav topics={PYTHON_TOPICS} selectedId={selectedId} onSelect={setTopic} />
+              <>
+                {/* Narrow windows: one grouped picker, so 50 topics do not push
+                    the lesson itself off the screen. */}
+                <label htmlFor="py-topic-picker" className="sr-only">Choose a topic</label>
+                <select
+                  id="py-topic-picker"
+                  className="lg:hidden w-full px-3 py-2 rounded-lg text-sm bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--cam-primary)]"
+                  value={selectedId}
+                  onChange={e => setTopic(e.target.value)}
+                >
+                  {CHAPTERS.filter(c => PYTHON_TOPICS.some(t => t.chapter === c.id)).map(c => (
+                    <optgroup key={c.id} label={c.label}>
+                      {PYTHON_TOPICS.filter(t => t.chapter === c.id).map(t => (
+                        <option key={t.id} value={t.id}>{t.title} — {t.estimatedMins}m</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <div className="hidden lg:block">
+                  <ChapterNav topics={PYTHON_TOPICS} selectedId={selectedId} onSelect={setTopic} />
+                </div>
+              </>
             )}
           </aside>
 
