@@ -2,7 +2,6 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { lazy, Suspense, useEffect, useState } from 'react';
-import SiteNav from './components/shared/SiteNav';
 import RootShell from './components/layout/RootShell';
 import { PaywallGate } from './components/shared/ui/PaywallGate';
 import { isOwnerEmail } from './lib/owner';
@@ -10,7 +9,6 @@ import { usePageTracker } from './hooks/usePageTracker';
 import { DialogProvider } from './components/shared/Dialog';
 import { CelebrationProvider } from './components/shared/Celebration';
 import { caraRegistry } from '@/lib/cara-registry';
-import { isElectron } from '@/lib/overlayMode';
 import { useSessionStore } from '@/stores/session-store';
 import CaraBar from '@/components/shared/cara/CaraBar';
 import { DesktopWindowControls } from '@/components/lumora/shell/DesktopWindowControls';
@@ -389,10 +387,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 }
 
-const ShellRoute = ({ children }: { children: React.ReactNode }) => {
+const ShellRoute = ({ children, fullBleed = false }: { children: React.ReactNode; fullBleed?: boolean }) => {
   return (
     <ProtectedRoute>
-      <RootShell>{children}</RootShell>
+      <RootShell fullBleed={fullBleed}>{children}</RootShell>
     </ProtectedRoute>
   );
 }
@@ -610,11 +608,9 @@ export const App = () => {
           <Route path="/lumora/profile" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/credits" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/fix" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
-          {/* Claude embeds claude.ai in an Electron <webview>; the web build can't
-              render it, so redirect this route to the dashboard outside desktop. */}
-          <Route path="/lumora/claude" element={isElectron() ? <PaidRoute><LumoraShellPage /></PaidRoute> : <Navigate to="/lumora" replace />} />
-          {/* Gemini answers through our own backend, not an embedded webview,
-              so unlike /lumora/claude it has nothing desktop-only about it. */}
+          {/* Claude and Gemini both stream from our own backend now. Neither
+              embeds a webview, so neither is desktop-only. */}
+          <Route path="/lumora/claude" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/gemini" element={<PaidRoute><LumoraShellPage /></PaidRoute>} />
           <Route path="/lumora/playground" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
           <Route path="/lumora/playground/s/:snippetId" element={<ProtectedRoute><LumoraShellPage /></ProtectedRoute>} />
@@ -643,14 +639,14 @@ export const App = () => {
           <Route path="/capra/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
           <Route path="/capra/plan" element={<ShellRoute><PrepPlanPage /></ShellRoute>} />
           <Route path="/capra/library" element={<ShellRoute><HRLibraryPage /></ShellRoute>} />
-          <Route path="/capra/problems/:slug" element={<ShellRoute><ProtectedRoute><ProblemDetailPage /></ProtectedRoute></ShellRoute>} />
+          <Route path="/capra/problems/:slug" element={<ShellRoute fullBleed><ProtectedRoute><ProblemDetailPage /></ProtectedRoute></ShellRoute>} />
           <Route path="/capra/quiz"         element={<ShellRoute><MCQPage /></ShellRoute>} />
           <Route path="/capra/quiz/session" element={<ShellRoute><QuizSessionPage /></ShellRoute>} />
           <Route path="/capra/flashcards"   element={<ShellRoute><FlashcardsPage /></ShellRoute>} />
           <Route path="/capra/k8s" element={<ShellRoute><K8sPathPage /></ShellRoute>} />
           <Route path="/capra/learn/python" element={<ShellRoute><PythonLearnPage /></ShellRoute>} />
           <Route path="/capra/learn/programiz" element={<Navigate to="/capra/learn/python" replace />} />
-          <Route path="/playground" element={<ShellRoute><ProtectedRoute><PlaygroundPage /></ProtectedRoute></ShellRoute>} />
+          <Route path="/playground" element={<ShellRoute fullBleed><ProtectedRoute><PlaygroundPage /></ProtectedRoute></ShellRoute>} />
           <Route path="/capra/playground" element={<Navigate to="/playground?tab=vm" replace />} />
           <Route path="/capra/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
           <Route path="/capra/landing" element={<CapraLanding />} />
@@ -660,9 +656,9 @@ export const App = () => {
           <Route path="/prepare/*" element={<ShellRoute><CapraPrepare /></ShellRoute>} />
           <Route path="/practice" element={<ShellRoute><CapraPractice /></ShellRoute>} />
           <Route path="/handbook" element={<ShellRoute><Blind75Page /></ShellRoute>} />
-          <Route path="/handbook/:id/practice" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
-          <Route path="/handbook/:id/solution" element={<ShellRoute><Blind75PracticePage /></ShellRoute>} />
-          <Route path="/problems/:slug" element={<ShellRoute><ProtectedRoute><ProblemDetailPage /></ProtectedRoute></ShellRoute>} />
+          <Route path="/handbook/:id/practice" element={<ShellRoute fullBleed><Blind75PracticePage /></ShellRoute>} />
+          <Route path="/handbook/:id/solution" element={<ShellRoute fullBleed><Blind75PracticePage /></ShellRoute>} />
+          <Route path="/problems/:slug" element={<ShellRoute fullBleed><ProtectedRoute><ProblemDetailPage /></ProtectedRoute></ShellRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute><CapraOnboarding /></ProtectedRoute>} />
 
           {/* ── Referral ────────────────────────────── */}

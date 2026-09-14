@@ -6,7 +6,6 @@ import CamoraLogo from '../../shared/CamoraLogo';
 import UserDropdown from '../../shared/UserDropdown';
 import { requestAudioSetup } from '@/lib/audio-preferences';
 import { useStealth, useSyncStealthOnLaunch } from '../../../lib/stealth';
-import { isElectron } from '../../../lib/overlayMode';
 
 export type LumoraTab = 'session' | 'coding' | 'design' | 'cofix' | 'behavioral' | 'claude' | 'gemini' | 'ask' | 'practice' | 'prepkit' | 'docs' | 'calendar' | 'sessions' | 'assistants' | 'profile' | 'credits';
 
@@ -222,12 +221,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
       <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
       <div className="px-1.5">
         {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
-        {/* The Claude tab embeds claude.ai in a webview, which only works in the
-            Electron desktop app — hide it in the web build. Gemini is not a
-            webview (it streams from our backend), so it stays visible on web. */}
-        {TOOL_ITEMS
-          .filter(item => item.id !== 'claude' || isElectron())
-          .map(item => {
+        {TOOL_ITEMS.map(item => {
           const active = activeTab === item.id;
           return (
             <Link
