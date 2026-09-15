@@ -1,356 +1,93 @@
 {
-  "audit_date": "2026-07-01",
-  "prior_audit_date": "2026-06-01",
+  "audit_date": "2026-09-02",
+  "prior_audit_date": "2026-07-01",
   "summary": {
     "CRITICAL": 4,
-    "HIGH": 8,
-    "MEDIUM": 22,
-    "LOW": 8,
-    "total": 42
+    "HIGH": 13,
+    "MEDIUM": 31,
+    "LOW": 18,
+    "total": 66
+  },
+  "new_findings_this_run": {
+    "CRITICAL": 0,
+    "HIGH": 5,
+    "MEDIUM": 9,
+    "LOW": 10,
+    "total": 24
   },
   "net_change_vs_prior": {
-    "CRITICAL": "+2",
-    "HIGH": "+1",
-    "MEDIUM": "-11",
-    "LOW": "-8",
-    "note": "2 prior Stripe CRITICALs (ascend_stripe_events never created; handleInvoicePaid skip) no longer present — presumed fixed. 2 new Stripe CRITICAL + 1 auth escalation."
+    "CRITICAL": "+0",
+    "HIGH": "+5",
+    "MEDIUM": "+9",
+    "LOW": "+10",
+    "note": "No new CRITICALs. 5 new HIGHs: /ask paywall bypass (free users get free Gemini calls), jwt.verify algorithm confusion in lumora-within-ascend, token revocation gap in lumora authenticate, CORS Railway substring match, lifetime plan missing from PERSONAL_HOUR_BUDGETS."
   },
   "findings": [
-    {
-      "id": "AUTH-001",
-      "severity": "CRITICAL",
-      "area": "AUTH",
-      "file": "packages/shared-auth/src/index.js",
-      "line": 46,
-      "description": "verifyToken() does not enforce payload.type === 'access' — add type check so refresh/other tokens are rejected by all middleware"
-    },
-    {
-      "id": "AUTH-002",
-      "severity": "CRITICAL",
-      "area": "AUTH",
-      "file": "packages/shared-auth/src/index.js",
-      "line": 27,
-      "description": "createToken() accepts any payload without type claim validation — add type allowlist in createToken()"
-    },
-    {
-      "id": "AUTH-003",
-      "severity": "HIGH",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/middleware/authenticate.js",
-      "line": 120,
-      "description": "requireAdmin() checks role === 'admin' but role field is never set (always 'user') — change to check is_admin boolean"
-    },
-    {
-      "id": "AUTH-004",
-      "severity": "HIGH",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/lib/_shared/auth.js",
-      "line": 71,
-      "description": "Cookie domain hardcoded to '.cariara.com' with no env override — add COOKIE_DOMAIN env support for staging"
-    },
-    {
-      "id": "AUTH-005",
-      "severity": "HIGH",
-      "area": "AUTH",
-      "file": "packages/shared-auth/src/index.js",
-      "line": 40,
-      "description": "Bearer token parsed with slice(7) not split(' ')[1] — standardize parsing across all middlewares"
-    },
-    {
-      "id": "AUTH-006",
-      "severity": "MEDIUM",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/index.js",
-      "line": 537,
-      "description": "OWNER_EMAILS auto-applies is_admin at every startup — manage admin grant via DB, not env auto-grant"
-    },
-    {
-      "id": "AUTH-007",
-      "severity": "MEDIUM",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/middleware/authenticate.js",
-      "line": 6,
-      "description": "Both OWNER_EMAILS and ADMIN_EMAILS supported with no deprecation path — standardize on one variable"
-    },
-    {
-      "id": "AUTH-008",
-      "severity": "MEDIUM",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/routes/auth.js",
-      "line": 337,
-      "description": "Refresh endpoint uses ignoreExpiration without max-age check — add 90-day max-age limit on token age"
-    },
-    {
-      "id": "AUTH-009",
-      "severity": "MEDIUM",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/routes/auth.js",
-      "line": 509,
-      "description": "ADMIN_SECRET endpoint has no rate limiting — add IP-based lockout or exponential backoff"
-    },
-    {
-      "id": "AUTH-010",
-      "severity": "MEDIUM",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/index.js",
-      "line": 812,
-      "description": "CORS allows origins containing 'ascend' or 'camora' keyword substring — switch to explicit allowlist"
-    },
-    {
-      "id": "AUTH-011",
-      "severity": "MEDIUM",
-      "area": "AUTH",
-      "file": "apps/lumora-backend/src/middleware/authenticate.js",
-      "line": 85,
-      "description": "ADMIN_EMAILS check is case-sensitive — normalize with .toLowerCase() and use Set.has()"
-    },
-    {
-      "id": "AUTH-012",
-      "severity": "LOW",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/routes/auth.js",
-      "line": 18,
-      "description": "OAuth state freshness uses Date.now() — replace with server-TTL cache to avoid clock skew rejections"
-    },
-    {
-      "id": "AUTH-013",
-      "severity": "LOW",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/middleware/jwtAuth.js",
-      "line": 67,
-      "description": "shared-auth verifyToken has no algorithm whitelist — add algorithm: ['HS256'] to jwt.verify options"
-    },
-    {
-      "id": "AUTH-014",
-      "severity": "LOW",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/routes/auth.js",
-      "line": 212,
-      "description": "Referral code truncates base64url output — keep all 8 chars from randomBytes(6) for full entropy"
-    },
-    {
-      "id": "AUTH-015",
-      "severity": "LOW",
-      "area": "AUTH",
-      "file": "apps/ascend-backend/src/routes/auth.js",
-      "line": 427,
-      "description": "Token issuance at /me does not check is_active flag — add account suspension check"
-    },
-    {
-      "id": "STRIPE-001",
-      "severity": "CRITICAL",
-      "area": "STRIPE",
-      "file": "apps/ascend-backend/src/services/teamService.js",
-      "line": 23,
-      "description": "Team price formula (n*20-1)*100 contradicts billing.js tiered formula — reconcile to single authoritative calculation"
-    },
-    {
-      "id": "STRIPE-002",
-      "severity": "CRITICAL",
-      "area": "STRIPE",
-      "file": "apps/ascend-backend/src/routes/billing.js",
-      "line": 18,
-      "description": "Tiered team price formula ($49+$10/seat) contradicts teamService.js — customers charged inconsistently by code path"
-    },
-    {
-      "id": "STRIPE-003",
-      "severity": "HIGH",
-      "area": "STRIPE",
-      "file": "apps/ascend-backend/src/services/freeUsageService.js",
-      "line": 118,
-      "description": "Hardcoded plan type check missing 'lifetime' — import PAID_PLAN_TYPES from @camora/shared-db/plans"
-    },
-    {
-      "id": "STRIPE-004",
-      "severity": "HIGH",
-      "area": "STRIPE",
-      "file": "apps/ascend-backend/src/services/playground/sessionManager.js",
-      "line": 16,
-      "description": "PAID_PLAN_TYPES redeclared locally instead of imported from lib/plans.js — import from shared source"
-    },
-    {
-      "id": "STRIPE-005",
-      "severity": "MEDIUM",
-      "area": "STRIPE",
-      "file": "apps/ascend-backend/src/routes/billing.js",
-      "line": 110,
-      "description": "Comment describes flat_discount_cents but code uses tiered formula — remove or fix misleading comment"
-    },
-    {
-      "id": "STRIPE-006",
-      "severity": "LOW",
-      "area": "STRIPE",
-      "file": "apps/ascend-backend/src/routes/billing.js",
-      "line": 1102,
-      "description": "Team renewal skips ai_hour_topups, relying implicitly on rollOverTeamPoolForUser — add explicit comment"
-    },
-    {
-      "id": "ROBUST-001",
-      "severity": "MEDIUM",
-      "area": "ROBUSTNESS",
-      "file": "apps/ascend-backend/src/routes/teams.js",
-      "line": 459,
-      "description": "Admin endpoints protected by adminGate but lack a dedicated stricter rate limiter — apply admin-specific rate limit"
-    },
-    {
-      "id": "ROBUST-002",
-      "severity": "LOW",
-      "area": "ROBUSTNESS",
-      "file": "apps/ascend-backend/src/lumora/routes/transcription.js",
-      "line": 63,
-      "description": "Math.random() for multipart boundary generation (non-security, acceptable)"
-    },
-    {
-      "id": "ROBUST-003",
-      "severity": "LOW",
-      "area": "ROBUSTNESS",
-      "file": "apps/ascend-backend/src/routes/mcq.js",
-      "line": 184,
-      "description": "Math.random() for quiz question shuffle (non-security, acceptable)"
-    },
-    {
-      "id": "ROBUST-004",
-      "severity": "LOW",
-      "area": "ROBUSTNESS",
-      "file": "apps/ascend-backend/src/services/autoTopupService.js",
-      "line": 115,
-      "description": "Empty catch on advisory lock release (intentional per inline comment)"
-    },
-    {
-      "id": "DESIGN-001",
-      "severity": "HIGH",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/FlyerPage.tsx",
-      "line": 21,
-      "description": "Missing SiteNav on public page — add SiteNav for brand consistency (feedback_nav_redirect_rules)"
-    },
-    {
-      "id": "DESIGN-002",
-      "severity": "HIGH",
-      "area": "DESIGN",
-      "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx",
-      "line": 59,
-      "description": "cyan-500 in gradient text — replace with emerald per Lumora palette rules (feedback_lumora_sharp_palette)"
-    },
-    {
-      "id": "DESIGN-003",
-      "severity": "HIGH",
-      "area": "DESIGN",
-      "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx",
-      "line": 198,
-      "description": "cyan-500 in gradient text (second occurrence) — replace with emerald per Lumora palette rules"
-    },
-    {
-      "id": "DESIGN-004",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx",
-      "line": 179,
-      "description": "text-cyan-200 in step labels — replace with emerald palette color"
-    },
-    {
-      "id": "DESIGN-005",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/PracticePage.jsx",
-      "line": 1201,
-      "description": "rgba(255,255,255,0.75) on variable backgrounds — verify WCAG contrast (feedback_no_white_on_white)"
-    },
-    {
-      "id": "DESIGN-006",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx",
-      "line": 30,
-      "description": "Hardcoded hex #10b981 for easy difficulty — replace with CSS design token"
-    },
-    {
-      "id": "DESIGN-007",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx",
-      "line": 31,
-      "description": "Hardcoded hex #f59e0b for medium difficulty — replace with CSS design token"
-    },
-    {
-      "id": "DESIGN-008",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx",
-      "line": 32,
-      "description": "Hardcoded hex #ef4444 for hard difficulty — replace with CSS design token"
-    },
-    {
-      "id": "DESIGN-009",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/ResumeGeneratorPage.tsx",
-      "line": 133,
-      "description": "Hardcoded hex #ef4444 — consolidate with design token var(--danger)"
-    },
-    {
-      "id": "DESIGN-010",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/ResumeGeneratorPage.tsx",
-      "line": 153,
-      "description": "Mixed CSS vars with hex fallbacks (#22c55e, #f59e0b, #ef4444) — standardize to single token system"
-    },
-    {
-      "id": "DESIGN-011",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
-      "line": 25,
-      "description": "Hardcoded hex #ef4444 for 'again' state — use design token"
-    },
-    {
-      "id": "DESIGN-012",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
-      "line": 26,
-      "description": "Hardcoded hex #f59e0b for 'hard' state — use design token"
-    },
-    {
-      "id": "DESIGN-013",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
-      "line": 27,
-      "description": "Hardcoded hex #22c55e for 'good' state — use design token"
-    },
-    {
-      "id": "DESIGN-014",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx",
-      "line": 28,
-      "description": "Hardcoded hex #3683DC (--accent value) — use CSS var(--accent) directly"
-    },
-    {
-      "id": "DESIGN-015",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/PracticePage.jsx",
-      "line": 452,
-      "description": "Company brand colors hardcoded as hex values — move to shared constants"
-    },
-    {
-      "id": "DESIGN-016",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/pages/capra/CompanyPrepPage.tsx",
-      "line": 40,
-      "description": "Hardcoded company brand colors — centralize in constants or design tokens"
-    },
-    {
-      "id": "DESIGN-017",
-      "severity": "MEDIUM",
-      "area": "DESIGN",
-      "file": "apps/camora/src/components/shared/SiteNav.tsx",
-      "line": 156,
-      "description": "Hardcoded hex #3683DC and #2265BF in className — use CSS var(--accent)"
-    }
+    {"id": "AUTH-001", "severity": "CRITICAL", "area": "AUTH", "file": "packages/shared-auth/src/index.js", "line": 46, "description": "verifyToken() does not enforce payload.type === 'access' — add type check so refresh/other tokens are rejected by all middleware"},
+    {"id": "AUTH-002", "severity": "CRITICAL", "area": "AUTH", "file": "packages/shared-auth/src/index.js", "line": 27, "description": "createToken() accepts any payload without type claim validation — add type allowlist in createToken()"},
+    {"id": "AUTH-003", "severity": "HIGH", "area": "AUTH", "file": "apps/ascend-backend/src/middleware/authenticate.js", "line": 120, "description": "requireAdmin() checks role === 'admin' but role field is never set (always 'user') — change to check is_admin boolean"},
+    {"id": "AUTH-004", "severity": "HIGH", "area": "AUTH", "file": "apps/ascend-backend/src/lib/_shared/auth.js", "line": 71, "description": "Cookie domain hardcoded to '.cariara.com' with no env override — add COOKIE_DOMAIN env support for staging"},
+    {"id": "AUTH-005", "severity": "HIGH", "area": "AUTH", "file": "packages/shared-auth/src/index.js", "line": 40, "description": "Bearer token parsed with slice(7) not split(' ')[1] — standardize parsing across all middlewares"},
+    {"id": "AUTH-006", "severity": "MEDIUM", "area": "AUTH", "file": "apps/ascend-backend/src/index.js", "line": 537, "description": "OWNER_EMAILS auto-applies is_admin at every startup — manage admin grant via DB, not env auto-grant"},
+    {"id": "AUTH-007", "severity": "MEDIUM", "area": "AUTH", "file": "apps/ascend-backend/src/middleware/authenticate.js", "line": 6, "description": "Both OWNER_EMAILS and ADMIN_EMAILS supported with no deprecation path — standardize on one variable"},
+    {"id": "AUTH-008", "severity": "MEDIUM", "area": "AUTH", "file": "apps/ascend-backend/src/routes/auth.js", "line": 337, "description": "Refresh endpoint uses ignoreExpiration without max-age check — add 90-day max-age limit on token age"},
+    {"id": "AUTH-009", "severity": "MEDIUM", "area": "AUTH", "file": "apps/ascend-backend/src/routes/auth.js", "line": 509, "description": "ADMIN_SECRET endpoint has no rate limiting — add IP-based lockout or exponential backoff"},
+    {"id": "AUTH-010", "severity": "MEDIUM", "area": "AUTH", "file": "apps/ascend-backend/src/index.js", "line": 812, "description": "CORS allows origins containing 'ascend' or 'camora' keyword substring — switch to explicit allowlist"},
+    {"id": "AUTH-011", "severity": "MEDIUM", "area": "AUTH", "file": "apps/lumora-backend/src/middleware/authenticate.js", "line": 85, "description": "ADMIN_EMAILS check is case-sensitive — normalize with .toLowerCase() and use Set.has()"},
+    {"id": "AUTH-012", "severity": "LOW", "area": "AUTH", "file": "apps/ascend-backend/src/routes/auth.js", "line": 18, "description": "OAuth state freshness uses Date.now() — replace with server-TTL cache to avoid clock skew rejections"},
+    {"id": "AUTH-013", "severity": "LOW", "area": "AUTH", "file": "apps/ascend-backend/src/middleware/jwtAuth.js", "line": 67, "description": "shared-auth verifyToken has no algorithm whitelist — add algorithm: ['HS256'] to jwt.verify options"},
+    {"id": "AUTH-014", "severity": "LOW", "area": "AUTH", "file": "apps/ascend-backend/src/routes/auth.js", "line": 212, "description": "Referral code truncates base64url output — keep all 8 chars from randomBytes(6) for full entropy"},
+    {"id": "AUTH-015", "severity": "LOW", "area": "AUTH", "file": "apps/ascend-backend/src/routes/auth.js", "line": 427, "description": "Token issuance at /me does not check is_active flag — add account suspension check"},
+    {"id": "AUTH-016", "severity": "HIGH", "area": "AUTH", "file": "apps/ascend-backend/src/lumora/lib/_shared/auth.js", "line": 22, "description": "verifyToken calls jwt.verify with no algorithms option; three other copies patched to HS256 but this lumora-within-ascend copy was not — add { algorithms: ['HS256'] }", "new_in": "2026-09-02"},
+    {"id": "AUTH-017", "severity": "HIGH", "area": "AUTH", "file": "apps/lumora-backend/src/middleware/authenticate.js", "line": 20, "description": "authenticate middleware does not check users.token_generation; POST /auth/revoke-all-sessions revokes ascend jwtAuth routes but all lumora routes accept the revoked JWT until 30-day natural expiry — check token_generation on every authenticate call", "new_in": "2026-09-02"},
+    {"id": "AUTH-018", "severity": "HIGH", "area": "AUTH", "file": "apps/ascend-backend/src/index.js", "line": 891, "description": "CORS Railway check uses origin.includes('capra-backend') && origin.endsWith('.railway.app') — substring match; evil-capra-backend.railway.app passes both conditions; switch to exact-origin allowlist", "new_in": "2026-09-02"},
+    {"id": "AUTH-019", "severity": "MEDIUM", "area": "AUTH", "file": "apps/ascend-backend/src/index.js", "line": 234, "description": "Referral-code backfill migration uses SUBSTR(MD5(RANDOM()::TEXT || id::TEXT), 1, 8); PostgreSQL RANDOM() is not a CSPRNG — use encode(gen_random_bytes(6), 'hex') for future migrations", "new_in": "2026-09-02"},
+    {"id": "AUTH-020", "severity": "MEDIUM", "area": "AUTH", "file": "apps/lumora-backend/src/routes/auth.js", "line": 127, "description": "GET /me in lumora-backend unconditionally mints a fresh 24h access_token on every call with no near-expiry guard; ascend-backend gates re-issuance to within 7 days of expiry — apply the same guard here", "new_in": "2026-09-02"},
+    {"id": "AUTH-021", "severity": "MEDIUM", "area": "AUTH", "file": "apps/ascend-backend/src/middleware/jwtAuth.js", "line": 17, "description": "JWT_ALGORITHM is env-configurable; setting it to RS256 enables algorithm-confusion attacks — hardcode to HS256 like the canonical shared-auth modules", "new_in": "2026-09-02"},
+    {"id": "AUTH-022", "severity": "LOW", "area": "AUTH", "file": "apps/camora/src/App.tsx", "line": 424, "description": "OwnerRoute calls isOwnerEmail(user?.email) instead of isOwner(user) which also checks user?.is_admin — DB-granted admins are locked out of all /admin/* frontend routes despite working backend access", "new_in": "2026-09-02"},
+    {"id": "AUTH-023", "severity": "LOW", "area": "AUTH", "file": "apps/ascend-backend/src/index.js", "line": 1047, "description": "GET /api/visitors/pageview-stats (admin-only) missing apiLimiter; adjacent /api/visitors/visitors-detail has it — add apiLimiter for consistency", "new_in": "2026-09-02"},
+    {"id": "STRIPE-001", "severity": "CRITICAL", "area": "STRIPE", "file": "apps/ascend-backend/src/services/teamService.js", "line": 23, "description": "Team price formula (n*20-1)*100 contradicts billing.js tiered formula — reconcile to single authoritative calculation"},
+    {"id": "STRIPE-002", "severity": "CRITICAL", "area": "STRIPE", "file": "apps/ascend-backend/src/routes/billing.js", "line": 18, "description": "Tiered team price formula ($49+$10/seat) contradicts teamService.js — customers charged inconsistently by code path"},
+    {"id": "STRIPE-003", "severity": "HIGH", "area": "STRIPE", "file": "apps/ascend-backend/src/services/freeUsageService.js", "line": 118, "description": "Hardcoded plan type check missing 'lifetime' — import PAID_PLAN_TYPES from @camora/shared-db/plans"},
+    {"id": "STRIPE-004", "severity": "HIGH", "area": "STRIPE", "file": "apps/ascend-backend/src/services/playground/sessionManager.js", "line": 16, "description": "PAID_PLAN_TYPES redeclared locally instead of imported from lib/plans.js — import from shared source"},
+    {"id": "STRIPE-005", "severity": "MEDIUM", "area": "STRIPE", "file": "apps/ascend-backend/src/routes/billing.js", "line": 110, "description": "Comment describes flat_discount_cents but code uses tiered formula — remove or fix misleading comment"},
+    {"id": "STRIPE-006", "severity": "LOW", "area": "STRIPE", "file": "apps/ascend-backend/src/routes/billing.js", "line": 1102, "description": "Team renewal skips ai_hour_topups, relying implicitly on rollOverTeamPoolForUser — add explicit comment"},
+    {"id": "STRIPE-007", "severity": "HIGH", "area": "STRIPE", "file": "apps/ascend-backend/src/services/teamService.js", "line": 265, "description": "PERSONAL_HOUR_BUDGETS has no 'lifetime' entry; plan_type='lifetime' subscribers fall through to the free budget (0 hours) and are paywalled by hourBudgetGate once topup hours run out — add lifetime budget entry", "new_in": "2026-09-02"},
+    {"id": "STRIPE-008", "severity": "MEDIUM", "area": "STRIPE", "file": "apps/ascend-backend/src/index.js", "line": 1283, "description": "Admin grant-trial ON CONFLICT CASE omits 'lifetime'; granting a trial to a lifetime subscriber silently resets plan_type to 'free' — add 'lifetime' to both CASE branches", "new_in": "2026-09-02"},
+    {"id": "STRIPE-009", "severity": "MEDIUM", "area": "STRIPE", "file": "apps/ascend-backend/src/services/autoTopupService.js", "line": 168, "description": "stripe.paymentIntents.create in chargeAndCredit has no automatic_tax field; when STRIPE_AUTOMATIC_TAX=1 is set auto-topup charges silently skip tax collection — add automatic_tax: { enabled: true } conditionally", "new_in": "2026-09-02"},
+    {"id": "STRIPE-010", "severity": "LOW", "area": "STRIPE", "file": "apps/ascend-backend/src/routes/billing.js", "line": 1025, "description": "validTypes array in handleCheckoutComplete unknown-price fallback omits 'lifetime'; metadata.type='lifetime' with an unrecognised price ID is silently activated as pro_monthly — add 'lifetime'", "new_in": "2026-09-02"},
+    {"id": "STRIPE-011", "severity": "LOW", "area": "STRIPE", "file": "apps/ascend-backend/src/routes/billing.js", "line": 1029, "description": "handleCheckoutComplete does not read session.subscription to store stripe_subscription_id; cancel-subscription endpoint returns 404 between checkout.session.completed and customer.subscription.updated — read session.subscription and store it", "new_in": "2026-09-02"},
+    {"id": "STRIPE-012", "severity": "LOW", "area": "STRIPE", "file": "apps/ascend-backend/src/lib/_shared/plans.js", "line": 14, "description": "ALL_PLAN_TYPES includes 'admin' not present in packages/shared-db/src/plans.js; two copies are no longer equivalent — remove 'admin' or add it intentionally to the shared-db canonical file with a comment", "new_in": "2026-09-02"},
+    {"id": "ROBUST-001", "severity": "MEDIUM", "area": "ROBUSTNESS", "file": "apps/ascend-backend/src/routes/teams.js", "line": 459, "description": "Admin endpoints protected by adminGate but lack a dedicated stricter rate limiter — apply admin-specific rate limit"},
+    {"id": "ROBUST-002", "severity": "LOW", "area": "ROBUSTNESS", "file": "apps/ascend-backend/src/lumora/routes/transcription.js", "line": 63, "description": "Math.random() for multipart boundary generation (non-security, acceptable)"},
+    {"id": "ROBUST-003", "severity": "LOW", "area": "ROBUSTNESS", "file": "apps/ascend-backend/src/routes/mcq.js", "line": 184, "description": "Math.random() for quiz question shuffle (non-security, acceptable)"},
+    {"id": "ROBUST-004", "severity": "LOW", "area": "ROBUSTNESS", "file": "apps/ascend-backend/src/services/autoTopupService.js", "line": 115, "description": "Empty catch on advisory lock release (intentional per inline comment)"},
+    {"id": "ROBUST-005", "severity": "HIGH", "area": "ROBUSTNESS", "file": "apps/ascend-backend/src/index.js", "line": 1502, "description": "/api/v1/ask route mounted with only authenticate + aiLimiter; hourBudgetGate and subscriptionRequired are absent; free users get unlimited Gemini/Claude calls via Ask Sona — add hourBudgetGate (and subscriptionRequired) to the mount", "new_in": "2026-09-02"},
+    {"id": "ROBUST-006", "severity": "MEDIUM", "area": "ROBUSTNESS", "file": "apps/lumora-backend/src/routes/internal.js", "line": 46, "description": "/cache/delete and /cache/flush async route handlers have no try/catch; unhandled rejection leaves response unsent — wrap in try/catch matching the pattern of adjacent handlers", "new_in": "2026-09-02"},
+    {"id": "ROBUST-007", "severity": "MEDIUM", "area": "ROBUSTNESS", "file": "apps/camora/src/components/lumora/shell/LumoraDocsPanel.tsx", "line": 3010, "description": "generateOneSection fires fetch without AbortController; no useEffect cleanup aborts in-flight SSE requests on unmount — add AbortController ref with unmount cleanup", "new_in": "2026-09-02"},
+    {"id": "ROBUST-008", "severity": "MEDIUM", "area": "ROBUSTNESS", "file": "apps/camora/src/pages/Blind75PracticePage.tsx", "line": 5706, "description": "generateAiSolution calls fetch without AbortController; stream drains and setState fires on unmounted component after navigation — add AbortController ref with unmount cleanup", "new_in": "2026-09-02"},
+    {"id": "ROBUST-009", "severity": "LOW", "area": "ROBUSTNESS", "file": "apps/ascend-backend/src/index.js", "line": 1189, "description": "Five /api/admin/* mutation routes (grant admin, delete user, grant trial) use apiLimiter (60/min) same as public endpoints — add a stricter dedicated admin limiter", "new_in": "2026-09-02"},
+    {"id": "ROBUST-010", "severity": "LOW", "area": "ROBUSTNESS", "file": "apps/camora/src/components/lumora/proctor/ProctorProvider.tsx", "line": 37, "description": "uid() fallback when crypto.randomUUID absent uses Math.random() for a session ID sent to proctor API — replace fallback with crypto.getRandomValues(new Uint8Array(16))", "new_in": "2026-09-02"},
+    {"id": "ROBUST-011", "severity": "LOW", "area": "ROBUSTNESS", "file": "apps/camora/src/pages/JobPrepPage.tsx", "line": 295, "description": "resume hardcoded to '' with // TODO: get from user profile; AI prep always runs without resume, producing generic output — read from auth context or prompt user to paste", "new_in": "2026-09-02"},
+    {"id": "ROBUST-012", "severity": "LOW", "area": "ROBUSTNESS", "file": "apps/camora/src/main.tsx", "line": 148, "description": "Root ErrorBoundary onError only console.error; production render panics are invisible without DevTools — wire a remote error sink (Sentry or lightweight fetch to /api/v1/client-error)", "new_in": "2026-09-02"},
+    {"id": "DESIGN-001", "severity": "HIGH", "area": "DESIGN", "file": "apps/camora/src/pages/FlyerPage.tsx", "line": 21, "description": "Missing SiteNav on public page — add SiteNav for brand consistency (feedback_nav_redirect_rules)"},
+    {"id": "DESIGN-002", "severity": "HIGH", "area": "DESIGN", "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx", "line": 59, "description": "cyan-500 in gradient text — replace with emerald per Lumora palette rules (feedback_lumora_sharp_palette)"},
+    {"id": "DESIGN-003", "severity": "HIGH", "area": "DESIGN", "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx", "line": 198, "description": "cyan-500 in gradient text (second occurrence) — replace with emerald per Lumora palette rules"},
+    {"id": "DESIGN-004", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/components/capra/auth/OAuthLogin.jsx", "line": 179, "description": "text-cyan-200 in step labels — replace with emerald palette color"},
+    {"id": "DESIGN-005", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/PracticePage.jsx", "line": 1201, "description": "rgba(255,255,255,0.75) on variable backgrounds — verify WCAG contrast (feedback_no_white_on_white)"},
+    {"id": "DESIGN-006", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx", "line": 30, "description": "Hardcoded hex #10b981 for easy difficulty — replace with CSS design token"},
+    {"id": "DESIGN-007", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx", "line": 31, "description": "Hardcoded hex #f59e0b for medium difficulty — replace with CSS design token"},
+    {"id": "DESIGN-008", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/CodeSignalLearnPage.tsx", "line": 32, "description": "Hardcoded hex #ef4444 for hard difficulty — replace with CSS design token"},
+    {"id": "DESIGN-009", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/ResumeGeneratorPage.tsx", "line": 133, "description": "Hardcoded hex #ef4444 — consolidate with design token var(--danger)"},
+    {"id": "DESIGN-010", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/ResumeGeneratorPage.tsx", "line": 153, "description": "Mixed CSS vars with hex fallbacks (#22c55e, #f59e0b, #ef4444) — standardize to single token system"},
+    {"id": "DESIGN-011", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx", "line": 25, "description": "Hardcoded hex #ef4444 for 'again' state — use design token"},
+    {"id": "DESIGN-012", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx", "line": 26, "description": "Hardcoded hex #f59e0b for 'hard' state — use design token"},
+    {"id": "DESIGN-013", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx", "line": 27, "description": "Hardcoded hex #22c55e for 'good' state — use design token"},
+    {"id": "DESIGN-014", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/FlashcardsPage.tsx", "line": 28, "description": "Hardcoded hex #3683DC (--accent value) — use CSS var(--accent) directly"},
+    {"id": "DESIGN-015", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/PracticePage.jsx", "line": 452, "description": "Company brand colors hardcoded as hex values — move to shared constants"},
+    {"id": "DESIGN-016", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/pages/capra/CompanyPrepPage.tsx", "line": 40, "description": "Hardcoded company brand colors — centralize in constants or design tokens"},
+    {"id": "DESIGN-017", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/components/shared/SiteNav.tsx", "line": 156, "description": "Hardcoded hex #3683DC and #2265BF in className — use CSS var(--accent)"},
+    {"id": "DESIGN-018", "severity": "MEDIUM", "area": "DESIGN", "file": "apps/camora/src/components/lumora/session/MermaidDiagram.tsx", "line": 70, "description": "Hardcoded 'Courier New',monospace in cssText override — replace with var(--font-mono, 'JetBrains Mono', monospace) to respect the design system font", "new_in": "2026-09-02"},
+    {"id": "DESIGN-019", "severity": "LOW", "area": "DESIGN", "file": "apps/camora/src/components/lumora/shell/ScreenshotStrip.tsx", "line": 173, "description": "Hardcoded #00ea64 live-recording indicator — add --cam-status-live CSS token and reference it", "new_in": "2026-09-02"}
   ]
 }
