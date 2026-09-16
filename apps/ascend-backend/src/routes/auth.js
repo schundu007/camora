@@ -46,6 +46,42 @@ const FRONTEND_URL = process.env.FRONTEND_URL
     ? 'https://capra.cariara.com'
     : 'http://localhost:5173');
 
+// Sibling properties on the Cariara apex (pg.cariara.com and friends) share
+// this SSO, so they have to be able to say "send the user back here" with a
+// full URL — a relative path can only ever mean FRONTEND_URL.
+//
+// Everything outside that apex is an open-redirect attempt as far as this
+// route is concerned. The hostname is taken from a parsed URL rather than a
+// string test, so `https://cariara.com.evil.tld` and userinfo tricks like
+// `https://evil.tld/@pg.cariara.com` do not read as a match.
+const RETURN_TO_APEX = process.env.RETURN_TO_APEX || 'cariara.com';
+
+function sanitizeReturnTo(raw) {
+  const value = String(raw || '/').slice(0, 200);
+
+  // Relative path — the long-standing shape, resolved against FRONTEND_URL.
+  if (value.startsWith('/')) {
+    if (value.startsWith('//') || value.includes('\\')) return '/';
+    return value;
+  }
+
+  // Absolute URL — allowed only on the Cariara apex, and only over https.
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:') return '/';
+    const host = url.hostname.toLowerCase();
+    if (host !== RETURN_TO_APEX && !host.endsWith(`.${RETURN_TO_APEX}`)) return '/';
+    return url.toString();
+  } catch {
+    return '/';
+  }
+}
+
+// A validated returnTo is either a path under FRONTEND_URL or a full URL that
+// already names its own origin.
+const resolveReturnTo = (returnTo) =>
+  (returnTo.startsWith('/') ? `${FRONTEND_URL}${returnTo}` : returnTo);
+
 /**
  * GET /api/auth/google/login — Redirect to Google OAuth
  *
@@ -68,9 +104,9 @@ router.get('/google/login', async (req, res) => {
   const pkceChallenge = String(req.query.dc || '').slice(0, 100);
   const desktopState = String(req.query.ds || '').slice(0, 100);
 
-  // Cap and sanitize returnTo — only relative paths starting with /
-  let returnTo = String(req.query.redirect || '/').slice(0, 200);
-  if (!returnTo.startsWith('/') || returnTo.startsWith('//')) returnTo = '/';
+  // Cap and sanitize returnTo — a relative path, or a full URL on the
+  // Cariara apex so a sibling property can be returned to directly.
+  const returnTo = sanitizeReturnTo(req.query.redirect);
 
   // Generate CSRF nonce — stored in Redis (primary) and cookie (fallback)
   const nonce = randomBytes(24).toString('base64url');
@@ -227,9 +263,10 @@ router.get('/google/callback', async (req, res) => {
     logger.warn({ ip: req.ip, ageMs: Date.now() - issuedAt }, '[oauth] state expired');
     return res.redirect(`${FRONTEND_URL}?error=oauth_state_expired`);
   }
-  let returnTo = returnToFromState;
-  // Prevent open redirect (e.g., //../evil.com or //evil.com)
-  if (!returnTo.startsWith('/') || returnTo.includes('://') || returnTo.startsWith('//') || returnTo.includes('\\')) returnTo = '/';
+  // Re-validated here rather than trusted from state: state is signed by
+  // nothing, so the same rules that admitted this value at /login have to
+  // admit it again before it becomes a Location header.
+  const returnTo = sanitizeReturnTo(returnToFromState);
   if (!code) return res.redirect(`${FRONTEND_URL}?error=no_code`);
 
   // SECURITY: Validate code parameter
@@ -536,8 +573,9 @@ router.get('/google/callback', async (req, res) => {
     // AuthContext already calls /api/v1/auth/me with credentials:'include',
     // and /me returns a fresh access_token in its response body for the
     // Authorization header use case. So the URL hash is no longer needed.
-    const sep = returnTo.includes('?') ? '&' : '?';
-    res.redirect(`${FRONTEND_URL}${returnTo}${sep}login=success`);
+    const target = resolveReturnTo(returnTo);
+    const sep = target.includes('?') ? '&' : '?';
+    res.redirect(`${target}${sep}login=success`);
   } catch (err) {
     logger.error({ error: err.message }, 'Google OAuth failed');
     res.redirect(`${FRONTEND_URL}/#error=oauth_failed`);
