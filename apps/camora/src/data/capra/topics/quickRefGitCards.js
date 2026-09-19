@@ -103,6 +103,19 @@ git config --global alias.lg "log --oneline --graph --decorate --all"
 git config --global alias.last "log -1 HEAD --stat"
 git config --global alias.unstage "restore --staged"
 git config --global alias.amend "commit --amend --no-edit"
+git config --global alias.hist "log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short"
+#   %h hash  %ad author date  %s subject  %d branch/tag decorations  %an author
+#   The same aliases in ~/.gitconfig file form:
+#     [alias]
+#         st = status
+#         hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+
+# Credentials over HTTPS (SSH needs none: the key does the work)
+git config --global credential.helper cache             # memory, 15 min
+git config --global credential.helper 'cache --timeout=3600'
+git config --global credential.helper osxkeychain       # macOS keychain; wincred on Windows
+#   Editor precedence: GIT_EDITOR > core.editor > VISUAL > EDITOR
+git config --global core.safecrlf true                  # refuse a commit that would mangle line endings
 
 # Use a different identity per directory tree (work vs personal)
 #   ~/.gitconfig:
@@ -138,6 +151,8 @@ git add -i                      # full interactive menu
 git commit -m "fix: handle empty payload"
 git commit                      # opens the editor for a body
 git commit -am "msg"            # add TRACKED files and commit (skips untracked)
+git commit file.txt -m "msg"    # commit that file straight from the working tree,
+                                # BYPASSING whatever version of it was staged
 git commit --amend              # replace the last commit (message + staged work)
 git commit --amend --no-edit    # ...keeping the existing message
 git commit --no-verify          # skip hooks — use sparingly
@@ -146,8 +161,11 @@ git commit --fixup=abc123       # marks a fixup for a later autosquash rebase
 # UNSTAGE / DISCARD  (Git 2.23+ verbs; the old form is git checkout/reset)
 git restore --staged file       # unstage, KEEP the working-tree change
 git restore file                # DISCARD the working-tree change — UNRECOVERABLE
-git restore --source=HEAD~2 file  # bring a file back from an older commit
-git checkout -- file            # the old spelling of git restore file
+git restore --source=HEAD~2 file  # older version into the WORKING TREE only
+git restore --source=HEAD~2 --staged --worktree file   # into both; this, not the
+                                # line above, is what git checkout HEAD~2 -- file did
+git checkout -- file            # old spelling of git restore file: restores the
+                                # STAGED version, not HEAD's (staged 3, edited 4 -> 3)
 
 # COMMIT MESSAGE CONVENTION (Conventional Commits)
 #   feat:     a new feature            fix:      a bug fix
@@ -189,6 +207,9 @@ git diff --find-renames
 git show HEAD                   # the last commit: message + full diff
 git show HEAD --stat
 git show abc123:path/to/file    # a file's CONTENTS at that commit
+git show HEAD:path/to/file      # the committed version
+git show :path/to/file          # the STAGED version (bare leading colon)
+git show --pretty="" --name-only abc123   # just the files a commit touched
 git show HEAD~2:src/app.py > old_app.py
 
 git log --oneline -10
@@ -204,6 +225,10 @@ git log -G'regex'               # commits whose DIFF matches the regex
 git log main..feature           # commits on feature not yet in main
 git log --merges;  git log --no-merges
 git log --pretty=format:'%h %an %ar %s'
+git log --pretty=format:'%h %ad | %s%d [%an]' --date=short
+#   %H/%h hash  %an author  %ad author date  %ar relative  %s subject
+#   %d decorations (branches, tags)  %P parents  %b body  %G? signature status
+git log --pretty=oneline --max-count=3
 git log -L 10,20:file.py        # the history of just those lines
 
 git shortlog -sn                # commit counts by author
@@ -234,6 +259,7 @@ git branch feature              # create WITHOUT switching
 git switch -c feature main      # branch from a specific start point
 git switch -c hotfix v1.2.0     # branch from a tag
 git switch --detach abc123      # detached HEAD: inspect an old commit
+git branch -f main HEAD~3       # MOVE a branch pointer by force (not the checked-out one)
 
 git branch -m old new           # rename
 git branch -m new               # rename the CURRENT branch
@@ -245,6 +271,9 @@ git push origin --delete feature        # delete the remote branch
 git branch -u origin/main       # set upstream for the current branch
 git branch --unset-upstream
 git push -u origin feature      # push and set upstream in one go
+git branch --track greet origin/greet   # create a local branch tracking a remote one
+git switch -c greet origin/greet        # the same, and switch to it
+#   origin/HEAD -> origin/main in git branch -a is the remote's DEFAULT branch
 
 # DETACHED HEAD: you are on a commit, not a branch. New commits belong to
 # nothing and are garbage-collected eventually. To keep them:
@@ -326,6 +355,8 @@ git rebase --continue           # after resolving a conflict
 git rebase --skip               # drop the current commit
 git rebase --abort              # give up, restore the original state
 git rebase --onto main old-base feature    # move only a specific range
+git rebase --onto main old-base            # same, for the CURRENT branch
+git rebase main feature         # two-argument form: switch to feature, rebase onto main
 
 # THE GOLDEN RULE
 #   Rebase only commits that exist ONLY on your machine. Rebasing shared
@@ -395,6 +426,8 @@ git reset --hard origin/main    # make local exactly match the remote
 #   --hard   HEAD moves.  index reset.      working tree RESET  <-- data loss
 
 git reset file              # unstage one file (old spelling of restore --staged)
+git reset abc123 -- file    # stage THAT commit's version of the file; working tree untouched
+git reset -p                # unstage hunk by hunk (restore -p / checkout -p likewise)
 
 # ---- REVERT: the safe undo for anything already pushed ----
 git revert abc123           # a new commit that inverts abc123
@@ -407,7 +440,8 @@ git revert -m 1 <merge>     # revert a MERGE, keeping the first parent
 git restore file                    # discard working-tree changes (UNRECOVERABLE)
 git restore --staged file           # unstage, keep the edit
 git restore --staged --worktree file  # unstage AND discard
-git restore --source=HEAD~2 file    # pull one file from an older commit
+git restore --source=HEAD~2 file    # older version into the working tree ONLY
+git restore --source=HEAD~2 --staged --worktree file   # ...into the index too
 git restore .                       # discard ALL working-tree changes
 
 # ---- THE RECOVERY PLAYBOOK ----
@@ -527,6 +561,26 @@ git push origin --delete feature
 git push --force-with-lease     # safe force: aborts if the remote changed
 git push --force                # DANGEROUS: silently discards others' commits
 
+# REFSPECS  <source>:<destination>; + allows a non-fast-forward update
+git push origin main:main               # what git push origin main expands to
+git push origin feature:qa/feature      # push under a different remote name
+git push origin main^:foo               # any expression works as the source
+git push origin :feature                # EMPTY source deletes the remote branch
+git fetch origin main:refs/remotes/origin/mymain
+git fetch origin c3:foo                 # fetch straight onto a LOCAL branch (not the checked-out one)
+git fetch origin :bar                   # empty source creates an empty local branch
+git pull origin bar:bugFix              # = fetch origin bar:bugFix; merge bugFix
+#   .git/config default:  fetch = +refs/heads/*:refs/remotes/origin/*
+
+# BARE REPOSITORIES — the shape of every server: .git with no working tree
+git clone --bare hello hello.git        # convention: name ends in .git
+git init --bare /srv/repo.git
+git clone hello cloned_hello            # a remote can be a LOCAL PATH
+git remote add shared ../hello.git      # any name, not only origin
+git push shared main;  git pull shared main
+git daemon --verbose --export-all --base-path=.   # serve git:// — NO auth
+git clone git://localhost/hello.git
+
 # THE FORK WORKFLOW
 git remote add upstream https://github.com/original/repo.git
 git fetch upstream
@@ -587,6 +641,8 @@ git push --follow-tags                  # push commits + annotated tags only
 git push origin --delete v1.0.0
 
 git checkout v1.0.0                     # detached HEAD at that tag
+git tag oops; git reset --hard v1.0.0   # ANCHOR before a reset: the dropped commits
+git log --all; git tag -d oops          # stay visible until you delete the tag
 git switch -c hotfix v1.0.0             # branch from a release
 
 # DESCRIBE — a human-readable version string from the nearest tag
@@ -752,8 +808,19 @@ git rev-list --objects --all \\
 
 # GIT LFS for large binaries
 git lfs install
-git lfs track '*.psd'
-git add .gitattributes
+git lfs track '*.psd'                   # writes *.psd filter=lfs diff=lfs merge=lfs -text
+git add .gitattributes                  # COMMIT it, or nobody else gets LFS for those files
+git lfs track                           # list patterns;  git lfs untrack '*.psd'
+git lfs pull;  git lfs fetch --recent   # content for recent refs (lfs.fetchrecentrefsdays, 7)
+git lfs fetch --all                     # every version ever referenced (before moving hosts)
+git lfs prune --dry-run;  git lfs prune # drop local objects no recent ref needs
+git lfs track '*.psd' --lockable;  git lfs lock a.psd;  git lfs unlock a.psd
+
+# THREE "prune" COMMANDS THAT DO DIFFERENT THINGS
+git fetch --prune               # delete stale origin/* refs (branches deleted upstream)
+git remote prune origin         # the same, for one remote
+git prune -n                    # delete UNREACHABLE OBJECTS (normally only via git gc);
+                                # dry run usually prints nothing: the reflog still holds them
 
 # PURGING A FILE FROM ALL HISTORY (secrets, huge blobs)
 #   git-filter-repo is the supported tool; filter-branch is deprecated.
@@ -817,9 +884,25 @@ git am < 0001-fix.patch             # apply, preserving authorship
 git diff > my.patch;  git apply my.patch
 git apply --check my.patch          # test without applying
 
-# BUNDLES — a repo in a single file (air-gapped transfer)
+# ARCHIVES — a snapshot WITHOUT .git (release tarballs, deploy artefacts)
+git archive --format=tar.gz --output=release.tar.gz v1.4.0
+git archive --format=zip HEAD src/ > src.zip
+#   .gitattributes: tests/ export-ignore    keeps paths out of archives
+
+# BUNDLES — history in a single file (air-gapped transfer)
 git bundle create repo.bundle --all
+git bundle verify repo.bundle
 git clone repo.bundle repo/
+
+# REPLACE — present a different object without rewriting any SHA
+git replace <old-sha> <new-sha>         # e.g. graft a parent; refs/replace/*
+git replace -l;  git replace -d <sha>
+
+# DOTFILES in a bare repo, no .git in $HOME
+git init --bare $HOME/.cfg
+alias config='git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
+config config --local status.showUntrackedFiles no
+config add .vimrc; config commit -m "Add vimrc"
 
 # NOTES / ATTRIBUTES / MAINTENANCE
 git notes add -m "reviewed by X" HEAD
@@ -835,8 +918,9 @@ git fsck                            # verify object integrity`,
 #    Committed work is recoverable via reflog; UNCOMMITTED work is NOT.
 #    Stash or commit before any reset --hard.
 
-# 2. git restore file / git checkout -- file silently destroys your edit.
-#    There is no reflog for uncommitted changes.
+# 2. git restore file / git checkout -- file silently destroys your edit,
+#    and what comes back is the STAGED version, not HEAD's. There is no
+#    reflog for uncommitted changes.
 
 # 3. git push --force overwrites teammates' commits with no warning.
 git push --force-with-lease      # always this instead
@@ -879,8 +963,9 @@ git mv --force File.txt file.txt
 # 16. git checkout is overloaded — it switches branches AND discards files.
 #     Use git switch and git restore; they cannot be confused for each other.
 
-# 17. Merging with uncommitted changes can fail halfway and leave a mess.
-#     Commit or stash first; enable rebase.autoStash for rebases.
+# 17. A merge needs a clean INDEX (staged changes block it); a dirty working
+#     tree is tolerated only in files the merge does not touch. Commit or
+#     stash first; enable rebase.autoStash for rebases.
 
 # 18. Submodules pin a SHA. Forgetting --recurse-submodules gives you empty
 #     directories and a confusing build failure.

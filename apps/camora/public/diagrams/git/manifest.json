@@ -1,0 +1,272 @@
+[
+  {
+    "file": "fund-basic-usage.png",
+    "title": "The Three Trees",
+    "shows": "Three boxes left to right -- Working Directory, Stage (Index), History -- with six labelled arrows: add/commit moving files rightward toward history, reset/checkout moving files back leftward, and two long arcs (commit files|-a, checkout HEAD -- files) that jump straight between Working Directory and History, skipping the stage."
+  },
+  {
+    "file": "fund-conventions.png",
+    "title": "Conventions",
+    "shows": "Five green commit circles a47c3 through ed489 chained oldest to newest, with gold branch pill \"main\" (carrying HEAD) pointing at ed489 and gold branch pill \"stable\" pointing at a47c3, plus a Stage and a Working Directory box below labelled with their role."
+  },
+  {
+    "file": "fund-diff.png",
+    "title": "git diff Forms",
+    "shows": "The same five-commit chain with five labelled comparison arrows: stage-vs-worktree (plain diff), HEAD-vs-stage (--cached), HEAD-vs-worktree (diff HEAD), an old commit vs worktree (diff stable), and commit-vs-commit (diff b325c da985) arcing over the chain. No pointer moves and no new commits."
+  },
+  {
+    "file": "fund-commit.png",
+    "title": "git commit",
+    "shows": "Before: main and HEAD point at ed489, the tip of a five-commit chain. After: a new gold commit f0cec is created as a child of ed489, and main (with HEAD) moves to point at f0cec; the stage feeds its content into the new commit."
+  },
+  {
+    "file": "fund-commit-stable.png",
+    "title": "Commit on an Ancestor Branch",
+    "shows": "Before: stable (an ancestor of main) points at a47c3. After: a commit made while on stable creates gold commit 1800b as a47c3's child; stable now points at 1800b, forking the history away from main's unchanged chain -- a merge or rebase will be needed to rejoin them."
+  },
+  {
+    "file": "fund-commit-amend.png",
+    "title": "git commit --amend",
+    "shows": "Before: main points at ed489, child of da985. After: amend creates gold commit 4ca87 with the SAME parent da985; main moves to 4ca87 and the original ed489 is left drawn but orphaned, referenced by nothing."
+  },
+  {
+    "file": "fund-checkout-files.png",
+    "title": "git checkout HEAD~ files",
+    "shows": "The unchanged five-commit chain with main on ed489 and stable on a47c3. Two solid arrows run from da985 (HEAD~, the parent of ed489) into both the Stage and the Working Directory -- nothing else moves, no branch changes."
+  },
+  {
+    "file": "fund-checkout-branch.png",
+    "title": "git checkout stable",
+    "shows": "Before: HEAD is attached to main (at ed489). After: HEAD detaches from main and re-attaches to stable (at a47c3); neither branch pointer moves, only HEAD does, and a47c3's files flow into the stage and worktree."
+  },
+  {
+    "file": "fund-checkout-detached.png",
+    "title": "Detached HEAD",
+    "shows": "Before: HEAD is attached to main. After: HEAD becomes a standalone gray pill pointing straight at b325c (main~3) instead of at a branch -- an \"anonymous branch\" -- while main and stable stay put."
+  },
+  {
+    "file": "fund-detached-sequence.png",
+    "title": "Detached HEAD: Commit, Lose, Rescue",
+    "shows": "Three panels: (1) committing on a detached HEAD creates gold commit 2eecb with HEAD pointing straight at it; (2) checking out main leaves 2eecb faded and unreferenced; (3) git checkout -b new creates a new gold branch pointing at 2eecb, rescuing it before garbage collection."
+  },
+  {
+    "file": "fund-reset-commit.png",
+    "title": "git reset HEAD~3",
+    "shows": "Before: main points at ed489. After: main moves back three commits to b325c; c10b9, da985 and ed489 stay drawn but faded, now unreferenced. The stage updates unless --soft; the worktree updates only if --hard."
+  },
+  {
+    "file": "fund-reset-bare.png",
+    "title": "git reset",
+    "shows": "The unchanged chain with main on ed489. ed489 always flows into the Stage; it only flows into the Working Directory when --hard is given. No branch pointer moves."
+  },
+  {
+    "file": "fund-reset-files.png",
+    "title": "git reset -- files",
+    "shows": "The unchanged chain with main on ed489. A single arrow copies ed489 into the Stage only -- the Working Directory box is untouched, which is why this form is always working-directory safe."
+  },
+  {
+    "file": "fund-reset-modes.png",
+    "title": "reset --soft vs --mixed vs --hard",
+    "shows": "Three panels sharing the same v1-v2-v3 commit chain: --soft only moves HEAD/main back to v2, leaving Index and Working Directory at v3; --mixed also resyncs the Index to v2; --hard resyncs both the Index and the Working Directory to v2, the only mode that can discard uncommitted work."
+  },
+  {
+    "file": "fund-merge-ff.png",
+    "title": "Fast-Forward Merge",
+    "shows": "Before: stable is behind main, at a47c3. After: merging main into stable just slides the stable pointer up to ed489 -- no merge commit is created -- and ed489's files flow into the stage and worktree."
+  },
+  {
+    "file": "fund-merge-3way.png",
+    "title": "Three-Way Merge",
+    "shows": "Before: main is at ed489 and other has diverged through 2eecb to 33104 off the shared ancestor b325c. After: a 3-way-merge combines the current commit ed489, the other commit 33104 and their common ancestor b325c into a new gold merge commit f8bc5 with two parents; main advances to it once the stage lands with no conflicts."
+  },
+  {
+    "file": "fund-cherry-pick.png",
+    "title": "git cherry-pick",
+    "shows": "Before: topic branches off main through 169a6, 2c33a, 3ba22. After: a new gold commit f142b is created as a child of main's ed489, linked to 2c33a by a dotted \"copied from\" line; main advances to f142b while topic is untouched."
+  },
+  {
+    "file": "fund-rebase.png",
+    "title": "git rebase",
+    "shows": "Before: topic forks off main through 169a6 and 2c33a. After: those two commits are replayed as new gold commits e57cf and f7e63 directly on top of main's tip da985; topic moves to f7e63 and the two originals are left faded and unreferenced, pending garbage collection."
+  },
+  {
+    "file": "fund-rebase-onto.png",
+    "title": "git rebase --onto",
+    "shows": "Before: topic has two commits past main, 169a6 then 2c33a. After: only 2c33a (the commit AFTER 169a6) is replayed, as gold commit e918c on main's tip; 169a6 itself is left exactly where it was, untouched and not replayed."
+  },
+  {
+    "file": "graph-snapshots-vs-deltas.png",
+    "title": "Deltas vs. Snapshots",
+    "shows": "Two tables side by side across five checkins. The delta model stores each file's own chain of changes with gaps where a file did not change; the snapshot model gives every version a full row per file, marking cells with a star where Git reuses the previous unchanged blob instead of storing new content."
+  },
+  {
+    "file": "graph-three-states.png",
+    "title": "The Three States",
+    "shows": "Three boxes -- .git Directory, Working Tree, Staging Area -- in a cycle: checkout unpacks the repository into the working tree, staging copies edited files into the staging area, and commit seals the staging area back into the repository."
+  },
+  {
+    "file": "graph-file-lifecycle.png",
+    "title": "File Status Lifecycle",
+    "shows": "Four states -- Untracked, Unmodified, Modified, Staged -- left to right, with five labelled transitions: add moves untracked straight to staged, edit moves unmodified to modified, stage moves modified to staged, remove moves unmodified back to untracked, and commit moves staged back to unmodified."
+  },
+  {
+    "file": "graph-commit-and-tree.png",
+    "title": "A Commit and Its Tree",
+    "shows": "Commit 98ca9 points to one tree object 92ec2, which in turn points to three blob objects -- README, LICENSE and test.rb -- the top-level directory listing for that snapshot."
+  },
+  {
+    "file": "graph-commits-and-parents.png",
+    "title": "Commits and Their Parents",
+    "shows": "A three-commit chain 98ca9 to 34ac2 to f30ab, each one a child pointing back to its parent, and each commit also pointing down to the snapshot (tree) it recorded."
+  },
+  {
+    "file": "graph-branches-head.png",
+    "title": "Branches, Tags and HEAD",
+    "shows": "A three-commit chain with master and testing both pointing at the tip commit f30ab, a v1.0 tag on the same commit, and HEAD attached to testing -- showing several refs can point at one commit at once."
+  },
+  {
+    "file": "graph-divergent-history.png",
+    "title": "Divergent History",
+    "shows": "Three panels: testing advances to 87ab2 while master stays at f30ab; checking out master moves HEAD without moving either branch; then master advances on its own to a sibling commit c2b9e, so f30ab now has two children."
+  },
+  {
+    "file": "graph-basic-branching.png",
+    "title": "Basic Branching and a Fast-Forward",
+    "shows": "Three panels: iss53 is created at C2; a hotfix branch also forks from C2 into C4 while iss53 moves on to its own C3; merging hotfix into master fast-forwards master straight to C4 since master had not moved."
+  },
+  {
+    "file": "graph-three-way-merge.png",
+    "title": "Three-Way Merge",
+    "shows": "master (C4) and iss53 (C5) both descend from the common ancestor C2. Merging iss53 into master creates gold merge commit C6 with two parent edges, one to C4 and one to C5; master advances to C6."
+  },
+  {
+    "file": "graph-rebase-vs-merge.png",
+    "title": "Merge vs. Rebase",
+    "shows": "Both panels start from the same fork: master at C3, experiment at C4, both off C2. Merging creates a new two-parent commit C5 on master. Rebasing instead replays C4 as a new commit C4' directly on top of C3, fades the original C4, and lets master fast-forward to the now-linear tip."
+  },
+  {
+    "file": "graph-rebase-onto-topic.png",
+    "title": "git rebase --onto: client, server, and master",
+    "shows": "Three panels: client forks off server which forks off master; --onto master server client lifts just client's two commits onto master, skipping server entirely; finally rebasing server onto master and fast-forwarding master produces one straight line client-server-master, all traceable back through C1."
+  },
+  {
+    "file": "graph-perils-of-rebasing.png",
+    "title": "The Perils of Rebasing a Shared Branch",
+    "shows": "Four panels tell the cautionary story: you build C2-C3 on a shared C1; the team merges in C7; the team then force-pushes a rebase that replaces C4 with C4', abandoning C4 and C6 upstream while your repo still has the old commits; the fix is to rebase your own work onto the new teamone/master rather than merging again."
+  },
+  {
+    "file": "graph-double-dot.png",
+    "title": "Double-Dot / Triple-Dot Ranges",
+    "shows": "A line A-B-E-F holds master, with a second line B-C-D holding experiment forking off B. Three caption lines below spell out what each dotted range selects: master..experiment is {D,C}, experiment..master is {F,E}, and the triple-dot master...experiment is the union of all four."
+  },
+  {
+    "file": "remote-clone-and-tracking.png",
+    "title": "Clone, Diverge, Fetch",
+    "shows": "Three panels: right after clone, local master and origin/master both match the server; after both sides commit independently the two histories diverge while origin/master stays frozen at the old point; running git fetch downloads the new server commits and slides origin/master forward, without touching local master."
+  },
+  {
+    "file": "remote-second-remote.png",
+    "title": "A Second Remote",
+    "shows": "Two server boxes -- origin (further ahead) and teamone (behind) -- feed two separate remote-tracking branches in the local repository, origin/master and teamone/master, each frozen at the point it was last fetched, alongside the local master line."
+  },
+  {
+    "file": "remote-fetch-vs-pull.png",
+    "title": "Fetch vs. Pull",
+    "shows": "Left panel: git fetch downloads C2 and slides o/main forward while local main stays put. Right panel: git pull does the same download but then also merges the fetched commit into main, creating a new merge commit C4."
+  },
+  {
+    "file": "remote-diverged-push.png",
+    "title": "Diverged Push, Fixed by Rebase",
+    "shows": "Before: your local C3 was based on C1, but origin has already moved to C2, so the push is rejected. After: git pull --rebase replays your commit as C3' on top of C2, fades the original C3, and the push then succeeds cleanly."
+  },
+  {
+    "file": "remote-refspec.png",
+    "title": "Refspecs",
+    "shows": "Local and remote panels connected by three labelled arrows: push origin src:dst uploads a commit onto a differently-named remote branch, push origin :branch (empty source) deletes the remote branch, and fetch origin src:dst downloads a remote commit onto a brand-new local branch."
+  },
+  {
+    "file": "remote-bare-hub.png",
+    "title": "Bare Repository Hub",
+    "shows": "A bare repository hello.git sits in the middle with no working directory of its own. Two ordinary working clones, hello and cloned_hello, each added it as a remote named \"shared\" and push/pull main to and from it -- a hub-and-spoke topology with no direct clone-to-clone edge."
+  },
+  {
+    "file": "remote-centralized-workflow.png",
+    "title": "Centralized Workflow",
+    "shows": "One shared repository at the top with double-headed push/pull arrows to three separate developers below it -- every developer talks only to the shared repo, never to each other directly."
+  },
+  {
+    "file": "remote-integration-manager.png",
+    "title": "Integration-Manager Workflow",
+    "shows": "A blessed repository is fed only by the integration manager. Each developer pushes from a private repo to their own public repo, and the integration manager pulls from those public repos before deciding what lands in the blessed repository."
+  },
+  {
+    "file": "walk-object-graph.png",
+    "title": "Walking the Object Graph",
+    "shows": "Three commits fdf4fc, cac0ca, 1a410e chain to their parents and each point to a tree; refs/heads/master points at the newest commit while refs/heads/test points at the middle one, reaching only two of the three commits. Blob 1f7a7a (\"version 2\") is pointed to by two different trees, showing content-level de-duplication."
+  },
+  {
+    "file": "lgb-intro3-merge.png",
+    "title": "LGB: Merging in Git",
+    "shows": "Start: a two-commit main. Goal: bugFix commits C2 off C1, main commits its own C3 off C1, then a merge commit C4 with two parents (C3 first, C2 second) brings both together with main and HEAD on C4."
+  },
+  {
+    "file": "lgb-intro4-rebase.png",
+    "title": "LGB: Rebase Introduction",
+    "shows": "Start: a two-commit main. Goal: bugFix's original commit C2 (faded) is replayed as C2' directly on top of main's own new commit C3; bugFix and HEAD move to C2', while main stays at C3, untouched by the rebase."
+  },
+  {
+    "file": "lgb-rampup4-reset-revert.png",
+    "title": "LGB: Reset vs. Revert",
+    "shows": "Start: local and pushed each carry one extra commit past main. Goal contrasts the two undo tools side by side: local is rewound with reset straight back to C1 (C3 fades away), while pushed keeps C2 in history and gets a new commit C2' appended by revert that undoes it -- safe for a shared branch."
+  },
+  {
+    "file": "lgb-move1-cherry-pick.png",
+    "title": "LGB: Cherry-pick Intro",
+    "shows": "Start: three side branches (bugFix, side, another) each fork off main's C1. Goal: git cherry-pick C3 C4 C7 copies those three commits, in that order, directly onto main as C3', C4', C7' -- the original branches are untouched."
+  },
+  {
+    "file": "lgb-move2-rebase-i.png",
+    "title": "LGB: Interactive Rebase Intro",
+    "shows": "Start: a straight five-commit line C1-C5 with overHere at the base. Goal: git rebase -i overHere drops C2 entirely and reorders the rest into C3', C5', C4' on top of overHere; main ends on C4', the last commit in the new order."
+  },
+  {
+    "file": "lgb-mixed1-grab-one.png",
+    "title": "LGB: Grabbing Just 1 Commit",
+    "shows": "Start: bugFix's fix (C4) sits on top of two unrelated debug/printf commits (C2, C3). Goal: only C4 is copied over, as C4', directly onto main -- the debug and printf commits are left behind on their own branches."
+  },
+  {
+    "file": "lgb-advanced2-multiple-parents.png",
+    "title": "LGB: Multiple Parents",
+    "shows": "A diamond: C1 forks into two lines (C2 and C3-C4) that rejoin at merge commit C6, which main then advances past to C7. git branch bugWork main^^2^ walks up through C6's first parent, C6's second parent C5, then one more parent step to land on C2."
+  },
+  {
+    "file": "lgb-advanced1-rebase-9000.png",
+    "title": "LGB: Rebasing Over 9000 Times",
+    "shows": "Start: four scattered branches (bugFix, side, another) fork off main at different points. Goal: rebasing each branch onto the next in turn straightens everything into one line C3'-C4'-C5'-C6'-C7', with every branch, including main, pointing somewhere along that single chain."
+  },
+  {
+    "file": "lgb-remoteadv1-vs-2.png",
+    "title": "Push by Rebase vs. Merge",
+    "shows": "A shared start with three side branches off main. Push Main! integrates them by rebasing each in turn, ending in one straight pushed line. Merging with remotes solves the identical goal with git merge three times instead, producing three explicit merge commits C9, C10, C11 -- same end state, different-shaped history."
+  },
+  {
+    "file": "lgb-remoteadv6-fetch-args.png",
+    "title": "LGB: Fetch Arguments",
+    "shows": "Origin holds two lines, main (through C4) and foo (through C6). Colon-refspec fetches deliberately swap destinations: origin's C3 lands on local branch foo and origin's C6 lands on local branch main; o/main and o/foo themselves never move. Merging foo and main locally then produces C7."
+  },
+  {
+    "file": "topic-gitflow.png",
+    "title": "Gitflow branch roles",
+    "shows": "Five horizontal lanes, one per branch type: main (tagged releases v0.1, v0.2, v0.2.1), develop, feature, release and hotfix. Dashed arrows are branch-offs (develop from main, feature and release from develop, hotfix from main); solid arrows are merges (feature into develop; release into main with a tag and back into develop; hotfix into main with a tag and back into develop). Time runs left to right."
+  },
+  {
+    "file": "topic-reflog-dangling.png",
+    "title": "Reflog Recovery",
+    "shows": "main was reset back from C3 to C2, so C3 is abandoned and drawn faded -- but the reflog entry HEAD@{1} still remembers it. git branch recovered HEAD@{1} creates a brand-new branch pointing straight at that dangling commit, pulling it back into reachable history before garbage collection can claim it."
+  },
+  {
+    "file": "topic-submodule-state.png",
+    "title": "Submodule State",
+    "shows": "A 2x2 layout: the tracked .gitmodules file and the gitlink entry in the parent tree (mode 160000, the submodule's exact commit SHA) sit on top as the two committed sources of truth; the local .git/config and the actual checked-out working copy sit below as derived state. git submodule init copies the URL from .gitmodules into .git/config, sync refreshes it, update reads the gitlink SHA and checks the working copy out at it, and committing in the parent writes the working copy's new SHA back into the gitlink."
+  }
+]
