@@ -100,6 +100,14 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
       'sidecar-pattern', 'configuration-externalization', 'event-driven-architecture',
     ],
     devops: [
+      // Git — fundamentals track first, then the interview-grade topics
+      'git-three-trees-fundamentals', 'git-commits-branches-head', 'git-merge-rebase-visual',
+      'git-remotes-fetch-pull-push', 'git-hands-on-walkthrough',
+      'git-branching-strategies', 'git-stacked-prs', 'git-merge-at-scale', 'git-bisect-forensics',
+      'git-history-rewriting', 'git-monorepo-scale', 'git-internals-objects-refs',
+      'git-merge-conflicts-strategies', 'git-recovery-and-reflog', 'git-cherry-pick-backports',
+      'git-hooks-and-commit-standards', 'git-worktrees-and-daily-workflow',
+      'git-learn-branching-course', 'git-submodules-and-vendoring',
       // CI/CD core
       'continuous-integration', 'continuous-delivery-vs-deploy', 'trunk-based-development',
       'pipeline-as-code', 'github-actions-deep-dive', 'gitlab-ci-deep-dive',
@@ -167,6 +175,10 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
     ],
     sre: [], // empty = show all SRE topics
     devops: [
+      // Git
+      'git-three-trees-fundamentals', 'git-commits-branches-head', 'git-merge-rebase-visual',
+      'git-remotes-fetch-pull-push', 'git-hands-on-walkthrough',
+      'git-recovery-and-reflog', 'git-bisect-forensics', 'git-merge-conflicts-strategies',
       'opentelemetry-fundamentals', 'prometheus-grafana-stack', 'log-aggregation-stacks',
       'distributed-tracing', 'slo-error-budgets-dashboards', 'ebpf-observability',
       'chaos-engineering-observability', 'kubernetes-architecture', 'k8s-core-resources',
@@ -403,6 +415,10 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
     ],
     cloud: [], // empty = show all cloud topics
     devops: [
+      // Git
+      'git-three-trees-fundamentals', 'git-commits-branches-head', 'git-merge-rebase-visual',
+      'git-remotes-fetch-pull-push', 'git-hands-on-walkthrough',
+      'git-branching-strategies', 'git-worktrees-and-daily-workflow',
       'iac-fundamentals', 'terraform-internals', 'cloud-native-iac', 'immutable-infrastructure',
       'kubernetes-architecture', 'kubernetes-services', 'kubernetes-autoscaling',
       'container-fundamentals', 'docker-overview', 'docker-compose', 'container-security',
@@ -447,6 +463,11 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
       'event-driven-architecture', 'strangler-fig',
     ],
     devops: [
+      // Git
+      'git-three-trees-fundamentals', 'git-commits-branches-head', 'git-merge-rebase-visual',
+      'git-remotes-fetch-pull-push', 'git-hands-on-walkthrough',
+      'git-branching-strategies', 'git-merge-at-scale', 'git-stacked-prs', 'git-monorepo-scale',
+      'git-hooks-and-commit-standards',
       'platform-engineering-principles', 'internal-developer-platforms', 'golden-paths',
       'backstage-and-alternatives', 'developer-experience-metrics',
       'kubernetes-architecture', 'k8s-core-resources', 'kubernetes-services',
@@ -521,6 +542,10 @@ export const ROLE_TOPIC_MAP: Record<RoleKey, RoleTopics> = {
       'api-gateway-pattern', 'circuit-breaker', 'sidecar-pattern',
     ],
     devops: [
+      // Git
+      'git-three-trees-fundamentals', 'git-commits-branches-head', 'git-merge-rebase-visual',
+      'git-remotes-fetch-pull-push', 'git-hands-on-walkthrough',
+      'git-hooks-and-commit-standards', 'git-history-rewriting',
       'shift-left-security', 'sast-dast-sca', 'supply-chain-slsa', 'policy-as-code',
       'runtime-security', 'container-security', 'image-hardening', 'kubescape-runtime-security',
       'kubernetes-security', 'kubernetes-secrets-management', 'kubernetes-rbac',
