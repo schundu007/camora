@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
  * nothing. Both fail silently; these tests are what make them loud.
  */
 async function loadDevopsBundle() {
-  const [mod, helm, flux, cp, nb, extra, k8s] = await Promise.all([
+  const [mod, helm, flux, cp, nb, extra, k8s, git] = await Promise.all([
     import('./devopsTopics.js'),
     import('./helmTopics.js'),
     import('./fluxTopics.js'),
@@ -16,17 +16,19 @@ async function loadDevopsBundle() {
     import('./nativeBuildTopics.js'),
     import('./devopsTopicsExtra.js'),
     import('./k8sTopics.js'),
+    import('./gitTopics.js'),
   ]);
   return {
     topics: [
       ...mod.devopsTopics, ...helm.helmTopics, ...flux.fluxTopics,
       ...cp.controlPlaneTopics, ...nb.nativeBuildTopics, ...extra.devopsExtraTopics,
-      ...k8s.k8sTopics,
+      ...k8s.k8sTopics, ...git.gitTopics,
     ],
     map: {
       ...mod.devopsTopicCategoryMap,
       ...extra.devopsExtraTopicCategoryMap,
       ...k8s.k8sTopicCategoryMap,
+      ...git.gitTopicCategoryMap,
     },
     categoryIds: new Set(mod.devopsCategories.map((c: { id: string }) => c.id)),
     // devopsTopics.js also feeds the Observability and Platform Engineering
@@ -39,6 +41,15 @@ async function loadDevopsBundle() {
 }
 
 describe('devops catalog integrity', () => {
+  it('loader.js still imports the git and k8s modules (regressed once in 9ed24a4e)', async () => {
+    const { HEAVY_TOPIC_LOADERS } = await import('./loader.js');
+    const bundle = await HEAVY_TOPIC_LOADERS.devops();
+    const ids = new Set(bundle.devopsTopics.map((t: { id: string }) => t.id));
+    expect(ids.has('git-branching-strategies')).toBe(true);
+    expect(Object.values(bundle.devopsTopicCategoryMap)).toContain('git');
+    expect(Object.values(bundle.devopsTopicCategoryMap)).toContain('k8s-architecture');
+  });
+
   it('routes every topic to a category on some page', async () => {
     const { topics, map, otherPageIds } = await loadDevopsBundle();
     const unrouted = topics

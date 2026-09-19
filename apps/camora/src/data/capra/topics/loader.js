@@ -158,25 +158,37 @@ export const HEAVY_TOPIC_LOADERS = {
   // CNCF Platform Whitepaper, SLSA, Sigstore). 11 sub-categories, ~56 topics.
   // Diagrams at /diagrams/devops/*.png from gen-devops-diagrams.py.
   devops: async () => {
-    const [mod, helmMod, fluxMod, cpMod, nbMod, extraMod] = await Promise.all([
+    // k8sTopics.js and gitTopics.js were dropped from this list on 2026-08-24
+    // (9ed24a4e), which silently hid ten Kubernetes sub-categories and the
+    // whole Git category. catalog-integrity.test.ts mirrors this bundle so a
+    // repeat is loud.
+    const [mod, helmMod, fluxMod, cpMod, nbMod, extraMod, k8sMod, gitMod] = await Promise.all([
       import('./devopsTopics.js'),
       import('./helmTopics.js'),
       import('./fluxTopics.js'),
       import('./controlPlaneTopics.js'),
       import('./nativeBuildTopics.js'),
       import('./devopsTopicsExtra.js'),
+      import('./k8sTopics.js'),
+      import('./gitTopics.js'),
     ]);
     const devopsTopicCategoryMap = {
       ...mod.devopsTopicCategoryMap,
       ...extraMod.devopsExtraTopicCategoryMap,
+      ...k8sMod.k8sTopicCategoryMap,
+      ...gitMod.gitTopicCategoryMap,
     };
     const categoryPriority = [
       'foundations',
+      'git',
       'cicd',
       'delivery',
       'cicdtools',
       'containers',
-      'orchestration',
+      // The flat 'orchestration' category was retired for these ten.
+      'k8s-architecture', 'k8s-workloads', 'k8s-networking', 'k8s-storage',
+      'k8s-config-policy', 'k8s-security', 'k8s-scheduling', 'k8s-cluster-admin',
+      'k8s-baremetal', 'k8s-extending',
       'iac',
       'config',
       'gitops',
@@ -192,7 +204,7 @@ export const HEAVY_TOPIC_LOADERS = {
     const topics = [
         ...mod.devopsTopics, ...helmMod.helmTopics, ...fluxMod.fluxTopics,
         ...cpMod.controlPlaneTopics, ...nbMod.nativeBuildTopics,
-        ...extraMod.devopsExtraTopics,
+        ...extraMod.devopsExtraTopics, ...k8sMod.k8sTopics, ...gitMod.gitTopics,
       ];
     const orderedTopics = topics
       .map((topic, index) => ({ topic, index }))
