@@ -204,7 +204,7 @@ const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
           {head.map((h, i) => (
             <th
               key={i}
-              className="text-left px-3 py-2 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap"
+              className="text-left px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.06em] whitespace-nowrap"
               style={{ color: 'var(--lum-accent-sm)', background: 'var(--lum-accent-bg)' }}
             >
               {inlineMarkdown(h)}
@@ -316,7 +316,7 @@ const AnchorList = ({ blocks, keyBase }: { blocks: AnchoredBlock[]; keyBase: str
     {blocks.map((b, i) => (
       <Fragment key={`${keyBase}-${i}`}>
         <dt
-          className="text-[11px] font-bold uppercase tracking-[0.08em] leading-[1.7] break-words min-w-0 @[26rem]:text-right"
+          className="text-[10px] font-semibold uppercase tracking-[0.03em] leading-[1.6] break-words min-w-0 @[26rem]:text-right"
           style={{ color: 'var(--lum-accent-sm)' }}
         >
           {b.anchor}
@@ -439,7 +439,7 @@ export const AskResponse = ({ content }: { content: string }) => {
         }
         return (
           <div key={i}>
-            <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.06em] mb-2" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
               {inlineMarkdown(title)}
             </p>
             <div>{renderContent(body)}</div>

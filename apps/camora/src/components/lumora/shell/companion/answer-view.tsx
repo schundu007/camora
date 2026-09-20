@@ -86,7 +86,7 @@ const FS_SMALL = '12px';
 /** Code type, a step under prose so a fence does not shout over the sentence. */
 const FS_CODE = '12px';
 /** Rail labels and block headings — their own step, below FS_SMALL. */
-const FS_LABEL = '11px';
+const FS_LABEL = '10px';
 const LH_BODY = '1.7';
 
 /* ── Emphasis ───────────────────────────────────────────────────────────────
@@ -132,7 +132,7 @@ const LcStripHeader = ({ icon, label, hint, count, right }: {
       {icon ?? (
         <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf-lt)' }} />
       )}
-      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
+      <span className="font-display text-[10px] font-semibold tracking-[0.08em] uppercase text-[var(--cam-strip-heading)]">
         {label}
       </span>
       {hint && (
@@ -351,7 +351,7 @@ const ArchetypeBadge = ({ archetype }: { archetype: Archetype }) => {
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
       </span>
-      <span className="font-display text-[11px] font-bold tracking-[0.14em] uppercase text-[var(--cam-strip-heading)]">
+      <span className="font-display text-[10px] font-semibold tracking-[0.08em] uppercase text-[var(--cam-strip-heading)]">
         {archetype}
       </span>
       <span className="text-[12px]" style={{ color: 'var(--cam-strip-text-muted)' }}>· {ARCHETYPE_HINT[archetype]}</span>
@@ -777,7 +777,7 @@ export const RichText = ({ text }: { text: string }) => {
           {rail.map(({ i, m }) => (
             <React.Fragment key={`${ci}-${i}`}>
               <dt
-                className="font-bold uppercase tracking-[0.08em] break-words min-w-0 @[26rem]:text-right"
+                className="font-semibold uppercase tracking-[0.03em] break-words min-w-0 @[26rem]:text-right"
                 style={{ fontSize: FS_LABEL, lineHeight: LH_BODY, color: ACCENT_TEXT }}
               >
                 {m[1]}
