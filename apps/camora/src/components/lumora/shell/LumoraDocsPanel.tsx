@@ -3662,7 +3662,7 @@ export const LumoraDocsPanel = ({
         {activeSection === 'input' ? (
           /* space-y-8 rather than each card carrying its own margin — the
              blocks were reading as one continuous surface. */
-          <div className="p-6 pb-8 max-w-4xl space-y-8">
+          <div className="p-6 pb-8 max-w-4xl w-full mx-auto space-y-8">
             {/* ONE intake. It was four named cards, then three zones plus two
                 URL boxes across Materials, Study Materials and Research Docs —
                 five places to add a document, each asking what kind it was
