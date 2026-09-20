@@ -3319,6 +3319,14 @@ export const LumoraDocsPanel = ({
   // the full sidebar.
   const activeSectionLabel = SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label || 'Section';
 
+  /* On the Input Materials view the rail becomes a band UNDER the upload.
+     It held one short list and three controls in a 180px column, so most of
+     its height was empty while the thing you came to use sat beside it. On a
+     generated section it stays a rail — that is how you move between sections,
+     and pushing it below the text would mean scrolling past the whole intake
+     to reach the next one. Same markup either way, reflowed. */
+  const isInput = activeSection === 'input';
+
   return (
     <div className="h-full flex flex-col" style={{ background: 'var(--bg-surface)' }}>
       {/* Setup first, materials below it — the order you actually work in. */}
@@ -3332,11 +3340,11 @@ export const LumoraDocsPanel = ({
           />
         </div>
       )}
-      <div className="flex-1 min-h-0 flex flex-col sm:flex-row">
+      <div className={`flex-1 min-h-0 flex ${isInput ? 'flex-col overflow-y-auto' : 'flex-col sm:flex-row'}`}>
       {/* Mobile collapsed-sidebar pill — only shows when the sidebar is
           collapsed on phones. Tap to expand. The desktop sidebar at
           sm:w-[180px] stays visible always; this pill is mobile-only. */}
-      {!mobileSidebarOpen && (
+      {!mobileSidebarOpen && !isInput && (
         <button
           type="button"
           onClick={() => setMobileSidebarOpen(true)}
@@ -3364,8 +3372,12 @@ export const LumoraDocsPanel = ({
       {/* Sidebar — collapsed-out on mobile by default. Auto-shows on
           ≥sm screens via sm:flex. */}
       <div
-        className={`${mobileSidebarOpen ? 'flex' : 'hidden'} sm:flex w-full sm:w-[180px] flex-col shrink-0 sm:shrink-0`}
-        style={{ borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}
+        className={isInput
+          ? 'order-2 flex w-full flex-col shrink-0'
+          : `${mobileSidebarOpen ? 'flex' : 'hidden'} sm:flex w-full sm:w-[180px] flex-col shrink-0 sm:shrink-0`}
+        style={isInput
+          ? { borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }
+          : { borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}
       >
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
@@ -3520,7 +3532,9 @@ export const LumoraDocsPanel = ({
             </button>
           )}
         </div>
-        <div className="flex-1 overflow-y-auto py-1">
+        <div className={isInput
+          ? 'py-1 px-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2'
+          : 'flex-1 overflow-y-auto py-1'}>
           {SIDEBAR_SECTIONS.map((s) => {
             const isActive = s.id === activeSection;
             const hasContent = s.id === 'input' ? hasRequiredDocs : !!state.sections[s.id];
@@ -3614,7 +3628,8 @@ export const LumoraDocsPanel = ({
         </div>
 
         {/* Bottom action panel */}
-        <div className="p-3 flex flex-col gap-2" style={{ borderTop: '1px solid var(--border)' }}>
+        <div className={isInput ? 'p-3 flex flex-wrap items-center gap-3' : 'p-3 flex flex-col gap-2'}
+          style={{ borderTop: '1px solid var(--border)' }}>
 
           {/* Progress bar — only while generating */}
           {generating && (() => {
@@ -3623,7 +3638,7 @@ export const LumoraDocsPanel = ({
             const done = Object.values(sectionStatus).filter(s => s === 'done').length;
             const total = Math.max(selectedSections.length, done, 1);
             return (
-            <div>
+            <div className={isInput ? 'w-full' : ''}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
                 <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
@@ -3639,7 +3654,7 @@ export const LumoraDocsPanel = ({
           })()}
 
           {/* Cloud provider */}
-          <div className="flex justify-center">
+          <div className={isInput ? 'flex' : 'flex justify-center'}>
             <CloudProviderSelector variant="compact" />
           </div>
 
@@ -3648,7 +3663,7 @@ export const LumoraDocsPanel = ({
           <button
             onClick={handleGenerate}
             disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
-            className="w-full py-2.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-40"
+            className={`${isInput ? 'px-6' : 'w-full'} py-2.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-40`}
             style={{
               background: 'linear-gradient(135deg, var(--cam-primary) 0%, color-mix(in srgb, var(--cam-primary) 80%, #7c3aed) 100%)',
               color: '#fff',
@@ -3659,7 +3674,7 @@ export const LumoraDocsPanel = ({
               : `Generate ${selectedSections.length > 0 ? `(${selectedSections.length})` : ''}`}
           </button>
           {!hasRequiredDocs && (
-            <p className="text-[12px] text-center -mt-1" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>
+            <p className={`text-[12px] ${isInput ? '' : 'text-center -mt-1'}`} style={{ color: 'var(--text-muted)' }}>Add JD &amp; Resume to start</p>
           )}
 
           {/* Export and clear, as one row of icons. These were three stacked
@@ -3667,7 +3682,7 @@ export const LumoraDocsPanel = ({
               in the panel, for actions you press once. The format name stays
               INSIDE the glyph: a page with "PDF" on it is read at a glance,
               and a download arrow alone would make the two indistinguishable. */}
-          <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-2 ${isInput ? '' : 'w-full'}`}>
             {generatedCount > 0 && (
               <>
                 <ActionIcon
@@ -3690,7 +3705,7 @@ export const LumoraDocsPanel = ({
                 </ActionIcon>
               </>
             )}
-            <span className="flex-1" />
+            {!isInput && <span className="flex-1" />}
             {/* Always visible, never hover-only — it is destructive and has to
                 be findable. */}
             <ActionIcon
@@ -3706,7 +3721,7 @@ export const LumoraDocsPanel = ({
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-auto">
+      <div className={`flex flex-col min-w-0 ${isInput ? 'order-1' : 'flex-1 overflow-auto'}`}>
         {activeSection === 'input' ? (
           <div className="p-6 max-w-4xl">
             {/* ONE intake. It was four named cards, then three zones plus two
