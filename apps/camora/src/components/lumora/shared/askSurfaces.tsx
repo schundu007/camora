@@ -14,6 +14,31 @@ import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 
 export type AskSurface = { id: string; label: string; path: string; icon: React.ReactNode };
 
+/**
+ * The rail chip that leads into these surfaces.
+ *
+ * It used to borrow the active surface's name and glyph, which read as "you
+ * are on Claude" — fine until nothing was active, when it fell back to the
+ * first surface and announced "Behavioral" while standing for all three. A
+ * group needs its own name and its own mark.
+ *
+ * The mark is drawn here rather than pulled from a set: a speech bubble whose
+ * body is three answer lines, longest first. It says question-in,
+ * answer-out — which is the one thing all three surfaces have in common and
+ * the reason they share a chip at all.
+ */
+export const ASK_GROUP = {
+  label: 'Ask',
+  icon: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20.5 12.6a7.9 7.9 0 01-8 7.9 8.3 8.3 0 01-3.4-.7L4 21l1.3-4.3a7.7 7.7 0 01-.8-3.4 8 8 0 018-7.9h.5a7.9 7.9 0 017.5 7.4z" />
+      <path d="M8.6 10.3h7.2" />
+      <path d="M8.6 13h5" />
+      <path d="M8.6 15.7h2.9" />
+    </svg>
+  ),
+};
+
 export const ASK_SURFACES: AskSurface[] = [
   // Ask Sona is no longer here. It held the chip on three things the tabs did
   // not have, and all three moved: its table rules for family questions ("4xx

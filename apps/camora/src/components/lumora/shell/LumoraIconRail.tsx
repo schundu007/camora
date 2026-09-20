@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ASK_SURFACES } from '../shared/askSurfaces';
+import { ASK_SURFACES, ASK_GROUP } from '../shared/askSurfaces';
 import { getActiveCompanyKey, ASSISTANT_UPDATED_EVENT } from '../../../lib/companyContext';
 import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
@@ -76,6 +76,10 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
   // you are already looking. The rail tried to own that and got it wrong twice
   // — four near-identical chips, then a group that auto-opened into five rows.
   const askActive = ASK_SURFACES.some(i => i.id === activeTab);
+  // Where the chip GOES is still the surface you were last on; what it SAYS is
+  // the group. Borrowing the active surface's label meant that with nothing
+  // active it fell through to the first one and called itself "Behavioral"
+  // while standing for all three.
   const askCurrent = ASK_SURFACES.find(i => i.id === activeTab) ?? ASK_SURFACES[0];
   // Active interview/company key drives the context chip label (below Tools).
   const [companyKey, setCompanyKey] = useState<string | null>(() => getActiveCompanyKey());
@@ -232,10 +236,10 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
           className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${askActive ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
           style={itemStyle(askActive)}
           aria-current={askActive ? 'page' : undefined}
-          data-tip={expanded ? undefined : askCurrent.label}
+          data-tip={expanded ? undefined : ASK_GROUP.label}
         >
-          {askCurrent.icon}
-          {expanded && <span className="whitespace-nowrap">{askCurrent.label}</span>}
+          {ASK_GROUP.icon}
+          {expanded && <span className="whitespace-nowrap">{ASK_GROUP.label}</span>}
         </Link>
 
         {TOOL_ITEMS.map(item => {
