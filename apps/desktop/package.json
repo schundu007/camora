@@ -13,12 +13,12 @@
     "build:win-zip": "electron-builder --win --x64 -c.win.target.0.target=zip -c.win.artifactName=Camora-${version}-win-x64.zip"
   },
   "dependencies": {
-    "docx": "^9.0.3",
+    "docx": "^9.7.1",
     "electron-updater": "^6.8.9"
   },
   "devDependencies": {
     "electron": "41.5.0",
-    "electron-builder": "26.8.1"
+    "electron-builder": "26.15.3"
   },
   "build": {
     "appId": "com.cariara.camora",
