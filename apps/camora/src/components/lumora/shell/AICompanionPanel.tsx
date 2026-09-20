@@ -11,6 +11,7 @@ import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
 import { LIVE_TURNS } from '../shared/qaTurns';
 import { AskSwitcher } from '../shared/askSurfaces';
+import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { Citations } from '@/components/lumora/Citations';
 import { useSessionStore } from '@/stores/session-store';
 import { sonaRegistry } from '@/lib/sona-registry';
@@ -158,7 +159,15 @@ const SonaAvatar = ({ size = 24, active = false }: { size?: number; active?: boo
 
 
 /* ═══ Assistant Panel ═══ */
-export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = false }: AICompanionPanelProps & { initialQuestion?: string; embedded?: boolean }) => {
+export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = false, onTranscription }: AICompanionPanelProps & {
+  initialQuestion?: string;
+  embedded?: boolean;
+  /** The shell's transcript handler. Passing it here rather than to
+   *  ScreenshotStrip is what lets the mic live in this composer, beside the
+   *  screenshot and send controls, exactly where the other two surfaces keep
+   *  theirs. */
+  onTranscription?: (text: string, opts?: { manual?: boolean; source?: 'interviewer' | 'room'; filtered?: boolean }) => void;
+}) => {
   const { token } = useAuth();
 
   // Load active assistant context (resume + JD) — shared helper, same shape as Coding + Design windows
@@ -1271,6 +1280,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             placeholder="Type a question..."
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[13px]"
             style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
+          {/* Mic — the same control the Claude and Gemini composers carry, in
+              the same place. It renders its own button; AudioCapture is also
+              the recorder, so it stays mounted while this panel is open. */}
+          {onTranscription && (
+            <AudioCapture onTranscription={onTranscription} autoStart active compact locked />
+          )}
           {/* Screenshot — ask Sona about whatever is on screen. */}
           <button
             onClick={snapIntoComposer}

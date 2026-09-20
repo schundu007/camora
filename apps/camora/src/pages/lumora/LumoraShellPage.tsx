@@ -989,7 +989,7 @@ export const LumoraShellPage = () => {
           {/* AI Assistant — fullscreen mode (behavioral / ask questions) */}
           {copilotFullscreen && (
             <div className="absolute inset-0 z-20 flex flex-col" style={{ background: 'var(--bg-surface)' }}>
-              <AICompanionPanel isOpen={true} onClose={() => navigate('/lumora')} initialQuestion={copilotQuestion} embedded />
+              <AICompanionPanel isOpen={true} onClose={() => navigate('/lumora')} initialQuestion={copilotQuestion} embedded onTranscription={handleTranscription} />
             </div>
           )}
 

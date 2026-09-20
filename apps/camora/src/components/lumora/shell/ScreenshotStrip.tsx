@@ -341,11 +341,10 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         </div>
       )}
 
-      {/* AudioCapture — behavioral only. Coding and Design already have Sona;
-          mic controls don't belong there. */}
-      {onTranscription && surface === 'behavioral' && (
-        <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={surface === 'behavioral'} />
-      )}
+      {/* The behavioral mic moved into that panel's own composer, where the
+          Claude and Gemini tabs already keep theirs. It sat up here in the navy
+          strip, so the one surface that shares a job with those two was also
+          the one whose controls were somewhere else. */}
 
       {/* VoiceEnrollment moved to the AskSwitcher strip above every composer.
           It was mounted here, behavioral-only, which made a rule that governs
