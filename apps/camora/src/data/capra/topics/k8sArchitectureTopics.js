@@ -15,7 +15,7 @@ export const k8sArchitectureTopics = [
     title: 'Kubernetes Architecture',
     icon: 'gitBranch',
     color: '#14b8a6',
-    questions: 20,
+    questions: 28,
     description:
       'How a cluster is wired: a control plane (kube-apiserver, etcd, scheduler, controller-manager, cloud-controller-manager) coordinating worker nodes (kubelet, kube-proxy, container runtime) through the pluggable CRI, CNI and CSI interfaces. Covers etcd Raft consensus, HA control-plane sizing, and managed offerings versus self-managed installers.',
     introduction: `Almost every "how does X work in Kubernetes" question resolves to the same answer, and it is worth learning that answer once rather than memorising the surface of each feature.
@@ -26,6 +26,26 @@ The control plane is five processes and the node is three, plus three plugin int
 
 One structural note worth carrying: the API server is the only component that talks to etcd. Every other component — controllers, scheduler, kubelet, your kubectl — goes through the API. That single chokepoint is what makes authentication, authorization, admission control and audit tractable, and it is why an API server outage looks like "nothing can change" rather than "everything falls over".`,
     topics: [
+      {
+        title: 'From kubectl apply to a running container — the path a workload takes',
+        content: `Seven steps, in order, and every component named in the rest of this topic appears exactly once doing exactly one job. Knowing the order is usually enough to place a failure without reading a log line.
+
+**1. Declare the desired state.** You write a manifest — normally a Deployment, not a bare Pod — naming the container image, the resource \`requests\` and \`limits\` the scheduler will place it against, the probes, and the volumes. The manifest describes what should be true, never the steps to get there. That distinction is the whole design: there is no "create" instruction anywhere in the system, only a written record of the intended end state.
+
+**2. The API server accepts it.** \`kubectl apply\` POSTs to the apiserver, which runs authentication, then authorization (RBAC), then admission — mutating webhooks first, so a sidecar injector or a defaulting webhook can rewrite the Pod spec, then validating webhooks and ValidatingAdmissionPolicy. Only then does it validate against the OpenAPI schema and write to etcd. The write is what makes it real: the response means "persisted", not "running". Every watcher is notified.
+
+**3. Controllers expand it.** The Deployment controller sees the new Deployment and creates a ReplicaSet. The ReplicaSet controller sees a ReplicaSet wanting three replicas and holding none, and creates three Pod objects. Both are writes back through the apiserver — no controller has a private channel. The Pods it creates have an empty \`spec.nodeName\`, which is exactly what makes them visible to the next step.
+
+**4. The scheduler binds each Pod to a node.** It watches for Pods with no \`spec.nodeName\` and runs two phases: filter, discarding nodes that cannot take the Pod (allocatable CPU or memory below the Pod's \`requests\`, an untolerated taint, a failed affinity or topology spread constraint), then score, ranking what survives. It issues a Binding, which is itself an API write setting \`spec.nodeName\`. The scheduler never contacts a node. Its entire job is to write one field.
+
+**5. The kubelet on that node runs it.** Each kubelet watches the apiserver for Pods bound to its own node name — a pull, not a push, which is why nodes need no inbound connectivity. It then calls three plugin interfaces: the CRI to pull the image and start the containers, the CNI to allocate the Pod IP and wire it into the pod network, and the CSI to attach and mount volumes. It starts the probes and reports status back up.
+
+**6. A Service gives it a stable address.** Pod IPs are ephemeral — a rescheduled Pod gets a new one — so nothing should address a Pod directly. A Service holds a stable ClusterIP and a DNS name, \`<service>.<namespace>.svc.cluster.local\`, resolved by CoreDNS. The EndpointSlice controller watches Pods matching the Service's label selector and keeps the endpoint list current, adding a Pod only once its readiness probe passes and removing it the moment that probe fails or the Pod is deleted. kube-proxy — or the CNI's eBPF replacement — turns that list into packet forwarding on every node.
+
+**7. Controllers keep it true.** None of the above is a one-shot. Every controller is a loop comparing desired against observed and writing the difference, forever. Kill a Pod and the ReplicaSet controller sees its count is short and creates a replacement on its next sync. Raise \`replicas\` from 3 to 10 and the same loop creates seven more. Change the image tag and the Deployment controller creates a new ReplicaSet alongside the old one, shifting replicas from old to new a few at a time within \`maxSurge\` and \`maxUnavailable\`, holding each new Pod out of the Service until its readiness probe passes. That gating is what makes a rolling update zero-downtime — and a missing readiness probe the most common reason a rollout drops traffic.
+
+**Where it breaks, by step.** A Pod stuck \`Pending\` never cleared step 4: no node fits, and \`kubectl describe pod\` prints the scheduler's reason verbatim. \`ContainerCreating\` means step 5 is still working — an image pull, a CNI allocation or a volume attach is hanging. \`CrashLoopBackOff\` means the container started and exited, so the loop is doing its job correctly and your process is not. A Service with no endpoints means step 6 found nothing ready: usually a label selector that does not match, or a readiness probe that never passes.`,
+      },
       {
         title: 'Control plane components — kube-apiserver, etcd, scheduler, controller-manager, CCM',
         content: `A Kubernetes cluster is a control plane plus a fleet of worker nodes. The control plane is five processes; everything in the system is reducible to "client writes object to apiserver, controller reconciles".
@@ -123,6 +143,13 @@ Linux nodes also typically need systemd to supervise the local components — th
       { q: 'Stacked versus external etcd?', a: 'Stacked runs etcd on the control-plane nodes (kubeadm default) — simpler, coupled failure domains, fine to ~50 nodes. External runs etcd separately — more hardware, independent failure domains, preferred at scale.' },
       { q: "What's the most common HA control-plane mistake?", a: 'Running etcd on the same disk as the host OS. etcd needs a dedicated SSD.' },
       { q: 'Managed versus self-managed options?', a: 'Managed: EKS, GKE, AKS, DOKS, LKE, OKE, ACK — the provider runs the control plane. Self-managed: kubeadm (canonical), K3s (edge, SQLite default), K0s (single binary), kops (AWS), kubespray (Ansible over kubeadm).' },
+      { q: 'What has actually happened when kubectl apply returns?', a: 'The object is persisted in etcd and watchers are notified. Nothing has been scheduled or started yet.' },
+      { q: 'What does the scheduler actually write?', a: 'One field. It issues a Binding that sets spec.nodeName; it never contacts the node.' },
+      { q: 'Which component starts the container?', a: 'The kubelet on the bound node, through the CRI. It pulls the Pod from the API rather than being pushed to.' },
+      { q: 'Why should nothing address a Pod by IP?', a: 'Pod IPs are ephemeral — a rescheduled Pod gets a new one. Use the Service ClusterIP and its CoreDNS name.' },
+      { q: 'What gates a Pod joining a Service endpoint list?', a: 'The readiness probe. EndpointSlice adds it on pass and removes it on fail.' },
+      { q: 'What makes a rolling update zero-downtime?', a: 'Two ReplicaSets, replicas shifted within maxSurge and maxUnavailable, and new Pods held out of the Service until readiness passes.' },
+      { q: 'Pod Pending versus ContainerCreating?', a: 'Pending means the scheduler found no node that fits. ContainerCreating means the kubelet is still pulling the image, allocating the CNI IP, or attaching a volume.' },
     ],
     references: [
       'https://kubernetes.io/docs/concepts/architecture/',
@@ -130,6 +157,11 @@ Linux nodes also typically need systemd to supervise the local components — th
       'https://kubernetes.io/docs/concepts/architecture/nodes/',
       'https://kubernetes.io/docs/concepts/architecture/control-plane-node-communication/',
       'https://kubernetes.io/docs/concepts/architecture/controller/',
+      'https://kubernetes.io/docs/concepts/workloads/controllers/deployment/',
+      'https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/',
+      'https://kubernetes.io/docs/concepts/services-networking/service/',
+      'https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/',
+      'https://kubernetes.io/docs/concepts/containers/images/',
       'https://etcd.io/docs/v3.5/op-guide/hardware/',
       'https://github.com/container-storage-interface/spec',
       'https://github.com/containernetworking/cni/blob/main/SPEC.md',

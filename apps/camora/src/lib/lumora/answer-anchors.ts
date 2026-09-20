@@ -1,0 +1,92 @@
+// Anchor parsing for Lumora answers.
+//
+// Every answer surface asks the model for the same line grammar:
+//
+//     **<anchor, 1-3 words>** — <one spoken idea>
+//
+// The anchors are a skeleton, not decoration — the prompt says so in those
+// words. Until now the renderer did not know that: it bolded the anchor inline
+// and emitted one flat column, so a ten-hop sequence and a two-line aside were
+// the same shape on screen and the candidate had to read to tell them apart.
+//
+// This turns that grammar into structure the renderer can lay out in two
+// columns, with the anchors in a rail the eye can scan straight down.
+
+export type AnswerLine = {
+  text: string;
+  /** 1-based position when the block is an ordered sequence. */
+  n?: number;
+  /** The line arrived as `- item`. Kept so the renderer can preserve list
+   *  semantics for an anchorless bullet list rather than flattening it to
+   *  paragraphs — a screen reader should still hear "list, 2 items". */
+  bullet?: boolean;
+};
+
+export type AnswerBlock =
+  | { kind: 'anchor'; anchor: string; lines: AnswerLine[]; ordered: boolean }
+  | { kind: 'prose'; lines: AnswerLine[] };
+
+/** `**Anchor** — rest`, or a bare `**Anchor**` on its own line. */
+const ANCHOR_RE = /^\*\*([^*]{1,48}?)\*\*\s*(?:[—–-]\s*(.*))?$/;
+/** A child line that carries its own bold lead-in, e.g. `**HTTP POST** — …`. */
+const BOLD_LEAD_RE = /^(?:[-*•]\s*)?\*\*[^*]{1,48}?\*\*\s*[—–-]\s*\S/;
+const BULLET_RE = /^[-*•]\s+/;
+
+/**
+ * A block is a sequence when every child names its own step. That is
+ * structural rather than a guess at the anchor's wording: "The path" with ten
+ * `**hop** — …` children numbers, "The catch" with two plain sentences does
+ * not. Three is the floor — two steps read fine unnumbered and numbering them
+ * adds chrome without adding orientation.
+ */
+const isOrdered = (lines: AnswerLine[]) =>
+  lines.length >= 3 && lines.every((l) => BOLD_LEAD_RE.test(l.text));
+
+export function parseAnchors(text: string): AnswerBlock[] {
+  const blocks: AnswerBlock[] = [];
+  let open: Extract<AnswerBlock, { kind: 'anchor' }> | null = null;
+  let prose: AnswerLine[] = [];
+
+  const flushProse = () => {
+    if (prose.length) blocks.push({ kind: 'prose', lines: prose });
+    prose = [];
+  };
+  const flushAnchor = () => {
+    if (!open) return;
+    open.ordered = isOrdered(open.lines);
+    if (open.ordered) open.lines.forEach((l, i) => { l.n = i + 1; });
+    blocks.push(open);
+    open = null;
+  };
+
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+
+    const m = line.match(ANCHOR_RE);
+    if (m) {
+      flushAnchor();
+      flushProse();
+      const rest = (m[2] || '').trim();
+      open = { kind: 'anchor', anchor: m[1].trim(), lines: rest ? [{ text: rest }] : [], ordered: false };
+      continue;
+    }
+
+    // Anything after an anchor belongs to it — a dashed sub-line or a plain
+    // continuation sentence. Both appear in real answers and both are children,
+    // so the bullet marker is stripped and the text kept.
+    const bullet = BULLET_RE.test(line);
+    const text = line.replace(BULLET_RE, '');
+
+    if (open) {
+      open.lines.push(bullet ? { text, bullet } : { text });
+      continue;
+    }
+
+    prose.push(bullet ? { text, bullet } : { text });
+  }
+
+  flushAnchor();
+  flushProse();
+  return blocks;
+}

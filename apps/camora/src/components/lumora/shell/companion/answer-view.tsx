@@ -80,11 +80,11 @@ const FONT_ANSWER = "var(--font-answer)";
    it used to fit. FS_LEAD is the opening sentence, a clear step up so the eye
    knows where to start. FS_SMALL is for dense secondary blocks (labels,
    rebuttals, table cells) and holds the 12 px floor. */
-const FS_LEAD = '17px';
-const FS_BODY = '15px';
-const FS_SMALL = '13px';
+const FS_LEAD = '14px';
+const FS_BODY = '12px';
+const FS_SMALL = '12px';
 /** Code type, a step under prose so a fence does not shout over the sentence. */
-const FS_CODE = '13.5px';
+const FS_CODE = '12px';
 const LH_BODY = '1.7';
 
 /* ── Emphasis ───────────────────────────────────────────────────────────────
@@ -734,12 +734,67 @@ export const RichText = ({ text }: { text: string }) => {
   }
   if (lastIdx < text.length) chunks.push({ k: 'text', content: text.slice(lastIdx) });
 
+  /* The anchor rail.
+
+     A "<label> — <sentence>" line already had its lead-in bolded inline, which
+     marks the entry point but does not let the eye SCAN. Consecutive anchored
+     lines now share one description list, so the labels stack into a column the
+     candidate can run down and land on the part they need mid-sentence —
+     matching Ask Sona and the Claude and Gemini tabs, which is the point.
+
+     Only plain bullets and paragraphs join the rail. Numbered steps, STAR
+     labels, tables and code already carry their own chrome and keep it. The
+     lede keeps its gold rule: it is the line said first, not a part to find. */
+  const anchorOf = (seg: Seg, isLede: boolean): RegExpMatchArray | null => {
+    if (isLede || (seg.s !== 'bullet' && seg.s !== 'para')) return null;
+    return seg.text.match(LEAD_RE);
+  };
+
+  const renderRun = (segs: Seg[], ci: number, ledeAt: number) => {
+    const out: React.ReactNode[] = [];
+    let rail: { i: number; m: RegExpMatchArray }[] = [];
+    const flushRail = (at: number) => {
+      if (!rail.length) return;
+      out.push(
+        <dl
+          key={`${ci}-dl-${at}`}
+          className="grid grid-cols-1 gap-x-4 gap-y-2 m-0 my-1 @[26rem]:grid-cols-[7rem_minmax(0,1fr)]"
+        >
+          {rail.map(({ i, m }) => (
+            <React.Fragment key={`${ci}-${i}`}>
+              <dt
+                className="font-bold uppercase tracking-[0.08em] @[26rem]:text-right"
+                style={{ fontSize: FS_SMALL, lineHeight: LH_BODY, color: ACCENT_TEXT }}
+              >
+                {m[1]}
+              </dt>
+              <dd className="m-0 min-w-0" style={{ fontSize: FS_BODY, lineHeight: LH_BODY, color: TEXT_PRIMARY }}>
+                {inline(m[3])}
+              </dd>
+            </React.Fragment>
+          ))}
+        </dl>
+      );
+      rail = [];
+    };
+    segs.forEach((seg, si) => {
+      const m = anchorOf(seg, ci === 0 && si === ledeAt);
+      if (m) { rail.push({ i: si, m }); return; }
+      flushRail(si);
+      out.push(renderSeg(seg, `${ci}-${si}`, ci === 0 && si === ledeAt));
+    });
+    flushRail(segs.length);
+    return out;
+  };
+
   return (
-    <div className="flex flex-col gap-1" style={{ fontFamily: FONT_ANSWER }}>
+    // @container so the rail measures this card, not the window — the same
+    // answer renders in the side rail and in the fullscreen view.
+    <div className="@container flex flex-col gap-1" style={{ fontFamily: FONT_ANSWER }}>
       {chunks.map((chunk, ci) => chunk.k === 'code'
         ? renderCodeBlock(chunk.content, chunk.lang, ci)
         // Only the very first segment of the answer can be the lede.
-        : parseSegs(chunk.content).map((seg, si) => renderSeg(seg, `${ci}-${si}`, ci === 0 && si === 0))
+        : renderRun(parseSegs(chunk.content), ci, 0)
       )}
     </div>
   );

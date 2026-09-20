@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { Fragment, useState, useRef, useCallback, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import atomOneDark from 'react-syntax-highlighter/dist/esm/styles/hljs/atom-one-dark';
@@ -17,6 +17,9 @@ import { useSessionStore } from '@/stores/session-store';
 import { resolveAskListenSource } from '@/lib/lumora/ask-listen-source';
 import { snapRegion } from '@/lib/lumora/snapCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
+import { parseAnchors, type AnswerLine, type AnswerBlock } from '@/lib/lumora/answer-anchors';
+
+type AnchoredBlock = Extract<AnswerBlock, { kind: 'anchor' }>;
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('py', python);
@@ -120,15 +123,22 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
   );
 };
 
-// Process inline markdown: **bold**, `code`
+// Process inline markdown: **bold**, `code`, *italic*.
+//
+// Order matters in the alternation: **bold** is first, so at a `**` the engine
+// commits to it before the single-asterisk branch can claim one of the stars.
+// Italic was missing entirely, which is why a model-emitted *desired* used to
+// render with its asterisks showing.
 const inlineMarkdown = (raw: string): React.ReactNode[] => {
   const nodes: React.ReactNode[] = [];
-  const re = /\*\*(.+?)\*\*|`([^`]+)`/g;
+  const re = /\*\*(.+?)\*\*|`([^`]+)`|\*([^*\n]+)\*/g;
   let last = 0, m: RegExpExecArray | null;
   while ((m = re.exec(raw)) !== null) {
     if (m.index > last) nodes.push(raw.slice(last, m.index));
     if (m[1] !== undefined) {
       nodes.push(<strong key={m.index} style={{ color: 'var(--cam-gold-leaf-text)', fontWeight: 700 }}>{m[1]}</strong>);
+    } else if (m[3] !== undefined) {
+      nodes.push(<em key={m.index} style={{ color: 'var(--text-primary)' }}>{m[3]}</em>);
     } else {
       nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--cam-gold-leaf-text)', fontFamily: "var(--font-mono)", fontSize: '0.92em', letterSpacing: '-0.02em' }}>{m[2]}</code>);
     }
@@ -182,6 +192,125 @@ const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
   </div>
 );
 
+// The lines under one anchor.
+//
+// A single line is just text. Several lines are a real list, so a screen reader
+// hears "list, 7 items" and not seven loose sentences — and an ordered block is
+// an <ol>, because the numbering is the content there, not decoration. The
+// marker is drawn by hand so it can take the accent; the list itself carries
+// the semantics.
+const AnchorLines = ({ lines, ordered }: { lines: AnswerLine[]; ordered: boolean }) => {
+  if (lines.length === 1) {
+    return <span className="text-[12px] leading-[1.7]" style={{ color: 'var(--text-primary)' }}>{inlineMarkdown(lines[0].text)}</span>;
+  }
+  const List = ordered ? 'ol' : 'ul';
+  return (
+    <List className="flex flex-col gap-1.5 list-none p-0 m-0">
+      {lines.map((l, i) => (
+        <li key={i} className="flex items-start gap-2.5">
+          {ordered ? (
+            <span className="shrink-0 tabular-nums text-[12px] font-bold leading-[1.7] w-[1.1rem] text-right" style={{ color: 'var(--lum-accent)' }}>
+              {l.n}
+            </span>
+          ) : (
+            <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-[9px]" style={{ background: 'var(--cam-primary)' }} />
+          )}
+          <span className="text-[12px] leading-[1.7] min-w-0" style={{ color: 'var(--text-primary)' }}>
+            {inlineMarkdown(l.text)}
+          </span>
+        </li>
+      ))}
+    </List>
+  );
+};
+
+// Anchorless lines — the direct answer before the skeleton starts, or a model
+// that ignored the format. Bullets stay a list; sentences stay paragraphs.
+const ProseRows = ({ lines, keyBase }: { lines: AnswerLine[]; keyBase: string }) => {
+  // Runs, not a whole-block test: a lead sentence followed by three bullets is
+  // a paragraph and a list, and testing the block as a whole swept the sentence
+  // into the list as a fourth item.
+  const runs: AnswerLine[][] = [];
+  for (const l of lines) {
+    const tail = runs[runs.length - 1];
+    if (tail && !!tail[0].bullet === !!l.bullet) tail.push(l);
+    else runs.push([l]);
+  }
+  return (
+    <>
+      {runs.map((run, r) => run[0].bullet ? (
+        <ul key={`${keyBase}-u${r}`} className="flex flex-col gap-2 list-none p-0 m-0">
+          {run.map((l, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-[12px] leading-[1.7]" style={{ color: 'var(--text-primary)' }}>
+              <span className="shrink-0 w-1.5 h-1.5 rounded-full mt-[9px]" style={{ background: 'var(--cam-primary)' }} />
+              <span className="min-w-0">{inlineMarkdown(l.text)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Fragment key={`${keyBase}-p${r}`}>
+          {run.map((l, i) => (
+            <p key={i} className="text-[12px] leading-[1.7]" style={{ color: 'var(--text-primary)' }}>
+              {inlineMarkdown(l.text)}
+            </p>
+          ))}
+        </Fragment>
+      ))}
+    </>
+  );
+};
+
+// Anchored blocks laid out as a description list: the anchor is the term, its
+// lines are the definition.
+//
+// The point is the rail. The anchors are the skeleton the prompt asks for, and
+// stacked in a column the candidate can run their eye down it and land on the
+// one part they need mid-sentence — which is the whole job of this surface. In
+// one flowing column a ten-hop sequence and a two-line aside were the same
+// shape and had to be read to be told apart.
+//
+// It collapses to stacked below 26rem of CONTAINER width, not viewport: this
+// renderer draws into the wide Ask Sona column and into the narrow Claude and
+// Gemini tabs, and only the container knows which.
+const AnchorList = ({ blocks, keyBase }: { blocks: AnchoredBlock[]; keyBase: string }) => (
+  <dl className="grid grid-cols-1 gap-x-5 gap-y-3 m-0 @[26rem]:grid-cols-[7.5rem_minmax(0,1fr)]">
+    {blocks.map((b, i) => (
+      <Fragment key={`${keyBase}-${i}`}>
+        <dt
+          className="text-[12px] font-bold uppercase tracking-[0.08em] leading-[1.7] @[26rem]:text-right"
+          style={{ color: 'var(--lum-accent-sm)' }}
+        >
+          {b.anchor}
+        </dt>
+        <dd className="m-0 min-w-0">
+          <AnchorLines lines={b.lines} ordered={b.ordered} />
+        </dd>
+      </Fragment>
+    ))}
+  </dl>
+);
+
+// A <dl> may only contain dt/dd (or div wrappers of them), so an anchorless
+// block cannot sit inside one. Consecutive anchored blocks are grouped into a
+// single list and prose is emitted as its sibling — which also keeps the rail
+// aligned across every anchor in a run, rather than per-row.
+const renderAnchored = (text: string, keyBase: number): React.ReactNode[] => {
+  const out: React.ReactNode[] = [];
+  let run: AnchoredBlock[] = [];
+  const flushRun = (i: number) => {
+    if (!run.length) return;
+    out.push(<AnchorList key={`${keyBase}-dl-${i}`} blocks={run} keyBase={`${keyBase}-${i}`} />);
+    run = [];
+  };
+  parseAnchors(text).forEach((b, i) => {
+    if (b.kind === 'anchor') { run.push(b); return; }
+    flushRun(i);
+    out.push(<ProseRows key={`${keyBase}-p-${i}`} lines={b.lines} keyBase={`${keyBase}-${i}`} />);
+  });
+  flushRun(999);
+  return out;
+};
+
 const renderContent = (text: string) => {
   const parts = text.split(/(```[\s\S]*?```)/g);
   const result: React.ReactNode[] = [];
@@ -198,23 +327,18 @@ const renderContent = (text: string) => {
     }
     if (!part.trim()) continue;
 
-    // Render line-by-line so list items get proper treatment
+    // Tables are consumed whole; everything between them is anchored prose and
+    // goes through parseAnchors so the two-column layout can see the skeleton.
     const lines = part.split('\n');
-    const listItems: string[] = [];
+    let buf: string[] = [];
 
-    const flushList = () => {
-      if (!listItems.length) return;
+    const flushBuf = () => {
+      const t = buf.join('\n').trim();
+      buf = [];
+      if (!t) return;
       result.push(
-        <ul key={key++} className="space-y-2 my-2.5 ml-1">
-          {listItems.map((item, j) => (
-            <li key={j} className="flex items-start gap-2.5 text-[15px] leading-[1.7]" style={{ color: 'var(--text-primary)' }}>
-              <span className="w-1.5 h-1.5 rounded-full mt-[9px] shrink-0" style={{ background: 'var(--cam-primary)' }} />
-              <span>{inlineMarkdown(item)}</span>
-            </li>
-          ))}
-        </ul>
+        <div key={key++} className="flex flex-col gap-3">{renderAnchored(t, key)}</div>
       );
-      listItems.length = 0;
     };
 
     for (let i = 0; i < lines.length; i++) {
@@ -222,9 +346,9 @@ const renderContent = (text: string) => {
 
       // A header row followed by a |---|---| rule opens a table; consume every
       // row after it. Anything that only looks like a row (a lone piped line)
-      // falls through to the paragraph path unchanged.
+      // falls through to the anchored path unchanged.
       if (isTableRow(trimmed) && isTableRule((lines[i + 1] || '').trim())) {
-        flushList();
+        flushBuf();
         const head = tableCells(trimmed);
         const rows: string[][] = [];
         let j = i + 2;
@@ -238,38 +362,46 @@ const renderContent = (text: string) => {
         continue;
       }
 
-      if (trimmed.match(/^[-*•]\s/)) {
-        listItems.push(trimmed.replace(/^[-*•]\s/, ''));
-      } else {
-        flushList();
-        if (trimmed) {
-          result.push(
-            <p key={key++} className="text-[15px] leading-[1.7] my-2" style={{ color: 'var(--text-primary)' }}>
-              {inlineMarkdown(trimmed)}
-            </p>
-          );
-        }
-      }
+      buf.push(lines[i]);
     }
-    flushList();
+    flushBuf();
   }
 
   return result;
 };
 
+// A "### " title that is really an anchor line. The prompt allows exactly one
+// heading ("### If they push") and asks for every other line to be
+// `**Anchor** — text`, so a model that prefixes an anchor line with ### used to
+// have the whole sentence printed raw through the heading path: markup showing,
+// backticks showing, and the direct answer — the single most important line —
+// shouted in tracked-out capitals across two rows. Fold it back into the body
+// and let the anchor layout have it.
+const ANCHOR_TITLE_RE = /^\*\*[^*]{1,48}?\*\*\s*[—–-]\s*\S/;
+
 export const AskResponse = ({ content }: { content: string }) => {
-  const sections = content.split(/^### /m).filter(Boolean);
-  if (sections.length <= 1) return <div>{renderContent(content)}</div>;
+  // split() puts an empty string before a leading "### ". Dropping it with
+  // filter(Boolean) made a single-heading answer fall into the no-heading
+  // branch, which then rendered its own "### Answer" line as literal text.
+  const parts = content.split(/^### /m);
+  const lead = parts[0];
+  const sections = parts.slice(1);
+  // @container, so the anchor rail measures THIS column rather than the window.
+  if (!sections.length) return <div className="@container">{renderContent(content)}</div>;
   return (
-    <div className="flex flex-col gap-5">
+    <div className="@container flex flex-col gap-5">
+      {lead.trim() ? <div>{renderContent(lead)}</div> : null}
       {sections.map((sec, i) => {
         const nl = sec.indexOf('\n');
         const title = nl > -1 ? sec.slice(0, nl).trim() : sec.trim();
         const body = nl > -1 ? sec.slice(nl + 1) : '';
+        if (ANCHOR_TITLE_RE.test(title)) {
+          return <div key={i}>{renderContent(`${title}\n${body}`)}</div>;
+        }
         return (
           <div key={i}>
             <p className="text-[13px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
-              {title}
+              {inlineMarkdown(title)}
             </p>
             <div>{renderContent(body)}</div>
           </div>
@@ -1013,7 +1145,7 @@ export const AskLayout = () => {
           top band of the window, closest to the webcam, and the history
           scrolls away beneath it instead of pushing the live answer down. */}
       {hasMessages ? (
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 19rem))', paddingRight: 'max(1rem, calc(50% - 19rem))' }}>
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 23.75rem))', paddingRight: 'max(1rem, calc(50% - 23.75rem))' }}>
           <div ref={topRef} />
           {streaming && (
             <div className="mb-6">

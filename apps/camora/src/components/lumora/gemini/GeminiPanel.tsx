@@ -35,20 +35,14 @@ import { toTurns } from '../shared/qaTurns';
 // The reading column is capped rather than filling the panel. At 15px a
 // full-width tab runs past 120 characters a line, and a line that long loses
 // the eye on the way back from the webcam — the one thing this surface cannot
-// afford. 19rem of gutter leaves ~608px, a touch under 80 characters. The same
-// measure is used by Ask Sona.
-const READ_GUTTER = 'max(0.75rem, calc(50% - 19rem))';
+// afford. 23.75rem of gutter leaves ~760px, which at 14px is a shade over 90
+// characters. The same measure is used by Ask Sona.
+const READ_GUTTER = 'max(0.75rem, calc(50% - 23.75rem))';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 type Role = 'user' | 'assistant';
 type Msg = { role: Role; content: string };
-
-const EMPTY_HINT = [
-  'Ask anything mid-interview — a definition, a design trade-off, a coding problem.',
-  'Answers come back interview-shaped: the answer first, then bullets you can expand out loud.',
-  'Press ` to let the interviewer\u2019s questions come straight here, or Space to ask in your own voice.',
-];
 
 export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -358,14 +352,6 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
       </div>
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-3"
         style={{ paddingLeft: READ_GUTTER, paddingRight: READ_GUTTER }}>
-        {!messages.length && !streaming && (
-          <div className="h-full flex flex-col items-center justify-center gap-1.5 text-center px-6">
-            {EMPTY_HINT.map((line, i) => (
-              <p key={i} className="text-[13px] leading-relaxed" style={{ color: 'var(--lum-text-2)' }}>{line}</p>
-            ))}
-          </div>
-        )}
-
         <div className="flex flex-col gap-3">
           {/* Newest turn first, directly under the composer — the order Ask Sona
               and the behavioral panel already read in. Only the pairing differs:

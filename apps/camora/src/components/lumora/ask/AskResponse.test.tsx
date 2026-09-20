@@ -52,3 +52,56 @@ describe('AskResponse tables', () => {
     expect(container.querySelector('pre')).not.toBeNull();
   });
 });
+
+// The layout the screenshot asked for, and the three rendering bugs it exposed.
+describe('AskResponse anchor rail', () => {
+  const ANSWER = [
+    '**In short** — `kubectl apply` sends the YAML to the API server.',
+    '**The path**',
+    '- **kubectl apply** — reads main.yaml locally.',
+    '- **HTTP POST** — sends the YAML to the API server.',
+    '- **API server** — authenticates, authorizes, validates.',
+    '**The catch** — it is declarative; it describes the *desired* state.',
+  ].join('\n');
+
+  it('puts the anchors in a description list', () => {
+    const { container } = render(<AskResponse content={ANSWER} />);
+    expect(container.querySelector('dl')).not.toBeNull();
+    expect([...container.querySelectorAll('dt')].map((n) => n.textContent))
+      .toEqual(['In short', 'The path', 'The catch']);
+  });
+
+  it('numbers a block whose children each name a step, and only that block', () => {
+    const { container } = render(<AskResponse content={ANSWER} />);
+    const ol = container.querySelector('ol');
+    expect(ol).not.toBeNull();
+    expect(ol!.querySelectorAll('li')).toHaveLength(3);
+    // "The catch" is a single line, so it is not a list at all.
+    expect(container.querySelectorAll('ol')).toHaveLength(1);
+  });
+
+  it('renders *italic* instead of printing its asterisks', () => {
+    const { container } = render(<AskResponse content={ANSWER} />);
+    expect(container.querySelector('em')?.textContent).toBe('desired');
+    expect(container.textContent).not.toContain('*desired*');
+  });
+
+  it('does not print markup when the model prefixes ### to an anchor line', () => {
+    // This is the screenshot: the title path used to emit its text raw, so the
+    // whole sentence arrived as a shouting heading with ** and ` intact.
+    const { container } = render(
+      <AskResponse content={'### **In short** — `kubectl apply` persists desired state.'} />,
+    );
+    expect(container.textContent).not.toContain('**');
+    expect(container.textContent).not.toContain('`');
+    expect(container.querySelector('dt')?.textContent).toBe('In short');
+  });
+
+  it('still renders a real "### If they push" heading as a heading', () => {
+    const { container } = render(
+      <AskResponse content={'**In short** — the answer.\n### If they push\n**Why** — because.'} />,
+    );
+    expect(container.textContent).toContain('If they push');
+    expect(container.querySelectorAll('dt')).toHaveLength(2);
+  });
+});
