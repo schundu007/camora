@@ -2,7 +2,7 @@
  * Interview Prep — matches capra.cariara.com/app/prep layout.
  * Sidebar sections + upload zones + Generate button.
  */
-import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, Fragment } from 'react';
 import { InterviewContextPanel } from './InterviewContextPanel';
 import { useSearchParams } from 'react-router-dom';
 import type { JSX, CSSProperties } from 'react';
@@ -3011,6 +3011,10 @@ export const LumoraDocsPanel = ({
       };
     });
     setActiveSection('input');
+    // Arriving from /jobs/:id/prepare names the interview, so the list has
+    // already been answered — go straight into it rather than showing a
+    // picker for the company the URL just chose.
+    setPrepOpen(true);
     if (seedJd) autoGenerateRef.current = true;
   }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -3025,12 +3029,22 @@ export const LumoraDocsPanel = ({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Get active company's doc state. Run through migrateStudyDocs every
-  // read so any older payload that slipped past the loader/hydrate (e.g.
-  // a company entry created before the studyDocs schema landed) still
-  // exposes an array, not undefined.
-  const state = migrateStudyDocs(
-    prepData.activeCompany ? (prepData.data[prepData.activeCompany] || EMPTY_DOC) : EMPTY_DOC
+  /* Active company's doc state, run through migrateStudyDocs so any older
+     payload that slipped past the loader still exposes the current shape.
+     
+     MEMOISED, and that matters more than it looks. This used to run on every
+     render, and for any document saved before the intake landed — which is
+     every existing one until it is next edited — that is the full migration:
+     classifyDoc's regexes over each entry, then deriveFromIntake joining every
+     document's text into new strings. With a JD and a résumé that is tens of
+     thousands of characters copied per render, on a component that re-renders
+     on every keystroke in the composer. It also handed back a new studyDocs
+     array each time, so anything keyed on it saw a change that had not
+     happened. */
+  const activeDoc = prepData.activeCompany ? prepData.data[prepData.activeCompany] : undefined;
+  const state = useMemo(
+    () => migrateStudyDocs(activeDoc || EMPTY_DOC),
+    [activeDoc],
   );
   const setState = (updater: DocState | ((prev: DocState) => DocState)) => {
     const company = prepData.activeCompany;
@@ -3158,6 +3172,14 @@ export const LumoraDocsPanel = ({
     setGenerating(false);
     setSectionStatus({});
   }, [prepData.activeCompany]);
+
+  /* Open every section at its beginning. Without this the scroller keeps the
+     offset from the section you just left, so clicking a short one after a
+     long one lands you past the end of it, on blank space. */
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [activeSection, prepData.activeCompany]);
 
   const extractFile = useCallback(async (file: File): Promise<string> => {
     if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
@@ -3527,7 +3549,12 @@ export const LumoraDocsPanel = ({
           />
         </div>
       )}
-      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+      {/* The band and the content are SEPARATE now. They shared one scroller,
+          so reading a long Elevator Pitch scrolled the section chips off the
+          top — the navigation moved with the thing it navigates — and
+          switching sections kept the old offset, dropping you into the middle
+          of the next one. */}
+      <div className="flex-1 min-h-0 flex flex-col">
       {/* Mobile collapsed-sidebar pill — only shows when the sidebar is
           collapsed on phones. Tap to expand. The desktop sidebar at
           sm:w-[180px] stays visible always; this pill is mobile-only. */}
@@ -3749,7 +3776,7 @@ export const LumoraDocsPanel = ({
       </div>
 
       {/* Main content */}
-      <div className="flex flex-col min-w-0 flex-1">
+      <div ref={contentRef} className="flex flex-col min-w-0 flex-1 min-h-0 overflow-y-auto">
         {activeSection === 'input' ? (
           /* space-y-8 rather than each card carrying its own margin — the
              blocks were reading as one continuous surface. */
@@ -4015,18 +4042,18 @@ export const LumoraDocsPanel = ({
           </div>
         ) : activeSection === 'jd-view' ? (
           /* JD formatted viewer */
-          <div className="flex-1 flex flex-col">
+          <div className="flex flex-col">
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Job Description</h3>
               <button onClick={() => setActiveSection('input')} className="text-[12px] font-medium px-2 py-1 rounded-lg" style={{ color: 'var(--cam-primary)', background: 'var(--accent-subtle)' }}>Edit</button>
             </div>
-            <div className="flex-1 overflow-auto p-6 select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
+            <div className="p-6 max-w-4xl w-full mx-auto select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
               <FormattedJD text={state.jd} />
             </div>
           </div>
         ) : (
           /* Generated section content */
-          <div className="flex-1 flex flex-col">
+          <div className="flex flex-col">
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
               <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
                 {SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label}
@@ -4051,7 +4078,7 @@ export const LumoraDocsPanel = ({
                 )}
               </div>
             </div>
-            <div className="flex-1 overflow-auto p-6 select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
+            <div className="p-6 max-w-4xl w-full mx-auto select-text" style={{ userSelect: 'text', WebkitUserSelect: 'text' }}>
               {sectionStatus[activeSection] === 'generating' ? (
                 <div className="flex flex-col items-center justify-center py-16">
                   <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin mb-4" style={{ borderColor: 'var(--cam-primary)', borderTopColor: 'transparent' }} />
