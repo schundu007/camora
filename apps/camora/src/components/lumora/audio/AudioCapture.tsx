@@ -137,6 +137,17 @@ interface AudioCaptureProps {
   // Fires after every accepted Whisper chunk with the current running
   // accumulation so the UI can show a live preview before the final flush.
   onLiveTranscription?: (accumulated: string) => void;
+  /**
+   * 'strip'    — the wide chip row this was built for: a filled "Ask `" pill
+   *              with its shortcut printed on it, beside a five-bar level meter.
+   * 'composer' — the same two controls as round icon buttons, sized and spaced
+   *              to sit in a composer beside a screenshot and a send button.
+   *              The behavioral panel uses this so its composer matches the
+   *              Claude and Gemini ones, which is the whole point: a candidate
+   *              switching surfaces mid-interview should not have to re-find
+   *              the mic.
+   */
+  variant?: 'strip' | 'composer';
   autoStart?: boolean;
   // When false: suppresses all keyboard shortcuts and immediately releases
   // the mic if it was recording. When it flips back to true, AUTO resumes
@@ -199,7 +210,7 @@ function useMicLevel(enabled: boolean): number {
   return level;
 }
 
-export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart = true, active, compact, locked }: AudioCaptureProps) => {
+export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart = true, active, compact, locked, variant = 'strip' }: AudioCaptureProps) => {
   // Use centralized auth
   const { token } = useAuth();
 
@@ -1356,6 +1367,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     micLevel={micLevel}
     compact={compact}
     locked={locked}
+    variant={variant}
   />;
 }
 
@@ -1373,7 +1385,9 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
   handleModeToggle, handleToggle, recordingModeUI, speakerActive, speakerLevel, micLevel, compact, locked,
+  variant = 'strip',
 }: {
+  variant?: 'strip' | 'composer';
   continuousMode: boolean;
   audioLevel: number;
   handleModeToggle: () => void;
@@ -1482,9 +1496,21 @@ const UnifiedMicButton = ({
           data-tip={isAsking
             ? 'Recording your question — it sends to Sona automatically when you pause (or press ` / click to send now).'
             : 'Ask in your own voice — press ` (or click), speak, and it sends to Sona when you pause.'}
-          className={`lum-tool-chip ${isAsking ? 'is-live' : 'is-primary'}`}
+          className={variant === 'composer'
+            ? 'w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors'
+            : `lum-tool-chip ${isAsking ? 'is-live' : 'is-primary'}`}
+          style={variant === 'composer'
+            ? (isAsking
+                ? { background: 'var(--danger)', color: '#fff', border: '1px solid var(--danger)' }
+                : { background: 'var(--lum-bg)', color: 'var(--cam-gold-leaf)', border: '1px solid var(--cam-gold-leaf-dk)' })
+            : undefined}
         >
-          {isAsking ? (
+          {variant === 'composer' ? (
+            // Icon only. The label and the ` hint are what make the strip
+            // version readable across a wide row; in a composer they would make
+            // the mic twice the width of every control beside it.
+            <MicIcon />
+          ) : isAsking ? (
             <>
               {/* currentColor, so the dot inherits the chip's near-black label
                   colour instead of the blue it used to hardcode — which sat on
@@ -1516,16 +1542,20 @@ const UnifiedMicButton = ({
           and a floor of one lit bar while capturing says "listening, hearing
           nothing" rather than "not working". */}
       <div
-        className="lum-tool-group"
+        className={variant === 'composer'
+          ? 'w-9 h-9 rounded-full flex items-center justify-center shrink-0'
+          : 'lum-tool-group'}
         data-overlay-keep
         role="img"
         aria-label={(listenOn || isAsking) ? 'Input level' : 'Input level — not capturing'}
         data-tip={(listenOn || isAsking)
           ? 'Input level — the bars move when Sona hears audio. Flat bars mean no sound is reaching it.'
           : 'Input level — flat because Sona is not capturing right now.'}
-        style={{ padding: '0 8px' }}
+        style={variant === 'composer'
+          ? { background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text-2)' }
+          : { padding: '0 8px' }}
       >
-        <WaveIcon />
+        {variant !== 'composer' && <WaveIcon />}
         <span className="lum-tool-meter" aria-hidden="true">
           {[0, 1, 2, 3, 4].map((i) => {
             // Bar 0 lights whenever anything is capturing, even in a silent

@@ -315,6 +315,14 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // convert to PDF locally. Markdown is the lowest-common-denominator
   // format that round-trips into every doc tool. PDF/DOCX export needs
   // a backend renderer (Puppeteer/Pandoc) which is a separate task.
+  /** Copy the latest answer — the same action the Claude and Gemini tabs have.
+   *  Behavioral had an Export but no Copy, which is the one you actually reach
+   *  for mid-interview. */
+  const copyLastAnswer = useCallback(() => {
+    const last = [...messages].reverse().find(m => m.role === 'ai');
+    if (last?.text) navigator.clipboard?.writeText(last.text).catch(() => { /* denied */ });
+  }, [messages]);
+
   const exportSession = useCallback(() => {
     if (messages.length === 0) return;
     const role = activeAssistant?.role || activeAssistant?.company || 'Behavioral';
@@ -1233,7 +1241,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // included on mobile-Safari notch devices.
   const composer = (
     <div
-      className="px-3 pt-2 shrink-0 flex flex-col items-center gap-2 lumora-companion-input-row w-full mx-auto"
+      className="px-3 pt-2 shrink-0 flex flex-col items-stretch gap-2 lumora-companion-input-row w-full mx-auto"
       data-embedded={embedded ? 'true' : 'false'}
       style={embedded ? { maxWidth: 880 } : undefined}
     >
@@ -1264,9 +1272,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             the eye already is when you decide another model would answer this
             better. */}
         <AskSwitcher
+          topRow
           className="mb-2 overflow-x-auto"
           onNew={clearMessages}
+          onCopy={copyLastAnswer}
           onExport={exportSession}
+          onClose={onClose}
           hasContent={messages.length > 0}
         />
         {/* Text input — visible in both floating and embedded behavioral mode */}
@@ -1284,7 +1295,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               the same place. It renders its own button; AudioCapture is also
               the recorder, so it stays mounted while this panel is open. */}
           {onTranscription && (
-            <AudioCapture onTranscription={onTranscription} autoStart active compact locked />
+            <AudioCapture onTranscription={onTranscription} autoStart active compact locked variant="composer" />
           )}
           {/* Screenshot — ask Sona about whatever is on screen. */}
           <button

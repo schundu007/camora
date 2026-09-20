@@ -65,6 +65,7 @@ const ACTION_ICON = {
   new: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>,
   copy: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>,
   export: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>,
+  close: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>,
 };
 
 const ActionChip = ({ kind, label, onClick, disabled }: {
@@ -90,6 +91,9 @@ export interface AskActions {
   onNew?: () => void;
   onCopy?: () => void;
   onExport?: () => void;
+  /** Behavioral only: shuts the companion panel. The tabs are routed pages and
+   *  have nothing to shut, so they pass nothing and no chip renders. */
+  onClose?: () => void;
   /** Both New and Export are meaningless on an empty surface. */
   hasContent?: boolean;
 }
@@ -108,6 +112,7 @@ export const AskSwitcher = ({
   onNew,
   onCopy,
   onExport,
+  onClose,
   hasContent = false,
 }: {
   className?: string;
@@ -159,6 +164,7 @@ export const AskSwitcher = ({
         {onNew && <ActionChip kind="new" label="New" onClick={onNew} disabled={!hasContent} />}
         {onCopy && <ActionChip kind="copy" label="Copy" onClick={onCopy} disabled={!hasContent} />}
         {onExport && <ActionChip kind="export" label="Export" onClick={onExport} disabled={!hasContent} />}
+        {onClose && <ActionChip kind="close" label="Close" onClick={onClose} />}
         {voice && <VoiceEnrollment disabled={false} variant="light" iconOnly />}
       </span>
     </div>

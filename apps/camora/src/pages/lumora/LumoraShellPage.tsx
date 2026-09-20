@@ -584,9 +584,12 @@ export const LumoraShellPage = () => {
         {/* Global screenshot strip — design & behavioral render it as a
             standalone row here. Coding merges it into CodingLayout's toolbar
             (passed below as captureControls) so coding shows one row, not two. */}
-        {(activeTab === 'design' || activeTab === 'behavioral') && (
+        {/* Design only. Behavioral's controls all moved into its own composer
+            to match the Claude and Gemini tabs, which left this strip holding a
+            single ✕ floating in the middle of the window. */}
+        {activeTab === 'design' && (
           <ScreenshotStrip
-            surface={activeTab as 'design' | 'behavioral'}
+            surface="design"
             screenshots={screenshots}
             onSnapped={handleSnapped}
             onRemove={handleRemoveScreenshot}
