@@ -61,6 +61,7 @@ describe('AskResponse anchor rail', () => {
     '- **kubectl apply** — reads main.yaml locally.',
     '- **HTTP POST** — sends the YAML to the API server.',
     '- **API server** — authenticates, authorizes, validates.',
+    '',
     '**The catch** — it is declarative; it describes the *desired* state.',
   ].join('\n');
 

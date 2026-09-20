@@ -137,3 +137,49 @@ describe('parseAnchors — what production actually sent', () => {
     expect(b.kind === 'anchor' && b.anchor).toBe('kubectl apply');
   });
 });
+
+describe('parseAnchors — a bare anchor is a header', () => {
+  it('nests the hops under a lone **The path** and numbers them', () => {
+    // Without this each hop became its own rail row: eighteen labels, no
+    // numbers, and no way to see it was one sequence.
+    const blocks = parseAnchors([
+      '**The path**',
+      '**kubectl** — reads the file, converts YAML to JSON.',
+      '**apiserver** — authenticates, authorizes, runs admission.',
+      '**etcd** — the object is persisted; nothing is running yet.',
+    ].join('\n'));
+    expect(blocks).toHaveLength(1);
+    const b = blocks[0];
+    expect(b.kind === 'anchor' && b.anchor).toBe('The path');
+    expect(b.kind === 'anchor' && b.ordered).toBe(true);
+    expect(b.kind === 'anchor' && b.lines.map((l) => l.n)).toEqual([1, 2, 3]);
+    // The lead-in survives, so it still renders bold inside the step.
+    expect(b.kind === 'anchor' && b.lines[0].text).toContain('**kubectl**');
+  });
+
+  it('keeps anchors that carry their own content as siblings', () => {
+    // A skeleton is not a sequence: "In short" and "The catch" each say
+    // something on their own line, so neither adopts the other.
+    const blocks = parseAnchors([
+      '**In short** — the answer.',
+      '**The catch** — a warning.',
+      '**In practice** — what I do.',
+    ].join('\n'));
+    expect(blocks).toHaveLength(3);
+    expect(blocks.every((b) => b.kind === 'anchor')).toBe(true);
+  });
+});
+
+describe('parseAnchors — where a header stops adopting', () => {
+  it('a blank line ends the walk, so the next anchor is its own row', () => {
+    const blocks = parseAnchors([
+      '**The path**',
+      '**kubectl** — reads the file.',
+      '**apiserver** — validates it.',
+      '',
+      '**The catch** — it is declarative.',
+    ].join('\n'));
+    expect(blocks.map((b) => b.kind === 'anchor' && b.anchor)).toEqual(['The path', 'The catch']);
+    expect(blocks[0].kind === 'anchor' && blocks[0].lines).toHaveLength(2);
+  });
+});

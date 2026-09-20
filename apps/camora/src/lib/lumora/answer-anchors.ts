@@ -72,6 +72,12 @@ const isOrdered = (lines: AnswerLine[]) =>
 export function parseAnchors(text: string): AnswerBlock[] {
   const blocks: AnswerBlock[] = [];
   let open: Extract<AnswerBlock, { kind: 'anchor' }> | null = null;
+  // An anchor written on a line of its own — `**The path**` with nothing after
+  // it — is a HEADER for the lines beneath it, not a one-line point. The lines
+  // that follow are its steps even when each carries its own lead-in, so they
+  // nest rather than becoming eighteen sibling rows down the rail with no
+  // numbering and no way to tell a nine-step path from nine unrelated facts.
+  let openIsHeader = false;
   let prose: AnswerLine[] = [];
 
   const flushProse = () => {
@@ -79,6 +85,7 @@ export function parseAnchors(text: string): AnswerBlock[] {
     prose = [];
   };
   const flushAnchor = () => {
+    openIsHeader = false;
     if (!open) return;
     open.ordered = isOrdered(open.lines);
     if (open.ordered) open.lines.forEach((l, i) => { l.n = i + 1; });
@@ -88,7 +95,13 @@ export function parseAnchors(text: string): AnswerBlock[] {
 
   for (const raw of text.split('\n')) {
     const line = raw.trim();
-    if (!line) continue;
+    if (!line) {
+      // A blank line closes a header's adoption window. Without it the next
+      // skeleton anchor — "**The catch** — …" — is swallowed as one more step
+      // of the walk above it.
+      openIsHeader = false;
+      continue;
+    }
 
     const m = line.match(ANCHOR_RE);
     if (m) {
@@ -103,10 +116,17 @@ export function parseAnchors(text: string): AnswerBlock[] {
         open.lines.push({ text: rest ? `**${num[2]}** — ${rest}` : `**${num[2]}**` });
         continue;
       }
+      if (open && openIsHeader && rest) {
+        // A step under a bare header anchor. The lead-in is kept in the text so
+        // it still renders bold, and so isOrdered can see the block is a walk.
+        open.lines.push({ text: `**${anchor}** — ${rest}` });
+        continue;
+      }
       if (railable(anchor)) {
         flushAnchor();
         flushProse();
         open = { kind: 'anchor', anchor, lines: rest ? [{ text: rest }] : [], ordered: false };
+        openIsHeader = !rest;
         continue;
       }
     }

@@ -84,11 +84,24 @@ does a pod get scheduled", "where does the packet actually go": the interviewer
 is checking whether the candidate knows the whole path or only the two ends of
 it. Answering with the application exchange alone — "the browser sends a GET,
 the server returns the HTML" — is the exact failure this rule exists to prevent.
-Every hop gets its own anchored line, in order —
-**TLS handshake** — SNI, cert chain, ALPN — so the hops stack into the rail
-and read as the sequence they are. The four-line guidance above does not apply to a flow question: it
-runs long by design, and dropping the infrastructure in the middle to stay
-short is never the right trade.
+Put the whole walk under ONE anchor on a line of its own, then one line per
+hop beneath it, and leave a blank line after the last hop:
+
+    **The path**
+    **kubectl** — reads the file, converts the YAML to JSON.
+    **apiserver** — authenticates, authorizes, runs admission.
+    **etcd** — the object is persisted; nothing is running yet.
+
+    **The catch** — ...
+
+The hops are numbered for you and the walk is labelled once beside them.
+Giving each hop its own anchor instead puts eighteen labels down the side of
+the answer, unnumbered, and nothing then tells a nine-step path apart from
+nine unrelated facts.
+
+The four-line guidance above does not apply to a flow question: it runs long
+by design, and dropping the infrastructure in the middle to stay short is
+never the right trade.
 
 OPEN BY OFFERING THE SCOPE — then answer the whole thing anyway.
 A question this wide spans three domains that are each a whole interview on

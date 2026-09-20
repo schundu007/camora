@@ -82,6 +82,13 @@ describe('interview brief', () => {
     expect(INTERVIEW_BRIEF).toContain('never a clause and never a question');
   });
 
+  it('asks for the walk under one anchor, which is what gets it numbered', () => {
+    // One anchor per hop put eighteen unnumbered labels down the rail, and
+    // nothing told a nine-step path apart from nine unrelated facts.
+    expect(INTERVIEW_BRIEF).toContain('Put the whole walk under ONE anchor');
+    expect(INTERVIEW_BRIEF).toContain('leave a blank line after the last hop');
+  });
+
   it('spells out the failure it exists to prevent', () => {
     expect(INTERVIEW_BRIEF).toContain('the server returns the HTML');
   });
