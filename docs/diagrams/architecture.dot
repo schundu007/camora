@@ -1,0 +1,63 @@
+// Camora service architecture — rendered to docs/screenshots/00-architecture.png
+// Regenerate:  dot -Tpng -Gdpi=144 docs/diagrams/architecture.dot -o docs/screenshots/00-architecture.png
+digraph camora {
+  graph [rankdir=TB, bgcolor="#ffffff", fontname="Helvetica", splines=ortho,
+         nodesep=0.45, ranksep=0.62, pad=0.35, compound=true];
+  node  [shape=box, style="filled,rounded", fontname="Helvetica", fontsize=11,
+         penwidth=1.3, height=0.52, margin="0.20,0.11"];
+  edge  [fontname="Helvetica", fontsize=9, color="#7c8794", penwidth=1.1,
+         arrowsize=0.7];
+
+  subgraph cluster_clients {
+    label="  CLIENTS  "; fontsize=10; fontcolor="#5b6672";
+    style="filled,rounded"; fillcolor="#f6f8fa"; color="#d5dbe2"; penwidth=1.2;
+    web     [label="Web\napps/camora", fillcolor="#e8effa", color="#26619C", fontcolor="#16406e"];
+    desktop [label="Desktop\nElectron 41", fillcolor="#e8effa", color="#26619C", fontcolor="#16406e"];
+    mobile  [label="Mobile\nExpo", fillcolor="#e8effa", color="#26619C", fontcolor="#16406e"];
+    ext     [label="Extension", fillcolor="#e8effa", color="#26619C", fontcolor="#16406e"];
+  }
+
+  subgraph cluster_api {
+    label="  APIs  "; fontsize=10; fontcolor="#5b6672";
+    style="filled,rounded"; fillcolor="#f6f8fa"; color="#d5dbe2"; penwidth=1.2;
+    lumora [label="lumora-backend\nlive interview · Express 5\nClaude (Anthropic)",
+            fillcolor="#fdf3e0", color="#D4A043", fontcolor="#6b4c12"];
+    ascend [label="ascend-backend\nprep · study · billing · Express 5\nGemini (Google)",
+            fillcolor="#fdf3e0", color="#D4A043", fontcolor="#6b4c12"];
+  }
+
+  subgraph cluster_svc {
+    label="  SERVICES  "; fontsize=10; fontcolor="#5b6672";
+    style="filled,rounded"; fillcolor="#f6f8fa"; color="#d5dbe2"; penwidth=1.2;
+    ai     [label="ai-services\nFastAPI · speaker id\nGraphviz diagrams",
+            fillcolor="#e7f5ee", color="#1f9254", fontcolor="#115733"];
+    runner [label="code-runner\nsandboxed execution",
+            fillcolor="#e7f5ee", color="#1f9254", fontcolor="#115733"];
+    play   [label="playground-backend\nNomad · k8s / etcd / linux labs",
+            fillcolor="#e7f5ee", color="#1f9254", fontcolor="#115733"];
+  }
+
+  subgraph cluster_data {
+    label="  DATA  "; fontsize=10; fontcolor="#5b6672";
+    style="filled,rounded"; fillcolor="#f6f8fa"; color="#d5dbe2"; penwidth=1.2;
+    pg    [label="PostgreSQL + pgvector\nshared users · hybrid retrieval",
+           shape=cylinder, style=filled, fillcolor="#efe9f8", color="#6b46c1", fontcolor="#4a2f92"];
+    redis [label="Redis\ncache", shape=cylinder, style=filled,
+           fillcolor="#efe9f8", color="#6b46c1", fontcolor="#4a2f92"];
+  }
+
+  web     -> lumora [xlabel="SSE "];
+  web     -> ascend;
+  desktop -> lumora [xlabel="system audio "];
+  mobile  -> lumora;
+  ext     -> web    [xlabel="open tab ", style=dashed, constraint=false];
+
+  lumora -> ai;
+  lumora -> runner;
+  ascend -> ai;
+  ascend -> play;
+
+  lumora -> pg;
+  ascend -> pg;
+  ascend -> redis;
+}

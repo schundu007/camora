@@ -102,32 +102,9 @@ Graded SQL exercises with the source tables, the expected output and a live edit
 
 ## Architecture
 
-```
-                 ┌──────────────────────────┐
-  browser  ──────│  apps/camora (React 19)  │
-  desktop  ──────│  Vite 8 · Tailwind 4     │
-  mobile   ──────└────────────┬─────────────┘
-                              │
-              ┌───────────────┴────────────────┐
-              │                                │
-   ┌──────────▼──────────┐        ┌────────────▼────────────┐
-   │  lumora-backend     │        │  ascend-backend         │
-   │  live interview API │        │  prep / study / billing │
-   │  Claude (Anthropic) │        │  Gemini (Google)        │
-   └──────┬───────┬──────┘        └────────────┬────────────┘
-          │       │                            │
-          │       └──────────┬─────────────────┘
-          │                  │
-   ┌──────▼──────┐   ┌───────▼────────┐   ┌───────────────────┐
-   │ ai-services │   │  PostgreSQL    │   │ playground-       │
-   │  (FastAPI)  │   │  + pgvector    │   │ backend (Nomad)   │
-   │ speaker id  │   │  shared users  │   │ k8s / etcd / linux│
-   │ diagrams    │   └────────────────┘   └───────────────────┘
-   └─────────────┘
-                     ┌──────────────┐
-                     │ code-runner  │  sandboxed execution
-                     └──────────────┘
-```
+<img src="docs/screenshots/00-architecture.png" alt="Camora architecture: clients, the two API backends, supporting services and the data layer" width="100%" />
+
+<sub>Rendered from [`docs/diagrams/architecture.dot`](docs/diagrams/architecture.dot) — `dot -Tpng -Gdpi=144 docs/diagrams/architecture.dot -o docs/screenshots/00-architecture.png`</sub>
 
 | Package | What it is | Stack |
 |---|---|---|

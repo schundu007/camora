@@ -73,8 +73,9 @@ a call site imports from.** And when auditing, grepping for `@anthropic-ai/sdk` 
 enough — a raw `fetch('https://api.anthropic.com/v1/messages')` has slipped past exactly
 that check before. Grep for both, plus `x-api-key`.
 
-> **Note:** `apps/ascend-backend/.env.example` currently still lists `ANTHROPIC_API_KEY`.
-> That is leftover and is being removed — do not add one to your ascend `.env`.
+> Your ascend `.env` should have **no** `ANTHROPIC_API_KEY` at all. It answers on
+> `GOOGLE_AI_API_KEY` / `GEMINI_API_KEY`, and the one Anthropic branch in the service
+> (`routes/ask.js`) is gated behind a hard-coded `ANTHROPIC_ENABLED = false`.
 
 ## Repo conventions
 

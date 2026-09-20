@@ -41,3 +41,16 @@ scripts/**/.*-cookies.json
 
 # understand-anything knowledge graph (generated)
 .ua/
+
+# Repo-root scratch that kept getting committed by accident: ad-hoc review
+# screenshots, one-off audit dumps, and a stale duplicate of the DevOps topic
+# file (the real one is apps/camora/src/data/capra/topics/devopsTopics.js).
+# Scoped with a leading slash so only the repo ROOT is affected - topic
+# diagrams under apps/camora/public/diagrams/ must keep being tracked.
+/*.png
+/*.jpg
+/*.jpeg
+/*.pdf
+/devopsTopics.js
+/last_audit.json
+/prior_week.json
