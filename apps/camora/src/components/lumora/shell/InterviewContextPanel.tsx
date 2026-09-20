@@ -259,24 +259,6 @@ export const InterviewContextPanel = ({
           onChange={onCodingPlatformChange}
         />
       )}
-      {onMeetingPlatformChange && (
-        <ChoiceRow
-          n={2}
-          label="Where the interview is held"
-          value={meetingPlatform || 'zoom'}
-          options={MEETING_OPTIONS}
-          onChange={onMeetingPlatformChange}
-        />
-      )}
-      {onCodingPlatformChange && (
-        <ChoiceRow
-          n={3}
-          label="Coding platform they will share"
-          value={codingPlatform || 'auto'}
-          options={CODING_OPTIONS}
-          onChange={onCodingPlatformChange}
-        />
-      )}
     </>
   );
 };
