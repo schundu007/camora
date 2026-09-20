@@ -31,17 +31,18 @@ interface DocState {
   jdFile?: string;
   resume: string;
   resumeFile?: string;
-  /* coverLetter and prepMaterials no longer have cards of their own — they are
-     DERIVED from otherDocs by deriveOther(). Both are still sent to the backend
-     and still read where they always were: getCandidateBackground grounds
-     first-person answers on resume + coverLetter and never looks at
-     prepMaterials, so the two cannot simply be merged into one field. */
+  /* None of these four have a card of their own any more. There is ONE intake —
+     a drop zone and a URL box — and everything below is DERIVED from it by
+     deriveFromIntake(). The fields survive because the backend reads each one
+     differently: getCandidateBackground grounds first-person answers on
+     resume + coverLetter and never looks at prepMaterials or documentation,
+     so a single merged blob would put a resume where nothing answering "tell
+     me about yourself" reads it. The classification is the UI's job now
+     instead of the user's. */
   coverLetter: string;
   coverLetterFile?: string;
   prepMaterials: string;
   prepMaterialsFile?: string;
-  /** Everything that is not the JD or the resume, as one list. */
-  otherDocs: StudyDoc[];
   // Multi-document study material list. Sona reads every entry as
   // additional context during live sessions.
   studyDocs: StudyDoc[];
@@ -49,7 +50,19 @@ interface DocState {
   // folded into studyDocs, then kept undefined.
   studyMaterials?: string;
   studyMaterialsFile?: string;
+  /** The one list everything is added to, and the only one the user edits. */
+  intake: IntakeDoc[];
+  /** Superseded by intake. Read once on load, then left undefined. */
+  otherDocs?: StudyDoc[];
   sections: Record<string, any>;
+}
+
+type DocKind = 'jd' | 'resume' | 'cover' | 'other';
+
+interface IntakeDoc extends StudyDoc {
+  kind: DocKind;
+  /** Set when it came from the URL box rather than a file. */
+  url?: string;
 }
 
 interface PrepData {
@@ -61,60 +74,118 @@ interface PrepData {
 
 const EMPTY_DOC: DocState = {
   jd: '', resume: '', coverLetter: '', prepMaterials: '', studyDocs: [],
-  otherDocs: [],
+  intake: [],
   sections: {},
 };
 
-/* A cover letter is the second-strongest source of first-person truth after the
-   resume — getCandidateBackground puts it in the identity block, the one place
-   a claim about the candidate may come from. Prep material is study text and
-   deliberately is NOT in that block. So "Other documents" is one box in the UI
-   and still two fields underneath: the alternative is a cover letter landing in
-   prepMaterials, where nothing answering "tell me about yourself" reads it. */
-const COVER_LETTER_NAME = /cover[\s_-]*letter/i;
-const COVER_LETTER_BODY = /\b(dear\s+(hiring|recruit|sir|madam|mr\.?|ms\.?)|i am writing to (apply|express)|i'm writing to (apply|express))/i;
+/* ── Which of the four a document is ──────────────────────────────────────
+ * There used to be a card per kind, so the user classified every file before
+ * they could add it. Now one box takes everything and this decides, because
+ * the backend genuinely reads the four differently — see DocState.
+ *
+ * Filename first: it is what the user actually named the thing, and
+ * "Senior_DevOps_Resume.docx" is not a guess. Content second, on markers that
+ * only appear in one kind. Ambiguous falls to 'other', which is the harmless
+ * answer — and every row carries a dropdown, so a wrong guess is one click to
+ * fix rather than something to be clever about.
+ */
+const RE_NAME_RESUME = /\b(resume|r[ée]sum[ée]|\bcv\b|curriculum[\s_-]*vitae)\b/i;
+const RE_NAME_JD = /\b(jd|job[\s_-]*(description|post(ing)?|spec)|role[\s_-]*(description|spec)|requisition)\b/i;
+const RE_NAME_COVER = /cover[\s_-]*letter/i;
 
-const isCoverLetter = (d: StudyDoc): boolean =>
-  COVER_LETTER_NAME.test(d.name) || COVER_LETTER_BODY.test(d.content.slice(0, 400));
+const RE_BODY_COVER = /\b(dear\s+(hiring|recruit|sir|madam|mr\.?|ms\.?)|i am writing to (apply|express)|i'm writing to (apply|express))/i;
+// A posting describes a role it is offering. A resume describes work already
+// done. These phrases only ever appear on the offering side.
+// No trailing \b on these: a boundary after ':' needs a word character next,
+// and "Responsibilities:" is followed by a space — which silently killed every
+// alternative ending in a colon.
+const RE_BODY_JD = /\b(what you'?ll do|what you'?ll bring|responsibilities\s*:|qualifications\s*:|requirements\s*:|we are looking for|you will be responsible|minimum qualifications|preferred qualifications|equal opportunity employer|about the role)/i;
+// And these only on the having-done side.
+const RE_BODY_RESUME = /\b(work experience|professional experience|employment history|technical skills|education\s*:|certifications\s*:)/i;
 
-/** Split the one visible list back into the two fields the backend reads. */
-const deriveOther = (docs: StudyDoc[]): Pick<DocState, 'coverLetter' | 'coverLetterFile' | 'prepMaterials' | 'prepMaterialsFile'> => {
-  const letters = docs.filter(isCoverLetter);
-  const rest = docs.filter(d => !isCoverLetter(d));
-  const join = (list: StudyDoc[]) =>
+/* Underscores are word characters, so \b never fires inside
+   "Senior_DevOps_Resume.docx" and the most common resume filename there is
+   classified as 'other'. Separators become spaces before matching. */
+const nameWords = (name: string) => name.replace(/[_.\-]+/g, ' ');
+
+export const classifyDoc = (name: string, content: string): DocKind => {
+  const n = nameWords(name);
+  if (RE_NAME_COVER.test(n)) return 'cover';
+  if (RE_NAME_RESUME.test(n)) return 'resume';
+  if (RE_NAME_JD.test(n)) return 'jd';
+  const head = content.slice(0, 3000);
+  if (RE_BODY_COVER.test(head)) return 'cover';
+  const jd = RE_BODY_JD.test(head);
+  const resume = RE_BODY_RESUME.test(head);
+  // Both sets of markers means a JD pasted alongside notes, or a resume
+  // quoting the posting. Neither is safe to claim, so neither wins.
+  if (jd && !resume) return 'jd';
+  if (resume && !jd) return 'resume';
+  return 'other';
+};
+
+const KIND_LABEL: Record<DocKind, string> = {
+  jd: 'Job description',
+  resume: 'Resume',
+  cover: 'Cover letter',
+  other: 'Other',
+};
+
+/** Split the one list back into the fields the backend reads. */
+const deriveFromIntake = (docs: IntakeDoc[]): Pick<DocState, 'jd' | 'jdFile' | 'resume' | 'resumeFile' | 'coverLetter' | 'coverLetterFile' | 'prepMaterials' | 'prepMaterialsFile' | 'studyDocs'> => {
+  const of = (k: DocKind) => docs.filter(d => d.kind === k);
+  // More than one of a kind is legitimate — two resumes tailored differently,
+  // a JD plus the team page. Joining keeps both rather than picking a winner.
+  const join = (list: IntakeDoc[]) =>
     list.map(d => (list.length > 1 ? `### ${d.name}\n${d.content}` : d.content)).join('\n\n');
+  const [jd, resume, cover, other] = [of('jd'), of('resume'), of('cover'), of('other')];
   return {
-    coverLetter: join(letters),
-    coverLetterFile: letters[0]?.name,
-    prepMaterials: join(rest),
-    prepMaterialsFile: rest[0]?.name,
+    jd: join(jd), jdFile: jd[0]?.name,
+    resume: join(resume), resumeFile: resume[0]?.name,
+    coverLetter: join(cover), coverLetterFile: cover[0]?.name,
+    // Everything else goes as `documentation`, the array the generator injects
+    // entry by entry. prepMaterials was the single-string version of the same
+    // thing and loses the filenames, so it stays empty.
+    prepMaterials: '', prepMaterialsFile: undefined,
+    studyDocs: other.map(({ name, content }) => ({ name, content })),
   };
 };
 
-/** Fold a legacy single-string studyMaterials field into the studyDocs
- *  array so users who uploaded one doc on v8 don't lose it on first read.
+/** Bring every older shape forward into `intake`.
  *
- *  Does the same for otherDocs: anyone who filled the old Cover Letter and
- *  Prep Materials cards has those as bare strings, and the cards they were
- *  typed into no longer exist. Seeding the list from them keeps the content
- *  visible and removable instead of stranded in a field with no UI. */
+ *  Three generations are in the wild: a single studyMaterials string, the four
+ *  named fields, and the short-lived otherDocs list. All of them held content
+ *  in fields that no longer have any UI, so without this it would still be
+ *  sent to the backend while being invisible and unremovable on screen. */
 const migrateStudyDocs = (doc: any): DocState  => {
   if (!doc) return { ...EMPTY_DOC };
-  const studyDocs: StudyDoc[] = Array.isArray(doc.studyDocs) ? doc.studyDocs : [];
-  if (!studyDocs.length && typeof doc.studyMaterials === 'string' && doc.studyMaterials.trim()) {
-    studyDocs.push({ name: doc.studyMaterialsFile || 'Study material', content: doc.studyMaterials });
+  if (Array.isArray(doc.intake) && doc.intake.length) {
+    return { ...EMPTY_DOC, ...doc, intake: doc.intake, otherDocs: undefined, studyMaterials: undefined, studyMaterialsFile: undefined };
   }
-  const otherDocs: StudyDoc[] = Array.isArray(doc.otherDocs) ? doc.otherDocs : [];
-  if (!otherDocs.length) {
-    if (typeof doc.coverLetter === 'string' && doc.coverLetter.trim()) {
-      otherDocs.push({ name: doc.coverLetterFile || 'Cover letter', content: doc.coverLetter });
-    }
-    if (typeof doc.prepMaterials === 'string' && doc.prepMaterials.trim()) {
-      otherDocs.push({ name: doc.prepMaterialsFile || 'Prep material', content: doc.prepMaterials });
-    }
+
+  const intake: IntakeDoc[] = [];
+  const push = (name: string | undefined, content: unknown, kind: DocKind, fallback: string) => {
+    if (typeof content !== 'string' || !content.trim()) return;
+    intake.push({ name: name || fallback, content, kind });
+  };
+  push(doc.jdFile, doc.jd, 'jd', 'Job description');
+  push(doc.resumeFile, doc.resume, 'resume', 'Resume');
+  push(doc.coverLetterFile, doc.coverLetter, 'cover', 'Cover letter');
+  push(doc.prepMaterialsFile, doc.prepMaterials, 'other', 'Prep material');
+  push(doc.studyMaterialsFile, doc.studyMaterials, 'other', 'Study material');
+  for (const d of (Array.isArray(doc.otherDocs) ? doc.otherDocs : [])) {
+    if (d?.content?.trim()) intake.push({ name: d.name || 'Document', content: d.content, kind: classifyDoc(d.name || '', d.content) });
   }
-  return { ...EMPTY_DOC, ...doc, studyDocs, otherDocs, studyMaterials: undefined, studyMaterialsFile: undefined };
+  for (const d of (Array.isArray(doc.studyDocs) ? doc.studyDocs : [])) {
+    if (d?.content?.trim()) intake.push({ name: d.name || 'Document', content: d.content, kind: 'other' });
+  }
+
+  return {
+    ...EMPTY_DOC, ...doc, intake, ...deriveFromIntake(intake),
+    otherDocs: undefined, studyMaterials: undefined, studyMaterialsFile: undefined,
+  };
 }
+
 
 const INITIAL_STATE: PrepData = {
   companies: [],
@@ -1942,124 +2013,186 @@ const savePrepData = (s: PrepData) => {
   writePrepRaw(s);
 }
 
-const UploadZone = ({ label, required, value, fileName, onUpload, onPaste: _onPaste, onClickOverride }: {
-  label: string; required?: boolean; value: string; fileName?: string;
-  onUpload: (file: File) => void; onPaste: (text: string) => void;
-  onClickOverride?: () => void;
-}) => {
+const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+
+const IntakeZone = ({ onAdd, onPaste }: { onAdd: (files: File[]) => void; onPaste: () => void }) => {
   const ref = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setDragOver(false);
-    const file = e.dataTransfer?.files?.[0];
-    if (file) onUpload(file);
-  };
-
   return (
     <div
-      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-[border-color,background-color,box-shadow] min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
-      style={{ background: value ? 'var(--accent-subtle)' : 'var(--bg-elevated)', border: `1px solid ${value ? 'var(--cam-primary)' : 'var(--border)'}` }}
-      onClick={() => { if (onClickOverride) onClickOverride(); else ref.current?.click(); }}
-      onDrop={handleDrop}
+      className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-[border-color,background-color] min-h-[112px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
+      style={{ background: 'var(--bg-elevated)', border: `1px dashed ${dragOver ? 'var(--cam-primary)' : 'var(--border)'}` }}
+      onClick={() => ref.current?.click()}
+      onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = Array.from(e.dataTransfer?.files || []); if (f.length) onAdd(f); }}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
     >
-      <input ref={ref} type="file" accept=".pdf,.docx,.doc,.txt,.md" className="hidden"
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) onUpload(f); e.target.value = ''; }} />
-      {value ? (
-        <>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center mb-2" style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-          </div>
-          <span className="text-xs font-semibold w-full px-2 truncate text-center" style={{ color: 'var(--cam-primary)' }} data-tip={fileName}>{fileName || 'Content added'}</span>
-          <span className="text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>{value.length.toLocaleString()} characters</span>
-        </>
-      ) : (
-        <>
-          <svg className="w-6 h-6 mb-2" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-            {label}{required && <span style={{ color: 'var(--danger)' }}>*</span>}
-          </span>
-          <span className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {onClickOverride ? 'Paste URL, text, or upload' : 'Drop or click'}
-          </span>
-        </>
-      )}
+      <input ref={ref} type="file" multiple accept=".pdf,.docx,.doc,.txt,.md" className="hidden"
+        onChange={(e) => { const f = Array.from(e.target.files || []); if (f.length) onAdd(f); e.target.value = ''; }} />
+      <svg className="w-6 h-6 mb-2" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+      </svg>
+      <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+        Drop files or click — any document
+      </span>
+      <span className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        Job description, resume, cover letter, notes — PDF, DOCX, TXT, MD
+      </span>
+      {/* A job description is usually copied out of a posting, not saved as a
+          file. Without this the only paste path was a modal nothing opened. */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onPaste(); }}
+        className="mt-2 text-[12px] font-semibold underline underline-offset-2 hover:opacity-80"
+        style={{ color: 'var(--cam-primary)' }}
+      >
+        or paste text
+      </button>
     </div>
   );
-}
+};
 
-const LUMORA_API_URL = import.meta.env.VITE_LUMORA_API_URL || 'https://lumorab.cariara.com';
+/* One box for every link. A github.com/owner/repo still goes to the repo
+   reader, which walks the tree and returns many files; anything else is
+   fetched as a single page. Two boxes made the user route that themselves. */
+const GITHUB_REPO_RE = /^https?:\/\/(www\.)?github\.com\/[^/]+\/[^/]+\/?$/i;
 
-const GitHubRepoFetcher = ({ onDocs }: { onDocs: (docs: StudyDoc[]) => void }) => {
+const IntakeUrlBox = ({ onDocs, companySlug }: { onDocs: (docs: IntakeDoc[]) => void; companySlug?: string }) => {
   const { token } = useAuth();
   const [url, setUrl] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
 
-  const handleFetch = async () => {
-    const trimmed = url.trim();
-    if (!trimmed || !token) return;
-    setStatus('loading');
-    setMsg('');
+  const go = async () => {
+    const link = url.trim();
+    if (!link || busy) return;
+    setBusy(true); setMsg(null);
     try {
-      const res = await fetch(`${LUMORA_API_URL}/api/v1/github/fetch-repo`, {
+      if (GITHUB_REPO_RE.test(link)) {
+        const res = await fetch(`${LUMORA_API_URL}/api/v1/github/fetch-repo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ url: link }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { setMsg({ tone: 'err', text: data.error || 'Could not read that repo' }); return; }
+        const docs: IntakeDoc[] = (data.docs || []).map((d: StudyDoc) => ({ ...d, kind: 'other' as DocKind, url: link }));
+        if (!docs.length) { setMsg({ tone: 'err', text: 'No readable files in that repo' }); return; }
+        onDocs(docs);
+        setMsg({ tone: 'ok', text: `Added ${docs.length} files from ${data.repoName || 'the repo'}` });
+        setUrl('');
+        return;
+      }
+      /* With a company selected the link is ALSO stored and RAG-indexed, the
+         same as a dropped file is — one call does both, and it shows up in
+         Research Docs below. Without one there is nowhere to file it, so it
+         is only read into the prep state. */
+      const endpoint = companySlug ? 'url' : 'fetch-url';
+      const res = await fetch(`${API_URL}/api/v1/prep/docs/${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ url: trimmed }),
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        credentials: 'include',
+        body: JSON.stringify(companySlug ? { url: link, company_slug: companySlug } : { url: link }),
       });
-      const data = await res.json();
-      if (!res.ok) { setStatus('error'); setMsg(data.error || 'Fetch failed'); return; }
-      onDocs(data.docs || []);
-      setStatus('done');
-      setMsg(`Added ${data.docs?.length ?? 0} files from ${data.repoName}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setMsg({ tone: 'err', text: data.error || `Could not open that link (HTTP ${res.status})` }); return; }
+      const content: string = data.text || '';
+      if (!content.trim()) { setMsg({ tone: 'err', text: 'Nothing readable on that page' }); return; }
+      const name: string = data.title || link;
+      onDocs([{ name, content, kind: classifyDoc(name, content), url: data.url || link }]);
+      setMsg({ tone: 'ok', text: `Added ${name}` });
       setUrl('');
     } catch (e: any) {
-      setStatus('error');
-      setMsg(e?.message || 'Network error');
+      setMsg({ tone: 'err', text: e?.message || 'Network error' });
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
-    <div className="mb-3 rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-      <div className="flex items-center gap-2 px-3 py-2" style={{ background: 'var(--bg-elevated)' }}>
-        {/* GitHub mark icon */}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ color: 'var(--text-secondary)', flexShrink: 0 }}>
-          <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+    <div className="mt-2">
+      <div className="flex items-center gap-2 rounded-lg pl-2.5 pr-1.5"
+        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ color: 'var(--text-muted)', flexShrink: 0 }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 13a5 5 0 007.07 0l2.12-2.12a5 5 0 00-7.07-7.07L10.6 5.34M14 11a5 5 0 00-7.07 0L4.8 13.12a5 5 0 007.07 7.07l1.5-1.5" />
         </svg>
         <input
           type="url"
           value={url}
-          onChange={e => { setUrl(e.target.value); setStatus('idle'); setMsg(''); }}
-          onKeyDown={e => { if (e.key === 'Enter') handleFetch(); }}
-          placeholder="https://github.com/owner/repo"
-          className="flex-1 bg-transparent text-[12px] outline-none"
+          onChange={e => { setUrl(e.target.value); setMsg(null); }}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); go(); } }}
+          placeholder="Paste a URL — job posting, a page, or a GitHub repo"
+          disabled={busy}
+          className="flex-1 min-w-0 bg-transparent h-9 text-[12px] outline-none placeholder:opacity-50"
           style={{ color: 'var(--text-primary)' }}
         />
         <button
-          onClick={handleFetch}
-          disabled={!url.trim() || status === 'loading'}
-          className="px-2.5 py-1 rounded text-[12px] font-bold uppercase tracking-wide shrink-0 disabled:opacity-40 transition-opacity"
+          type="button"
+          onClick={go}
+          disabled={!url.trim() || busy}
+          className="px-2.5 h-7 rounded-md text-[12px] font-bold uppercase tracking-wide shrink-0 disabled:opacity-40 transition-opacity"
           style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
         >
-          {status === 'loading' ? '…' : 'Fetch'}
+          {busy ? '…' : 'Fetch'}
         </button>
       </div>
       {msg && (
-        <div className="px-3 py-1.5 text-[12px]" style={{ color: status === 'error' ? 'var(--danger)' : '#00ea64', background: 'var(--bg-surface)' }}>
-          {msg}
+        <div className="px-1 pt-1.5 text-[12px]" style={{ color: msg.tone === 'err' ? 'var(--danger)' : 'var(--cam-primary)' }}>
+          {msg.text}
         </div>
       )}
     </div>
   );
-}
+};
 
-/** Multi-document dropzone for Study Materials. Accepts multiple files at
- *  once (drag-drop or file picker), shows a chip per uploaded doc, and
- *  lets the user delete individual entries. */
+/* A row per document, with what it was classified as. The dropdown is the
+   whole reason one box can replace four cards: the guess is visible and
+   correctable, so being wrong costs a click instead of a misfiled resume. */
+const IntakeRow = ({ doc, onKind, onRemove }: {
+  doc: IntakeDoc;
+  onKind: (k: DocKind) => void;
+  onRemove: () => void;
+}) => (
+  <li className="flex items-center gap-2.5 px-3 py-2 rounded-lg"
+    style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+    <span style={{ color: 'var(--cam-primary)', flexShrink: 0 }}>
+      {doc.url ? (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 13a5 5 0 007.07 0l2.12-2.12a5 5 0 00-7.07-7.07L10.6 5.34M14 11a5 5 0 00-7.07 0L4.8 13.12a5 5 0 007.07 7.07l1.5-1.5" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )}
+    </span>
+    <span className="flex-1 text-[12px] font-medium truncate min-w-0" style={{ color: 'var(--text-primary)' }} data-tip={doc.url || doc.name}>
+      {doc.name}
+    </span>
+    <span className="text-[12px] shrink-0" style={{ color: 'var(--text-muted)' }}>
+      {doc.content.length.toLocaleString()} ch
+    </span>
+    <select
+      value={doc.kind}
+      onChange={e => onKind(e.target.value as DocKind)}
+      aria-label={`What kind of document ${doc.name} is`}
+      className="shrink-0 h-7 rounded-md text-[12px] px-1.5 outline-none"
+      style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+    >
+      {(Object.keys(KIND_LABEL) as DocKind[]).map(k => (
+        <option key={k} value={k}>{KIND_LABEL[k]}</option>
+      ))}
+    </select>
+    <button type="button" onClick={onRemove} aria-label={`Remove ${doc.name}`}
+      className="shrink-0 w-6 h-6 rounded flex items-center justify-center opacity-60 hover:opacity-100"
+      style={{ color: 'var(--text-muted)' }}>
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </li>
+);
+
 /* ── Sidebar action icons ────────────────────────────────────────────────
    A 34px square that states what it does on hover and to a screen reader, so
    the glyph never has to carry the whole meaning on its own. */
@@ -2122,86 +2255,6 @@ const TrashIcon = () => (
   </svg>
 );
 
-const MultiUploadZone = ({ docs, onAdd, onRemove, label, hint }: {
-  docs: StudyDoc[];
-  onAdd: (files: File[]) => void;
-  onRemove: (index: number) => void;
-  label?: string;
-  hint?: string;
-}) => {
-  const ref = useRef<HTMLInputElement>(null);
-  const [dragOver, setDragOver] = useState(false);
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault(); setDragOver(false);
-    const files = Array.from(e.dataTransfer?.files || []);
-    if (files.length) onAdd(files);
-  };
-
-  return (
-    <div className="space-y-2">
-      <div
-        className={`rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-[border-color,background-color,box-shadow] min-h-[120px] ${dragOver ? 'ring-2 ring-[var(--cam-primary)]' : ''}`}
-        style={{ background: 'var(--bg-elevated)', border: `1px dashed ${dragOver ? 'var(--cam-primary)' : 'var(--border)'}` }}
-        onClick={() => ref.current?.click()}
-        onDrop={handleDrop}
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-        onDragLeave={() => setDragOver(false)}
-      >
-        <input
-          ref={ref}
-          type="file"
-          multiple
-          accept=".pdf,.docx,.doc,.txt,.md"
-          className="hidden"
-          onChange={(e) => {
-            const files = Array.from(e.target.files || []);
-            if (files.length) onAdd(files);
-            e.target.value = '';
-          }}
-        />
-        <svg className="w-6 h-6 mb-2" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-        </svg>
-        <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-          {docs.length ? 'Add more documents' : (label || 'Drop files or click — multiple OK')}
-        </span>
-        <span className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-          {hint || 'PDF, DOCX, TXT, MD — Sona will read every file'}
-        </span>
-      </div>
-      {docs.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {docs.map((d, i) => (
-            <div
-              key={`${d.name}-${i}`}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px]"
-              style={{ background: 'var(--accent-subtle)', border: '1px solid var(--cam-primary)', color: 'var(--cam-primary)' }}
-            >
-              <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span className="font-semibold truncate max-w-[200px]" data-tip={d.name}>{d.name}</span>
-              <span className="text-[12px] opacity-70">{d.content.length.toLocaleString()} ch</span>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onRemove(i); }}
-                className="ml-1 opacity-60 hover:opacity-100"
-                aria-label={`Remove ${d.name}`}
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Parse JD text into structured sections and render beautifully */
 const FormattedJD = ({ text }: { text: string }) => {
   if (!text?.trim()) return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No job description added yet.</p>;
 
@@ -3246,6 +3299,11 @@ export const LumoraDocsPanel = ({
   const generatedCount = SIDEBAR_SECTIONS.filter((s) => s.id !== 'input' && s.id !== 'jd-view' && state.sections[s.id]).length;
 
   const hasRequiredDocs = state.jd.trim().length > 0 && state.resume.trim().length > 0;
+  /* One slug for both the intake's link indexing and the Research Docs list,
+     so a link cannot be filed under a different company than the list reads. */
+  const researchSlug = prepData.activeCompany
+    ? prepData.activeCompany.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    : 'default';
 
   // Auto-trigger generation when arriving from a job page with JD pre-seeded
   // and resume is available (either carried over or already saved).
@@ -3651,90 +3709,78 @@ export const LumoraDocsPanel = ({
       <div className="flex-1 flex flex-col min-w-0 overflow-auto">
         {activeSection === 'input' ? (
           <div className="p-6 max-w-4xl">
-            {/* Materials */}
+            {/* ONE intake. It was four named cards, then three zones plus two
+                URL boxes across Materials, Study Materials and Research Docs —
+                five places to add a document, each asking what kind it was
+                before it would take it. classifyDoc answers that instead, and
+                every row carries a dropdown to correct it. */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Materials</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <UploadZone label="Job Description" required value={state.jd} fileName={state.jdFile}
-                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, jd: t, jdFile: f.name })); }}
-                  onPaste={(t) => setState(p => ({ ...p, jd: t }))}
-                  onClickOverride={() => { setJdEditText(state.jd || ''); setJdModalOpen(true); }} />
-                <UploadZone label="Resume" required value={state.resume} fileName={state.resumeFile}
-                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, resume: t, resumeFile: f.name })); }}
-                  onPaste={(t) => setState(p => ({ ...p, resume: t }))} />
-              </div>
-              {/* One box for everything that is not the JD or the resume. It
-                  was two cards, Cover Letter and Prep Materials, which asked
-                  the user to classify a file before they could add it. */}
-              <div className="mt-3">
-                <MultiUploadZone
-                  docs={state.otherDocs}
-                  label="Other documents"
-                  hint="Cover letter, notes, anything else — PDF, DOCX, TXT, MD"
-                  onAdd={async (files) => {
-                    const added: StudyDoc[] = [];
-                    for (const f of files) {
-                      try {
-                        uploadToResearchDocs(f);
-                        const content = await extractFile(f);
-                        if (content.trim()) added.push({ name: f.name, content });
-                      } catch (err) {
-                        console.warn('[other] extract failed', f.name, err);
-                      }
-                    }
-                    if (added.length) setState(p => {
-                      const otherDocs = [...p.otherDocs, ...added];
-                      return { ...p, otherDocs, ...deriveOther(otherDocs) };
-                    });
-                  }}
-                  onRemove={(idx) => setState(p => {
-                    const otherDocs = p.otherDocs.filter((_, i) => i !== idx);
-                    return { ...p, otherDocs, ...deriveOther(otherDocs) };
-                  })}
-                />
-              </div>
-            </div>
-
-            {/* Study Materials — multi-document. Sona reads every entry
-                here as additional context during the live interview. */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />
-                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Study Materials</span>
                 <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                  {state.studyDocs.length === 0 ? 'Add as many as you want — Sona reads them all' : `${state.studyDocs.length} document${state.studyDocs.length === 1 ? '' : 's'} loaded`}
+                  {state.intake.length === 0
+                    ? 'Drop the job description and your resume to start'
+                    : `${state.intake.length} document${state.intake.length === 1 ? '' : 's'}`}
                 </span>
               </div>
-              {/* GitHub repo fetcher */}
-              <GitHubRepoFetcher onDocs={(docs) => setState(p => ({ ...p, studyDocs: [...p.studyDocs, ...docs] }))} />
-              <MultiUploadZone
-                docs={state.studyDocs}
+
+              <IntakeZone
+                onPaste={() => { setJdEditText(''); setJdModalOpen(true); }}
                 onAdd={async (files) => {
-                  const added: StudyDoc[] = [];
+                  const added: IntakeDoc[] = [];
                   for (const f of files) {
                     try {
+                      uploadToResearchDocs(f);
                       const content = await extractFile(f);
-                      if (content.trim()) added.push({ name: f.name, content });
+                      if (content.trim()) added.push({ name: f.name, content, kind: classifyDoc(f.name, content) });
                     } catch (err) {
-                      console.warn('[study] extract failed', f.name, err);
+                      console.warn('[intake] extract failed', f.name, err);
                     }
                   }
-                  if (added.length) setState(p => ({ ...p, studyDocs: [...p.studyDocs, ...added] }));
+                  if (added.length) setState(p => {
+                    const intake = [...p.intake, ...added];
+                    return { ...p, intake, ...deriveFromIntake(intake) };
+                  });
                 }}
-                onRemove={(idx) => setState(p => ({ ...p, studyDocs: p.studyDocs.filter((_, i) => i !== idx) }))}
               />
+
+              <IntakeUrlBox
+                companySlug={researchSlug}
+                onDocs={(docs) => setState(p => {
+                  const intake = [...p.intake, ...docs];
+                  return { ...p, intake, ...deriveFromIntake(intake) };
+                })}
+              />
+
+              {state.intake.length > 0 && (
+                <ul className="mt-3 space-y-1.5">
+                  {state.intake.map((d, i) => (
+                    <IntakeRow
+                      key={`${d.name}-${i}`}
+                      doc={d}
+                      onKind={(kind) => setState(p => {
+                        const intake = p.intake.map((x, xi) => (xi === i ? { ...x, kind } : x));
+                        return { ...p, intake, ...deriveFromIntake(intake) };
+                      })}
+                      onRemove={() => setState(p => {
+                        const intake = p.intake.filter((_, xi) => xi !== i);
+                        return { ...p, intake, ...deriveFromIntake(intake) };
+                      })}
+                    />
+                  ))}
+                </ul>
+              )}
             </div>
 
-            {/* Research Docs — RAG-indexed documents Sona reads during live sessions */}
+            {/* Research Docs — the RAG-indexed copy of everything added above.
+                It has no inputs of its own any more: a dropped file already
+                went through uploadToResearchDocs, and a pasted link is indexed
+                by the same call that reads it, so its own upload button and
+                URL box were a second and third way to do what the one intake
+                does. */}
             <div className="mt-6">
-              <ResearchDocsCard
-                companySlug={prepData.activeCompany
-                  ? prepData.activeCompany.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-                  : 'default'}
-              />
+              <ResearchDocsCard companySlug={researchSlug} />
             </div>
 
             {/* Status */}
@@ -3923,7 +3969,19 @@ export const LumoraDocsPanel = ({
               </button>
               <button
                 onClick={() => {
-                  if (jdEditText.trim()) setState(p => ({ ...p, jd: jdEditText.trim(), jdFile: undefined }));
+                  /* Adds to the intake like any other document, rather than
+                     assigning state.jd — that field is derived now, so a direct
+                     write is erased by the next intake change. Classified from
+                     the text, correctable in the row. */
+                  const text = jdEditText.trim();
+                  if (text) setState(p => {
+                    const intake: IntakeDoc[] = [...p.intake, {
+                      name: 'Pasted text',
+                      content: text,
+                      kind: classifyDoc('', text),
+                    }];
+                    return { ...p, intake, ...deriveFromIntake(intake) };
+                  });
                   closeJdModal();
                 }}
                 disabled={!jdEditText.trim()}

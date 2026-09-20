@@ -178,6 +178,44 @@ router.post('/upload', jwtAuth, upload.single('file'), async (req, res) => {
   }
 });
 
+/* Read a link and hand back its text, without storing anything.
+ *
+ * The Materials intake keeps its documents in the user's prep state, not in
+ * the R2/RAG store that /url writes to, so it needs the extraction and the
+ * SSRF checks but not the persistence. Same guards, different destination. */
+router.post('/fetch-url', jwtAuth, async (req, res) => {
+  try {
+    const rawUrl = typeof req.body.url === 'string' ? req.body.url.trim() : '';
+    if (!rawUrl) return res.status(400).json({ error: 'url required' });
+
+    let fetched;
+    try {
+      fetched = await safeFetch(rawUrl);
+    } catch (err) {
+      return res.status(400).json({ error: err?.message || 'Could not open that link' });
+    }
+    const { res: upstream, finalUrl } = fetched;
+
+    const contentType = (upstream.headers.get('content-type') || '').toLowerCase();
+    if (!/^(text\/|application\/(json|xhtml))/.test(contentType)) {
+      return res.status(400).json({ error: 'That link is not a page or a text document. Upload the file instead.' });
+    }
+
+    const raw = (await upstream.text()).slice(0, 2 * 1024 * 1024);
+    const isHtml = /html|xhtml/.test(contentType);
+    const text = isHtml ? htmlToText(raw) : raw.trim();
+    if (text.length < 40) {
+      return res.status(400).json({ error: 'Nothing readable on that page — it is probably rendered by JavaScript.' });
+    }
+
+    const title = (isHtml ? titleOf(raw, finalUrl.hostname) : finalUrl.pathname.split('/').pop() || finalUrl.hostname).slice(0, 160);
+    res.json({ title, url: finalUrl.href, text: text.slice(0, 400_000) });
+  } catch (err) {
+    logger.error({ err }, '[prepDocs] fetch-url error');
+    res.status(500).json({ error: 'Could not read that link' });
+  }
+});
+
 /* Add a link. Same table and same indexing path as an upload, so the card can
  * list files and links together in the order they were added. */
 router.post('/url', jwtAuth, async (req, res) => {
@@ -245,7 +283,10 @@ router.post('/url', jwtAuth, async (req, res) => {
       body: JSON.stringify({ r2_key: r2Key, user_id: userId, company_slug: companySlug }),
     }).catch(err => console.warn('[prepDocs] reindex trigger failed:', err.message));
 
-    res.json({ id: docId, filename, source_url: finalUrl.href, size_bytes: body.length });
+    // Returns the text as well, so one call can both index the link and hand
+    // it to the caller's own state — otherwise the intake needs a second fetch
+    // of the same page to show what it added.
+    res.json({ id: docId, filename, title: filename, url: finalUrl.href, source_url: finalUrl.href, size_bytes: body.length, text: text.slice(0, 400_000) });
   } catch (err) {
     logger.error({ err }, '[prepDocs] url error');
     res.status(500).json({ error: 'Could not add that link' });
