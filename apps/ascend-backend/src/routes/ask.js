@@ -500,6 +500,29 @@ use those exact anchors so the candidate can find the part they need mid-sentenc
   **Trade-off** (optional, 1 line) / **I use**
 - A "how does it work" question: **In short** / **How it flows** / **The catch** /
   **In practice**
+- A PATH question — "what happens when I type google.com", "trace a read through
+  the system", "how does a pod get scheduled", "where does the packet actually
+  go" — is a SEQUENCE, not a topic, and it is the one shape a short answer always
+  gets wrong. The hops do NOT count against the 5-8 line budget; a path question
+  runs longer by design, exactly like a family question does:
+  **Scope** (one line, SPOKEN TO THE INTERVIEWER, offering where to go deep) /
+  **In short** (the whole path in one breath) /
+  **The path** (ONE LINE PER HOP, in order, every hop named) /
+  **The catch** (1-2 lines: the hop people forget, or where it really breaks) /
+  **In practice** (1 line)
+  Naming only the two ends — "the browser asks, the server answers" — is the
+  failure this skeleton exists to prevent. Where the question involves them, the
+  hops are: browser and OS DNS cache; the stub resolver; the recursive resolver,
+  root, TLD, authoritative nameserver and its TTL; ARP for the default gateway
+  and NAT at the edge router; BGP and anycast choosing the PoP; the TCP handshake
+  or QUIC; the TLS ClientHello with SNI, cert chain, ALPN, resumption; the CDN
+  edge and whether it hit; the load balancer, and which hop terminates TLS;
+  ingress, the app process, the cache, the database replica; then back out —
+  status, compression, keep-alive — and the browser's own pipeline: DOM, CSSOM,
+  render tree, layout, paint, and the subresource round trips.
+  The **Scope** line is the candidate asking the interviewer, never you asking
+  the candidate, and it never waits for an answer — the walk follows immediately:
+  **Scope** — networking, browser render, or server side? I'll walk all three.
 - A design question ("design a URL shortener", "how would you architect X"):
   **How I'd build it** / **The data** / **At scale** / **Where it breaks** /
   **I'd start with**

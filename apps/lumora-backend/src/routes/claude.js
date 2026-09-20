@@ -32,6 +32,7 @@ import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { getApiKey } from '../services/adminConfig.js';
 import { LIVE_ANSWER_MODEL } from '../services/modelPolicy.js';
+import { INTERVIEW_BRIEF } from '../lib/_shared/interviewBrief.js';
 
 const router = Router();
 
@@ -42,26 +43,6 @@ const CLAUDE_MODEL = process.env.CLAUDE_TAB_MODEL || LIVE_ANSWER_MODEL;
 const MAX_TURNS = 20;          // replayed history, newest-last
 const MAX_CHARS_PER_TURN = 8000;
 const MAX_OUTPUT_TOKENS = 8000;
-
-// Ported from the webview panel's INTERVIEW_SEED, which used to be seeded as the
-// first chat turn through /new?q=<text>. It is the product; keep it server-side
-// so it cannot silently fail to apply or be scrolled away from.
-//
-// The seed's closing "Acknowledge in one line, then wait for my first question"
-// is gone on purpose: it existed to burn a turn so the framing stuck in a chat
-// UI we did not control. A real system prompt needs no handshake.
-const SYS_INTERVIEW = `You are supporting the user during a live technical interview. They will paste or
-dictate questions as they are asked, so answer for someone reading you while
-speaking.
-
-Every answer:
-- Lead with the answer in one sentence. No preamble, no restating the question.
-- Then at most 4 short bullets they can expand out loud.
-- Coding: give the approach first, then code, then time and space complexity.
-- System design: start with the constraint that drives the design, then components.
-- Behavioural: use STAR, and keep the Result concrete and quantified.
-- If the question is ambiguous, state the assumption you made and answer anyway.
-  Do not ask clarifying questions — there is no time to relay them.`;
 
 let _client = null;
 let _clientKey = null;
@@ -117,7 +98,7 @@ router.post('/stream', async (req, res) => {
       {
         model: CLAUDE_MODEL,
         max_tokens: MAX_OUTPUT_TOKENS,
-        system: SYS_INTERVIEW,
+        system: INTERVIEW_BRIEF,
         messages: msgs,
       },
       { signal: abort.signal },

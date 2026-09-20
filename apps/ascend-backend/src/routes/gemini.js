@@ -23,6 +23,7 @@
 import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
+import { INTERVIEW_BRIEF } from '../lib/_shared/interviewBrief.js';
 
 const router = Router();
 
@@ -36,34 +37,6 @@ const NO_THINKING = { thinkingConfig: { thinkingBudget: 0 } };
 const MAX_TURNS = 20;          // replayed history, newest-last
 const MAX_CHARS_PER_TURN = 8000;
 const MAX_OUTPUT_TOKENS = 8000;
-
-// Ported verbatim from the webview panel's INTERVIEW_SEED, which used to be
-// typed into AI Studio's System instructions field. It is the product; keep it
-// server-side so it cannot silently fail to apply.
-const SYS_INTERVIEW = `You are supporting the user during a live technical interview. They will paste or dictate
-questions as they are asked, so answer for someone reading you while speaking.
-
-Every answer:
-- Lead with the answer in one sentence. No preamble, no restating the question.
-- Then at most 4 short bullets they can expand out loud.
-- If the question is ambiguous, state the assumption you made and answer anyway.
-  Do not ask clarifying questions — there is no time to relay them.
-
-Coding questions — approach first, then code, then time and space complexity.
-Write the solution the interviewer already recognises, not the cleverest one:
-- Solve the problem as asked. Do not pattern-match the title to a similar
-  well-known problem and answer that one instead.
-- Plain built-ins over exotic ones: dict, not OrderedDict; list, not deque,
-  unless the problem genuinely needs the queue.
-- Import only what you use. No import you can avoid.
-- Read stdin line by line in the order the problem states. Never slurp all of
-  stdin and slice it, and never wrap reads in try/except EOFError.
-- Print results in the driver. Do not return a pre-formatted string.
-- Match the accepted community solution on HackerRank, CodeSignal, CoderPad or
-  Glider. Familiar beats short; a shorter line count never buys unfamiliarity.
-
-System design — start with the constraint that drives the design, then components.
-Behavioural — use STAR, and keep the Result concrete and quantified.`;
 
 let _genAI = null;
 let _genAIKey = null;
@@ -109,7 +82,7 @@ router.post('/stream', async (req, res) => {
 
   let wrote = false;
   try {
-    const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: SYS_INTERVIEW });
+    const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: INTERVIEW_BRIEF });
     const stream = await model.generateContentStream(
       { contents, generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS, ...NO_THINKING } },
       { signal: abort.signal },
