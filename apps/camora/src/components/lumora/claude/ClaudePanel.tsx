@@ -36,6 +36,7 @@ import { StreamingMicButton } from '../ask/StreamingMicButton';
 import { InterviewerListenButton } from '../ask/InterviewerListenButton';
 import { useInterviewerListen } from '../shared/useInterviewerListen';
 import { QuestionBlock } from '../shared/QuestionBlock';
+import { toTurns } from '../shared/qaTurns';
 import { useAuth } from '@/contexts/AuthContext';
 
 // lumora-backend, not Capra — see the note above about which key each service
@@ -83,15 +84,16 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
   // produces plenty of superseded questions and each is billed until cut off.
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  // Follow the tail while an answer streams, but only when the user is already
-  // at the bottom — yanking the viewport away from something they scrolled back
-  // to read is worse than a missed line.
+  // Hold the view at the TOP, where the newest turn renders. This used to chase
+  // the bottom of the list — the right instinct for a chat app and the wrong
+  // one here, because it walked the answer further down the screen on every
+  // exchange while a camera was pointed at the candidate.
+  //
+  // Keyed on a message landing or a stream starting, never on every token, or
+  // scrolling back through history would yank you forward mid-read.
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    if (nearBottom) el.scrollTop = el.scrollHeight;
-  }, [messages, streamText]);
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [messages.length, streaming]);
 
   useEffect(() => {
     if (!copied) return;
@@ -266,6 +268,18 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
   const strip = 'flex items-center gap-1.5 px-2 h-7 rounded hover:bg-[var(--lum-surface-hover)] transition-colors text-[12px] font-semibold';
   const hasAnswer = messages.some(m => m.role === 'assistant');
 
+  const turns = toTurns(messages);
+  // The turn being answered right now: the newest one, still without an answer.
+  // The stream renders INSIDE it, so the live answer stays under the question
+  // it answers instead of floating above it at the top of the list.
+  const last = turns[turns.length - 1];
+  const pendingKey = streaming && last && !last.answer ? last.key : null;
+  // The in-flight answer goes through the same markdown path as a finished one,
+  // so nothing reflows the moment the stream closes.
+  const liveAnswer = streamText
+    ? <AskResponse content={streamText} />
+    : <p className="text-[13px]" style={{ color: 'var(--lum-text-2)' }}>Thinking…</p>;
+
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
       <div
@@ -361,21 +375,20 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
         )}
 
         <div className="flex flex-col gap-3">
-          {messages.map((m, i) => (
-            m.role === 'user' ? (
-              <QuestionBlock key={i}>{m.content}</QuestionBlock>
-            ) : (
-              <div key={i}><AskResponse content={m.content} /></div>
-            )
+          {/* Newest turn first, directly under the composer — the order Ask Sona
+              and the behavioral panel already read in. Only the pairing differs:
+              a question here is a labelled block rather than a chat bubble, so
+              the reversal is per turn and each answer keeps its question on top
+              of it. */}
+          {streaming && pendingKey === null && liveAnswer}
+          {[...turns].reverse().map((t) => (
+            <div key={t.key} className="flex flex-col gap-3">
+              {t.question && <QuestionBlock>{t.question.content}</QuestionBlock>}
+              {t.answer
+                ? <AskResponse content={t.answer.content} />
+                : t.key === pendingKey ? liveAnswer : null}
+            </div>
           ))}
-
-          {/* The in-flight answer renders through the same markdown path as a
-              finished one, so nothing reflows the moment the stream closes. */}
-          {streaming && (
-            streamText
-              ? <AskResponse content={streamText} />
-              : <p className="text-[13px]" style={{ color: 'var(--lum-text-2)' }}>Thinking…</p>
-          )}
         </div>
       </div>
 
