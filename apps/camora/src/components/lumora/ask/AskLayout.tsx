@@ -128,9 +128,9 @@ const inlineMarkdown = (raw: string): React.ReactNode[] => {
   while ((m = re.exec(raw)) !== null) {
     if (m.index > last) nodes.push(raw.slice(last, m.index));
     if (m[1] !== undefined) {
-      nodes.push(<strong key={m.index} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{m[1]}</strong>);
+      nodes.push(<strong key={m.index} style={{ color: 'var(--cam-gold-leaf-text)', fontWeight: 700 }}>{m[1]}</strong>);
     } else {
-      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'rgba(30,77,120,0.12)', borderRadius: 4, color: '#1e4d78', fontFamily: "var(--font-mono)", fontSize: 14, letterSpacing: '-0.02em' }}>{m[2]}</code>);
+      nodes.push(<code key={m.index} style={{ padding: '1px 5px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--cam-gold-leaf-text)', fontFamily: "var(--font-mono)", fontSize: '0.92em', letterSpacing: '-0.02em' }}>{m[2]}</code>);
     }
     last = m.index + m[0].length;
   }
@@ -149,7 +149,7 @@ const tableCells = (s: string) => s.slice(1, -1).split('|').map((c) => c.trim())
 
 const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
   <div className="my-2 overflow-x-auto rounded-lg" style={{ border: '1px solid var(--border-subtle, rgba(255,255,255,0.10))' }}>
-    <table className="w-full border-collapse text-[13px]" style={{ fontFamily: 'var(--font-sans)' }}>
+    <table className="w-full border-collapse text-[14px]" style={{ fontFamily: 'var(--font-sans)' }}>
       <thead>
         <tr>
           {head.map((h, i) => (
@@ -169,8 +169,8 @@ const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
             {head.map((_, j) => (
               <td
                 key={j}
-                className="px-3 py-2 align-top leading-relaxed"
-                style={{ color: 'var(--text-secondary)', fontWeight: j === 0 ? 700 : 400 }}
+                className="px-3 py-2 align-top leading-[1.6]"
+                style={{ color: 'var(--text-primary)', fontWeight: j === 0 ? 700 : 400 }}
               >
                 {inlineMarkdown(r[j] ?? '')}
               </td>
@@ -205,10 +205,10 @@ const renderContent = (text: string) => {
     const flushList = () => {
       if (!listItems.length) return;
       result.push(
-        <ul key={key++} className="space-y-1 my-1.5 ml-1">
+        <ul key={key++} className="space-y-2 my-2.5 ml-1">
           {listItems.map((item, j) => (
-            <li key={j} className="flex items-start gap-2 text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              <span className="w-1 h-1 rounded-full mt-[7px] shrink-0" style={{ background: 'var(--cam-primary)' }} />
+            <li key={j} className="flex items-start gap-2.5 text-[15px] leading-[1.7]" style={{ color: 'var(--text-primary)' }}>
+              <span className="w-1.5 h-1.5 rounded-full mt-[9px] shrink-0" style={{ background: 'var(--cam-primary)' }} />
               <span>{inlineMarkdown(item)}</span>
             </li>
           ))}
@@ -244,7 +244,7 @@ const renderContent = (text: string) => {
         flushList();
         if (trimmed) {
           result.push(
-            <p key={key++} className="text-[13px] leading-relaxed my-0.5" style={{ color: 'var(--text-secondary)' }}>
+            <p key={key++} className="text-[15px] leading-[1.7] my-2" style={{ color: 'var(--text-primary)' }}>
               {inlineMarkdown(trimmed)}
             </p>
           );
@@ -261,14 +261,14 @@ export const AskResponse = ({ content }: { content: string }) => {
   const sections = content.split(/^### /m).filter(Boolean);
   if (sections.length <= 1) return <div>{renderContent(content)}</div>;
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {sections.map((sec, i) => {
         const nl = sec.indexOf('\n');
         const title = nl > -1 ? sec.slice(0, nl).trim() : sec.trim();
         const body = nl > -1 ? sec.slice(nl + 1) : '';
         return (
           <div key={i}>
-            <p className="text-[12px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
+            <p className="text-[13px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
               {title}
             </p>
             <div>{renderContent(body)}</div>
@@ -1013,7 +1013,7 @@ export const AskLayout = () => {
           top band of the window, closest to the webcam, and the history
           scrolls away beneath it instead of pushing the live answer down. */}
       {hasMessages ? (
-        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 390px))', paddingRight: 'max(1rem, calc(50% - 390px))' }}>
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-6" style={{ paddingLeft: 'max(1rem, calc(50% - 19rem))', paddingRight: 'max(1rem, calc(50% - 19rem))' }}>
           <div ref={topRef} />
           {streaming && (
             <div className="mb-6">
@@ -1049,7 +1049,7 @@ export const AskLayout = () => {
                     </div>
                   )}
                   {m.content && (
-                    <div className="px-4 py-2.5 rounded-2xl text-[14px]" style={{ background: 'var(--lum-accent)', border: '1px solid var(--lum-accent-sm)', color: '#FFFFFF', ...sans }}>
+                    <div className="px-4 py-2.5 rounded-2xl text-[15px] leading-[1.6] font-semibold" style={{ background: 'color-mix(in oklab, var(--lum-accent) 12%, transparent)', border: '1px solid color-mix(in oklab, var(--lum-accent) 38%, transparent)', color: 'var(--lum-text)', ...sans }}>
                       {m.content}
                     </div>
                   )}

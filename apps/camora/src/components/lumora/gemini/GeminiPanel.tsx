@@ -32,6 +32,13 @@ import { useInterviewerListen } from '../shared/useInterviewerListen';
 import { QuestionBlock } from '../shared/QuestionBlock';
 import { toTurns } from '../shared/qaTurns';
 
+// The reading column is capped rather than filling the panel. At 15px a
+// full-width tab runs past 120 characters a line, and a line that long loses
+// the eye on the way back from the webcam — the one thing this surface cannot
+// afford. 19rem of gutter leaves ~608px, a touch under 80 characters. The same
+// measure is used by Ask Sona.
+const READ_GUTTER = 'max(0.75rem, calc(50% - 19rem))';
+
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
 type Role = 'user' | 'assistant';
@@ -263,7 +270,7 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
   // so nothing reflows the moment the stream closes.
   const liveAnswer = streamText
     ? <AskResponse content={streamText} />
-    : <p className="text-[13px]" style={{ color: 'var(--lum-text-2)' }}>Thinking…</p>;
+    : <p className="text-[15px]" style={{ color: 'var(--lum-text-2)' }}>Thinking…</p>;
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
@@ -349,7 +356,8 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
           )}
         </div>
       </div>
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-3 py-3">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto py-3"
+        style={{ paddingLeft: READ_GUTTER, paddingRight: READ_GUTTER }}>
         {!messages.length && !streaming && (
           <div className="h-full flex flex-col items-center justify-center gap-1.5 text-center px-6">
             {EMPTY_HINT.map((line, i) => (

@@ -67,18 +67,25 @@ const BORDER = 'var(--border)';
 const FONT_ANSWER = "var(--font-answer)";
 
 /* ── Type scale ─────────────────────────────────────────────────────────────
-   Interview answers are skimmed at a glance, not read line by line. The old
-   14 px body forced long answers into 2-3 viewports of scroll and looked
-   oversized inside the fullscreen card. 12.75 px at 1.6 keeps ~100 chars per
-   line on the ~880 px card, so a full pitch fits on one screen.
-   FS_LEAD is the opening headline sentence — one step up so the hierarchy
-   still reads. FS_SMALL is for dense secondary blocks (labels, rebuttals). */
-const FS_LEAD = '13.5px';
-const FS_BODY = '11.75px';
-const FS_SMALL = '11px';
-/** Code type, matched to the editor beside it (11px) so the two do not clash. */
-const FS_CODE = '11.25px';
-const LH_BODY = '1.6';
+   One scale, shared with the Ask Sona / Claude / Gemini renderer, so an answer
+   is the same size whichever tab produced it.
+
+   This used to run at 11.75 px to fit a full pitch on one screen without
+   scrolling. That optimised for the wrong thing: nobody reads this surface, they
+   glance at it — eyes off the webcam, catch the next line, eyes back — and at
+   11.75 px a glance did not land. Fitting more on screen is worthless if none of
+   it can be caught in half a second.
+
+   The trade is real and deliberate: a long behavioral answer now scrolls where
+   it used to fit. FS_LEAD is the opening sentence, a clear step up so the eye
+   knows where to start. FS_SMALL is for dense secondary blocks (labels,
+   rebuttals, table cells) and holds the 12 px floor. */
+const FS_LEAD = '17px';
+const FS_BODY = '15px';
+const FS_SMALL = '13px';
+/** Code type, a step under prose so a fence does not shout over the sentence. */
+const FS_CODE = '13.5px';
+const LH_BODY = '1.7';
 
 /* ── Emphasis ───────────────────────────────────────────────────────────────
    Three tiers, so the eye lands in the right place while speaking:
@@ -91,7 +98,7 @@ const LH_BODY = '1.6';
 const ACCENT_TEXT = 'var(--cam-gold-leaf-text)';
 const EMPH_BOLD: React.CSSProperties = { color: ACCENT_TEXT, fontWeight: 700 };
 const EMPH_TERM: React.CSSProperties = { color: ACCENT_TEXT, fontWeight: 600 };
-const INLINE_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: 'var(--accent-text)', padding: '1px 5px', borderRadius: 4, fontSize: '0.9em', fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
+const INLINE_CODE: React.CSSProperties = { background: 'var(--bg-elevated)', color: ACCENT_TEXT, padding: '1px 5px', borderRadius: 4, fontSize: '0.9em', fontFamily: 'var(--font-mono)', border: '1px solid var(--border)' };
 
 /* Lead-in splitter — "<short label> — <sentence>" and "<requirement> → <proof>"
    are the two shapes the answer contract emits. Bolding the left half gives

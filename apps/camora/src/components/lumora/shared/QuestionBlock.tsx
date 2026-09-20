@@ -13,7 +13,7 @@
 // this a tint of the panel in all three.
 export const QuestionBlock = ({ children }: { children: React.ReactNode }) => (
   <div
-    className="rounded px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap font-medium"
+    className="rounded px-3.5 py-2.5 text-[15px] leading-[1.6] whitespace-pre-wrap font-semibold"
     style={{
       background: 'color-mix(in oklab, var(--lum-accent) 12%, transparent)',
       border: '1px solid color-mix(in oklab, var(--lum-accent) 38%, transparent)',
@@ -24,7 +24,7 @@ export const QuestionBlock = ({ children }: { children: React.ReactNode }) => (
     }}
   >
     <span
-      className="block text-[10px] font-bold uppercase tracking-[0.08em] mb-1 select-none"
+      className="block text-[12px] font-bold uppercase tracking-[0.08em] mb-1.5 select-none"
       style={{ color: 'var(--lum-accent)' }}
     >
       Question

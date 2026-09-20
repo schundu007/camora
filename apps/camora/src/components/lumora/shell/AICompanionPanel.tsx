@@ -1641,7 +1641,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                           data-tip="Answer this with Sona"
                         >
                           <div className="flex-1 min-w-0">
-                            <p className="break-words text-[13px] md:text-[12px] font-medium">{q.text}</p>
+                            <p className="break-words text-[14px] md:text-[13px] leading-[1.5] font-semibold">{q.text}</p>
                             <span className="text-[12px] mt-1 block font-bold uppercase tracking-wide" style={{ color: 'var(--cam-gold-leaf)' }}>tap to answer · {q.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                           <button
@@ -1741,7 +1741,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                           the question appeared was the left rail, which is
                           exactly why the rail could not close. */}
                       <span
-                        className="font-display text-[12px] font-bold tracking-[0.06em] min-w-0 flex-1 truncate"
+                        className="font-display text-[13px] font-bold tracking-[0.06em] leading-[1.45] min-w-0 flex-1 line-clamp-2"
                         style={{ color: 'var(--cam-strip-heading)' }}
                         title={questionFor(i) || undefined}
                       >
