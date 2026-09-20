@@ -1,4 +1,12 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "*": false,
+      "main": true
+    }
+  },
   "framework": "vite",
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
