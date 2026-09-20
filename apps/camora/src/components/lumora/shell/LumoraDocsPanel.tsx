@@ -106,7 +106,7 @@ const RE_BODY_RESUME = /\b(work experience|professional experience|employment hi
 /* Underscores are word characters, so \b never fires inside
    "Senior_DevOps_Resume.docx" and the most common resume filename there is
    classified as 'other'. Separators become spaces before matching. */
-const nameWords = (name: string) => name.replace(/[_.\-]+/g, ' ');
+const nameWords = (name: string) => name.replace(/[_.-]+/g, ' ');
 
 export const classifyDoc = (name: string, content: string): DocKind => {
   const n = nameWords(name);
@@ -2757,7 +2757,6 @@ export const LumoraDocsPanel = ({
   // ~10% for the actual section content. The flag below collapses
   // the sidebar to a single-row chip when a section is being read,
   // and the user taps a chevron to re-open the full list.
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'pending' | 'generating' | 'done' | 'error'>>({});
   const [selectedSections, setSelectedSections] = useState<string[]>(() => ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack']);
@@ -3314,18 +3313,7 @@ export const LumoraDocsPanel = ({
     }
   }, [hasRequiredDocs, generating, handleGenerate]);
 
-  // Active section's display name — used for the mobile collapsed
-  // chip so the user can tell what they're reading without expanding
-  // the full sidebar.
-  const activeSectionLabel = SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label || 'Section';
 
-  /* On the Input Materials view the rail becomes a band UNDER the upload.
-     It held one short list and three controls in a 180px column, so most of
-     its height was empty while the thing you came to use sat beside it. On a
-     generated section it stays a rail — that is how you move between sections,
-     and pushing it below the text would mean scrolling past the whole intake
-     to reach the next one. Same markup either way, reflowed. */
-  const isInput = activeSection === 'input';
 
   return (
     <div className="h-full flex flex-col" style={{ background: 'var(--bg-surface)' }}>
@@ -3340,64 +3328,21 @@ export const LumoraDocsPanel = ({
           />
         </div>
       )}
-      <div className={`flex-1 min-h-0 flex ${isInput ? 'flex-col overflow-y-auto' : 'flex-col sm:flex-row'}`}>
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
       {/* Mobile collapsed-sidebar pill — only shows when the sidebar is
           collapsed on phones. Tap to expand. The desktop sidebar at
           sm:w-[180px] stays visible always; this pill is mobile-only. */}
-      {!mobileSidebarOpen && !isInput && (
-        <button
-          type="button"
-          onClick={() => setMobileSidebarOpen(true)}
-          className="sm:hidden flex items-center justify-between gap-2 px-3 py-2 shrink-0"
-          style={{
-            background: 'var(--cam-hero-strip)',
-            borderBottom: '2px solid var(--cam-gold-leaf)',
-          }}
-          aria-expanded="false"
-          aria-label="Open prep sections"
-        >
-          <span className="flex items-center gap-2 min-w-0">
-            <span className="text-[12px] font-bold uppercase tracking-wider text-[var(--cam-strip-text-muted)] shrink-0">Section</span>
-            <span className="text-[12px] font-bold text-[var(--cam-strip-heading)] truncate">{activeSectionLabel}</span>
-          </span>
-          <span className="flex items-center gap-1 text-[12px] font-semibold uppercase tracking-wider text-[var(--cam-strip-text)] shrink-0">
-            Sections
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </span>
-        </button>
-      )}
 
       {/* Sidebar — collapsed-out on mobile by default. Auto-shows on
           ≥sm screens via sm:flex. */}
       <div
-        className={isInput
-          ? 'order-2 flex w-full flex-col shrink-0'
-          : `${mobileSidebarOpen ? 'flex' : 'hidden'} sm:flex w-full sm:w-[180px] flex-col shrink-0 sm:shrink-0`}
-        style={isInput
-          ? { borderTop: '1px solid var(--border)', background: 'var(--bg-elevated)' }
-          : { borderRight: '1px solid var(--border)', background: 'var(--bg-elevated)' }}
+        className="flex w-full flex-col shrink-0"
+        style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-elevated)' }}
       >
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-[12px] font-bold uppercase tracking-wider text-[var(--cam-strip-heading)]" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
-            {/* Mobile-only collapse button so users can dismiss the
-                sidebar without picking a different section. Hidden on
-                ≥sm where the sidebar is permanent chrome. */}
-            <button
-              type="button"
-              onClick={() => setMobileSidebarOpen(false)}
-              className="sm:hidden shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[color-mix(in_oklab,var(--text-primary)_12%,transparent)]"
-              style={{ color: 'var(--cam-strip-text)' }}
-              aria-label="Close sections"
-              data-tip="Close"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
             {/* Sync indicator — proves writes are reaching the lumora
                 backend (lumora_prep_state). "Saved" means the JD/resume/
                 companies have landed in Postgres and will be available
@@ -3532,14 +3477,12 @@ export const LumoraDocsPanel = ({
             </button>
           )}
         </div>
-        <div className={isInput
-          ? 'py-1 px-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2'
-          : 'flex-1 overflow-y-auto py-1'}>
+        <div className="py-1 px-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2">
           {SIDEBAR_SECTIONS.map((s) => {
             const isActive = s.id === activeSection;
             const hasContent = s.id === 'input' ? hasRequiredDocs : !!state.sections[s.id];
             return (
-              <button key={s.id} onClick={() => { setActiveSection(s.id); setMobileSidebarOpen(false); }}
+              <button key={s.id} onClick={() => { setActiveSection(s.id); }}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
                 style={{
                   background: isActive
@@ -3597,10 +3540,11 @@ export const LumoraDocsPanel = ({
               </button>
             );
           })}
+        </div>
 
-          {/* Select All / Deselect All — icon-only row below Tech Stack */}
-          {!generating && (
-            <div className="flex gap-1.5 px-3 pt-1 pb-0.5">
+        {/* Select all / deselect all — its own row under the list. */}
+        {!generating && (
+          <div className="flex gap-1.5 px-3 pt-2 pb-3 justify-center max-w-[220px] mx-auto w-full">
               <button
                 data-tip="Select all sections"
                 onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
@@ -3625,10 +3569,9 @@ export const LumoraDocsPanel = ({
               </button>
             </div>
           )}
-        </div>
 
         {/* Bottom action panel */}
-        <div className={isInput ? 'p-3 flex flex-wrap items-center gap-3' : 'p-3 flex flex-col gap-2'}
+        <div className="p-3 flex flex-wrap items-center justify-center gap-3"
           style={{ borderTop: '1px solid var(--border)' }}>
 
           {/* Progress bar — only while generating */}
@@ -3638,7 +3581,7 @@ export const LumoraDocsPanel = ({
             const done = Object.values(sectionStatus).filter(s => s === 'done').length;
             const total = Math.max(selectedSections.length, done, 1);
             return (
-            <div className={isInput ? 'w-full' : ''}>
+            <div className="w-full">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
                 <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
@@ -3654,7 +3597,7 @@ export const LumoraDocsPanel = ({
           })()}
 
           {/* Cloud provider */}
-          <div className={isInput ? 'flex' : 'flex justify-center'}>
+          <div className="flex">
             <CloudProviderSelector variant="compact" />
           </div>
 
@@ -3663,7 +3606,7 @@ export const LumoraDocsPanel = ({
           <button
             onClick={handleGenerate}
             disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
-            className={`${isInput ? 'px-6' : 'w-full'} py-2.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-40`}
+            className="px-6 py-2.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-40"
             style={{
               background: 'linear-gradient(135deg, var(--cam-primary) 0%, color-mix(in srgb, var(--cam-primary) 80%, #7c3aed) 100%)',
               color: '#fff',
@@ -3674,7 +3617,7 @@ export const LumoraDocsPanel = ({
               : `Generate ${selectedSections.length > 0 ? `(${selectedSections.length})` : ''}`}
           </button>
           {!hasRequiredDocs && (
-            <p className={`text-[12px] ${isInput ? '' : 'text-center -mt-1'}`} style={{ color: 'var(--text-muted)' }}>Add JD &amp; Resume to start</p>
+            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Add JD &amp; Resume to start</p>
           )}
 
           {/* Export and clear, as one row of icons. These were three stacked
@@ -3682,7 +3625,7 @@ export const LumoraDocsPanel = ({
               in the panel, for actions you press once. The format name stays
               INSIDE the glyph: a page with "PDF" on it is read at a glance,
               and a download arrow alone would make the two indistinguishable. */}
-          <div className={`flex items-center gap-2 ${isInput ? '' : 'w-full'}`}>
+          <div className="flex items-center gap-2">
             {generatedCount > 0 && (
               <>
                 <ActionIcon
@@ -3705,7 +3648,6 @@ export const LumoraDocsPanel = ({
                 </ActionIcon>
               </>
             )}
-            {!isInput && <span className="flex-1" />}
             {/* Always visible, never hover-only — it is destructive and has to
                 be findable. */}
             <ActionIcon
@@ -3721,15 +3663,17 @@ export const LumoraDocsPanel = ({
       </div>
 
       {/* Main content */}
-      <div className={`flex flex-col min-w-0 ${isInput ? 'order-1' : 'flex-1 overflow-auto'}`}>
+      <div className="flex flex-col min-w-0 flex-1">
         {activeSection === 'input' ? (
-          <div className="p-6 max-w-4xl">
+          /* space-y-8 rather than each card carrying its own margin — the
+             blocks were reading as one continuous surface. */
+          <div className="p-6 pb-8 max-w-4xl space-y-8">
             {/* ONE intake. It was four named cards, then three zones plus two
                 URL boxes across Materials, Study Materials and Research Docs —
                 five places to add a document, each asking what kind it was
                 before it would take it. classifyDoc answers that instead, and
                 every row carries a dropdown to correct it. */}
-            <div className="mb-6">
+            <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cam-primary)' }} />
                 <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Materials</span>
@@ -3794,14 +3738,14 @@ export const LumoraDocsPanel = ({
                 by the same call that reads it, so its own upload button and
                 URL box were a second and third way to do what the one intake
                 does. */}
-            <div className="mt-6">
+            <div>
               <ResearchDocsCard companySlug={researchSlug} />
             </div>
 
             {/* Status */}
-            <div className="mt-6 text-center">
+            <div className="text-center">
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {hasRequiredDocs ? 'Ready to generate — click Generate in the sidebar' : 'Add JD & Resume to start'}
+                {hasRequiredDocs ? 'Ready to generate — pick your sections above and click Generate' : 'Add JD & Resume to start'}
               </p>
             </div>
           </div>

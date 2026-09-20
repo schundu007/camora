@@ -1,9 +1,12 @@
 /**
- * ResearchDocsCard — lets users upload PDFs/notes for a company prep slot.
- * Uploaded files are indexed by ascend-backend into the RAG pipeline so
- * Sona can reference them during the live interview.
+ * ResearchDocsCard — the indexed copy of everything added to Materials.
+ *
+ * Read-only. It had its own upload button and URL box, which were a second
+ * and third way to do what the one intake above already does: a dropped file
+ * goes through uploadToResearchDocs, and a pasted link is indexed by the same
+ * call that reads it. This lists what landed, and removes it.
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { getAuthHeaders } from '../../../utils/authHeaders';
 import { dialogConfirm } from '../../shared/Dialog';
 
@@ -61,11 +64,7 @@ const LinkIcon = () => (
 
 export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
   const [docs, setDocs] = useState<ResearchDoc[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [url, setUrl] = useState('');
-  const [fetching, setFetching] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDocs = async () => {
     if (!companySlug) return;
@@ -90,60 +89,6 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
   useEffect(() => {
     fetchDocs();
   }, [companySlug]);
-
-  const handleUpload = async (file: File) => {
-    if (!companySlug) return;
-    setUploading(true);
-    setError(null);
-    try {
-      const form = new FormData();
-      form.append('file', file);
-      form.append('company_slug', companySlug);
-      const res = await fetch(`${CAPRA_API}/api/v1/prep/docs/upload`, {
-        method: 'POST',
-        headers: { ...getAuthHeaders() },
-        credentials: 'include',
-        body: form,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || data.detail || `Upload failed (HTTP ${res.status})`);
-        return;
-      }
-      await fetchDocs();
-    } catch (e: any) {
-      setError(e?.message || 'Upload failed');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleAddUrl = async () => {
-    const link = url.trim();
-    if (!link || !companySlug) return;
-    setFetching(true);
-    setError(null);
-    try {
-      const res = await fetch(`${CAPRA_API}/api/v1/prep/docs/url`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        credentials: 'include',
-        body: JSON.stringify({ url: link, company_slug: companySlug }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(data.error || data.detail || `Could not add that link (HTTP ${res.status})`);
-        return;
-      }
-      setUrl('');
-      await fetchDocs();
-    } catch (e: any) {
-      setError(e?.message || 'Could not add that link');
-    } finally {
-      setFetching(false);
-    }
-  };
 
   const handleDelete = async (doc: ResearchDoc) => {
     const confirmed = await dialogConfirm({
@@ -289,73 +234,10 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
           </ul>
         )}
 
-        {/* Two ways in, in the order you reach for them: a file you have, or a
-            link you found. Both land in the list above, in the order added. */}
-        {!atCap && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.docx,.txt,.md"
-                className="hidden"
-                onChange={e => {
-                  const f = e.target.files?.[0];
-                  if (f) handleUpload(f);
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading || fetching}
-                className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-[12px] font-bold uppercase tracking-wide transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
-              >
-                {uploading ? (
-                  <>
-                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Uploading…
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    Upload File
-                  </>
-                )}
-              </button>
-              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-                10 MB max · PDF, DOCX, TXT
-              </span>
-            </div>
-
-            <div
-              className="flex items-center gap-2 rounded-lg pl-2.5 pr-1.5"
-              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
-            >
-              <span style={{ color: 'var(--text-muted)' }}><LinkIcon /></span>
-              <input
-                type="url"
-                value={url}
-                onChange={e => setUrl(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddUrl(); } }}
-                placeholder="Paste a link — docs, a blog post, an engineering page"
-                disabled={fetching || uploading}
-                className="flex-1 min-w-0 bg-transparent h-9 text-[12px] outline-none placeholder:opacity-50"
-                style={{ color: 'var(--text-primary)' }}
-              />
-              <button
-                type="button"
-                onClick={handleAddUrl}
-                disabled={!url.trim() || fetching || uploading}
-                className="px-2.5 h-7 rounded-md text-[12px] font-bold uppercase tracking-wide shrink-0 transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)', border: '1px solid var(--border)' }}
-              >
-                {fetching ? 'Fetching…' : 'Add'}
-              </button>
-            </div>
-          </div>
+        {docs.length === 0 && (
+          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+            Files and links you add above are indexed here for the live session.
+          </p>
         )}
 
         {atCap && (

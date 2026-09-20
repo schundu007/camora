@@ -35,52 +35,75 @@ const SectionHead = ({ n, label, value }: { n: number; label: string; value: str
   </div>
 );
 
-const ChoiceRow = ({ n, label, value, options, onChange }: {
-  n: number;
+/* A dropdown that is NOT a native <select>.
+ *
+ * This is the whole reason it exists: a native select renders its open menu in
+ * a separate OS window, and setContentProtection only hides ours — so the list
+ * of meeting tools would sit on screen in a screen share with the rest of
+ * Camora invisible. The menu below is ordinary DOM and goes with the window.
+ *
+ * data-overlay-keep because the overlay strips background-color from every
+ * non-button element inside .lumora-shell-root, which would render the open
+ * menu completely transparent. */
+const StealthSelect = ({ label, value, options, onChange }: {
   label: string;
   value: string;
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
-}) => (
-  <div className="px-5 py-4 border-t" style={{ borderColor: 'var(--lum-border)' }}>
-    <SectionHead n={n} label={label} value={options.find(o => o.value === value)?.label ?? '—'} />
-    <div className="flex flex-wrap gap-1.5">
-      {options.map(o => {
-        const on = o.value === value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => onChange(o.value)}
-            aria-pressed={on}
-            className="px-3 h-7 rounded-md text-[12px] font-medium transition-colors"
-            style={on
-              // Ink is --lum-text, and the fill is a color-mix TINT of the
-              // accent — not --lum-accent-bg.
-              //
-              // That token is a fill, not a colour: near-black navy in dark,
-              // near-white in light, and a TRANSLUCENT blue under the overlay
-              // theme. Used as text on an accent fill it turned into faint blue
-              // on blue the moment the overlay was on, which is exactly the
-              // trap QuestionBlock documents and I walked into anyway.
-              //
-              // A tint plus a border plus body ink is legible in all three,
-              // and it is what the icon rail already uses to mark selection.
-              ? {
-                  background: 'color-mix(in oklab, var(--lum-accent) 22%, transparent)',
-                  color: 'var(--lum-text)',
-                  border: '1px solid var(--lum-accent)',
-                  fontWeight: 600,
-                }
-              : { background: 'var(--lum-bg)', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
-          >
-            {o.label}
-          </button>
-        );
-      })}
+}) => {
+  const [open, setOpen] = useState(false);
+  const current = options.find(o => o.value === value)?.label ?? '—';
+  return (
+    <div className="flex-1 min-w-[180px]">
+      <span className="block text-[12px] font-semibold mb-1" style={{ color: 'var(--lum-text-2)' }}>{label}</span>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen(v => !v)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="w-full flex items-center justify-between gap-2 h-8 px-2.5 rounded-md text-[12px] font-medium"
+          style={{ background: 'var(--lum-bg)', color: 'var(--lum-text)', border: '1px solid var(--lum-border)' }}
+        >
+          <span className="truncate">{current}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div
+              data-overlay-keep
+              role="listbox"
+              className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg overflow-hidden py-1"
+              style={{ background: 'var(--lum-surface)', border: '1px solid var(--lum-border-strong)', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }}
+            >
+              {options.map(o => {
+                const on = o.value === value;
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    role="option"
+                    aria-selected={on}
+                    onClick={() => { onChange(o.value); setOpen(false); }}
+                    className="w-full text-left px-2.5 h-7 text-[12px] flex items-center"
+                    style={on
+                      ? { background: 'color-mix(in oklab, var(--lum-accent) 22%, transparent)', color: 'var(--lum-text)', fontWeight: 600 }
+                      : { background: 'transparent', color: 'var(--lum-text-2)' }}
+                  >
+                    {o.label}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const MEETING_OPTIONS = [
   { value: 'zoom', label: 'Zoom' },
@@ -241,23 +264,28 @@ export const InterviewContextPanel = ({
         )}
       </div>
 
-      {onMeetingPlatformChange && (
-        <ChoiceRow
-          n={2}
-          label="Where the interview is held"
-          value={meetingPlatform || 'zoom'}
-          options={MEETING_OPTIONS}
-          onChange={onMeetingPlatformChange}
-        />
-      )}
-      {onCodingPlatformChange && (
-        <ChoiceRow
-          n={3}
-          label="Coding platform they will share"
-          value={codingPlatform || 'auto'}
-          options={CODING_OPTIONS}
-          onChange={onCodingPlatformChange}
-        />
+      {/* One row, two dropdowns. These were two full-width bands of chips —
+          ten buttons and two numbered headers — for two settings you touch once
+          a session. */}
+      {(onMeetingPlatformChange || onCodingPlatformChange) && (
+        <div className="px-5 py-3.5 border-t flex flex-wrap gap-3" style={{ borderColor: 'var(--lum-border)' }}>
+          {onMeetingPlatformChange && (
+            <StealthSelect
+              label="Meeting tool"
+              value={meetingPlatform || 'zoom'}
+              options={MEETING_OPTIONS}
+              onChange={onMeetingPlatformChange}
+            />
+          )}
+          {onCodingPlatformChange && (
+            <StealthSelect
+              label="Coding platform"
+              value={codingPlatform || 'auto'}
+              options={CODING_OPTIONS}
+              onChange={onCodingPlatformChange}
+            />
+          )}
+        </div>
       )}
     </>
   );
