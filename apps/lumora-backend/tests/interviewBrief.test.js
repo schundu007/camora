@@ -89,6 +89,38 @@ describe('interview brief', () => {
     expect(INTERVIEW_BRIEF).toContain('leave a blank line after the last hop');
   });
 
+  it('covers the ground these interviews actually cover', () => {
+    for (const domain of [
+      'CI/CD and release engineering',
+      'Platform engineering',
+      'Cloud security',
+      'Observability',
+      'Bare metal and provisioning',
+    ]) {
+      expect(INTERVIEW_BRIEF, domain).toContain(domain);
+    }
+  });
+
+  it('asks for a practitioner voice, not documentation', () => {
+    expect(INTERVIEW_BRIEF).toContain('VOICE');
+    expect(INTERVIEW_BRIEF).toContain('Speak from practice, not from documentation');
+    // The tells that give away a generated answer.
+    for (const tell of ['leverage', 'seamless', 'It\'s worth noting']) {
+      expect(INTERVIEW_BRIEF, tell).toContain(tell);
+    }
+  });
+
+  it('forbids inventing a CV, since this tab has no resume', () => {
+    // The behavioral panel gets systemContext; these tabs are stateless, so
+    // "at <company> we..." would be a fabrication the interviewer can check.
+    expect(INTERVIEW_BRIEF).toContain('NEVER invent an employer');
+    expect(INTERVIEW_BRIEF).toContain('This tab has no resume to draw on');
+  });
+
+  it('covers both shapes of coding interview', () => {
+    expect(INTERVIEW_BRIEF).toContain("LeetCode-shaped or the interviewer's own problem");
+  });
+
   it('spells out the failure it exists to prevent', () => {
     expect(INTERVIEW_BRIEF).toContain('the server returns the HTML');
   });
