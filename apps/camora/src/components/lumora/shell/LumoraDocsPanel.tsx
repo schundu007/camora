@@ -3,6 +3,7 @@
  * Sidebar sections + upload zones + Generate button.
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { InterviewContextPanel } from './InterviewContextPanel';
 import { useSearchParams } from 'react-router-dom';
 import type { JSX, CSSProperties } from 'react';
 import hljs from '@/lib/hljs';
@@ -2565,7 +2566,19 @@ const FormattedJD = ({ text }: { text: string }) => {
 // to `pl-5`.
 const NavyStrip = () => null;
 
-export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void }) => {
+export const LumoraDocsPanel = ({
+  onClose: _onClose, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange,
+}: {
+  onClose?: () => void;
+  /* Interview context, hosted here rather than behind its own rail chip.
+     Choosing WHICH interview and working ON it were two destinations for one
+     job — you activated a workspace in a modal and then edited its documents
+     somewhere else. */
+  meetingPlatform?: string;
+  onMeetingPlatformChange?: (v: string) => void;
+  codingPlatform?: string;
+  onCodingPlatformChange?: (v: string) => void;
+}) => {
   const { token } = useAuth();
   // Cloud-platform choice for prep-section generation. Sent to the backend
   // so the LLM names services correctly (Cosmos DB vs DynamoDB) instead of
@@ -3137,7 +3150,19 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
   const activeSectionLabel = SIDEBAR_SECTIONS.find(s => s.id === activeSection)?.label || 'Section';
 
   return (
-    <div className="h-full flex flex-col sm:flex-row" style={{ background: 'var(--bg-surface)' }}>
+    <div className="h-full flex flex-col" style={{ background: 'var(--bg-surface)' }}>
+      {/* Setup first, materials below it — the order you actually work in. */}
+      {(onMeetingPlatformChange || onCodingPlatformChange) && (
+        <div className="shrink-0 border-b" style={{ borderColor: 'var(--lum-border)' }}>
+          <InterviewContextPanel
+            meetingPlatform={meetingPlatform}
+            onMeetingPlatformChange={onMeetingPlatformChange}
+            codingPlatform={codingPlatform}
+            onCodingPlatformChange={onCodingPlatformChange}
+          />
+        </div>
+      )}
+      <div className="flex-1 min-h-0 flex flex-col sm:flex-row">
       {/* Mobile collapsed-sidebar pill — only shows when the sidebar is
           collapsed on phones. Tap to expand. The desktop sidebar at
           sm:w-[180px] stays visible always; this pill is mobile-only. */}
@@ -3765,6 +3790,7 @@ export const LumoraDocsPanel = ({ onClose: _onClose }: { onClose?: () => void })
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

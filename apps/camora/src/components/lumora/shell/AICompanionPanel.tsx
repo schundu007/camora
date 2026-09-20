@@ -1371,7 +1371,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               }
             }}
             onPaste={onComposerPaste}
-            rows={2}
+            rows={1}
             placeholder="Type a question…  (Enter sends, ` is the interviewer, Space is the mic)"
             className="flex-1 min-w-0 resize-none rounded px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:opacity-40"
             style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)', fontFamily: 'var(--font-sans)' }}

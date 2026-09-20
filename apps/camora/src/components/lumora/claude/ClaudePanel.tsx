@@ -346,7 +346,7 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={onKeyDown}
-            rows={2}
+            rows={1}
             placeholder="Ask Claude…  (Enter sends, ` listens to the interviewer, Space is the mic)"
             className="flex-1 resize-none rounded px-2.5 py-2 text-[13px] leading-relaxed outline-none"
             style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}

@@ -5,7 +5,7 @@
 // existing 28px drag strip (globals.css `body.electron-desktop::before`).
 //
 // Gated on Electron: renders nothing in the web build.
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   isElectron,
   useOverlayMode,
@@ -52,6 +52,35 @@ export function DesktopWindowControls() {
 
   const camo = (window as any).camo;
   // Only render when the desktop window was actually created frameless (opt-in
+  /* Publish this cluster's real width as --lumora-winctl-w.
+   *
+   * Every header that has to clear these controls used to hardcode the
+   * reserve: 120px normally, 188px in overlay, in a stylesheet, guessed from
+   * the layout at the time. The cluster is a grip, a transparency slider, a
+   * dock toggle, minimise and close — its width changes with mode, with the
+   * slider, and with any button added to it — so the guess drifts and things
+   * slide underneath. That is why this keeps coming back.
+   *
+   * Measured, it cannot drift. The controls are positioned over the corner and
+   * are not in the layout, so nothing else can know their width; this is the
+   * only place that does.
+   */
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = rootRef.current;
+    const root = document.documentElement;
+    if (!el) { root.style.setProperty('--lumora-winctl-w', '0px'); return; }
+    const publish = () => {
+      // +16px so a header's last control has air beside the cluster rather
+      // than touching it.
+      root.style.setProperty('--lumora-winctl-w', `${Math.ceil(el.getBoundingClientRect().width) + 16}px`);
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => { ro.disconnect(); root.style.setProperty('--lumora-winctl-w', '0px'); };
+  });
+
   // overlay build). A normal framed window keeps its native traffic lights, so
   // these custom controls would be a duplicate/overlap.
   if (!isElectron() || !camo?.overlayEnabled || typeof document === 'undefined') return null;
@@ -62,6 +91,7 @@ export function DesktopWindowControls() {
   // it pinned top-right and above app content regardless of DOM position.
   return (
     <div
+      ref={rootRef}
       className={`desktop-winctl${overlay ? ' desktop-winctl--overlay' : ''}`}
       // Overlay mode keeps the WHOLE window clickable (set once on overlay entry in
       // overlayMode.ts), so no per-element click-through toggling here — that was

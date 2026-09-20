@@ -788,7 +788,12 @@ export const LumoraShellPage = () => {
           {mountedTabs.has('prepkit') && (
             <div className="tab-fade-in flex-1 flex flex-col min-h-0 absolute inset-0"
               style={{ display: activeTab === 'prepkit' ? undefined : 'none' }}>
-              <LumoraDocsPanel />
+              <LumoraDocsPanel
+                meetingPlatform={meetingPlatform}
+                onMeetingPlatformChange={setMeetingPlatform}
+                codingPlatform={codingPlatform}
+                onCodingPlatformChange={setCodingPlatform}
+              />
             </div>
           )}
 

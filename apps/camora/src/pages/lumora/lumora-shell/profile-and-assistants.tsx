@@ -249,10 +249,19 @@ interface Assistant {
   createdAt: string;
 }
 
+/* Current models.
+ *
+ * These were Claude Sonnet 4, Claude Opus 4 and Gemini 1.5 Flash — three names
+ * that no longer exist. Worth saying plainly: nothing reads `assistant.model`.
+ * The model is chosen server-side by modelPolicy.js, so this picker has been
+ * advertising a choice it does not make. It is kept, and kept current, because
+ * it is the natural place for a per-assistant override if one is ever wired —
+ * but it should not claim to be doing something it is not. */
 const AI_MODELS = [
-  { value: 'claude-sonnet', label: 'Claude Sonnet 4', provider: 'Anthropic', color: '#2B6394' },
-  { value: 'claude-opus', label: 'Claude Opus 4', provider: 'Anthropic', color: '#1E4D78' },
-  { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', provider: 'Google', color: '#4285F4' },
+  { value: 'claude-opus-5', label: 'Claude Opus 5', provider: 'Anthropic', color: '#1E4D78' },
+  { value: 'claude-sonnet-5', label: 'Claude Sonnet 5', provider: 'Anthropic', color: '#2B6394' },
+  { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', provider: 'Anthropic', color: '#3E7CAE' },
+  { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', color: '#4285F4' },
 ];
 
 export const AssistantsPage = () => {
@@ -263,7 +272,7 @@ export const AssistantsPage = () => {
     try { return (assistantsStore.read() as Assistant[] | null) || []; } catch { return []; }
   });
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '', pinnedIntro: '' });
+  const [form, setForm] = useState({ name: '', role: '', company: '', model: 'claude-sonnet-5', resume: '', jobDescription: '', pinnedIntro: '' });
   const save = (list: Assistant[]) => { setAssistants(list); assistantsStore.write(list as any); };
 
   /** Kick off resume → Story Bank extraction in the background. */
@@ -314,7 +323,7 @@ export const AssistantsPage = () => {
       storyParseStatus: form.resume.trim() ? 'parsing' : 'idle',
     };
     save([newAssistant, ...assistants]);
-    setForm({ name: '', role: '', company: '', model: 'claude-sonnet', resume: '', jobDescription: '', pinnedIntro: '' });
+    setForm({ name: '', role: '', company: '', model: 'claude-sonnet-5', resume: '', jobDescription: '', pinnedIntro: '' });
     setShowCreate(false);
     if (newAssistant.resume) parseStories(id, newAssistant.resume);
   };

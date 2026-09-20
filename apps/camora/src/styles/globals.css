@@ -2526,12 +2526,16 @@ html[data-overlay='on'] .gemini-webview {
    + right margin), so 150px was too tight and chips still clipped; 184px clears it
    with margin. Every top-of-surface toolbar carries this class — see the sweep in
    ScreenshotStrip, DesignLayout, AskLayout, PlaygroundLayout, CodingLayout, CoFix. */
-body.electron-desktop .lumora-winctl-safe {
-  padding-right: 120px !important;
-}
-/* Overlay mode adds the transparency slider (~50px), so the cluster is wider. */
-html[data-overlay='on'] .lumora-winctl-safe {
-  padding-right: 188px !important;
+/* The reserve is MEASURED, not guessed.
+   DesktopWindowControls publishes its own width as --lumora-winctl-w and keeps
+   it current with a ResizeObserver, so the reserve tracks the cluster through
+   overlay mode, the transparency slider, and any button added to it later.
+   It was two hardcoded numbers — 120px, 188px in overlay — taken from the
+   layout at the time, and things kept sliding under the controls as the
+   cluster changed. The fallback is 0 because on web there are no controls to
+   clear. */
+.lumora-winctl-safe {
+  padding-right: var(--lumora-winctl-w, 0px) !important;
 }
 /* Centring variant. Same reserve, mirrored onto BOTH sides, so a row that is
    centred inside it stays on the true centre instead of drifting left by half
@@ -2539,13 +2543,9 @@ html[data-overlay='on'] .lumora-winctl-safe {
    line — the left padding costs nothing and the row clears the control cluster.
    Use .lumora-winctl-safe when content is left-aligned and only the right end
    needs protecting; use this when the content is centred. */
-body.electron-desktop .lumora-winctl-safe-center {
-  padding-left: 120px !important;
-  padding-right: 120px !important;
-}
-html[data-overlay='on'] .lumora-winctl-safe-center {
-  padding-left: 188px !important;
-  padding-right: 188px !important;
+.lumora-winctl-safe-center {
+  padding-left: var(--lumora-winctl-w, 0px) !important;
+  padding-right: var(--lumora-winctl-w, 0px) !important;
 }
 /* The grip drives a JS drag (see DesktopWindowControls) since macOS blocks
    -webkit-app-region:drag on transparent windows. Keep everything no-drag so the

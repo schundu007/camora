@@ -27,35 +27,19 @@ interface LumoraIconRailProps {
   onOpenContext?: () => void;
 }
 
-/* ── Sidebar items, ordered by priority ──
-   Home (hub) → Interview (live surfaces) → Setup (context + tools) →
-   Prep (study) → Library (history/assistants) → account/utilities. */
+
+/* Home. */
 const MAIN_ITEMS = [
   { id: 'dashboard', label: 'Home', path: '/lumora', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> },
 ];
 
-/* Library group — review history + manage assistants (lower priority). */
 const LIBRARY_ITEMS = [
   { id: 'sessions', label: 'Sessions', path: '/lumora/sessions', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg> },
-  { id: 'assistants', label: 'Assistants', path: '/lumora/assistants', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> },
 ];
 
-/* Prep group — Prep Kit + Practice + Prepare, grouped together in their own
-   section, kept separate from the meeting/coding Tools group. */
 const PREP_ITEMS = [
   { id: 'documents', label: 'Prep Kit', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
 ];
-
-/* No Camora Home chip here. It was added as the way out after Prepare and
-   Practice left, and it drew the same house glyph as the Home item at the top
-   of the rail — two identical icons, one going to /lumora and one to /, which
-   is worse than either on its own. Lumora Home is the home this rail means. */
-
-const MORE_ITEMS = [
-  { id: 'profile', label: 'Profile', path: '/lumora/profile' },
-  { id: 'credits', label: 'Credits', path: '/lumora/credits' },
-];
-
 
 /* The tools that are genuinely their own thing — an editor, a canvas, a
    diff — and keep their own chip. */
@@ -72,7 +56,6 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
   // relearn the rail per tab costs more attention than the extra icons it
   // saved. Same rail everywhere, so muscle memory holds.
 
-  const [accountOpen, setAccountOpen] = useState(false);
 
   // One chip for the four Q&A surfaces. It navigates to whichever you were last
   // on; switching BETWEEN them happens on the strip above the composer, where
@@ -265,41 +248,15 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
 
       {/* Setup — interview context + meeting/coding platform. Configured per
           interview, so it sits right under the live surfaces. */}
-      {(onOpenContext || onMeetingPlatformChange || onCodingPlatformChange) && (
-        <>
-          <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
-          <div className="px-1.5">
-            {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Setup</p>}
-            {onOpenContext && (
-              <button
-                type="button"
-                onClick={onOpenContext}
-                data-tip={companyKey ? `Interview: ${companyKey}` : 'Set interview context'}
-                aria-label={companyKey ? `Interview: ${companyKey} — change` : 'Set interview context'}
-                className={`flex items-center w-full ${expanded ? 'gap-2 px-3 justify-start' : 'justify-center px-0'} py-2 mb-0.5 rounded-lg text-[13px] font-bold transition-[background-color,color,transform] active:scale-[0.98]`}
-                style={companyKey
-                  ? { background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-border-strong)' }
-                  : { background: 'var(--lum-surface)', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
-                {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
-              </button>
-            )}
-            {/* The meeting and coding pickers moved INTO the context drawer the
-                button above opens. They were two more icons to find, and both
-                were native <select>s — whose menus open in a separate OS window
-                that content protection cannot hide, so the list stayed on
-                screen in a share. Choosing the workspace, the meeting tool and
-                the coding platform is one decision about what this interview
-                is, so it is now one window. */}
-          </div>
-        </>
-      )}
+      {/* No SETUP section. Choosing the interview and working on it were two
+          rail entries for one job, so the context now lives at the top of the
+          Prep Kit page — above the very materials it selects between. One
+          destination, and one less chip in a rail read mid-interview. */}
 
-        {/* Prep — study before interviews (Prep Kit + Practice + Prepare). */}
+      {/* Prep — study before interviews (Prep Kit + Practice + Prepare). */}
         <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
         <div className="px-1.5">
-          {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Prep</p>}
+          {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
           {PREP_ITEMS.map(item => {
             const active = isActive(item.id);
             return (
@@ -318,7 +275,7 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
           })}
         </div>
 
-        {/* Library — history + assistants (lower priority). */}
+        {/* Library — session history. Assistants is hidden; see LIBRARY_ITEMS. */}
         <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
         <div className="px-1.5">
           {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Library</p>}
@@ -340,40 +297,10 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
           })}
         </div>
 
-      {/* Divider */}
-      <div className="mx-4 my-3 h-px" style={{ background: 'var(--border)' }} />
-
-      {/* More section */}
-      <div className="px-1.5">
-        {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>More</p>}
-        {/* Account dropdown */}
-        <button
-          onClick={() => setAccountOpen(!accountOpen)}
-          className={`flex items-center ${expanded ? 'justify-between px-3' : 'justify-center px-0'} w-full py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] hover:bg-[var(--bg-elevated)]`}
-          style={{ color: 'var(--text-secondary)' }}
-          data-tip={expanded ? undefined : 'Account'}
-        >
-          <div className="flex items-center gap-3">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-            {expanded && 'Account'}
-          </div>
-          {expanded && <svg className={`w-3.5 h-3.5 transition-transform ${accountOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>}
-        </button>
-        {accountOpen && expanded && (
-          <div className="ml-5 flex flex-col gap-0.5">
-            {MORE_ITEMS.map(item => (
-              <Link
-                key={item.id}
-                to={item.path}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-[background-color,color,transform] hover:bg-[var(--bg-elevated)]"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* No More/Account section. Profile and Credits are account settings, and
+          Capra already owns them — the same two links, one screen away. A rail
+          used during a live interview is the wrong place to keep a second copy
+          of a billing page. Both routes still exist and still work. */}
 
       {/* Spacer */}
       <div className="flex-1" />
