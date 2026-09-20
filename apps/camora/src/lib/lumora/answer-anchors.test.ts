@@ -183,3 +183,31 @@ describe('parseAnchors — where a header stops adopting', () => {
     expect(blocks[0].kind === 'anchor' && blocks[0].lines).toHaveLength(2);
   });
 });
+
+describe('parseAnchors — only a walk gets numbered', () => {
+  const withLeads = (anchor: string) => parseAnchors([
+    `**${anchor}**`,
+    '**Declarative vs. Imperative** — you define the desired state.',
+    '**Admission** — mutating webhooks can alter the object.',
+    '**Controllers** — the control loop reconciles continuously.',
+  ].join('\n'))[0];
+
+  it('numbers a path', () => {
+    const b = withLeads('The path');
+    expect(b.kind === 'anchor' && b.ordered).toBe(true);
+  });
+
+  it('does not number caveats that merely look like steps', () => {
+    // Production sent exactly this: four caveats, each with a bold lead-in,
+    // structurally identical to a nine-hop walk, numbered 1-4 as though the
+    // reader should do them in order.
+    const b = withLeads('The catch');
+    expect(b.kind === 'anchor' && b.ordered).toBe(false);
+  });
+
+  it('recognises the other wordings the prompts use for a walk', () => {
+    for (const a of ['How it flows', 'The steps', 'Request lifecycle']) {
+      expect(withLeads(a).ordered, a).toBe(true);
+    }
+  });
+});

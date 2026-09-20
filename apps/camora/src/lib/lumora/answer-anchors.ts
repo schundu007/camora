@@ -60,14 +60,31 @@ const BOLD_LEAD_RE = /^(?:[-*•]\s*)?\*\*[^*]{1,48}?\*\*\s*[—–-]\s*\S/;
 const BULLET_RE = /^[-*•]\s+/;
 
 /**
- * A block is a sequence when every child names its own step. That is
- * structural rather than a guess at the anchor's wording: "The path" with ten
- * `**hop** — …` children numbers, "The catch" with two plain sentences does
- * not. Three is the floor — two steps read fine unnumbered and numbering them
- * adds chrome without adding orientation.
+ * Anchors that mean "this is a walk". The prompts standardise the anchor
+ * vocabulary, so this is reading a label the model was told to use rather than
+ * guessing at free text.
  */
-const isOrdered = (lines: AnswerLine[]) =>
-  lines.length >= 3 && lines.every((l) => BOLD_LEAD_RE.test(l.text));
+const SEQUENCE_ANCHOR_RE = /\b(path|flow|flows|step|steps|sequence|order|walk|pipeline|lifecycle|journey)\b/i;
+
+/**
+ * A block is numbered when it says it is a walk AND every child names its own
+ * step.
+ *
+ * The structural half alone is not enough, and production proved it: "The
+ * catch" came back with four caveats that each had a bold lead-in, structurally
+ * identical to a nine-hop path, and got numbered 1-4 as though the reader
+ * should do them in order. Caveats are a set, not a sequence. Requiring the
+ * anchor to say so too costs nothing — the walk is always labelled "The path"
+ * or "How it flows" — and it stops the renderer inventing an order the answer
+ * does not have.
+ *
+ * Three is the floor. Two steps read fine unnumbered, and numbering them adds
+ * chrome without adding orientation.
+ */
+const isOrdered = (anchor: string, lines: AnswerLine[]) =>
+  SEQUENCE_ANCHOR_RE.test(anchor) &&
+  lines.length >= 3 &&
+  lines.every((l) => BOLD_LEAD_RE.test(l.text));
 
 export function parseAnchors(text: string): AnswerBlock[] {
   const blocks: AnswerBlock[] = [];
@@ -87,7 +104,7 @@ export function parseAnchors(text: string): AnswerBlock[] {
   const flushAnchor = () => {
     openIsHeader = false;
     if (!open) return;
-    open.ordered = isOrdered(open.lines);
+    open.ordered = isOrdered(open.anchor, open.lines);
     if (open.ordered) open.lines.forEach((l, i) => { l.n = i + 1; });
     blocks.push(open);
     open = null;
