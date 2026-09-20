@@ -207,7 +207,8 @@ describe('parseAnchors — only a walk gets numbered', () => {
 
   it('recognises the other wordings the prompts use for a walk', () => {
     for (const a of ['How it flows', 'The steps', 'Request lifecycle']) {
-      expect(withLeads(a).ordered, a).toBe(true);
+      const b = withLeads(a);
+      expect(b.kind === 'anchor' && b.ordered, a).toBe(true);
     }
   });
 });
