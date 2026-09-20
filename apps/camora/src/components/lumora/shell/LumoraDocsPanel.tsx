@@ -3477,8 +3477,18 @@ export const LumoraDocsPanel = ({
             </button>
           )}
         </div>
+        {/* Navigation — ONLY what can actually be opened.
+            It used to list all nine sections with a checkbox on each, so on
+            Input Materials you were looking at eight navigable rows for
+            content that did not exist yet, and one control doing two unrelated
+            jobs: clicking a name navigates, ticking a box queues generation.
+            The boxes moved to the Generate card, which is what they are about;
+            a section appears here once it has something to show. */}
         <div className="py-1 px-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2">
-          {SIDEBAR_SECTIONS.map((s) => {
+          {SIDEBAR_SECTIONS.filter((s) =>
+            s.id === 'input' ||
+            (s.id === 'jd-view' ? !!state.jd.trim() : (!!state.sections[s.id] || sectionStatus[s.id] === 'generating'))
+          ).map((s) => {
             const isActive = s.id === activeSection;
             const hasContent = s.id === 'input' ? hasRequiredDocs : !!state.sections[s.id];
             return (
@@ -3515,151 +3525,11 @@ export const LumoraDocsPanel = ({
                 {sectionStatus[s.id] === 'pending' && generating && (
                   <Chip variant="default" className="text-[12px]">queued</Chip>
                 )}
-                {GENERATE_SECTIONS.includes(s.id) && !generating && (() => {
-                  const checked = selectedSections.includes(s.id);
-                  return (
-                    <span
-                      role="checkbox"
-                      aria-checked={checked}
-                      onClick={(e) => { e.stopPropagation(); setSelectedSections(prev => checked ? prev.filter(x => x !== s.id) : [...prev, s.id]); }}
-                      className="shrink-0 flex items-center justify-center transition-all"
-                      style={{
-                        width: 15, height: 15, borderRadius: 4, cursor: 'pointer', flexShrink: 0,
-                        background: checked ? 'var(--cam-primary)' : 'var(--bg-surface)',
-                        border: `1.5px solid ${checked ? 'var(--cam-primary)' : 'color-mix(in srgb, var(--border) 100%, transparent)'}`,
-                        boxShadow: checked ? '0 0 0 2px color-mix(in srgb, var(--cam-primary) 20%, transparent)' : 'none',
-                      }}>
-                      {checked && (
-                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                          <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </span>
-                  );
-                })()}
               </button>
             );
           })}
         </div>
 
-        {/* Select all / deselect all — its own row under the list. */}
-        {!generating && (
-          <div className="flex gap-1.5 px-3 pt-2 pb-3 justify-center max-w-[220px] mx-auto w-full">
-              <button
-                data-tip="Select all sections"
-                onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
-                disabled={selectedSections.length === GENERATE_SECTIONS.length}
-                className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
-                style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--cam-primary) 35%, transparent)' }}>
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ color: 'var(--cam-primary)' }}>
-                  <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
-                  <path d="M3.5 6.5L5.5 8.5L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              <button
-                data-tip="Deselect all sections"
-                onClick={() => setSelectedSections([])}
-                disabled={selectedSections.length === 0}
-                className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
-                style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--cam-primary) 35%, transparent)' }}>
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ color: 'var(--cam-primary)' }}>
-                  <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
-                  <path d="M4 6.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-          )}
-
-        {/* Bottom action panel */}
-        <div className="p-3 flex flex-wrap items-center justify-center gap-3"
-          style={{ borderTop: '1px solid var(--border)' }}>
-
-          {/* Progress bar — only while generating */}
-          {generating && (() => {
-            // Clamp: `done` can exceed selectedSections.length (stale/extra
-            // section statuses), which showed >100% and a wrong X/Y.
-            const done = Object.values(sectionStatus).filter(s => s === 'done').length;
-            const total = Math.max(selectedSections.length, done, 1);
-            return (
-            <div className="w-full">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
-                <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
-                  {done}/{total}
-                </span>
-              </div>
-              <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
-                <div className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, (done / total) * 100)}%`, background: 'var(--cam-primary)' }} />
-              </div>
-            </div>
-            );
-          })()}
-
-          {/* Cloud provider */}
-          <div className="flex">
-            <CloudProviderSelector variant="compact" />
-          </div>
-
-
-          {/* Generate CTA */}
-          <button
-            onClick={handleGenerate}
-            disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
-            className="px-6 py-2.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-40"
-            style={{
-              background: 'linear-gradient(135deg, var(--cam-primary) 0%, color-mix(in srgb, var(--cam-primary) 80%, #7c3aed) 100%)',
-              color: '#fff',
-              boxShadow: hasRequiredDocs && !generating && selectedSections.length > 0 ? '0 2px 12px color-mix(in srgb, var(--cam-primary) 40%, transparent)' : 'none',
-            }}>
-            {generating
-              ? <span className="flex items-center justify-center gap-2"><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" />Generating…</span>
-              : `Generate ${selectedSections.length > 0 ? `(${selectedSections.length})` : ''}`}
-          </button>
-          {!hasRequiredDocs && (
-            <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Add JD &amp; Resume to start</p>
-          )}
-
-          {/* Export and clear, as one row of icons. These were three stacked
-              full-width buttons carrying their own labels — the tallest thing
-              in the panel, for actions you press once. The format name stays
-              INSIDE the glyph: a page with "PDF" on it is read at a glance,
-              and a download arrow alone would make the two indistinguishable. */}
-          <div className="flex items-center gap-2">
-            {generatedCount > 0 && (
-              <>
-                <ActionIcon
-                  label={downloading === 'pdf' ? 'Saving…' : 'Download as PDF'}
-                  onClick={() => handleDownload('pdf')}
-                  disabled={!!downloading}
-                  busy={downloading === 'pdf'}
-                  tint="var(--danger)"
-                >
-                  <FileFormatIcon format="PDF" />
-                </ActionIcon>
-                <ActionIcon
-                  label={downloading === 'docx' ? 'Saving…' : 'Download as Word (DOCX)'}
-                  onClick={() => handleDownload('docx')}
-                  disabled={!!downloading}
-                  busy={downloading === 'docx'}
-                  tint="var(--cam-primary)"
-                >
-                  <FileFormatIcon format="DOC" />
-                </ActionIcon>
-              </>
-            )}
-            {/* Always visible, never hover-only — it is destructive and has to
-                be findable. */}
-            <ActionIcon
-              label="Clear all materials and generated sections"
-              onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
-              tint="var(--danger)"
-            >
-              <TrashIcon />
-            </ActionIcon>
-          </div>
-          {downloadMsg && <p className="text-[12px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</p>}
-        </div>
       </div>
 
       {/* Main content */}
@@ -3740,6 +3610,184 @@ export const LumoraDocsPanel = ({
                 does. */}
             <div>
               <ResearchDocsCard companySlug={researchSlug} />
+            </div>
+
+            {/* Generate — what to make, and the button that makes it.
+                These controls were up in the navigation band, which put the
+                question "what should I generate" above the documents it is
+                generated FROM. It is the last step, so it is the last card. */}
+            <div className="rounded-xl overflow-hidden" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              <div className="px-4 py-3 flex items-center gap-2"
+                style={{ background: 'var(--cam-hero-strip, var(--bg-elevated))', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
+                <span className="text-xs font-bold uppercase tracking-wider flex-1" style={{ color: 'var(--text-primary)' }}>
+                  Generate
+                </span>
+                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full"
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                  {selectedSections.length}/{GENERATE_SECTIONS.length}
+                </span>
+              </div>
+
+              {/* The checkboxes, on their own, away from navigation. */}
+              <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                {GENERATE_SECTIONS.map((id) => {
+                  const label = SIDEBAR_SECTIONS.find(x => x.id === id)?.label || id;
+                  const checked = selectedSections.includes(id);
+                  const done = !!state.sections[id];
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={checked}
+                      disabled={generating}
+                      onClick={() => setSelectedSections(prev => checked ? prev.filter(x => x !== id) : [...prev, id])}
+                      className="flex items-center gap-2 px-2.5 h-8 rounded-lg text-[12px] font-medium text-left transition-colors disabled:opacity-50"
+                      style={checked
+                        ? { background: 'color-mix(in srgb, var(--cam-primary) 14%, var(--bg-elevated))', color: 'var(--text-primary)', border: '1px solid var(--cam-primary)' }
+                        : { background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                    >
+                      <span aria-hidden className="shrink-0 flex items-center justify-center"
+                        style={{
+                          width: 14, height: 14, borderRadius: 4,
+                          background: checked ? 'var(--cam-primary)' : 'transparent',
+                          border: `1.5px solid ${checked ? 'var(--cam-primary)' : 'var(--border)'}`,
+                        }}>
+                        {checked && (
+                          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                            <path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </span>
+                      <span className="flex-1 truncate">{label}</span>
+                      {/* Says which ones already exist, so re-running is a
+                          deliberate choice rather than a surprise. */}
+                      {done && (
+                        <span className="shrink-0 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--cam-gold-leaf)' }} data-tip="Already generated" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+          {/* Select all / deselect all — under the boxes they act on. */}
+          {!generating && (
+            <div className="flex gap-1.5 px-3 pt-2 pb-3 justify-center max-w-[220px] mx-auto w-full">
+                <button
+                  data-tip="Select all sections"
+                  onClick={() => setSelectedSections([...GENERATE_SECTIONS])}
+                  disabled={selectedSections.length === GENERATE_SECTIONS.length}
+                  className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
+                  style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--cam-primary) 35%, transparent)' }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ color: 'var(--cam-primary)' }}>
+                    <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M3.5 6.5L5.5 8.5L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+                <button
+                  data-tip="Deselect all sections"
+                  onClick={() => setSelectedSections([])}
+                  disabled={selectedSections.length === 0}
+                  className="flex-1 flex items-center justify-center py-1.5 rounded-md transition-all active:scale-[0.97] disabled:opacity-30"
+                  style={{ background: 'color-mix(in srgb, var(--cam-primary) 12%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--cam-primary) 35%, transparent)' }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ color: 'var(--cam-primary)' }}>
+                    <rect x="1" y="1" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
+                    <path d="M4 6.5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+
+          {/* Bottom action panel */}
+          <div className="p-3 flex flex-wrap items-center justify-center gap-3"
+            style={{ borderTop: '1px solid var(--border)' }}>
+
+            {/* Progress bar — only while generating */}
+            {generating && (() => {
+              // Clamp: `done` can exceed selectedSections.length (stale/extra
+              // section statuses), which showed >100% and a wrong X/Y.
+              const done = Object.values(sectionStatus).filter(s => s === 'done').length;
+              const total = Math.max(selectedSections.length, done, 1);
+              return (
+              <div className="w-full">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[12px] font-medium" style={{ color: 'var(--text-muted)' }}>Generating…</span>
+                  <span className="text-[12px] font-bold tabular-nums" style={{ color: 'var(--cam-primary)' }}>
+                    {done}/{total}
+                  </span>
+                </div>
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-elevated)' }}>
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, (done / total) * 100)}%`, background: 'var(--cam-primary)' }} />
+                </div>
+              </div>
+              );
+            })()}
+
+            {/* Cloud provider */}
+            <div className="flex">
+              <CloudProviderSelector variant="compact" />
+            </div>
+
+
+            {/* Generate CTA */}
+            <button
+              onClick={handleGenerate}
+              disabled={!hasRequiredDocs || generating || selectedSections.length === 0}
+              className="px-6 py-2.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] disabled:opacity-40"
+              style={{
+                background: 'linear-gradient(135deg, var(--cam-primary) 0%, color-mix(in srgb, var(--cam-primary) 80%, #7c3aed) 100%)',
+                color: '#fff',
+                boxShadow: hasRequiredDocs && !generating && selectedSections.length > 0 ? '0 2px 12px color-mix(in srgb, var(--cam-primary) 40%, transparent)' : 'none',
+              }}>
+              {generating
+                ? <span className="flex items-center justify-center gap-2"><span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" />Generating…</span>
+                : `Generate ${selectedSections.length > 0 ? `(${selectedSections.length})` : ''}`}
+            </button>
+            {!hasRequiredDocs && (
+              <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>Add JD &amp; Resume to start</p>
+            )}
+
+            {/* Export and clear, as one row of icons. These were three stacked
+                full-width buttons carrying their own labels — the tallest thing
+                in the panel, for actions you press once. The format name stays
+                INSIDE the glyph: a page with "PDF" on it is read at a glance,
+                and a download arrow alone would make the two indistinguishable. */}
+            <div className="flex items-center gap-2">
+              {generatedCount > 0 && (
+                <>
+                  <ActionIcon
+                    label={downloading === 'pdf' ? 'Saving…' : 'Download as PDF'}
+                    onClick={() => handleDownload('pdf')}
+                    disabled={!!downloading}
+                    busy={downloading === 'pdf'}
+                    tint="var(--danger)"
+                  >
+                    <FileFormatIcon format="PDF" />
+                  </ActionIcon>
+                  <ActionIcon
+                    label={downloading === 'docx' ? 'Saving…' : 'Download as Word (DOCX)'}
+                    onClick={() => handleDownload('docx')}
+                    disabled={!!downloading}
+                    busy={downloading === 'docx'}
+                    tint="var(--cam-primary)"
+                  >
+                    <FileFormatIcon format="DOC" />
+                  </ActionIcon>
+                </>
+              )}
+              {/* Always visible, never hover-only — it is destructive and has to
+                  be findable. */}
+              <ActionIcon
+                label="Clear all materials and generated sections"
+                onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
+                tint="var(--danger)"
+              >
+                <TrashIcon />
+              </ActionIcon>
+            </div>
+            {downloadMsg && <p className="text-[12px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</p>}
+          </div>
             </div>
 
             {/* Status */}
