@@ -1285,7 +1285,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // included on mobile-Safari notch devices.
   const composer = (
     <div
-      className="px-3 pt-2 shrink-0 flex flex-col items-stretch gap-2 lumora-companion-input-row w-full mx-auto"
+      className="px-2 pt-2 shrink-0 flex flex-col items-stretch gap-2 lumora-companion-input-row w-full mx-auto"
       data-embedded={embedded ? 'true' : 'false'}
       style={embedded ? { maxWidth: 880 } : undefined}
     >
@@ -1331,51 +1331,50 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         {/* Double height: the composer is where the whole panel gets driven
             from, and a 36px strip at the bottom of a full-screen window read as
             a status bar rather than the thing you type into. */}
-        <div className="flex items-center gap-2 px-3 h-24 md:h-[72px] rounded-xl w-full" style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+        {/* Same box and the same control order as the Claude and Gemini
+            composers: screenshot, interviewer, mic, send. It used to run
+            listen / mic / screenshot with the send appearing only once you had
+            typed something, so the row changed width as you used it and the
+            camera was at the opposite end from where the other two keep it. */}
+        <div className="flex items-end gap-2 w-full">
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && (input.trim() || pendingImages.length > 0)) handleSubmit(); }}
             onPaste={onComposerPaste}
-            placeholder="Type a question..."
-            className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[13px]"
-            style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
-          {/* Interviewer audio, then the mic — the same two controls in the same
-              order the Claude and Gemini composers use. */}
+            placeholder="Type a question…  (Enter sends, ` is the interviewer, Space is the mic)"
+            className="flex-1 min-w-0 rounded px-2.5 py-2 h-9 text-[13px] leading-relaxed outline-none placeholder:opacity-40"
+            style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)', fontFamily: 'var(--font-sans)' }}
+            disabled={streaming} />
+          <button
+            onClick={snapIntoComposer}
+            disabled={snapping || streaming || pendingImages.length >= MAX_IMAGES}
+            className="w-9 h-9 rounded flex items-center justify-center shrink-0 transition-opacity disabled:opacity-40"
+            style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text-2)' }}
+            aria-label="Attach a screenshot"
+            data-tip={pendingImages.length >= MAX_IMAGES
+              ? `Up to ${MAX_IMAGES} screenshots per question`
+              : 'Screenshot a region into the question'}
+          >
+            {snapping
+              ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>}
+          </button>
           <InterviewerListenButton
             listening={hearingInterviewer}
             onToggle={openAudioSetup}
             tip={listenReason ?? 'Sona is hearing the interviewer. Click to change audio setup.'}
           />
-          {/* Mic — the same control the Claude and Gemini composers carry, in
-              the same place. It renders its own button; AudioCapture is also
-              the recorder, so it stays mounted while this panel is open. */}
           {onTranscription && (
             <AudioCapture onTranscription={onTranscription} autoStart active compact locked variant="composer" />
           )}
-          {/* Screenshot — ask Sona about whatever is on screen. */}
           <button
-            onClick={snapIntoComposer}
-            disabled={snapping || streaming || pendingImages.length >= MAX_IMAGES}
-            className="w-9 h-9 md:w-8 md:h-8 rounded-full flex items-center justify-center shrink-0 disabled:opacity-40"
-            style={{ border: '1px solid var(--border)' }}
-            aria-label="Add a screenshot"
-            data-tip={pendingImages.length >= MAX_IMAGES
-              ? `Up to ${MAX_IMAGES} screenshots per question`
-              : 'Screenshot — drag to select any area and ask about it. Pasting an image works too.'}
+            onClick={handleSubmit}
+            disabled={streaming || (!input.trim() && pendingImages.length === 0)}
+            className="px-3 h-9 rounded text-[12px] font-semibold shrink-0 disabled:opacity-40"
+            style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)' }}
+            aria-label="Send question"
           >
-            {snapping ? (
-              <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" style={{ color: 'var(--text-muted)' }} />
-            ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--cam-gold-leaf)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 md:w-4 md:h-4">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            )}
+            Send
           </button>
-          {(input.trim() || pendingImages.length > 0) && !streaming && (
-            <button onClick={handleSubmit} className="w-9 h-9 md:w-8 md:h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--cam-primary)' }} aria-label="Send question">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="w-4 h-4"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-            </button>
-          )}
         </div>
     </div>
   );
