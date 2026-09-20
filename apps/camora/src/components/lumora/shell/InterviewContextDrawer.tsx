@@ -14,18 +14,36 @@ import {
  *  absorbed were a hole in stealth: the list would stay on screen in a share
  *  even with the rest of Camora hidden. Buttons are ordinary DOM and go with
  *  the window. */
-const ChoiceRow = ({ label, hint, value, options, onChange }: {
+/* A numbered section header.
+
+   The three things this window sets are a SEQUENCE — which interview, then
+   where it is held, then what you will be coding in — and numbering them says
+   so. (Numbered markers are decoration on content that is not ordered; this
+   content is.) The current value sits at the right of each header, so the
+   window answers "what am I set up for" without reading a single chip. */
+const SectionHead = ({ n, label, value }: { n: number; label: string; value: string }) => (
+  <div className="flex items-center gap-2.5 mb-2.5">
+    <span
+      aria-hidden
+      className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-[10px] font-bold tabular-nums shrink-0"
+      style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}
+    >
+      {n}
+    </span>
+    <span className="text-[12px] font-semibold" style={{ color: 'var(--lum-text)' }}>{label}</span>
+    <span className="ml-auto text-[12px] truncate max-w-[45%]" style={{ color: 'var(--lum-text-2)' }}>{value}</span>
+  </div>
+);
+
+const ChoiceRow = ({ n, label, value, options, onChange }: {
+  n: number;
   label: string;
-  hint: string;
   value: string;
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
 }) => (
-  <div className="px-5 py-3 border-t" style={{ borderColor: 'var(--lum-border)' }}>
-    <div className="flex items-baseline gap-2 mb-2">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--lum-accent-sm)' }}>{label}</span>
-      <span className="text-[12px]" style={{ color: 'var(--lum-text-2)' }}>{hint}</span>
-    </div>
+  <div className="px-5 py-4 border-t" style={{ borderColor: 'var(--lum-border)' }}>
+    <SectionHead n={n} label={label} value={options.find(o => o.value === value)?.label ?? '—'} />
     <div className="flex flex-wrap gap-1.5">
       {options.map(o => {
         const on = o.value === value;
@@ -35,10 +53,10 @@ const ChoiceRow = ({ label, hint, value, options, onChange }: {
             type="button"
             onClick={() => onChange(o.value)}
             aria-pressed={on}
-            className="px-2.5 h-7 rounded-full text-[12px] font-semibold transition-colors"
+            className="px-3 h-7 rounded-md text-[12px] font-medium transition-colors"
             style={on
-              ? { background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }
-              : { background: 'transparent', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
+              ? { background: 'var(--lum-accent)', color: 'var(--lum-accent-bg)', border: '1px solid var(--lum-accent)', fontWeight: 600 }
+              : { background: 'var(--lum-bg)', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
           >
             {o.label}
           </button>
@@ -154,7 +172,7 @@ export const InterviewContextDrawer = ({
       >
         {/* Header */}
         <div
-          className="relative px-5 py-4 border-b shrink-0"
+          className="relative px-5 py-3.5 border-b shrink-0"
           style={{ borderColor: 'var(--lum-border)', background: 'var(--lum-bg)' }}
         >
           {/* One accent rule down the edge. The gradient wash behind it was two
@@ -163,12 +181,13 @@ export const InterviewContextDrawer = ({
           <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'var(--lum-accent)' }} />
           <div className="pl-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
+              {/* Title only. The subtitle explained what the window was for, to
+                  someone already looking at three labelled, numbered sections
+                  that say it better — and the eyebrow above it said the same
+                  words a third time. */}
               <h2 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--lum-text)' }}>
                 Interview context
               </h2>
-              <p className="text-[12px] mt-1 leading-relaxed" style={{ color: 'var(--lum-text-2)' }}>
-                Pick the workspace Sona answers from, and what this interview is run on.
-              </p>
             </div>
             <button
               type="button"
@@ -264,8 +283,8 @@ export const InterviewContextDrawer = ({
 
         {onMeetingPlatformChange && (
           <ChoiceRow
-            label="Meeting"
-            hint="where the interviewer is calling from"
+            n={2}
+            label="Where the interview is held"
             value={meetingPlatform || 'zoom'}
             options={MEETING_OPTIONS}
             onChange={onMeetingPlatformChange}
@@ -273,8 +292,8 @@ export const InterviewContextDrawer = ({
         )}
         {onCodingPlatformChange && (
           <ChoiceRow
-            label="Coding"
-            hint="the editor they will share"
+            n={3}
+            label="Coding platform they will share"
             value={codingPlatform || 'auto'}
             options={CODING_OPTIONS}
             onChange={onCodingPlatformChange}
@@ -282,10 +301,10 @@ export const InterviewContextDrawer = ({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t" style={{ borderColor: 'var(--lum-border)', background: 'var(--lum-bg)' }}>
-          <p className="text-[12px]" style={{ color: 'var(--lum-text-2)' }}>
-            Manage workspaces in the <strong style={{ color: 'var(--lum-text)' }}>Documents</strong> sidebar
-          </p>
+        <div className="flex items-center justify-end gap-3 px-5 py-3 shrink-0 border-t" style={{ borderColor: 'var(--lum-border)', background: 'var(--lum-bg)' }}>
+          {/* The "manage workspaces in Documents" line went with the rest of the
+              explanatory copy. The empty state already says it, in the one
+              place it is actually needed — when there is nothing to pick. */}
           <button
             type="button"
             onClick={onClose}
