@@ -88,7 +88,11 @@ export const LumoraShellPage = () => {
     try { localStorage.setItem('lumora_meeting_platform', meetingPlatform); } catch {}
   }, [meetingPlatform]);
   const { handleSubmit, handleCodingSubmit } = useStreamingSession();
-  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold, question, isDesignQuestion, setIsStealthActive } = useSessionStore();
+  const { isStreaming, history, useSearch, setUseSearch, clearHistory, removeHistoryEntry, threshold: vadThreshold, question, isDesignQuestion, setIsStealthActive, voiceEnrolled, voiceFilterEnabled } = useSessionStore();
+  // Read through a ref: handleTranscript is a useCallback that must not
+  // re-create (and drop its coalescer) every time the toggle flips.
+  const voiceFilterActiveRef = useRef(false);
+  useEffect(() => { voiceFilterActiveRef.current = voiceEnrolled && voiceFilterEnabled; }, [voiceEnrolled, voiceFilterEnabled]);
   // Persist the Settings-tip dismissal so it's a true one-time hint,
   // not a banner that re-appears on every page load and re-eats
   // ~40 vertical px on phones. Once dismissed, never shown again on
@@ -347,6 +351,11 @@ export const LumoraShellPage = () => {
         manual: isManual,
         source,
         dedicatedInterviewerHeard: dedicatedInterviewerHeardRef.current,
+        // The filter is a standing instruction — "do not turn my own voice into
+        // text" — and it has to be enforced here too, not only in the backend
+        // call. That one fails open when the voice print is missing.
+        voiceFilterActive: voiceFilterActiveRef.current,
+        filtered: opts?.filtered === true,
       })) return;
       window.dispatchEvent(new CustomEvent('lumora:behavioral-question', { detail: { text: trimmed, manual: isManual } }));
       return;

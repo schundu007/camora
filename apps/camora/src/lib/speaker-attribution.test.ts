@@ -57,3 +57,50 @@ describe('room-mic is not treated as a trusted dedicated stream', () => {
     expect(source).toBe('room');
   });
 });
+
+// The long-standing leak: with the voice filter switched ON, the candidate's
+// own voice still reached the question box. Two layers were supposed to stop
+// it and both failed open — the backend call needs an enrolled print (missing
+// prints read exactly like clean audio), and attribution never looked at the
+// filter at all.
+describe('isCandidateSelfVoice — the voice filter is a standing instruction', () => {
+  const base = { manual: false, dedicatedInterviewerHeard: false };
+
+  it('drops the candidate mic while the filter is on, even with no dedicated stream', () => {
+    // This is the case that leaked: a mic-only or room setup where nothing has
+    // ever proven it can hear the interviewer separately.
+    expect(isCandidateSelfVoice({ ...base, source: undefined, voiceFilterActive: true })).toBe(true);
+  });
+
+  it('still allows the candidate mic when the filter is off', () => {
+    // Someone testing alone with no filter on: the mic is the only ear in the
+    // room and suppressing it would leave Sona deaf.
+    expect(isCandidateSelfVoice({ ...base, source: undefined, voiceFilterActive: false })).toBe(false);
+  });
+
+  it('drops an unfiltered room chunk while the filter is on', () => {
+    // The filter was meant to run on this and did not. A room mic carries both
+    // voices, so an unfiltered chunk is the failure, not permission.
+    expect(isCandidateSelfVoice({ ...base, source: 'room', voiceFilterActive: true, filtered: false })).toBe(true);
+  });
+
+  it('accepts a room chunk the filter actually ran on', () => {
+    expect(isCandidateSelfVoice({ ...base, source: 'room', voiceFilterActive: true, filtered: true })).toBe(false);
+  });
+
+  it('leaves room behaviour unchanged when the filter is off', () => {
+    // Not part of this fix: an unenrolled room-mic setup still works the way
+    // it always has, rather than going silent.
+    expect(isCandidateSelfVoice({ ...base, source: 'room', voiceFilterActive: false, filtered: false })).toBe(false);
+  });
+
+  it('never suppresses a dedicated interviewer stream', () => {
+    expect(isCandidateSelfVoice({ ...base, source: 'interviewer', voiceFilterActive: true })).toBe(false);
+  });
+
+  it('never suppresses a deliberate manual press', () => {
+    // The filter stops Sona OVERHEARING you. It does not stop you choosing to
+    // speak to her.
+    expect(isCandidateSelfVoice({ ...base, manual: true, source: undefined, voiceFilterActive: true })).toBe(false);
+  });
+});

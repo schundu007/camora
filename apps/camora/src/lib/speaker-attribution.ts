@@ -31,6 +31,12 @@ export interface AttributionInput {
   /** A dedicated interviewer stream has delivered at least one transcript this
    *  session. Latched by the caller — never cleared while mounted. */
   dedicatedInterviewerHeard: boolean;
+  /** The candidate has an enrolled voice print AND the filter switched on.
+   *  A standing instruction: do not turn my own voice into text. */
+  voiceFilterActive?: boolean;
+  /** The backend actually ran the voice filter on THIS chunk and took the
+   *  candidate out of it. Set by SpeakerAudio per transcript. */
+  filtered?: boolean;
 }
 
 /**
@@ -64,8 +70,32 @@ export const isCandidateSelfVoice = ({
   manual,
   source,
   dedicatedInterviewerHeard,
+  voiceFilterActive = false,
+  filtered = false,
 }: AttributionInput): boolean => {
   if (manual) return false;
-  if (source) return false;
+  if (source === 'interviewer') return false;
+
+  // A room mic is ONE microphone hearing everyone, so it is the interviewer
+  // only while the backend's filter actually removed the candidate from this
+  // chunk. `source` used to be enough on its own — any truthy source was
+  // trusted — which meant a room chunk the filter never ran on was accepted as
+  // a question with both voices still in it. While the filter is switched on,
+  // a chunk that comes back unfiltered is the filter having failed (a wiped
+  // voice print reads exactly like this), not permission to use it.
+  if (source === 'room') return voiceFilterActive && !filtered;
+
+  // The candidate's own microphone.
+  //
+  // The filter is a standing instruction, and it has to hold HERE, not only in
+  // the backend call. Those are two different layers and the backend one fails
+  // OPEN: shouldFilterVoice needs an enrolled print, so if the print is missing
+  // — which has happened, silently, when the volume holding them was wiped —
+  // nothing is filtered and the raw mixed transcript arrives looking exactly
+  // like a clean one. Attribution never looked at the filter at all, so both
+  // layers failed together and the candidate's own answers were typed into the
+  // question box while the Filter chip said it was on.
+  if (voiceFilterActive) return true;
+
   return dedicatedInterviewerHeard;
 };
