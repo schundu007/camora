@@ -381,10 +381,20 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     URL.revokeObjectURL(url);
   }, [messages, activeAssistant]);
 
-  const clearMessages = useCallback(async () => {
+  /* Clears immediately, the way New does on the Claude and Gemini tabs.
+   *
+   * It used to confirm, which is the right instinct for a destructive button
+   * and the wrong reading of this one: the dialog's own text said "saved
+   * sessions are not affected". Nothing is destroyed — the panel is cleared,
+   * the session is already persisted — so the prompt was asking permission for
+   * something that could not lose anything, on a surface where every extra
+   * click is spent with an interviewer waiting.
+   *
+   * The two tabs never asked, so behavioral asking made the same chip behave
+   * differently depending on which surface you happened to be on. */
+  const clearMessages = useCallback(() => {
     if (messages.length === 0) return;
-    const ok = await dialogConfirm({ title: 'Reset this interview?', message: 'This clears the current behavioral Q&A with Sona so you can start fresh. Saved sessions are not affected.', confirmLabel: 'Reset', tone: 'danger' });
-    if (ok) setMessages([]);
+    setMessages([]);
   }, [messages.length]);
 
   // Declared here (before the useEffect below) so the dependency array
