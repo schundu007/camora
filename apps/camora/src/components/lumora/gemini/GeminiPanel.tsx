@@ -283,6 +283,7 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
           answer this better. */}
       <div className="shrink-0 px-2 pt-2" style={{ background: 'var(--lum-surface)' }}>
         <AskSwitcher
+          topRow
           onNew={newChat}
           onCopy={copyLast}
           hasContent={hasAnswer}

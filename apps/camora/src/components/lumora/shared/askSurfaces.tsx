@@ -104,14 +104,34 @@ export interface AskActions {
 export const AskSwitcher = ({
   className = '',
   voice = true,
+  topRow = false,
   onNew,
   onCopy,
   onExport,
   hasContent = false,
-}: { className?: string; voice?: boolean } & AskActions) => {
+}: {
+  className?: string;
+  voice?: boolean;
+  /**
+   * This strip is the TOPMOST row of the window, so its right end has to clear
+   * the desktop window controls — the grip, the overlay slider, dock, minimise
+   * and close — which are positioned over the top-right corner and are not in
+   * the layout. `lumora-winctl-safe` reserves 120px for them, 188px in overlay
+   * where the transparency slider widens the cluster.
+   *
+   * Only the surfaces where this strip is genuinely first need it. On the
+   * others a strip above it already reserves, and adding it there would just
+   * push the chips off their own centre.
+   */
+  topRow?: boolean;
+} & AskActions) => {
   const { pathname } = useLocation();
   return (
-    <div className={`flex items-center gap-1 ${className}`} role="navigation" aria-label="Answer surface">
+    <div
+      className={`flex items-center gap-1 ${topRow ? 'lumora-winctl-safe' : ''} ${className}`}
+      role="navigation"
+      aria-label="Answer surface"
+    >
       {ASK_SURFACES.map((s) => {
         const active = pathname.startsWith(s.path);
         return (
