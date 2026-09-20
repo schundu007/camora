@@ -15,7 +15,11 @@ set -uo pipefail
 NEEDLE="${1:?usage: verify-deploy.sh <needle> [origin]}"
 ORIGIN="${2:-https://camora.cariara.com}"
 
-INDEX="$(curl -fsS "$ORIGIN/")" || { echo "FAIL: cannot fetch $ORIGIN"; exit 1; }
+# Cache-bust the entry: edges hand back a stale index.html for a while after a
+# deploy, and a stale index names the OLD chunks — so the crawl greps the
+# previous build and reports a pass or a fail about code that is not current.
+INDEX="$(curl -fsS -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$ORIGIN/?cb=$(date +%s)")" \
+  || { echo "FAIL: cannot fetch $ORIGIN"; exit 1; }
 mapfile -t SEEDS < <(grep -oE '/assets/[A-Za-z0-9._-]+\.(js|css)' <<<"$INDEX" | sort -u)
 [ "${#SEEDS[@]}" -gt 0 ] || { echo "FAIL: no assets referenced by $ORIGIN"; exit 1; }
 
