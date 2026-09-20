@@ -521,7 +521,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // east/south handles can shift the bottom-right anchor outward without
   // accumulating drift across consecutive moves.
   const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number; origX: number; origY: number; mode: string } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const initialQuestionSent = useRef(false);
 
@@ -1308,9 +1308,8 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // included on mobile-Safari notch devices.
   const composer = (
     <div
-      className="px-2 pt-2 shrink-0 flex flex-col items-stretch gap-2 lumora-companion-input-row w-full mx-auto"
+      className="px-2 pt-2 shrink-0 flex flex-col items-stretch gap-2 lumora-companion-input-row w-full"
       data-embedded={embedded ? 'true' : 'false'}
-      style={embedded ? { maxWidth: 880 } : undefined}
     >
         {/* Voice enrollment / filter status lives in the ScreenshotStrip top
             toolbar for behavioral (the single <VoiceEnrollment> instance,
@@ -1360,11 +1359,21 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             typed something, so the row changed width as you used it and the
             camera was at the opposite end from where the other two keep it. */}
         <div className="flex items-end gap-2 w-full">
-          <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && (input.trim() || pendingImages.length > 0)) handleSubmit(); }}
+          {/* A 2-row textarea, not a single-line input — the same field the
+              tabs use, so the row is the same height and a long question does
+              not scroll sideways out of view as you type it. Enter sends,
+              Shift+Enter is a newline. */}
+          <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (input.trim() || pendingImages.length > 0) handleSubmit();
+              }
+            }}
             onPaste={onComposerPaste}
+            rows={2}
             placeholder="Type a question…  (Enter sends, ` is the interviewer, Space is the mic)"
-            className="flex-1 min-w-0 rounded px-2.5 py-2 h-9 text-[13px] leading-relaxed outline-none placeholder:opacity-40"
+            className="flex-1 min-w-0 resize-none rounded px-2.5 py-2 text-[13px] leading-relaxed outline-none placeholder:opacity-40"
             style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)', fontFamily: 'var(--font-sans)' }}
             disabled={streaming} />
           <button
