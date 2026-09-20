@@ -219,6 +219,20 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
   // the effect below to that object would re-register the listener every time.
   const { toggle: toggleListen } = listen;
 
+  /* ` when there is no interviewer stream opens audio setup instead of doing
+     nothing.
+     
+     It used to just return: toggle() bails when the source is unavailable, so
+     the key was silent and indistinguishable from a dead binding. The reason
+     was only ever in a tooltip, which you have to go hunting for — and you do
+     not hunt for tooltips with an interviewer waiting. Now the key always does
+     something, and what it does is the thing that fixes the problem it is
+     reporting. Same behaviour as the behavioral surface. */
+  const onInterviewerKey = useCallback(() => {
+    if (listen.available) toggleListen();
+    else window.dispatchEvent(new CustomEvent('lumora:open-audio-wizard'));
+  }, [listen.available, toggleListen]);
+
   // Two audio keys, matching Ask Sona so the pair means the same thing on every
   // surface:
   //   `      → arm/disarm interviewer listening
@@ -250,11 +264,11 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
       if (isSpace && (tag === 'BUTTON' || tag === 'A' || tag === 'SELECT' ||
           el?.getAttribute('role') === 'button')) return;
       e.preventDefault();
-      if (isTick) toggleListen(); else setMicToggle(n => n + 1);
+      if (isTick) onInterviewerKey(); else setMicToggle(n => n + 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isActive, input, toggleListen]);
+  }, [isActive, input, onInterviewerKey]);
 
   const hasAnswer = messages.some(m => m.role === 'assistant');
 
@@ -334,10 +348,14 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
               ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>}
           </button>
+          {/* Clickable in BOTH states. Passing the reason as `unavailableReason`
+              disabled the button, which took away the one control that could
+              fix what it was reporting — so the reason is a tooltip now and the
+              click routes to audio setup. */}
           <InterviewerListenButton
             listening={listen.listening}
-            onToggle={listen.toggle}
-            unavailableReason={listen.unavailableReason}
+            onToggle={onInterviewerKey}
+            tip={listen.unavailableReason}
           />
           <StreamingMicButton
             toggleSignal={micToggle}
