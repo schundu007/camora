@@ -256,7 +256,6 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [isActive, input, toggleListen]);
 
-  const strip = 'flex items-center gap-1.5 px-2 h-7 rounded hover:bg-[var(--lum-surface-hover)] transition-colors text-[12px] font-semibold';
   const hasAnswer = messages.some(m => m.role === 'assistant');
 
   // Only the last two turns render. Everything older stays in `messages` and
@@ -276,26 +275,6 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 relative">
-      <div
-        className="flex items-center gap-1 px-2 h-9 shrink-0"
-        style={{ background: 'var(--lum-surface)', borderBottom: '1px solid var(--lum-border)' }}
-      >
-        <button type="button" onClick={newChat} data-tip="Start a new chat" aria-label="New chat"
-          className={strip} style={{ color: 'var(--lum-text-2)' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
-          New chat
-        </button>
-        <button type="button" onClick={copyLast} disabled={!hasAnswer}
-          data-tip="Copy the last answer" aria-label="Copy answer"
-          className={strip} style={{ color: 'var(--lum-text-2)', opacity: hasAnswer ? 1 : 0.4 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
-          {copied ? 'Copied' : 'Copy answer'}
-        </button>
-        <div className="ml-auto flex items-center gap-1">
-          <span className="text-[12px] font-mono tabular-nums pl-1" style={{ color: 'var(--lum-text-2)' }}>gemini</span>
-        </div>
-      </div>
-
       {/* Composer on TOP. The answer is the thing being read mid-interview,
           so it grows downward from a fixed point instead of pushing the box
           you are typing in around as it streams. */}
@@ -303,7 +282,11 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
           is where the eye already is when you decide the other model would
           answer this better. */}
       <div className="shrink-0 px-2 pt-2" style={{ background: 'var(--lum-surface)' }}>
-        <AskSwitcher />
+        <AskSwitcher
+          onNew={newChat}
+          onCopy={copyLast}
+          hasContent={hasAnswer}
+        />
       </div>
       <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)', borderBottom: '1px solid var(--lum-border)' }}>
         {/* Attached screenshots, above the box they belong to. */}

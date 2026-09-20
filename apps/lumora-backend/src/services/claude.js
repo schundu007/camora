@@ -789,27 +789,33 @@ Think: What would fit on a sticky note that helps someone ace this question?`;
     // verbatim — depth is a budget change, not a shape change. Loosen only the
     // walkable-format caps, which exist for a candidate glancing down mid-
     // sentence and are the one thing a user asking for detail is opting out of.
-    if (isBehavioral && !isShortMode) {
+    if (isBehavioral) {
+      // ONE behavioral depth, sitting between what Short and Detailed used to
+      // be. The two modes were a real control — 20 vs 30 word bullets, 3 vs 5
+      // actions, 1200 vs 3000 tokens — but they were a setting the candidate
+      // had to pick correctly in advance, with a toolbar chip carrying it
+      // through every interview, to land somewhere the middle would have served
+      // anyway. Short truncated a good story; Detailed padded a thin one.
       systemPrompt += `
 
-═══ DETAILED MODE — MORE ROOM, IDENTICAL SHAPE ═══
-The candidate asked for depth, so you may say more inside each section. EVERY
-structural rule above still binds without exception: the ARCHETYPE line, the
-Situation / Task / Action / Result labels and the REBUTTALS block are still
+═══ DEPTH — FULL LINES, SAME SHAPE ═══
+EVERY structural rule above still binds without exception: the ARCHETYPE line,
+the Situation / Task / Action / Result labels and the REBUTTALS block are
 REQUIRED, spelled exactly as specified. The UI parses those labels to render the
 answer — drop one and the whole answer collapses into an unreadable wall of
-prose. What changes, and all that changes:
-- Bullets may run to 30 words instead of 20. Still ONE idea per bullet.
-- ACTION may use up to 5 bullets instead of 3.
+prose. Within that skeleton:
+- Bullets run to about 25 words. Still ONE idea per bullet.
+- ACTION uses up to 4 bullets.
 - RESULT keeps its hard metric, and may add ONE sentence of downstream impact.
-- Emit 3-4 REBUTTALS instead of 2-3.
-- A direct (non-STAR) answer may use 5-7 cue-card lines instead of 3-5.
+- Emit 3 REBUTTALS.
+- A direct (non-STAR) answer uses 4-6 cue-card lines.
 Do NOT switch to paragraphs. Do NOT drop or rename the labels. Do NOT bolt on a
-summary section. Depth means fuller lines inside the same skeleton.`;
-      // 1200 is sized for the tight cue card; a 5-bullet ACTION plus 4 rebuttals
-      // truncates against it. Below MAX_TOKENS_DESIGN (12k) on purpose — this is
-      // still an answer someone reads aloud, not a document.
-      maxTokens = 3000;
+summary section. This is still an answer someone reads ALOUD while an
+interviewer waits — every line has to be sayable in one breath.`;
+      // Between the old 1200 (sized for the tight cue card, which truncated a
+      // 4-bullet ACTION plus 3 rebuttals) and 3000. Well below
+      // MAX_TOKENS_DESIGN on purpose: this is spoken, not a document.
+      maxTokens = 2000;
     }
   } else if (isCoding) {
     // CODING_SYSTEM_PROMPT is opinionated and doesn't read `resume`, so the

@@ -153,7 +153,7 @@
     --topbar-height: 60px;
     --toc-width: 200px;
     --content-max: 720px;
-    --page-max: 1280px;
+    --page-max: 1600px;
     --nav-h: 84px;
 
     /* Legacy compat aliases */
@@ -1707,6 +1707,20 @@ html:not([data-overlay='on'])[data-theme='light'] .lumora-shell-root textarea {
 /* ── Page layout ────────────────────────────────────────────────── */
 /* Standard page content wrapper. Apply to the main content div on every
    public page so max-width + gutter are consistent across the site. */
+/* The one place content width is decided for shelled pages. RootShell wraps
+   every page in this, so a page cannot silently invent its own measure.
+   Pages that genuinely need the whole viewport (code editor, playground,
+   whiteboard) opt out explicitly via ShellRoute's fullBleed prop. */
+.app-measure {
+  width: 100%;
+  max-width: var(--page-max, 1600px);
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) { .app-measure { padding-inline: 1.5rem; } }
+/* Nested inside .app-measure, .page-wrap must not re-pad or re-centre. */
+.app-measure .page-wrap { max-width: none; padding-inline: 0; }
+
 .page-wrap {
   width: 100%;
   max-width: var(--page-max, 1280px);

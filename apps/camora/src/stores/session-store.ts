@@ -134,7 +134,6 @@ interface SessionState {
   isStealthActive: boolean;
 
   // Sona response verbosity — shared across AICompanionPanel and ScreenshotStrip
-  answerMode: 'short' | 'detailed';
 
   // Sona panel actions — registered by AICompanionPanel, consumed by ScreenshotStrip
   sonaExport: (() => void) | null;
@@ -181,7 +180,6 @@ interface SessionState {
   setLastFromCache: (fromCache: boolean | null) => void;
   setLiveSolveContext: (ctx: SessionState['liveSolveContext']) => void;
   setIsStealthActive: (v: boolean) => void;
-  setAnswerMode: (mode: 'short' | 'detailed') => void;
   setSonaActions: (actions: { export: (() => void) | null; clear: (() => void) | null; close: (() => void) | null; hasMessages: boolean }) => void;
 }
 
@@ -234,7 +232,6 @@ const initialState = {
   isStealthActive: true,
   popupVisible: false,
   popupMinimized: false,
-  answerMode: 'short' as const,
   sonaExport: null as (() => void) | null,
   sonaClear: null as (() => void) | null,
   sonaClose: null as (() => void) | null,
@@ -365,7 +362,6 @@ export const useSessionStore = create<SessionState>()(
   setIsStealthActive: (v) => set({ isStealthActive: v }),
   setPopupVisible: (visible) => set({ popupVisible: visible }),
   setPopupMinimized: (minimized) => set({ popupMinimized: minimized }),
-  setAnswerMode: (mode) => set({ answerMode: mode }),
   setSonaActions: ({ export: exp, clear, close, hasMessages }) => set({
     sonaExport: exp,
     sonaClear: clear,
@@ -409,7 +405,6 @@ export const useSessionStore = create<SessionState>()(
         voiceFilterEnabled: state.voiceFilterEnabled,
         modelOverrides: state.modelOverrides,
         isStealthActive: state.isStealthActive,
-        answerMode: state.answerMode,
       }),
       migrate: (old: any) => ({
         useSearch: old?.useSearch ?? false,
@@ -429,7 +424,6 @@ export const useSessionStore = create<SessionState>()(
         voiceFilterEnabled: old?.voiceFilterEnabled ?? false,
         modelOverrides: old?.modelOverrides ?? { coding: '', behavioral: '', design: '', prep: '' },
         isStealthActive: old?.isStealthActive ?? true,
-        answerMode: old?.answerMode ?? 'short',
       }),
     }
   )

@@ -30,6 +30,39 @@ export const ASK_SURFACES: AskSurface[] = [
  * every non-button element in the shell, and without the fill there is nothing
  * left to say which surface you are on.
  */
+const ACTION_ICON = {
+  new: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>,
+  copy: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>,
+  export: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>,
+};
+
+const ActionChip = ({ kind, label, onClick, disabled }: {
+  kind: keyof typeof ACTION_ICON; label: string; onClick: () => void; disabled?: boolean;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    data-tip={label}
+    aria-label={label}
+    className="flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[12px] font-semibold whitespace-nowrap shrink-0 transition-colors disabled:opacity-40"
+    style={{ background: 'transparent', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
+  >
+    {ACTION_ICON[kind]}
+    {label}
+  </button>
+);
+
+export interface AskActions {
+  /** Clear this surface's Q&A. "New chat" on the tabs, "Reset" on behavioral —
+   *  the same action under two names, so it gets one name here. */
+  onNew?: () => void;
+  onCopy?: () => void;
+  onExport?: () => void;
+  /** Both New and Export are meaningless on an empty surface. */
+  hasContent?: boolean;
+}
+
 /**
  * @param voice  Show the enrol / filter control on the right of the strip.
  *   Whose voice becomes a question is the same rule on all four surfaces, so
@@ -37,7 +70,14 @@ export const ASK_SURFACES: AskSurface[] = [
  *   on behavioral, which is why the filter read as a behavioral setting rather
  *   than the standing instruction it actually is.
  */
-export const AskSwitcher = ({ className = '', voice = true }: { className?: string; voice?: boolean }) => {
+export const AskSwitcher = ({
+  className = '',
+  voice = true,
+  onNew,
+  onCopy,
+  onExport,
+  hasContent = false,
+}: { className?: string; voice?: boolean } & AskActions) => {
   const { pathname } = useLocation();
   return (
     <div className={`flex items-center gap-1 ${className}`} role="navigation" aria-label="Answer surface">
@@ -59,11 +99,17 @@ export const AskSwitcher = ({ className = '', voice = true }: { className?: stri
           </Link>
         );
       })}
-      {voice && (
-        <span className="ml-auto pl-2 shrink-0" data-overlay-keep>
-          <VoiceEnrollment disabled={false} variant="light" iconOnly />
-        </span>
-      )}
+      {/* Actions, in the same strip and the same shape on every surface.
+          They used to be four different toolbars saying four different things
+          for the same job: "New chat" on the tabs, a Reset icon on behavioral,
+          "+ New" on Ask. One row, one vocabulary, so nothing has to be
+          relearned when you switch mid-interview. */}
+      <span className="ml-auto flex items-center gap-1 shrink-0" data-overlay-keep>
+        {onNew && <ActionChip kind="new" label="New" onClick={onNew} disabled={!hasContent} />}
+        {onCopy && <ActionChip kind="copy" label="Copy" onClick={onCopy} disabled={!hasContent} />}
+        {onExport && <ActionChip kind="export" label="Export" onClick={onExport} disabled={!hasContent} />}
+        {voice && <VoiceEnrollment disabled={false} variant="light" iconOnly />}
+      </span>
     </div>
   );
 };

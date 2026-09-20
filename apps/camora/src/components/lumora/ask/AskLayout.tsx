@@ -1037,7 +1037,15 @@ export const AskLayout = () => {
           {/* Surface switcher — above the box you type into, because that is
               where the eye already is when you decide another model would
               answer this better. */}
-          <AskSwitcher className="mb-2 px-1" />
+          <AskSwitcher
+            className="mb-2 px-1"
+            onNew={startNew}
+            onCopy={() => {
+              const last = [...messages].reverse().find(m => m.role === 'assistant');
+              if (last) navigator.clipboard?.writeText(last.content).catch(() => { /* denied */ });
+            }}
+            hasContent={messages.length > 0}
+          />
           {/* Input box */}
           <div
             className="relative rounded-2xl flex flex-col"

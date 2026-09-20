@@ -415,8 +415,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     return typeof window === 'undefined' ? 560 : Math.min(560, Math.max(360, window.innerHeight - 96));
   });
   const [isResizing, setIsResizing] = useState<false | 'w' | 'h' | 'wh' | 'e' | 's' | 'es'>(false);
-  const answerMode = useSessionStore(s => s.answerMode);
-  const setAnswerMode = useSessionStore(s => s.setAnswerMode);
   const [position, setPosition] = useState(() => savedPrefs ? { x: savedPrefs.x, y: savedPrefs.y } : { x: 0, y: 0 });
 
   // Debounced write-through of size + position
@@ -734,7 +732,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       return;
     }
 
-    const modePrefix = answerMode === 'short' ? '[SHORT] ' : '[DETAILED] ';
 
     activeQuestionRef.current = trimmed;
     noteHeard(trimmed, 'answering');
@@ -779,7 +776,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       const imgs = pendingImagesRef.current;
       if (imgs.length) { pendingImagesRef.current = []; setPendingImages([]); }
       await streamResponse({
-        question: modePrefix + question.trim(),
+        question: question.trim(),
         ...(imgs.length ? { images: imgs } : {}),
         token,
         signal: streamAbort.signal,
@@ -865,7 +862,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       setStreamText('');
       setStreaming(false);
     }
-  }, [token, streaming, answerMode, systemContext, addHistoryEntry, embedded, noteHeard]);
+  }, [token, streaming, systemContext, addHistoryEntry, embedded, noteHeard]);
 
   /**
    * Skip the question Sona is answering right now.
@@ -1257,7 +1254,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         {/* Surface switcher — above the box you type into, because that is where
             the eye already is when you decide another model would answer this
             better. */}
-        <AskSwitcher className="mb-2 overflow-x-auto" />
+        <AskSwitcher
+          className="mb-2 overflow-x-auto"
+          onNew={clearMessages}
+          onExport={exportSession}
+          hasContent={messages.length > 0}
+        />
         {/* Text input — visible in both floating and embedded behavioral mode */}
         {/* Double height: the composer is where the whole panel gets driven
             from, and a 36px strip at the bottom of a full-screen window read as
@@ -1803,7 +1805,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             <div className="flex flex-col items-center justify-center h-full py-6">
               <div className="mb-4 opacity-40"><SonaAvatar size={32} /></div>
               <p className="text-[12px] mb-3 text-center" style={{ color: C.muted }}>
-                {answerMode === 'short' ? 'Short mode — concise bullet points' : 'Detailed mode — comprehensive explanations'}
+                Ask, or let Sona pick the question up from the call.
               </p>
               <div className="grid grid-cols-2 gap-1.5 w-full">
                 {['Design a URL shortener', 'Explain TCP vs UDP', 'Tell me about a conflict', 'Detect cycle in linked list'].map(s => (

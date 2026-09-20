@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { CSSProperties } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import SiteNav from '../../components/shared/SiteNav';
 import SiteFooter from '../../components/shared/SiteFooter';
@@ -193,14 +192,7 @@ export default function PythonLearnPage() {
   const totalMins = PYTHON_TOPICS.reduce((s, t) => s + t.estimatedMins, 0);
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      /* 125% of the shared 1280px page width. Scoped to this page: the lesson
-         body, its code blocks and the cheat-sheet tables all want the room,
-         and every other page keeps the site-wide --page-max. Both page-wrap
-         users below (hero and body) inherit it, so they stay aligned. */
-      style={{ background: 'var(--bg-app)', '--page-max': '1600px' } as CSSProperties}
-    >
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg-app)' }}>
       <SiteNav variant="light" />
 
       {/* Hero */}

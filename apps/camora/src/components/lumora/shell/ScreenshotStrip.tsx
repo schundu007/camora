@@ -53,12 +53,7 @@ const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[12px] font-b
 
 export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform, inline }: ScreenshotStripProps) => {
   const { token } = useAuth();
-  const answerMode = useSessionStore(s => s.answerMode);
-  const setAnswerMode = useSessionStore(s => s.setAnswerMode);
-  const sonaExport = useSessionStore(s => s.sonaExport);
-  const sonaClear = useSessionStore(s => s.sonaClear);
   const sonaClose = useSessionStore(s => s.sonaClose);
-  const sonaHasMessages = useSessionStore(s => s.sonaHasMessages);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [snapError, setSnapError] = useState<string | null>(null);
   // Arm-then-click-another-window only exists for surfaces without native region
@@ -322,65 +317,19 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* SHORT / DETAILED — behavioral tab only.
-          Two icon-only buttons whose selected state was drawn with
-          --cam-chip-active-bg: #001129 sitting on a #161d26 strip, two
-          near-black navies one step apart. Which mode you were in was, in
-          practice, not marked at all — the same thing the icon rail found and
-          fixed for itself with a tint plus a border.
-          It also said nothing about what the two icons meant. A segmented pair
-          that carries its own words needs no tooltip and no guess. */}
-      {surface === 'behavioral' && (
-        <div
-          className="flex items-center gap-0.5 p-0.5 rounded-lg shrink-0"
-          data-overlay-keep
-          role="group"
-          aria-label="Answer length"
-          style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
-        >
-          {(['short', 'detailed'] as const).map(mode => {
-            const on = answerMode === mode;
-            return (
-              <button
-                key={mode}
-                onClick={() => setAnswerMode(mode)}
-                data-tip={mode === 'short' ? 'Short — concise bullet points' : 'Detailed — comprehensive explanations'}
-                aria-label={mode === 'short' ? 'Short answers' : 'Detailed answers'}
-                aria-pressed={on}
-                className="flex items-center gap-1.5 h-[22px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors"
-                style={on
-                  ? { background: 'color-mix(in oklab, var(--cam-gold-leaf) 18%, transparent)', color: 'var(--cam-strip-heading)', border: '1px solid var(--cam-gold-leaf)' }
-                  : { background: 'transparent', color: 'var(--cam-strip-text)', border: '1px solid transparent' }}
-              >
-                {mode === 'short' ? <ShortIcon /> : <DetailedIcon />}
-                {mode === 'short' ? 'Short' : 'Detailed'}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Sona panel actions — behavioral only, lifted from AICompanionPanel header */}
-      {surface === 'behavioral' && (sonaExport || sonaClear || sonaClose) && (
+      {/* The Short / Detailed pair is gone. It was a real control — 20 vs 30
+          word bullets, 3 vs 5 actions, 1200 vs 3000 tokens — but it asked the
+          candidate to pick a depth correctly in advance and then carried a chip
+          through every interview to land somewhere the middle serves anyway.
+          One averaged depth now lives in the behavioral prompt itself. */}
+      {/* Export and Reset moved to the shared strip above the composer, where
+          all four surfaces now carry the same row. They were the same actions
+          the tabs already had under other names — "New chat" there, a Reset
+          icon here — so keeping a second, icon-only copy on one surface meant
+          relearning the toolbar every time you switched mid-interview.
+          Close stays: it shuts THIS panel, and only this one has a panel. */}
+      {surface === 'behavioral' && sonaClose && (
         <div className="lum-tool-group" data-overlay-keep>
-          <button
-            onClick={sonaExport ?? undefined}
-            disabled={!sonaHasMessages}
-            data-tip="Export session (.md)"
-            aria-label="Export session"
-            className="lum-tool-btn"
-          >
-            <ExportIcon />
-          </button>
-          <button
-            onClick={sonaClear ?? undefined}
-            disabled={!sonaHasMessages}
-            data-tip="Reset — clear this interview's Q&A"
-            aria-label="Reset interview"
-            className="lum-tool-btn"
-          >
-            <ResetIcon />
-          </button>
           <button
             onClick={sonaClose ?? undefined}
             data-tip="Close Sona"
@@ -421,38 +370,12 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
 const ICON = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round', strokeLinejoin: 'round' } as const;
 
 // Short answers — one full line over a short one (a brief, clipped reply).
-const ShortIcon = () => (
-  <svg {...ICON} aria-hidden="true">
-    <path d="M5 9h14" />
-    <path d="M5 15h6" />
-  </svg>
-);
 
 // Detailed answers — full stacked lines (a long, comprehensive reply).
-const DetailedIcon = () => (
-  <svg {...ICON} aria-hidden="true">
-    <path d="M4 7h16" />
-    <path d="M4 12h16" />
-    <path d="M4 17h11" />
-  </svg>
-);
 
 // Export — a page leaving downward into a tray.
-const ExportIcon = () => (
-  <svg {...ICON} aria-hidden="true">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
-);
 
 // Reset — counter-clockwise arrow, the universal "start this over".
-const ResetIcon = () => (
-  <svg {...ICON} aria-hidden="true">
-    <polyline points="1 4 1 10 7 10" />
-    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-  </svg>
-);
 
 const CloseIcon = () => (
   <svg {...ICON} aria-hidden="true">
