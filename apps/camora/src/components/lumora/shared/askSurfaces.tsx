@@ -133,10 +133,14 @@ export const AskSwitcher = ({
   const { pathname } = useLocation();
   return (
     <div
-      className={`flex items-center gap-1 ${topRow ? 'lumora-winctl-safe' : ''} ${className}`}
+      className={`flex items-center gap-2 ${topRow ? 'lumora-winctl-safe' : ''} ${className}`}
       role="navigation"
       aria-label="Answer surface"
     >
+      {/* Three tracks: surfaces, actions, spacer. The two outer tracks are
+          flex-1 and therefore equal, which puts the actions on the row's TRUE
+          centre — ml-auto only pushed them to the right end. */}
+      <div className="flex-1 flex items-center gap-1 min-w-0">
       {ASK_SURFACES.map((s) => {
         const active = pathname.startsWith(s.path);
         return (
@@ -155,18 +159,21 @@ export const AskSwitcher = ({
           </Link>
         );
       })}
+      </div>
       {/* Actions, in the same strip and the same shape on every surface.
           They used to be four different toolbars saying four different things
           for the same job: "New chat" on the tabs, a Reset icon on behavioral,
           "+ New" on Ask. One row, one vocabulary, so nothing has to be
           relearned when you switch mid-interview. */}
-      <span className="ml-auto flex items-center gap-1 shrink-0" data-overlay-keep>
+      <span className="flex items-center gap-1 shrink-0" data-overlay-keep>
         {onNew && <ActionChip kind="new" label="New" onClick={onNew} disabled={!hasContent} />}
         {onCopy && <ActionChip kind="copy" label="Copy" onClick={onCopy} disabled={!hasContent} />}
         {onExport && <ActionChip kind="export" label="Export" onClick={onExport} disabled={!hasContent} />}
         {onClose && <ActionChip kind="close" label="Close" onClick={onClose} />}
         {voice && <VoiceEnrollment disabled={false} variant="light" iconOnly />}
       </span>
+      {/* Balances the surfaces track so the centre is the real centre. */}
+      <div className="flex-1" aria-hidden />
     </div>
   );
 };
