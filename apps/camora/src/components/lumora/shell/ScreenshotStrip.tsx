@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionStore } from '@/stores/session-store';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
-import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { snapRegion, canRegionSnap } from '@/lib/lumora/snapCapture';
 
@@ -323,21 +322,41 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* SHORT / DETAILED — behavioral tab only */}
+      {/* SHORT / DETAILED — behavioral tab only.
+          Two icon-only buttons whose selected state was drawn with
+          --cam-chip-active-bg: #001129 sitting on a #161d26 strip, two
+          near-black navies one step apart. Which mode you were in was, in
+          practice, not marked at all — the same thing the icon rail found and
+          fixed for itself with a tint plus a border.
+          It also said nothing about what the two icons meant. A segmented pair
+          that carries its own words needs no tooltip and no guess. */}
       {surface === 'behavioral' && (
-        <div className="lum-tool-group" data-overlay-keep>
-          {(['short', 'detailed'] as const).map(mode => (
-            <button
-              key={mode}
-              onClick={() => setAnswerMode(mode)}
-              data-tip={mode === 'short' ? 'Short — concise bullet points' : 'Detailed — comprehensive explanations'}
-              aria-label={mode === 'short' ? 'Short answers' : 'Detailed answers'}
-              aria-pressed={answerMode === mode}
-              className="lum-tool-btn"
-            >
-              {mode === 'short' ? <ShortIcon /> : <DetailedIcon />}
-            </button>
-          ))}
+        <div
+          className="flex items-center gap-0.5 p-0.5 rounded-lg shrink-0"
+          data-overlay-keep
+          role="group"
+          aria-label="Answer length"
+          style={{ background: 'var(--cam-strip-icon-bg)', border: '1px solid var(--cam-strip-icon-border)' }}
+        >
+          {(['short', 'detailed'] as const).map(mode => {
+            const on = answerMode === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => setAnswerMode(mode)}
+                data-tip={mode === 'short' ? 'Short — concise bullet points' : 'Detailed — comprehensive explanations'}
+                aria-label={mode === 'short' ? 'Short answers' : 'Detailed answers'}
+                aria-pressed={on}
+                className="flex items-center gap-1.5 h-[22px] px-2 rounded-md text-[11px] font-semibold whitespace-nowrap transition-colors"
+                style={on
+                  ? { background: 'color-mix(in oklab, var(--cam-gold-leaf) 18%, transparent)', color: 'var(--cam-strip-heading)', border: '1px solid var(--cam-gold-leaf)' }
+                  : { background: 'transparent', color: 'var(--cam-strip-text)', border: '1px solid transparent' }}
+              >
+                {mode === 'short' ? <ShortIcon /> : <DetailedIcon />}
+                {mode === 'short' ? 'Short' : 'Detailed'}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -373,13 +392,16 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
         </div>
       )}
 
-      {/* AudioCapture + VoiceEnrollment — behavioral only.
-          Coding and Design already have Sona; mic controls don't belong there. */}
+      {/* AudioCapture — behavioral only. Coding and Design already have Sona;
+          mic controls don't belong there. */}
       {onTranscription && surface === 'behavioral' && (
         <AudioCapture key={surface} onTranscription={onTranscription} autoStart={true} active={isTabActive} compact locked={surface === 'behavioral'} />
       )}
 
-      {onTranscription && surface === 'behavioral' && <VoiceEnrollment disabled={false} variant="light" iconOnly />}
+      {/* VoiceEnrollment moved to the AskSwitcher strip above every composer.
+          It was mounted here, behavioral-only, which made a rule that governs
+          all four surfaces look like a behavioral setting — and left the other
+          three with no way to see or change it. */}
       {/* Trailing spacer — pairs with the flex-1 above so the behavioral chip
           cluster sits CENTERED in the strip instead of pinned under the fixed
           top-right window controls (Dock/−/✕). lumora-winctl-safe on the root

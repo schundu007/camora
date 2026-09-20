@@ -10,6 +10,7 @@
 // One list, imported by both the rail and the switcher, so a surface can never
 // exist in one and not the other.
 import { Link, useLocation } from 'react-router-dom';
+import { VoiceEnrollment } from '@/components/lumora/audio/VoiceEnrollment';
 
 export type AskSurface = { id: string; label: string; path: string; icon: React.ReactNode };
 
@@ -29,7 +30,14 @@ export const ASK_SURFACES: AskSurface[] = [
  * every non-button element in the shell, and without the fill there is nothing
  * left to say which surface you are on.
  */
-export const AskSwitcher = ({ className = '' }: { className?: string }) => {
+/**
+ * @param voice  Show the enrol / filter control on the right of the strip.
+ *   Whose voice becomes a question is the same rule on all four surfaces, so
+ *   the control belongs wherever the question is asked — it used to exist only
+ *   on behavioral, which is why the filter read as a behavioral setting rather
+ *   than the standing instruction it actually is.
+ */
+export const AskSwitcher = ({ className = '', voice = true }: { className?: string; voice?: boolean }) => {
   const { pathname } = useLocation();
   return (
     <div className={`flex items-center gap-1 ${className}`} role="navigation" aria-label="Answer surface">
@@ -51,6 +59,11 @@ export const AskSwitcher = ({ className = '' }: { className?: string }) => {
           </Link>
         );
       })}
+      {voice && (
+        <span className="ml-auto pl-2 shrink-0" data-overlay-keep>
+          <VoiceEnrollment disabled={false} variant="light" iconOnly />
+        </span>
+      )}
     </div>
   );
 };
