@@ -26,3 +26,33 @@ export function toTurns(messages: QaMsg[]): QaTurn[] {
   }
   return turns;
 }
+
+/**
+ * How many Q&A pairs the live windows keep on screen.
+ *
+ * The surface is read mid-interview, at a glance, with a camera pointed at the
+ * candidate. A transcript that grows all session means the thing being read now
+ * shares the window with everything already said, and the eye has to find it
+ * each time. Two is enough to glance back at the previous answer without the
+ * current one competing with a session's worth of history.
+ *
+ * Only the RENDER is capped. Older turns stay in state and are still sent to
+ * the model, so follow-ups like "what about the second one" keep working.
+ */
+export const LIVE_TURNS = 2;
+
+/**
+ * The tail of `messages` covering the last `n` turns, a turn starting at each
+ * user message. Returns the array unchanged when there are fewer than that.
+ */
+export function lastTurns<T extends { role: QaRole }>(messages: T[], n: number = LIVE_TURNS): T[] {
+  let seen = 0;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role !== 'user') continue;
+    seen += 1;
+    // Cut AT the nth question, not after the one before it — slicing past the
+    // boundary leaves that turn's answer behind with no question above it.
+    if (seen === n) return messages.slice(i);
+  }
+  return messages;
+}

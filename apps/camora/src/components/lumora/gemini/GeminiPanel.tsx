@@ -30,7 +30,7 @@ import { StreamingMicButton } from '../ask/StreamingMicButton';
 import { InterviewerListenButton } from '../ask/InterviewerListenButton';
 import { useInterviewerListen } from '../shared/useInterviewerListen';
 import { QuestionBlock } from '../shared/QuestionBlock';
-import { toTurns } from '../shared/qaTurns';
+import { toTurns, lastTurns } from '../shared/qaTurns';
 
 // The reading column is capped rather than filling the panel. At 15px a
 // full-width tab runs past 120 characters a line, and a line that long loses
@@ -254,7 +254,10 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
   const strip = 'flex items-center gap-1.5 px-2 h-7 rounded hover:bg-[var(--lum-surface-hover)] transition-colors text-[12px] font-semibold';
   const hasAnswer = messages.some(m => m.role === 'assistant');
 
-  const turns = toTurns(messages);
+  // Only the last two turns render. Everything older stays in `messages` and
+  // still goes to the model, so a follow-up that refers back keeps working —
+  // it just stops competing for the window with the answer being read now.
+  const turns = toTurns(lastTurns(messages));
   // The turn being answered right now: the newest one, still without an answer.
   // The stream renders INSIDE it, so the live answer stays under the question
   // it answers instead of floating above it at the top of the list.

@@ -18,6 +18,7 @@ import { resolveAskListenSource } from '@/lib/lumora/ask-listen-source';
 import { snapRegion } from '@/lib/lumora/snapCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { parseAnchors, type AnswerLine, type AnswerBlock } from '@/lib/lumora/answer-anchors';
+import { lastTurns } from '@/components/lumora/shared/qaTurns';
 
 type AnchoredBlock = Extract<AnswerBlock, { kind: 'anchor' }>;
 
@@ -1201,7 +1202,9 @@ export const AskLayout = () => {
               )}
             </div>
           )}
-          {[...messages].reverse().map((m, i) => (
+          {/* Last two turns only. Older ones stay in state and still go to the
+              model; they just stop sharing the window with the live answer. */}
+          {[...lastTurns(messages)].reverse().map((m, i) => (
             <div key={i} className={`mb-6 ${m.role === 'user' ? 'flex justify-end' : ''}`}>
               {m.role === 'user' ? (
                 <div className="max-w-[75%] flex flex-col items-end gap-2">

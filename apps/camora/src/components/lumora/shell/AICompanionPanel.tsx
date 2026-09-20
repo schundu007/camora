@@ -9,6 +9,7 @@ import { isQuestion, isWhisperHallucination } from '@/lib/questionDetector';
 import { passesNoiseFilter, shouldAutoAnswer } from './companion/question-routing';
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
+import { LIVE_TURNS } from '../shared/qaTurns';
 import { Citations } from '@/components/lumora/Citations';
 import { useSessionStore } from '@/stores/session-store';
 import { sonaRegistry } from '@/lib/sona-registry';
@@ -1711,6 +1712,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                   .map((msg, i) => ({ msg, i }))
                   .filter(({ msg }) => msg.role === 'ai')
                   .reverse()
+                  // Last two answers only. The card streaming above counts as
+                  // one of them, so an answer in flight shows one finished
+                  // answer beneath it rather than two. Older answers stay in
+                  // `messages` and still go to the model as context; they just
+                  // stop sharing the window with the one being read now.
+                  .slice(0, streaming ? LIVE_TURNS - 1 : LIVE_TURNS)
                   .map(({ msg, i }) => (
                   <div
                     key={i}

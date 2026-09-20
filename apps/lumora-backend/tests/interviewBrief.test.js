@@ -63,6 +63,25 @@ describe('interview brief', () => {
     }
   });
 
+  it('asks for the line grammar the renderer lays out', () => {
+    // Without this the tabs emit plain prose: the anchor rail never engages and
+    // nothing is bolded, because nothing was ever asked for. The renderer can
+    // only lay out a skeleton the model actually emits.
+    expect(INTERVIEW_BRIEF).toContain('LINE SHAPE');
+    expect(INTERVIEW_BRIEF).toContain('**<anchor, 1-3 words>** — <one spoken idea>');
+    expect(INTERVIEW_BRIEF).toContain('BOLD THE TERM');
+  });
+
+  it('tells the model not to number its own anchors', () => {
+    // It used to, and each numbered step became its own rail row beside the
+    // number the surface had already drawn.
+    expect(INTERVIEW_BRIEF).toContain('Do not number the anchors yourself');
+  });
+
+  it('keeps anchors short enough for the rail', () => {
+    expect(INTERVIEW_BRIEF).toContain('never a clause and never a question');
+  });
+
   it('spells out the failure it exists to prevent', () => {
     expect(INTERVIEW_BRIEF).toContain('the server returns the HTML');
   });
