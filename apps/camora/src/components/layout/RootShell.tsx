@@ -5,9 +5,13 @@ import Sidebar from './Sidebar';
 
 interface RootShellProps {
   children: React.ReactNode;
+  /** Opt out of the shared content measure. Only for pages that genuinely need
+   *  the whole viewport — the code editor, the playground, the whiteboard.
+   *  Everything else inherits one width so pages cannot drift apart. */
+  fullBleed?: boolean;
 }
 
-export default function RootShell({ children }: RootShellProps) {
+export default function RootShell({ children, fullBleed = false }: RootShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const { pathname } = useLocation();
@@ -45,7 +49,7 @@ export default function RootShell({ children }: RootShellProps) {
           onClose={() => setSidebarOpen(false)}
         />
         <main ref={mainRef} id="app-scroll-container" className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch', background: 'var(--bg-app)' }}>
-          {children}
+          {fullBleed ? children : <div className="app-measure">{children}</div>}
         </main>
       </div>
       <footer
