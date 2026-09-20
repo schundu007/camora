@@ -303,7 +303,10 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
           hasContent={hasAnswer}
         />
       </div>
-      <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)', borderBottom: '1px solid var(--lum-border)' }}>
+      {/* No rule under the composer. The behavioral panel never had one, and
+          the field already has its own border — a second line directly beneath
+          it read as a seam across the window. */}
+      <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)' }}>
         {/* Attached screenshots, above the box they belong to. */}
         {snap.pending.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2" data-overlay-keep>
