@@ -395,11 +395,16 @@ export const StreamingMicButton = ({ onStart, onInterim, onFinal, disabled = fal
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled || busy}
+      /* Disabled while the filter is on, rather than recording and quietly
+         discarding. "Filter on" means the candidate's voice never becomes
+         text, so there is nothing this button can do — and a mic that records
+         you, strips you, and returns nothing is the same silent failure the
+         behavioral Ask chip had. Say it instead. */
+      disabled={disabled || busy || (!active && filterMyVoice)}
       data-tip={active
         ? 'Listening to you — stop talking and it sends by itself. Click or press Space to stop without sending.'
         : filterMyVoice
-          ? 'Listening with your voice filtered out — only other voices become text. Turn the voice filter off if you want to dictate your own question.'
+          ? 'Voice filter is on — your voice is being removed, so it cannot become a question. Turn the filter off to dictate.'
           : 'Talk instead of typing (Space) — it sends automatically when you stop.'}
       aria-label={active ? 'Stop dictation' : 'Start dictation'}
       className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"

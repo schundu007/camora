@@ -704,19 +704,19 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     } else {
       // MANUAL MODE: the whole recording is one question.
       //
-      // The voice filter must NOT run here, and this used to be the opposite.
-      // On behavioral with the filter on, shouldFilterVoice was true, so the
-      // backend stripped the candidate's voice out of a recording that is
-      // nothing but the candidate's voice — every press came back skipped,
-      // returned before onTranscription, and asked nothing. The Ask chip
-      // silently did nothing for anyone with the filter switched on.
+      // The filter runs here too. "Filter on" means the candidate's voice never
+      // becomes text, with no exceptions — so this path cannot be the one place
+      // it does.
       //
-      // The rule is the same one speaker-attribution.ts keeps for the other
-      // direction: the filter stops Sona OVERHEARING you. It does not stop you
-      // choosing to speak to her. A manual press is choosing.
-      setStatus('transcribe', 'Transcribing...');
+      // That used to make the Ask button silently do nothing: it recorded, the
+      // backend stripped the only voice in the recording, and the handler
+      // returned before asking anything. The answer is not to exempt this path,
+      // it is to not let the press happen — the button renders disabled while
+      // the filter is on, and says why. This stays filtered as the backstop
+      // behind that.
+      setStatus('transcribe', shouldFilterVoice ? 'Analyzing speakers...' : 'Transcribing...');
       try {
-        const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', false);
+        const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
         if (result.skipped) {
           if (result.reason === 'hallucination_filtered') {
             incrementDroppedChunks();
@@ -1383,6 +1383,7 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
     compact={compact}
     locked={locked}
     variant={variant}
+    filterOn={voiceEnrolled && voiceFilterEnabled}
   />;
 }
 
@@ -1400,9 +1401,12 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
 const UnifiedMicButton = ({
   continuousMode, audioLevel,
   handleModeToggle, handleToggle, recordingModeUI, speakerActive, speakerLevel, micLevel, compact, locked,
-  variant = 'strip',
+  variant = 'strip', filterOn = false,
 }: {
   variant?: 'strip' | 'composer';
+  /** The candidate has an enrolled print and the filter switched on. Their
+   *  voice cannot become text, so there is nothing for this button to do. */
+  filterOn?: boolean;
   continuousMode: boolean;
   audioLevel: number;
   handleModeToggle: () => void;
@@ -1508,9 +1512,12 @@ const UnifiedMicButton = ({
           type="button"
           onClick={(e) => { handleToggle(); e.currentTarget.blur(); }}
           aria-pressed={isAsking}
-          data-tip={isAsking
-            ? 'Recording your question — it sends to Sona automatically when you pause (or press ` / click to send now).'
-            : 'Ask in your own voice — press ` (or click), speak, and it sends to Sona when you pause.'}
+          disabled={filterOn}
+          data-tip={filterOn
+            ? 'Voice filter is on — your voice is being removed, so it cannot become a question. Turn the filter off to dictate.'
+            : isAsking
+            ? 'Recording your question — it sends to Sona automatically when you pause (or press Space / click to send now).'
+            : 'Ask in your own voice — press Space (or click), speak, and it sends to Sona when you pause.'}
           className={variant === 'composer'
             ? 'w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors'
             : `lum-tool-chip ${isAsking ? 'is-live' : 'is-primary'}`}
