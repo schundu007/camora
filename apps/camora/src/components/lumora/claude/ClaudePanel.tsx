@@ -37,6 +37,7 @@ import { InterviewerListenButton } from '../ask/InterviewerListenButton';
 import { useInterviewerListen } from '../shared/useInterviewerListen';
 import { QuestionBlock } from '../shared/QuestionBlock';
 import { toTurns, lastTurns } from '../shared/qaTurns';
+import { AskSwitcher } from '../shared/askSurfaces';
 import { useAuth } from '@/contexts/AuthContext';
 
 // lumora-backend, not Capra — see the note above about which key each service
@@ -310,6 +311,12 @@ export function ClaudePanel({ isActive }: { isActive: boolean }) {
           being read mid-interview, so it grows downward from a fixed point
           instead of pushing the box you are typing in — and the mic and
           interviewer chips with it — around as it streams. */}
+      {/* Surface switcher — directly above the box you type into, because that
+          is where the eye already is when you decide the other model would
+          answer this better. */}
+      <div className="shrink-0 px-2 pt-2" style={{ background: 'var(--lum-surface)' }}>
+        <AskSwitcher />
+      </div>
       <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)', borderBottom: '1px solid var(--lum-border)' }}>
         <div className="flex items-end gap-2">
           <textarea

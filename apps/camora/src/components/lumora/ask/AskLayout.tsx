@@ -19,6 +19,7 @@ import { snapRegion } from '@/lib/lumora/snapCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { parseAnchors, type AnswerLine, type AnswerBlock } from '@/lib/lumora/answer-anchors';
 import { lastTurns } from '@/components/lumora/shared/qaTurns';
+import { AskSwitcher } from '@/components/lumora/shared/askSurfaces';
 
 type AnchoredBlock = Extract<AnswerBlock, { kind: 'anchor' }>;
 
@@ -1033,6 +1034,10 @@ export const AskLayout = () => {
               added to fix, just inverted. `provider` is still sent on the
               request and stored per conversation, so restoring the toggle is a
               UI-only change if Ask ever moves services. */}
+          {/* Surface switcher — above the box you type into, because that is
+              where the eye already is when you decide another model would
+              answer this better. */}
+          <AskSwitcher className="mb-2 px-1" />
           {/* Input box */}
           <div
             className="relative rounded-2xl flex flex-col"

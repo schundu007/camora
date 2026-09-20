@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { ASK_SURFACES } from '../shared/askSurfaces';
 import { getActiveCompanyKey, ASSISTANT_UPDATED_EVENT } from '../../../lib/companyContext';
 import { useTheme } from '@/hooks/useTheme';
 import CamoraLogo from '../../shared/CamoraLogo';
@@ -52,23 +53,6 @@ const MORE_ITEMS = [
   { id: 'credits', label: 'Credits', path: '/lumora/credits' },
 ];
 
-/* The four Q&A surfaces, behind one switcher.
-
-   They were four separate chips, which put four near-identical entries in a
-   rail whose other entries are genuinely different tools. They are one job —
-   ask a question, read an answer — answered by four different backends, so
-   they belong behind one control that says which one you are on.
-   
-   The group expands INLINE rather than into a floating popover, matching the
-   account chip below. That is deliberate: the overlay strips backgrounds from
-   every non-button element in the shell, so a popover with its own surface
-   renders as floating text over the meeting. Inline has no surface to lose. */
-const ASK_ITEMS = [
-  { id: 'ask', label: 'Ask Sona', path: '/lumora/ask', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z" /></svg> },
-  { id: 'behavioral', label: 'Behavioral', path: '/lumora/behavioral', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 00-16 0" /></svg> },
-  { id: 'claude', label: 'Claude', path: '/lumora/claude', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.5 3.6 1.9 5 5.5 5.5C13.9 8 12.5 9.4 12 13c-.5-3.6-1.9-5-5.5-5.5C10.1 7 11.5 5.6 12 2zM18.5 12c.3 2.2 1.1 3 3.3 3.3-2.2.3-3 1.1-3.3 3.3-.3-2.2-1.1-3-3.3-3.3 2.2-.3 3-1.1 3.3-3.3zM6 14c.2 1.5.8 2.1 2.3 2.3C6.8 16.5 6.2 17.1 6 18.6c-.2-1.5-.8-2.1-2.3-2.3C5.2 16.1 5.8 15.5 6 14z" /></svg> },
-  { id: 'gemini', label: 'Gemini', path: '/lumora/gemini', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.9 5.1 4 8.2 9.1 9.1-5.1.9-8.2 4-9.1 9.1-.9-5.1-4-8.2-9.1-9.1C8 10.2 11.1 7.1 12 2z" /></svg> },
-];
 
 /* The tools that are genuinely their own thing — an editor, a canvas, a
    diff — and keep their own chip. */
@@ -87,13 +71,12 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
 
   const [accountOpen, setAccountOpen] = useState(false);
 
-  // The Ask group. Open whenever one of its surfaces is the active tab, so the
-  // rail never hides where you currently are — but still togglable, because
-  // during a call four extra rows is four extra things for the eye to skip.
-  const askActive = ASK_ITEMS.some(i => i.id === activeTab);
-  const askCurrent = ASK_ITEMS.find(i => i.id === activeTab) ?? ASK_ITEMS[0];
-  const [askOpen, setAskOpen] = useState(askActive);
-  useEffect(() => { if (askActive) setAskOpen(true); }, [askActive]);
+  // One chip for the four Q&A surfaces. It navigates to whichever you were last
+  // on; switching BETWEEN them happens on the strip above the composer, where
+  // you are already looking. The rail tried to own that and got it wrong twice
+  // — four near-identical chips, then a group that auto-opened into five rows.
+  const askActive = ASK_SURFACES.some(i => i.id === activeTab);
+  const askCurrent = ASK_SURFACES.find(i => i.id === activeTab) ?? ASK_SURFACES[0];
   // Active interview/company key drives the context chip label (below Tools).
   const [companyKey, setCompanyKey] = useState<string | null>(() => getActiveCompanyKey());
   useEffect(() => {
@@ -242,48 +225,18 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
       <div className="px-1.5">
         {expanded && <p className="px-3 mb-1 text-[12px] font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--text-muted)' }}>Interview</p>}
 
-        {/* Ask — one switcher for the four Q&A surfaces. The chip wears the
-            icon and name of the one you are on, so the rail always says which
-            backend is answering without costing four slots to say it. */}
-        <button
-          type="button"
-          onClick={() => setAskOpen(o => !o)}
-          aria-expanded={askOpen}
-          data-tip={expanded ? undefined : `Ask — ${askCurrent.label}`}
-          aria-label={`Ask: ${askCurrent.label}. ${askOpen ? 'Collapse' : 'Expand'} to switch.`}
-          className={`flex items-center w-full ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${askActive ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
+        {/* Ask — the entry point to the Q&A surfaces, wearing whichever one
+            you are on. The four-way switch lives above the composer. */}
+        <Link
+          to={askCurrent.path}
+          className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] ${askActive ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
           style={itemStyle(askActive)}
+          aria-current={askActive ? 'page' : undefined}
+          data-tip={expanded ? undefined : askCurrent.label}
         >
           {askCurrent.icon}
-          {expanded && (
-            <>
-              <span className="whitespace-nowrap">{askCurrent.label}</span>
-              <svg className={`ml-auto w-3.5 h-3.5 transition-transform ${askOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </>
-          )}
-        </button>
-        {askOpen && (
-          <div className={`flex flex-col gap-0.5 ${expanded ? 'ml-5' : ''}`} data-overlay-keep>
-            {ASK_ITEMS.map(item => {
-              const active = activeTab === item.id;
-              return (
-                <Link
-                  key={item.id}
-                  to={item.path}
-                  className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-1.5 rounded-lg text-[12px] font-medium transition-[background-color,color,transform] ${active ? '' : 'hover:bg-[var(--bg-elevated)]'}`}
-                  style={itemStyle(active)}
-                  aria-current={active ? 'page' : undefined}
-                  data-tip={expanded ? undefined : item.label}
-                >
-                  {item.icon}
-                  {expanded && <span className="whitespace-nowrap">{item.label}</span>}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+          {expanded && <span className="whitespace-nowrap">{askCurrent.label}</span>}
+        </Link>
 
         {TOOL_ITEMS.map(item => {
           const active = activeTab === item.id;

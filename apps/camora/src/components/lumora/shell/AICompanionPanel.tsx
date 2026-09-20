@@ -10,6 +10,7 @@ import { passesNoiseFilter, shouldAutoAnswer } from './companion/question-routin
 import { extractAnswer, cleanTags } from './companion/text-formatting';
 import { AnswerView } from './companion/answer-view';
 import { LIVE_TURNS } from '../shared/qaTurns';
+import { AskSwitcher } from '../shared/askSurfaces';
 import { Citations } from '@/components/lumora/Citations';
 import { useSessionStore } from '@/stores/session-store';
 import { sonaRegistry } from '@/lib/sona-registry';
@@ -1253,6 +1254,10 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             ))}
           </div>
         )}
+        {/* Surface switcher — above the box you type into, because that is where
+            the eye already is when you decide another model would answer this
+            better. */}
+        <AskSwitcher className="mb-2 overflow-x-auto" />
         {/* Text input — visible in both floating and embedded behavioral mode */}
         {/* Double height: the composer is where the whole panel gets driven
             from, and a 36px strip at the bottom of a full-screen window read as
