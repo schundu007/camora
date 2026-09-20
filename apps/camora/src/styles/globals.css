@@ -4126,6 +4126,24 @@ figure:has(> .viz-caption) {
    bottom. CSS `columns` would have been shorter to write and wrong — inside a
    scrolling panel it balances over the full document height, so you'd read the
    left column to the bottom and then scroll back up for the right one. */
+/* ── Answer type: sharp, not big ──────────────────────────────────────────
+   html sets -webkit-font-smoothing: antialiased, which on a dark background
+   thins every stem — small type there reads as washed out rather than small,
+   and the fix kept being "make it bigger". Subpixel smoothing puts the weight
+   back, so the answer can be a glance-sized 12 px and still land.
+
+   500 is a real weight in both answer families, not a synthesised bold.
+   Headings and emphasis set their own weight inline, so this only lifts body
+   prose. Applied wherever AnswerView renders: behavioral, Claude, Gemini, Ask. */
+.lumora-answer-type {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+  font-weight: 500;
+  /* No shadow or glow, ever — it is the opposite of sharp, and in overlay mode
+     it smears the text into the meeting behind it. */
+  text-shadow: none;
+}
+
 /* Light mode pays back the apparent weight that dark mode gets from halation.
    Newsreader ships 500 (see the Google Fonts link in index.html), so this is a
    real weight, not a synthesised bold. Applied to the book only — the rest of

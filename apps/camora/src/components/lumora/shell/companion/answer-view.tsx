@@ -70,24 +70,24 @@ const FONT_ANSWER = "var(--font-answer)";
    One scale, shared with the Ask Sona / Claude / Gemini renderer, so an answer
    is the same size whichever tab produced it.
 
-   This used to run at 11.75 px to fit a full pitch on one screen without
-   scrolling. That optimised for the wrong thing: nobody reads this surface, they
-   glance at it — eyes off the webcam, catch the next line, eyes back — and at
-   11.75 px a glance did not land. Fitting more on screen is worthless if none of
-   it can be caught in half a second.
+   Nobody reads this surface, they glance at it — eyes off the webcam, catch the
+   next line, eyes back. It ran at 11.75 px once and a glance did not land, so
+   legibility is bought with WEIGHT and CONTRAST rather than size: see
+   .lumora-answer-type in globals.css, which turns subpixel smoothing back on
+   and sets a 500 weight. Antialiased smoothing thins stems on a dark
+   background, which is what made small type here look washed out.
 
-   The trade is real and deliberate: a long behavioral answer now scrolls where
-   it used to fit. FS_LEAD is the opening sentence, a clear step up so the eye
-   knows where to start. FS_SMALL is for dense secondary blocks (labels,
-   rebuttals, table cells) and holds the 12 px floor. */
-const FS_LEAD = '14px';
+   Body holds the 12 px floor. Leading carries the size reduction instead — at
+   1.7 the block was mostly air, and tightening it fits more on screen without
+   costing a glance anything. FS_SMALL is for dense secondary blocks. */
+const FS_LEAD = '13px';
 const FS_BODY = '12px';
 const FS_SMALL = '12px';
 /** Code type, a step under prose so a fence does not shout over the sentence. */
 const FS_CODE = '12px';
 /** Rail labels and block headings — their own step, below FS_SMALL. */
 const FS_LABEL = '10px';
-const LH_BODY = '1.7';
+const LH_BODY = '1.5';
 
 /* ── Emphasis ───────────────────────────────────────────────────────────────
    Three tiers, so the eye lands in the right place while speaking:
@@ -823,7 +823,7 @@ export const AnswerView = ({ text, streaming }: { text: string; streaming?: bool
   const star = useMemo(() => parseStar(stripped), [stripped]);
   if (star) {
     return (
-      <div>
+      <div className="lumora-answer-type">
         {archetype && <ArchetypeBadge archetype={archetype} />}
         <StarAnswer sections={star.sections} streaming={streaming} />
         <LearningNote text={learning} />
@@ -833,7 +833,7 @@ export const AnswerView = ({ text, streaming }: { text: string; streaming?: bool
   }
   if (archetype) {
     return (
-      <div>
+      <div className="lumora-answer-type">
         <ArchetypeBadge archetype={archetype} />
         <RichText text={stripped} />
         <LearningNote text={learning} />
@@ -842,7 +842,7 @@ export const AnswerView = ({ text, streaming }: { text: string; streaming?: bool
     );
   }
   return (
-    <div>
+    <div className="lumora-answer-type">
       <RichText text={stripped} />
       <LearningNote text={learning} />
       <RebuttalsPanel items={rebuttals} />
