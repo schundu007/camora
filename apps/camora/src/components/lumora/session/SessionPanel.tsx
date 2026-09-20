@@ -416,6 +416,38 @@ const EmptyState = ({ onAskQuestion, onSwitchToCoding, onSwitchToDesign, onSwitc
             </span>
           ))}
         </div>
+
+        {/* The one way out of Lumora.
+        
+            It briefly lived in the rail and drew the same house glyph as Home
+            two rows above it — one going to /lumora, one to /, which is worse
+            than either on its own. It belongs here instead: leaving is
+            something you do from the home screen between interviews, not a
+            control that sits beside the live surfaces the whole time you are
+            in a call.
+        
+            An <a>, not a Link. Lumora and the marketing site are different
+            shells, and routing between them in-app leaves interview chrome
+            half-torn-down behind the landing page. */}
+        <div style={{ display:'flex', justifyContent:'center', paddingTop:28, paddingBottom:8 }}>
+          <a
+            href="/"
+            data-overlay-keep
+            data-tip="Leave Lumora and open the Camora site"
+            style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'8px 16px',
+                     fontSize:13, fontWeight:600, textDecoration:'none',
+                     color:'var(--lum-text-2)', background:'var(--lum-surface)',
+                     border:'1px solid var(--lum-border)', borderRadius:999 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Camora home
+          </a>
+        </div>
       </div>
     </div>
   );

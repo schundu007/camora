@@ -21,10 +21,10 @@ const ChoiceRow = ({ label, hint, value, options, onChange }: {
   options: { value: string; label: string }[];
   onChange: (v: string) => void;
 }) => (
-  <div className="px-5 py-3 border-t" style={{ borderColor: 'var(--border)' }}>
+  <div className="px-5 py-3 border-t" style={{ borderColor: 'var(--lum-border)' }}>
     <div className="flex items-baseline gap-2 mb-2">
-      <span className="text-[12px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--text-secondary)' }}>{label}</span>
-      <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{hint}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--lum-accent-sm)' }}>{label}</span>
+      <span className="text-[12px]" style={{ color: 'var(--lum-text-2)' }}>{hint}</span>
     </div>
     <div className="flex flex-wrap gap-1.5">
       {options.map(o => {
@@ -37,8 +37,8 @@ const ChoiceRow = ({ label, hint, value, options, onChange }: {
             aria-pressed={on}
             className="px-2.5 h-7 rounded-full text-[12px] font-semibold transition-colors"
             style={on
-              ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid var(--accent)' }
-              : { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+              ? { background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }
+              : { background: 'transparent', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
           >
             {o.label}
           </button>
@@ -126,50 +126,55 @@ export const InterviewContextDrawer = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      // lumora-shell-root on the overlay itself. This renders as a sibling of
+      // the shell, not a child, so none of the --lum-* remaps reached it and it
+      // drew itself in the global Capra palette: a white panel floating over a
+      // dark interview.
+      className="lumora-shell-root fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Interview Context"
       onClick={onClose}
-      style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
+      style={{ background: 'rgba(6,9,14,0.66)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="rounded-2xl overflow-hidden flex flex-col"
+        className="rounded-xl overflow-hidden flex flex-col"
+        data-overlay-keep
         style={{
-          width: 'min(520px, 94vw)',
+          width: 'min(560px, 94vw)',
           maxHeight: '82vh',
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--cam-gold-leaf)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+          background: 'var(--lum-surface)',
+          border: '1px solid var(--lum-border-strong)',
+          // One shadow, no inset highlight. The gloss belonged to the light
+          // palette; on a dark surface it reads as a seam across the top edge.
+          boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
+          fontFamily: 'var(--font-sans)',
         }}
       >
         {/* Header */}
         <div
           className="relative px-5 py-4 border-b shrink-0"
-          style={{ borderColor: 'var(--cam-gold-leaf)', background: 'linear-gradient(135deg, rgba(0,108,224,0.05) 0%, rgba(255,153,0,0.06) 100%)' }}
+          style={{ borderColor: 'var(--lum-border)', background: 'var(--lum-bg)' }}
         >
-          <span aria-hidden className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full" style={{ background: 'linear-gradient(180deg, var(--cam-primary) 0%, var(--cam-primary-dk) 100%)' }} />
+          {/* One accent rule down the edge. The gradient wash behind it was two
+              brand colours at 5% on a light panel — invisible here, and a
+              gradient nobody can see is just a paint cost. */}
+          <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'var(--lum-accent)' }} />
           <div className="pl-3 flex items-start justify-between gap-3">
-            <div>
-              <span
-                className="inline-flex items-center px-2.5 py-0.5 mb-2 rounded-full text-[12px] font-extrabold uppercase tracking-[0.16em]"
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--cam-gold-leaf)', color: 'var(--cam-gold-leaf-text)', boxShadow: '0 1px 2px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.45)' }}
-              >
-                Interview Context
-              </span>
-              <h2 className="text-[18px] font-extrabold tracking-tight" style={{ color: 'var(--cam-primary)' }}>
-                Your Interviews
+            <div className="min-w-0">
+              <h2 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--lum-text)' }}>
+                Interview context
               </h2>
-              <p className="text-[12.5px] mt-1" style={{ color: 'var(--text-secondary)' }}>
-                Activate a workspace — Sona will use its JD, resume, and prep materials.
+              <p className="text-[12px] mt-1 leading-relaxed" style={{ color: 'var(--lum-text-2)' }}>
+                Pick the workspace Sona answers from, and what this interview is run on.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
               className="shrink-0 flex items-center justify-center w-8 h-8 rounded-full transition-opacity hover:opacity-70"
-              style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+              style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
               aria-label="Close"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
@@ -181,11 +186,11 @@ export const InterviewContextDrawer = ({
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {items.length === 0 ? (
             <div className="py-12 text-center">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'var(--accent-subtle)' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
+              <div className="w-11 h-11 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'var(--lum-accent-bg)', border: '1px solid var(--lum-border)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--lum-accent)" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
               </div>
-              <p className="text-[14px] font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>No prep workspaces yet</p>
-              <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--lum-text)' }}>No prep workspaces yet</p>
+              <p className="text-[12px]" style={{ color: 'var(--lum-text-2)' }}>
                 Open the <strong>Documents</strong> sidebar and add a company to get started.
               </p>
             </div>
@@ -203,27 +208,29 @@ export const InterviewContextDrawer = ({
                     <div
                       className="flex items-center gap-3 p-3 rounded-xl"
                       style={{
-                        background: isActive ? 'color-mix(in srgb, var(--cam-gold-leaf) 10%, var(--bg-elevated))' : 'var(--bg-elevated)',
-                        border: isActive ? '1px solid var(--cam-gold-leaf)' : '1px solid var(--border)',
+                        background: isActive
+                          ? 'color-mix(in oklab, var(--lum-accent) 12%, transparent)'
+                          : 'var(--lum-bg)',
+                        border: isActive ? '1px solid var(--lum-accent)' : '1px solid var(--lum-border)',
                       }}
                     >
                       <span
                         className="w-2 h-2 rounded-full shrink-0"
-                        style={{ background: isActive ? 'var(--cam-primary)' : item.ready ? 'var(--success)' : 'var(--border)' }}
+                        style={{ background: isActive ? 'var(--lum-accent)' : item.ready ? 'var(--success)' : 'var(--lum-border-strong)' }}
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[14px] font-bold truncate" style={{ color: isActive ? 'var(--cam-primary)' : 'var(--text-primary)' }}>
+                          <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--lum-text)' }}>
                             {item.key}
                           </span>
                           {isActive && (
-                            <span className="text-[12px] font-extrabold uppercase tracking-[0.12em] px-2 py-0.5 rounded-full" style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full" style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}>
                               Active
                             </span>
                           )}
                         </div>
-                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                          {badges.length ? badges.join(' · ') : 'No materials yet — add JD or resume in Documents'}
+                        <p className="text-[12px] mt-0.5" style={{ color: 'var(--lum-text-2)' }}>
+                          {badges.length ? badges.join(' · ') : 'No materials yet — add a JD or resume in Documents'}
                         </p>
                       </div>
                       <div className="shrink-0">
@@ -232,7 +239,7 @@ export const InterviewContextDrawer = ({
                             type="button"
                             onClick={handleDeactivate}
                             className="text-[12px] font-semibold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
-                            style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+                            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
                           >
                             Deactivate
                           </button>
@@ -241,7 +248,7 @@ export const InterviewContextDrawer = ({
                             type="button"
                             onClick={() => handleActivate(item.key)}
                             className="text-[12px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
-                            style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
+                            style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}
                           >
                             Activate
                           </button>
@@ -275,15 +282,15 @@ export const InterviewContextDrawer = ({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t" style={{ borderColor: 'var(--border)' }}>
-          <p className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-            Manage workspaces in the <strong>Documents</strong> sidebar
+        <div className="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t" style={{ borderColor: 'var(--lum-border)', background: 'var(--lum-bg)' }}>
+          <p className="text-[12px]" style={{ color: 'var(--lum-text-2)' }}>
+            Manage workspaces in the <strong style={{ color: 'var(--lum-text)' }}>Documents</strong> sidebar
           </p>
           <button
             type="button"
             onClick={onClose}
             className="text-[12px] font-semibold px-3 py-1.5 rounded-md"
-            style={{ color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
           >
             Close
           </button>

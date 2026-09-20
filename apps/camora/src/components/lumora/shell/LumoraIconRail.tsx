@@ -46,11 +46,10 @@ const PREP_ITEMS = [
   { id: 'documents', label: 'Prep Kit', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
 ];
 
-/* Out of Lumora entirely. Prepare and Practice used to sit in the rail, which
-   put two studying destinations inside a surface used during a live interview —
-   and neither is something you open with someone watching. The one exit that IS
-   wanted is the way out, so that is what the rail carries. */
-const SITE_ITEM = { id: 'site', label: 'Camora Home', path: '/', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 001 1h3.5v-5.5h5V21H18a1 1 0 001-1V9.5" /></svg> };
+/* No Camora Home chip here. It was added as the way out after Prepare and
+   Practice left, and it drew the same house glyph as the Home item at the top
+   of the rail — two identical icons, one going to /lumora and one to /, which
+   is worse than either on its own. Lumora Home is the home this rail means. */
 
 const MORE_ITEMS = [
   { id: 'profile', label: 'Profile', path: '/lumora/profile' },
@@ -317,18 +316,6 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
               </Link>
             );
           })}
-          {/* The way out. An external <a>, not a Link: Lumora and the marketing
-              site are different shells, and routing between them in-app leaves
-              the interview chrome half-torn-down behind the landing page. */}
-          <a
-            href={SITE_ITEM.path}
-            className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] hover:bg-[var(--bg-elevated)]`}
-            style={itemStyle(false)}
-            data-tip={expanded ? undefined : SITE_ITEM.label}
-          >
-            {SITE_ITEM.icon}
-            {expanded && <span className="whitespace-nowrap">{SITE_ITEM.label}</span>}
-          </a>
         </div>
 
         {/* Library — history + assistants (lower priority). */}
