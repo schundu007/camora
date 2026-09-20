@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionStore } from '@/stores/session-store';
-import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
 import { dialogAlert } from '@/components/shared/Dialog';
 import { snapRegion, canRegionSnap } from '@/lib/lumora/snapCapture';
 
@@ -29,7 +28,8 @@ interface ScreenshotStripProps {
   onInputModeChange?: (mode: string) => void;
   /** Show TEXT/URL/IMAGE pills — true on coding and design tabs */
   showInputModeSelector?: boolean;
-  /** Forwarded to AudioCapture for all AI tabs */
+  /** The shell's transcript handler. Still forwarded for the coding and
+   *  design surfaces; behavioral now takes it directly. */
   onTranscription?: (text: string, opts?: { manual?: boolean }) => void;
   isTabActive?: boolean;
   /** Coding tab only — shows platform chip (hackerrank/leetcode/coderpad) at left of strip */
