@@ -2,7 +2,7 @@
  * Interview Prep — matches capra.cariara.com/app/prep layout.
  * Sidebar sections + upload zones + Generate button.
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { InterviewContextPanel } from './InterviewContextPanel';
 import { useSearchParams } from 'react-router-dom';
 import type { JSX, CSSProperties } from 'react';
@@ -2032,11 +2032,11 @@ const IntakeZone = ({ onAdd, onPaste }: { onAdd: (files: File[]) => void; onPast
       <svg className="w-6 h-6 mb-2" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
       </svg>
-      <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-        Drop files or click — any document
+      <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+        Upload JD or Resume or Interview Documents
       </span>
-      <span className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-        Job description, resume, cover letter, notes — PDF, DOCX, TXT, MD
+      <span className="text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>
+        Drop files or click — PDF, DOCX, TXT, MD
       </span>
       {/* A job description is usually copied out of a posting, not saved as a
           file. Without this the only paste path was a modal nothing opened. */}
@@ -2762,6 +2762,9 @@ export const LumoraDocsPanel = ({
   const [selectedSections, setSelectedSections] = useState<string[]>(() => ['pitch', 'hr', 'hiring-manager', 'coding', 'system-design', 'behavioral', 'techstack']);
   const [showArchived, setShowArchived] = useState(false);
   const [showNewCompany, setShowNewCompany] = useState(false);
+  /* false = the company list, true = that company's prep. Starts closed so the
+     first thing on screen is which interview, not which file. */
+  const [prepOpen, setPrepOpen] = useState(false);
   const [newCompanyName, setNewCompanyName] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const newCompanyRef = useRef<HTMLInputElement>(null);
@@ -3025,9 +3028,21 @@ export const LumoraDocsPanel = ({
     });
   };
 
+  /* The page opens on the list of companies, not on an upload box.
+     Landing straight in Materials answered "add a document" before you had
+     said which interview it belongs to — and with several companies saved, it
+     silently picked one for you. Opening a company, or creating one, is what
+     takes you into the prep. */
+  const openPrep = (name: string) => {
+    setPrepData(prev => ({ ...prev, activeCompany: name }));
+    setActiveSection('input');
+    setPrepOpen(true);
+  };
+
   const addCompany = () => {
     const name = newCompanyName.trim();
     if (!name) return;
+    setPrepOpen(true);
     setPrepData(prev => ({
       ...prev,
       companies: [...prev.companies, name],
@@ -3043,6 +3058,7 @@ export const LumoraDocsPanel = ({
     setPrepData(prev => ({ ...prev, activeCompany: name }));
     setShowDropdown(false);
     setActiveSection('input');
+    setPrepOpen(true);
   };
 
   const archiveCompany = (name: string) => {
@@ -3315,6 +3331,98 @@ export const LumoraDocsPanel = ({
 
 
 
+  /* Step one: which interview. Nothing about documents until that is answered. */
+  if (!prepOpen) {
+    return (
+      <div className="h-full flex flex-col overflow-y-auto" style={{ background: 'var(--bg-surface)' }}>
+        <div className="p-6 max-w-3xl w-full mx-auto">
+          <h2 className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-secondary)' }}>
+            Interviews
+          </h2>
+          <p className="text-[12px] mb-4" style={{ color: 'var(--text-muted)' }}>
+            Pick one to open its materials and prep kit.
+          </p>
+
+          {prepData.companies.length > 0 && (
+            <ul className="space-y-2 mb-4">
+              {prepData.companies.map(c => {
+                const doc = prepData.data[c];
+                const docs = doc?.intake?.length ?? 0;
+                const made = doc ? Object.keys(doc.sections || {}).length : 0;
+                const isActive = c === prepData.activeCompany;
+                return (
+                  <li key={c}>
+                    <button
+                      type="button"
+                      onClick={() => openPrep(c)}
+                      className="w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-colors"
+                      style={{
+                        background: 'var(--bg-elevated)',
+                        border: `1px solid ${isActive ? 'var(--cam-primary)' : 'var(--border)'}`,
+                      }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{c}</span>
+                          {isActive && <Chip variant="success">Active</Chip>}
+                        </div>
+                        {/* What is actually in it, so the list answers "where
+                            did I get to" without opening each one. */}
+                        <div className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                          {docs === 0 && made === 0
+                            ? 'No materials yet'
+                            : `${docs} document${docs === 1 ? '' : 's'}${made > 0 ? ` · ${made} section${made === 1 ? '' : 's'} generated` : ''}`}
+                        </div>
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" style={{ color: 'var(--text-muted)' }}>
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          {showNewCompany ? (
+            <div className="flex gap-2">
+              <input
+                ref={newCompanyRef}
+                value={newCompanyName}
+                onChange={(e) => setNewCompanyName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') addCompany(); if (e.key === 'Escape') setShowNewCompany(false); }}
+                placeholder="e.g. Nvidia DevOps"
+                className="flex-1 min-w-0 px-3 h-9 rounded-lg text-[13px] outline-none"
+                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              />
+              <button onClick={addCompany} disabled={!newCompanyName.trim()}
+                className="px-4 h-9 text-[12px] font-bold rounded-lg disabled:opacity-40"
+                style={{ background: 'var(--cam-primary-dk)', color: '#FFFFFF' }}>
+                Create
+              </button>
+              <button onClick={() => setShowNewCompany(false)}
+                className="px-3 h-9 text-[12px] rounded-lg" style={{ color: 'var(--text-muted)' }}>
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setShowNewCompany(true); setTimeout(() => newCompanyRef.current?.focus(), 100); }}
+              className="inline-flex items-center gap-2 px-3 h-9 rounded-full text-[12px] font-semibold transition-opacity hover:opacity-85"
+              style={{ background: 'color-mix(in srgb, var(--cam-primary) 14%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid var(--cam-primary)' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Add new interview
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col" style={{ background: 'var(--bg-surface)' }}>
       {/* Setup first, materials below it — the order you actually work in. */}
@@ -3342,7 +3450,19 @@ export const LumoraDocsPanel = ({
         {/* LeetCode-style sidebar header */}
         <div className="px-3 py-3" style={{ background: 'var(--cam-hero-strip)', borderBottom: '1px solid var(--cam-gold-leaf)' }}>
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[12px] font-bold uppercase tracking-wider text-[var(--cam-strip-heading)]" style={{ fontFamily: "var(--font-sans)" }}>Prep</h2>
+            {/* Back to the list — without it, opening a company is a one-way
+                door and the only way to reach another is the dropdown. */}
+            <button
+              type="button"
+              onClick={() => setPrepOpen(false)}
+              className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider transition-opacity hover:opacity-75"
+              style={{ color: 'var(--cam-strip-heading)', fontFamily: 'var(--font-sans)' }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              Interviews
+            </button>
             {/* Sync indicator — proves writes are reaching the lumora
                 backend (lumora_prep_state). "Saved" means the JD/resume/
                 companies have landed in Postgres and will be available
@@ -3484,28 +3604,32 @@ export const LumoraDocsPanel = ({
             jobs: clicking a name navigates, ticking a box queues generation.
             The boxes moved to the Generate card, which is what they are about;
             a section appears here once it has something to show. */}
-        <div className="py-1 px-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-2">
+        {/* Two groups, not one four-column grid. What you PUT IN (materials,
+            the JD) and what came OUT of it (the generated sections) were
+            landing side by side in the same row purely by index — Input
+            Materials, Job Description and Elevator Pitch reading as peers when
+            the first two are sources and the third is a result. A rule
+            separates them and each group flows on its own line. */}
+        <div className="py-1.5 px-2 flex flex-wrap items-center gap-1.5">
           {SIDEBAR_SECTIONS.filter((s) =>
             s.id === 'input' ||
             (s.id === 'jd-view' ? !!state.jd.trim() : (!!state.sections[s.id] || sectionStatus[s.id] === 'generating'))
-          ).map((s) => {
+          ).map((s, i, arr) => {
+            // The divider goes in front of the first generated section.
+            const isFirstGenerated = !['input', 'jd-view'].includes(s.id) &&
+              arr.findIndex(x => !['input', 'jd-view'].includes(x.id)) === i;
             const isActive = s.id === activeSection;
             const hasContent = s.id === 'input' ? hasRequiredDocs : !!state.sections[s.id];
             return (
-              <button key={s.id} onClick={() => { setActiveSection(s.id); }}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors text-xs font-medium"
-                style={{
-                  background: isActive
-                    ? 'color-mix(in srgb, var(--cam-gold-leaf) 12%, var(--bg-elevated))'
-                    : 'transparent',
-                  color: isActive ? 'var(--cam-primary)' : 'var(--text-muted)',
-                  borderLeft: isActive
-                    ? `3px solid var(--cam-primary)`
-                    : '3px solid transparent',
-                  borderRight: isActive
-                    ? `1px solid var(--cam-gold-leaf)`
-                    : '1px solid transparent',
-                }}>
+              <Fragment key={s.id}>
+              {isFirstGenerated && (
+                <span aria-hidden className="mx-1 self-stretch w-px" style={{ background: 'var(--border)' }} />
+              )}
+              <button onClick={() => { setActiveSection(s.id); }}
+                className="flex items-center gap-2 px-2.5 h-8 rounded-lg transition-colors text-xs font-medium"
+                style={isActive
+                  ? { background: 'color-mix(in srgb, var(--cam-primary) 14%, var(--bg-elevated))', color: 'var(--cam-primary)', border: '1px solid var(--cam-primary)' }
+                  : { background: 'var(--bg-elevated)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
                 {/* Status indicator — gold leaf when done, gold-leaf
                     spinner when generating, danger red on error,
                     neutral border tone when empty. No rainbow per
@@ -3521,11 +3645,12 @@ export const LumoraDocsPanel = ({
                 ) : (
                   <div className="w-2 h-2 rounded-full shrink-0" style={{ background: 'var(--border)' }} />
                 )}
-                <span className="flex-1">{s.label}</span>
+                <span>{s.label}</span>
                 {sectionStatus[s.id] === 'pending' && generating && (
                   <Chip variant="default" className="text-[12px]">queued</Chip>
                 )}
               </button>
+              </Fragment>
             );
           })}
         </div>
