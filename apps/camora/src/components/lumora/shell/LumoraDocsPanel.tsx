@@ -18,6 +18,7 @@ import { RichText } from './companion/answer-view';
 import Chip from '@/components/shared/ui/Chip';
 import { ResearchDocsCard } from '../prep/ResearchDocsCard';
 import { readPrepRaw, writePrepRaw } from '../../../lib/prepStorage';
+import { dialogConfirm } from '../../shared/Dialog';
 
 const API_URL = import.meta.env.VITE_CAPRA_API_URL || 'https://caprab.cariara.com';
 
@@ -2247,6 +2248,21 @@ const FileFormatIcon = ({ format }: { format: 'PDF' | 'DOC' }) => (
   </svg>
 );
 
+const ArchiveIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 7h18v3H3z" />
+    <path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9" />
+    <path d="M10 14h4" />
+  </svg>
+);
+
+const RestoreIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M3 10a9 9 0 1 1 2.5 6.2" />
+    <path d="M3 5v5h5" />
+  </svg>
+);
+
 const TrashIcon = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M4 7h16M10 11v6M14 11v6" />
@@ -2998,16 +3014,13 @@ export const LumoraDocsPanel = ({
     if (seedJd) autoGenerateRef.current = true;
   }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-create default company if none exists
+  /* No auto-created "My Session" any more. It existed because the page had
+     nowhere to start from, and it put back an empty interview every time you
+     deleted the last one — the landing list now opens with an explicit
+     "Add new interview" chip, so an empty placeholder is just something else
+     to delete. */
   useEffect(() => {
-    if (prepData.companies.length === 0) {
-      setPrepData(prev => ({
-        ...prev,
-        companies: ['My Session'],
-        activeCompany: 'My Session',
-        data: { ...prev.data, 'My Session': { ...EMPTY_DOC } },
-      }));
-    } else if (!prepData.activeCompany && prepData.companies.length > 0) {
+    if (!prepData.activeCompany && prepData.companies.length > 0) {
       setPrepData(prev => ({ ...prev, activeCompany: prev.companies[0] }));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -3084,12 +3097,23 @@ export const LumoraDocsPanel = ({
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     setPrepData(prev => {
       const newCompanies = prev.companies.filter(c => c !== name);
+      // Archived too — an archived interview was unreachable by delete, so the
+      // only way out of the archive was to restore it first.
+      const newArchived = (prev.archivedCompanies || []).filter(c => c !== name);
       const newData = { ...prev.data };
       delete newData[name];
-      const next = { ...prev, companies: newCompanies, activeCompany: newCompanies[0] || null, data: newData };
+      const next = {
+        ...prev,
+        companies: newCompanies,
+        archivedCompanies: newArchived,
+        data: newData,
+        // Only move the active pointer if it was THIS one; deleting an
+        // archived entry must not yank you out of the interview you are in.
+        activeCompany: prev.activeCompany === name ? (newCompanies[0] || null) : prev.activeCompany,
+      };
       if (token) {
         prepAPI.putState(token, next).catch(() => {});
-        fetch(`${API_URL}/api/v1/prep-docs/company/${encodeURIComponent(slug)}`, {
+        fetch(`${API_URL}/api/v1/prep/docs/company/${encodeURIComponent(slug)}`, {
           method: 'DELETE',
           headers: getAuthHeaders() as Record<string, string>,
           credentials: 'include',
@@ -3099,13 +3123,26 @@ export const LumoraDocsPanel = ({
     });
   };
 
+  const confirmDelete = async (name: string) => {
+    const ok = await dialogConfirm({
+      title: 'Delete interview',
+      message: `Delete "${name}" and everything in it — documents, generated sections and indexed research docs? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      tone: 'danger',
+    });
+    if (ok) deleteCompany(name);
+  };
+
   const uploadToResearchDocs = useCallback((file: File) => {
     const slug = (prepData.activeCompany || 'general')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const fd = new FormData();
     fd.append('file', file);
     fd.append('company_slug', slug);
-    fetch(`${API_URL}/api/v1/prep-docs/upload`, {
+    // /prep/docs, not /prep-docs. The router is mounted at the former, so
+    // every upload here 404'd into the empty catch below and Research Docs
+    // stayed at 0 however many documents you added.
+    fetch(`${API_URL}/api/v1/prep/docs/upload`, {
       method: 'POST',
       headers: getAuthHeaders() as Record<string, string>,
       credentials: 'include',
@@ -3343,6 +3380,13 @@ export const LumoraDocsPanel = ({
             Pick one to open its materials and prep kit.
           </p>
 
+          {prepData.companies.length === 0 && (prepData.archivedCompanies || []).length === 0 && (
+            <p className="text-[13px] mb-4 px-4 py-6 rounded-xl text-center"
+              style={{ color: 'var(--text-muted)', background: 'var(--bg-elevated)', border: '1px dashed var(--border)' }}>
+              No interviews yet — add one to start.
+            </p>
+          )}
+
           {prepData.companies.length > 0 && (
             <ul className="space-y-2 mb-4">
               {prepData.companies.map(c => {
@@ -3351,11 +3395,14 @@ export const LumoraDocsPanel = ({
                 const made = doc ? Object.keys(doc.sections || {}).length : 0;
                 const isActive = c === prepData.activeCompany;
                 return (
-                  <li key={c}>
+                  /* The row is a button and the actions sit BESIDE it, not
+                     inside it — a button inside a button is invalid and the
+                     click would open the interview you meant to delete. */
+                  <li key={c} className="flex items-stretch gap-2">
                     <button
                       type="button"
                       onClick={() => openPrep(c)}
-                      className="w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-colors"
+                      className="flex-1 min-w-0 text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-colors"
                       style={{
                         background: 'var(--bg-elevated)',
                         border: `1px solid ${isActive ? 'var(--cam-primary)' : 'var(--border)'}`,
@@ -3378,10 +3425,54 @@ export const LumoraDocsPanel = ({
                         <path d="M9 18l6-6-6-6" />
                       </svg>
                     </button>
+                    {/* Always visible, not revealed on hover — destructive
+                        actions you cannot find are worse than ones you can. */}
+                    <ActionIcon label={`Archive ${c}`} onClick={() => archiveCompany(c)} tint="var(--text-muted)">
+                      <ArchiveIcon />
+                    </ActionIcon>
+                    <ActionIcon label={`Delete ${c}`} onClick={() => confirmDelete(c)} tint="var(--danger)">
+                      <TrashIcon />
+                    </ActionIcon>
                   </li>
                 );
               })}
             </ul>
+          )}
+
+          {/* Archived. It had no delete at all, so the only way out of the
+              archive was to restore an interview first and delete it from the
+              main list. */}
+          {(prepData.archivedCompanies || []).length > 0 && (
+            <div className="mb-4">
+              <button
+                type="button"
+                onClick={() => setShowArchived(v => !v)}
+                aria-expanded={showArchived}
+                className="flex items-center gap-1.5 text-[12px] font-semibold mb-2"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <span style={{ display: 'inline-block', transition: 'transform 0.15s', transform: showArchived ? 'rotate(90deg)' : 'none' }}>▸</span>
+                Archived ({(prepData.archivedCompanies || []).length})
+              </button>
+              {showArchived && (
+                <ul className="space-y-2">
+                  {(prepData.archivedCompanies || []).map(c => (
+                    <li key={c} className="flex items-stretch gap-2">
+                      <div className="flex-1 min-w-0 px-4 py-2.5 rounded-xl flex items-center"
+                        style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                        <span className="text-[13px] truncate" style={{ color: 'var(--text-muted)' }}>{c}</span>
+                      </div>
+                      <ActionIcon label={`Restore ${c}`} onClick={() => unarchiveCompany(c)} tint="var(--cam-primary)">
+                        <RestoreIcon />
+                      </ActionIcon>
+                      <ActionIcon label={`Delete ${c}`} onClick={() => confirmDelete(c)} tint="var(--danger)">
+                        <TrashIcon />
+                      </ActionIcon>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
 
           {showNewCompany ? (
