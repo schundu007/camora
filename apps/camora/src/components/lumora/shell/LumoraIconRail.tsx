@@ -44,9 +44,13 @@ const LIBRARY_ITEMS = [
    section, kept separate from the meeting/coding Tools group. */
 const PREP_ITEMS = [
   { id: 'documents', label: 'Prep Kit', path: '/lumora/prepkit', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
-  { id: 'practice', label: 'Practice', path: '/lumora/practice', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="0.5" fill="currentColor" /></svg> },
-  { id: 'prepare', label: 'Prepare', path: '/capra/prepare', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /><path d="M9 7h7M9 11h5" /></svg> },
 ];
+
+/* Out of Lumora entirely. Prepare and Practice used to sit in the rail, which
+   put two studying destinations inside a surface used during a live interview —
+   and neither is something you open with someone watching. The one exit that IS
+   wanted is the way out, so that is what the rail carries. */
+const SITE_ITEM = { id: 'site', label: 'Camora Home', path: '/', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5L12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 001 1h3.5v-5.5h5V21H18a1 1 0 001-1V9.5" /></svg> };
 
 const MORE_ITEMS = [
   { id: 'profile', label: 'Profile', path: '/lumora/profile' },
@@ -282,39 +286,13 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
                 {expanded && <span className="truncate">{companyKey ?? '+ Context'}</span>}
               </button>
             )}
-            {onMeetingPlatformChange && (
-              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} data-tip={expanded ? undefined : `Meeting: ${meetingPlatform}`}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M15 10l4.553-2.37A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-                {expanded && (
-                  <select value={meetingPlatform} onChange={e => onMeetingPlatformChange(e.target.value)}
-                    className="bg-transparent border-none outline-none cursor-pointer text-[13px] font-medium flex-1" style={{ color: 'inherit' }}
-                    aria-label="Meeting platform">
-                    <option value="zoom">Zoom</option>
-                    <option value="teams">Teams</option>
-                    <option value="meet">Google Meet</option>
-                    <option value="other">Other</option>
-                  </select>
-                )}
-              </div>
-            )}
-            {onCodingPlatformChange && (
-              <div className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg`} style={{ color: 'var(--text-secondary)' }} data-tip={expanded ? undefined : `Coding: ${codingPlatform}`}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-                {expanded && (
-                  <select value={codingPlatform} onChange={e => onCodingPlatformChange(e.target.value)}
-                    className="bg-transparent border-none outline-none cursor-pointer text-[13px] font-medium flex-1" style={{ color: 'inherit' }}
-                    aria-label="Coding platform">
-                    <option value="auto">Auto-detect</option>
-                    <option value="none">Disabled</option>
-                    <option value="hackerrank">HackerRank</option>
-                    <option value="leetcode">LeetCode</option>
-                    <option value="coderpad">CoderPad</option>
-                    <option value="codesignal">CodeSignal</option>
-                    <option value="glider">Glider</option>
-                  </select>
-                )}
-              </div>
-            )}
+            {/* The meeting and coding pickers moved INTO the context drawer the
+                button above opens. They were two more icons to find, and both
+                were native <select>s — whose menus open in a separate OS window
+                that content protection cannot hide, so the list stayed on
+                screen in a share. Choosing the workspace, the meeting tool and
+                the coding platform is one decision about what this interview
+                is, so it is now one window. */}
           </div>
         </>
       )}
@@ -339,6 +317,18 @@ export const LumoraIconRail = ({ activeTab, meetingPlatform, onMeetingPlatformCh
               </Link>
             );
           })}
+          {/* The way out. An external <a>, not a Link: Lumora and the marketing
+              site are different shells, and routing between them in-app leaves
+              the interview chrome half-torn-down behind the landing page. */}
+          <a
+            href={SITE_ITEM.path}
+            className={`flex items-center ${expanded ? 'gap-3 px-3' : 'justify-center px-0'} py-2 rounded-lg text-[13px] font-medium transition-[background-color,color,transform] hover:bg-[var(--bg-elevated)]`}
+            style={itemStyle(false)}
+            data-tip={expanded ? undefined : SITE_ITEM.label}
+          >
+            {SITE_ITEM.icon}
+            {expanded && <span className="whitespace-nowrap">{SITE_ITEM.label}</span>}
+          </a>
         </div>
 
         {/* Library — history + assistants (lower priority). */}

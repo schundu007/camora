@@ -12,6 +12,9 @@ import { AnswerView } from './companion/answer-view';
 import { LIVE_TURNS } from '../shared/qaTurns';
 import { AskSwitcher } from '../shared/askSurfaces';
 import { AudioCapture } from '@/components/lumora/audio/AudioCapture';
+import { InterviewerListenButton } from '@/components/lumora/ask/InterviewerListenButton';
+import { useSpeakerAudio } from '@/components/lumora/audio/SpeakerAudio';
+import { resolveAskListenSource } from '@/lib/lumora/ask-listen-source';
 import { Citations } from '@/components/lumora/Citations';
 import { useSessionStore } from '@/stores/session-store';
 import { sonaRegistry } from '@/lib/sona-registry';
@@ -318,6 +321,37 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   /** Copy the latest answer — the same action the Claude and Gemini tabs have.
    *  Behavioral had an Export but no Copy, which is the one you actually reach
    *  for mid-interview. */
+  /* Interviewer audio, as a chip — the same control the Claude and Gemini
+     composers carry, in the same slot.
+     
+     It is NOT a toggle here, and that is the honest difference: those two arm
+     per question, behavioral listens unconditionally and answers hands-free.
+     So the chip reports rather than switches — lit while a dedicated stream is
+     carrying the interviewer, dark with the reason when it is not.
+     
+     That state is worth a chip on this surface more than on the others,
+     because a stream that dies here is silent: Sona simply stops answering,
+     which looks like Sona being broken. Clicking opens audio setup, which is
+     the fix. */
+  const speaker = useSpeakerAudio();
+  const { voiceEnrolled, voiceFilterEnabled } = useSessionStore();
+  const listenSource = resolveAskListenSource({
+    speakerActive: speaker.active,
+    method: speaker.method,
+    voiceFilterActive: voiceEnrolled && voiceFilterEnabled,
+  });
+  const hearingInterviewer = listenSource === 'interviewer';
+  const listenReason = hearingInterviewer
+    ? null
+    : !speaker.active
+      ? 'Interviewer audio is not connected — Sona cannot hear their questions. Click to set it up.'
+      : speaker.method === 'room-mic'
+        ? 'Room mic carries you as well as the interviewer. Enrol your voice and turn the filter on, or switch capture method. Click to set it up.'
+        : 'This setup has no separate interviewer stream. Click to set it up.';
+  const openAudioSetup = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('lumora:open-audio-wizard'));
+  }, []);
+
   const copyLastAnswer = useCallback(() => {
     const last = [...messages].reverse().find(m => m.role === 'ai');
     if (last?.text) navigator.clipboard?.writeText(last.text).catch(() => { /* denied */ });
@@ -1271,13 +1305,16 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
         {/* Surface switcher — above the box you type into, because that is where
             the eye already is when you decide another model would answer this
             better. */}
+        {/* Exactly what the Claude and Gemini tabs carry — New, Copy, voice.
+            Export went because an interview transcript is not something anyone
+            reaches for mid-interview, and Close went because New already
+            clears the surface and the rail already navigates away. Three
+            surfaces, one row, no per-surface exceptions left. */}
         <AskSwitcher
           topRow
           className="mb-2 overflow-x-auto"
           onNew={clearMessages}
           onCopy={copyLastAnswer}
-          onExport={exportSession}
-          onClose={onClose}
           hasContent={messages.length > 0}
         />
         {/* Text input — visible in both floating and embedded behavioral mode */}
@@ -1291,6 +1328,13 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
             placeholder="Type a question..."
             className="flex-1 bg-transparent focus:outline-none min-w-0 placeholder:opacity-40 text-[16px] md:text-[13px]"
             style={{ fontFamily: "var(--font-sans)", color: 'var(--text-primary)' }} disabled={streaming} />
+          {/* Interviewer audio, then the mic — the same two controls in the same
+              order the Claude and Gemini composers use. */}
+          <InterviewerListenButton
+            listening={hearingInterviewer}
+            onToggle={openAudioSetup}
+            tip={listenReason ?? 'Sona is hearing the interviewer. Click to change audio setup.'}
+          />
           {/* Mic — the same control the Claude and Gemini composers carry, in
               the same place. It renders its own button; AudioCapture is also
               the recorder, so it stays mounted while this panel is open. */}

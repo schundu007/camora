@@ -7,12 +7,79 @@ import {
   type CompanyPrepListItem,
 } from '../../../lib/companyContext';
 
+/** One row of choices, rendered as buttons rather than a <select>.
+ *
+ *  A native select opens its menu in a SEPARATE OS window, which
+ *  setContentProtection cannot hide — so the two platform pickers this drawer
+ *  absorbed were a hole in stealth: the list would stay on screen in a share
+ *  even with the rest of Camora hidden. Buttons are ordinary DOM and go with
+ *  the window. */
+const ChoiceRow = ({ label, hint, value, options, onChange }: {
+  label: string;
+  hint: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (v: string) => void;
+}) => (
+  <div className="px-5 py-3 border-t" style={{ borderColor: 'var(--border)' }}>
+    <div className="flex items-baseline gap-2 mb-2">
+      <span className="text-[12px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+      <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>{hint}</span>
+    </div>
+    <div className="flex flex-wrap gap-1.5">
+      {options.map(o => {
+        const on = o.value === value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            aria-pressed={on}
+            className="px-2.5 h-7 rounded-full text-[12px] font-semibold transition-colors"
+            style={on
+              ? { background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid var(--accent)' }
+              : { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
+
+const MEETING_OPTIONS = [
+  { value: 'zoom', label: 'Zoom' },
+  { value: 'teams', label: 'Teams' },
+  { value: 'meet', label: 'Google Meet' },
+  { value: 'other', label: 'Other' },
+];
+
+const CODING_OPTIONS = [
+  { value: 'auto', label: 'Auto-detect' },
+  { value: 'none', label: 'Disabled' },
+  { value: 'hackerrank', label: 'HackerRank' },
+  { value: 'leetcode', label: 'LeetCode' },
+  { value: 'coderpad', label: 'CoderPad' },
+  { value: 'codesignal', label: 'CodeSignal' },
+  { value: 'glider', label: 'Glider' },
+];
+
 interface Props {
   open: boolean;
   onClose: () => void;
+  /* The two platform pickers the rail used to carry as its own chips. They are
+     the same decision as the workspace — what this interview IS — so they
+     belong in the same window rather than as two more icons to hunt for. */
+  meetingPlatform?: string;
+  onMeetingPlatformChange?: (v: string) => void;
+  codingPlatform?: string;
+  onCodingPlatformChange?: (v: string) => void;
 }
 
-export const InterviewContextDrawer = ({ open, onClose }: Props) => {
+export const InterviewContextDrawer = ({
+  open, onClose, meetingPlatform, onMeetingPlatformChange, codingPlatform, onCodingPlatformChange,
+}: Props) => {
   const [items, setItems] = useState<CompanyPrepListItem[]>(() => listCompanyPreps());
   const [activeKey, setActiveKeyState] = useState<string | null>(() => getActiveCompanyKey());
 
@@ -187,6 +254,25 @@ export const InterviewContextDrawer = ({ open, onClose }: Props) => {
             </ul>
           )}
         </div>
+
+        {onMeetingPlatformChange && (
+          <ChoiceRow
+            label="Meeting"
+            hint="where the interviewer is calling from"
+            value={meetingPlatform || 'zoom'}
+            options={MEETING_OPTIONS}
+            onChange={onMeetingPlatformChange}
+          />
+        )}
+        {onCodingPlatformChange && (
+          <ChoiceRow
+            label="Coding"
+            hint="the editor they will share"
+            value={codingPlatform || 'auto'}
+            options={CODING_OPTIONS}
+            onChange={onCodingPlatformChange}
+          />
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 px-5 py-3 shrink-0 border-t" style={{ borderColor: 'var(--border)' }}>

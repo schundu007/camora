@@ -1541,21 +1541,23 @@ const UnifiedMicButton = ({
           A waveform mark carries the meaning without duplicating Ask's mic,
           and a floor of one lit bar while capturing says "listening, hearing
           nothing" rather than "not working". */}
+      {/* The level meter is a strip-row readout. In a composer it was a third
+          round button that could not be pressed, sitting between two that can.
+          The information it carried — is audio arriving — is on the
+          interviewer chip beside it, which says whether the stream is live at
+          all, and that is the question people actually have. */}
+      {variant !== 'composer' && (
       <div
-        className={variant === 'composer'
-          ? 'w-9 h-9 rounded-full flex items-center justify-center shrink-0'
-          : 'lum-tool-group'}
+        className={'lum-tool-group'}
         data-overlay-keep
         role="img"
         aria-label={(listenOn || isAsking) ? 'Input level' : 'Input level — not capturing'}
         data-tip={(listenOn || isAsking)
           ? 'Input level — the bars move when Sona hears audio. Flat bars mean no sound is reaching it.'
           : 'Input level — flat because Sona is not capturing right now.'}
-        style={variant === 'composer'
-          ? { background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text-2)' }
-          : { padding: '0 8px' }}
+        style={{ padding: '0 8px' }}
       >
-        {variant !== 'composer' && <WaveIcon />}
+        <WaveIcon />
         <span className="lum-tool-meter" aria-hidden="true">
           {[0, 1, 2, 3, 4].map((i) => {
             // Bar 0 lights whenever anything is capturing, even in a silent
@@ -1573,6 +1575,7 @@ const UnifiedMicButton = ({
           })}
         </span>
       </div>
+      )}
 
     </>
   );

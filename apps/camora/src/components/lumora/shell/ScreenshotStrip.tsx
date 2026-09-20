@@ -53,7 +53,6 @@ const pillBase = 'flex items-center gap-1 px-2 py-0.5 rounded text-[12px] font-b
 
 export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inputMode, onInputModeChange, showInputModeSelector, onTranscription, isTabActive, codingPlatform, inline }: ScreenshotStripProps) => {
   const { token } = useAuth();
-  const sonaClose = useSessionStore(s => s.sonaClose);
   const [snapState, setSnapState] = useState<'idle' | 'capturing' | 'error'>('idle');
   const [snapError, setSnapError] = useState<string | null>(null);
   // Arm-then-click-another-window only exists for surfaces without native region
@@ -322,25 +321,10 @@ export const ScreenshotStrip = ({ surface, screenshots, onSnapped, onRemove, inp
           candidate to pick a depth correctly in advance and then carried a chip
           through every interview to land somewhere the middle serves anyway.
           One averaged depth now lives in the behavioral prompt itself. */}
-      {/* Export and Reset moved to the shared strip above the composer, where
-          all four surfaces now carry the same row. They were the same actions
-          the tabs already had under other names — "New chat" there, a Reset
-          icon here — so keeping a second, icon-only copy on one surface meant
-          relearning the toolbar every time you switched mid-interview.
-          Close stays: it shuts THIS panel, and only this one has a panel. */}
-      {surface === 'behavioral' && sonaClose && (
-        <div className="lum-tool-group" data-overlay-keep>
-          <button
-            onClick={sonaClose ?? undefined}
-            data-tip="Close Sona"
-            aria-label="Close Sona"
-            className="lum-tool-btn"
-          >
-            <CloseIcon />
-          </button>
-        </div>
-      )}
-
+      {/* Nothing behavioral-specific renders here any more. Its actions live in
+          the shared strip above its composer, its mic lives in that composer,
+          and this strip is design-only — so the Close button that used to sit
+          here became unreachable the moment behavioral stopped rendering it. */}
       {/* The behavioral mic moved into that panel's own composer, where the
           Claude and Gemini tabs already keep theirs. It sat up here in the navy
           strip, so the one surface that shares a job with those two was also
@@ -376,8 +360,3 @@ const ICON = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke
 
 // Reset — counter-clockwise arrow, the universal "start this over".
 
-const CloseIcon = () => (
-  <svg {...ICON} aria-hidden="true">
-    <path d="M18 6L6 18M6 6l12 12" />
-  </svg>
-);

@@ -26,14 +26,24 @@ interface Props {
    *  not an interviewer stream, which is why "the chip is missing" was a bug
    *  report rather than something the UI answered on its own. */
   unavailableReason?: string | null;
+  /** Replaces the tooltip without touching the disabled logic.
+   *
+   *  The behavioral panel renders this chip as a READOUT — it listens
+   *  unconditionally, so there is nothing to arm — and clicking it opens audio
+   *  setup. It still needs to explain a dead stream, but passing that through
+   *  `unavailableReason` would disable the button and take away the one thing
+   *  that fixes it. */
+  tip?: string | null;
 }
 
-export const InterviewerListenButton = ({ listening, onToggle, disabled = false, unavailableReason = null }: Props) => (
+export const InterviewerListenButton = ({ listening, onToggle, disabled = false, unavailableReason = null, tip = null }: Props) => (
   <button
     type="button"
     onClick={onToggle}
     disabled={disabled || !!unavailableReason}
-    data-tip={unavailableReason
+    data-tip={tip
+      ? tip
+      : unavailableReason
       ? unavailableReason
       : listening
       ? 'Listening to the interviewer — each question is sent to Sona as it finishes. Click or press ` to stop.'

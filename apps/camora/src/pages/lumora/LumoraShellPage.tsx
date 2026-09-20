@@ -1129,6 +1129,10 @@ export const LumoraShellPage = () => {
     <InterviewContextDrawer
       open={contextDrawerOpen}
       onClose={() => setContextDrawerOpen(false)}
+      meetingPlatform={meetingPlatform}
+      onMeetingPlatformChange={setMeetingPlatform}
+      codingPlatform={codingPlatform}
+      onCodingPlatformChange={setCodingPlatform}
     />
 
     </SpeakerAudioProvider>
