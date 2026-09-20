@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/schundu007/camora/security/advisories/new
+    about: Report privately. Please do not open a public issue for a security problem.
+  - name: Try Camora
+    url: https://camora.cariara.com
+    about: The live product, if you want to see the behaviour before filing.

@@ -1,0 +1,50 @@
+name: Feature or improvement
+description: Suggest something Camora should do
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve
+      description: Describe the situation you're stuck in, not the solution you have in mind.
+      placeholder: When I'm prepping for an SRE loop I can't tell which topics I've already covered.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like to see
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Camora
+      options:
+        - Prepare / topics (Capra)
+        - Practice / problems
+        - Playground (labs, code, SQL)
+        - Lumora live interview
+        - Lumora coding
+        - Lumora system design
+        - Design system / accessibility
+        - Desktop app
+        - Mobile app
+        - Internationalization
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Would you like to build it
+      options:
+        - label: I'd be up for opening a PR for this

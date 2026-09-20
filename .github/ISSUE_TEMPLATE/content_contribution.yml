@@ -1,0 +1,53 @@
+name: Prep content — new topic or correction
+description: Propose a study topic, or report something wrong in an existing one
+labels: ["content", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Content is the highest-value contribution to Camora and needs no local setup —
+        no database, no API keys. See the
+        [content guide](../blob/main/CONTRIBUTING.md#adding-or-fixing-a-prep-topic).
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is this
+      options:
+        - A correction to an existing topic
+        - A new topic
+        - A new category
+        - A diagram is wrong or badly laid out
+        - A practice problem (coding or SQL)
+    validations:
+      required: true
+
+  - type: input
+    id: topic
+    attributes:
+      label: Topic id or title
+      description: For a correction, the id from the URL — e.g. `rest-vs-rpc`.
+      placeholder: rest-vs-rpc
+
+  - type: textarea
+    id: detail
+    attributes:
+      label: Details
+      description: |
+        For a correction: what's wrong, and what it should say.
+        For a new topic: what it covers and why it belongs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources
+      description: Where the correct information comes from. Primary docs and papers beat blog posts.
+
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Would you like to write it
+      options:
+        - label: I'd be up for opening a PR for this

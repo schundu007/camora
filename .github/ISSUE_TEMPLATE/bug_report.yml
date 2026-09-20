@@ -1,0 +1,81 @@
+name: Bug report
+description: Something in Camora is broken
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. If this is a **security** problem, stop here and follow
+        [SECURITY.md](../blob/main/SECURITY.md) instead — please don't file it publicly.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+      placeholder: |
+        I clicked X on the Prepare page and the topic list went blank.
+        I expected the DevOps topics to load.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Camora
+      options:
+        - Prepare / topics (Capra)
+        - Practice / problems
+        - Playground (labs, code, SQL)
+        - Lumora live interview
+        - Lumora coding
+        - Lumora system design
+        - Auth / login
+        - Billing
+        - Desktop app
+        - Mobile app
+        - Browser extension
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you hit it
+      options:
+        - camora.cariara.com (production)
+        - Running it locally
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Browser / OS
+      placeholder: Chrome 141 on macOS 15.5
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console or server errors
+      description: Any red errors in the browser console, or output from the backend.
+      render: shell
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots help a lot. Please redact your name, email and any resume content.

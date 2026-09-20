@@ -1,0 +1,18 @@
+# Default owner for everything.
+*                                   @schundu007
+
+# Provider separation is easy to break by accident and expensive to catch later.
+apps/ascend-backend/src/services/   @schundu007
+apps/ascend-backend/src/lib/        @schundu007
+apps/lumora-backend/src/services/   @schundu007
+apps/lumora-backend/src/lib/        @schundu007
+
+# Auth, billing and the sandboxes.
+packages/shared-auth/               @schundu007
+apps/code-runner/                   @schundu007
+apps/playground-backend/            @schundu007
+
+# Project-wide policy files.
+/LICENSE                            @schundu007
+/SECURITY.md                        @schundu007
+/CONTRIBUTING.md                    @schundu007
