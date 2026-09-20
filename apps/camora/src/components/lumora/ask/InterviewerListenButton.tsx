@@ -28,15 +28,20 @@ interface Props {
   unavailableReason?: string | null;
   /** Replaces the tooltip without touching the disabled logic.
    *
-   *  The behavioral panel renders this chip as a READOUT — it listens
-   *  unconditionally, so there is nothing to arm — and clicking it opens audio
-   *  setup. It still needs to explain a dead stream, but passing that through
-   *  `unavailableReason` would disable the button and take away the one thing
-   *  that fixes it. */
+   *  The behavioral panel needs its own wording — it listens for the whole
+   *  session and the chip pauses that, rather than arming per question — and
+   *  it must still explain a dead stream while staying clickable, because
+   *  clicking is what opens the setup that fixes it. Passing that reason
+   *  through `unavailableReason` would disable the button instead. */
   tip?: string | null;
+  /** Deliberately paused, as opposed to simply not armed. Both are unlit, so
+   *  without this they look identical — and on behavioral, where the stream is
+   *  live underneath, "unlit" would read as a broken stream rather than as the
+   *  pause the user just asked for. Draws a slash through the mark. */
+  paused?: boolean;
 }
 
-export const InterviewerListenButton = ({ listening, onToggle, disabled = false, unavailableReason = null, tip = null }: Props) => (
+export const InterviewerListenButton = ({ listening, onToggle, disabled = false, unavailableReason = null, tip = null, paused = false }: Props) => (
   <button
     type="button"
     onClick={onToggle}
@@ -48,7 +53,11 @@ export const InterviewerListenButton = ({ listening, onToggle, disabled = false,
       : listening
       ? 'Listening to the interviewer — each question is sent to Sona as it finishes. Click or press ` to stop.'
       : 'Listen to the interviewer (`) — their questions go straight to Sona. Your own voice is not on this stream.'}
-    aria-label={listening ? 'Stop listening to the interviewer' : 'Listen to the interviewer'}
+    aria-label={listening
+      ? 'Stop listening to the interviewer'
+      : paused
+      ? 'Resume listening to the interviewer'
+      : 'Listen to the interviewer'}
     aria-pressed={listening}
     className="relative w-9 h-9 rounded-full flex items-center justify-center transition-opacity disabled:opacity-40 hover:opacity-85"
     style={{
@@ -70,6 +79,7 @@ export const InterviewerListenButton = ({ listening, onToggle, disabled = false,
     >
       <path d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M8.464 15.536a5 5 0 010-7.072M5.636 18.364a9 9 0 010-12.728" />
       <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+      {paused && <path d="M4 20L20 4" />}
     </svg>
     {listening && (
       <span

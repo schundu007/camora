@@ -543,34 +543,51 @@ export const AudioSetupWizard = ({
       role="dialog"
       aria-modal="true"
       aria-label="Audio setup"
-      className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6 overflow-y-auto"
-      style={{ background: 'rgba(2,6,23,0.72)', backdropFilter: 'blur(6px)' }}
+      /* lumora-shell-root on the overlay. This mounts as a SIBLING of the
+         shell, so no --lum-* remap reached it and it drew itself in the global
+         Capra palette — a white card over a dark interview. */
+      className="lumora-shell-root fixed inset-0 z-[60] flex items-center justify-center px-4 py-6"
+      style={{ background: 'rgba(6,9,14,0.66)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
     >
       <div
-        className="w-full max-w-2xl rounded-2xl"
+        data-overlay-keep
+        className="w-full rounded-xl flex flex-col overflow-hidden"
         style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.55)',
+          maxWidth: 720,
+          maxHeight: 'min(88vh, 860px)',
+          background: 'var(--lum-surface)',
+          border: '1px solid var(--lum-border-strong)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
+          fontFamily: 'var(--font-sans)',
         }}
       >
-        {/* Header */}
-        <div className="px-6 pt-6 pb-3 flex items-start gap-3">
+        {/* Fixed, so close and the connection state stay reachable. */}
+        <div
+          className="relative shrink-0 px-5 py-3.5 flex items-center gap-3"
+          style={{ background: 'var(--lum-bg)', borderBottom: '1px solid var(--lum-border)' }}
+        >
+          <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'var(--lum-accent)' }} />
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-            style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ml-1.5"
+            style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent)' }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
             </svg>
           </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Set up audio</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-              Pick your microphone, speakers, and how Camora should hear the speaker. Works with any device — AirPods, USB mics, audio interfaces, virtual loopback (BlackHole / VoiceMeeter / Loopback).
-            </p>
-          </div>
+          {/* Title only — the paragraph under it listed hardware that the
+              picker below already lists. */}
+          <h2 className="flex-1 min-w-0 text-[15px] font-semibold tracking-tight" style={{ color: 'var(--lum-text)' }}>
+            Set up audio
+          </h2>
+          {/* The state the window exists for. It was buried in step 4. */}
+          <StatusPill
+            ok={speakerReady}
+            label={speakerReady
+              ? speaker.level > 0.012 ? 'Hearing the speaker' : 'Connected'
+              : prefs.captureMethod === 'mic-only' ? 'Mic only' : 'Not connected'}
+          />
           {/* Explicit X close — the bottom-left "Skip for this session" link
               was the only dismiss affordance and users were missing it,
               especially on tall layouts where the footer scrolls offscreen
@@ -579,150 +596,112 @@ export const AudioSetupWizard = ({
             type="button"
             onClick={dismiss}
             aria-label="Close"
-            className="w-8 h-8 -mr-1 -mt-1 rounded-md flex items-center justify-center transition-colors hover:bg-black/5"
-            style={{ color: 'var(--text-muted)' }}
+            className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-opacity hover:opacity-70"
+            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="px-6 pb-3 space-y-5">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* Side by side — stacked, these two short steps alone pushed
+              Connect and the footer below the fold. */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           {/* ── Microphone ──────────────────────────────────── */}
-          <Section
-            num={1}
-            title="Your microphone"
-            subtitle="The mic that captures your voice."
-          >
+          <Section num={1} title="Your microphone">
             {/* Permission / no-devices diagnostics. Until permission is
                 granted, Chrome returns audioinputs with empty labels
                 (or none at all), so the dropdown is useless. Surface a
                 clear retry path instead of silently showing an empty
                 "System default" option. */}
             {(permissionError || (!permissionGranted && inputs.length <= 1)) && (
-              <div
-                className="mb-2 p-2.5 rounded-lg text-[12px] flex items-start gap-2"
-                style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
-              >
-                <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--warning)' }} />
-                <div className="flex-1">
-                  <div className="font-bold mb-0.5">Microphone access needed</div>
-                  <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
-                    {permissionError || 'Camora needs permission to list your microphones. Click below.'}
-                  </div>
-                  {needsRelaunch ? (
-                    <button
-                      type="button"
-                      onClick={() => { (window as any).camo?.relaunch?.(); }}
-                      className="px-3 py-1 text-[12px] font-bold rounded-md"
-                      style={{ background: 'var(--accent)', color: '#fff' }}
-                    >
-                      Restart Camora
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { void enumerate(); }}
-                      className="px-3 py-1 text-[12px] font-bold rounded-md"
-                      style={{ background: 'var(--accent)', color: '#fff' }}
-                    >
-                      Grant microphone access
-                    </button>
-                  )}
-                </div>
-              </div>
+              <Notice tone="warning" title="Microphone access needed" body={permissionError || null}>
+                <button
+                  type="button"
+                  onClick={() => { needsRelaunch ? (window as any).camo?.relaunch?.() : void enumerate(); }}
+                  className="px-2.5 py-1 text-[12px] font-semibold rounded-md"
+                  style={{ background: 'var(--lum-accent)', color: 'var(--lum-accent-bg)' }}
+                >
+                  {needsRelaunch ? 'Restart Camora' : 'Grant access'}
+                </button>
+              </Notice>
             )}
             <div className="flex gap-2">
-              <select
-                value={prefs.micDeviceId || ''}
-                onChange={(e) => setMic(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg text-sm"
-                style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-              >
+              <Select value={prefs.micDeviceId || ''} onChange={setMic} className="flex-1 min-w-0">
                 <option value="">System default</option>
                 {inputs.map((d) => (
                   <option key={d.deviceId} value={d.deviceId}>
                     {d.label}{isVirtualMicLabel(d.label) ? ' — virtual loopback' : ''}
                   </option>
                 ))}
-              </select>
+              </Select>
               <button
                 type="button"
                 onClick={() => { void enumerate(); }}
-                className="px-3 py-2 text-[12px] font-bold rounded-lg"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}
-                data-tip="Re-enumerate devices (after plugging in a new mic, or granting permission)"
+                className="px-2.5 h-9 text-[12px] font-semibold rounded-lg shrink-0"
+                style={{ background: 'var(--lum-bg)', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
+                data-tip="Re-enumerate devices"
               >
                 Refresh
               </button>
             </div>
-            <div className="text-[12px] mt-1" style={{ color: 'var(--text-dimmed)' }}>
-              {inputs.length} microphone{inputs.length === 1 ? '' : 's'} detected
-            </div>
-            <LevelMeter level={micLevel} label="Speak now to test" active={micLevel > 0.012} />
+            <LevelMeter level={micLevel} label="Speak to test" active={micLevel > 0.012} />
           </Section>
 
-          {/* ── Speakers / headphones ───────────────────────── */}
-          {/* Output-DEVICE selection was removed: Sona has no audio output, so
-              routing to a specific speaker had zero effect on the interview.
-              The one useful thing here is confirming you can hear at all and
-              the headphones tip, so we keep a default-output "Test sound". */}
-          <Section
-            num={2}
-            title="Your speakers"
-            subtitle="Use headphones to keep the speaker's voice from leaking back into your mic. Play a test tone to confirm your output works."
-          >
+          {/* No output-device picker: Sona has no audio output, so the choice
+              did nothing. Confirming you can hear at all is the useful part. */}
+          <Section num={2} title="Your speakers">
             <button
               onClick={playSoundTest}
               disabled={speakerTestPlaying}
-              className="px-4 py-2 text-xs font-bold rounded-lg disabled:opacity-60"
-              style={{ background: 'var(--accent-subtle)', color: 'var(--accent)', border: '1px solid var(--accent)' }}
+              className="px-3 h-9 text-[12px] font-semibold rounded-lg disabled:opacity-60"
+              style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}
             >
               {speakerTestPlaying ? '♪ Playing' : 'Test sound'}
             </button>
+            <p className="text-[12px] mt-2" style={{ color: 'var(--lum-text-2)' }}>
+              Use headphones so the speaker's voice doesn't leak into your mic.
+            </p>
           </Section>
+          </div>
 
           {/* ── Speaker audio method ────────────────────── */}
-          <Section
-            num={3}
-            title="How Camora hears the speaker"
-            subtitle="Pick the method that matches your setup. Auto picks the best option for your environment."
-          >
+          <Section num={3} title="How Camora hears the speaker">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <MethodCard
                 value="auto"
                 current={prefs.captureMethod}
                 onPick={setMethod}
                 title="Auto"
-                desc="Uses the best path for your environment."
-                badge={env === 'desktop' ? 'desktop loopback' : env === 'chromium' ? 'tab share' : 'mic only'}
+                desc={env === 'desktop' ? 'Uses desktop loopback.' : env === 'chromium' ? 'Uses tab share.' : 'Uses mic only.'}
               />
               <MethodCard
                 value="electron-loopback"
                 current={prefs.captureMethod}
                 onPick={setMethod}
                 title="Desktop loopback"
-                desc="Captures all system audio. Works for Zoom desktop, Teams desktop, anything."
+                desc="All system audio — Zoom, Teams, anything."
                 badge="best"
                 disabled={!isElectron()}
-                disabledNote={!isElectron() ? 'Requires the Camora desktop app.' : undefined}
+                disabledNote={!isElectron() ? 'Needs the desktop app.' : undefined}
               />
               <MethodCard
                 value="tab-share"
                 current={prefs.captureMethod}
                 onPick={setMethod}
                 title="Share a browser tab"
-                desc="You'll pick the meeting tab and check Share tab audio."
+                desc="Pick the meeting tab, check Share tab audio."
                 disabled={!supportsTabShare()}
-                disabledNote={!supportsTabShare() ? 'Requires Chrome or Edge.' : undefined}
+                disabledNote={!supportsTabShare() ? 'Needs Chrome or Edge.' : undefined}
               />
               <MethodCard
                 value="mic-only"
                 current={prefs.captureMethod}
                 onPick={setMethod}
                 title="Mic-only fallback"
-                desc="No second stream. Server-side diarization tries to filter out your voice from the mic."
+                desc="No second stream. Your voice is filtered server-side."
                 badge="lossy"
               />
             </div>
@@ -732,12 +711,12 @@ export const AudioSetupWizard = ({
             <button
               type="button"
               onClick={() => setShowAdvancedMethods((v) => !v)}
-              className="mt-2 flex items-center gap-1.5 text-[12px] font-bold"
-              style={{ color: 'var(--text-secondary)' }}
+              className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold"
+              style={{ color: 'var(--lum-text-2)' }}
               aria-expanded={showAdvancedMethods}
             >
               <span style={{ display: 'inline-block', transition: 'transform 0.15s', transform: showAdvancedMethods ? 'rotate(90deg)' : 'none' }}>▸</span>
-              Advanced capture methods
+              Advanced
             </button>
             {showAdvancedMethods && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -746,21 +725,21 @@ export const AudioSetupWizard = ({
                   current={prefs.captureMethod}
                   onPick={setMethod}
                   title="Virtual loopback"
-                  desc="Route your call's audio to a virtual mic (BlackHole, VoiceMeeter, Loopback) and pick it below."
+                  desc="Route the call into BlackHole, VoiceMeeter or Loopback."
                   badge={detectedVirtualMic ? 'detected' : undefined}
                 />
                 <MethodCard
                   value="room-mic"
                   current={prefs.captureMethod}
                   onPick={setMethod}
-                  title="Room mic (any speaker)"
-                  desc="Captures the speaker's voice through your laptop mic. Works with Bluetooth speakers (JBL, Jabra), wired speakers, phone-on-speaker — anything audible."
-                  badge={voiceEnrolled && voiceFilterEnabled ? 'voice filter ✓' : 'needs voice enrollment'}
+                  title="Room mic"
+                  desc="Hears the speaker through your laptop mic."
+                  badge={voiceEnrolled && voiceFilterEnabled ? 'filter on' : 'needs enrollment'}
                   disabled={!voiceEnrolled || !voiceFilterEnabled}
                   disabledNote={!voiceEnrolled
-                    ? 'Enroll your voice first so the backend can subtract you from the room ambient.'
+                    ? 'Enroll your voice first.'
                     : !voiceFilterEnabled
-                      ? 'Turn voice filter on so Sona ignores your own voice.'
+                      ? 'Turn the voice filter on first.'
                       : undefined}
                 />
               </div>
@@ -768,84 +747,50 @@ export const AudioSetupWizard = ({
 
             {prefs.captureMethod === 'virtual-mic' && (
               <div className="mt-3">
-                <label className="text-[12px] uppercase font-bold tracking-wider block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                <label className="text-[12px] font-semibold block mb-1" style={{ color: 'var(--lum-text-2)' }}>
                   Virtual loopback device
                 </label>
-                <select
-                  value={prefs.virtualMicDeviceId || ''}
-                  onChange={(e) => setVirtualMic(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-sm"
-                  style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
-                >
+                <Select value={prefs.virtualMicDeviceId || ''} onChange={setVirtualMic} className="w-full">
                   <option value="">— pick a virtual loopback input —</option>
                   {inputs.map((d) => (
                     <option key={d.deviceId} value={d.deviceId}>
                       {d.label}{isVirtualMicLabel(d.label) ? ' ✓' : ''}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {!detectedVirtualMic && (
-                  <div className="text-[12px] mt-1.5" style={{ color: 'var(--warning-text, var(--warning))' }}>
-                    No common loopback driver detected. Install BlackHole (macOS), VoiceMeeter (Windows), or Loopback, route your call into it, then refresh this list.
+                  <div className="mt-2">
+                    <Notice tone="warning" title="No loopback driver detected" body="Install BlackHole, VoiceMeeter or Loopback, then refresh." />
                   </div>
                 )}
               </div>
             )}
 
-            {prefs.captureMethod === 'room-mic' && (
-              <div className="mt-3 p-3 rounded-lg text-[12px] leading-relaxed"
-                style={{ background: 'rgba(0,108,224,0.06)', border: '1px solid rgba(0,108,224,0.30)', color: 'var(--text-primary)' }}>
-                <div className="font-bold mb-1">How room mic works</div>
-                <div style={{ color: 'var(--text-secondary)' }}>
-                  Your laptop mic captures everything in the room — speaker audio bleeding
-                  (JBL, Jabra, AirPods, conference room) plus your own voice. The backend uses your enrolled
-                  voice profile to subtract you, so only the speaker reaches Sona.
-                </div>
-                {(!voiceEnrolled || !voiceFilterEnabled) && (
-                  <div className="mt-2 font-bold" style={{ color: 'var(--danger)' }}>
-                    ⚠ {!voiceEnrolled
-                      ? 'Voice not enrolled — Sona will answer your own voice. Enroll first.'
-                      : 'Voice filter is off — turn it on or Sona will answer your own voice.'}
-                  </div>
-                )}
+            {/* Only the part that bites: without the filter, Sona answers you. */}
+            {prefs.captureMethod === 'room-mic' && (!voiceEnrolled || !voiceFilterEnabled) && (
+              <div className="mt-3">
+                <Notice
+                  tone="danger"
+                  title={!voiceEnrolled ? 'Voice not enrolled' : 'Voice filter is off'}
+                  body="Sona will answer your own voice."
+                />
               </div>
             )}
           </Section>
 
           {/* ── Connect & verify ────────────────────────────── */}
           {prefs.captureMethod !== 'mic-only' && (
-            <Section
-              num={4}
-              title="Connect and verify"
-              subtitle="Hit connect, then have the speaker say something. The bars should rise."
-            >
-              {/* Method-mismatch warning. The user picked a method
-                  that requires an environment they aren't in.
-                  Without this, "Connect" silently fails and the user
-                  has no idea why. */}
+            <Section num={4} title="Connect and verify">
+              {/* Method-mismatch warnings. Without them, Connect silently
+                  fails and the user has no idea why. */}
               {prefs.captureMethod === 'electron-loopback' && !isElectron() && (
-                <div
-                  className="mb-2 p-2.5 rounded-lg text-[12px]"
-                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
-                >
-                  <strong>Desktop loopback requires the Camora desktop app.</strong> You're in a regular browser — switch to <em>Share a browser tab</em> above, or download the desktop app.
-                </div>
+                <Notice tone="warning" title="Desktop loopback needs the desktop app" body="Pick Share a browser tab instead." />
               )}
               {prefs.captureMethod === 'tab-share' && !supportsTabShare() && (
-                <div
-                  className="mb-2 p-2.5 rounded-lg text-[12px]"
-                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
-                >
-                  <strong>Tab share isn't supported in this browser.</strong> Use Chrome or Edge, the Camora desktop app, or pick <em>Virtual loopback</em> / <em>Mic-only fallback</em>.
-                </div>
+                <Notice tone="warning" title="Tab share needs Chrome or Edge" body="Pick Virtual loopback or Mic-only instead." />
               )}
               {prefs.captureMethod === 'virtual-mic' && !prefs.virtualMicDeviceId && (
-                <div
-                  className="mb-2 p-2.5 rounded-lg text-[12px]"
-                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
-                >
-                  <strong>Pick a virtual loopback device above.</strong> Connect won't work until you select a virtual mic.
-                </div>
+                <Notice tone="warning" title="Pick a virtual loopback device above" />
               )}
               {/* macOS-only: Screen Recording permission is required for
                   system-audio loopback (it goes through getDisplayMedia,
@@ -855,44 +800,36 @@ export const AudioSetupWizard = ({
                   this BEFORE they click Connect so they don't hit a
                   silent failure. */}
               {prefs.captureMethod === 'electron-loopback' && isElectron() && screenRecordingStatus !== 'granted' && screenRecordingStatus !== 'unknown' && (
-                <div
-                  className="mb-2 p-2.5 rounded-lg text-[12px] flex items-start gap-2"
-                  style={{ background: 'rgba(251,211,50,0.10)', border: '1px solid rgba(251,211,50,0.40)', color: 'var(--text-primary)' }}
+                <Notice
+                  tone="warning"
+                  title="Screen Recording permission needed"
+                  body="macOS routes system audio through it. Toggle Camora on, then restart."
                 >
-                  <span className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: 'var(--warning)' }} />
-                  <div className="flex-1">
-                    <div className="font-bold mb-0.5">Screen Recording permission needed</div>
-                    <div className="mb-2" style={{ color: 'var(--text-secondary)' }}>
-                      macOS routes system audio through the Screen Recording API. Toggle Camora ON in System Settings, then click Restart Camora — Connect system audio will work after the relaunch.
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => { (window as any).camo?.openSystemPrivacy?.('ScreenCapture'); }}
-                        className="px-3 py-1 text-[12px] font-bold rounded-md"
-                        style={{ background: 'var(--accent)', color: '#fff' }}
-                      >
-                        Open System Settings
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { (window as any).camo?.relaunch?.(); }}
-                        className="px-3 py-1 text-[12px] font-bold rounded-md"
-                        style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-                      >
-                        Restart Camora
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  <button
+                    type="button"
+                    onClick={() => { (window as any).camo?.openSystemPrivacy?.('ScreenCapture'); }}
+                    className="px-2.5 py-1 text-[12px] font-semibold rounded-md"
+                    style={{ background: 'var(--lum-accent)', color: 'var(--lum-accent-bg)' }}
+                  >
+                    Open System Settings
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { (window as any).camo?.relaunch?.(); }}
+                    className="px-2.5 py-1 text-[12px] font-semibold rounded-md"
+                    style={{ background: 'var(--lum-bg)', color: 'var(--lum-text)', border: '1px solid var(--lum-border)' }}
+                  >
+                    Restart Camora
+                  </button>
+                </Notice>
               )}
 
               <div className="flex gap-2 items-center mb-2">
                 {!speakerReady ? (
                   <button
                     onClick={connectSpeaker}
-                    className="px-4 py-2 text-xs font-bold rounded-lg"
-                    style={{ background: 'var(--accent)', color: '#fff' }}
+                    className="px-3 h-9 text-[12px] font-semibold rounded-lg"
+                    style={{ background: 'var(--lum-accent)', color: 'var(--lum-accent-bg)' }}
                   >
                     {prefs.captureMethod === 'electron-loopback' ? 'Connect system audio'
                       : prefs.captureMethod === 'tab-share' ? 'Share speaker tab'
@@ -902,30 +839,23 @@ export const AudioSetupWizard = ({
                 ) : (
                   <button
                     onClick={() => speaker.stop()}
-                    className="px-4 py-2 text-xs font-bold rounded-lg"
-                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                    className="px-3 h-9 text-[12px] font-semibold rounded-lg"
+                    style={{ background: 'var(--lum-bg)', color: 'var(--lum-text)', border: '1px solid var(--lum-border)' }}
                   >
                     Stop and reconnect
                   </button>
                 )}
-                <span className="text-[12px] font-mono" style={{ color: speakerReady ? 'var(--accent)' : 'var(--text-dimmed)' }}>
-                  {speakerReady
-                    ? speaker.level > 0.012 ? 'voice detected ✓' : 'connected, waiting…'
-                    : 'not connected'}
-                </span>
               </div>
               <LevelMeter level={speaker.level} label="Speaker level" active={speakerReady && speaker.level > 0.012} />
               {speaker.error && (
-                <div
-                  className="mt-2 rounded-lg p-2.5 text-xs"
-                  style={{ background: 'rgba(219,0,0,0.10)', border: '1px solid rgba(219,0,0,0.3)', color: 'var(--danger)' }}
-                >
-                  <strong>Connect failed:</strong> {speaker.error}
-                  {prefs.captureMethod === 'electron-loopback' && (
-                    <div className="mt-1.5" style={{ color: 'var(--danger)' }}>
-                      On macOS this usually means Screen Recording permission is denied. Open <strong>System Settings → Privacy &amp; Security → Screen Recording</strong>, enable Camora, and quit + relaunch the app.
-                    </div>
-                  )}
+                <div className="mt-2">
+                  <Notice
+                    tone="danger"
+                    title={`Connect failed: ${speaker.error}`}
+                    body={prefs.captureMethod === 'electron-loopback'
+                      ? 'On macOS this usually means Screen Recording is denied. Enable Camora there, then relaunch.'
+                      : null}
+                  />
                 </div>
               )}
             </Section>
@@ -934,23 +864,25 @@ export const AudioSetupWizard = ({
 
         {/* Footer */}
         <div
-          className="flex items-center justify-between px-6 py-4 rounded-b-2xl"
-          style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border)' }}
+          className="shrink-0 flex items-center justify-between gap-3 px-5 py-3"
+          style={{ background: 'var(--lum-bg)', borderTop: '1px solid var(--lum-border)' }}
         >
-          <button onClick={dismiss} className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+          <button
+            onClick={dismiss}
+            className="text-[12px] font-semibold px-3 py-1.5 rounded-md"
+            style={{ color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
+          >
             Skip for this session
           </button>
-          <div className="flex gap-2">
-            <button
-              onClick={finish}
-              disabled={!canFinish}
-              className="px-4 py-2 text-xs font-bold rounded-lg disabled:opacity-50"
-              style={{ background: 'var(--accent)', color: '#fff' }}
-              data-tip={canFinish ? 'Save and start session' : 'Verify the speaker level meter is moving first.'}
-            >
-              {canFinish ? 'Save and continue' : 'Waiting for audio…'}
-            </button>
-          </div>
+          <button
+            onClick={finish}
+            disabled={!canFinish}
+            className="px-3.5 py-1.5 text-[12px] font-semibold rounded-md disabled:opacity-50"
+            style={{ background: 'var(--lum-accent)', color: 'var(--lum-accent-bg)' }}
+            data-tip={canFinish ? '' : 'Verify the speaker level meter is moving first.'}
+          >
+            {canFinish ? 'Save and continue' : 'Waiting for audio…'}
+          </button>
         </div>
       </div>
     </div>
@@ -959,29 +891,83 @@ export const AudioSetupWizard = ({
 
 /* ── Sub-components ──────────────────────────────────────────────── */
 
-const Section = ({
-  num, title, subtitle, children,
+const Section = ({ num, title, children }: { num: number; title: string; children: React.ReactNode }) => (
+  <div>
+    <div className="flex items-center gap-2 mb-2">
+      <span
+        className="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-[12px] font-semibold tabular-nums"
+        style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)' }}
+      >
+        {num}
+      </span>
+      <h3 className="text-[13px] font-semibold tracking-tight" style={{ color: 'var(--lum-text)' }}>{title}</h3>
+    </div>
+    {children}
+  </div>
+);
+
+/* Live connection state, in the header. */
+const StatusPill = ({ ok, label }: { ok: boolean; label: string }) => (
+  <span
+    className="shrink-0 hidden sm:inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[12px] font-semibold"
+    style={{
+      background: 'var(--lum-bg)',
+      border: `1px solid ${ok ? 'var(--lum-ok)' : 'var(--lum-border)'}`,
+      color: ok ? 'var(--lum-ok)' : 'var(--lum-text-2)',
+    }}
+  >
+    <span className="w-1.5 h-1.5 rounded-full" style={{ background: ok ? 'var(--lum-ok)' : 'var(--lum-text-2)' }} />
+    {label}
+  </span>
+);
+
+/* One box for every warning and error. They were five hand-rolled divs with
+   the same hardcoded rgba, so none of them followed the theme. */
+const Notice = ({
+  tone, title, body, children,
 }: {
-  num: number; title: string; subtitle?: string; children: React.ReactNode;
+  tone: 'warning' | 'danger';
+  title: string;
+  body?: string | null;
+  children?: React.ReactNode;
 }) => {
+  const c = tone === 'danger' ? 'var(--danger)' : 'var(--warning)';
   return (
-    <div>
-      <div className="flex items-baseline gap-2 mb-1.5">
-        <span
-          className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[12px] font-bold"
-          style={{ background: 'var(--accent-subtle)', color: 'var(--accent)' }}
-        >
-          {num}
-        </span>
-        <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h3>
+    <div
+      className="mb-2 p-2.5 rounded-lg text-[12px] flex items-start gap-2"
+      style={{
+        background: `color-mix(in srgb, ${c} 12%, transparent)`,
+        border: `1px solid color-mix(in srgb, ${c} 45%, transparent)`,
+        color: 'var(--lum-text)',
+      }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: c }} />
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold">{title}</div>
+        {body && <div className="mt-0.5" style={{ color: 'var(--lum-text-2)' }}>{body}</div>}
+        {children && <div className="flex flex-wrap gap-2 mt-2">{children}</div>}
       </div>
-      {subtitle && (
-        <p className="text-[12px] mb-2" style={{ color: 'var(--text-secondary)' }}>{subtitle}</p>
-      )}
-      {children}
     </div>
   );
-}
+};
+
+const Select = ({
+  value, onChange, className = '', children,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  className?: string;
+  children: React.ReactNode;
+}) => (
+  <select
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+    className={`h-9 px-2.5 rounded-lg text-[13px] ${className}`}
+    style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}
+  >
+    {children}
+  </select>
+);
 
 const MethodCard = ({
   value, current, onPick, title, desc, badge, disabled, disabledNote,
@@ -1001,61 +987,72 @@ const MethodCard = ({
       type="button"
       onClick={() => !disabled && onPick(value)}
       disabled={disabled}
-      className="text-left p-3 rounded-lg transition-[background-color,border-color,opacity] duration-150 active:scale-[0.98] disabled:cursor-not-allowed"
+      className="text-left p-2.5 rounded-lg transition-[background-color,border-color,opacity] duration-150 active:scale-[0.98] disabled:cursor-not-allowed"
       style={{
-        background: selected ? 'var(--accent-subtle)' : 'var(--bg-elevated)',
-        border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+        background: selected ? 'var(--lum-accent-bg)' : 'var(--lum-bg)',
+        border: `1px solid ${selected ? 'var(--lum-accent)' : 'var(--lum-border)'}`,
         opacity: disabled ? 0.5 : 1,
       }}
       data-tip={disabled ? disabledNote : ''}
     >
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-bold" style={{ color: selected ? 'var(--accent)' : 'var(--text-primary)' }}>
+      <div className="flex items-center gap-1.5 mb-0.5">
+        {/* A tick, not colour alone. */}
+        <span
+          aria-hidden
+          className="w-3.5 h-3.5 rounded-full shrink-0 flex items-center justify-center"
+          style={{
+            border: `1px solid ${selected ? 'var(--lum-accent)' : 'var(--lum-border-strong)'}`,
+            background: selected ? 'var(--lum-accent)' : 'transparent',
+          }}
+        >
+          {selected && (
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--lum-accent-bg)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" />
+            </svg>
+          )}
+        </span>
+        <span className="text-[12px] font-semibold flex-1 min-w-0" style={{ color: selected ? 'var(--lum-accent-sm)' : 'var(--lum-text)' }}>
           {title}
         </span>
         {badge && (
           <span
-            className="text-[12px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
-            style={{ background: 'var(--bg-app)', color: 'var(--text-secondary)' }}
+            className="text-[12px] font-semibold px-1.5 rounded shrink-0"
+            style={{ background: 'var(--lum-surface)', color: 'var(--lum-text-2)' }}
           >
             {badge}
           </span>
         )}
       </div>
-      <div className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>{desc}</div>
+      <div className="text-[12px] pl-5" style={{ color: 'var(--lum-text-2)' }}>{desc}</div>
       {disabledNote && disabled && (
-        <div className="text-[12px] mt-1" style={{ color: 'var(--warning-text, var(--warning))' }}>{disabledNote}</div>
+        <div className="text-[12px] pl-5 mt-0.5" style={{ color: 'var(--warning)' }}>{disabledNote}</div>
       )}
     </button>
   );
-}
+};
 
-const LevelMeter = ({ level, label, active }: { level: number; label: string; active: boolean }) => {
-  return (
-    <div className="mt-2">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[12px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{label}</span>
-      </div>
-      <div className="flex items-end gap-0.5 h-5">
-        {Array.from({ length: 28 }).map((_, i) => {
-          const t = i / 28;
-          const lit = active && level > t * 0.5;
-          return (
-            <span
-              key={i}
-              className="flex-1 rounded-sm transition-all duration-75"
-              style={{
-                height: `${20 + t * 80}%`,
-                background: lit ? 'var(--accent)' : 'var(--border)',
-                opacity: lit ? 1 : 0.55,
-              }}
-            />
-          );
-        })}
-      </div>
+const LevelMeter = ({ level, label, active }: { level: number; label: string; active: boolean }) => (
+  <div className="mt-2">
+    <div className="text-[12px] mb-1" style={{ color: 'var(--lum-text-2)' }}>{label}</div>
+    <div className="flex items-end gap-px h-4">
+      {Array.from({ length: 28 }).map((_, i) => {
+        const t = i / 28;
+        const lit = active && level > t * 0.5;
+        return (
+          <span
+            key={i}
+            className="flex-1 rounded-[1px] transition-all duration-75"
+            style={{
+              height: `${30 + t * 70}%`,
+              background: lit ? 'var(--lum-accent)' : 'var(--lum-border)',
+              opacity: lit ? 1 : 0.6,
+            }}
+          />
+        );
+      })}
     </div>
-  );
-}
+  </div>
+);
 
 /* ── Tiny WAV encoder for the sound test ─────────────────────────── */
 const audioBufferToWavBlob = (buffer: AudioBuffer): Blob  => {

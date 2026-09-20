@@ -321,18 +321,15 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   /** Copy the latest answer — the same action the Claude and Gemini tabs have.
    *  Behavioral had an Export but no Copy, which is the one you actually reach
    *  for mid-interview. */
-  /* Interviewer audio, as a chip — the same control the Claude and Gemini
-     composers carry, in the same slot.
-     
-     It is NOT a toggle here, and that is the honest difference: those two arm
-     per question, behavioral listens unconditionally and answers hands-free.
-     So the chip reports rather than switches — lit while a dedicated stream is
-     carrying the interviewer, dark with the reason when it is not.
-     
-     That state is worth a chip on this surface more than on the others,
-     because a stream that dies here is silent: Sona simply stops answering,
-     which looks like Sona being broken. Clicking opens audio setup, which is
-     the fix. */
+  /* Interviewer audio, as a chip — same control and same meaning as Claude
+     and Gemini: it pauses and resumes Sona's ear. It was a read-out, and both
+     it and ` opened audio setup instead, so the key you press on every other
+     surface threw a modal over a live interview.
+
+     The pause does not touch the stream. It gates whether what Sona hears
+     becomes an answer — the distinction the old LIVE switch got wrong. With
+     no interviewer stream there is nothing to pause, so both fall back to
+     opening setup. */
   const speaker = useSpeakerAudio();
   const { voiceEnrolled, voiceFilterEnabled } = useSessionStore();
   const listenSource = resolveAskListenSource({
@@ -351,29 +348,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   const openAudioSetup = useCallback(() => {
     window.dispatchEvent(new CustomEvent('lumora:open-audio-wizard'));
   }, []);
-
-  /* ` is the interviewer key on every surface now.
-   *
-   * On the tabs it arms the stream; here there is nothing to arm, because Sona
-   * listens for the whole session — so it opens audio setup, which is the only
-   * thing you would want from that key on this surface and exactly what
-   * clicking the chip does.
-   *
-   * The important part is that it no longer starts the MIC. It used to, which
-   * meant one key armed the interviewer on three surfaces and recorded the
-   * candidate on the fourth. */
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Backquote' || e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
-      const el = e.target as HTMLElement | null;
-      const tag = el?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || el?.isContentEditable) return;
-      e.preventDefault();
-      openAudioSetup();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [openAudioSetup]);
 
   const copyLastAnswer = useCallback(() => {
     const last = [...messages].reverse().find(m => m.role === 'ai');
@@ -684,8 +658,47 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
   // ABORTED the answer the previous segment started — so nothing ever finished.
   // We now buffer segments and only submit once the speaker has been quiet for
   // COALESCE_MS, assembling the full question as one ask().
+  /* What Sona is hearing right now, mirrored into the panel above the
+     answers. Declared here because submitCoalesced below is what feeds it. */
+  const [liveTranscript, setLiveTranscript] = useState('');
   const coalesceBufferRef = useRef<string>('');
   const coalesceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Reconnecting resumes: pause → stream drops → user fixes audio → stream
+   * returns would otherwise leave Sona deaf behind a chip that reads as "still
+   * broken". The dep is the stream, so pausing while it is up won't re-fire. */
+  const [listenPaused, setListenPaused] = useState(false);
+  useEffect(() => { if (hearingInterviewer) setListenPaused(false); }, [hearingInterviewer]);
+  const listenPausedRef = useRef(false);
+  useEffect(() => { listenPausedRef.current = listenPaused; }, [listenPaused]);
+
+  /* Pausing drops what the coalescer is holding — a half-assembled question
+   * would otherwise land the moment you resume, about a moment that has passed. */
+  const toggleListen = useCallback(() => {
+    if (!hearingInterviewer) { openAudioSetup(); return; }
+    const next = !listenPausedRef.current;
+    setListenPaused(next);
+    if (next) {
+      if (coalesceTimerRef.current) { clearTimeout(coalesceTimerRef.current); coalesceTimerRef.current = null; }
+      coalesceBufferRef.current = '';
+      setLiveTranscript('');
+    }
+  }, [hearingInterviewer, openAudioSetup]);
+
+  /* ` means the same thing on every surface: start or stop listening to the
+   * interviewer. It does not start the MIC — that is Space. */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Backquote' || e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || el?.isContentEditable) return;
+      e.preventDefault();
+      toggleListen();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toggleListen]);
 
   // Behavioral tap-to-answer: the SOFT tier. Transcribed interviewer lines that
   // cleared the noise floor but not shouldAutoAnswer() land here as PENDING
@@ -1030,11 +1043,17 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     } else if (!normalizeQ(buf).includes(normalizeQ(t))) {
       coalesceBufferRef.current = `${buf} ${t}`;
     }
+    /* Print what is being heard, as it is heard. The live panel was fed only by
+       AudioCapture's dispatch — the candidate MIC — and on any setup with a
+       dedicated interviewer stream those transcripts are dropped by speaker
+       attribution, so nothing ever reached it. Both sources reach here. */
+    setLiveTranscript(coalesceBufferRef.current);
     if (coalesceTimerRef.current) clearTimeout(coalesceTimerRef.current);
     coalesceTimerRef.current = setTimeout(() => {
       const full = coalesceBufferRef.current.trim();
       coalesceBufferRef.current = '';
       coalesceTimerRef.current = null;
+      setLiveTranscript('');
       // Gate the COMPLETE assembled utterance (not the fragments) with the
       // recall-favoring behavioral gate: answer anything that isn't clearly
       // Whisper noise, interview wrap-up, or pure acknowledgment/filler. This
@@ -1157,7 +1176,11 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
       if (!text) return;
       // Manual mic press = one deliberate utterance → answer immediately,
       // skipping both the coalescer and the behavioral gate (explicit intent).
+      // A pause is about what Sona OVERHEARS; you pressed the mic, you meant it.
       if (detail?.manual) { askRef.current?.(text); return; }
+      // Read through a ref so pausing doesn't re-bind this listener, which
+      // would drop the coalesce buffer mid-question.
+      if (listenPausedRef.current) return;
       submitCoalesced(text);
     };
     window.addEventListener('lumora:behavioral-question', handler);
@@ -1202,7 +1225,6 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     return null;
   };
 
-  const [liveTranscript, setLiveTranscript] = useState('');
   useEffect(() => { if (!embedded) setRailOpen(false); }, [embedded]);
 
   // Minimized = floating icon button. Draggable: shares the same
@@ -1391,9 +1413,12 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
               : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>}
           </button>
           <InterviewerListenButton
-            listening={hearingInterviewer}
-            onToggle={openAudioSetup}
-            tip={listenReason ?? 'Sona is hearing the interviewer. Click to change audio setup.'}
+            listening={hearingInterviewer && !listenPaused}
+            paused={listenPaused}
+            onToggle={toggleListen}
+            tip={listenReason ?? (listenPaused
+              ? 'Paused — Sona is still hearing the interviewer but is not answering. Press ` or click to resume.'
+              : 'Sona is listening to the interviewer and answering hands-free. Press ` or click to pause.')}
           />
           {onTranscription && (
             <AudioCapture onTranscription={onTranscription} autoStart active compact locked variant="composer" />
