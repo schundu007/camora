@@ -745,9 +745,21 @@ export const RichText = ({ text }: { text: string }) => {
      Only plain bullets and paragraphs join the rail. Numbered steps, STAR
      labels, tables and code already carry their own chrome and keep it. The
      lede keeps its gold rule: it is the line said first, not a part to find. */
+  /* LEAD_RE allows a 64-character lead-in, which was harmless when the only
+     thing that happened to it was going bold in place. In a 7rem rail it is
+     not: "With kubectl apply specifically, it does a three-way diff" becomes a
+     five-line right-aligned label shouting beside one line of text.
+
+     The rail is for the short skeleton labels the prompt asks for. Anything
+     longer, or a question, keeps the inline bold lead-in it always had. */
+  const RAIL_MAX = 28;
   const anchorOf = (seg: Seg, isLede: boolean): RegExpMatchArray | null => {
     if (isLede || (seg.s !== 'bullet' && seg.s !== 'para')) return null;
-    return seg.text.match(LEAD_RE);
+    const m = seg.text.match(LEAD_RE);
+    if (!m) return null;
+    const label = m[1].trim();
+    if (label.length > RAIL_MAX || label.endsWith('?')) return null;
+    return m;
   };
 
   const renderRun = (segs: Seg[], ci: number, ledeAt: number) => {
@@ -763,7 +775,7 @@ export const RichText = ({ text }: { text: string }) => {
           {rail.map(({ i, m }) => (
             <React.Fragment key={`${ci}-${i}`}>
               <dt
-                className="font-bold uppercase tracking-[0.08em] @[26rem]:text-right"
+                className="font-bold uppercase tracking-[0.08em] break-words min-w-0 @[26rem]:text-right"
                 style={{ fontSize: FS_SMALL, lineHeight: LH_BODY, color: ACCENT_TEXT }}
               >
                 {m[1]}

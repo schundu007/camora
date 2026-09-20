@@ -129,7 +129,45 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
 // commits to it before the single-asterisk branch can claim one of the stars.
 // Italic was missing entirely, which is why a model-emitted *desired* used to
 // render with its asterisks showing.
-const inlineMarkdown = (raw: string): React.ReactNode[] => {
+//
+// A streaming answer is a half-written document. `**Load balancer` exists for a
+// beat before its closing `**` arrives, and a tokenizer that needs the pair
+// prints the asterisks until it does — so the candidate watches markup flicker
+// through every answer, and any run the model never closes keeps them forever.
+// Closing a dangling run first means the text is styled, never decorated.
+// Counting markers and appending a closer does not work: a string already
+// ending in `*` gains a second one and the "fix" opens a fresh unclosed bold
+// run. Scan instead, and decide per marker — close an opener that has content
+// after it, drop one that has nothing yet.
+//
+// Called per line, so there are no newlines to reason about here.
+const balanceEmphasis = (s: string) => {
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === '`') {
+      const end = s.indexOf('`', i + 1);
+      if (end === -1) return out + (s.length > i + 1 ? `\`${s.slice(i + 1)}\`` : '');
+      out += s.slice(i, end + 1); i = end + 1; continue;
+    }
+    if (c === '*' && s[i + 1] === '*') {
+      const end = s.indexOf('**', i + 2);
+      if (end === -1) return out + (s.length > i + 2 ? `**${s.slice(i + 2)}**` : '');
+      out += s.slice(i, end + 2); i = end + 2; continue;
+    }
+    if (c === '*') {
+      const end = s.indexOf('*', i + 1);
+      if (end === -1) return out + (s.length > i + 1 ? `*${s.slice(i + 1)}*` : '');
+      out += s.slice(i, end + 1); i = end + 1; continue;
+    }
+    out += c; i += 1;
+  }
+  return out;
+};
+
+const inlineMarkdown = (input: string): React.ReactNode[] => {
+  const raw = balanceEmphasis(input);
   const nodes: React.ReactNode[] = [];
   const re = /\*\*(.+?)\*\*|`([^`]+)`|\*([^*\n]+)\*/g;
   let last = 0, m: RegExpExecArray | null;
@@ -277,7 +315,7 @@ const AnchorList = ({ blocks, keyBase }: { blocks: AnchoredBlock[]; keyBase: str
     {blocks.map((b, i) => (
       <Fragment key={`${keyBase}-${i}`}>
         <dt
-          className="text-[12px] font-bold uppercase tracking-[0.08em] leading-[1.7] @[26rem]:text-right"
+          className="text-[12px] font-bold uppercase tracking-[0.08em] leading-[1.7] break-words min-w-0 @[26rem]:text-right"
           style={{ color: 'var(--lum-accent-sm)' }}
         >
           {b.anchor}

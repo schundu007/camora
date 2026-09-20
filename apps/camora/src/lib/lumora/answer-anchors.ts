@@ -28,6 +28,33 @@ export type AnswerBlock =
 
 /** `**Anchor** — rest`, or a bare `**Anchor**` on its own line. */
 const ANCHOR_RE = /^\*\*([^*]{1,48}?)\*\*\s*(?:[—–-]\s*(.*))?$/;
+
+/**
+ * The rail is a narrow column, and the prompt asks for anchors of one to three
+ * words. Not every bolded lead-in obeys that: the "### If they push" section
+ * emits `**<the question the interviewer asks>** — <the reply>`, and a whole
+ * question set as a rail label wraps across three lines and reads as shouting.
+ *
+ * A long lead-in, or one that is itself a question, stays in the body as an
+ * ordinary bold lead-in instead.
+ */
+const railable = (anchor: string) => anchor.length <= 28 && !anchor.endsWith('?');
+
+/**
+ * `**3. Authentication/Authorization** — …`
+ *
+ * A model that numbers its own steps emits them as anchor lines, one per step.
+ * Taken at face value each becomes its own rail row, which is wrong twice: the
+ * rail fills with twelve step names instead of the four anchors that are the
+ * actual skeleton, and a step name is far too long for it — "3.
+ * Authentication/Authorization" overflows the column and lands on top of the
+ * text beside it.
+ *
+ * A numbered line is not a sibling of the anchor above it. It is one of its
+ * steps, so it folds in as a child and our own numbering takes over — the
+ * model's "3." is dropped rather than rendered next to our 3.
+ */
+const NUMBERED_RE = /^(\d{1,2})[.)]\s+(.+)$/;
 /** A child line that carries its own bold lead-in, e.g. `**HTTP POST** — …`. */
 const BOLD_LEAD_RE = /^(?:[-*•]\s*)?\*\*[^*]{1,48}?\*\*\s*[—–-]\s*\S/;
 const BULLET_RE = /^[-*•]\s+/;
@@ -65,11 +92,23 @@ export function parseAnchors(text: string): AnswerBlock[] {
 
     const m = line.match(ANCHOR_RE);
     if (m) {
-      flushAnchor();
-      flushProse();
+      // Backticks never reach a rail label: the label is CSS-uppercased, so a
+      // code span inside it renders as SHOUTING CODE with its ticks showing.
+      const anchor = m[1].replace(/`/g, '').trim();
       const rest = (m[2] || '').trim();
-      open = { kind: 'anchor', anchor: m[1].trim(), lines: rest ? [{ text: rest }] : [], ordered: false };
-      continue;
+      const num = anchor.match(NUMBERED_RE);
+
+      if (num && open) {
+        // A step of the anchor above, not a new one.
+        open.lines.push({ text: rest ? `**${num[2]}** — ${rest}` : `**${num[2]}**` });
+        continue;
+      }
+      if (railable(anchor)) {
+        flushAnchor();
+        flushProse();
+        open = { kind: 'anchor', anchor, lines: rest ? [{ text: rest }] : [], ordered: false };
+        continue;
+      }
     }
 
     // Anything after an anchor belongs to it — a dashed sub-line or a plain

@@ -60,9 +60,21 @@ export const renderInlineSafe = (s: string, opts: InlineStyles = {}): React.Reac
         i = end + 2;
         continue;
       }
+      // No closer yet. This surface renders mid-stream, so `**Result` is the
+      // normal state of the last few characters of every answer — styling the
+      // tail is right, and printing the asterisks until the closer lands is
+      // markup flickering through the thing the candidate is reading aloud.
+      flush();
+      nodes.push(<strong key={`b-${k++}`} style={opts.bold}>{s.slice(i + 2)}</strong>);
+      break;
     }
     if (s[i] === '`') {
       const end = s.indexOf('`', i + 1);
+      if (end === -1) {
+        flush();
+        nodes.push(<code key={`c-${k++}`} style={opts.code}>{s.slice(i + 1)}</code>);
+        break;
+      }
       if (end !== -1) {
         flush();
         nodes.push(<code key={`c-${k++}`} style={opts.code}>{s.slice(i + 1, end)}</code>);

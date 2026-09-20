@@ -87,3 +87,53 @@ describe('parseAnchors — list provenance', () => {
     expect(b.lines[0].bullet).toBeUndefined();
   });
 });
+
+describe('parseAnchors — what the rail declines', () => {
+  it('keeps an interviewer follow-up question out of the rail', () => {
+    // "### If they push" emits `**<question>** — <reply>`. A whole question set
+    // as a rail label wraps across three lines; it belongs in the body.
+    const [b] = parseAnchors('**What about HTTP/3 and QUIC?** — QUIC over UDP cuts handshake time.');
+    expect(b.kind).toBe('prose');
+    expect(b.lines[0].text).toContain('**What about HTTP/3 and QUIC?**');
+  });
+
+  it('keeps a long lead-in out of the rail', () => {
+    const [b] = parseAnchors('**A lead-in far longer than three words and then some** — body.');
+    expect(b.kind).toBe('prose');
+  });
+
+  it('still rails a short anchor', () => {
+    const [b] = parseAnchors('**The path** — a step.');
+    expect(b.kind).toBe('anchor');
+  });
+});
+
+// Both screenshots that came back from production, as regression cases.
+describe('parseAnchors — what production actually sent', () => {
+  it('folds a model\'s own numbered steps into the anchor above them', () => {
+    // The model numbered its own path, so every step arrived as its own anchor
+    // line. Each became a rail row, and "3. Authentication/Authorization" ran
+    // out of the column and onto the text beside it.
+    const blocks = parseAnchors([
+      '**The path**',
+      '**1. `kubectl apply`** — reads your YAML manifest.',
+      '**2. API request** — kubectl converts YAML to JSON.',
+      '**3. Authentication/Authorization** — API server checks your credentials.',
+    ].join('\n'));
+    expect(blocks).toHaveLength(1);
+    const b = blocks[0];
+    expect(b.kind === 'anchor' && b.anchor).toBe('The path');
+    expect(b.kind === 'anchor' && b.ordered).toBe(true);
+    expect(b.kind === 'anchor' && b.lines.map((l) => l.n)).toEqual([1, 2, 3]);
+    // Our numbering replaces the model's, rather than printing "3." beside a 3.
+    expect(b.kind === 'anchor' && b.lines[2].text).toContain('**Authentication/Authorization**');
+    expect(b.kind === 'anchor' && b.lines[2].text).not.toContain('3.');
+  });
+
+  it('never puts a backtick in a rail label', () => {
+    // The label is CSS-uppercased, so a code span in it rendered as SHOUTING
+    // CODE with the ticks showing.
+    const [b] = parseAnchors('**`kubectl apply`** — reads the manifest.');
+    expect(b.kind === 'anchor' && b.anchor).toBe('kubectl apply');
+  });
+});

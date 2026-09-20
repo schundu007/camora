@@ -105,3 +105,39 @@ describe('AskResponse anchor rail', () => {
     expect(container.querySelectorAll('dt')).toHaveLength(2);
   });
 });
+
+// Streaming: a half-written answer must never show its own markup.
+describe('AskResponse mid-stream markup', () => {
+  const noMarkup = (c: HTMLElement) => {
+    expect(c.textContent).not.toContain('**');
+    expect(c.textContent).not.toContain('`');
+  };
+
+  it('styles a bold run that has not been closed yet', () => {
+    const { container } = render(<AskResponse content={'**In short** — the answer.\n**Load balan'} />);
+    noMarkup(container);
+    expect(container.textContent).toContain('Load balan');
+  });
+
+  it('styles an unclosed code span', () => {
+    const { container } = render(<AskResponse content={'**In short** — run `kubectl appl'} />);
+    noMarkup(container);
+    expect(container.textContent).toContain('kubectl appl');
+  });
+
+  it('styles an unclosed italic run', () => {
+    const { container } = render(<AskResponse content={'**In short** — it is *declarati'} />);
+    noMarkup(container);
+  });
+
+  it('shows no markup at any prefix of a streaming answer', () => {
+    // The real failure was time-based: markup flickered while tokens arrived.
+    // Walk every prefix, the way the stream actually renders.
+    const full = '**In short** — `kubectl apply` persists *desired* state.\n**The path**\n- **POST** — to the API.';
+    for (let i = 1; i <= full.length; i++) {
+      const { container, unmount } = render(<AskResponse content={full.slice(0, i)} />);
+      noMarkup(container);
+      unmount();
+    }
+  });
+});
