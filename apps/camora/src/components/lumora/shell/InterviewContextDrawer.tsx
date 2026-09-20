@@ -26,7 +26,7 @@ const SectionHead = ({ n, label, value }: { n: number; label: string; value: str
     <span
       aria-hidden
       className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full text-[10px] font-bold tabular-nums shrink-0"
-      style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}
+      style={{ background: 'color-mix(in oklab, var(--lum-accent) 18%, transparent)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}
     >
       {n}
     </span>
@@ -55,7 +55,23 @@ const ChoiceRow = ({ n, label, value, options, onChange }: {
             aria-pressed={on}
             className="px-3 h-7 rounded-md text-[12px] font-medium transition-colors"
             style={on
-              ? { background: 'var(--lum-accent)', color: 'var(--lum-accent-bg)', border: '1px solid var(--lum-accent)', fontWeight: 600 }
+              // Ink is --lum-text, and the fill is a color-mix TINT of the
+              // accent — not --lum-accent-bg.
+              //
+              // That token is a fill, not a colour: near-black navy in dark,
+              // near-white in light, and a TRANSLUCENT blue under the overlay
+              // theme. Used as text on an accent fill it turned into faint blue
+              // on blue the moment the overlay was on, which is exactly the
+              // trap QuestionBlock documents and I walked into anyway.
+              //
+              // A tint plus a border plus body ink is legible in all three,
+              // and it is what the icon rail already uses to mark selection.
+              ? {
+                  background: 'color-mix(in oklab, var(--lum-accent) 22%, transparent)',
+                  color: 'var(--lum-text)',
+                  border: '1px solid var(--lum-accent)',
+                  fontWeight: 600,
+                }
               : { background: 'var(--lum-bg)', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border)' }}
           >
             {o.label}
@@ -205,7 +221,7 @@ export const InterviewContextDrawer = ({
         <div className="flex-1 overflow-y-auto px-4 py-3">
           {items.length === 0 ? (
             <div className="py-12 text-center">
-              <div className="w-11 h-11 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'var(--lum-accent-bg)', border: '1px solid var(--lum-border)' }}>
+              <div className="w-11 h-11 mx-auto mb-3 rounded-full flex items-center justify-center" style={{ background: 'color-mix(in oklab, var(--lum-accent) 14%, transparent)', border: '1px solid var(--lum-border)' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--lum-accent)" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></svg>
               </div>
               <p className="text-[13px] font-semibold mb-1" style={{ color: 'var(--lum-text)' }}>No prep workspaces yet</p>
@@ -243,7 +259,7 @@ export const InterviewContextDrawer = ({
                             {item.key}
                           </span>
                           {isActive && (
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full" style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}>
+                            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in oklab, var(--lum-accent) 18%, transparent)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}>
                               Active
                             </span>
                           )}
@@ -267,7 +283,7 @@ export const InterviewContextDrawer = ({
                             type="button"
                             onClick={() => handleActivate(item.key)}
                             className="text-[12px] font-bold px-2.5 py-1 rounded-md transition-opacity hover:opacity-80"
-                            style={{ background: 'var(--lum-accent-bg)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}
+                            style={{ background: 'color-mix(in oklab, var(--lum-accent) 18%, transparent)', color: 'var(--lum-accent-sm)', border: '1px solid var(--lum-accent)' }}
                           >
                             Activate
                           </button>
