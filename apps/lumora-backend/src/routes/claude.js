@@ -34,6 +34,8 @@ import { getApiKey } from '../services/adminConfig.js';
 import { LIVE_ANSWER_MODEL } from '../services/modelPolicy.js';
 import { INTERVIEW_BRIEF } from '../lib/_shared/interviewBrief.js';
 import { parseImages, toAnthropicBlocks, attachToLastTurn } from '../lib/_shared/interviewImages.js';
+import { getCandidateBackground } from '../services/candidateBackground.js';
+import { retrieve, formatRetrievedContext } from '../services/retrieval.js';
 
 const router = Router();
 
@@ -80,6 +82,18 @@ function toMessages(messages, images = []) {
   });
 }
 
+/** The question just asked — what retrieval should be run against. */
+function lastUserText(msgs) {
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const m = msgs[i];
+    if (m.role !== 'user') continue;
+    if (typeof m.content === 'string') return m.content;
+    const part = Array.isArray(m.content) ? m.content.find((p) => p.type === 'text') : null;
+    if (part) return part.text;
+  }
+  return '';
+}
+
 router.post('/stream', async (req, res) => {
   const { messages, images } = req.body || {};
   const msgs = Array.isArray(messages) ? toMessages(messages, images) : [];
@@ -95,6 +109,35 @@ router.post('/stream', async (req, res) => {
   const abort = new AbortController();
   res.on('close', () => abort.abort());
 
+  // Grounding — the candidate's own prep kit and the shared knowledge base,
+  // the same two lookups Ask Sona makes.
+  //
+  // The tab stays stateless in the sense that mattered: its CONVERSATION still
+  // dies with the session. What it was also missing was the resume and the KB,
+  // and that is not scratchpad behaviour but a worse answer — an experience
+  // question with no resume invents a persona, which the brief forbids in
+  // words but cannot prevent without the material.
+  //
+  // Concurrent, so a grounded turn costs max() not sum(), and both fail OPEN:
+  // a retrieval error logs and the turn answers ungrounded rather than 500ing
+  // mid-interview.
+  let system = INTERVIEW_BRIEF;
+  try {
+    const userId = req.user?.id;
+    const question = lastUserText(msgs);
+    const [bg, kb] = await Promise.allSettled([
+      getCandidateBackground(userId),
+      retrieve({ question, userId, mode: 'general' }),
+    ]);
+    if (bg.status === 'fulfilled' && bg.value) system += bg.value;
+    else if (bg.status === 'rejected') console.error('[Claude] background skipped:', bg.reason?.message || bg.reason);
+    const chunks = kb.status === 'fulfilled' ? (kb.value?.chunks || []) : [];
+    if (chunks.length) system += formatRetrievedContext(chunks);
+    else if (kb.status === 'rejected') console.error('[Claude] KB grounding skipped:', kb.reason?.message || kb.reason);
+  } catch (err) {
+    console.error('[Claude] grounding skipped:', err?.message || err);
+  }
+
   let wrote = false;
   try {
     const client = getClient();
@@ -103,7 +146,7 @@ router.post('/stream', async (req, res) => {
       {
         model: CLAUDE_MODEL,
         max_tokens: MAX_OUTPUT_TOKENS,
-        system: INTERVIEW_BRIEF,
+        system,
         messages: msgs,
       },
       { signal: abort.signal },

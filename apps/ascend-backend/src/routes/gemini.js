@@ -25,6 +25,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { INTERVIEW_BRIEF } from '../lib/_shared/interviewBrief.js';
 import { parseImages, toGeminiParts, attachToLastTurn } from '../lib/_shared/interviewImages.js';
+import { retrieveForAsk, formatContext, getCandidateBackground } from '../services/askRetrieval.js';
 
 const router = Router();
 
@@ -70,6 +71,16 @@ function toContents(messages, images = []) {
   });
 }
 
+/** The question just asked — what retrieval should be run against. */
+function lastUserText(contents) {
+  for (let i = contents.length - 1; i >= 0; i--) {
+    if (contents[i].role !== 'user') continue;
+    const part = contents[i].parts.find((p) => typeof p.text === 'string');
+    if (part) return part.text;
+  }
+  return '';
+}
+
 router.post('/stream', async (req, res) => {
   const { messages, images } = req.body || {};
   const contents = Array.isArray(messages) ? toContents(messages, images) : [];
@@ -85,9 +96,37 @@ router.post('/stream', async (req, res) => {
   const abort = new AbortController();
   res.on('close', () => abort.abort());
 
+  // Grounding, the same two lookups Ask Sona makes.
+  //
+  // This tab was deliberately stateless, which is still true of its
+  // CONVERSATION — history dies with the session. But stateless was also
+  // costing it the candidate's own prep kit and the shared knowledge base, and
+  // that is not scratchpad behaviour, it is a worse answer: an experience
+  // question with no resume fabricates a persona, and a topic question with no
+  // KB answers from general knowledge when the candidate has study material
+  // sitting right there.
+  //
+  // Concurrent, so a grounded turn costs max() and not sum(), and both fail
+  // OPEN — a retrieval error logs and the turn answers ungrounded rather than
+  // 500s in the middle of an interview.
+  let system = INTERVIEW_BRIEF;
+  try {
+    const userId = req.user?.id;
+    const [bg, kb] = await Promise.allSettled([
+      getCandidateBackground(userId),
+      retrieveForAsk(lastUserText(contents)),
+    ]);
+    if (bg.status === 'fulfilled' && bg.value) system += bg.value;
+    else if (bg.status === 'rejected') console.error('[Gemini] background skipped:', bg.reason?.message || bg.reason);
+    if (kb.status === 'fulfilled' && kb.value?.length) system += formatContext(kb.value);
+    else if (kb.status === 'rejected') console.error('[Gemini] KB grounding skipped:', kb.reason?.message || kb.reason);
+  } catch (err) {
+    console.error('[Gemini] grounding skipped:', err?.message || err);
+  }
+
   let wrote = false;
   try {
-    const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: INTERVIEW_BRIEF });
+    const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL, systemInstruction: system });
     const stream = await model.generateContentStream(
       { contents, generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS, ...NO_THINKING } },
       { signal: abort.signal },

@@ -81,26 +81,38 @@ describe('behavioral answer contract — Short mode (the path that already worke
   });
 });
 
-describe('behavioral answer contract — Detailed mode (the regression)', () => {
-  it('carries the same contract without the [SHORT] prefix', async () => {
-    const sys = await systemPromptFor(`[DETAILED] ${STORY_Q}`, { mode: 'behavioral' });
-    expect(sys).toContain('ARCHETYPE');
-    expect(sys).toContain('REBUTTALS');
-    expect(sys).toMatch(/Situation/i);
-    expect(sys).toMatch(/Result/i);
-  });
+/* The Short / Detailed pair is gone — one averaged depth now applies to every
+   behavioral answer. What these pin has not changed: the depth block must
+   reassert the labels the renderer parses, and it must apply whatever prefix
+   the question happens to arrive with, because the UI no longer sends one. */
+describe('behavioral answer contract — one depth, every prefix', () => {
+  for (const [name, q] of [
+    ['no prefix (what the UI sends now)', STORY_Q],
+    ['a stale [DETAILED] prefix', `[DETAILED] ${STORY_Q}`],
+    ['a [SHORT] prefix from another surface', `[SHORT] ${STORY_Q}`],
+  ]) {
+    it(`carries the full contract with ${name}`, async () => {
+      const sys = await systemPromptFor(q, { mode: 'behavioral' });
+      expect(sys).toContain('ARCHETYPE');
+      expect(sys).toContain('REBUTTALS');
+      expect(sys).toMatch(/Situation/i);
+      expect(sys).toMatch(/Result/i);
+    });
 
-  it('adds the depth override rather than switching prompt shape', async () => {
-    const sys = await systemPromptFor(`[DETAILED] ${STORY_Q}`, { mode: 'behavioral' });
-    expect(sys).toContain('DETAILED MODE');
-    expect(sys).toMatch(/30 words instead of 20/);
-    // The override must reassert the labels, not merely permit more text.
-    expect(sys).toMatch(/Do NOT switch to paragraphs/i);
-  });
+    it(`applies the depth block with ${name}`, async () => {
+      const sys = await systemPromptFor(q, { mode: 'behavioral' });
+      expect(sys).toContain('DEPTH — FULL LINES, SAME SHAPE');
+      expect(sys).toMatch(/about 25 words/);
+      // It must reassert the labels, not merely permit more text — dropping one
+      // collapses the answer into prose the renderer cannot parse.
+      expect(sys).toMatch(/Do NOT switch to paragraphs/i);
+    });
+  }
 
-  it('does NOT apply the depth override in short mode', async () => {
-    const sys = await systemPromptFor(`[SHORT] ${STORY_Q}`, { mode: 'behavioral' });
-    expect(sys).not.toContain('DETAILED MODE — MORE ROOM');
+  it('no longer branches on a mode the UI cannot set', async () => {
+    const withPrefix = await systemPromptFor(`[SHORT] ${STORY_Q}`, { mode: 'behavioral' });
+    const without = await systemPromptFor(STORY_Q, { mode: 'behavioral' });
+    expect(withPrefix.includes('DEPTH — FULL LINES')).toBe(without.includes('DEPTH — FULL LINES'));
   });
 });
 

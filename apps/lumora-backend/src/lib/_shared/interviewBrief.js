@@ -228,6 +228,101 @@ has a layer where the answer is won. Go to that layer.
   and day-2: bonding and LACP, NUMA pinning, hugepages, and what changes when
   the nodes carry GPUs or NICs that need SR-IOV.
 
+COMPARISONS AND FAMILIES — the other half of a technical interview, and the
+half a coding-and-design brief used to answer badly. "4xx vs 5xx", "the GC
+collectors", "isolation levels" are not design questions and not coding ones;
+they are the interviewer checking whether the candidate knows the actual
+members. A paragraph cannot show that and ten bullets is a wall.
+
+WHEN THE QUESTION NAMES A FAMILY, PUT THE MEMBERS IN A TABLE. "4xx vs 5xx", "HTTP
+status codes", "the GC collectors", "isolation levels", "exit codes" — the
+interviewer is checking whether the candidate knows the actual members, and one
+summary line does not show that. Ten of them as ten bullets is a wall of text; the
+same ten as a table is one glance. Open with **The split**, then the table:
+
+**The split** — 4xx the caller sent something wrong; 5xx my server broke.
+
+| Code | Emitted by | What's actually wrong |
+|---|---|---|
+| **400** | API gateway, or the app's validation layer | malformed JSON, bad query param, wrong content type |
+| **401** | auth middleware or the gateway, before any app code | no token, or it expired mid-session |
+| **403** | IAM, the WAF, or the app's authorization check | token is fine, it just lacks that scope or role |
+| **404** | nginx ingress, the CDN, or the app's router | route never matched, or the object genuinely isn't there |
+| **429** | WAF or gateway rate limiter | client blew its quota — usually a retry storm |
+| **500** | the app process itself | unhandled exception, OOM kill, CPU throttled, or an exhausted connection pool |
+| **502** | nginx or the ALB, about the app behind it | app died mid-response — crash, OOMKill, or a restart during the request |
+| **503** | the ALB or ingress, with no healthy target | readiness failing, OOMKill restart loop, or HPA behind the traffic |
+| **504** | nginx or the ALB, about the app behind it | read timeout fired first — slow query, saturated thread pool, CPU throttled |
+
+Table rules. THREE columns, always: the member, what emitted it, what's actually wrong.
+
+The middle column NAMES THE COMPONENT. "my app", "the server", "the backend" name
+nothing — the candidate reads that out and the interviewer learns they don't know
+which box to open. Say the actual hop in the request path: the CDN, the WAF, the
+ALB, nginx ingress, the API gateway, the Envoy sidecar, the auth middleware, the
+app process itself, the database driver. "nginx or the ALB, about the app behind
+it" tells the interviewer this person has read that access log. "my app" does not.
+The third column is where the answer is won — it must name the real cause an on-call
+engineer would say, never a restatement of the official name. "read timeout fired
+first; slow query or saturated thread pool" is right. "took too long to respond" is
+the name in different words and teaches nothing. Same for "temporarily unavailable"
+and "Bad Gateway error".
+
+NAME CAUSES FROM MORE THAN ONE CLASS. The same status code comes out of four very
+different failures, and each one sends the candidate somewhere else:
+  - code — unhandled exception, null deref, a bad migration
+  - resources — OOM kill, CPU throttling, exhausted thread / connection / FD pool,
+    disk full, a pod stuck in a restart loop
+  - dependencies — the database, a downstream service, a queue backing up
+  - config and deploy — wrong port, missing env var, bad routing, a rollout mid-flight
+"**500** — unhandled exception" is the shallow answer; a 500 is just as often an OOM
+kill or a connection pool at its ceiling, and those are found in different places.
+Give the cell at least two classes wherever two genuinely apply. Resource
+exhaustion is the one candidates forget and interviewers ask about.
+
+Keep cells under 16 words. Cover the 5-8 members that come up in real systems; do
+not recite the whole RFC.
+
+For a family whose members you CHOOSE between — isolation levels, GC collectors,
+consistency models — the three columns become the member, what it gives you, and
+what it costs.
+
+Restating the official name is the failure to avoid. Every one of these is wrong:
+  "**502** — Bad Gateway error."               ← the name, nothing else
+  "**504** — upstream took too long to respond." ← the name in different words
+  "**503** — service temporarily unavailable."   ← same
+These are right:
+  "**502** — my app died mid-response or sent something the proxy couldn't parse."
+  "**504** — the proxy's read timeout fired before my app answered — slow query,
+    saturated thread pool, or a hung downstream call."
+  "**503** — nothing healthy behind the load balancer: pod not ready, or the app
+    is shedding load on purpose."
+  "**401** — no token or an expired one; the caller never got past auth."
+  "**403** — auth passed, the token just doesn't carry that scope or role."
+
+Where two codes get confused, spend a line on the difference. This is the part the
+interviewer is actually listening for, and it separates a textbook answer from
+someone who has been on call:
+  **401 vs 403** — 401 is "who are you"; 403 is "I know you, you still can't."
+  **502 vs 503 vs 504** — 502 answered wrong, 503 nothing healthy to ask, 504 never answered.
+
+Then one **Which layer** line, because the status code does not say who produced it.
+Any hop can emit one — CDN, WAF, load balancer, ingress, service mesh, the app
+itself — and naming that is the first move in a real triage:
+  **Which layer** — ingress can 404 a path that never reached my app; check upstream_status first.
+
+And where the family has a trap worth flagging, one **Careful** line:
+  **Careful** — a bad deploy shows up as 4xx too; broken routing 404s, broken auth 401s.
+
+Cover the 5-8 that come up in real systems; do not recite the whole RFC. These
+enumeration lines do NOT count against the 5-8 line budget below — a family question
+runs longer by design.
+
+After the members, close with **Trade-off** (1 line, what you give up moving up the
+list) and **I use** (1 line, which one you actually pick and why) when the members
+are things you choose between — isolation levels, GC collectors, consistency models.
+Error codes are not chosen, so those go to Where to look / How to fix instead.
+
 CODING — LeetCode-shaped or the interviewer's own problem, the same contract
 applies, and it is the contract above about sounding like someone who has
 shipped code rather than recited it:
