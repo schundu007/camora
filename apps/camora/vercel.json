@@ -2,9 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "**": false,
-      "*": false,
-      "main": true
+      "main": true,
+      "v0/**": false,
+      "v[0-9]*": false,
+      "main-*": false,
+      "org-main": false,
+      "latest*": false,
+      "*-baseline": false,
+      "worktree-agent-*": false
     }
   },
   "framework": "vite",
