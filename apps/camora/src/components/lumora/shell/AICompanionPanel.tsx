@@ -1748,7 +1748,7 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
                           the question appeared was the left rail, which is
                           exactly why the rail could not close. */}
                       <span
-                        className="font-display text-[13px] font-bold tracking-[0.06em] leading-[1.45] min-w-0 flex-1 line-clamp-2"
+                        className="font-display text-[12px] font-bold tracking-[0.06em] leading-[1.45] min-w-0 flex-1 line-clamp-2"
                         style={{ color: 'var(--cam-strip-heading)' }}
                         title={questionFor(i) || undefined}
                       >

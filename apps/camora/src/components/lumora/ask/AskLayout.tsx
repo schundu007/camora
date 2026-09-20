@@ -98,7 +98,7 @@ const CodeBlock = ({ code, lang }: { code: string; lang: string }) => {
   return (
     <div className="ask-code my-3 rounded-lg overflow-hidden" data-overlay-keep style={{ border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 2px 12px rgba(0,0,0,0.3)' }}>
       <div className="flex items-center justify-between px-3 py-1.5" style={{ background: '#1e222a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <span className="text-[12px] font-mono font-semibold uppercase tracking-widest" style={{ color: '#61afef' }}>{lang || 'code'}</span>
+        <span className="text-[11px] font-mono font-semibold uppercase tracking-widest" style={{ color: '#61afef' }}>{lang || 'code'}</span>
         <button
           onClick={handleCopy}
           className="text-[12px] font-medium px-2 py-0.5 rounded transition-all"
@@ -204,7 +204,7 @@ const AnswerTable = ({ head, rows }: { head: string[]; rows: string[][] }) => (
           {head.map((h, i) => (
             <th
               key={i}
-              className="text-left px-3 py-2 text-[12px] font-bold uppercase tracking-widest whitespace-nowrap"
+              className="text-left px-3 py-2 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap"
               style={{ color: 'var(--lum-accent-sm)', background: 'var(--lum-accent-bg)' }}
             >
               {inlineMarkdown(h)}
@@ -316,7 +316,7 @@ const AnchorList = ({ blocks, keyBase }: { blocks: AnchoredBlock[]; keyBase: str
     {blocks.map((b, i) => (
       <Fragment key={`${keyBase}-${i}`}>
         <dt
-          className="text-[12px] font-bold uppercase tracking-[0.08em] leading-[1.7] break-words min-w-0 @[26rem]:text-right"
+          className="text-[11px] font-bold uppercase tracking-[0.08em] leading-[1.7] break-words min-w-0 @[26rem]:text-right"
           style={{ color: 'var(--lum-accent-sm)' }}
         >
           {b.anchor}
@@ -439,7 +439,7 @@ export const AskResponse = ({ content }: { content: string }) => {
         }
         return (
           <div key={i}>
-            <p className="text-[13px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
+            <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--lum-accent-sm)', fontFamily: 'var(--font-sans)' }}>
               {inlineMarkdown(title)}
             </p>
             <div>{renderContent(body)}</div>

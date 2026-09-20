@@ -24,7 +24,7 @@ export const QuestionBlock = ({ children }: { children: React.ReactNode }) => (
     }}
   >
     <span
-      className="block text-[12px] font-bold uppercase tracking-[0.08em] mb-1.5 select-none"
+      className="block text-[11px] font-bold uppercase tracking-[0.08em] mb-1.5 select-none"
       style={{ color: 'var(--lum-accent)' }}
     >
       Question
