@@ -352,6 +352,29 @@ export const AICompanionPanel = ({ isOpen, onClose, initialQuestion, embedded = 
     window.dispatchEvent(new CustomEvent('lumora:open-audio-wizard'));
   }, []);
 
+  /* ` is the interviewer key on every surface now.
+   *
+   * On the tabs it arms the stream; here there is nothing to arm, because Sona
+   * listens for the whole session — so it opens audio setup, which is the only
+   * thing you would want from that key on this surface and exactly what
+   * clicking the chip does.
+   *
+   * The important part is that it no longer starts the MIC. It used to, which
+   * meant one key armed the interviewer on three surfaces and recorded the
+   * candidate on the fourth. */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Backquote' || e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || el?.isContentEditable) return;
+      e.preventDefault();
+      openAudioSetup();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openAudioSetup]);
+
   const copyLastAnswer = useCallback(() => {
     const last = [...messages].reverse().find(m => m.role === 'ai');
     if (last?.text) navigator.clipboard?.writeText(last.text).catch(() => { /* denied */ });

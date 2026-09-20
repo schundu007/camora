@@ -1289,16 +1289,19 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
 
   // Global audio shortcuts — capture phase so they fire from anywhere:
   // textareas, Monaco, contenteditable, the behavioral companion input.
-  // Two bindings: Cmd/Ctrl+Shift+A (silent/hidden) and Backquote (~/`)
-  // which the user uses mid-interview. Neither conflicts with normal
-  // typing since Cmd+Shift+A is OS-reserved and ` is not a useful
-  // character to type in any interview panel.
+  // Two bindings: Cmd/Ctrl+Shift+A (silent/hidden) and a mic key.
   //
-  // What they DO depends on which control that surface actually has:
-  //   • behavioral (locked) → Ask. There is no listen switch to toggle (Sona
-  //     listens for the whole session), and Ask is the one thing you press
-  //     mid-answer — worth a key you can hit without looking down.
-  //   • coding/design        → the AUTO listen switch.
+  // WHICH mic key depends on the variant, because the surfaces disagreed and
+  // one of them disagreed dangerously. On Ask, Claude and Gemini, ` arms the
+  // INTERVIEWER and Space is the mic. On behavioral, ` was the mic — so the
+  // same key that arms the interviewer on three surfaces started recording the
+  // candidate's own voice on the fourth, with no visible difference between
+  // them. Mid-interview that is the worst kind of inconsistency: you press the
+  // key you always press and the wrong thing listens.
+  //
+  // Composer variant (behavioral) therefore takes Space, matching the other
+  // three. The strip variant keeps ` for coding and design, where there is no
+  // interviewer toggle competing for it and the chip prints the hint on itself.
   //
   // When `active === false` (owning tab hidden), suppress the shortcut entirely
   // so it doesn't drive a background AudioCapture. activeRef is a ref so this
@@ -1309,20 +1312,32 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
       // Cmd/Ctrl+Shift+A
       const isCmdShiftA = (e.metaKey || e.ctrlKey) && e.shiftKey &&
         (e.key === 'A' || e.key === 'a' || e.code === 'KeyA');
-      // Backquote (` / ~) without modifier
-      const isBackquote = e.code === 'Backquote' && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey;
-      if (!isCmdShiftA && !isBackquote) return;
+      const micCode = variant === 'composer' ? 'Space' : 'Backquote';
+      const isMicKey = e.code === micCode && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey;
+      if (!isCmdShiftA && !isMicKey) return;
       // ` inside the Sona sidebar belongs to Sona's mic, not the interview mic.
       // This handler runs on the capture phase and stops propagation, so without
       // an explicit yield Sona's own listener could never see the key.
-      if (isBackquote && (e.target as HTMLElement | null)?.closest?.('[data-sona-sidebar]')) return;
+      if (isMicKey && (e.target as HTMLElement | null)?.closest?.('[data-sona-sidebar]')) return;
+      if (isMicKey) {
+        const el = e.target as HTMLElement | null;
+        const tag = el?.tagName;
+        // Space is a real character and a button activator, unlike `. Typing
+        // wins in any editable target, and a focused control keeps its own
+        // meaning — otherwise reaching this panel by CLICKING a chip would
+        // leave the next Space press driving that chip instead of the mic.
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || el?.isContentEditable ||
+            el?.closest?.('.monaco-editor')) return;
+        if (micCode === 'Space' && (tag === 'BUTTON' || tag === 'A' || tag === 'SELECT' ||
+            el?.getAttribute('role') === 'button')) return;
+      }
       e.preventDefault();
       e.stopPropagation();
       if (locked) handleToggle(); else handleModeToggle();
     };
     document.addEventListener('keydown', handleAudioShortcut, true);
     return () => document.removeEventListener('keydown', handleAudioShortcut, true);
-  }, [handleModeToggle, handleToggle, locked]);
+  }, [handleModeToggle, handleToggle, locked, variant]);
 
   // REMOVED: the effect that handed question capture entirely to the interviewer
   // stream once it had EVER connected — it stopped the candidate mic's loop, set
