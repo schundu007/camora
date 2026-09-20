@@ -32,6 +32,7 @@ import { useInterviewerListen } from '../shared/useInterviewerListen';
 import { QuestionBlock } from '../shared/QuestionBlock';
 import { toTurns, lastTurns } from '../shared/qaTurns';
 import { AskSwitcher } from '../shared/askSurfaces';
+import { useSnapAttach, MAX_PENDING_IMAGES } from '../shared/useSnapAttach';
 
 // The reading column is capped rather than filling the panel. At 15px a
 // full-width tab runs past 120 characters a line, and a line that long loses
@@ -53,6 +54,7 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
   const [copied, setCopied] = useState(false);
   // Bumped by the Space shortcut; StreamingMicButton toggles on each new value.
   const [micToggle, setMicToggle] = useState(0);
+  const snap = useSnapAttach(() => inputRef.current?.focus());
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -124,11 +126,13 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
     // Returning here while an answer streams leaves a dictated question sitting
     // in the box rather than dropping it: the candidate sees it and can send it
     // themselves once the current answer lands.
-    if (!text || streaming) return;
+    if ((!text && !snap.pending.length) || streaming) return;
 
     convSeqRef.current += 1;
     dictationBaseRef.current = '';
-    const next: Msg[] = [...messages, { role: 'user', content: text }];
+    const imgs = snap.pending.map(p => p.dataUrl);
+    snap.clear();
+    const next: Msg[] = [...messages, { role: 'user', content: text || '(screenshot)' }];
     setMessages(next);
     setInput('');
     setStreamText('');
@@ -143,7 +147,7 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ messages: next }),
+        body: JSON.stringify({ messages: next, images: imgs }),
         signal: controller.signal,
       });
       if (!resp.ok || !resp.body) throw new Error(`stream failed (${resp.status})`);
@@ -189,7 +193,7 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
         inputRef.current?.focus();
       }
     }
-  }, [input, streaming, messages]);
+  }, [input, streaming, messages, snap]);
 
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Enter sends; Shift+Enter is a newline. Mid-interview the common case by
@@ -302,7 +306,27 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
         <AskSwitcher />
       </div>
       <div className="shrink-0 px-2 py-2" style={{ background: 'var(--lum-surface)', borderBottom: '1px solid var(--lum-border)' }}>
-        <div className="flex items-end gap-2">
+        {/* Attached screenshots, above the box they belong to. */}
+        {snap.pending.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2" data-overlay-keep>
+            {snap.pending.map(img => (
+              <div key={img.id} className="relative">
+                <img src={img.dataUrl} alt="attachment" className="h-14 rounded object-cover"
+                  style={{ border: '1px solid var(--lum-border-strong)' }} />
+                <button type="button" onClick={() => snap.remove(img.id)}
+                  aria-label="Remove screenshot" data-tip="Remove this screenshot"
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[12px] leading-none flex items-center justify-center"
+                  style={{ background: 'var(--lum-surface)', color: 'var(--lum-text-2)', border: '1px solid var(--lum-border-strong)' }}
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex items-end gap-2"
+          onPaste={(e) => snap.addFiles(e.clipboardData?.files || null)}
+          onDrop={(e) => { e.preventDefault(); snap.addFiles(e.dataTransfer?.files || null); }}
+          onDragOver={(e) => e.preventDefault()}
+        >
           <textarea
             ref={inputRef}
             value={input}
@@ -313,6 +337,19 @@ export const GeminiPanel = ({ isActive }: { isActive: boolean }) => {
             className="flex-1 resize-none rounded px-2.5 py-2 text-[13px] leading-relaxed outline-none"
             style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text)' }}
           />
+          <button
+            type="button"
+            onClick={() => void snap.snap()}
+            disabled={snap.snapping || snap.full || streaming}
+            data-tip={snap.full ? `Up to ${MAX_PENDING_IMAGES} screenshots` : 'Screenshot a region into the question'}
+            aria-label="Attach a screenshot"
+            className="w-9 h-9 rounded flex items-center justify-center shrink-0 transition-opacity disabled:opacity-40"
+            style={{ background: 'var(--lum-bg)', border: '1px solid var(--lum-border)', color: 'var(--lum-text-2)' }}
+          >
+            {snap.snapping
+              ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>}
+          </button>
           <InterviewerListenButton
             listening={listen.listening}
             onToggle={listen.toggle}

@@ -33,6 +33,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getApiKey } from '../services/adminConfig.js';
 import { LIVE_ANSWER_MODEL } from '../services/modelPolicy.js';
 import { INTERVIEW_BRIEF } from '../lib/_shared/interviewBrief.js';
+import { parseImages, toAnthropicBlocks, attachToLastTurn } from '../lib/_shared/interviewImages.js';
 
 const router = Router();
 
@@ -63,7 +64,7 @@ function getClient() {
  * leading assistant turns rather than let the whole request 400 — the same
  * guard routes/gemini.js needs for the same reason.
  */
-function toMessages(messages) {
+function toMessages(messages, images = []) {
   const mapped = messages
     .filter((m) => m && typeof m.content === 'string' && m.content.trim())
     .slice(-MAX_TURNS)
@@ -72,12 +73,16 @@ function toMessages(messages) {
       content: m.content.slice(0, MAX_CHARS_PER_TURN),
     }));
   while (mapped.length && mapped[0].role === 'assistant') mapped.shift();
-  return mapped;
+  return attachToLastTurn(mapped, parseImages(images), {
+    blocksFor: toAnthropicBlocks,
+    wrapText: (text) => ({ type: 'text', text }),
+    contentKey: 'content',
+  });
 }
 
 router.post('/stream', async (req, res) => {
-  const { messages } = req.body || {};
-  const msgs = Array.isArray(messages) ? toMessages(messages) : [];
+  const { messages, images } = req.body || {};
+  const msgs = Array.isArray(messages) ? toMessages(messages, images) : [];
   if (!msgs.length) return res.status(400).json({ error: 'messages required' });
 
   res.setHeader('Content-Type', 'text/event-stream');

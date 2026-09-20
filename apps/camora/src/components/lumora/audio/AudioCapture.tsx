@@ -691,26 +691,33 @@ export const AudioCapture = ({ onTranscription, onLiveTranscription, autoStart =
         dlog('chunk_error', { msg: err?.message });
       }
     } else {
-      // MANUAL MODE: send entire recording as one question. On behavioral with
-      // the filter on, shouldFilterVoice is true and the candidate's own voice
-      // is dropped server-side — the `result.skipped` branch below then reports
-      // it and returns WITHOUT calling onTranscription, so nothing is asked and
-      // no answer is generated. Everywhere else this is still false and the
-      // status never mentions speaker analysis.
-      setStatus('transcribe', shouldFilterVoice ? 'Analyzing speakers...' : 'Transcribing...');
+      // MANUAL MODE: the whole recording is one question.
+      //
+      // The voice filter must NOT run here, and this used to be the opposite.
+      // On behavioral with the filter on, shouldFilterVoice was true, so the
+      // backend stripped the candidate's voice out of a recording that is
+      // nothing but the candidate's voice — every press came back skipped,
+      // returned before onTranscription, and asked nothing. The Ask chip
+      // silently did nothing for anyone with the filter switched on.
+      //
+      // The rule is the same one speaker-attribution.ts keeps for the other
+      // direction: the filter stops Sona OVERHEARING you. It does not stop you
+      // choosing to speak to her. A manual press is choosing.
+      setStatus('transcribe', 'Transcribing...');
       try {
-        const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', shouldFilterVoice);
+        const result = await transcriptionAPI.transcribe(token, blob, 'audio.webm', false);
         if (result.skipped) {
           if (result.reason === 'hallucination_filtered') {
             incrementDroppedChunks();
             setStatus('filter', 'Noise filtered');
             setTimeout(() => setStatus('ready', 'No speech detected - try again'), 1500);
           } else {
-            const ratio = result.interviewer_ratio;
-            const msg = ratio !== undefined
-              ? `Your voice (${Math.round((1 - ratio) * 100)}%) - filtering...`
-              : 'Your voice detected - filtering...';
-            setStatus('listen', msg);
+            // Nothing else should skip a manual press now that the filter is
+            // off for this path. If the backend still does, say so plainly
+            // rather than returning silently — a press that vanishes with no
+            // message is exactly how this went unnoticed for so long.
+            console.warn('[mic] manual transcription skipped', result);
+            setStatus('ready', "Didn't catch that - try again");
             return;
           }
         }

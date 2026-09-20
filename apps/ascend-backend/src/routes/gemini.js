@@ -24,6 +24,7 @@ import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getApiKey } from '../services/adminConfig.js';
 import { INTERVIEW_BRIEF } from '../lib/_shared/interviewBrief.js';
+import { parseImages, toGeminiParts, attachToLastTurn } from '../lib/_shared/interviewImages.js';
 
 const router = Router();
 
@@ -53,7 +54,7 @@ function getGenAI() {
  * rejects a history that does not start with a user turn — so drop leading
  * model turns rather than let the whole request 400.
  */
-function toContents(messages) {
+function toContents(messages, images = []) {
   const mapped = messages
     .filter((m) => m && typeof m.content === 'string' && m.content.trim())
     .slice(-MAX_TURNS)
@@ -62,12 +63,16 @@ function toContents(messages) {
       parts: [{ text: m.content.slice(0, MAX_CHARS_PER_TURN) }],
     }));
   while (mapped.length && mapped[0].role === 'model') mapped.shift();
-  return mapped;
+  return attachToLastTurn(mapped, parseImages(images), {
+    blocksFor: toGeminiParts,
+    wrapText: (text) => ({ text }),
+    contentKey: 'parts',
+  });
 }
 
 router.post('/stream', async (req, res) => {
-  const { messages } = req.body || {};
-  const contents = Array.isArray(messages) ? toContents(messages) : [];
+  const { messages, images } = req.body || {};
+  const contents = Array.isArray(messages) ? toContents(messages, images) : [];
   if (!contents.length) return res.status(400).json({ error: 'messages required' });
 
   res.setHeader('Content-Type', 'text/event-stream');
