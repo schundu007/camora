@@ -31,10 +31,17 @@ interface DocState {
   jdFile?: string;
   resume: string;
   resumeFile?: string;
+  /* coverLetter and prepMaterials no longer have cards of their own — they are
+     DERIVED from otherDocs by deriveOther(). Both are still sent to the backend
+     and still read where they always were: getCandidateBackground grounds
+     first-person answers on resume + coverLetter and never looks at
+     prepMaterials, so the two cannot simply be merged into one field. */
   coverLetter: string;
   coverLetterFile?: string;
   prepMaterials: string;
   prepMaterialsFile?: string;
+  /** Everything that is not the JD or the resume, as one list. */
+  otherDocs: StudyDoc[];
   // Multi-document study material list. Sona reads every entry as
   // additional context during live sessions.
   studyDocs: StudyDoc[];
@@ -54,18 +61,59 @@ interface PrepData {
 
 const EMPTY_DOC: DocState = {
   jd: '', resume: '', coverLetter: '', prepMaterials: '', studyDocs: [],
+  otherDocs: [],
   sections: {},
 };
 
+/* A cover letter is the second-strongest source of first-person truth after the
+   resume — getCandidateBackground puts it in the identity block, the one place
+   a claim about the candidate may come from. Prep material is study text and
+   deliberately is NOT in that block. So "Other documents" is one box in the UI
+   and still two fields underneath: the alternative is a cover letter landing in
+   prepMaterials, where nothing answering "tell me about yourself" reads it. */
+const COVER_LETTER_NAME = /cover[\s_-]*letter/i;
+const COVER_LETTER_BODY = /\b(dear\s+(hiring|recruit|sir|madam|mr\.?|ms\.?)|i am writing to (apply|express)|i'm writing to (apply|express))/i;
+
+const isCoverLetter = (d: StudyDoc): boolean =>
+  COVER_LETTER_NAME.test(d.name) || COVER_LETTER_BODY.test(d.content.slice(0, 400));
+
+/** Split the one visible list back into the two fields the backend reads. */
+const deriveOther = (docs: StudyDoc[]): Pick<DocState, 'coverLetter' | 'coverLetterFile' | 'prepMaterials' | 'prepMaterialsFile'> => {
+  const letters = docs.filter(isCoverLetter);
+  const rest = docs.filter(d => !isCoverLetter(d));
+  const join = (list: StudyDoc[]) =>
+    list.map(d => (list.length > 1 ? `### ${d.name}\n${d.content}` : d.content)).join('\n\n');
+  return {
+    coverLetter: join(letters),
+    coverLetterFile: letters[0]?.name,
+    prepMaterials: join(rest),
+    prepMaterialsFile: rest[0]?.name,
+  };
+};
+
 /** Fold a legacy single-string studyMaterials field into the studyDocs
- *  array so users who uploaded one doc on v8 don't lose it on first read. */
+ *  array so users who uploaded one doc on v8 don't lose it on first read.
+ *
+ *  Does the same for otherDocs: anyone who filled the old Cover Letter and
+ *  Prep Materials cards has those as bare strings, and the cards they were
+ *  typed into no longer exist. Seeding the list from them keeps the content
+ *  visible and removable instead of stranded in a field with no UI. */
 const migrateStudyDocs = (doc: any): DocState  => {
   if (!doc) return { ...EMPTY_DOC };
   const studyDocs: StudyDoc[] = Array.isArray(doc.studyDocs) ? doc.studyDocs : [];
   if (!studyDocs.length && typeof doc.studyMaterials === 'string' && doc.studyMaterials.trim()) {
     studyDocs.push({ name: doc.studyMaterialsFile || 'Study material', content: doc.studyMaterials });
   }
-  return { ...EMPTY_DOC, ...doc, studyDocs, studyMaterials: undefined, studyMaterialsFile: undefined };
+  const otherDocs: StudyDoc[] = Array.isArray(doc.otherDocs) ? doc.otherDocs : [];
+  if (!otherDocs.length) {
+    if (typeof doc.coverLetter === 'string' && doc.coverLetter.trim()) {
+      otherDocs.push({ name: doc.coverLetterFile || 'Cover letter', content: doc.coverLetter });
+    }
+    if (typeof doc.prepMaterials === 'string' && doc.prepMaterials.trim()) {
+      otherDocs.push({ name: doc.prepMaterialsFile || 'Prep material', content: doc.prepMaterials });
+    }
+  }
+  return { ...EMPTY_DOC, ...doc, studyDocs, otherDocs, studyMaterials: undefined, studyMaterialsFile: undefined };
 }
 
 const INITIAL_STATE: PrepData = {
@@ -2012,10 +2060,74 @@ const GitHubRepoFetcher = ({ onDocs }: { onDocs: (docs: StudyDoc[]) => void }) =
 /** Multi-document dropzone for Study Materials. Accepts multiple files at
  *  once (drag-drop or file picker), shows a chip per uploaded doc, and
  *  lets the user delete individual entries. */
-const MultiUploadZone = ({ docs, onAdd, onRemove }: {
+/* ── Sidebar action icons ────────────────────────────────────────────────
+   A 34px square that states what it does on hover and to a screen reader, so
+   the glyph never has to carry the whole meaning on its own. */
+const ActionIcon = ({ label, onClick, disabled, busy, tint, children }: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  busy?: boolean;
+  tint: string;
+  children: React.ReactNode;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    aria-label={label}
+    data-tip={label}
+    className="w-[34px] h-[34px] rounded-lg flex items-center justify-center shrink-0 transition-[opacity,transform] active:scale-[0.94] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-80"
+    style={{
+      color: tint,
+      background: `color-mix(in srgb, ${tint} 10%, var(--bg-elevated))`,
+      border: `1px solid color-mix(in srgb, ${tint} 28%, transparent)`,
+    }}
+  >
+    {busy
+      ? <span className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+      : children}
+  </button>
+);
+
+/* A page with the format written on it and an arrow leaving the bottom edge.
+   The wordmark is the identifying part — two download arrows side by side say
+   "download" twice and never say which is which. */
+const FileFormatIcon = ({ format }: { format: 'PDF' | 'DOC' }) => (
+  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path
+      d="M6 2.75h7L18.25 8v8.5a1.75 1.75 0 0 1-1.75 1.75h-9A1.75 1.75 0 0 1 5.75 16.5V4.5A1.75 1.75 0 0 1 7.5 2.75Z"
+      stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"
+    />
+    {/* Folded corner — the one detail that reads as "document" at this size. */}
+    <path d="M13 2.75V8h5.25" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <text
+      x="12" y="14.6" textAnchor="middle"
+      fontSize="5.4" fontWeight="700" letterSpacing="0.1"
+      fill="currentColor" stroke="none"
+      fontFamily="var(--font-mono), monospace"
+    >
+      {format}
+    </text>
+    {/* Down arrow, clear of the page, so the action reads too. */}
+    <path d="M12 18.5v3.2m0 0 1.9-1.9M12 21.7l-1.9-1.9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 7h16M10 11v6M14 11v6" />
+    <path d="M6 7l.9 12.1A2 2 0 0 0 8.9 21h6.2a2 2 0 0 0 2-1.9L18 7" />
+    <path d="M9 7V4.6A1.6 1.6 0 0 1 10.6 3h2.8A1.6 1.6 0 0 1 15 4.6V7" />
+  </svg>
+);
+
+const MultiUploadZone = ({ docs, onAdd, onRemove, label, hint }: {
   docs: StudyDoc[];
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
+  label?: string;
+  hint?: string;
 }) => {
   const ref = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -2052,10 +2164,10 @@ const MultiUploadZone = ({ docs, onAdd, onRemove }: {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
         </svg>
         <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-          {docs.length ? 'Add more documents' : 'Drop files or click — multiple OK'}
+          {docs.length ? 'Add more documents' : (label || 'Drop files or click — multiple OK')}
         </span>
         <span className="text-[12px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-          PDF, DOCX, TXT, MD — Sona will read every file
+          {hint || 'PDF, DOCX, TXT, MD — Sona will read every file'}
         </span>
       </div>
       {docs.length > 0 && (
@@ -3492,36 +3604,46 @@ export const LumoraDocsPanel = ({
             <p className="text-[12px] text-center -mt-1" style={{ color: 'var(--text-muted)' }}>Add JD & Resume to start</p>
           )}
 
-          {/* Download — export the generated sections (was fully built but had no UI) */}
-          {generatedCount > 0 && (
-            <div className="flex flex-col gap-1">
-              <div className="flex gap-2">
-                <button
+          {/* Export and clear, as one row of icons. These were three stacked
+              full-width buttons carrying their own labels — the tallest thing
+              in the panel, for actions you press once. The format name stays
+              INSIDE the glyph: a page with "PDF" on it is read at a glance,
+              and a download arrow alone would make the two indistinguishable. */}
+          <div className="flex items-center gap-2">
+            {generatedCount > 0 && (
+              <>
+                <ActionIcon
+                  label={downloading === 'pdf' ? 'Saving…' : 'Download as PDF'}
                   onClick={() => handleDownload('pdf')}
                   disabled={!!downloading}
-                  className="flex-1 py-2 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
-                  style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
-                  {downloading === 'pdf' ? 'Saving…' : 'Download PDF'}
-                </button>
-                <button
+                  busy={downloading === 'pdf'}
+                  tint="var(--danger)"
+                >
+                  <FileFormatIcon format="PDF" />
+                </ActionIcon>
+                <ActionIcon
+                  label={downloading === 'docx' ? 'Saving…' : 'Download as Word (DOCX)'}
                   onClick={() => handleDownload('docx')}
                   disabled={!!downloading}
-                  className="flex-1 py-2 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.98] disabled:opacity-40"
-                  style={{ color: 'var(--cam-primary-dk)', background: 'var(--accent-subtle)', border: '1px solid var(--border)' }}>
-                  {downloading === 'docx' ? 'Saving…' : 'Download DOCX'}
-                </button>
-              </div>
-              {downloadMsg && <p className="text-[12px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</p>}
-            </div>
-          )}
-
-          {/* Clear */}
-          <button
-            onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
-            className="w-full py-2 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.98] hover:opacity-90"
-            style={{ color: 'color-mix(in srgb, var(--danger) 70%, var(--text-secondary))', background: 'color-mix(in srgb, var(--danger) 8%, var(--bg-elevated))', border: '1px solid color-mix(in srgb, var(--danger) 25%, transparent)' }}>
-            Clear All
-          </button>
+                  busy={downloading === 'docx'}
+                  tint="var(--cam-primary)"
+                >
+                  <FileFormatIcon format="DOC" />
+                </ActionIcon>
+              </>
+            )}
+            <span className="flex-1" />
+            {/* Always visible, never hover-only — it is destructive and has to
+                be findable. */}
+            <ActionIcon
+              label="Clear all materials and generated sections"
+              onClick={() => { setState({ ...EMPTY_DOC } as any); setSectionStatus({}); setActiveSection('input'); }}
+              tint="var(--danger)"
+            >
+              <TrashIcon />
+            </ActionIcon>
+          </div>
+          {downloadMsg && <p className="text-[12px] text-center" style={{ color: 'var(--text-muted)' }}>{downloadMsg}</p>}
         </div>
       </div>
 
@@ -3543,12 +3665,36 @@ export const LumoraDocsPanel = ({
                 <UploadZone label="Resume" required value={state.resume} fileName={state.resumeFile}
                   onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, resume: t, resumeFile: f.name })); }}
                   onPaste={(t) => setState(p => ({ ...p, resume: t }))} />
-                <UploadZone label="Cover Letter" value={state.coverLetter} fileName={state.coverLetterFile}
-                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, coverLetter: t, coverLetterFile: f.name })); }}
-                  onPaste={(t) => setState(p => ({ ...p, coverLetter: t }))} />
-                <UploadZone label="Prep Materials" value={state.prepMaterials} fileName={state.prepMaterialsFile}
-                  onUpload={async (f) => { uploadToResearchDocs(f); const t = await extractFile(f); setState(p => ({ ...p, prepMaterials: t, prepMaterialsFile: f.name })); }}
-                  onPaste={(t) => setState(p => ({ ...p, prepMaterials: t }))} />
+              </div>
+              {/* One box for everything that is not the JD or the resume. It
+                  was two cards, Cover Letter and Prep Materials, which asked
+                  the user to classify a file before they could add it. */}
+              <div className="mt-3">
+                <MultiUploadZone
+                  docs={state.otherDocs}
+                  label="Other documents"
+                  hint="Cover letter, notes, anything else — PDF, DOCX, TXT, MD"
+                  onAdd={async (files) => {
+                    const added: StudyDoc[] = [];
+                    for (const f of files) {
+                      try {
+                        uploadToResearchDocs(f);
+                        const content = await extractFile(f);
+                        if (content.trim()) added.push({ name: f.name, content });
+                      } catch (err) {
+                        console.warn('[other] extract failed', f.name, err);
+                      }
+                    }
+                    if (added.length) setState(p => {
+                      const otherDocs = [...p.otherDocs, ...added];
+                      return { ...p, otherDocs, ...deriveOther(otherDocs) };
+                    });
+                  }}
+                  onRemove={(idx) => setState(p => {
+                    const otherDocs = p.otherDocs.filter((_, i) => i !== idx);
+                    return { ...p, otherDocs, ...deriveOther(otherDocs) };
+                  })}
+                />
               </div>
             </div>
 

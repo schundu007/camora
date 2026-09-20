@@ -16,6 +16,8 @@ interface ResearchDoc {
   mime_type: string | null;
   size_bytes: number | null;
   doc_type: string;
+  /** Set when the entry came from the URL box. Null for an uploaded file. */
+  source_url: string | null;
   indexed_at: string | null;
   uploaded_at: string;
 }
@@ -47,10 +49,22 @@ const DocFileIcon = () => (
   </svg>
 );
 
+/* Links and files sit in one list, so each needs a glyph that says which it is
+   at a glance — the filename alone does not, a page title looks like a document
+   name. */
+const LinkIcon = () => (
+  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"
+      d="M10 13a5 5 0 007.07 0l2.12-2.12a5 5 0 00-7.07-7.07L10.6 5.34M14 11a5 5 0 00-7.07 0L4.8 13.12a5 5 0 007.07 7.07l1.5-1.5" />
+  </svg>
+);
+
 export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
   const [docs, setDocs] = useState<ResearchDoc[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [url, setUrl] = useState('');
+  const [fetching, setFetching] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDocs = async () => {
@@ -102,6 +116,32 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAddUrl = async () => {
+    const link = url.trim();
+    if (!link || !companySlug) return;
+    setFetching(true);
+    setError(null);
+    try {
+      const res = await fetch(`${CAPRA_API}/api/v1/prep/docs/url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        credentials: 'include',
+        body: JSON.stringify({ url: link, company_slug: companySlug }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || data.detail || `Could not add that link (HTTP ${res.status})`);
+        return;
+      }
+      setUrl('');
+      await fetchDocs();
+    } catch (e: any) {
+      setError(e?.message || 'Could not add that link');
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -191,15 +231,28 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
               >
                 <span style={{ color: 'var(--cam-primary)' }}>
-                  <DocFileIcon />
+                  {doc.source_url ? <LinkIcon /> : <DocFileIcon />}
                 </span>
-                <span
-                  className="flex-1 text-[12px] font-medium truncate min-w-0"
-                  style={{ color: 'var(--text-primary)' }}
-                  data-tip={doc.filename}
-                >
-                  {doc.filename}
-                </span>
+                {doc.source_url ? (
+                  <a
+                    href={doc.source_url}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="flex-1 text-[12px] font-medium truncate min-w-0 hover:underline"
+                    style={{ color: 'var(--text-primary)' }}
+                    data-tip={doc.source_url}
+                  >
+                    {doc.filename}
+                  </a>
+                ) : (
+                  <span
+                    className="flex-1 text-[12px] font-medium truncate min-w-0"
+                    style={{ color: 'var(--text-primary)' }}
+                    data-tip={doc.filename}
+                  >
+                    {doc.filename}
+                  </span>
+                )}
                 <span className="text-[12px] shrink-0" style={{ color: 'var(--text-muted)' }}>
                   {fmtBytes(doc.size_bytes)}
                 </span>
@@ -236,42 +289,72 @@ export const ResearchDocsCard = ({ companySlug }: ResearchDocsCardProps) => {
           </ul>
         )}
 
+        {/* Two ways in, in the order you reach for them: a file you have, or a
+            link you found. Both land in the list above, in the order added. */}
         {!atCap && (
-          <div className="flex items-center gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.docx,.txt,.md"
-              className="hidden"
-              onChange={e => {
-                const f = e.target.files?.[0];
-                if (f) handleUpload(f);
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold uppercase tracking-wide transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt,.md"
+                className="hidden"
+                onChange={e => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUpload(f);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || fetching}
+                className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-[12px] font-bold uppercase tracking-wide transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: 'var(--cam-primary-dk)', color: '#fff' }}
+              >
+                {uploading ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Uploading…
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Upload File
+                  </>
+                )}
+              </button>
+              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
+                10 MB max · PDF, DOCX, TXT
+              </span>
+            </div>
+
+            <div
+              className="flex items-center gap-2 rounded-lg pl-2.5 pr-1.5"
+              style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
             >
-              {uploading ? (
-                <>
-                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Uploading…
-                </>
-              ) : (
-                <>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  Upload File
-                </>
-              )}
-            </button>
-            <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>
-              10 MB max · PDF, DOCX, TXT
-            </span>
+              <span style={{ color: 'var(--text-muted)' }}><LinkIcon /></span>
+              <input
+                type="url"
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddUrl(); } }}
+                placeholder="Paste a link — docs, a blog post, an engineering page"
+                disabled={fetching || uploading}
+                className="flex-1 min-w-0 bg-transparent h-9 text-[12px] outline-none placeholder:opacity-50"
+                style={{ color: 'var(--text-primary)' }}
+              />
+              <button
+                type="button"
+                onClick={handleAddUrl}
+                disabled={!url.trim() || fetching || uploading}
+                className="px-2.5 h-7 rounded-md text-[12px] font-bold uppercase tracking-wide shrink-0 transition-[opacity,transform] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: 'var(--accent-subtle)', color: 'var(--cam-primary)', border: '1px solid var(--border)' }}
+              >
+                {fetching ? 'Fetching…' : 'Add'}
+              </button>
+            </div>
           </div>
         )}
 
