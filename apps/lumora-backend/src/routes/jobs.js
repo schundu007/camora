@@ -326,19 +326,15 @@ router.get('/', async (req, res, next) => {
       }
     }
 
+    // citizenship_restricted is a generated, indexed column (see jobs DB
+    // migration) that's true when the description contains USC/clearance
+    // language OR is too short to trust (e.g. TheMuse listings only ever
+    // carry a ~160-char SEO teaser, never the real posting body — treating
+    // that as "no exclusion keywords found" used to mark every TheMuse job
+    // H1B-friendly by default). Replaces a 16x NOT ILIKE scan that took
+    // ~29s; the indexed column lookup takes ~13ms.
     if (req.query.h1b_only === 'true') {
-      const USC_PATTERNS = [
-        '%us citizen%', '%u.s. citizen%', '%usc only%', '%must be a us citizen%',
-        '%green card%', '%permanent resident%', '%gc required%', '%gc holder%',
-        '%requires citizenship%', '%require citizenship%',
-        '%security clearance%', '%active clearance%', '%secret clearance%',
-        '%top secret%', '%ts/sci%', '%ts / sci%',
-      ];
-      for (const pat of USC_PATTERNS) {
-        conditions.push(`(j.job_description IS NULL OR j.job_description NOT ILIKE $${paramIdx})`);
-        params.push(pat);
-        paramIdx++;
-      }
+      conditions.push(`j.citizenship_restricted IS NOT TRUE`);
     }
 
     if (req.query.posted_within) {
