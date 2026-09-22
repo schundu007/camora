@@ -1075,10 +1075,7 @@ export default function JobsPage() {
               <div className="jobs-filter-group" style={{ borderBottom: '1px solid var(--border)', padding: '12px 0' }}>
                 <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', gap: 12 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-                    H1B friendly only
-                    <span style={{ display: 'block', fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginTop: 2 }}>
-                      Excludes USC / Green Card / clearance required
-                    </span>
+                    H1B Based
                   </span>
                   <button
                     type="button"
