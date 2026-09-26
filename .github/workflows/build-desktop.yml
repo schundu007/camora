@@ -132,6 +132,9 @@ jobs:
           path: |
             apps/desktop/build/Camora-*-Setup.exe
             apps/desktop/build/latest.yml
+          # Only the publish job reads it; the installer lives on the release.
+          # The 90-day default kept ~200 MB per run and was the Actions bill.
+          retention-days: 1
 
   publish:
     needs: [build]
